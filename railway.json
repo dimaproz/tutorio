@@ -1,0 +1,12 @@
+{
+  "$schema": "https://railway.com/railway.schema.json",
+  "build": {
+    "buildCommand": "pnpm install --frozen-lockfile && pnpm --filter @tutorio/api prisma:generate && pnpm turbo run build --filter=@tutorio/api..."
+  },
+  "deploy": {
+    "preDeployCommand": "pnpm --filter @tutorio/api prisma:deploy",
+    "startCommand": "pnpm --filter @tutorio/api start:prod",
+    "healthcheckPath": "/api/health",
+    "restartPolicyType": "ON_FAILURE"
+  }
+}
