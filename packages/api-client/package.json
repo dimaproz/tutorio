@@ -1,0 +1,35 @@
+{
+  "name": "@tutorio/api-client",
+  "version": "0.0.0",
+  "private": true,
+  "sideEffects": false,
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "scripts": {
+    "generate": "pnpm --filter @tutorio/api openapi:emit && openapi-typescript openapi.json -o src/generated/schema.ts",
+    "build": "tsup src/index.ts --format cjs,esm --dts --sourcemap",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "openapi-fetch": "^0.14.0"
+  },
+  "devDependencies": {
+    "@tutorio/config": "workspace:*",
+    "eslint": "^9.28.0",
+    "openapi-typescript": "^7.8.0",
+    "tsup": "^8.5.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.0"
+  }
+}
