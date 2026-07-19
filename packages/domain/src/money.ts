@@ -1,6 +1,6 @@
 /**
- * Деньги хранятся в minor units (копейки/центы/гроши) — целые числа.
- * Никаких float-операций с деньгами.
+ * Money is stored in minor units (cents/kopecks/groszy) as integers.
+ * No floating-point arithmetic on money.
  */
 
 export const SUPPORTED_CURRENCIES = ['EUR', 'UAH', 'PLN', 'USD', 'GBP'] as const;
@@ -8,7 +8,7 @@ export const SUPPORTED_CURRENCIES = ['EUR', 'UAH', 'PLN', 'USD', 'GBP'] as const
 export type CurrencyCode = (typeof SUPPORTED_CURRENCIES)[number];
 
 export interface Money {
-  /** Сумма в minor units (целое число, может быть отрицательной). */
+  /** Amount in minor units (integer, may be negative). */
   amountMinor: number;
   currency: CurrencyCode;
 }
@@ -41,12 +41,12 @@ export function subtractMoney(a: Money, b: Money): Money {
   return money(a.amountMinor - b.amountMinor, a.currency);
 }
 
-/** Сумма списка Money одной валюты. Пустой список требует явной валюты. */
+/** Sum of a list of Money in a single currency. An empty list requires an explicit currency. */
 export function sumMoney(items: readonly Money[], currency: CurrencyCode): Money {
   return items.reduce((acc, item) => addMoney(acc, item), money(0, currency));
 }
 
-/** Форматирование для UI: money(150000, 'UAH') → "1 500,00 ₴" (зависит от локали). */
+/** Formatting for UI: money(150000, 'UAH') → "1 500,00 ₴" (locale-dependent). */
 export function formatMoney(value: Money, locale: string): string {
   return new Intl.NumberFormat(locale, {
     style: 'currency',

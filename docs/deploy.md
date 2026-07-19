@@ -1,53 +1,53 @@
-# Деплой Tutorio (Этап 0)
+# Tutorio Deployment (Stage 0)
 
-Всё, что ниже, делается один раз руками (нужны аккаунты). Конфиги уже в репо.
+Everything below is a one-time manual setup (accounts required). The configs are already in the repo.
 
 ## 1. GitHub
 
-1. Создать приватный репозиторий, запушить `main`.
-2. CI (`.github/workflows/ci.yml`) заработает сам: lint + typecheck + test + build на каждый push/PR.
+1. Create a private repository, push `main`.
+2. CI (`.github/workflows/ci.yml`) runs automatically: lint + typecheck + test + build on every push/PR.
 
 ## 2. Railway — API + Postgres
 
-1. Создать проект → **Deploy from GitHub repo** (этот репозиторий).
-2. Добавить **PostgreSQL** (New → Database → Postgres). Включить бэкапы: Database → Backups → daily.
-3. В сервисе API (Settings):
-   - Root Directory: `/` (корень; сборка описана в `railway.json`).
-   - Config as code подхватит `railway.json`: build → prisma generate → turbo build; healthcheck `/api/health`; перед деплоем — `prisma migrate deploy`.
-4. Variables сервиса API:
-   - `DATABASE_URL` → Reference на Postgres (`${{Postgres.DATABASE_URL}}`)
-   - `JWT_SECRET` → сгенерировать (`openssl rand -hex 32`)
-   - `WEB_ORIGIN` → URL веба на Vercel (можно добавить после шага 3)
-   - `SENTRY_DSN` → из шага 4
+1. Create a project → **Deploy from GitHub repo** (this repository).
+2. Add **PostgreSQL** (New → Database → Postgres). Enable backups: Database → Backups → daily.
+3. In the API service (Settings):
+   - Root Directory: `/` (repo root; the build is described in `railway.json`).
+   - Config-as-code picks up `railway.json`: build → prisma generate → turbo build; healthcheck `/api/health`; pre-deploy → `prisma migrate deploy`.
+4. API service variables:
+   - `DATABASE_URL` → reference the Postgres service (`${{Postgres.DATABASE_URL}}`)
+   - `JWT_SECRET` → generate (`openssl rand -hex 32`)
+   - `WEB_ORIGIN` → the web URL on Vercel (can be added after step 3)
+   - `SENTRY_DSN` → from step 4
    - `NODE_ENV=production`
-5. Проверка: `https://<api-domain>/api/health` → `{"status":"ok"}`, `https://<api-domain>/docs` — Swagger.
+5. Verify: `https://<api-domain>/api/health` → `{"status":"ok"}`, `https://<api-domain>/docs` → Swagger.
 
 ## 3. Vercel — Web
 
-1. Import Git Repository → этот репозиторий.
-2. Root Directory: `apps/web` (Framework: Next.js — определится сам; pnpm-workspace тоже).
+1. Import Git Repository → this repository.
+2. Root Directory: `apps/web` (Framework: Next.js — auto-detected; pnpm workspace too).
 3. Environment Variables:
    - `NEXT_PUBLIC_API_URL` → `https://<api-domain>/api`
-   - `NEXT_PUBLIC_SENTRY_DSN` → из шага 4
-4. После деплоя вписать Vercel-домен в `WEB_ORIGIN` сервиса API на Railway.
+   - `NEXT_PUBLIC_SENTRY_DSN` → from step 4
+4. After deploy, put the Vercel domain into `WEB_ORIGIN` of the API service on Railway.
 
 ## 4. Sentry
 
-1. Создать организацию + два проекта: `tutorio-api` (Node/NestJS) и `tutorio-web` (Next.js).
-2. DSN каждого проекта → в переменные Railway (`SENTRY_DSN`) и Vercel (`NEXT_PUBLIC_SENTRY_DSN`).
-3. Код инициализации уже в репо (`apps/api/src/instrument.ts`, `apps/web/src/instrumentation*.ts`) — без DSN он просто выключен.
+1. Create an organization + two projects: `tutorio-api` (Node/NestJS) and `tutorio-web` (Next.js).
+2. Each project's DSN → Railway variables (`SENTRY_DSN`) and Vercel (`NEXT_PUBLIC_SENTRY_DSN`).
+3. Init code is already in the repo (`apps/api/src/instrument.ts`, `apps/web/src/instrumentation*.ts`) — without a DSN it is simply disabled.
 
-## 5. Локальная разработка
+## 5. Local development
 
 ```bash
 pnpm install
-cp apps/api/.env.example apps/api/.env   # вписать DATABASE_URL (можно Railway dev-базу)
+cp apps/api/.env.example apps/api/.env   # set DATABASE_URL (a Railway dev DB works)
 cp apps/web/.env.example apps/web/.env.local
-pnpm --filter @tutorio/api prisma:migrate   # первая миграция
-pnpm dev                                    # turbo: api на :4000, web на :3000
+pnpm --filter @tutorio/api prisma:migrate   # first migration
+pnpm dev                                    # turbo: api on :4000, web on :3000
 ```
 
-Генерация типизированного клиента после изменения API:
+Generate the typed client after changing the API:
 
 ```bash
 pnpm generate   # openapi.json + packages/api-client/src/generated/schema.ts

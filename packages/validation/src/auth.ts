@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-// Заготовка DTO для Этапа 1 (регистрация/логин). Схемы общие для web-форм и api-пайпов.
+// DTO groundwork for Stage 1 (register/login). Schemas are shared by web forms and api pipes.
 export const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8).max(128),

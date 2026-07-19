@@ -3,8 +3,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule, JwtSignOptions } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 
-// Auth-заготовка (Этап 0): JWT-инфраструктура подключена, эндпоинты
-// register/login/refresh появятся в Этапе 1.
+// Auth groundwork (Stage 0): JWT infrastructure is wired up; the
+// register/login/refresh endpoints arrive in Stage 1.
 @Module({
   imports: [
     PassportModule,

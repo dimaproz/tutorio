@@ -4,8 +4,8 @@ import type { paths } from './generated/schema';
 export type ApiClient = ReturnType<typeof createApiClient>;
 
 /**
- * Типизированный клиент Tutorio API, сгенерированный из OpenAPI-схемы.
- * `pnpm generate` обновляет схему (openapi.json → src/generated/schema.ts).
+ * Typed Tutorio API client generated from the OpenAPI schema.
+ * `pnpm generate` refreshes the schema (openapi.json → src/generated/schema.ts).
  */
 export function createApiClient(options: ClientOptions & { baseUrl: string }) {
   return createClient<paths>(options);

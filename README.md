@@ -1,36 +1,36 @@
 # Tutorio
 
-Финансовый календарь для частных преподавателей и малых школ: абонементы, баланс занятий, журнал операций, расписание.
+Financial calendar for private tutors and small schools: lesson packages, lesson credit balance, operations ledger, scheduling.
 
-План MVP: [docs/mvp-plan.md](docs/mvp-plan.md) · Деплой: [docs/deploy.md](docs/deploy.md)
+MVP plan: [docs/mvp-plan.md](docs/mvp-plan.md) · Deploy: [docs/deploy.md](docs/deploy.md)
 
-## Структура
+## Structure
 
 ```
 apps/
-  api/        NestJS + Prisma + PostgreSQL (Swagger на /docs)
+  api/        NestJS + Prisma + PostgreSQL (Swagger at /docs)
   web/        Next.js (App Router) + Tailwind
 packages/
-  domain/     чистая бизнес-логика (vitest, без I/O)
-  validation/ Zod-схемы DTO, общие для web и api
-  api-client/ типизированный клиент, генерируется из OpenAPI
-  config/     общие tsconfig / eslint пресеты
+  domain/     pure business logic (vitest, no I/O)
+  validation/ Zod DTO schemas shared by web and api
+  api-client/ typed client generated from OpenAPI
+  config/     shared tsconfig / eslint presets
 ```
 
-## Быстрый старт
+## Quick Start
 
 ```bash
 pnpm install
-cp apps/api/.env.example apps/api/.env        # вписать DATABASE_URL
+cp apps/api/.env.example apps/api/.env        # set DATABASE_URL
 cp apps/web/.env.example apps/web/.env.local
-pnpm --filter @tutorio/api prisma:migrate     # миграции БД
+pnpm --filter @tutorio/api prisma:migrate     # run DB migrations
 pnpm dev                                      # api :4000, web :3000
 ```
 
-## Команды
+## Commands
 
-| Команда | Что делает |
+| Command | What it does |
 |---|---|
-| `pnpm dev` | dev-серверы api + web |
-| `pnpm lint` / `pnpm typecheck` / `pnpm test` / `pnpm build` | пайплайн (то же в CI) |
+| `pnpm dev` | dev servers for api + web |
+| `pnpm lint` / `pnpm typecheck` / `pnpm test` / `pnpm build` | pipeline (same as CI) |
 | `pnpm generate` | OpenAPI → `packages/api-client` |

@@ -7,7 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Auth-заготовка (Этап 0). Workspace/WorkspaceMember и остальные сущности — Этап 1+.
+// Auth groundwork (Stage 0). Workspace/WorkspaceMember and other entities land in Stage 1+.
 model User {
   id           String    @id @default(uuid())
   email        String    @unique

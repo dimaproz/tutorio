@@ -4,8 +4,8 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../src/app.module';
 import { buildOpenApiDocument } from '../src/swagger';
 
-// Выгружает openapi.json без запуска HTTP-сервера и без подключения к БД
-// (PrismaService подключается лениво). Результат забирает packages/api-client.
+// Emits openapi.json without starting the HTTP server or connecting to the DB
+// (PrismaService connects lazily). The output is consumed by packages/api-client.
 async function main() {
   const app = await NestFactory.create(AppModule, { logger: false });
   app.setGlobalPrefix('api');
