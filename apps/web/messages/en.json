@@ -5,7 +5,23 @@
   },
   "common": {
     "appName": "Tutorio",
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "save": "Save",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "restore": "Restore",
+    "back": "Back",
+    "actions": "Actions",
+    "openMenu": "Open menu",
+    "notProvided": "Not provided",
+    "retry": "Try again",
+    "errorTitle": "Something went wrong",
+    "required": "Required",
+    "open": "Open",
+    "deleted": "Deleted",
+    "restoreOwnerOnly": "Only the owner can restore"
   },
   "auth": {
     "login": {
@@ -42,6 +58,23 @@
       "generic": "Something went wrong. Please try again."
     }
   },
+  "errors": {
+    "STUDENT_NOT_FOUND": "This student no longer exists.",
+    "GROUP_NOT_FOUND": "This group no longer exists.",
+    "ENROLLMENT_NOT_FOUND": "This enrollment no longer exists.",
+    "WORKSPACE_MEMBER_NOT_FOUND": "This teacher is not a member of the workspace.",
+    "ACTIVE_ENROLLMENTS_EXIST": "Archive the active and paused enrollments first.",
+    "DUPLICATE_ENROLLMENT": "An equivalent enrollment already exists.",
+    "INVALID_WORKSPACE_RELATION": "This record belongs to another workspace.",
+    "INVALID_MONEY_AMOUNT": "Enter a valid amount.",
+    "EMAIL_TAKEN": "This email is already registered.",
+    "INVALID_CREDENTIALS": "Incorrect email or password.",
+    "INVALID_REFRESH_TOKEN": "Your session is no longer valid. Please sign in again.",
+    "SESSION_EXPIRED": "Your session has expired. Please sign in again.",
+    "FORBIDDEN": "You don't have permission to do that.",
+    "UNEXPECTED": "Something went wrong. Please try again.",
+    "generic": "Something went wrong. Please try again."
+  },
   "validation": {
     "emailInvalid": "Enter a valid email address",
     "passwordTooShort": "Password must be at least 12 characters",
@@ -52,7 +85,51 @@
     "workspaceNameTooShort": "Workspace name must be at least 2 characters",
     "workspaceNameTooLong": "Workspace name must be at most 80 characters",
     "confirmPasswordMismatch": "Passwords do not match",
+    "fullNameRequired": "Enter the student's name",
+    "fullNameTooLong": "Name must be at most 120 characters",
+    "groupNameRequired": "Enter the group name",
+    "groupNameTooLong": "Name must be at most 120 characters",
+    "timezoneRequired": "Choose a timezone",
+    "timezoneInvalid": "Choose a valid timezone",
+    "phoneInvalid": "Enter a valid phone number",
+    "notesTooLong": "Notes are too long",
+    "priceInvalid": "Enter an amount like 1500 or 1500.50",
+    "priceRequired": "Enter a price",
+    "deadlineRange": "Enter a number of hours between 0 and 336",
     "invalid": "This value is invalid"
+  },
+  "pagination": {
+    "label": "Pagination",
+    "previous": "Previous",
+    "next": "Next",
+    "summary": "Page {page} of {totalPages}",
+    "total": "{count, plural, =0 {No records} one {# record} other {# records}}"
+  },
+  "filters": {
+    "state": "Show",
+    "stateActive": "Active",
+    "stateDeleted": "Deleted",
+    "stateAll": "All",
+    "clear": "Clear filters"
+  },
+  "currencies": {
+    "EUR": "EUR — Euro",
+    "UAH": "UAH — Hryvnia",
+    "PLN": "PLN — Zloty",
+    "USD": "USD — US dollar",
+    "GBP": "GBP — Pound sterling"
+  },
+  "enrollmentStatus": {
+    "label": "Status",
+    "ACTIVE": "Active",
+    "PAUSED": "Paused",
+    "ARCHIVED": "Archived"
+  },
+  "billingType": {
+    "label": "Billing",
+    "PACKAGE": "Lesson package",
+    "MONTHLY": "Monthly",
+    "PER_LESSON": "Per lesson"
   },
   "app": {
     "nav": {
@@ -62,6 +139,7 @@
       "groups": "Groups",
       "calendar": "Calendar",
       "finance": "Finance",
+      "settings": "Settings",
       "comingSoon": "Coming soon"
     },
     "sidebar": {
@@ -89,5 +167,326 @@
       "emptyTitle": "Your workspace is ready",
       "emptyDescription": "Students, groups, calendar and finance will appear here in the next stages. For now, explore the navigation and account settings."
     }
+  },
+  "students": {
+    "title": "Students",
+    "subtitle": "Everyone learning in your workspace.",
+    "add": "Add student",
+    "searchLabel": "Search students",
+    "searchPlaceholder": "Name, email, phone or parent contact…",
+    "deletedBadge": "In trash",
+    "count": "{count, plural, =0 {No students} one {# student} other {# students}}",
+    "columns": {
+      "student": "Student",
+      "contacts": "Contacts",
+      "groups": "Groups",
+      "enrollments": "Enrollments",
+      "timezone": "Timezone",
+      "actions": "Actions"
+    },
+    "tableCaption": "Workspace students with their groups and active enrollments",
+    "activeEnrollments": "{count, plural, =0 {No active enrollments} one {# active enrollment} other {# active enrollments}}",
+    "noGroups": "Individual only",
+    "empty": {
+      "title": "No students yet",
+      "description": "Add your first student to start building schedules and packages.",
+      "action": "Add student"
+    },
+    "emptySearch": {
+      "title": "Nothing found",
+      "description": "No students match your search. Try a different name or contact."
+    },
+    "emptyDeleted": {
+      "title": "Trash is empty",
+      "description": "Deleted students appear here and can be restored."
+    },
+    "error": {
+      "title": "Could not load students"
+    },
+    "form": {
+      "createTitle": "New student",
+      "createSubtitle": "Only the name and timezone are required.",
+      "editTitle": "Edit student",
+      "editSubtitle": "Update contact details and notes.",
+      "basicSection": "Basic information",
+      "contactsSection": "Student contacts",
+      "contactsHint": "Optional — useful for reminders later.",
+      "timezoneSection": "Timezone",
+      "timezoneHint": "Lesson times are shown to the student in this timezone.",
+      "parentSection": "Parent or guardian",
+      "parentHint": "Fill this in for students under 18.",
+      "notesSection": "Notes",
+      "fullName": "Full name",
+      "email": "Email",
+      "phone": "Phone",
+      "timezone": "Timezone",
+      "timezonePlaceholder": "Select a timezone",
+      "timezoneSearch": "Search timezones…",
+      "timezoneEmpty": "No timezone found",
+      "parentName": "Parent name",
+      "parentEmail": "Parent email",
+      "parentPhone": "Parent phone",
+      "notes": "Notes",
+      "notesPlaceholder": "Goals, preferences, anything worth remembering",
+      "submitCreate": "Create student",
+      "submitEdit": "Save changes"
+    },
+    "detail": {
+      "contactsTitle": "Contact details",
+      "parentTitle": "Parent or guardian",
+      "notesTitle": "Notes",
+      "enrollmentsTitle": "Enrollments",
+      "enrollmentsDescription": "Where this student learns and how they are billed.",
+      "addEnrollment": "Add enrollment",
+      "noEnrollments": "No enrollments yet",
+      "noEnrollmentsDescription": "Connect this student to a group or an individual teacher.",
+      "individual": "Individual lessons",
+      "teacher": "Teacher",
+      "price": "Price",
+      "deadline": "Cancellation deadline",
+      "deadlineHours": "{hours, plural, one {# hour} other {# hours}} before the lesson",
+      "deadlineInherited": "Workspace default",
+      "deletedTitle": "This student is in the trash",
+      "deletedDescription": "Restore the student to edit them again."
+    },
+    "toasts": {
+      "created": "Student created",
+      "updated": "Changes saved",
+      "deleted": "Student moved to trash",
+      "restored": "Student restored"
+    },
+    "deleteDialog": {
+      "title": "Move this student to trash?",
+      "description": "{name} will be hidden from lists but nothing is erased permanently. An owner can restore them at any time.",
+      "confirm": "Move to trash"
+    }
+  },
+  "groups": {
+    "title": "Groups",
+    "subtitle": "Classes that several students attend together.",
+    "add": "Add group",
+    "searchLabel": "Search groups",
+    "searchPlaceholder": "Group name…",
+    "deletedBadge": "In trash",
+    "columns": {
+      "group": "Group",
+      "students": "Students",
+      "statuses": "Enrollments",
+      "actions": "Actions"
+    },
+    "tableCaption": "Workspace groups with the number of enrolled students",
+    "studentCount": "{count, plural, =0 {No students} one {# student} other {# students}}",
+    "empty": {
+      "title": "No groups yet",
+      "description": "Create a group to bill several students under one class.",
+      "action": "Add group"
+    },
+    "emptySearch": {
+      "title": "Nothing found",
+      "description": "No groups match your search."
+    },
+    "emptyDeleted": {
+      "title": "Trash is empty",
+      "description": "Deleted groups appear here and can be restored."
+    },
+    "error": {
+      "title": "Could not load groups"
+    },
+    "form": {
+      "createTitle": "New group",
+      "createSubtitle": "Give the group a name your students will recognise.",
+      "editTitle": "Edit group",
+      "editSubtitle": "Update the group name and notes.",
+      "detailsSection": "Group details",
+      "name": "Name",
+      "namePlaceholder": "For example, B1 English Evenings",
+      "notes": "Notes",
+      "notesPlaceholder": "Schedule, level, materials",
+      "submitCreate": "Create group",
+      "submitEdit": "Save changes"
+    },
+    "detail": {
+      "notesTitle": "Notes",
+      "membersTitle": "Enrolled students",
+      "membersDescription": "Each student keeps their own price and billing rules.",
+      "addStudent": "Add student",
+      "noMembers": "No students yet",
+      "noMembersDescription": "Add an existing student to this group.",
+      "student": "Student",
+      "teacher": "Teacher",
+      "price": "Price",
+      "deletedTitle": "This group is in the trash",
+      "deletedDescription": "Restore the group to edit it again."
+    },
+    "toasts": {
+      "created": "Group created",
+      "updated": "Changes saved",
+      "deleted": "Group moved to trash",
+      "restored": "Group restored"
+    },
+    "deleteDialog": {
+      "title": "Move this group to trash?",
+      "description": "{name} will be hidden from lists but nothing is erased permanently. An owner can restore it at any time.",
+      "confirm": "Move to trash"
+    }
+  },
+  "enrollments": {
+    "editor": {
+      "createTitle": "New enrollment",
+      "createDescription": "Connect a student to a group or an individual teacher, with their own price and rules.",
+      "editTitle": "Edit enrollment",
+      "editDescription": "Change billing rules or the lifecycle status. The student, group and teacher cannot be moved.",
+      "student": "Student",
+      "studentPlaceholder": "Select a student",
+      "studentSearch": "Search students…",
+      "studentEmpty": "No student found",
+      "group": "Group",
+      "groupPlaceholder": "Individual lessons",
+      "groupNone": "Individual lessons (no group)",
+      "groupSearch": "Search groups…",
+      "groupEmpty": "No group found",
+      "teacher": "Teacher",
+      "teacherPlaceholder": "Select a teacher",
+      "teacherSearch": "Search teachers…",
+      "teacherEmpty": "No teacher found",
+      "status": "Status",
+      "billingType": "Billing type",
+      "price": "Price",
+      "priceHint": "Per lesson or per month, depending on the billing type.",
+      "currency": "Currency",
+      "policySection": "Cancellation policy",
+      "policyDefault": "Use the workspace default",
+      "policyCustom": "Custom deadline for this enrollment",
+      "customHours": "Hours before the lesson",
+      "effective": "Effective deadline: {hours, plural, one {# hour} other {# hours}} before the lesson.",
+      "submitCreate": "Create enrollment",
+      "submitEdit": "Save changes"
+    },
+    "toasts": {
+      "created": "Enrollment created",
+      "updated": "Enrollment updated",
+      "deleted": "Enrollment moved to trash"
+    },
+    "deleteDialog": {
+      "title": "Move this enrollment to trash?",
+      "description": "Nothing is erased permanently. To end a relationship that really happened, set the status to Archived instead — archived enrollments stay visible in history.",
+      "confirm": "Move to trash"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Workspace defaults and the audit trail.",
+    "tabs": {
+      "general": "General",
+      "audit": "Audit log"
+    },
+    "general": {
+      "title": "Workspace defaults",
+      "description": "New enrollments start from these values.",
+      "defaultCurrency": "Default currency",
+      "cancellationDeadline": "Default cancellation deadline",
+      "cancellationDeadlineHint": "Hours before a lesson when a student can still cancel without being charged.",
+      "priceNotice": "Existing enrollments keep the currency and price you configured for them — changing the default never rewrites them.",
+      "deadlineNotice": "Enrollments without their own deadline will immediately follow the new default.",
+      "submit": "Save settings",
+      "saved": "Settings saved"
+    },
+    "audit": {
+      "title": "Audit log",
+      "description": "Every change to students, groups, enrollments and settings.",
+      "columns": {
+        "when": "When",
+        "actor": "Who",
+        "action": "Action",
+        "entity": "Record",
+        "changes": "Changes"
+      },
+      "tableCaption": "Workspace changes, newest first",
+      "filterAction": "Action",
+      "filterEntity": "Record type",
+      "filterAll": "All",
+      "systemActor": "System",
+      "noChanges": "No field changes",
+      "changeSummary": "{field}: {before} → {after}",
+      "changeCount": "{count, plural, one {# field changed} other {# fields changed}}",
+      "emptyValue": "empty",
+      "empty": {
+        "title": "Nothing recorded yet",
+        "description": "Changes appear here as soon as you edit students, groups or settings."
+      },
+      "error": {
+        "title": "Could not load the audit log"
+      }
+    },
+    "auditAction": {
+      "CREATE": "Created",
+      "UPDATE": "Updated",
+      "DELETE": "Moved to trash",
+      "RESTORE": "Restored"
+    },
+    "auditEntity": {
+      "STUDENT": "Student",
+      "GROUP": "Group",
+      "ENROLLMENT": "Enrollment",
+      "WORKSPACE": "Workspace"
+    },
+    "auditField": {
+      "fullName": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "timezone": "Timezone",
+      "parentName": "Parent name",
+      "parentEmail": "Parent email",
+      "parentPhone": "Parent phone",
+      "notes": "Notes",
+      "name": "Name",
+      "status": "Status",
+      "billingType": "Billing type",
+      "priceMinor": "Price",
+      "currency": "Currency",
+      "cancellationDeadlineHours": "Cancellation deadline",
+      "defaultCurrency": "Default currency",
+      "studentId": "Student",
+      "groupId": "Group",
+      "teacherId": "Teacher",
+      "deletedAt": "Deleted at"
+    },
+    "ownerOnly": {
+      "title": "Owner access only",
+      "description": "Workspace settings and the audit log are available to the workspace owner."
+    }
+  },
+  "auditAction": {
+    "CREATE": "Created",
+    "UPDATE": "Updated",
+    "DELETE": "Moved to trash",
+    "RESTORE": "Restored"
+  },
+  "auditEntity": {
+    "STUDENT": "Student",
+    "GROUP": "Group",
+    "ENROLLMENT": "Enrollment",
+    "WORKSPACE": "Workspace"
+  },
+  "auditField": {
+    "fullName": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "timezone": "Timezone",
+    "parentName": "Parent name",
+    "parentEmail": "Parent email",
+    "parentPhone": "Parent phone",
+    "notes": "Notes",
+    "name": "Name",
+    "status": "Status",
+    "billingType": "Billing type",
+    "priceMinor": "Price",
+    "currency": "Currency",
+    "cancellationDeadlineHours": "Cancellation deadline",
+    "defaultCurrency": "Default currency",
+    "studentId": "Student",
+    "groupId": "Group",
+    "teacherId": "Teacher",
+    "deletedAt": "Trash status"
   }
 }

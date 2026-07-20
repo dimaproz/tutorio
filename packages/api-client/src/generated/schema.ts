@@ -134,6 +134,261 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/workspaces/current/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update workspace default currency and cancellation deadline
+         * @description Owner only. Existing enrollments keep their configured currency and price; enrollments without a custom deadline inherit the new default. Creates a WORKSPACE UPDATE audit entry.
+         */
+        patch: operations["WorkspacesController_updateSettings"];
+        trace?: never;
+    };
+    "/api/workspaces/current/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List workspace members (teacher selector)
+         * @description Read-only roster; member management is out of scope.
+         */
+        get: operations["WorkspacesController_listMembers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/audit-logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List workspace audit log entries (owner only)
+         * @description Newest-first, paginated. Supports filtering by entity, entityId, actor, action and a createdAt time range.
+         */
+        get: operations["AuditController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/students": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List workspace students
+         * @description Paginated summaries with active enrollment counts and group names. Search covers full name, contacts and parent contacts. state=deleted|all is owner-only.
+         */
+        get: operations["StudentsController_list"];
+        put?: never;
+        /** Create a student */
+        post: operations["StudentsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/students/{studentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a student profile with enrollment summaries */
+        get: operations["StudentsController_getDetail"];
+        put?: never;
+        post?: never;
+        /**
+         * Soft-delete a student (move to trash)
+         * @description Idempotent. Fails with ACTIVE_ENROLLMENTS_EXIST while the student has active or paused enrollments.
+         */
+        delete: operations["StudentsController_softDelete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update a student
+         * @description PATCH semantics: omitted fields stay unchanged, null clears an optional field. A no-op update creates no audit entry.
+         */
+        patch: operations["StudentsController_update"];
+        trace?: never;
+    };
+    "/api/students/{studentId}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore a soft-deleted student (owner only) */
+        post: operations["StudentsController_restore"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List workspace groups
+         * @description Paginated summaries with active student counts. state=deleted|all is owner-only.
+         */
+        get: operations["GroupsController_list"];
+        put?: never;
+        /** Create a group */
+        post: operations["GroupsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/groups/{groupId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a group with enrollment summaries */
+        get: operations["GroupsController_getDetail"];
+        put?: never;
+        post?: never;
+        /**
+         * Soft-delete a group (move to trash)
+         * @description Idempotent. Fails with ACTIVE_ENROLLMENTS_EXIST while the group has active or paused enrollments.
+         */
+        delete: operations["GroupsController_softDelete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update a group
+         * @description PATCH semantics: omitted fields stay unchanged, null clears an optional field. A no-op update creates no audit entry.
+         */
+        patch: operations["GroupsController_update"];
+        trace?: never;
+    };
+    "/api/groups/{groupId}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore a soft-deleted group (owner only) */
+        post: operations["GroupsController_restore"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/enrollments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List workspace enrollments
+         * @description Paginated, newest first, with compact student/group/teacher refs and the effective cancellation deadline. Filterable by student, group, teacher and status. state=deleted|all is owner-only.
+         */
+        get: operations["EnrollmentsController_list"];
+        put?: never;
+        /**
+         * Enroll a student with a group or an individual teacher
+         * @description groupId null/omitted creates an individual enrollment. Student, group and teacher must be live records of the current workspace. An indistinguishable live duplicate is rejected with DUPLICATE_ENROLLMENT.
+         */
+        post: operations["EnrollmentsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/enrollments/{enrollmentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get an enrollment */
+        get: operations["EnrollmentsController_getDetail"];
+        put?: never;
+        post?: never;
+        /**
+         * Soft-delete an enrollment (move to trash)
+         * @description Idempotent. For a legitimately ended relationship prefer status=ARCHIVED, which stays visible in history.
+         */
+        delete: operations["EnrollmentsController_softDelete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update enrollment billing rules or lifecycle status
+         * @description Student, group and teacher are immutable — archive and re-enroll instead. cancellationDeadlineHours null reverts to the workspace default. A no-op update creates no audit entry.
+         */
+        patch: operations["EnrollmentsController_update"];
+        trace?: never;
+    };
+    "/api/enrollments/{enrollmentId}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restore a soft-deleted enrollment (owner only)
+         * @description Re-validates duplicate constraints; restoring next to an equivalent live enrollment is rejected with DUPLICATE_ENROLLMENT.
+         */
+        post: operations["EnrollmentsController_restore"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -217,6 +472,353 @@ export interface components {
             };
             /** @enum {string} */
             role: "OWNER" | "TEACHER";
+        };
+        UpdateWorkspaceSettingsDto: {
+            /** @enum {string} */
+            defaultCurrency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+            cancellationDeadlineHours?: number;
+        };
+        WorkspaceMemberListDto: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                userId: string;
+                name: string;
+                email: string;
+                /** @enum {string} */
+                role: "OWNER" | "TEACHER";
+            }[];
+        };
+        AuditLogListDto: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                workspaceId: string;
+                /** Format: uuid */
+                actorId: string | null;
+                actor: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    email: string;
+                } | null;
+                /** @enum {string} */
+                entity: "STUDENT" | "GROUP" | "ENROLLMENT" | "WORKSPACE";
+                entityId: string;
+                /** @enum {string} */
+                action: "CREATE" | "UPDATE" | "DELETE" | "RESTORE";
+                changes: {
+                    fields: {
+                        [key: string]: {
+                            before: unknown;
+                            after: unknown;
+                        };
+                    };
+                } | null;
+                /** Format: date-time */
+                createdAt: string;
+            }[];
+            page: number;
+            pageSize: number;
+            total: number;
+            totalPages: number;
+        };
+        StudentListDto: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                fullName: string;
+                email: string | null;
+                phone: string | null;
+                timezone: string;
+                /** Format: date-time */
+                deletedAt: string | null;
+                activeEnrollmentCount: number;
+                groupNames: string[];
+            }[];
+            page: number;
+            pageSize: number;
+            total: number;
+            totalPages: number;
+        };
+        CreateStudentDto: {
+            fullName: string;
+            /** Format: email */
+            email: string;
+            phone: string;
+            timezone: string;
+            parentName: string;
+            /** Format: email */
+            parentEmail: string;
+            parentPhone: string;
+            notes: string;
+        };
+        StudentDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            workspaceId: string;
+            fullName: string;
+            email: string | null;
+            phone: string | null;
+            timezone: string;
+            parentName: string | null;
+            parentEmail: string | null;
+            parentPhone: string | null;
+            notes: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            deletedAt: string | null;
+        };
+        StudentDetailDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            workspaceId: string;
+            fullName: string;
+            email: string | null;
+            phone: string | null;
+            timezone: string;
+            parentName: string | null;
+            parentEmail: string | null;
+            parentPhone: string | null;
+            notes: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            deletedAt: string | null;
+            enrollments: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                status: "ACTIVE" | "PAUSED" | "ARCHIVED";
+                /** @enum {string} */
+                billingType: "PACKAGE" | "MONTHLY" | "PER_LESSON";
+                priceMinor: number;
+                currency: string;
+                cancellationDeadlineHours: number | null;
+                effectiveCancellationDeadlineHours: number;
+                group: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                } | null;
+                teacher: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                };
+            }[];
+        };
+        UpdateStudentDto: {
+            fullName?: string;
+            /** Format: email */
+            email?: string | null;
+            phone?: string | null;
+            timezone?: string;
+            parentName?: string | null;
+            /** Format: email */
+            parentEmail?: string | null;
+            parentPhone?: string | null;
+            notes?: string | null;
+        };
+        GroupListDto: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                /** Format: date-time */
+                deletedAt: string | null;
+                activeStudentCount: number;
+            }[];
+            page: number;
+            pageSize: number;
+            total: number;
+            totalPages: number;
+        };
+        CreateGroupDto: {
+            name: string;
+            notes?: string;
+        };
+        GroupDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            workspaceId: string;
+            name: string;
+            notes: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            deletedAt: string | null;
+        };
+        GroupDetailDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            workspaceId: string;
+            name: string;
+            notes: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            deletedAt: string | null;
+            enrollments: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                status: "ACTIVE" | "PAUSED" | "ARCHIVED";
+                /** @enum {string} */
+                billingType: "PACKAGE" | "MONTHLY" | "PER_LESSON";
+                priceMinor: number;
+                currency: string;
+                student: {
+                    /** Format: uuid */
+                    id: string;
+                    fullName: string;
+                };
+                teacher: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                };
+            }[];
+        };
+        UpdateGroupDto: {
+            name?: string;
+            notes?: string | null;
+        };
+        EnrollmentListDto: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                workspaceId: string;
+                /** Format: uuid */
+                studentId: string;
+                /** Format: uuid */
+                groupId: string | null;
+                /** Format: uuid */
+                teacherId: string;
+                student: {
+                    /** Format: uuid */
+                    id: string;
+                    fullName: string;
+                };
+                group: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                } | null;
+                teacher: {
+                    /** Format: uuid */
+                    id: string;
+                    /** Format: uuid */
+                    userId: string;
+                    name: string;
+                };
+                /** @enum {string} */
+                status: "ACTIVE" | "PAUSED" | "ARCHIVED";
+                /** @enum {string} */
+                billingType: "PACKAGE" | "MONTHLY" | "PER_LESSON";
+                priceMinor: number;
+                /** @enum {string} */
+                currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+                cancellationDeadlineHours: number | null;
+                effectiveCancellationDeadlineHours: number;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+                /** Format: date-time */
+                deletedAt: string | null;
+            }[];
+            page: number;
+            pageSize: number;
+            total: number;
+            totalPages: number;
+        };
+        CreateEnrollmentDto: {
+            /** Format: uuid */
+            studentId: string;
+            /** Format: uuid */
+            groupId?: string | null;
+            /** Format: uuid */
+            teacherId: string;
+            /**
+             * @default PACKAGE
+             * @enum {string}
+             */
+            billingType: "PACKAGE" | "MONTHLY" | "PER_LESSON";
+            priceMinor: number;
+            /** @enum {string} */
+            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+            cancellationDeadlineHours?: number | null;
+        };
+        EnrollmentDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            workspaceId: string;
+            /** Format: uuid */
+            studentId: string;
+            /** Format: uuid */
+            groupId: string | null;
+            /** Format: uuid */
+            teacherId: string;
+            student: {
+                /** Format: uuid */
+                id: string;
+                fullName: string;
+            };
+            group: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
+            teacher: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                userId: string;
+                name: string;
+            };
+            /** @enum {string} */
+            status: "ACTIVE" | "PAUSED" | "ARCHIVED";
+            /** @enum {string} */
+            billingType: "PACKAGE" | "MONTHLY" | "PER_LESSON";
+            priceMinor: number;
+            /** @enum {string} */
+            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+            cancellationDeadlineHours: number | null;
+            effectiveCancellationDeadlineHours: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            deletedAt: string | null;
+        };
+        UpdateEnrollmentDto: {
+            /** @enum {string} */
+            status?: "ACTIVE" | "PAUSED" | "ARCHIVED";
+            /** @enum {string} */
+            billingType?: "PACKAGE" | "MONTHLY" | "PER_LESSON";
+            priceMinor?: number;
+            /** @enum {string} */
+            currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+            cancellationDeadlineHours?: number | null;
         };
     };
     responses: never;
@@ -425,6 +1027,678 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CurrentWorkspaceDto"];
+                };
+            };
+        };
+    };
+    WorkspacesController_updateSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateWorkspaceSettingsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurrentWorkspaceDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    WorkspacesController_listMembers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceMemberListDto"];
+                };
+            };
+        };
+    };
+    AuditController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                entity?: "STUDENT" | "GROUP" | "ENROLLMENT" | "WORKSPACE";
+                entityId?: string;
+                actorId?: string;
+                action?: "CREATE" | "UPDATE" | "DELETE" | "RESTORE";
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditLogListDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    StudentsController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                search?: string;
+                state?: "active" | "deleted" | "all";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentListDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    StudentsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateStudentDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentDto"];
+                };
+            };
+        };
+    };
+    StudentsController_getDetail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                studentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentDetailDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    StudentsController_softDelete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                studentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    StudentsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                studentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateStudentDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    StudentsController_restore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                studentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    GroupsController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                search?: string;
+                state?: "active" | "deleted" | "all";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupListDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    GroupsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateGroupDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupDto"];
+                };
+            };
+        };
+    };
+    GroupsController_getDetail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                groupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupDetailDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    GroupsController_softDelete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                groupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    GroupsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                groupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateGroupDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    GroupsController_restore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                groupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    EnrollmentsController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                studentId?: string;
+                groupId?: string;
+                teacherId?: string;
+                status?: "ACTIVE" | "PAUSED" | "ARCHIVED";
+                state?: "active" | "deleted" | "all";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnrollmentListDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    EnrollmentsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateEnrollmentDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnrollmentDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    EnrollmentsController_getDetail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                enrollmentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnrollmentDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    EnrollmentsController_softDelete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                enrollmentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    EnrollmentsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                enrollmentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateEnrollmentDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnrollmentDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    EnrollmentsController_restore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                enrollmentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnrollmentDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
         };

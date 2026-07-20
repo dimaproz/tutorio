@@ -21,6 +21,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@tutorio/domain": "workspace:*",
     "zod": "^3.25.67"
   },
   "devDependencies": {
