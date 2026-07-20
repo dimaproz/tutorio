@@ -21,6 +21,31 @@ enum WorkspaceRole {
   @@map("workspace_role")
 }
 
+enum EnrollmentStatus {
+  ACTIVE
+  PAUSED
+  ARCHIVED
+
+  @@map("enrollment_status")
+}
+
+enum BillingType {
+  PACKAGE
+  MONTHLY
+  PER_LESSON
+
+  @@map("billing_type")
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  RESTORE
+
+  @@map("audit_action")
+}
+
 model User {
   id           String    @id @default(uuid())
   email        String    @unique
@@ -32,6 +57,7 @@ model User {
 
   memberships  WorkspaceMember[]
   authSessions AuthSession[]
+  auditLogs    AuditLog[]
 
   @@map("users")
 }
@@ -48,6 +74,10 @@ model Workspace {
 
   members      WorkspaceMember[]
   authSessions AuthSession[]
+  students     Student[]
+  groups       Group[]
+  enrollments  Enrollment[]
+  auditLogs    AuditLog[]
 
   @@map("workspaces")
 }
@@ -64,6 +94,8 @@ model WorkspaceMember {
 
   workspace Workspace @relation(fields: [workspaceId], references: [id])
   user      User      @relation(fields: [userId], references: [id])
+
+  enrollmentsAsTeacher Enrollment[] @relation("EnrollmentTeacher")
 
   @@unique([workspaceId, userId])
   @@index([userId])
@@ -90,4 +122,106 @@ model AuthSession {
   @@index([userId])
   @@index([expiresAt])
   @@map("auth_sessions")
+}
+
+model Student {
+  id          String    @id @default(uuid())
+  workspaceId String
+  fullName    String
+  // Not unique: siblings may share a parent email.
+  email       String?
+  phone       String?
+  timezone    String
+  // Parent/guardian contact when the student is a minor (GDPR minimum).
+  parentName  String?
+  parentEmail String?
+  parentPhone String?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  workspace   Workspace    @relation(fields: [workspaceId], references: [id])
+  enrollments Enrollment[]
+
+  @@index([workspaceId, deletedAt])
+  @@index([workspaceId, fullName])
+  @@index([workspaceId, updatedAt])
+  @@map("students")
+}
+
+model Group {
+  id          String    @id @default(uuid())
+  workspaceId String
+  name        String
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  workspace   Workspace    @relation(fields: [workspaceId], references: [id])
+  enrollments Enrollment[]
+
+  @@index([workspaceId, deletedAt])
+  @@index([workspaceId, name])
+  @@index([workspaceId, updatedAt])
+  @@map("groups")
+}
+
+// Student participation in a group (groupId set) or individual lessons with a
+// teacher (groupId null). All financial entities in later stages hang off the
+// enrollment, never off the group.
+model Enrollment {
+  id                        String           @id @default(uuid())
+  workspaceId               String
+  studentId                 String
+  groupId                   String?
+  // The teacher is a workspace member, not a bare user: authorization and
+  // teacher identity are workspace-scoped.
+  teacherId                 String
+  status                    EnrollmentStatus @default(ACTIVE)
+  billingType               BillingType      @default(PACKAGE)
+  // Price per lesson in minor units of `currency`; non-negative (DB CHECK).
+  priceMinor                Int
+  currency                  String
+  // Overrides Workspace.cancellationDeadlineHours; null = inherit the default.
+  cancellationDeadlineHours Int?
+  createdAt                 DateTime         @default(now())
+  updatedAt                 DateTime         @updatedAt
+  deletedAt                 DateTime?
+
+  workspace Workspace       @relation(fields: [workspaceId], references: [id])
+  student   Student         @relation(fields: [studentId], references: [id])
+  group     Group?          @relation(fields: [groupId], references: [id])
+  teacher   WorkspaceMember @relation("EnrollmentTeacher", fields: [teacherId], references: [id])
+
+  // Uniqueness among non-deleted rows only (one active enrollment per
+  // student+group, one active individual enrollment per student+teacher) is
+  // enforced by partial unique indexes added as raw SQL in the Stage 2
+  // migration — Prisma cannot express partial indexes.
+  @@index([workspaceId, deletedAt])
+  @@index([studentId])
+  @@index([groupId])
+  @@index([teacherId])
+  @@map("enrollments")
+}
+
+// Append-only: no updatedAt/deletedAt on purpose. actorId is null for
+// system-initiated changes (cron jobs, migrations).
+model AuditLog {
+  id          String      @id @default(uuid())
+  workspaceId String
+  actorId     String?
+  entity      String
+  entityId    String
+  action      AuditAction
+  diff        Json?
+  createdAt   DateTime    @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  actor     User?     @relation(fields: [actorId], references: [id])
+
+  @@index([workspaceId, createdAt])
+  @@index([workspaceId, entity, entityId])
+  @@map("audit_logs")
 }

@@ -299,6 +299,9 @@ importers:
 
   packages/validation:
     dependencies:
+      '@tutorio/domain':
+        specifier: workspace:*
+        version: link:../domain
       zod:
         specifier: ^3.25.67
         version: 3.25.76
