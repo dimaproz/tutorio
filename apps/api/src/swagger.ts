@@ -1,5 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { cleanupOpenApiDoc } from 'nestjs-zod';
 
 export function buildOpenApiDocument(app: INestApplication) {
   const config = new DocumentBuilder()
@@ -8,5 +9,6 @@ export function buildOpenApiDocument(app: INestApplication) {
     .setVersion('0.1.0')
     .addBearerAuth()
     .build();
-  return SwaggerModule.createDocument(app, config);
+  // cleanupOpenApiDoc fixes the schema output produced by nestjs-zod DTOs.
+  return cleanupOpenApiDoc(SwaggerModule.createDocument(app, config));
 }

@@ -16,8 +16,11 @@ Everything below is a one-time manual setup (accounts required). The configs are
    - Config-as-code picks up `railway.json`: build → prisma generate → turbo build; healthcheck `/api/health`; pre-deploy → `prisma migrate deploy`.
 4. API service variables:
    - `DATABASE_URL` → reference the Postgres service (`${{Postgres.DATABASE_URL}}`)
-   - `JWT_SECRET` → generate (`openssl rand -hex 32`)
-   - `WEB_ORIGIN` → the web URL on Vercel (can be added after step 3)
+   - `JWT_ACCESS_SECRET` → generate (`openssl rand -hex 32`)
+   - `JWT_REFRESH_SECRET` → generate separately (`openssl rand -hex 32`, must differ from the access secret)
+   - `JWT_ACCESS_TTL=15m`, `JWT_REFRESH_TTL=30d` (optional, these are the defaults)
+   - `JWT_ISSUER=tutorio-api`, `JWT_AUDIENCE=tutorio-clients` (optional, defaults)
+   - `WEB_ORIGIN` → the web URL on Vercel (can be added after step 3); CORS uses this exact allowlist
    - `SENTRY_DSN` → from step 4
    - `NODE_ENV=production`
 5. Verify: `https://<api-domain>/api/health` → `{"status":"ok"}`, `https://<api-domain>/docs` → Swagger.
@@ -27,7 +30,7 @@ Everything below is a one-time manual setup (accounts required). The configs are
 1. Import Git Repository → this repository.
 2. Root Directory: `apps/web` (Framework: Next.js — auto-detected; pnpm workspace too).
 3. Environment Variables:
-   - `NEXT_PUBLIC_API_URL` → `https://<api-domain>/api`
+   - `API_URL` → `https://<api-domain>/api` (server-only; used by the Next.js auth gateway)
    - `NEXT_PUBLIC_SENTRY_DSN` → from step 4
 4. After deploy, put the Vercel domain into `WEB_ORIGIN` of the API service on Railway.
 
