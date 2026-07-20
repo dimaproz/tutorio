@@ -1,25 +1,17 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { JwtModule, JwtSignOptions } from '@nestjs/jwt';
-import { PassportModule } from '@nestjs/passport';
+import { JwtModule } from '@nestjs/jwt';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+import { PasswordService } from './password.service';
+import { TokenService } from './token.service';
 
-// Auth groundwork (Stage 0): JWT infrastructure is wired up; the
-// register/login/refresh endpoints arrive in Stage 1.
+// Secrets and TTLs are passed per sign/verify call by TokenService, so the
+// JwtModule itself carries no configuration (access and refresh tokens use
+// different secrets).
 @Module({
-  imports: [
-    PassportModule,
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        secret: config.get<string>('JWT_SECRET', 'dev-secret-change-me'),
-        signOptions: {
-          expiresIn: (config.get<string>('JWT_ACCESS_TTL') ??
-            '15m') as JwtSignOptions['expiresIn'],
-        },
-      }),
-    }),
-  ],
-  exports: [JwtModule],
+  imports: [JwtModule.register({})],
+  controllers: [AuthController],
+  providers: [AuthService, TokenService, PasswordService],
+  exports: [TokenService],
 })
 export class AuthModule {}

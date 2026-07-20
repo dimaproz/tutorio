@@ -1,0 +1,93 @@
+{
+  "meta": {
+    "title": "Tutorio",
+    "description": "Financial calendar for private tutors and small schools"
+  },
+  "common": {
+    "appName": "Tutorio",
+    "loading": "Loading…"
+  },
+  "auth": {
+    "login": {
+      "title": "Sign in",
+      "subtitle": "Welcome back! Sign in to your workspace.",
+      "email": "Email",
+      "password": "Password",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password",
+      "submit": "Sign in",
+      "noAccount": "Don't have an account?",
+      "registerLink": "Create one"
+    },
+    "register": {
+      "title": "Create your workspace",
+      "subtitle": "Start managing lessons, students and payments.",
+      "name": "Your name",
+      "workspaceName": "Workspace name",
+      "workspaceNameHint": "For example, the name of your school or studio",
+      "email": "Email",
+      "password": "Password",
+      "passwordHint": "At least 12 characters — a long passphrase works best",
+      "confirmPassword": "Confirm password",
+      "submit": "Create workspace",
+      "haveAccount": "Already have an account?",
+      "loginLink": "Sign in"
+    },
+    "errors": {
+      "EMAIL_TAKEN": "This email is already registered. Try signing in instead.",
+      "INVALID_CREDENTIALS": "Incorrect email or password.",
+      "INVALID_REFRESH_TOKEN": "Your session is no longer valid. Please sign in again.",
+      "SESSION_EXPIRED": "Your session has expired. Please sign in again.",
+      "FORBIDDEN": "You don't have permission to do that.",
+      "generic": "Something went wrong. Please try again."
+    }
+  },
+  "validation": {
+    "emailInvalid": "Enter a valid email address",
+    "passwordTooShort": "Password must be at least 12 characters",
+    "passwordTooLong": "Password must be at most 128 characters",
+    "passwordRequired": "Enter your password",
+    "nameRequired": "Enter your name",
+    "nameTooLong": "Name must be at most 120 characters",
+    "workspaceNameTooShort": "Workspace name must be at least 2 characters",
+    "workspaceNameTooLong": "Workspace name must be at most 80 characters",
+    "confirmPasswordMismatch": "Passwords do not match",
+    "invalid": "This value is invalid"
+  },
+  "app": {
+    "nav": {
+      "label": "Main navigation",
+      "dashboard": "Dashboard",
+      "students": "Students",
+      "groups": "Groups",
+      "calendar": "Calendar",
+      "finance": "Finance",
+      "comingSoon": "Coming soon"
+    },
+    "sidebar": {
+      "toggle": "Toggle sidebar"
+    },
+    "userMenu": {
+      "label": "Account menu",
+      "roles": {
+        "OWNER": "Owner",
+        "TEACHER": "Teacher"
+      },
+      "theme": "Theme",
+      "themeLight": "Light",
+      "themeDark": "Dark",
+      "themeSystem": "System",
+      "logout": "Sign out"
+    },
+    "localeSwitcher": {
+      "label": "Language",
+      "uk": "Українська",
+      "en": "English"
+    },
+    "dashboard": {
+      "welcome": "Welcome, {name}!",
+      "emptyTitle": "Your workspace is ready",
+      "emptyDescription": "Students, groups, calendar and finance will appear here in the next stages. For now, explore the navigation and account settings."
+    }
+  }
+}

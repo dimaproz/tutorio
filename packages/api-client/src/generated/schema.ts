@@ -20,10 +20,205 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Register a new account
+         * @description Creates the user, their workspace, an OWNER membership and a session in one transaction.
+         */
+        post: operations["AuthController_register"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Log in with email and password
+         * @description Unknown email and wrong password return the same INVALID_CREDENTIALS response.
+         */
+        post: operations["AuthController_login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rotate the refresh token
+         * @description Returns a new token pair. Replaying a previously rotated token revokes the session.
+         */
+        post: operations["AuthController_refresh"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Revoke the session
+         * @description Idempotent — unknown or already revoked tokens still return 204.
+         */
+        post: operations["AuthController_logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get the authenticated user, active workspace and role */
+        get: operations["AuthController_me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/workspaces/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get the active workspace and the current member role */
+        get: operations["WorkspacesController_getCurrent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: never;
+    schemas: {
+        RegisterDto: {
+            name: string;
+            workspaceName: string;
+            /** Format: email */
+            email: string;
+            password: string;
+        };
+        AuthSessionDto: {
+            tokens: {
+                accessToken: string;
+                refreshToken: string;
+            };
+            user: {
+                /** Format: uuid */
+                id: string;
+                /** Format: email */
+                email: string;
+                name: string;
+            };
+            workspace: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                /** @enum {string} */
+                plan: "FREE" | "PRO";
+                defaultCurrency: string;
+                cancellationDeadlineHours: number;
+            };
+            /** @enum {string} */
+            role: "OWNER" | "TEACHER";
+        };
+        ApiErrorDto: {
+            statusCode: number;
+            code: string;
+            message: string;
+        };
+        LoginDto: {
+            /** Format: email */
+            email: string;
+            password: string;
+        };
+        RefreshDto: {
+            refreshToken: string;
+        };
+        LogoutDto: {
+            refreshToken: string;
+        };
+        AuthMeDto: {
+            user: {
+                /** Format: uuid */
+                id: string;
+                /** Format: email */
+                email: string;
+                name: string;
+            };
+            workspace: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                /** @enum {string} */
+                plan: "FREE" | "PRO";
+                defaultCurrency: string;
+                cancellationDeadlineHours: number;
+            };
+            /** @enum {string} */
+            role: "OWNER" | "TEACHER";
+        };
+        CurrentWorkspaceDto: {
+            workspace: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                /** @enum {string} */
+                plan: "FREE" | "PRO";
+                defaultCurrency: string;
+                cancellationDeadlineHours: number;
+            };
+            /** @enum {string} */
+            role: "OWNER" | "TEACHER";
+        };
+    };
     responses: never;
     parameters: never;
     requestBodies: never;
@@ -47,6 +242,190 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    AuthController_register: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthSessionDto"];
+                };
+            };
+            /** @description EMAIL_TAKEN */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_login: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthSessionDto"];
+                };
+            };
+            /** @description INVALID_CREDENTIALS */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_refresh: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RefreshDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthSessionDto"];
+                };
+            };
+            /** @description INVALID_REFRESH_TOKEN or SESSION_EXPIRED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_logout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LogoutDto"];
+            };
+        };
+        responses: {
+            /** @description Session revoked (or was already invalid) */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_me: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthMeDto"];
+                };
+            };
+            /** @description Missing or invalid access token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WorkspacesController_getCurrent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurrentWorkspaceDto"];
+                };
             };
         };
     };

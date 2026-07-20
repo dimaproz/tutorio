@@ -1,10 +1,10 @@
-export default function Home() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-4 p-8">
-      <h1 className="text-4xl font-semibold tracking-tight">Tutorio</h1>
-      <p className="text-lg text-zinc-600 dark:text-zinc-400">
-        Financial calendar for tutors — MVP in progress (Stage 0).
-      </p>
-    </main>
-  );
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { REFRESH_COOKIE } from '@/lib/auth/cookies';
+
+// Optimistic entry point: route by session-cookie presence. The protected
+// shell still validates the session against the API.
+export default async function RootPage() {
+  const store = await cookies();
+  redirect(store.has(REFRESH_COOKIE) ? '/app' : '/login');
 }
