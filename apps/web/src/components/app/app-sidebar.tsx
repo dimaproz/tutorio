@@ -6,6 +6,7 @@ import {
   CalendarIcon,
   GraduationCapIcon,
   LayoutDashboardIcon,
+  SettingsIcon,
   UsersIcon,
   WalletIcon,
 } from 'lucide-react';
@@ -23,9 +24,14 @@ import {
 } from '@/components/ui/sidebar';
 import { useSession } from './session-provider';
 
+// Live in Stage 2.
+const NAV_ITEMS = [
+  { key: 'students', href: '/app/students', icon: UsersIcon },
+  { key: 'groups', href: '/app/groups', icon: GraduationCapIcon },
+] as const;
+
+// Enabled in later stages.
 const UPCOMING_ITEMS = [
-  { key: 'students', icon: UsersIcon },
-  { key: 'groups', icon: GraduationCapIcon },
   { key: 'calendar', icon: CalendarIcon },
   { key: 'finance', icon: WalletIcon },
 ] as const;
@@ -35,6 +41,7 @@ export function AppSidebar() {
   const tCommon = useTranslations('common');
   const pathname = usePathname();
   const session = useSession();
+  const isOwner = session.role === 'OWNER';
 
   return (
     <Sidebar collapsible="offcanvas">
@@ -56,6 +63,30 @@ export function AppSidebar() {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+
+              {NAV_ITEMS.map(({ key, href, icon: Icon }) => (
+                <SidebarMenuItem key={key}>
+                  <SidebarMenuButton asChild isActive={pathname.startsWith(href)}>
+                    <Link href={href}>
+                      <Icon />
+                      <span>{t(key)}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+
+              {/* Settings is owner-only in the UI; the API enforces it too. */}
+              {isOwner ? (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={pathname.startsWith('/app/settings')}>
+                    <Link href="/app/settings">
+                      <SettingsIcon />
+                      <span>{t('settings')}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ) : null}
+
               {UPCOMING_ITEMS.map(({ key, icon: Icon }) => (
                 <SidebarMenuItem key={key}>
                   <SidebarMenuButton

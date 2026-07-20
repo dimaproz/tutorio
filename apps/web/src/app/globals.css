@@ -127,4 +127,20 @@
   html {
     @apply font-sans;
   }
+  /* Removes the tap delay and double-tap zoom on controls without disabling
+     pinch zoom for the page. */
+  button,
+  a,
+  input,
+  select,
+  textarea,
+  [role='button'],
+  [role='menuitem'],
+  [role='tab'] {
+    touch-action: manipulation;
+  }
+  /* Digits in list and detail columns stay vertically aligned. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
 }

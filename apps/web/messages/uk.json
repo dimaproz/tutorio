@@ -5,7 +5,23 @@
   },
   "common": {
     "appName": "Tutorio",
-    "loading": "Завантаження…"
+    "loading": "Завантаження…",
+    "save": "Зберегти",
+    "saving": "Збереження…",
+    "cancel": "Скасувати",
+    "edit": "Редагувати",
+    "delete": "Видалити",
+    "restore": "Відновити",
+    "back": "Назад",
+    "actions": "Дії",
+    "openMenu": "Відкрити меню",
+    "notProvided": "Не вказано",
+    "retry": "Спробувати ще раз",
+    "errorTitle": "Щось пішло не так",
+    "required": "Обов'язково",
+    "open": "Відкрити",
+    "deleted": "Видалено",
+    "restoreOwnerOnly": "Відновити може лише власник"
   },
   "auth": {
     "login": {
@@ -42,6 +58,23 @@
       "generic": "Щось пішло не так. Спробуйте ще раз."
     }
   },
+  "errors": {
+    "STUDENT_NOT_FOUND": "Цього учня більше не існує.",
+    "GROUP_NOT_FOUND": "Цієї групи більше не існує.",
+    "ENROLLMENT_NOT_FOUND": "Цього запису на навчання більше не існує.",
+    "WORKSPACE_MEMBER_NOT_FOUND": "Цей викладач не входить до простору.",
+    "ACTIVE_ENROLLMENTS_EXIST": "Спочатку заархівуйте активні та призупинені записи.",
+    "DUPLICATE_ENROLLMENT": "Такий запис на навчання вже існує.",
+    "INVALID_WORKSPACE_RELATION": "Цей запис належить іншому простору.",
+    "INVALID_MONEY_AMOUNT": "Введіть коректну суму.",
+    "EMAIL_TAKEN": "Ця пошта вже зареєстрована.",
+    "INVALID_CREDENTIALS": "Неправильна пошта або пароль.",
+    "INVALID_REFRESH_TOKEN": "Ваша сесія більше не дійсна. Увійдіть знову.",
+    "SESSION_EXPIRED": "Ваша сесія закінчилася. Увійдіть знову.",
+    "FORBIDDEN": "У вас немає прав для цієї дії.",
+    "UNEXPECTED": "Щось пішло не так. Спробуйте ще раз.",
+    "generic": "Щось пішло не так. Спробуйте ще раз."
+  },
   "validation": {
     "emailInvalid": "Введіть коректну адресу ел. пошти",
     "passwordTooShort": "Пароль має містити щонайменше 12 символів",
@@ -52,7 +85,51 @@
     "workspaceNameTooShort": "Назва простору має містити щонайменше 2 символи",
     "workspaceNameTooLong": "Назва простору має містити щонайбільше 80 символів",
     "confirmPasswordMismatch": "Паролі не збігаються",
+    "fullNameRequired": "Введіть ім'я учня",
+    "fullNameTooLong": "Ім'я має містити щонайбільше 120 символів",
+    "groupNameRequired": "Введіть назву групи",
+    "groupNameTooLong": "Назва має містити щонайбільше 120 символів",
+    "timezoneRequired": "Оберіть часовий пояс",
+    "timezoneInvalid": "Оберіть коректний часовий пояс",
+    "phoneInvalid": "Введіть коректний номер телефону",
+    "notesTooLong": "Нотатки задовгі",
+    "priceInvalid": "Введіть суму, наприклад 1500 або 1500,50",
+    "priceRequired": "Введіть ціну",
+    "deadlineRange": "Введіть кількість годин від 0 до 336",
     "invalid": "Некоректне значення"
+  },
+  "pagination": {
+    "label": "Сторінки",
+    "previous": "Назад",
+    "next": "Далі",
+    "summary": "Сторінка {page} з {totalPages}",
+    "total": "{count, plural, =0 {Записів немає} one {# запис} few {# записи} many {# записів} other {# запису}}"
+  },
+  "filters": {
+    "state": "Показати",
+    "stateActive": "Активні",
+    "stateDeleted": "Видалені",
+    "stateAll": "Усі",
+    "clear": "Скинути фільтри"
+  },
+  "currencies": {
+    "EUR": "EUR — євро",
+    "UAH": "UAH — гривня",
+    "PLN": "PLN — злотий",
+    "USD": "USD — долар США",
+    "GBP": "GBP — фунт стерлінгів"
+  },
+  "enrollmentStatus": {
+    "label": "Статус",
+    "ACTIVE": "Активний",
+    "PAUSED": "Призупинений",
+    "ARCHIVED": "Заархівований"
+  },
+  "billingType": {
+    "label": "Оплата",
+    "PACKAGE": "Абонемент",
+    "MONTHLY": "Щомісячно",
+    "PER_LESSON": "За урок"
   },
   "app": {
     "nav": {
@@ -62,6 +139,7 @@
       "groups": "Групи",
       "calendar": "Календар",
       "finance": "Фінанси",
+      "settings": "Налаштування",
       "comingSoon": "Незабаром"
     },
     "sidebar": {
@@ -89,5 +167,326 @@
       "emptyTitle": "Ваш простір готовий",
       "emptyDescription": "Учні, групи, календар і фінанси з'являться тут на наступних етапах. А поки роздивіться навігацію та налаштування акаунта."
     }
+  },
+  "students": {
+    "title": "Учні",
+    "subtitle": "Усі, хто навчається у вашому просторі.",
+    "add": "Додати учня",
+    "searchLabel": "Пошук учнів",
+    "searchPlaceholder": "Ім'я, пошта, телефон або контакт батьків…",
+    "deletedBadge": "У кошику",
+    "count": "{count, plural, =0 {Учнів немає} one {# учень} few {# учні} many {# учнів} other {# учня}}",
+    "columns": {
+      "student": "Учень",
+      "contacts": "Контакти",
+      "groups": "Групи",
+      "enrollments": "Записи",
+      "timezone": "Часовий пояс",
+      "actions": "Дії"
+    },
+    "tableCaption": "Учні простору з групами та активними записами на навчання",
+    "activeEnrollments": "{count, plural, =0 {Активних записів немає} one {# активний запис} few {# активні записи} many {# активних записів} other {# активного запису}}",
+    "noGroups": "Лише індивідуально",
+    "empty": {
+      "title": "Учнів поки немає",
+      "description": "Додайте першого учня, щоб почати складати розклад і абонементи.",
+      "action": "Додати учня"
+    },
+    "emptySearch": {
+      "title": "Нічого не знайдено",
+      "description": "Жоден учень не відповідає запиту. Спробуйте інше ім'я або контакт."
+    },
+    "emptyDeleted": {
+      "title": "Кошик порожній",
+      "description": "Видалені учні з'являються тут, і їх можна відновити."
+    },
+    "error": {
+      "title": "Не вдалося завантажити учнів"
+    },
+    "form": {
+      "createTitle": "Новий учень",
+      "createSubtitle": "Обов'язкові лише ім'я та часовий пояс.",
+      "editTitle": "Редагування учня",
+      "editSubtitle": "Оновіть контакти та нотатки.",
+      "basicSection": "Основна інформація",
+      "contactsSection": "Контакти учня",
+      "contactsHint": "Необов'язково — знадобиться для нагадувань.",
+      "timezoneSection": "Часовий пояс",
+      "timezoneHint": "Час уроків показується учневі саме в цьому поясі.",
+      "parentSection": "Батьки або опікун",
+      "parentHint": "Заповніть для учнів до 18 років.",
+      "notesSection": "Нотатки",
+      "fullName": "Повне ім'я",
+      "email": "Ел. пошта",
+      "phone": "Телефон",
+      "timezone": "Часовий пояс",
+      "timezonePlaceholder": "Оберіть часовий пояс",
+      "timezoneSearch": "Пошук поясів…",
+      "timezoneEmpty": "Пояс не знайдено",
+      "parentName": "Ім'я батька або матері",
+      "parentEmail": "Пошта батьків",
+      "parentPhone": "Телефон батьків",
+      "notes": "Нотатки",
+      "notesPlaceholder": "Цілі, побажання, усе важливе",
+      "submitCreate": "Створити учня",
+      "submitEdit": "Зберегти зміни"
+    },
+    "detail": {
+      "contactsTitle": "Контактні дані",
+      "parentTitle": "Батьки або опікун",
+      "notesTitle": "Нотатки",
+      "enrollmentsTitle": "Записи на навчання",
+      "enrollmentsDescription": "Де навчається учень і як за це платить.",
+      "addEnrollment": "Додати запис",
+      "noEnrollments": "Записів поки немає",
+      "noEnrollmentsDescription": "Додайте учня до групи або до індивідуального викладача.",
+      "individual": "Індивідуальні уроки",
+      "teacher": "Викладач",
+      "price": "Ціна",
+      "deadline": "Дедлайн скасування",
+      "deadlineHours": "{hours, plural, one {# година} few {# години} many {# годин} other {# години}} до уроку",
+      "deadlineInherited": "Як у просторі",
+      "deletedTitle": "Цей учень у кошику",
+      "deletedDescription": "Відновіть учня, щоб знову його редагувати."
+    },
+    "toasts": {
+      "created": "Учня створено",
+      "updated": "Зміни збережено",
+      "deleted": "Учня перенесено в кошик",
+      "restored": "Учня відновлено"
+    },
+    "deleteDialog": {
+      "title": "Перенести учня в кошик?",
+      "description": "{name} зникне зі списків, але нічого не буде стерто назавжди. Власник може відновити запис будь-коли.",
+      "confirm": "Перенести в кошик"
+    }
+  },
+  "groups": {
+    "title": "Групи",
+    "subtitle": "Заняття, які учні відвідують разом.",
+    "add": "Додати групу",
+    "searchLabel": "Пошук груп",
+    "searchPlaceholder": "Назва групи…",
+    "deletedBadge": "У кошику",
+    "columns": {
+      "group": "Група",
+      "students": "Учні",
+      "statuses": "Записи",
+      "actions": "Дії"
+    },
+    "tableCaption": "Групи простору з кількістю записаних учнів",
+    "studentCount": "{count, plural, =0 {Учнів немає} one {# учень} few {# учні} many {# учнів} other {# учня}}",
+    "empty": {
+      "title": "Груп поки немає",
+      "description": "Створіть групу, щоб об'єднати кількох учнів одним заняттям.",
+      "action": "Додати групу"
+    },
+    "emptySearch": {
+      "title": "Нічого не знайдено",
+      "description": "Жодна група не відповідає запиту."
+    },
+    "emptyDeleted": {
+      "title": "Кошик порожній",
+      "description": "Видалені групи з'являються тут, і їх можна відновити."
+    },
+    "error": {
+      "title": "Не вдалося завантажити групи"
+    },
+    "form": {
+      "createTitle": "Нова група",
+      "createSubtitle": "Дайте групі назву, зрозумілу вашим учням.",
+      "editTitle": "Редагування групи",
+      "editSubtitle": "Оновіть назву та нотатки.",
+      "detailsSection": "Дані групи",
+      "name": "Назва",
+      "namePlaceholder": "Наприклад, B1 English вечірня",
+      "notes": "Нотатки",
+      "notesPlaceholder": "Розклад, рівень, матеріали",
+      "submitCreate": "Створити групу",
+      "submitEdit": "Зберегти зміни"
+    },
+    "detail": {
+      "notesTitle": "Нотатки",
+      "membersTitle": "Записані учні",
+      "membersDescription": "У кожного учня власна ціна та правила оплати.",
+      "addStudent": "Додати учня",
+      "noMembers": "Учнів поки немає",
+      "noMembersDescription": "Додайте до групи наявного учня.",
+      "student": "Учень",
+      "teacher": "Викладач",
+      "price": "Ціна",
+      "deletedTitle": "Ця група у кошику",
+      "deletedDescription": "Відновіть групу, щоб знову її редагувати."
+    },
+    "toasts": {
+      "created": "Групу створено",
+      "updated": "Зміни збережено",
+      "deleted": "Групу перенесено в кошик",
+      "restored": "Групу відновлено"
+    },
+    "deleteDialog": {
+      "title": "Перенести групу в кошик?",
+      "description": "{name} зникне зі списків, але нічого не буде стерто назавжди. Власник може відновити запис будь-коли.",
+      "confirm": "Перенести в кошик"
+    }
+  },
+  "enrollments": {
+    "editor": {
+      "createTitle": "Новий запис на навчання",
+      "createDescription": "Додайте учня до групи або до індивідуального викладача з власною ціною та правилами.",
+      "editTitle": "Редагування запису",
+      "editDescription": "Змініть правила оплати або статус. Учня, групу та викладача змінити не можна.",
+      "student": "Учень",
+      "studentPlaceholder": "Оберіть учня",
+      "studentSearch": "Пошук учнів…",
+      "studentEmpty": "Учня не знайдено",
+      "group": "Група",
+      "groupPlaceholder": "Індивідуальні уроки",
+      "groupNone": "Індивідуальні уроки (без групи)",
+      "groupSearch": "Пошук груп…",
+      "groupEmpty": "Групу не знайдено",
+      "teacher": "Викладач",
+      "teacherPlaceholder": "Оберіть викладача",
+      "teacherSearch": "Пошук викладачів…",
+      "teacherEmpty": "Викладача не знайдено",
+      "status": "Статус",
+      "billingType": "Тип оплати",
+      "price": "Ціна",
+      "priceHint": "За урок або за місяць — залежно від типу оплати.",
+      "currency": "Валюта",
+      "policySection": "Правила скасування",
+      "policyDefault": "Як у налаштуваннях простору",
+      "policyCustom": "Власний дедлайн для цього запису",
+      "customHours": "Годин до уроку",
+      "effective": "Чинний дедлайн: {hours, plural, one {# година} few {# години} many {# годин} other {# години}} до уроку.",
+      "submitCreate": "Створити запис",
+      "submitEdit": "Зберегти зміни"
+    },
+    "toasts": {
+      "created": "Запис створено",
+      "updated": "Запис оновлено",
+      "deleted": "Запис перенесено в кошик"
+    },
+    "deleteDialog": {
+      "title": "Перенести запис у кошик?",
+      "description": "Нічого не буде стерто назавжди. Якщо навчання справді завершилося, краще поставте статус «Заархівований» — такі записи залишаються в історії.",
+      "confirm": "Перенести в кошик"
+    }
+  },
+  "settings": {
+    "title": "Налаштування",
+    "subtitle": "Значення за замовчуванням і журнал змін.",
+    "tabs": {
+      "general": "Загальні",
+      "audit": "Журнал змін"
+    },
+    "general": {
+      "title": "Значення за замовчуванням",
+      "description": "Нові записи на навчання починаються з цих значень.",
+      "defaultCurrency": "Валюта за замовчуванням",
+      "cancellationDeadline": "Дедлайн скасування за замовчуванням",
+      "cancellationDeadlineHint": "За скільки годин до уроку учень ще може скасувати його без списання.",
+      "priceNotice": "Наявні записи зберігають свою валюту та ціну — зміна значення за замовчуванням ніколи їх не переписує.",
+      "deadlineNotice": "Записи без власного дедлайну одразу почнуть використовувати нове значення.",
+      "submit": "Зберегти налаштування",
+      "saved": "Налаштування збережено"
+    },
+    "audit": {
+      "title": "Журнал змін",
+      "description": "Кожна зміна учнів, груп, записів і налаштувань.",
+      "columns": {
+        "when": "Коли",
+        "actor": "Хто",
+        "action": "Дія",
+        "entity": "Запис",
+        "changes": "Зміни"
+      },
+      "tableCaption": "Зміни у просторі, найновіші зверху",
+      "filterAction": "Дія",
+      "filterEntity": "Тип запису",
+      "filterAll": "Усі",
+      "systemActor": "Система",
+      "noChanges": "Поля не змінювалися",
+      "changeSummary": "{field}: {before} → {after}",
+      "changeCount": "{count, plural, one {# поле змінено} few {# поля змінено} many {# полів змінено} other {# поля змінено}}",
+      "emptyValue": "порожньо",
+      "empty": {
+        "title": "Записів поки немає",
+        "description": "Зміни з'являться тут, щойно ви відредагуєте учнів, групи або налаштування."
+      },
+      "error": {
+        "title": "Не вдалося завантажити журнал змін"
+      }
+    },
+    "auditAction": {
+      "CREATE": "Створено",
+      "UPDATE": "Оновлено",
+      "DELETE": "Перенесено в кошик",
+      "RESTORE": "Відновлено"
+    },
+    "auditEntity": {
+      "STUDENT": "Учень",
+      "GROUP": "Група",
+      "ENROLLMENT": "Запис на навчання",
+      "WORKSPACE": "Простір"
+    },
+    "auditField": {
+      "fullName": "Ім'я",
+      "email": "Ел. пошта",
+      "phone": "Телефон",
+      "timezone": "Часовий пояс",
+      "parentName": "Ім'я батька або матері",
+      "parentEmail": "Пошта батьків",
+      "parentPhone": "Телефон батьків",
+      "notes": "Нотатки",
+      "name": "Назва",
+      "status": "Статус",
+      "billingType": "Тип оплати",
+      "priceMinor": "Ціна",
+      "currency": "Валюта",
+      "cancellationDeadlineHours": "Дедлайн скасування",
+      "defaultCurrency": "Валюта за замовчуванням",
+      "studentId": "Учень",
+      "groupId": "Група",
+      "teacherId": "Викладач",
+      "deletedAt": "Видалено"
+    },
+    "ownerOnly": {
+      "title": "Лише для власника",
+      "description": "Налаштування робочого простору та журнал змін доступні лише власнику."
+    }
+  },
+  "auditAction": {
+    "CREATE": "Створено",
+    "UPDATE": "Змінено",
+    "DELETE": "Переміщено в кошик",
+    "RESTORE": "Відновлено"
+  },
+  "auditEntity": {
+    "STUDENT": "Учень",
+    "GROUP": "Група",
+    "ENROLLMENT": "Запис на навчання",
+    "WORKSPACE": "Робочий простір"
+  },
+  "auditField": {
+    "fullName": "Імʼя",
+    "email": "Email",
+    "phone": "Телефон",
+    "timezone": "Часовий пояс",
+    "parentName": "Імʼя батьків",
+    "parentEmail": "Email батьків",
+    "parentPhone": "Телефон батьків",
+    "notes": "Нотатки",
+    "name": "Назва",
+    "status": "Статус",
+    "billingType": "Тип оплати",
+    "priceMinor": "Ціна",
+    "currency": "Валюта",
+    "cancellationDeadlineHours": "Дедлайн скасування",
+    "defaultCurrency": "Валюта за замовчуванням",
+    "studentId": "Учень",
+    "groupId": "Група",
+    "teacherId": "Викладач",
+    "deletedAt": "Стан кошика"
   }
 }
