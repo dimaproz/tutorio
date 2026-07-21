@@ -25,8 +25,11 @@ function initials(name: string): string {
 export function GroupCard({ group }: { group: GroupListItem }) {
   const t = useTranslations('groups');
   const isDeleted = Boolean(group.deletedAt);
-  const visible = group.students.slice(0, ROSTER_LIMIT);
-  const overflow = group.students.length - visible.length;
+  // Defensive: web (Vercel) and the API (Railway) deploy independently, so a
+  // web build can briefly reach an API that predates this field.
+  const students = group.students ?? [];
+  const visible = students.slice(0, ROSTER_LIMIT);
+  const overflow = students.length - visible.length;
 
   return (
     <Card>
@@ -52,8 +55,8 @@ export function GroupCard({ group }: { group: GroupListItem }) {
         ) : null}
 
         <div className="flex items-center gap-3">
-          {group.students.length > 0 ? (
-            <AvatarGroup aria-label={group.students.map((student) => student.fullName).join(', ')}>
+          {students.length > 0 ? (
+            <AvatarGroup aria-label={students.map((student) => student.fullName).join(', ')}>
               {visible.map((student) => (
                 <Avatar key={student.id} size="sm">
                   <AvatarFallback>{initials(student.fullName)}</AvatarFallback>
