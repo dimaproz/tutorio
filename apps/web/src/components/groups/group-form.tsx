@@ -1,0 +1,130 @@
+'use client';
+
+import { useRouter } from 'next/navigation';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
+import type { GroupDetail } from '@tutorio/validation';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
+import { Textarea } from '@/components/ui/textarea';
+import { errorMessageKey } from '@/lib/api/error-message';
+import { useCreateGroupMutation, useUpdateGroupMutation } from '@/lib/api/groups';
+import { makeZodErrorMap } from '@/lib/forms/error-map';
+import { groupFormSchema, type GroupFormValues } from '@/lib/forms/schemas';
+
+// One component for both create and edit, mirroring StudentForm.
+export function GroupForm({ group }: { group?: GroupDetail }) {
+  const t = useTranslations('groups.form');
+  const tGroups = useTranslations('groups');
+  const tErrors = useTranslations('errors');
+  const tValidation = useTranslations('validation');
+  const tCommon = useTranslations('common');
+  const router = useRouter();
+
+  const isEdit = Boolean(group);
+  const createGroup = useCreateGroupMutation();
+  const updateGroup = useUpdateGroupMutation(group?.id ?? '');
+  const mutation = isEdit ? updateGroup : createGroup;
+
+  const form = useForm<GroupFormValues>({
+    resolver: zodResolver(groupFormSchema, {
+      errorMap: makeZodErrorMap(tValidation),
+      path: [],
+      async: true,
+    }),
+    defaultValues: {
+      name: group?.name ?? '',
+      notes: group?.notes ?? '',
+    },
+  });
+  const { errors } = form.formState;
+
+  const onSubmit = form.handleSubmit(async (values) => {
+    try {
+      if (group) {
+        await updateGroup.mutateAsync({
+          name: values.name,
+          // An emptied field becomes null so the API clears it.
+          notes: values.notes.trim() === '' ? null : values.notes,
+        });
+        toast.success(tGroups('toasts.updated'));
+        router.push(`/app/groups/${group.id}`);
+        return;
+      }
+      const created = await createGroup.mutateAsync({
+        name: values.name,
+        notes: values.notes.trim() === '' ? undefined : values.notes,
+      });
+      toast.success(tGroups('toasts.created'));
+      router.push(`/app/groups/${created.id}`);
+    } catch {
+      // Surfaced by the alert below.
+    }
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>
+          <h1 className="text-balance">{isEdit ? t('editTitle') : t('createTitle')}</h1>
+        </CardTitle>
+        <CardDescription>{isEdit ? t('editSubtitle') : t('createSubtitle')}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={onSubmit} noValidate>
+          <FieldGroup>
+            {mutation.error ? (
+              <Alert variant="destructive" role="alert">
+                <AlertDescription>{tErrors(errorMessageKey(mutation.error))}</AlertDescription>
+              </Alert>
+            ) : null}
+
+            <Field data-invalid={errors.name ? true : undefined}>
+              <FieldLabel htmlFor="group-name">{t('name')}</FieldLabel>
+              <Input
+                id="group-name"
+                aria-invalid={errors.name ? true : undefined}
+                {...form.register('name')}
+              />
+              <FieldError errors={[errors.name]} />
+            </Field>
+
+            <Field data-invalid={errors.notes ? true : undefined}>
+              <FieldLabel htmlFor="group-notes">{t('notes')}</FieldLabel>
+              <Textarea
+                id="group-notes"
+                rows={4}
+                placeholder={t('notesPlaceholder')}
+                aria-invalid={errors.notes ? true : undefined}
+                {...form.register('notes')}
+              />
+              <FieldError errors={[errors.notes]} />
+            </Field>
+
+            <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+              <Button type="button" variant="outline" onClick={() => router.back()}>
+                {tCommon('cancel')}
+              </Button>
+              <Button type="submit" disabled={mutation.isPending}>
+                {mutation.isPending ? <Spinner data-icon="inline-start" /> : null}
+                {isEdit ? t('submitEdit') : t('submitCreate')}
+              </Button>
+            </div>
+          </FieldGroup>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
