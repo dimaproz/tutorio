@@ -9,7 +9,10 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  /* Indirection through --font-display: `@theme inline` substitutes values at
+     build time, so pointing straight at --font-sans would freeze the heading
+     face and ignore any per-theme override. */
+  --font-heading: var(--font-display);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -49,6 +52,8 @@
 }
 
 :root {
+  /* Default: headings share the body face. Themes may override. */
+  --font-display: var(--font-sans);
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -117,6 +122,193 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* ---------------------------------------------------------------------------
+   TailAdmin theme — the lab reproduces the TailAdmin dashboard look
+   (react.tailwind-admin.com): brand-blue #465FFF, boxed white cards with soft
+   shadows on a light-grey page, Untitled-UI grey scale, Outfit-like geometric
+   type (Onest here, for full Cyrillic). Colour values are TailAdmin's own
+   design tokens; no TailAdmin source is copied.
+
+   Scoped to .theme-tailadmin (lab only); the real app keeps the default
+   shadcn palette in :root above.
+--------------------------------------------------------------------------- */
+.theme-tailadmin {
+  /* Geometric grotesque, close to TailAdmin's Outfit but with Cyrillic. Both
+     headings and figures share it — no serif voice in this system. */
+  --font-sans: var(--font-onest);
+  --font-display: var(--font-onest);
+
+  /* TailAdmin brand ramp (50 → 950). 500 is the interface blue. */
+  --brand-50: #ecf3ff;
+  --brand-400: #7592ff;
+  --brand-500: #465fff;
+  --brand-600: #3641f5;
+  /* Untitled-UI grey ramp shared by TailAdmin. */
+  --gray-50: #f9fafb;
+  --gray-100: #f2f4f7;
+  --gray-200: #e4e7ec;
+  --gray-300: #d0d5dd;
+  --gray-400: #98a2b3;
+  --gray-500: #667085;
+  --gray-600: #475467;
+  --gray-700: #344054;
+  --gray-800: #1d2939;
+  --gray-900: #101828;
+  --success-500: #12b76a;
+  --success-600: #039855;
+  --error-500: #f04438;
+  --error-600: #d92d20;
+  --warning-500: #f79009;
+  --warning-600: #dc6803;
+
+  /* Aliases kept so lab markup that still references the old token names keeps
+     rendering: marker = act-on-this (brand), due = money owed (error),
+     settled = money in (success). */
+  --paper: var(--gray-50);
+  --ink: var(--gray-800);
+  --graphite: var(--gray-500);
+  --rule: var(--gray-200);
+  --marker: var(--brand-500);
+  --marker-ink: #ffffff;
+  --marker-wash: var(--brand-50);
+  --due: var(--error-600);
+  --due-wash: #fef3f2;
+  --settled: var(--success-600);
+  --settled-wash: #ecfdf3;
+
+  /* Soft, low, TailAdmin-style card elevation. */
+  --shadow-card: 0px 1px 3px 0px rgba(16, 24, 40, 0.1), 0px 1px 2px 0px rgba(16, 24, 40, 0.06);
+
+  --background: var(--gray-50);
+  --foreground: var(--gray-800);
+  --card: #ffffff;
+  --card-foreground: var(--gray-800);
+  --popover: #ffffff;
+  --popover-foreground: var(--gray-800);
+  --primary: var(--brand-500);
+  --primary-foreground: #ffffff;
+  --secondary: var(--gray-100);
+  --secondary-foreground: var(--gray-700);
+  --muted: var(--gray-100);
+  --muted-foreground: var(--gray-500);
+  --accent: var(--gray-100);
+  --accent-foreground: var(--gray-800);
+  --destructive: var(--error-500);
+  --border: var(--gray-200);
+  --input: var(--gray-300);
+  --ring: var(--brand-500);
+  /* Buttons/inputs land on ~8px (rounded-lg); cards are lifted to 16px below. */
+  --radius: 0.625rem;
+
+  --chart-1: var(--brand-500);
+  --chart-2: var(--brand-400);
+  --chart-3: var(--success-500);
+  --chart-4: var(--warning-500);
+  --chart-5: var(--gray-300);
+
+  /* Six product statuses as TailAdmin "light" badges (50-tint bg, 600 text). */
+  --status-active: var(--brand-500);
+  --status-active-wash: var(--brand-50);
+  --status-paused: var(--warning-600);
+  --status-paused-wash: #fffaeb;
+  --status-overdue: var(--error-600);
+  --status-overdue-wash: #fef3f2;
+  --status-paid: var(--success-600);
+  --status-paid-wash: #ecfdf3;
+  --status-cancelled: var(--gray-500);
+  --status-cancelled-wash: var(--gray-100);
+  --status-archived: var(--gray-600);
+  --status-archived-wash: var(--gray-100);
+
+  /* Register cells (lesson package meter). */
+  --cell-empty: #ffffff;
+  --cell-rule: var(--gray-300);
+  --cell-mark: var(--brand-500);
+  --cell-low: var(--error-500);
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: var(--gray-700);
+  --sidebar-primary: var(--brand-500);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--brand-50);
+  --sidebar-accent-foreground: var(--brand-500);
+  --sidebar-border: var(--gray-200);
+  --sidebar-ring: var(--brand-500);
+}
+
+/* Keyed off the themed element itself, never an ancestor: the app root already
+   carries `.dark`, so an ancestor selector would pin the palette to dark. */
+.theme-tailadmin.dark {
+  --paper: var(--gray-900);
+  --ink: #ffffff;
+  --graphite: var(--gray-400);
+  --rule: rgba(255, 255, 255, 0.1);
+  --marker: var(--brand-400);
+  --marker-ink: #ffffff;
+  --marker-wash: rgba(70, 95, 255, 0.15);
+  --due: #fda29b;
+  --due-wash: rgba(240, 68, 56, 0.15);
+  --settled: #6ce9a6;
+  --settled-wash: rgba(18, 183, 106, 0.15);
+
+  --shadow-card: 0px 1px 3px 0px rgba(0, 0, 0, 0.35), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
+
+  --background: var(--gray-900);
+  --foreground: #ffffff;
+  --card: #1a2231;
+  --card-foreground: #ffffff;
+  --popover: #1a2231;
+  --popover-foreground: #ffffff;
+  --primary: var(--brand-500);
+  --primary-foreground: #ffffff;
+  --secondary: #1d2939;
+  --secondary-foreground: var(--gray-100);
+  --muted: #1d2939;
+  --muted-foreground: var(--gray-400);
+  --accent: rgba(255, 255, 255, 0.05);
+  --accent-foreground: #ffffff;
+  --destructive: var(--error-500);
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.12);
+  --ring: var(--brand-400);
+
+  --status-active: var(--brand-400);
+  --status-active-wash: rgba(70, 95, 255, 0.15);
+  --status-paused: #fdb022;
+  --status-paused-wash: rgba(247, 144, 9, 0.15);
+  --status-overdue: #fda29b;
+  --status-overdue-wash: rgba(240, 68, 56, 0.15);
+  --status-paid: #6ce9a6;
+  --status-paid-wash: rgba(18, 183, 106, 0.15);
+  --status-cancelled: var(--gray-400);
+  --status-cancelled-wash: rgba(255, 255, 255, 0.06);
+  --status-archived: var(--gray-400);
+  --status-archived-wash: rgba(255, 255, 255, 0.06);
+
+  --cell-empty: rgba(255, 255, 255, 0.03);
+  --cell-rule: rgba(255, 255, 255, 0.15);
+  --cell-mark: var(--brand-500);
+  --cell-low: var(--error-500);
+
+  --sidebar: var(--gray-900);
+  --sidebar-foreground: var(--gray-300);
+  --sidebar-primary: var(--brand-400);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(70, 95, 255, 0.15);
+  --sidebar-accent-foreground: var(--brand-400);
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: var(--brand-400);
+}
+
+/* TailAdmin card shape, scoped to the lab so shared ui/card.tsx (used by the
+   real app) is untouched: lift every card to 16px with the soft elevation. */
+.theme-tailadmin [data-slot='card'] {
+  border-radius: 1rem;
+  border-color: var(--border);
+  box-shadow: var(--shadow-card);
+}
+
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -126,5 +318,67 @@
   }
   html {
     @apply font-sans;
+  }
+  /* Removes the tap delay and double-tap zoom on controls without disabling
+     pinch zoom for the page. */
+  button,
+  a,
+  input,
+  select,
+  textarea,
+  [role='button'],
+  [role='menuitem'],
+  [role='tab'] {
+    touch-action: manipulation;
+  }
+  /* Digits in list and detail columns stay vertically aligned. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  /* Money and counts are set in the serif with tabular figures: ledgers and
+     class registers have always been set this way, and it separates a figure
+     a tutor acts on from ordinary bold UI text. */
+  .numeral {
+    font-family: var(--font-display);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'ss01';
+    letter-spacing: -0.01em;
+  }
+  /* The workbook's own voice: section headings and dates. */
+  .workbook {
+    font-family: var(--font-display);
+    letter-spacing: -0.011em;
+  }
+  /* Small ruled label above a block, like a column head in a register. */
+  .register-label {
+    font-size: 0.6875rem;
+    line-height: 1;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+    font-weight: 500;
+  }
+  /* Density is a desktop affordance. On a phone the same actions have to be
+     thumb-sized, so every real button grows below the sm breakpoint. Form
+     primitives keep their own hit areas and are excluded. */
+  @media (max-width: 40rem) {
+    .theme-tutorio button:not([data-slot='switch']):not([data-slot='checkbox']):not(
+        [data-slot='radio-group-item']
+      ) {
+      min-height: 2.75rem;
+    }
+  }
+
+  /* Reduced motion is honoured globally: the lab only uses short functional
+     transitions, and they are all safe to drop. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
