@@ -134,6 +134,7 @@
   "app": {
     "nav": {
       "label": "Головна навігація",
+      "menuLabel": "Меню",
       "dashboard": "Огляд",
       "students": "Учні",
       "groups": "Групи",
@@ -144,6 +145,10 @@
     },
     "sidebar": {
       "toggle": "Перемкнути бокову панель"
+    },
+    "header": {
+      "searchPlaceholder": "Пошук (незабаром)",
+      "notifications": "Сповіщення (незабаром)"
     },
     "userMenu": {
       "label": "Меню акаунта",

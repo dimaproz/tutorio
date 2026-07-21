@@ -39,9 +39,10 @@ export function useGroupsQuery(filters: GroupListFilters, enabled = true) {
   });
 }
 
-export function useGroupQuery(groupId: string) {
+export function useGroupQuery(groupId: string, enabled = true) {
   return useQuery<GroupDetail, GatewayError>({
     queryKey: queryKeys.groups.detail(groupId),
+    enabled: enabled && Boolean(groupId),
     queryFn: () => gatewayFetch<GroupDetail>(`/api/backend/groups/${groupId}`),
   });
 }

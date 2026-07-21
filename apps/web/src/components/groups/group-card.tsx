@@ -5,12 +5,28 @@ import { useTranslations } from 'next-intl';
 import type { GroupListItem } from '@tutorio/validation';
 import { GroupRowActions } from './group-row-actions';
 import { DeletedBadge } from '@/components/app/status-badges';
+import { Avatar, AvatarFallback, AvatarGroup, AvatarGroupCount } from '@/components/ui/avatar';
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-// Mobile representation of a group row.
+const ROSTER_LIMIT = 5;
+
+function initials(name: string): string {
+  return (
+    name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join('') || '?'
+  );
+}
+
+// The single group representation — one grid, every breakpoint.
 export function GroupCard({ group }: { group: GroupListItem }) {
   const t = useTranslations('groups');
   const isDeleted = Boolean(group.deletedAt);
+  const visible = group.students.slice(0, ROSTER_LIMIT);
+  const overflow = group.students.length - visible.length;
 
   return (
     <Card>
@@ -28,11 +44,30 @@ export function GroupCard({ group }: { group: GroupListItem }) {
           <GroupRowActions groupId={group.id} name={group.name} isDeleted={isDeleted} />
         </CardAction>
       </CardHeader>
-      <CardContent className="flex flex-wrap items-center gap-2 text-sm">
-        <span className="tabular text-muted-foreground">
-          {t('studentCount', { count: group.activeStudentCount })}
-        </span>
+      <CardContent className="flex flex-col gap-3">
         {isDeleted ? <DeletedBadge label={t('deletedBadge')} /> : null}
+
+        {group.notes ? (
+          <p className="text-muted-foreground line-clamp-2 text-sm">{group.notes}</p>
+        ) : null}
+
+        <div className="flex items-center gap-3">
+          {group.students.length > 0 ? (
+            <AvatarGroup aria-label={group.students.map((student) => student.fullName).join(', ')}>
+              {visible.map((student) => (
+                <Avatar key={student.id} size="sm">
+                  <AvatarFallback>{initials(student.fullName)}</AvatarFallback>
+                </Avatar>
+              ))}
+              {overflow > 0 ? (
+                <AvatarGroupCount className="size-6 text-xs">+{overflow}</AvatarGroupCount>
+              ) : null}
+            </AvatarGroup>
+          ) : null}
+          <span className="tabular text-muted-foreground text-sm">
+            {t('studentCount', { count: group.activeStudentCount })}
+          </span>
+        </div>
       </CardContent>
     </Card>
   );

@@ -15,7 +15,8 @@ import {
   DeletedBadge,
   EnrollmentStatusBadge,
 } from '@/components/app/status-badges';
-import { EnrollmentSheet } from '@/components/enrollments/enrollment-sheet';
+import { EnrollmentDialog } from '@/components/enrollments/enrollment-dialog';
+import { GroupFormDialog } from './group-form-dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -50,6 +51,7 @@ export function GroupDetailView({ groupId }: { groupId: string }) {
   const router = useRouter();
 
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<EnrollmentResponse | undefined>();
 
@@ -127,11 +129,9 @@ export function GroupDetailView({ groupId }: { groupId: string }) {
             ) : null
           ) : (
             <div className="flex flex-wrap gap-2">
-              <Button type="button" variant="outline" asChild>
-                <Link href={`/app/groups/${data.id}/edit`}>
-                  <PencilIcon data-icon="inline-start" />
-                  {tCommon('edit')}
-                </Link>
+              <Button type="button" variant="outline" onClick={() => setEditOpen(true)}>
+                <PencilIcon data-icon="inline-start" />
+                {tCommon('edit')}
               </Button>
               <Button type="button" variant="outline" onClick={() => setDeleteOpen(true)}>
                 <Trash2Icon data-icon="inline-start" />
@@ -242,12 +242,14 @@ export function GroupDetailView({ groupId }: { groupId: string }) {
         pending={deleteGroup.isPending}
       />
 
-      <EnrollmentSheet
+      <EnrollmentDialog
         open={sheetOpen}
         onOpenChange={setSheetOpen}
         enrollment={editing}
         lockedGroupId={data.id}
       />
+
+      <GroupFormDialog open={editOpen} onOpenChange={setEditOpen} groupId={data.id} />
     </>
   );
 }

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { MoreHorizontalIcon, PencilIcon, RotateCcwIcon, Trash2Icon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
@@ -16,6 +15,7 @@ import { ConfirmDialog } from '@/components/app/confirm-dialog';
 import { useSession } from '@/components/app/session-provider';
 import { errorMessageKey } from '@/lib/api/error-message';
 import { useDeleteStudentMutation, useRestoreStudentMutation } from '@/lib/api/students';
+import { StudentFormDialog } from './student-form-dialog';
 
 // Deleted students can only be restored (owner) — never edited, never
 // permanently erased.
@@ -33,10 +33,10 @@ export function StudentRowActions({
   const t = useTranslations('students');
   const tCommon = useTranslations('common');
   const tErrors = useTranslations('errors');
-  const router = useRouter();
   const session = useSession();
   const isOwner = session.role === 'OWNER';
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
 
   const deleteStudent = useDeleteStudentMutation();
   const restoreStudent = useRestoreStudentMutation();
@@ -85,7 +85,7 @@ export function StudentRowActions({
             ) : null
           ) : (
             <>
-              <DropdownMenuItem onSelect={() => router.push(`/app/students/${studentId}/edit`)}>
+              <DropdownMenuItem onSelect={() => setEditOpen(true)}>
                 <PencilIcon data-icon />
                 {tCommon('edit')}
               </DropdownMenuItem>
@@ -107,6 +107,8 @@ export function StudentRowActions({
         onConfirm={handleDelete}
         pending={deleteStudent.isPending}
       />
+
+      <StudentFormDialog open={editOpen} onOpenChange={setEditOpen} studentId={studentId} />
     </>
   );
 }

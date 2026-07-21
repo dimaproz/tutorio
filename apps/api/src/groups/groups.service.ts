@@ -65,7 +65,8 @@ export class GroupsService {
         include: {
           enrollments: {
             where: { deletedAt: null, status: { in: ['ACTIVE', 'PAUSED'] } },
-            select: { studentId: true },
+            select: { student: { select: { id: true, fullName: true } } },
+            orderBy: { student: { fullName: 'asc' } },
           },
         },
       }),
@@ -73,14 +74,26 @@ export class GroupsService {
     ]);
 
     return buildPaginatedResponse(
-      rows.map((row) => ({
-        id: row.id,
-        name: row.name,
-        deletedAt: row.deletedAt?.toISOString() ?? null,
-        activeStudentCount: new Set(
-          row.enrollments.map((enrollment) => enrollment.studentId),
-        ).size,
-      })),
+      rows.map((row) => {
+        // Dedupe: a student can only hold one live enrollment per group, but
+        // this stays defensive rather than assuming it.
+        const students = [
+          ...new Map(
+            row.enrollments.map((enrollment) => [
+              enrollment.student.id,
+              enrollment.student,
+            ]),
+          ).values(),
+        ];
+        return {
+          id: row.id,
+          name: row.name,
+          notes: row.notes,
+          deletedAt: row.deletedAt?.toISOString() ?? null,
+          activeStudentCount: students.length,
+          students,
+        };
+      }),
       total,
       query,
     );
