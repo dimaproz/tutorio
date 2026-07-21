@@ -90,7 +90,7 @@ Email/password + JWT (access/refresh), registration → auto-create workspace, o
 CRUD for students (a card from the original plan's list), groups, enrollments with statuses and individual rules (price, currency, cancellation deadline). Workspace settings (default currency, default deadline). Soft delete + AuditLog from this stage.
 
 **Stage 3. Scheduling (weeks 6–8)** — the riskiest stage
-`packages/domain`: recurrence + materialization with tests for DST transitions. `LessonSeries`, cron materialization over 12 weeks, day/week/month calendar (react-big-calendar), one-off lessons, rescheduling ("only this / this and following"), lesson statuses and the state machine of transitions. No financial consequences yet — those are in stage 4.
+`packages/domain`: recurrence + materialization with tests for DST transitions. `LessonSeries`, cron materialization over 12 weeks, day/week/month calendar, one-off lessons, rescheduling ("only this / this and following"), lesson statuses and the state machine of transitions. No financial consequences yet — those are in stage 4.
 
 **Stage 4. Packages, ledger, payments (weeks 9–11)** — the product core
 `packages/domain`: the "status transition → ledger operation" rules with full test coverage (all 8 complex cases from the original plan as test scenarios: 8 lessons for 9 lessons in a month, late cancellation, refund on teacher cancellation, freeze, price snapshot, etc.). LessonPackage, LessonCreditEntry with idempotency, manual Payment, partial payment and debt, manual balance adjustment, a student finance screen with a "why the balance is what it is" history.

@@ -56,12 +56,23 @@ export const groupResponseSchema = z.object({
 
 export type GroupResponse = z.infer<typeof groupResponseSchema>;
 
-// Lean list row with the count of distinct students in live enrollments.
+// Mirrors groupEnrollmentSummarySchema.student — a bare id+name reference.
+export const groupMemberSummarySchema = z.object({
+  id: uuidSchema,
+  fullName: z.string(),
+});
+
+export type GroupMemberSummary = z.infer<typeof groupMemberSummarySchema>;
+
+// Lean list row: distinct students in live enrollments, both as a count and
+// as a deduped mini roster (for an avatar stack), plus notes for a preview.
 export const groupListItemSchema = z.object({
   id: uuidSchema,
   name: z.string(),
+  notes: z.string().nullable(),
   deletedAt: isoDateTimeSchema.nullable(),
   activeStudentCount: z.number().int().nonnegative(),
+  students: z.array(groupMemberSummarySchema),
 });
 
 export type GroupListItem = z.infer<typeof groupListItemSchema>;
