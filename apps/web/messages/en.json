@@ -134,6 +134,7 @@
   "app": {
     "nav": {
       "label": "Main navigation",
+      "menuLabel": "Menu",
       "dashboard": "Dashboard",
       "students": "Students",
       "groups": "Groups",
@@ -144,6 +145,10 @@
     },
     "sidebar": {
       "toggle": "Toggle sidebar"
+    },
+    "header": {
+      "searchPlaceholder": "Search (coming soon)",
+      "notifications": "Notifications (coming soon)"
     },
     "userMenu": {
       "label": "Account menu",

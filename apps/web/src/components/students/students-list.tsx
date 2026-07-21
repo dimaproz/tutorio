@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import type { ColumnDef } from '@tanstack/react-table';
@@ -8,6 +8,7 @@ import { PlusIcon, UsersIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { StudentListItem } from '@tutorio/validation';
 import { StudentCard } from './student-card';
+import { StudentFormDialog } from './student-form-dialog';
 import { StudentRowActions } from './student-row-actions';
 import { DataTable } from '@/components/app/data-table';
 import {
@@ -35,6 +36,7 @@ export function StudentsList() {
   const searchParams = useSearchParams();
   const session = useSession();
   const isOwner = session.role === 'OWNER';
+  const [createOpen, setCreateOpen] = useState(false);
 
   const page = parsePageParam(searchParams.get('page'));
   const search = searchParams.get('search')?.trim() || undefined;
@@ -118,11 +120,9 @@ export function StudentsList() {
         title={t('title')}
         description={t('subtitle')}
         action={
-          <Button asChild className="h-11 md:h-9">
-            <Link href="/app/students/new">
-              <PlusIcon data-icon />
-              {t('add')}
-            </Link>
+          <Button className="h-11 md:h-9" onClick={() => setCreateOpen(true)}>
+            <PlusIcon data-icon />
+            {t('add')}
           </Button>
         }
       />
@@ -142,7 +142,9 @@ export function StudentsList() {
         />
       ) : null}
 
-      {showEmpty ? <StudentsEmptyState search={search} state={state} /> : null}
+      {showEmpty ? (
+        <StudentsEmptyState search={search} state={state} onCreate={() => setCreateOpen(true)} />
+      ) : null}
 
       {items.length > 0 ? (
         <>
@@ -159,6 +161,8 @@ export function StudentsList() {
           <ListPagination page={page} totalPages={students.data?.totalPages ?? 1} />
         </>
       ) : null}
+
+      <StudentFormDialog open={createOpen} onOpenChange={setCreateOpen} />
     </div>
   );
 }
@@ -179,9 +183,11 @@ function ContactSummary({ email, phone }: { email: string | null; phone: string 
 function StudentsEmptyState({
   search,
   state,
+  onCreate,
 }: {
   search?: string;
   state: 'active' | 'deleted' | 'all';
+  onCreate: () => void;
 }) {
   const t = useTranslations('students');
   const scope = search ? 'emptySearch' : state === 'deleted' ? 'emptyDeleted' : 'empty';
@@ -197,11 +203,9 @@ function StudentsEmptyState({
       </EmptyHeader>
       {scope === 'empty' ? (
         <EmptyContent>
-          <Button asChild>
-            <Link href="/app/students/new">
-              <PlusIcon data-icon />
-              {t('empty.action')}
-            </Link>
+          <Button onClick={onCreate}>
+            <PlusIcon data-icon />
+            {t('empty.action')}
           </Button>
         </EmptyContent>
       ) : null}

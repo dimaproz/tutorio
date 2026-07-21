@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import type { ColumnDef } from '@tanstack/react-table';
@@ -8,6 +8,7 @@ import { LayersIcon, PlusIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { GroupListItem } from '@tutorio/validation';
 import { GroupCard } from './group-card';
+import { GroupFormDialog } from './group-form-dialog';
 import { GroupRowActions } from './group-row-actions';
 import { DataTable } from '@/components/app/data-table';
 import {
@@ -35,6 +36,7 @@ export function GroupsList() {
   const searchParams = useSearchParams();
   const session = useSession();
   const isOwner = session.role === 'OWNER';
+  const [createOpen, setCreateOpen] = useState(false);
 
   const page = parsePageParam(searchParams.get('page'));
   const search = searchParams.get('search')?.trim() || undefined;
@@ -98,11 +100,9 @@ export function GroupsList() {
         title={t('title')}
         description={t('subtitle')}
         action={
-          <Button asChild className="h-11 md:h-9">
-            <Link href="/app/groups/new">
-              <PlusIcon data-icon />
-              {t('add')}
-            </Link>
+          <Button className="h-11 md:h-9" onClick={() => setCreateOpen(true)}>
+            <PlusIcon data-icon />
+            {t('add')}
           </Button>
         }
       />
@@ -122,7 +122,9 @@ export function GroupsList() {
         />
       ) : null}
 
-      {showEmpty ? <GroupsEmptyState search={search} state={state} /> : null}
+      {showEmpty ? (
+        <GroupsEmptyState search={search} state={state} onCreate={() => setCreateOpen(true)} />
+      ) : null}
 
       {items.length > 0 ? (
         <>
@@ -138,6 +140,8 @@ export function GroupsList() {
           <ListPagination page={page} totalPages={groups.data?.totalPages ?? 1} />
         </>
       ) : null}
+
+      <GroupFormDialog open={createOpen} onOpenChange={setCreateOpen} />
     </div>
   );
 }
@@ -145,9 +149,11 @@ export function GroupsList() {
 function GroupsEmptyState({
   search,
   state,
+  onCreate,
 }: {
   search?: string;
   state: 'active' | 'deleted' | 'all';
+  onCreate: () => void;
 }) {
   const t = useTranslations('groups');
   const scope = search ? 'emptySearch' : state === 'deleted' ? 'emptyDeleted' : 'empty';
@@ -163,11 +169,9 @@ function GroupsEmptyState({
       </EmptyHeader>
       {scope === 'empty' ? (
         <EmptyContent>
-          <Button asChild>
-            <Link href="/app/groups/new">
-              <PlusIcon data-icon />
-              {t('empty.action')}
-            </Link>
+          <Button onClick={onCreate}>
+            <PlusIcon data-icon />
+            {t('empty.action')}
           </Button>
         </EmptyContent>
       ) : null}

@@ -11,6 +11,13 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
   Field,
   FieldDescription,
   FieldError,
@@ -26,14 +33,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
 import { Spinner } from '@/components/ui/spinner';
 import { errorMessageKey } from '@/lib/api/error-message';
 import {
@@ -55,7 +54,7 @@ const CURRENCIES = ['EUR', 'UAH', 'PLN', 'USD', 'GBP'] as const;
 // Sentinel for "no group" — Radix Select cannot hold an empty string value.
 const INDIVIDUAL = 'individual';
 
-export function EnrollmentSheet({
+export function EnrollmentDialog({
   open,
   onOpenChange,
   enrollment,
@@ -112,7 +111,7 @@ export function EnrollmentSheet({
   const { errors } = form.formState;
   const values = form.watch();
 
-  // Refill whenever the sheet opens so a reopened editor never shows stale data.
+  // Refill whenever the dialog opens so a reopened editor never shows stale data.
   useEffect(() => {
     if (!open) {
       return;
@@ -211,17 +210,17 @@ export function EnrollmentSheet({
   });
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="flex w-full flex-col gap-0 sm:max-w-lg">
-        <SheetHeader>
-          <SheetTitle>{isEdit ? t('editor.editTitle') : t('editor.createTitle')}</SheetTitle>
-          <SheetDescription>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="flex max-h-[90vh] w-full flex-col sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{isEdit ? t('editor.editTitle') : t('editor.createTitle')}</DialogTitle>
+          <DialogDescription>
             {isEdit ? t('editor.editDescription') : t('editor.createDescription')}
-          </SheetDescription>
-        </SheetHeader>
+          </DialogDescription>
+        </DialogHeader>
 
-        <form onSubmit={onSubmit} noValidate className="flex min-h-0 flex-1 flex-col">
-          <div className="min-h-0 flex-1 overflow-y-auto px-4">
+        <form onSubmit={onSubmit} noValidate className="flex min-h-0 flex-1 flex-col gap-4">
+          <div className="min-h-0 flex-1 overflow-y-auto">
             <FieldGroup>
               {mutation.error ? (
                 <Alert variant="destructive" role="alert">
@@ -411,17 +410,17 @@ export function EnrollmentSheet({
             </FieldGroup>
           </div>
 
-          <SheetFooter>
+          <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              {tCommon('cancel')}
+            </Button>
             <Button type="submit" disabled={mutation.isPending}>
               {mutation.isPending ? <Spinner data-icon="inline-start" /> : null}
               {isEdit ? tCommon('save') : t('editor.submitCreate')}
             </Button>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              {tCommon('cancel')}
-            </Button>
-          </SheetFooter>
+          </div>
         </form>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }

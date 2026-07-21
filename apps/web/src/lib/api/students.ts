@@ -41,9 +41,10 @@ export function useStudentsQuery(filters: StudentListFilters, enabled = true) {
   });
 }
 
-export function useStudentQuery(studentId: string) {
+export function useStudentQuery(studentId: string, enabled = true) {
   return useQuery<StudentDetail, GatewayError>({
     queryKey: queryKeys.students.detail(studentId),
+    enabled: enabled && Boolean(studentId),
     queryFn: () => gatewayFetch<StudentDetail>(`/api/backend/students/${studentId}`),
   });
 }

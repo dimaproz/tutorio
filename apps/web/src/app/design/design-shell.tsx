@@ -9,16 +9,11 @@ import { Sidebar } from '@/components/design/shell/sidebar';
 import { cn } from '@/lib/utils';
 
 // Lab chrome, styled after TailAdmin: a fixed left sidebar on desktop, a Sheet
-// on mobile, and a sticky top header over a grey content column. The real app
-// keeps its own theme handling — this only exists so the whole system can be
-// reviewed on one screen.
-export function DesignShell({
-  fontVariables,
-  children,
-}: {
-  fontVariables: string;
-  children: React.ReactNode;
-}) {
+// on mobile, and a sticky top header over a grey content column. The TailAdmin
+// theme and Onest font are global (see globals.css / app/layout.tsx) — this
+// only adds the lab's own dark-mode preview toggle, independent of the real
+// app's theme provider, so both palettes can be judged side by side.
+export function DesignShell({ children }: { children: React.ReactNode }) {
   const [isDark, setIsDark] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -52,8 +47,6 @@ export function DesignShell({
   return (
     <div
       className={cn(
-        fontVariables,
-        'theme-tailadmin',
         isDark && 'dark',
         'bg-background text-foreground min-h-svh font-sans antialiased',
       )}

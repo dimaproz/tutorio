@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
@@ -14,7 +13,8 @@ import {
   DeletedBadge,
   EnrollmentStatusBadge,
 } from '@/components/app/status-badges';
-import { EnrollmentSheet } from '@/components/enrollments/enrollment-sheet';
+import { EnrollmentDialog } from '@/components/enrollments/enrollment-dialog';
+import { StudentFormDialog } from './student-form-dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -50,6 +50,7 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
   const router = useRouter();
 
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<EnrollmentResponse | undefined>();
 
@@ -125,11 +126,9 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
             ) : null
           ) : (
             <div className="flex flex-wrap gap-2">
-              <Button type="button" variant="outline" asChild>
-                <Link href={`/app/students/${data.id}/edit`}>
-                  <PencilIcon data-icon="inline-start" />
-                  {tCommon('edit')}
-                </Link>
+              <Button type="button" variant="outline" onClick={() => setEditOpen(true)}>
+                <PencilIcon data-icon="inline-start" />
+                {tCommon('edit')}
               </Button>
               <Button type="button" variant="outline" onClick={() => setDeleteOpen(true)}>
                 <Trash2Icon data-icon="inline-start" />
@@ -314,12 +313,14 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
         pending={deleteStudent.isPending}
       />
 
-      <EnrollmentSheet
+      <EnrollmentDialog
         open={sheetOpen}
         onOpenChange={setSheetOpen}
         enrollment={editing}
         lockedStudentId={data.id}
       />
+
+      <StudentFormDialog open={editOpen} onOpenChange={setEditOpen} studentId={data.id} />
     </>
   );
 }

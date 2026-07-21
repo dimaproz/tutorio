@@ -16,6 +16,7 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuBadge,
@@ -46,13 +47,21 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="offcanvas">
       <SidebarHeader>
-        <div className="flex flex-col gap-0.5 px-2 py-1.5">
-          <span className="text-sm font-semibold">{tCommon('appName')}</span>
-          <span className="truncate text-xs text-muted-foreground">{session.workspace.name}</span>
+        <div className="flex items-center gap-2.5 px-2 py-1.5">
+          <span className="bg-primary text-primary-foreground grid size-9 shrink-0 place-items-center rounded-lg">
+            <GraduationCapIcon className="size-5" aria-hidden="true" />
+          </span>
+          <div className="flex min-w-0 flex-col">
+            <span className="truncate text-sm font-semibold">{tCommon('appName')}</span>
+            <span className="text-muted-foreground truncate text-xs">
+              {session.workspace.name}
+            </span>
+          </div>
         </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
+          <SidebarGroupLabel>{t('menuLabel')}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu aria-label={t('label')}>
               <SidebarMenuItem>
