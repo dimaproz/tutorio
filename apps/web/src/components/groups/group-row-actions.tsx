@@ -17,6 +17,7 @@ import {
 import { errorMessageKey } from '@/lib/api/error-message';
 import { useDeleteGroupMutation, useRestoreGroupMutation } from '@/lib/api/groups';
 import type { GatewayError } from '@/lib/auth/client';
+import { GroupFormDialog } from './group-form-dialog';
 
 export function GroupRowActions({
   groupId,
@@ -34,6 +35,7 @@ export function GroupRowActions({
   const isOwner = session.role === 'OWNER';
 
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const deleteGroup = useDeleteGroupMutation();
   const restoreGroup = useRestoreGroupMutation();
 
@@ -84,8 +86,8 @@ export function GroupRowActions({
               <DropdownMenuItem asChild>
                 <Link href={`/app/groups/${groupId}`}>{tCommon('open')}</Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href={`/app/groups/${groupId}/edit`}>{tCommon('edit')}</Link>
+              <DropdownMenuItem onSelect={() => setEditOpen(true)}>
+                {tCommon('edit')}
               </DropdownMenuItem>
               <DropdownMenuItem variant="destructive" onSelect={() => setConfirmOpen(true)}>
                 {tCommon('delete')}
@@ -104,6 +106,8 @@ export function GroupRowActions({
         onConfirm={() => void onDelete()}
         pending={deleteGroup.isPending}
       />
+
+      <GroupFormDialog open={editOpen} onOpenChange={setEditOpen} groupId={groupId} />
     </>
   );
 }

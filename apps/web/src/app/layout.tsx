@@ -1,13 +1,15 @@
 import type { Metadata } from 'next';
-import { Geist_Mono, Inter } from 'next/font/google';
+import { Geist_Mono, Onest } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Providers } from '@/components/providers';
 import { Toaster } from '@/components/ui/sonner';
 import './globals.css';
 
-// Inter covers Cyrillic, which Geist Sans does not.
-const inter = Inter({
+// TailAdmin's interface face is Outfit, a geometric grotesque with no Cyrillic
+// coverage. Onest is its near-twin and carries Cyrillic properly, so Ukrainian
+// copy keeps the same geometric texture as the English UI.
+const onest = Onest({
   variable: '--font-sans',
   subsets: ['latin', 'cyrillic'],
 });
@@ -42,7 +44,7 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
-      className={`${inter.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${onest.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col">

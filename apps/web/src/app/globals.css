@@ -51,92 +51,16 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-:root {
-  /* Default: headings share the body face. Themes may override. */
-  --font-display: var(--font-sans);
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
-
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
-}
-
 /* ---------------------------------------------------------------------------
-   TailAdmin theme — the lab reproduces the TailAdmin dashboard look
-   (react.tailwind-admin.com): brand-blue #465FFF, boxed white cards with soft
-   shadows on a light-grey page, Untitled-UI grey scale, Outfit-like geometric
-   type (Onest here, for full Cyrillic). Colour values are TailAdmin's own
-   design tokens; no TailAdmin source is copied.
-
-   Scoped to .theme-tailadmin (lab only); the real app keeps the default
-   shadcn palette in :root above.
+   TailAdmin theme (react.tailwind-admin.com): brand-blue #465FFF, boxed white
+   cards with soft shadows on a light-grey page, Untitled-UI grey scale,
+   Outfit-like geometric type (Onest here, for full Cyrillic — set as
+   --font-sans by the root layout's font loader). Colour values are
+   TailAdmin's own design tokens; no TailAdmin source is copied.
 --------------------------------------------------------------------------- */
-.theme-tailadmin {
-  /* Geometric grotesque, close to TailAdmin's Outfit but with Cyrillic. Both
-     headings and figures share it — no serif voice in this system. */
-  --font-sans: var(--font-onest);
-  --font-display: var(--font-onest);
+:root {
+  /* Headings and figures share the body face — no serif voice in this system. */
+  --font-display: var(--font-sans);
 
   /* TailAdmin brand ramp (50 → 950). 500 is the interface blue. */
   --brand-50: #ecf3ff;
@@ -161,7 +85,7 @@
   --warning-500: #f79009;
   --warning-600: #dc6803;
 
-  /* Aliases kept so lab markup that still references the old token names keeps
+  /* Aliases kept so markup that references the old token names keeps
      rendering: marker = act-on-this (brand), due = money owed (error),
      settled = money in (success). */
   --paper: var(--gray-50);
@@ -236,9 +160,7 @@
   --sidebar-ring: var(--brand-500);
 }
 
-/* Keyed off the themed element itself, never an ancestor: the app root already
-   carries `.dark`, so an ancestor selector would pin the palette to dark. */
-.theme-tailadmin.dark {
+.dark {
   --paper: var(--gray-900);
   --ink: #ffffff;
   --graphite: var(--gray-400);
@@ -300,9 +222,8 @@
   --sidebar-ring: var(--brand-400);
 }
 
-/* TailAdmin card shape, scoped to the lab so shared ui/card.tsx (used by the
-   real app) is untouched: lift every card to 16px with the soft elevation. */
-.theme-tailadmin [data-slot='card'] {
+/* TailAdmin card shape: every card lifts to 16px with the soft elevation. */
+[data-slot='card'] {
   border-radius: 1rem;
   border-color: var(--border);
   box-shadow: var(--shadow-card);
@@ -335,9 +256,9 @@
   .tabular {
     font-variant-numeric: tabular-nums;
   }
-  /* Money and counts are set in the serif with tabular figures: ledgers and
-     class registers have always been set this way, and it separates a figure
-     a tutor acts on from ordinary bold UI text. */
+  /* Money and counts are set with tabular figures: ledgers and class
+     registers have always been set this way, and it separates a figure a
+     tutor acts on from ordinary bold UI text. */
   .numeral {
     font-family: var(--font-display);
     font-variant-numeric: tabular-nums;
@@ -358,18 +279,8 @@
     color: var(--muted-foreground);
     font-weight: 500;
   }
-  /* Density is a desktop affordance. On a phone the same actions have to be
-     thumb-sized, so every real button grows below the sm breakpoint. Form
-     primitives keep their own hit areas and are excluded. */
-  @media (max-width: 40rem) {
-    .theme-tutorio button:not([data-slot='switch']):not([data-slot='checkbox']):not(
-        [data-slot='radio-group-item']
-      ) {
-      min-height: 2.75rem;
-    }
-  }
 
-  /* Reduced motion is honoured globally: the lab only uses short functional
+  /* Reduced motion is honoured globally: the app only uses short functional
      transitions, and they are all safe to drop. */
   @media (prefers-reduced-motion: reduce) {
     *,

@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
@@ -10,13 +9,6 @@ import type { StudentDetail } from '@tutorio/validation';
 import { detectTimezone, TimezoneCombobox } from '@/components/app/timezone-combobox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import {
   Field,
   FieldDescription,
@@ -40,14 +32,24 @@ import {
 } from '@/lib/forms/schemas';
 
 // One component for both modes: creating sends only filled fields, editing
-// sends null for cleared ones so the API knows to erase them.
-export function StudentForm({ student }: { student?: StudentDetail }) {
+// sends null for cleared ones so the API knows to erase them. Rendered inside
+// a Dialog (see StudentFormDialog) — the caller owns the open state and is
+// told when to close it via onSuccess/onCancel rather than the form
+// navigating itself.
+export function StudentForm({
+  student,
+  onSuccess,
+  onCancel,
+}: {
+  student?: StudentDetail;
+  onSuccess?: () => void;
+  onCancel?: () => void;
+}) {
   const t = useTranslations('students.form');
   const tStudents = useTranslations('students');
   const tErrors = useTranslations('errors');
   const tValidation = useTranslations('validation');
   const tCommon = useTranslations('common');
-  const router = useRouter();
 
   const isEdit = Boolean(student);
   const createStudent = useCreateStudentMutation();
@@ -100,11 +102,11 @@ export function StudentForm({ student }: { student?: StudentDetail }) {
           notes: cleared(values.notes),
         });
         toast.success(tStudents('toasts.updated'));
-        router.push(`/app/students/${student.id}`);
+        onSuccess?.();
         return;
       }
 
-      const created = await createStudent.mutateAsync({
+      await createStudent.mutateAsync({
         fullName: values.fullName,
         email: optional(values.email),
         phone: optional(values.phone),
@@ -115,7 +117,7 @@ export function StudentForm({ student }: { student?: StudentDetail }) {
         notes: optional(values.notes),
       });
       toast.success(tStudents('toasts.created'));
-      router.push(`/app/students/${created.id}`);
+      onSuccess?.();
     } catch {
       // Surfaced by the alert below.
     }
@@ -124,167 +126,157 @@ export function StudentForm({ student }: { student?: StudentDetail }) {
   const pending = isSubmitting || mutation.isPending;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          <h1 className="text-balance">{isEdit ? t('editTitle') : t('createTitle')}</h1>
-        </CardTitle>
-        <CardDescription>{isEdit ? t('editSubtitle') : t('createSubtitle')}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={onSubmit} noValidate>
+    <form onSubmit={onSubmit} noValidate>
+      <FieldGroup>
+        {mutation.error ? (
+          <Alert variant="destructive" role="alert">
+            <AlertDescription>{tErrors(errorMessageKey(mutation.error))}</AlertDescription>
+          </Alert>
+        ) : null}
+
+        <FieldSet>
+          <FieldLegend>{t('basicSection')}</FieldLegend>
           <FieldGroup>
-            {mutation.error ? (
-              <Alert variant="destructive" role="alert">
-                <AlertDescription>{tErrors(errorMessageKey(mutation.error))}</AlertDescription>
-              </Alert>
-            ) : null}
-
-            <FieldSet>
-              <FieldLegend>{t('basicSection')}</FieldLegend>
-              <FieldGroup>
-                <Field data-invalid={errors.fullName ? true : undefined}>
-                  <FieldLabel htmlFor="student-full-name">{t('fullName')}</FieldLabel>
-                  <Input
-                    id="student-full-name"
-                    autoComplete="name"
-                    aria-invalid={errors.fullName ? true : undefined}
-                    {...form.register('fullName')}
-                  />
-                  <FieldError errors={[errors.fullName]} />
-                </Field>
-              </FieldGroup>
-            </FieldSet>
-
-            <FieldSeparator />
-
-            <FieldSet>
-              <FieldLegend>{t('contactsSection')}</FieldLegend>
-              <FieldDescription>{t('contactsHint')}</FieldDescription>
-              <FieldGroup>
-                <Field data-invalid={errors.email ? true : undefined}>
-                  <FieldLabel htmlFor="student-email">{t('email')}</FieldLabel>
-                  <Input
-                    id="student-email"
-                    type="email"
-                    inputMode="email"
-                    spellCheck={false}
-                    aria-invalid={errors.email ? true : undefined}
-                    {...form.register('email')}
-                  />
-                  <FieldError errors={[errors.email]} />
-                </Field>
-                <Field data-invalid={errors.phone ? true : undefined}>
-                  <FieldLabel htmlFor="student-phone">{t('phone')}</FieldLabel>
-                  <Input
-                    id="student-phone"
-                    type="tel"
-                    inputMode="tel"
-                    autoComplete="tel"
-                    aria-invalid={errors.phone ? true : undefined}
-                    {...form.register('phone')}
-                  />
-                  <FieldError errors={[errors.phone]} />
-                </Field>
-              </FieldGroup>
-            </FieldSet>
-
-            <FieldSeparator />
-
-            <FieldSet>
-              <FieldLegend>{t('timezoneSection')}</FieldLegend>
-              <FieldGroup>
-                <Field data-invalid={errors.timezone ? true : undefined}>
-                  <FieldLabel htmlFor="student-timezone">{t('timezone')}</FieldLabel>
-                  <TimezoneCombobox
-                    id="student-timezone"
-                    value={timezone}
-                    onChange={(value) =>
-                      form.setValue('timezone', value, { shouldValidate: true })
-                    }
-                    placeholder={t('timezonePlaceholder')}
-                    searchPlaceholder={t('timezoneSearch')}
-                    emptyLabel={t('timezoneEmpty')}
-                    invalid={Boolean(errors.timezone)}
-                  />
-                  <FieldDescription>{t('timezoneHint')}</FieldDescription>
-                  <FieldError errors={[errors.timezone]} />
-                </Field>
-              </FieldGroup>
-            </FieldSet>
-
-            <FieldSeparator />
-
-            <FieldSet>
-              <FieldLegend>{t('parentSection')}</FieldLegend>
-              <FieldDescription>{t('parentHint')}</FieldDescription>
-              <FieldGroup>
-                <Field data-invalid={errors.parentName ? true : undefined}>
-                  <FieldLabel htmlFor="student-parent-name">{t('parentName')}</FieldLabel>
-                  <Input
-                    id="student-parent-name"
-                    aria-invalid={errors.parentName ? true : undefined}
-                    {...form.register('parentName')}
-                  />
-                  <FieldError errors={[errors.parentName]} />
-                </Field>
-                <Field data-invalid={errors.parentEmail ? true : undefined}>
-                  <FieldLabel htmlFor="student-parent-email">{t('parentEmail')}</FieldLabel>
-                  <Input
-                    id="student-parent-email"
-                    type="email"
-                    inputMode="email"
-                    spellCheck={false}
-                    aria-invalid={errors.parentEmail ? true : undefined}
-                    {...form.register('parentEmail')}
-                  />
-                  <FieldError errors={[errors.parentEmail]} />
-                </Field>
-                <Field data-invalid={errors.parentPhone ? true : undefined}>
-                  <FieldLabel htmlFor="student-parent-phone">{t('parentPhone')}</FieldLabel>
-                  <Input
-                    id="student-parent-phone"
-                    type="tel"
-                    inputMode="tel"
-                    aria-invalid={errors.parentPhone ? true : undefined}
-                    {...form.register('parentPhone')}
-                  />
-                  <FieldError errors={[errors.parentPhone]} />
-                </Field>
-              </FieldGroup>
-            </FieldSet>
-
-            <FieldSeparator />
-
-            <FieldSet>
-              <FieldLegend>{t('notesSection')}</FieldLegend>
-              <FieldGroup>
-                <Field data-invalid={errors.notes ? true : undefined}>
-                  <FieldLabel htmlFor="student-notes">{t('notes')}</FieldLabel>
-                  <Textarea
-                    id="student-notes"
-                    rows={4}
-                    placeholder={t('notesPlaceholder')}
-                    aria-invalid={errors.notes ? true : undefined}
-                    {...form.register('notes')}
-                  />
-                  <FieldError errors={[errors.notes]} />
-                </Field>
-              </FieldGroup>
-            </FieldSet>
-
-            <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-              <Button type="button" variant="outline" onClick={() => router.back()}>
-                {tCommon('cancel')}
-              </Button>
-              <Button type="submit" disabled={pending}>
-                {pending ? <Spinner data-icon="inline-start" /> : null}
-                {isEdit ? t('submitEdit') : t('submitCreate')}
-              </Button>
-            </div>
+            <Field data-invalid={errors.fullName ? true : undefined}>
+              <FieldLabel htmlFor="student-full-name">{t('fullName')}</FieldLabel>
+              <Input
+                id="student-full-name"
+                autoComplete="name"
+                aria-invalid={errors.fullName ? true : undefined}
+                {...form.register('fullName')}
+              />
+              <FieldError errors={[errors.fullName]} />
+            </Field>
           </FieldGroup>
-        </form>
-      </CardContent>
-    </Card>
+        </FieldSet>
+
+        <FieldSeparator />
+
+        <FieldSet>
+          <FieldLegend>{t('contactsSection')}</FieldLegend>
+          <FieldDescription>{t('contactsHint')}</FieldDescription>
+          <FieldGroup>
+            <Field data-invalid={errors.email ? true : undefined}>
+              <FieldLabel htmlFor="student-email">{t('email')}</FieldLabel>
+              <Input
+                id="student-email"
+                type="email"
+                inputMode="email"
+                spellCheck={false}
+                aria-invalid={errors.email ? true : undefined}
+                {...form.register('email')}
+              />
+              <FieldError errors={[errors.email]} />
+            </Field>
+            <Field data-invalid={errors.phone ? true : undefined}>
+              <FieldLabel htmlFor="student-phone">{t('phone')}</FieldLabel>
+              <Input
+                id="student-phone"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                aria-invalid={errors.phone ? true : undefined}
+                {...form.register('phone')}
+              />
+              <FieldError errors={[errors.phone]} />
+            </Field>
+          </FieldGroup>
+        </FieldSet>
+
+        <FieldSeparator />
+
+        <FieldSet>
+          <FieldLegend>{t('timezoneSection')}</FieldLegend>
+          <FieldGroup>
+            <Field data-invalid={errors.timezone ? true : undefined}>
+              <FieldLabel htmlFor="student-timezone">{t('timezone')}</FieldLabel>
+              <TimezoneCombobox
+                id="student-timezone"
+                value={timezone}
+                onChange={(value) =>
+                  form.setValue('timezone', value, { shouldValidate: true })
+                }
+                placeholder={t('timezonePlaceholder')}
+                searchPlaceholder={t('timezoneSearch')}
+                emptyLabel={t('timezoneEmpty')}
+                invalid={Boolean(errors.timezone)}
+              />
+              <FieldDescription>{t('timezoneHint')}</FieldDescription>
+              <FieldError errors={[errors.timezone]} />
+            </Field>
+          </FieldGroup>
+        </FieldSet>
+
+        <FieldSeparator />
+
+        <FieldSet>
+          <FieldLegend>{t('parentSection')}</FieldLegend>
+          <FieldDescription>{t('parentHint')}</FieldDescription>
+          <FieldGroup>
+            <Field data-invalid={errors.parentName ? true : undefined}>
+              <FieldLabel htmlFor="student-parent-name">{t('parentName')}</FieldLabel>
+              <Input
+                id="student-parent-name"
+                aria-invalid={errors.parentName ? true : undefined}
+                {...form.register('parentName')}
+              />
+              <FieldError errors={[errors.parentName]} />
+            </Field>
+            <Field data-invalid={errors.parentEmail ? true : undefined}>
+              <FieldLabel htmlFor="student-parent-email">{t('parentEmail')}</FieldLabel>
+              <Input
+                id="student-parent-email"
+                type="email"
+                inputMode="email"
+                spellCheck={false}
+                aria-invalid={errors.parentEmail ? true : undefined}
+                {...form.register('parentEmail')}
+              />
+              <FieldError errors={[errors.parentEmail]} />
+            </Field>
+            <Field data-invalid={errors.parentPhone ? true : undefined}>
+              <FieldLabel htmlFor="student-parent-phone">{t('parentPhone')}</FieldLabel>
+              <Input
+                id="student-parent-phone"
+                type="tel"
+                inputMode="tel"
+                aria-invalid={errors.parentPhone ? true : undefined}
+                {...form.register('parentPhone')}
+              />
+              <FieldError errors={[errors.parentPhone]} />
+            </Field>
+          </FieldGroup>
+        </FieldSet>
+
+        <FieldSeparator />
+
+        <FieldSet>
+          <FieldLegend>{t('notesSection')}</FieldLegend>
+          <FieldGroup>
+            <Field data-invalid={errors.notes ? true : undefined}>
+              <FieldLabel htmlFor="student-notes">{t('notes')}</FieldLabel>
+              <Textarea
+                id="student-notes"
+                rows={4}
+                placeholder={t('notesPlaceholder')}
+                aria-invalid={errors.notes ? true : undefined}
+                {...form.register('notes')}
+              />
+              <FieldError errors={[errors.notes]} />
+            </Field>
+          </FieldGroup>
+        </FieldSet>
+
+        <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            {tCommon('cancel')}
+          </Button>
+          <Button type="submit" disabled={pending}>
+            {pending ? <Spinner data-icon="inline-start" /> : null}
+            {isEdit ? t('submitEdit') : t('submitCreate')}
+          </Button>
+        </div>
+      </FieldGroup>
+    </form>
   );
 }
