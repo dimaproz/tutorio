@@ -5,6 +5,7 @@ import { ClockIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { StudentListItem } from '@tutorio/validation';
 import { StudentRowActions } from './student-row-actions';
+import { StudentStatusBadge } from './student-status-badge';
 import { DeletedBadge } from '@/components/app/status-badges';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -55,12 +56,16 @@ export function StudentCard({ student }: { student: StudentListItem }) {
             studentId={student.id}
             fullName={student.fullName}
             isDeleted={isDeleted}
+            status={student.status}
           />
         </CardAction>
       </CardHeader>
       <CardContent className="flex flex-col gap-2 text-sm">
         <div className="flex flex-wrap items-center gap-2">
           {isDeleted ? <DeletedBadge label={t('deletedBadge')} /> : null}
+          {!isDeleted && student.status === 'ON_HOLD' ? (
+            <StudentStatusBadge status={student.status} />
+          ) : null}
           <span className="tabular text-muted-foreground">
             {t('activeEnrollments', { count: student.activeEnrollmentCount })}
           </span>

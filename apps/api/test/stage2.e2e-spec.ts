@@ -117,7 +117,13 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
     await prisma.enrollment.deleteMany({
       where: { workspaceId: { in: workspaceIds } },
     });
+    await prisma.studentParent.deleteMany({
+      where: { student: { workspaceId: { in: workspaceIds } } },
+    });
     await prisma.student.deleteMany({
+      where: { workspaceId: { in: workspaceIds } },
+    });
+    await prisma.parent.deleteMany({
       where: { workspaceId: { in: workspaceIds } },
     });
     await prisma.group.deleteMany({
@@ -143,8 +149,16 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
 
   describe('students CRUD and tenant isolation', () => {
     let studentId: string;
+    let parentId: string;
 
-    it('creates a student with parent contacts and audits exactly one CREATE', async () => {
+    it('creates a student linked to a parent and audits exactly one CREATE', async () => {
+      const parent = await server()
+        .post('/api/parents')
+        .set('Authorization', auth(ownerA))
+        .send({ fullName: 'Parent Learner', phone: '+380501112299' })
+        .expect(201);
+      parentId = parent.body.id;
+
       const created = await server()
         .post('/api/students')
         .set('Authorization', auth(ownerA))
@@ -153,8 +167,15 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
           email: 'alice@example.com',
           phone: '+380501112233',
           timezone: 'Europe/Kyiv',
-          parentName: 'Parent Learner',
-          parentEmail: 'parent@example.com',
+          telegramUsername: 'alice_e2e',
+          subject: 'ENGLISH',
+          hourlyRateMinor: 45000,
+          currency: 'UAH',
+          languageLevel: 'B1',
+          knowledgeLevel: 'INTERMEDIATE',
+          age: 16,
+          grade: 10,
+          parentIds: [parentId],
           notes: 'Prefers evening lessons',
         })
         .expect(201);
@@ -162,7 +183,8 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
 
       expect(created.body).toMatchObject({
         fullName: 'Alice Learner',
-        parentName: 'Parent Learner',
+        status: 'ACTIVE',
+        parents: [{ id: parentId, fullName: 'Parent Learner' }],
         deletedAt: null,
       });
       expect(await auditCount('STUDENT', studentId, 'CREATE')).toBe(1);
@@ -182,9 +204,16 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
           'email',
           'phone',
           'timezone',
-          'parentName',
-          'parentEmail',
-          'parentPhone',
+          'telegramUsername',
+          'subject',
+          'hourlyRateMinor',
+          'currency',
+          'status',
+          'languageLevel',
+          'knowledgeLevel',
+          'age',
+          'grade',
+          'parents',
           'notes',
           'createdAt',
           'updatedAt',
@@ -194,10 +223,10 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
       );
     });
 
-    it('searches by parent contact and paginates', async () => {
+    it('searches by telegram username and paginates', async () => {
       const list = await server()
         .get('/api/students')
-        .query({ search: 'parent@example.com' })
+        .query({ search: 'alice_e2e' })
         .set('Authorization', auth(ownerA))
         .expect(200);
       expect(list.body.total).toBe(1);
@@ -220,6 +249,70 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
         .send({ notes: 'Moved to mornings' })
         .expect(200);
       expect(await auditCount('STUDENT', studentId, 'UPDATE')).toBe(1);
+    });
+
+    it('rejects a parentId that belongs to another workspace', async () => {
+      const parentB = await server()
+        .post('/api/parents')
+        .set('Authorization', auth(ownerB))
+        .send({ fullName: 'Foreign Parent' })
+        .expect(201);
+      const before = await auditCount('STUDENT', studentId, 'UPDATE');
+
+      const rejected = await server()
+        .patch(`/api/students/${studentId}`)
+        .set('Authorization', auth(ownerA))
+        .send({ parentIds: [parentB.body.id] })
+        .expect(404);
+      expect(rejected.body.code).toBe('INVALID_WORKSPACE_RELATION');
+      // Rejected mid-transaction: no partial write, no audit row.
+      expect(await auditCount('STUDENT', studentId, 'UPDATE')).toBe(before);
+    });
+
+    it('relinks parents via PATCH parentIds and audits the diff', async () => {
+      const before = await auditCount('STUDENT', studentId, 'UPDATE');
+
+      await server()
+        .patch(`/api/students/${studentId}`)
+        .set('Authorization', auth(ownerA))
+        .send({ parentIds: [] })
+        .expect(200);
+      const cleared = await server()
+        .get(`/api/students/${studentId}`)
+        .set('Authorization', auth(ownerA))
+        .expect(200);
+      expect(cleared.body.parents).toEqual([]);
+
+      await server()
+        .patch(`/api/students/${studentId}`)
+        .set('Authorization', auth(ownerA))
+        .send({ parentIds: [parentId] })
+        .expect(200);
+      const relinked = await server()
+        .get(`/api/students/${studentId}`)
+        .set('Authorization', auth(ownerA))
+        .expect(200);
+      expect(relinked.body.parents).toEqual([
+        { id: parentId, fullName: 'Parent Learner' },
+      ]);
+      expect(await auditCount('STUDENT', studentId, 'UPDATE')).toBe(before + 2);
+    });
+
+    it('puts a student on hold and restores active status', async () => {
+      const onHold = await server()
+        .patch(`/api/students/${studentId}`)
+        .set('Authorization', auth(ownerA))
+        .send({ status: 'ON_HOLD' })
+        .expect(200);
+      expect(onHold.body.status).toBe('ON_HOLD');
+      expect(onHold.body.deletedAt).toBeNull();
+
+      const active = await server()
+        .patch(`/api/students/${studentId}`)
+        .set('Authorization', auth(ownerA))
+        .send({ status: 'ACTIVE' })
+        .expect(200);
+      expect(active.body.status).toBe('ACTIVE');
     });
 
     it('hides workspace A students from workspace B behind the same 404', async () => {
@@ -490,6 +583,138 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
         .delete(`/api/students/${studentId}`)
         .set('Authorization', auth(ownerA))
         .expect(204);
+    });
+  });
+
+  describe('parents CRUD and links', () => {
+    let parentId: string;
+    let studentId: string;
+
+    it('creates a parent and audits exactly one CREATE', async () => {
+      const created = await server()
+        .post('/api/parents')
+        .set('Authorization', auth(ownerA))
+        .send({ fullName: 'Standalone Parent', phone: '+380671112233' })
+        .expect(201);
+      parentId = created.body.id;
+
+      expect(created.body).toMatchObject({
+        fullName: 'Standalone Parent',
+        deletedAt: null,
+      });
+      expect(await auditCount('PARENT', parentId, 'CREATE')).toBe(1);
+    });
+
+    it('shows an empty roster until linked, then the linked student', async () => {
+      const empty = await server()
+        .get(`/api/parents/${parentId}`)
+        .set('Authorization', auth(ownerA))
+        .expect(200);
+      expect(empty.body.students).toEqual([]);
+
+      const student = await server()
+        .post('/api/students')
+        .set('Authorization', auth(ownerA))
+        .send({
+          fullName: 'Roster Learner',
+          timezone: 'UTC',
+          parentIds: [parentId],
+        })
+        .expect(201);
+      studentId = student.body.id;
+
+      const withRoster = await server()
+        .get(`/api/parents/${parentId}`)
+        .set('Authorization', auth(ownerA))
+        .expect(200);
+      expect(withRoster.body.students).toEqual([
+        { id: studentId, fullName: 'Roster Learner' },
+      ]);
+    });
+
+    it('updates with PATCH semantics and audits the diff; no-op adds nothing', async () => {
+      await server()
+        .patch(`/api/parents/${parentId}`)
+        .set('Authorization', auth(ownerA))
+        .send({ phone: null, notes: 'Prefers Telegram' })
+        .expect(200);
+      expect(await auditCount('PARENT', parentId, 'UPDATE')).toBe(1);
+
+      await server()
+        .patch(`/api/parents/${parentId}`)
+        .set('Authorization', auth(ownerA))
+        .send({ notes: 'Prefers Telegram' })
+        .expect(200);
+      expect(await auditCount('PARENT', parentId, 'UPDATE')).toBe(1);
+    });
+
+    it('hides workspace A parents from workspace B behind the same 404', async () => {
+      const read = await server()
+        .get(`/api/parents/${parentId}`)
+        .set('Authorization', auth(ownerB))
+        .expect(404);
+      expect(read.body.code).toBe('PARENT_NOT_FOUND');
+
+      const listB = await server()
+        .get('/api/parents')
+        .set('Authorization', auth(ownerB))
+        .expect(200);
+      expect(
+        listB.body.items.every((item: { id: string }) => item.id !== parentId),
+      ).toBe(true);
+    });
+
+    it('finds parents by search', async () => {
+      const found = await server()
+        .get('/api/parents')
+        .query({ search: 'Standalone Parent' })
+        .set('Authorization', auth(ownerA))
+        .expect(200);
+      expect(found.body.total).toBe(1);
+      expect(found.body.items[0].id).toBe(parentId);
+    });
+
+    it('soft-deletes, drops out of the student roster, and restores (owner only)', async () => {
+      await server()
+        .delete(`/api/parents/${parentId}`)
+        .set('Authorization', auth(ownerA))
+        .expect(204);
+      expect(await auditCount('PARENT', parentId, 'DELETE')).toBe(1);
+
+      // Idempotent: deleting again adds no audit row.
+      await server()
+        .delete(`/api/parents/${parentId}`)
+        .set('Authorization', auth(ownerA))
+        .expect(204);
+      expect(await auditCount('PARENT', parentId, 'DELETE')).toBe(1);
+
+      // The link row survives, but a soft-deleted parent no longer appears
+      // on the student it's linked to.
+      const student = await server()
+        .get(`/api/students/${studentId}`)
+        .set('Authorization', auth(ownerA))
+        .expect(200);
+      expect(student.body.parents).toEqual([]);
+
+      await server()
+        .post(`/api/parents/${parentId}/restore`)
+        .set('Authorization', auth(teacherA))
+        .expect(403);
+
+      const restored = await server()
+        .post(`/api/parents/${parentId}/restore`)
+        .set('Authorization', auth(ownerA))
+        .expect(201);
+      expect(restored.body.deletedAt).toBeNull();
+      expect(await auditCount('PARENT', parentId, 'RESTORE')).toBe(1);
+
+      const studentAfterRestore = await server()
+        .get(`/api/students/${studentId}`)
+        .set('Authorization', auth(ownerA))
+        .expect(200);
+      expect(studentAfterRestore.body.parents).toEqual([
+        { id: parentId, fullName: 'Standalone Parent' },
+      ]);
     });
   });
 

@@ -203,7 +203,7 @@ export interface paths {
         };
         /**
          * List workspace students
-         * @description Paginated summaries with active enrollment counts and group names. Search covers full name, contacts and parent contacts. state=deleted|all is owner-only.
+         * @description Paginated summaries with active enrollment counts and group names. Search covers full name, contacts and Telegram username. state=deleted|all is owner-only.
          */
         get: operations["StudentsController_list"];
         put?: never;
@@ -251,6 +251,66 @@ export interface paths {
         put?: never;
         /** Restore a soft-deleted student (owner only) */
         post: operations["StudentsController_restore"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/parents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List workspace parents
+         * @description Paginated summaries with each parent’s linked-student roster. Search covers full name, phone and Telegram username. state=deleted|all is owner-only.
+         */
+        get: operations["ParentsController_list"];
+        put?: never;
+        /** Create a parent */
+        post: operations["ParentsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/parents/{parentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a parent with their linked-student roster */
+        get: operations["ParentsController_getDetail"];
+        put?: never;
+        post?: never;
+        /** Soft-delete a parent (move to trash) */
+        delete: operations["ParentsController_softDelete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update a parent
+         * @description PATCH semantics: omitted fields stay unchanged, null clears an optional field. A no-op update creates no audit entry.
+         */
+        patch: operations["ParentsController_update"];
+        trace?: never;
+    };
+    "/api/parents/{parentId}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore a soft-deleted parent (owner only) */
+        post: operations["ParentsController_restore"];
         delete?: never;
         options?: never;
         head?: never;
@@ -505,7 +565,7 @@ export interface components {
                     email: string;
                 } | null;
                 /** @enum {string} */
-                entity: "STUDENT" | "GROUP" | "ENROLLMENT" | "WORKSPACE";
+                entity: "STUDENT" | "PARENT" | "GROUP" | "ENROLLMENT" | "WORKSPACE";
                 entityId: string;
                 /** @enum {string} */
                 action: "CREATE" | "UPDATE" | "DELETE" | "RESTORE";
@@ -533,6 +593,10 @@ export interface components {
                 email: string | null;
                 phone: string | null;
                 timezone: string;
+                /** @enum {string|null} */
+                subject: "MATH" | "ENGLISH" | "GERMAN" | "FRENCH" | "POLISH" | "UKRAINIAN_LANGUAGE" | "UKRAINIAN_LITERATURE" | "WORLD_LITERATURE" | "PHYSICS" | "CHEMISTRY" | "BIOLOGY" | "GEOGRAPHY" | "HISTORY" | "WORLD_HISTORY" | "HISTORY_OF_UKRAINE" | "COMPUTER_SCIENCE" | "ECONOMICS" | "LAW" | "MUSIC" | "ART" | "PHYSICAL_EDUCATION" | "NMT_PREP" | "ZNO_PREP" | "IELTS_PREP" | "TOEFL_PREP" | "SAT_PREP" | null;
+                /** @enum {string} */
+                status: "ACTIVE" | "ON_HOLD";
                 /** Format: date-time */
                 deletedAt: string | null;
                 activeEnrollmentCount: number;
@@ -549,10 +613,24 @@ export interface components {
             email: string;
             phone: string;
             timezone: string;
-            parentName: string;
-            /** Format: email */
-            parentEmail: string;
-            parentPhone: string;
+            telegramUsername: string;
+            /** @enum {string} */
+            subject: "MATH" | "ENGLISH" | "GERMAN" | "FRENCH" | "POLISH" | "UKRAINIAN_LANGUAGE" | "UKRAINIAN_LITERATURE" | "WORLD_LITERATURE" | "PHYSICS" | "CHEMISTRY" | "BIOLOGY" | "GEOGRAPHY" | "HISTORY" | "WORLD_HISTORY" | "HISTORY_OF_UKRAINE" | "COMPUTER_SCIENCE" | "ECONOMICS" | "LAW" | "MUSIC" | "ART" | "PHYSICAL_EDUCATION" | "NMT_PREP" | "ZNO_PREP" | "IELTS_PREP" | "TOEFL_PREP" | "SAT_PREP";
+            hourlyRateMinor?: number;
+            /** @enum {string} */
+            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+            /**
+             * @default ACTIVE
+             * @enum {string}
+             */
+            status: "ACTIVE" | "ON_HOLD";
+            /** @enum {string} */
+            languageLevel: "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
+            /** @enum {string} */
+            knowledgeLevel: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
+            age?: number;
+            grade?: number;
+            parentIds?: string[];
             notes: string;
         };
         StudentDto: {
@@ -564,9 +642,25 @@ export interface components {
             email: string | null;
             phone: string | null;
             timezone: string;
-            parentName: string | null;
-            parentEmail: string | null;
-            parentPhone: string | null;
+            telegramUsername: string | null;
+            /** @enum {string|null} */
+            subject: "MATH" | "ENGLISH" | "GERMAN" | "FRENCH" | "POLISH" | "UKRAINIAN_LANGUAGE" | "UKRAINIAN_LITERATURE" | "WORLD_LITERATURE" | "PHYSICS" | "CHEMISTRY" | "BIOLOGY" | "GEOGRAPHY" | "HISTORY" | "WORLD_HISTORY" | "HISTORY_OF_UKRAINE" | "COMPUTER_SCIENCE" | "ECONOMICS" | "LAW" | "MUSIC" | "ART" | "PHYSICAL_EDUCATION" | "NMT_PREP" | "ZNO_PREP" | "IELTS_PREP" | "TOEFL_PREP" | "SAT_PREP" | null;
+            hourlyRateMinor: number | null;
+            /** @enum {string|null} */
+            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
+            /** @enum {string} */
+            status: "ACTIVE" | "ON_HOLD";
+            /** @enum {string|null} */
+            languageLevel: "A1" | "A2" | "B1" | "B2" | "C1" | "C2" | null;
+            /** @enum {string|null} */
+            knowledgeLevel: "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | null;
+            age: number | null;
+            grade: number | null;
+            parents: {
+                /** Format: uuid */
+                id: string;
+                fullName: string;
+            }[];
             notes: string | null;
             /** Format: date-time */
             createdAt: string;
@@ -584,9 +678,25 @@ export interface components {
             email: string | null;
             phone: string | null;
             timezone: string;
-            parentName: string | null;
-            parentEmail: string | null;
-            parentPhone: string | null;
+            telegramUsername: string | null;
+            /** @enum {string|null} */
+            subject: "MATH" | "ENGLISH" | "GERMAN" | "FRENCH" | "POLISH" | "UKRAINIAN_LANGUAGE" | "UKRAINIAN_LITERATURE" | "WORLD_LITERATURE" | "PHYSICS" | "CHEMISTRY" | "BIOLOGY" | "GEOGRAPHY" | "HISTORY" | "WORLD_HISTORY" | "HISTORY_OF_UKRAINE" | "COMPUTER_SCIENCE" | "ECONOMICS" | "LAW" | "MUSIC" | "ART" | "PHYSICAL_EDUCATION" | "NMT_PREP" | "ZNO_PREP" | "IELTS_PREP" | "TOEFL_PREP" | "SAT_PREP" | null;
+            hourlyRateMinor: number | null;
+            /** @enum {string|null} */
+            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
+            /** @enum {string} */
+            status: "ACTIVE" | "ON_HOLD";
+            /** @enum {string|null} */
+            languageLevel: "A1" | "A2" | "B1" | "B2" | "C1" | "C2" | null;
+            /** @enum {string|null} */
+            knowledgeLevel: "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | null;
+            age: number | null;
+            grade: number | null;
+            parents: {
+                /** Format: uuid */
+                id: string;
+                fullName: string;
+            }[];
             notes: string | null;
             /** Format: date-time */
             createdAt: string;
@@ -623,10 +733,90 @@ export interface components {
             email?: string | null;
             phone?: string | null;
             timezone?: string;
-            parentName?: string | null;
-            /** Format: email */
-            parentEmail?: string | null;
-            parentPhone?: string | null;
+            telegramUsername?: string | null;
+            /** @enum {string|null} */
+            subject?: "MATH" | "ENGLISH" | "GERMAN" | "FRENCH" | "POLISH" | "UKRAINIAN_LANGUAGE" | "UKRAINIAN_LITERATURE" | "WORLD_LITERATURE" | "PHYSICS" | "CHEMISTRY" | "BIOLOGY" | "GEOGRAPHY" | "HISTORY" | "WORLD_HISTORY" | "HISTORY_OF_UKRAINE" | "COMPUTER_SCIENCE" | "ECONOMICS" | "LAW" | "MUSIC" | "ART" | "PHYSICAL_EDUCATION" | "NMT_PREP" | "ZNO_PREP" | "IELTS_PREP" | "TOEFL_PREP" | "SAT_PREP" | null;
+            hourlyRateMinor?: number | null;
+            /** @enum {string|null} */
+            currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
+            /** @enum {string} */
+            status?: "ACTIVE" | "ON_HOLD";
+            /** @enum {string|null} */
+            languageLevel?: "A1" | "A2" | "B1" | "B2" | "C1" | "C2" | null;
+            /** @enum {string|null} */
+            knowledgeLevel?: "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | null;
+            age?: number | null;
+            grade?: number | null;
+            parentIds?: string[];
+            notes?: string | null;
+        };
+        ParentListDto: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                fullName: string;
+                phone: string | null;
+                telegramUsername: string | null;
+                /** Format: date-time */
+                deletedAt: string | null;
+                students: {
+                    /** Format: uuid */
+                    id: string;
+                    fullName: string;
+                }[];
+            }[];
+            page: number;
+            pageSize: number;
+            total: number;
+            totalPages: number;
+        };
+        CreateParentDto: {
+            fullName: string;
+            phone: string;
+            telegramUsername: string;
+            notes: string;
+        };
+        ParentDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            workspaceId: string;
+            fullName: string;
+            phone: string | null;
+            telegramUsername: string | null;
+            notes: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            deletedAt: string | null;
+        };
+        ParentDetailDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            workspaceId: string;
+            fullName: string;
+            phone: string | null;
+            telegramUsername: string | null;
+            notes: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            deletedAt: string | null;
+            students: {
+                /** Format: uuid */
+                id: string;
+                fullName: string;
+            }[];
+        };
+        UpdateParentDto: {
+            fullName?: string;
+            phone?: string | null;
+            telegramUsername?: string | null;
             notes?: string | null;
         };
         GroupListDto: {
@@ -634,9 +824,18 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 name: string;
+                pricePerLesson: number | null;
+                /** @enum {string|null} */
+                currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
+                notes: string | null;
                 /** Format: date-time */
                 deletedAt: string | null;
                 activeStudentCount: number;
+                students: {
+                    /** Format: uuid */
+                    id: string;
+                    fullName: string;
+                }[];
             }[];
             page: number;
             pageSize: number;
@@ -645,6 +844,9 @@ export interface components {
         };
         CreateGroupDto: {
             name: string;
+            pricePerLesson?: number;
+            /** @enum {string} */
+            currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
             notes?: string;
         };
         GroupDto: {
@@ -653,6 +855,9 @@ export interface components {
             /** Format: uuid */
             workspaceId: string;
             name: string;
+            pricePerLesson: number | null;
+            /** @enum {string|null} */
+            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
             notes: string | null;
             /** Format: date-time */
             createdAt: string;
@@ -667,6 +872,9 @@ export interface components {
             /** Format: uuid */
             workspaceId: string;
             name: string;
+            pricePerLesson: number | null;
+            /** @enum {string|null} */
+            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
             notes: string | null;
             /** Format: date-time */
             createdAt: string;
@@ -697,6 +905,9 @@ export interface components {
         };
         UpdateGroupDto: {
             name?: string;
+            pricePerLesson?: number | null;
+            /** @enum {string|null} */
+            currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
             notes?: string | null;
         };
         EnrollmentListDto: {
@@ -1086,7 +1297,7 @@ export interface operations {
             query?: {
                 page?: number;
                 pageSize?: number;
-                entity?: "STUDENT" | "GROUP" | "ENROLLMENT" | "WORKSPACE";
+                entity?: "STUDENT" | "PARENT" | "GROUP" | "ENROLLMENT" | "WORKSPACE";
                 entityId?: string;
                 actorId?: string;
                 action?: "CREATE" | "UPDATE" | "DELETE" | "RESTORE";
@@ -1286,6 +1497,187 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StudentDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    ParentsController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                search?: string;
+                state?: "active" | "deleted" | "all";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParentListDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    ParentsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateParentDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParentDto"];
+                };
+            };
+        };
+    };
+    ParentsController_getDetail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                parentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParentDetailDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    ParentsController_softDelete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                parentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    ParentsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                parentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateParentDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParentDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    ParentsController_restore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                parentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParentDto"];
                 };
             };
             403: {

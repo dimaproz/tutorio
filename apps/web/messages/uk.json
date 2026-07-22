@@ -60,6 +60,7 @@
   },
   "errors": {
     "STUDENT_NOT_FOUND": "Цього учня більше не існує.",
+    "PARENT_NOT_FOUND": "Цього запису батьків більше не існує.",
     "GROUP_NOT_FOUND": "Цієї групи більше не існує.",
     "ENROLLMENT_NOT_FOUND": "Цього запису на навчання більше не існує.",
     "WORKSPACE_MEMBER_NOT_FOUND": "Цей викладач не входить до простору.",
@@ -131,12 +132,58 @@
     "MONTHLY": "Щомісячно",
     "PER_LESSON": "За урок"
   },
+  "studentStatus": {
+    "ACTIVE": "Активний",
+    "ON_HOLD": "На канікулах"
+  },
+  "languageLevel": {
+    "A1": "A1 — початковий",
+    "A2": "A2 — елементарний",
+    "B1": "B1 — середній",
+    "B2": "B2 — вище середнього",
+    "C1": "C1 — просунутий",
+    "C2": "C2 — досконалий"
+  },
+  "knowledgeLevel": {
+    "BEGINNER": "Початковий",
+    "INTERMEDIATE": "Середній",
+    "ADVANCED": "Просунутий"
+  },
+  "subject": {
+    "MATH": "Математика",
+    "ENGLISH": "Англійська мова",
+    "GERMAN": "Німецька мова",
+    "FRENCH": "Французька мова",
+    "POLISH": "Польська мова",
+    "UKRAINIAN_LANGUAGE": "Українська мова",
+    "UKRAINIAN_LITERATURE": "Українська література",
+    "WORLD_LITERATURE": "Зарубіжна література",
+    "PHYSICS": "Фізика",
+    "CHEMISTRY": "Хімія",
+    "BIOLOGY": "Біологія",
+    "GEOGRAPHY": "Географія",
+    "HISTORY": "Історія",
+    "WORLD_HISTORY": "Всесвітня історія",
+    "HISTORY_OF_UKRAINE": "Історія України",
+    "COMPUTER_SCIENCE": "Інформатика",
+    "ECONOMICS": "Економіка",
+    "LAW": "Правознавство",
+    "MUSIC": "Музика",
+    "ART": "Образотворче мистецтво",
+    "PHYSICAL_EDUCATION": "Фізична культура / Фітнес",
+    "NMT_PREP": "Підготовка до НМТ",
+    "ZNO_PREP": "Підготовка до ЗНО",
+    "IELTS_PREP": "Підготовка до IELTS",
+    "TOEFL_PREP": "Підготовка до TOEFL",
+    "SAT_PREP": "Підготовка до SAT"
+  },
   "app": {
     "nav": {
       "label": "Головна навігація",
       "menuLabel": "Меню",
       "dashboard": "Огляд",
       "students": "Учні",
+      "parents": "Батьки",
       "groups": "Групи",
       "calendar": "Календар",
       "finance": "Фінанси",
@@ -178,11 +225,14 @@
     "subtitle": "Усі, хто навчається у вашому просторі.",
     "add": "Додати учня",
     "searchLabel": "Пошук учнів",
-    "searchPlaceholder": "Ім'я, пошта, телефон або контакт батьків…",
+    "searchPlaceholder": "Ім'я, пошта, телефон або Telegram…",
     "deletedBadge": "У кошику",
+    "putOnHold": "Відправити на канікули",
+    "reactivate": "Повернути з канікул",
     "count": "{count, plural, =0 {Учнів немає} one {# учень} few {# учні} many {# учнів} other {# учня}}",
     "columns": {
       "student": "Учень",
+      "status": "Статус",
       "contacts": "Контакти",
       "groups": "Групи",
       "enrollments": "Записи",
@@ -218,19 +268,34 @@
       "contactsHint": "Необов'язково — знадобиться для нагадувань.",
       "timezoneSection": "Часовий пояс",
       "timezoneHint": "Час уроків показується учневі саме в цьому поясі.",
-      "parentSection": "Батьки або опікун",
-      "parentHint": "Заповніть для учнів до 18 років.",
+      "academicSection": "Навчальний профіль",
+      "pricingSection": "Ціна",
+      "pricingHint": "Ціна за замовчуванням для уроків цього учня — запис на навчання може її перевизначити.",
+      "parentSection": "Батьки",
+      "parentHint": "Прив'яжіть наявного з батьків або створіть нового.",
       "notesSection": "Нотатки",
       "fullName": "Повне ім'я",
       "email": "Ел. пошта",
       "phone": "Телефон",
+      "telegramUsername": "Юзернейм у Telegram",
+      "subject": "Предмет",
+      "status": "Статус",
+      "languageLevel": "Рівень мови",
+      "knowledgeLevel": "Рівень знань",
+      "age": "Вік",
+      "grade": "Клас",
+      "hourlyRate": "Ціна за годину",
+      "hourlyRateHint": "За урок, наприклад 500 або 500,50",
+      "currency": "Валюта",
       "timezone": "Часовий пояс",
       "timezonePlaceholder": "Оберіть часовий пояс",
       "timezoneSearch": "Пошук поясів…",
       "timezoneEmpty": "Пояс не знайдено",
-      "parentName": "Ім'я батька або матері",
-      "parentEmail": "Пошта батьків",
-      "parentPhone": "Телефон батьків",
+      "addParentPlaceholder": "Прив'язати наявного з батьків",
+      "addParentSearch": "Пошук батьків…",
+      "addParentEmpty": "Батьків не знайдено",
+      "newParent": "Новий з батьків",
+      "removeParent": "Прибрати {name}",
       "notes": "Нотатки",
       "notesPlaceholder": "Цілі, побажання, усе важливе",
       "submitCreate": "Створити учня",
@@ -238,7 +303,9 @@
     },
     "detail": {
       "contactsTitle": "Контактні дані",
-      "parentTitle": "Батьки або опікун",
+      "academicTitle": "Навчальний профіль",
+      "pricingTitle": "Ціна за годину",
+      "parentTitle": "Батьки",
       "notesTitle": "Нотатки",
       "enrollmentsTitle": "Записи на навчання",
       "enrollmentsDescription": "Де навчається учень і як за це платить.",
@@ -258,7 +325,9 @@
       "created": "Учня створено",
       "updated": "Зміни збережено",
       "deleted": "Учня перенесено в кошик",
-      "restored": "Учня відновлено"
+      "restored": "Учня відновлено",
+      "onHold": "Учня відправлено на канікули",
+      "reactivated": "Учня повернено з канікул"
     },
     "deleteDialog": {
       "title": "Перенести учня в кошик?",
@@ -305,12 +374,16 @@
       "detailsSection": "Дані групи",
       "name": "Назва",
       "namePlaceholder": "Наприклад, B1 English вечірня",
+      "pricePerLesson": "Ціна за урок",
+      "pricePerLessonHint": "За замовчуванням для записів цієї групи, наприклад 500 або 500,50",
+      "currency": "Валюта",
       "notes": "Нотатки",
       "notesPlaceholder": "Розклад, рівень, матеріали",
       "submitCreate": "Створити групу",
       "submitEdit": "Зберегти зміни"
     },
     "detail": {
+      "priceTitle": "Ціна за урок",
       "notesTitle": "Нотатки",
       "membersTitle": "Записані учні",
       "membersDescription": "У кожного учня власна ціна та правила оплати.",
@@ -331,6 +404,70 @@
     },
     "deleteDialog": {
       "title": "Перенести групу в кошик?",
+      "description": "{name} зникне зі списків, але нічого не буде стерто назавжди. Власник може відновити запис будь-коли.",
+      "confirm": "Перенести в кошик"
+    }
+  },
+  "parents": {
+    "title": "Батьки",
+    "subtitle": "Батьки та опікуни, пов'язані з вашими учнями.",
+    "add": "Додати батьків",
+    "searchLabel": "Пошук батьків",
+    "searchPlaceholder": "Ім'я, телефон або Telegram…",
+    "deletedBadge": "У кошику",
+    "columns": {
+      "parent": "Батьки",
+      "contacts": "Контакти",
+      "students": "Учні",
+      "actions": "Дії"
+    },
+    "tableCaption": "Батьки простору з пов'язаними учнями",
+    "empty": {
+      "title": "Батьків поки немає",
+      "description": "Додайте батьків, щоб пов'язати їх з одним або кількома учнями.",
+      "action": "Додати батьків"
+    },
+    "emptySearch": {
+      "title": "Нічого не знайдено",
+      "description": "Жоден запис не відповідає запиту. Спробуйте інше ім'я або контакт."
+    },
+    "emptyDeleted": {
+      "title": "Кошик порожній",
+      "description": "Видалені записи з'являються тут, і їх можна відновити."
+    },
+    "error": {
+      "title": "Не вдалося завантажити батьків"
+    },
+    "form": {
+      "createTitle": "Нові батьки",
+      "createSubtitle": "Обов'язкове лише ім'я.",
+      "editTitle": "Редагування запису",
+      "editSubtitle": "Оновіть контакти та нотатки.",
+      "fullName": "Повне ім'я",
+      "phone": "Телефон",
+      "telegramUsername": "Юзернейм у Telegram",
+      "notes": "Нотатки",
+      "notesPlaceholder": "Усе важливе про цих батьків",
+      "submitCreate": "Створити запис",
+      "submitEdit": "Зберегти зміни"
+    },
+    "detail": {
+      "contactsTitle": "Контактні дані",
+      "notesTitle": "Нотатки",
+      "studentsTitle": "Пов'язані учні",
+      "noStudents": "Учнів поки не прив'язано",
+      "noStudentsDescription": "Прив'яжіть цей запис у формі редагування учня.",
+      "deletedTitle": "Цей запис у кошику",
+      "deletedDescription": "Відновіть запис, щоб знову його редагувати."
+    },
+    "toasts": {
+      "created": "Запис створено",
+      "updated": "Зміни збережено",
+      "deleted": "Запис перенесено в кошик",
+      "restored": "Запис відновлено"
+    },
+    "deleteDialog": {
+      "title": "Перенести цей запис у кошик?",
       "description": "{name} зникне зі списків, але нічого не буде стерто назавжди. Власник може відновити запис будь-коли.",
       "confirm": "Перенести в кошик"
     }
@@ -431,6 +568,7 @@
     },
     "auditEntity": {
       "STUDENT": "Учень",
+      "PARENT": "Батьки",
       "GROUP": "Група",
       "ENROLLMENT": "Запис на навчання",
       "WORKSPACE": "Простір"
@@ -440,6 +578,15 @@
       "email": "Ел. пошта",
       "phone": "Телефон",
       "timezone": "Часовий пояс",
+      "telegramUsername": "Юзернейм у Telegram",
+      "subject": "Предмет",
+      "hourlyRateMinor": "Ціна за годину",
+      "languageLevel": "Рівень мови",
+      "knowledgeLevel": "Рівень знань",
+      "age": "Вік",
+      "grade": "Клас",
+      "parentIds": "Пов'язані батьки",
+      "pricePerLesson": "Ціна за урок",
       "parentName": "Ім'я батька або матері",
       "parentEmail": "Пошта батьків",
       "parentPhone": "Телефон батьків",
@@ -469,6 +616,7 @@
   },
   "auditEntity": {
     "STUDENT": "Учень",
+    "PARENT": "Батьки",
     "GROUP": "Група",
     "ENROLLMENT": "Запис на навчання",
     "WORKSPACE": "Робочий простір"
@@ -478,6 +626,15 @@
     "email": "Email",
     "phone": "Телефон",
     "timezone": "Часовий пояс",
+    "telegramUsername": "Юзернейм у Telegram",
+    "subject": "Предмет",
+    "hourlyRateMinor": "Ціна за годину",
+    "languageLevel": "Рівень мови",
+    "knowledgeLevel": "Рівень знань",
+    "age": "Вік",
+    "grade": "Клас",
+    "parentIds": "Пов'язані батьки",
+    "pricePerLesson": "Ціна за урок",
     "parentName": "Імʼя батьків",
     "parentEmail": "Email батьків",
     "parentPhone": "Телефон батьків",

@@ -16,6 +16,13 @@ export interface GroupListFilters {
   pageSize?: number;
 }
 
+export interface ParentListFilters {
+  page: number;
+  search?: string;
+  state?: 'active' | 'deleted' | 'all';
+  pageSize?: number;
+}
+
 export interface EnrollmentListFilters {
   studentId?: string;
   groupId?: string;
@@ -42,6 +49,11 @@ export const queryKeys = {
     all: ['groups'] as const,
     lists: (filters: GroupListFilters) => ['groups', 'list', filters] as const,
     detail: (groupId: string) => ['groups', 'detail', groupId] as const,
+  },
+  parents: {
+    all: ['parents'] as const,
+    lists: (filters: ParentListFilters) => ['parents', 'list', filters] as const,
+    detail: (parentId: string) => ['parents', 'detail', parentId] as const,
   },
   enrollments: {
     all: ['enrollments'] as const,
