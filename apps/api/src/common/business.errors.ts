@@ -21,6 +21,13 @@ export const studentNotFound = () =>
     HttpStatus.NOT_FOUND,
   );
 
+export const parentNotFound = () =>
+  new BusinessApiException(
+    'PARENT_NOT_FOUND',
+    'Parent not found',
+    HttpStatus.NOT_FOUND,
+  );
+
 export const groupNotFound = () =>
   new BusinessApiException(
     'GROUP_NOT_FOUND',

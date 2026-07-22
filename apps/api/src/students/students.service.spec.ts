@@ -25,13 +25,20 @@ const studentRow = {
   email: null,
   phone: null,
   timezone: 'Europe/Kyiv',
-  parentName: null,
-  parentEmail: null,
-  parentPhone: null,
+  telegramUsername: null,
+  subject: null,
+  hourlyRateMinor: null,
+  currency: null,
+  status: 'ACTIVE' as const,
+  languageLevel: null,
+  knowledgeLevel: null,
+  age: null,
+  grade: null,
   notes: null,
   createdAt: NOW,
   updatedAt: NOW,
   deletedAt: null,
+  parents: [] as { parent: { id: string; fullName: string } }[],
 };
 
 function buildPrismaMock() {
@@ -106,7 +113,7 @@ describe('StudentsService.list', () => {
     ).rejects.toBeInstanceOf(AuthApiException);
   });
 
-  it('searches across student and parent contact fields', async () => {
+  it('searches across student contact fields', async () => {
     const { prisma, service } = buildService();
 
     await service.list(owner, {
@@ -124,9 +131,7 @@ describe('StudentsService.list', () => {
       'fullName',
       'email',
       'phone',
-      'parentName',
-      'parentEmail',
-      'parentPhone',
+      'telegramUsername',
     ]);
   });
 
@@ -219,6 +224,7 @@ describe('StudentsService.create', () => {
     await service.create(owner, {
       fullName: 'Alice Example',
       timezone: 'Europe/Kyiv',
+      status: 'ACTIVE',
     });
 
     expect(prisma.student.create.mock.calls[0][0].data.workspaceId).toBe(

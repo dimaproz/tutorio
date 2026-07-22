@@ -6,11 +6,17 @@ import {
   enrollmentStatusSchema,
   groupNameSchema,
   groupNotesSchema,
-  personNameSchema,
+  notesSchema,
+  parentFullNameSchema,
   phoneSchema,
   registerSchema,
   studentFullNameSchema,
   studentNotesSchema,
+  studentKnowledgeLevelSchema,
+  studentLanguageLevelSchema,
+  studentStatusSchema,
+  studentSubjectSchema,
+  telegramUsernameSchema,
   timezoneSchema,
 } from '@tutorio/validation';
 import { z } from 'zod';
@@ -41,16 +47,49 @@ function optionalText<T extends z.ZodTypeAny>(schema: T) {
   return z.literal('').or(schema);
 }
 
-export const studentFormSchema = z.object({
-  fullName: studentFullNameSchema,
-  email: optionalText(emailSchema),
-  phone: optionalText(phoneSchema),
-  timezone: timezoneSchema,
-  parentName: optionalText(personNameSchema),
-  parentEmail: optionalText(emailSchema),
-  parentPhone: optionalText(phoneSchema),
-  notes: optionalText(studentNotesSchema),
-});
+// A number typed into a plain <input>, allowed to be blank. `min`/`max` mirror
+// the corresponding @tutorio/validation integer schema.
+function optionalIntString(min: number, max: number) {
+  return z.string().refine(
+    (value) => {
+      if (value.trim() === '') {
+        return true;
+      }
+      const parsed = Number(value);
+      return Number.isInteger(parsed) && parsed >= min && parsed <= max;
+    },
+    { params: { key: 'intRange', min, max } },
+  );
+}
+
+export const studentFormSchema = z
+  .object({
+    fullName: studentFullNameSchema,
+    email: optionalText(emailSchema),
+    phone: optionalText(phoneSchema),
+    timezone: timezoneSchema,
+    telegramUsername: optionalText(telegramUsernameSchema),
+    subject: optionalText(studentSubjectSchema),
+    hourlyRate: z.string(),
+    currency: currencyCodeSchema,
+    status: studentStatusSchema,
+    languageLevel: optionalText(studentLanguageLevelSchema),
+    knowledgeLevel: optionalText(studentKnowledgeLevelSchema),
+    age: optionalIntString(0, 120),
+    grade: optionalIntString(1, 12),
+    parentIds: z.array(z.string().uuid()),
+    notes: optionalText(studentNotesSchema),
+  })
+  .superRefine((data, ctx) => {
+    if (data.hourlyRate.trim() !== '' && parsePriceInput(data.hourlyRate) === null) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['hourlyRate'],
+        params: { key: 'priceInvalid' },
+        message: 'Invalid price',
+      });
+    }
+  });
 
 export type StudentFormValues = z.infer<typeof studentFormSchema>;
 
@@ -59,18 +98,57 @@ export const EMPTY_STUDENT_FORM: StudentFormValues = {
   email: '',
   phone: '',
   timezone: '',
-  parentName: '',
-  parentEmail: '',
-  parentPhone: '',
+  telegramUsername: '',
+  subject: '',
+  hourlyRate: '',
+  currency: 'EUR',
+  status: 'ACTIVE',
+  languageLevel: '',
+  knowledgeLevel: '',
+  age: '',
+  grade: '',
+  parentIds: [],
   notes: '',
 };
 
-export const groupFormSchema = z.object({
-  name: groupNameSchema,
-  notes: optionalText(groupNotesSchema),
-});
+export const groupFormSchema = z
+  .object({
+    name: groupNameSchema,
+    pricePerLesson: z.string(),
+    currency: currencyCodeSchema,
+    notes: optionalText(groupNotesSchema),
+  })
+  .superRefine((data, ctx) => {
+    if (
+      data.pricePerLesson.trim() !== '' &&
+      parsePriceInput(data.pricePerLesson) === null
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['pricePerLesson'],
+        params: { key: 'priceInvalid' },
+        message: 'Invalid price',
+      });
+    }
+  });
 
 export type GroupFormValues = z.infer<typeof groupFormSchema>;
+
+export const parentFormSchema = z.object({
+  fullName: parentFullNameSchema,
+  phone: optionalText(phoneSchema),
+  telegramUsername: optionalText(telegramUsernameSchema),
+  notes: optionalText(notesSchema),
+});
+
+export type ParentFormValues = z.infer<typeof parentFormSchema>;
+
+export const EMPTY_PARENT_FORM: ParentFormValues = {
+  fullName: '',
+  phone: '',
+  telegramUsername: '',
+  notes: '',
+};
 
 // Price is entered in major units and converted to integer minor units on
 // submit; the field itself stays a string so "1500,50" keeps working.

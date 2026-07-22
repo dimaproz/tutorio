@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import {
+  currencyCodeSchema,
   isoDateTimeSchema,
   recordStateSchema,
   uuidSchema,
@@ -7,6 +8,7 @@ import {
 import {
   billingTypeSchema,
   enrollmentStatusSchema,
+  priceMinorSchema,
 } from './enrollments';
 import { paginatedResponseSchema, paginationQuerySchema } from './pagination';
 
@@ -17,6 +19,9 @@ export const groupNotesSchema = z.string().trim().max(2000);
 export const createGroupSchema = z
   .object({
     name: groupNameSchema,
+    // Group-level default price/currency; Enrollment.priceMinor overrides it.
+    pricePerLesson: priceMinorSchema.optional(),
+    currency: currencyCodeSchema.optional(),
     notes: groupNotesSchema.optional(),
   })
   .strict();
@@ -27,6 +32,8 @@ export type CreateGroupDto = z.infer<typeof createGroupSchema>;
 export const updateGroupSchema = z
   .object({
     name: groupNameSchema,
+    pricePerLesson: priceMinorSchema.nullable(),
+    currency: currencyCodeSchema.nullable(),
     notes: groupNotesSchema.nullable(),
   })
   .partial()
@@ -48,6 +55,8 @@ export const groupResponseSchema = z.object({
   id: uuidSchema,
   workspaceId: uuidSchema,
   name: z.string(),
+  pricePerLesson: z.number().int().nonnegative().nullable(),
+  currency: currencyCodeSchema.nullable(),
   notes: z.string().nullable(),
   createdAt: isoDateTimeSchema,
   updatedAt: isoDateTimeSchema,
@@ -69,6 +78,8 @@ export type GroupMemberSummary = z.infer<typeof groupMemberSummarySchema>;
 export const groupListItemSchema = z.object({
   id: uuidSchema,
   name: z.string(),
+  pricePerLesson: z.number().int().nonnegative().nullable(),
+  currency: currencyCodeSchema.nullable(),
   notes: z.string().nullable(),
   deletedAt: isoDateTimeSchema.nullable(),
   activeStudentCount: z.number().int().nonnegative(),

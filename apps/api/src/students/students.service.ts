@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { Prisma, Student } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
 import type {
   CreateStudentDto,
   ListStudentsQueryDto,
@@ -13,6 +13,7 @@ import { forbidden } from '../auth/auth.errors';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import {
   activeEnrollmentsExist,
+  invalidWorkspaceRelation,
   studentNotFound,
 } from '../common/business.errors';
 import {
@@ -22,22 +23,52 @@ import {
 } from '../common/pagination';
 import { PrismaService } from '../prisma/prisma.service';
 
-function toResponse(row: Student): StudentResponse {
+// Live (non-deleted) linked parents, in a stable order — used both to build
+// the response and to compute the "before" side of the parentIds audit diff.
+const parentLinksInclude = {
+  parents: {
+    where: { parent: { deletedAt: null } },
+    include: { parent: { select: { id: true, fullName: true } } },
+    orderBy: { parent: { fullName: 'asc' as const } },
+  },
+} satisfies Prisma.StudentInclude;
+
+type StudentWithParentLinks = Prisma.StudentGetPayload<{
+  include: typeof parentLinksInclude;
+}>;
+
+function toParentRefs(student: StudentWithParentLinks) {
+  return student.parents.map((link) => link.parent);
+}
+
+function toResponse(student: StudentWithParentLinks): StudentResponse {
   return {
-    id: row.id,
-    workspaceId: row.workspaceId,
-    fullName: row.fullName,
-    email: row.email,
-    phone: row.phone,
-    timezone: row.timezone,
-    parentName: row.parentName,
-    parentEmail: row.parentEmail,
-    parentPhone: row.parentPhone,
-    notes: row.notes,
-    createdAt: row.createdAt.toISOString(),
-    updatedAt: row.updatedAt.toISOString(),
-    deletedAt: row.deletedAt?.toISOString() ?? null,
+    id: student.id,
+    workspaceId: student.workspaceId,
+    fullName: student.fullName,
+    email: student.email,
+    phone: student.phone,
+    timezone: student.timezone,
+    telegramUsername: student.telegramUsername,
+    subject: student.subject as StudentResponse['subject'],
+    hourlyRateMinor: student.hourlyRateMinor,
+    currency: student.currency as StudentResponse['currency'],
+    status: student.status,
+    languageLevel: student.languageLevel as StudentResponse['languageLevel'],
+    knowledgeLevel: student.knowledgeLevel as StudentResponse['knowledgeLevel'],
+    age: student.age,
+    grade: student.grade,
+    parents: toParentRefs(student),
+    notes: student.notes,
+    createdAt: student.createdAt.toISOString(),
+    updatedAt: student.updatedAt.toISOString(),
+    deletedAt: student.deletedAt?.toISOString() ?? null,
   };
+}
+
+/** Sorted, deduped copy — a stable shape for audit-diff comparison. */
+function sortedIds(ids: readonly string[]): string[] {
+  return [...new Set(ids)].sort();
 }
 
 @Injectable()
@@ -57,19 +88,14 @@ export class StudentsService {
 
     const search = query.search
       ? {
-          OR: [
-            'fullName',
-            'email',
-            'phone',
-            'parentName',
-            'parentEmail',
-            'parentPhone',
-          ].map((field) => ({
-            [field]: {
-              contains: query.search,
-              mode: 'insensitive' as const,
-            },
-          })),
+          OR: ['fullName', 'email', 'phone', 'telegramUsername'].map(
+            (field) => ({
+              [field]: {
+                contains: query.search,
+                mode: 'insensitive' as const,
+              },
+            }),
+          ),
         }
       : {};
 
@@ -104,6 +130,8 @@ export class StudentsService {
         email: row.email,
         phone: row.phone,
         timezone: row.timezone,
+        subject: row.subject as StudentListResponse['items'][number]['subject'],
+        status: row.status,
         deletedAt: row.deletedAt?.toISOString() ?? null,
         activeEnrollmentCount: row.enrollments.filter(
           (enrollment) => enrollment.status === 'ACTIVE',
@@ -121,13 +149,42 @@ export class StudentsService {
     );
   }
 
+  /** Throws INVALID_WORKSPACE_RELATION if any id is missing/foreign/deleted. */
+  private async assertParentsBelongToWorkspace(
+    tx: Prisma.TransactionClient,
+    workspaceId: string,
+    parentIds: readonly string[],
+  ): Promise<void> {
+    if (parentIds.length === 0) {
+      return;
+    }
+    const count = await tx.parent.count({
+      where: { id: { in: [...parentIds] }, workspaceId, deletedAt: null },
+    });
+    if (count !== new Set(parentIds).size) {
+      throw invalidWorkspaceRelation();
+    }
+  }
+
   async create(
     auth: AuthenticatedUser,
     dto: CreateStudentDto,
   ): Promise<StudentResponse> {
+    const { parentIds: rawParentIds = [], ...scalarDto } = dto;
+    const parentIds = [...new Set(rawParentIds)];
     const student = await this.prisma.$transaction(async (tx) => {
+      await this.assertParentsBelongToWorkspace(
+        tx,
+        auth.workspaceId,
+        parentIds,
+      );
       const created = await tx.student.create({
-        data: { workspaceId: auth.workspaceId, ...dto },
+        data: {
+          workspaceId: auth.workspaceId,
+          ...scalarDto,
+          parents: { create: parentIds.map((parentId) => ({ parentId })) },
+        },
+        include: parentLinksInclude,
       });
       await this.audit.record(tx, {
         workspaceId: auth.workspaceId,
@@ -135,7 +192,10 @@ export class StudentsService {
         action: 'CREATE',
         entity: 'STUDENT',
         entityId: created.id,
-        changes: this.audit.buildChanges({}, { ...dto }),
+        changes: this.audit.buildChanges(
+          {},
+          { ...scalarDto, parentIds: sortedIds(parentIds) },
+        ),
       });
       return created;
     });
@@ -149,6 +209,7 @@ export class StudentsService {
     const student = await this.prisma.student.findFirst({
       where: { id: studentId, workspaceId: auth.workspaceId, deletedAt: null },
       include: {
+        ...parentLinksInclude,
         workspace: { select: { cancellationDeadlineHours: true } },
         enrollments: {
           where: { deletedAt: null },
@@ -192,6 +253,9 @@ export class StudentsService {
     studentId: string,
     dto: UpdateStudentDto,
   ): Promise<StudentResponse> {
+    const { parentIds: rawParentIds, ...scalarDto } = dto;
+    const parentIds =
+      rawParentIds !== undefined ? [...new Set(rawParentIds)] : undefined;
     const student = await this.prisma.$transaction(async (tx) => {
       const before = await tx.student.findFirst({
         where: {
@@ -199,20 +263,56 @@ export class StudentsService {
           workspaceId: auth.workspaceId,
           deletedAt: null,
         },
+        include: parentLinksInclude,
       });
       if (!before) {
         throw studentNotFound();
       }
+      const beforeParentIds = toParentRefs(before).map((parent) => parent.id);
 
-      const changes = this.audit.buildChanges(before, { ...dto });
+      const changes = this.audit.buildChanges(
+        { ...before, parentIds: sortedIds(beforeParentIds) },
+        {
+          ...scalarDto,
+          ...(parentIds !== undefined
+            ? { parentIds: sortedIds(parentIds) }
+            : {}),
+        },
+      );
       if (!changes) {
         // No-op PATCH: nothing to persist, no audit row.
         return before;
       }
 
+      if (parentIds !== undefined) {
+        await this.assertParentsBelongToWorkspace(
+          tx,
+          auth.workspaceId,
+          parentIds,
+        );
+        const nextIds = new Set(parentIds);
+        const currentIds = new Set(beforeParentIds);
+        const toRemove = beforeParentIds.filter((id) => !nextIds.has(id));
+        const toAdd = parentIds.filter((id) => !currentIds.has(id));
+        if (toRemove.length > 0) {
+          await tx.studentParent.deleteMany({
+            where: { studentId: before.id, parentId: { in: toRemove } },
+          });
+        }
+        if (toAdd.length > 0) {
+          await tx.studentParent.createMany({
+            data: toAdd.map((parentId) => ({
+              studentId: before.id,
+              parentId,
+            })),
+          });
+        }
+      }
+
       const updated = await tx.student.update({
         where: { id: before.id },
-        data: dto,
+        data: scalarDto,
+        include: parentLinksInclude,
       });
       await this.audit.record(tx, {
         workspaceId: auth.workspaceId,
@@ -273,6 +373,7 @@ export class StudentsService {
     const student = await this.prisma.$transaction(async (tx) => {
       const existing = await tx.student.findFirst({
         where: { id: studentId, workspaceId: auth.workspaceId },
+        include: parentLinksInclude,
       });
       if (!existing) {
         throw studentNotFound();
@@ -285,6 +386,7 @@ export class StudentsService {
       const restored = await tx.student.update({
         where: { id: existing.id },
         data: { deletedAt: null },
+        include: parentLinksInclude,
       });
       await this.audit.record(tx, {
         workspaceId: auth.workspaceId,

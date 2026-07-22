@@ -1,20 +1,75 @@
 import { z } from 'zod';
 import { emailSchema } from './auth';
 import {
+  currencyCodeSchema,
   isoDateTimeSchema,
   phoneSchema,
   recordStateSchema,
   timezoneSchema,
   uuidSchema,
 } from './common';
-import { enrollmentStatusSchema, billingTypeSchema } from './enrollments';
+import { enrollmentStatusSchema, billingTypeSchema, priceMinorSchema } from './enrollments';
 import { paginatedResponseSchema, paginationQuerySchema } from './pagination';
+import { telegramUsernameSchema } from './parents';
 
 export const studentFullNameSchema = z.string().trim().min(1).max(120);
 
 export const personNameSchema = z.string().trim().min(1).max(120);
 
 export const studentNotesSchema = z.string().trim().max(4000);
+
+export const studentStatusSchema = z.enum(['ACTIVE', 'ON_HOLD']);
+export type StudentStatusDto = z.infer<typeof studentStatusSchema>;
+
+export const STUDENT_LANGUAGE_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const;
+export const studentLanguageLevelSchema = z.enum(STUDENT_LANGUAGE_LEVELS);
+export type StudentLanguageLevelDto = z.infer<typeof studentLanguageLevelSchema>;
+
+export const STUDENT_KNOWLEDGE_LEVELS = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'] as const;
+export const studentKnowledgeLevelSchema = z.enum(STUDENT_KNOWLEDGE_LEVELS);
+export type StudentKnowledgeLevelDto = z.infer<typeof studentKnowledgeLevelSchema>;
+
+// Curated subject catalogue (school subjects + exam-prep tracks). A closed
+// dropdown, not free text — extend this list rather than accepting arbitrary
+// strings.
+export const STUDENT_SUBJECTS = [
+  'MATH',
+  'ENGLISH',
+  'GERMAN',
+  'FRENCH',
+  'POLISH',
+  'UKRAINIAN_LANGUAGE',
+  'UKRAINIAN_LITERATURE',
+  'WORLD_LITERATURE',
+  'PHYSICS',
+  'CHEMISTRY',
+  'BIOLOGY',
+  'GEOGRAPHY',
+  'HISTORY',
+  'WORLD_HISTORY',
+  'HISTORY_OF_UKRAINE',
+  'COMPUTER_SCIENCE',
+  'ECONOMICS',
+  'LAW',
+  'MUSIC',
+  'ART',
+  'PHYSICAL_EDUCATION',
+  'NMT_PREP',
+  'ZNO_PREP',
+  'IELTS_PREP',
+  'TOEFL_PREP',
+  'SAT_PREP',
+] as const;
+export const studentSubjectSchema = z.enum(STUDENT_SUBJECTS);
+export type StudentSubjectDto = z.infer<typeof studentSubjectSchema>;
+
+export const studentAgeSchema = z.number().int().min(0).max(120);
+
+// Ukrainian school system: grades 1-12 (inclusive of vocational years).
+export const studentGradeSchema = z.number().int().min(1).max(12);
+
+// Reasonable cap: a student rarely has more than a couple of guardians.
+const parentIdsSchema = z.array(uuidSchema).max(20);
 
 // HTML forms submit empty strings for untouched optional inputs; the API
 // treats them as "not provided".
@@ -31,9 +86,17 @@ export const createStudentSchema = z
     email: optionalField(emailSchema),
     phone: optionalField(phoneSchema),
     timezone: timezoneSchema,
-    parentName: optionalField(personNameSchema),
-    parentEmail: optionalField(emailSchema),
-    parentPhone: optionalField(phoneSchema),
+    telegramUsername: optionalField(telegramUsernameSchema),
+    subject: optionalField(studentSubjectSchema),
+    hourlyRateMinor: priceMinorSchema.optional(),
+    currency: optionalField(currencyCodeSchema),
+    status: studentStatusSchema.default('ACTIVE'),
+    languageLevel: optionalField(studentLanguageLevelSchema),
+    knowledgeLevel: optionalField(studentKnowledgeLevelSchema),
+    age: studentAgeSchema.optional(),
+    grade: studentGradeSchema.optional(),
+    // Existing parents to link at creation time; omitted/empty = none yet.
+    parentIds: parentIdsSchema.optional(),
     notes: optionalField(studentNotesSchema),
   })
   .strict();
@@ -41,15 +104,23 @@ export const createStudentSchema = z
 export type CreateStudentDto = z.infer<typeof createStudentSchema>;
 
 // PATCH semantics: omitted = unchanged, null = clear the optional field.
+// parentIds has no "clear via null" — pass [] to unlink every parent.
 export const updateStudentSchema = z
   .object({
     fullName: studentFullNameSchema,
     email: emailSchema.nullable(),
     phone: phoneSchema.nullable(),
     timezone: timezoneSchema,
-    parentName: personNameSchema.nullable(),
-    parentEmail: emailSchema.nullable(),
-    parentPhone: phoneSchema.nullable(),
+    telegramUsername: telegramUsernameSchema.nullable(),
+    subject: studentSubjectSchema.nullable(),
+    hourlyRateMinor: priceMinorSchema.nullable(),
+    currency: currencyCodeSchema.nullable(),
+    status: studentStatusSchema,
+    languageLevel: studentLanguageLevelSchema.nullable(),
+    knowledgeLevel: studentKnowledgeLevelSchema.nullable(),
+    age: studentAgeSchema.nullable(),
+    grade: studentGradeSchema.nullable(),
+    parentIds: parentIdsSchema,
     notes: studentNotesSchema.nullable(),
   })
   .partial()
@@ -67,6 +138,15 @@ export const listStudentsQuerySchema = paginationQuerySchema
 
 export type ListStudentsQueryDto = z.infer<typeof listStudentsQuerySchema>;
 
+// Compact parent reference shown on the student form/detail — avoids a
+// request waterfall to load full parent records.
+export const studentParentRefSchema = z.object({
+  id: uuidSchema,
+  fullName: z.string(),
+});
+
+export type StudentParentRef = z.infer<typeof studentParentRefSchema>;
+
 export const studentResponseSchema = z.object({
   id: uuidSchema,
   workspaceId: uuidSchema,
@@ -74,9 +154,16 @@ export const studentResponseSchema = z.object({
   email: z.string().nullable(),
   phone: z.string().nullable(),
   timezone: z.string(),
-  parentName: z.string().nullable(),
-  parentEmail: z.string().nullable(),
-  parentPhone: z.string().nullable(),
+  telegramUsername: z.string().nullable(),
+  subject: studentSubjectSchema.nullable(),
+  hourlyRateMinor: z.number().int().nonnegative().nullable(),
+  currency: currencyCodeSchema.nullable(),
+  status: studentStatusSchema,
+  languageLevel: studentLanguageLevelSchema.nullable(),
+  knowledgeLevel: studentKnowledgeLevelSchema.nullable(),
+  age: z.number().int().nonnegative().nullable(),
+  grade: z.number().int().nonnegative().nullable(),
+  parents: z.array(studentParentRefSchema),
   notes: z.string().nullable(),
   createdAt: isoDateTimeSchema,
   updatedAt: isoDateTimeSchema,
@@ -92,6 +179,8 @@ export const studentListItemSchema = z.object({
   email: z.string().nullable(),
   phone: z.string().nullable(),
   timezone: z.string(),
+  subject: studentSubjectSchema.nullable(),
+  status: studentStatusSchema,
   deletedAt: isoDateTimeSchema.nullable(),
   activeEnrollmentCount: z.number().int().nonnegative(),
   groupNames: z.array(z.string()),

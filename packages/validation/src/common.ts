@@ -62,6 +62,7 @@ export const phoneSchema = z
 
 export const BUSINESS_ERROR_CODES = [
   'STUDENT_NOT_FOUND',
+  'PARENT_NOT_FOUND',
   'GROUP_NOT_FOUND',
   'ENROLLMENT_NOT_FOUND',
   'WORKSPACE_MEMBER_NOT_FOUND',

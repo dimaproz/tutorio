@@ -46,6 +46,15 @@ enum AuditAction {
   @@map("audit_action")
 }
 
+// ON_HOLD hides the student from active lists without soft-deleting
+// (distinct from deletedAt, which means "actually removed").
+enum StudentStatus {
+  ACTIVE
+  ON_HOLD
+
+  @@map("student_status")
+}
+
 model User {
   id           String    @id @default(uuid())
   email        String    @unique
@@ -75,6 +84,7 @@ model Workspace {
   members      WorkspaceMember[]
   authSessions AuthSession[]
   students     Student[]
+  parents      Parent[]
   groups       Group[]
   enrollments  Enrollment[]
   auditLogs    AuditLog[]
@@ -128,21 +138,32 @@ model Student {
   id          String    @id @default(uuid())
   workspaceId String
   fullName    String
-  // Not unique: siblings may share a parent email.
+  // Not unique: siblings may share a contact.
   email       String?
   phone       String?
   timezone    String
-  // Parent/guardian contact when the student is a minor (GDPR minimum).
-  parentName  String?
-  parentEmail String?
-  parentPhone String?
+  telegramUsername String?
+  // Free-text label validated against a curated list at the app layer
+  // (@tutorio/validation), not a DB enum — the catalogue is expected to grow.
+  subject     String?
+  // Default price/currency for this student's enrollments; Enrollment.priceMinor
+  // is the per-enrollment override, non-negative (DB CHECK below).
+  hourlyRateMinor Int?
+  currency    String?
+  status      StudentStatus @default(ACTIVE)
+  // Free-text labels validated against curated enums at the app layer.
+  languageLevel   String?
+  knowledgeLevel  String?
+  age         Int?
+  grade       Int?
   notes       String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
 
-  workspace   Workspace    @relation(fields: [workspaceId], references: [id])
+  workspace   Workspace       @relation(fields: [workspaceId], references: [id])
   enrollments Enrollment[]
+  parents     StudentParent[]
 
   @@index([workspaceId, deletedAt])
   @@index([workspaceId, fullName])
@@ -150,11 +171,56 @@ model Student {
   @@map("students")
 }
 
+// Parent/guardian entity, decoupled from Student (a parent may have several
+// children in the same workspace). Replaces the old flat
+// Student.parentName/parentEmail/parentPhone columns.
+model Parent {
+  id               String    @id @default(uuid())
+  workspaceId      String
+  fullName         String
+  phone            String?
+  telegramUsername String?
+  notes            String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+
+  workspace Workspace       @relation(fields: [workspaceId], references: [id])
+  students  StudentParent[]
+
+  @@index([workspaceId, deletedAt])
+  @@index([workspaceId, fullName])
+  @@index([workspaceId, updatedAt])
+  @@map("parents")
+}
+
+// Many-to-many join: a student may have several parents, a parent may have
+// several students. Removing a link deletes the row outright — there is no
+// soft-delete concept for a relationship.
+model StudentParent {
+  id        String   @id @default(uuid())
+  studentId String
+  parentId  String
+  createdAt DateTime @default(now())
+
+  student Student @relation(fields: [studentId], references: [id])
+  parent  Parent  @relation(fields: [parentId], references: [id])
+
+  @@unique([studentId, parentId])
+  @@index([studentId])
+  @@index([parentId])
+  @@map("student_parents")
+}
+
 model Group {
   id          String    @id @default(uuid())
   workspaceId String
   name        String
   notes       String?
+  // Group-level default price/currency; Enrollment.priceMinor is the
+  // per-enrollment override, non-negative (DB CHECK below).
+  pricePerLesson Int?
+  currency    String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?

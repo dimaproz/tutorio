@@ -77,12 +77,12 @@ describe('students', () => {
       timezone: 'UTC',
       email: '',
       phone: '  ',
-      parentEmail: '',
+      telegramUsername: '',
       notes: '',
     });
     expect(parsed.email).toBeUndefined();
     expect(parsed.phone).toBeUndefined();
-    expect(parsed.parentEmail).toBeUndefined();
+    expect(parsed.telegramUsername).toBeUndefined();
     expect(parsed.notes).toBeUndefined();
   });
 
@@ -91,10 +91,32 @@ describe('students', () => {
       fullName: 'Alice',
       timezone: 'UTC',
       email: ' Parent@Example.COM ',
-      parentEmail: 'DAD@example.com',
     });
     expect(parsed.email).toBe('parent@example.com');
-    expect(parsed.parentEmail).toBe('dad@example.com');
+  });
+
+  it('accepts the new academic/pricing fields and rejects out-of-range values', () => {
+    const parsed = createStudentSchema.parse({
+      fullName: 'Alice',
+      timezone: 'UTC',
+      subject: 'ENGLISH',
+      hourlyRateMinor: 5000,
+      currency: 'EUR',
+      status: 'ON_HOLD',
+      languageLevel: 'B2',
+      knowledgeLevel: 'INTERMEDIATE',
+      age: 14,
+      grade: 8,
+      parentIds: [UUID],
+    });
+    expect(parsed.status).toBe('ON_HOLD');
+    expect(parsed.parentIds).toEqual([UUID]);
+    expect(createStudentSchema.safeParse({ fullName: 'Alice', timezone: 'UTC', grade: 13 }).success).toBe(
+      false,
+    );
+    expect(createStudentSchema.safeParse({ fullName: 'Alice', timezone: 'UTC', age: -1 }).success).toBe(
+      false,
+    );
   });
 
   it('rejects unknown keys and missing timezone', () => {
