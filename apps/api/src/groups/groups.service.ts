@@ -27,6 +27,8 @@ function toResponse(row: Group): GroupResponse {
     id: row.id,
     workspaceId: row.workspaceId,
     name: row.name,
+    pricePerLesson: row.pricePerLesson,
+    currency: row.currency as GroupResponse['currency'],
     notes: row.notes,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
@@ -88,6 +90,9 @@ export class GroupsService {
         return {
           id: row.id,
           name: row.name,
+          pricePerLesson: row.pricePerLesson,
+          currency:
+            row.currency as GroupListResponse['items'][number]['currency'],
           notes: row.notes,
           deletedAt: row.deletedAt?.toISOString() ?? null,
           activeStudentCount: students.length,

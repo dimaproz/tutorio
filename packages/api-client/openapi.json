@@ -349,6 +349,7 @@
               "type": "string",
               "enum": [
                 "STUDENT",
+                "PARENT",
                 "GROUP",
                 "ENROLLMENT",
                 "WORKSPACE"
@@ -441,7 +442,7 @@
     },
     "/api/students": {
       "get": {
-        "description": "Paginated summaries with active enrollment counts and group names. Search covers full name, contacts and parent contacts. state=deleted|all is owner-only.",
+        "description": "Paginated summaries with active enrollment counts and group names. Search covers full name, contacts and Telegram username. state=deleted|all is owner-only.",
         "operationId": "StudentsController_list",
         "parameters": [
           {
@@ -763,6 +764,322 @@
         "summary": "Restore a soft-deleted student (owner only)",
         "tags": [
           "students"
+        ]
+      }
+    },
+    "/api/parents": {
+      "get": {
+        "description": "Paginated summaries with each parent’s linked-student roster. Search covers full name, phone and Telegram username. state=deleted|all is owner-only.",
+        "operationId": "ParentsController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "exclusiveMinimum": false,
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "exclusiveMaximum": false,
+              "exclusiveMinimum": false,
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minLength": 1,
+              "maxLength": 120,
+              "type": "string"
+            }
+          },
+          {
+            "name": "state",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "active",
+              "type": "string",
+              "enum": [
+                "active",
+                "deleted",
+                "all"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParentListDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List workspace parents",
+        "tags": [
+          "parents"
+        ]
+      },
+      "post": {
+        "operationId": "ParentsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateParentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParentDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a parent",
+        "tags": [
+          "parents"
+        ]
+      }
+    },
+    "/api/parents/{parentId}": {
+      "get": {
+        "operationId": "ParentsController_getDetail",
+        "parameters": [
+          {
+            "name": "parentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParentDetailDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a parent with their linked-student roster",
+        "tags": [
+          "parents"
+        ]
+      },
+      "patch": {
+        "description": "PATCH semantics: omitted fields stay unchanged, null clears an optional field. A no-op update creates no audit entry.",
+        "operationId": "ParentsController_update",
+        "parameters": [
+          {
+            "name": "parentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateParentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParentDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a parent",
+        "tags": [
+          "parents"
+        ]
+      },
+      "delete": {
+        "operationId": "ParentsController_softDelete",
+        "parameters": [
+          {
+            "name": "parentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Soft-delete a parent (move to trash)",
+        "tags": [
+          "parents"
+        ]
+      }
+    },
+    "/api/parents/{parentId}/restore": {
+      "post": {
+        "operationId": "ParentsController_restore",
+        "parameters": [
+          {
+            "name": "parentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParentDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Restore a soft-deleted parent (owner only)",
+        "tags": [
+          "parents"
         ]
       }
     },
@@ -1899,6 +2216,7 @@
                   "type": "string",
                   "enum": [
                     "STUDENT",
+                    "PARENT",
                     "GROUP",
                     "ENROLLMENT",
                     "WORKSPACE"
@@ -2012,6 +2330,45 @@
                 "timezone": {
                   "type": "string"
                 },
+                "subject": {
+                  "type": "string",
+                  "enum": [
+                    "MATH",
+                    "ENGLISH",
+                    "GERMAN",
+                    "FRENCH",
+                    "POLISH",
+                    "UKRAINIAN_LANGUAGE",
+                    "UKRAINIAN_LITERATURE",
+                    "WORLD_LITERATURE",
+                    "PHYSICS",
+                    "CHEMISTRY",
+                    "BIOLOGY",
+                    "GEOGRAPHY",
+                    "HISTORY",
+                    "WORLD_HISTORY",
+                    "HISTORY_OF_UKRAINE",
+                    "COMPUTER_SCIENCE",
+                    "ECONOMICS",
+                    "LAW",
+                    "MUSIC",
+                    "ART",
+                    "PHYSICAL_EDUCATION",
+                    "NMT_PREP",
+                    "ZNO_PREP",
+                    "IELTS_PREP",
+                    "TOEFL_PREP",
+                    "SAT_PREP"
+                  ],
+                  "nullable": true
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "ACTIVE",
+                    "ON_HOLD"
+                  ]
+                },
                 "deletedAt": {
                   "type": "string",
                   "format": "date-time",
@@ -2035,6 +2392,8 @@
                 "email",
                 "phone",
                 "timezone",
+                "subject",
+                "status",
                 "deletedAt",
                 "activeEnrollmentCount",
                 "groupNames"
@@ -2094,21 +2453,108 @@
             "minLength": 1,
             "maxLength": 64
           },
-          "parentName": {
+          "telegramUsername": {
             "type": "string",
-            "minLength": 1,
-            "maxLength": 120
-          },
-          "parentEmail": {
-            "type": "string",
-            "format": "email",
-            "maxLength": 320
-          },
-          "parentPhone": {
-            "type": "string",
-            "minLength": 3,
+            "minLength": 2,
             "maxLength": 32,
-            "pattern": "^\\+?[\\d ()-]+$"
+            "pattern": "^@?\\w{2,32}$"
+          },
+          "subject": {
+            "type": "string",
+            "enum": [
+              "MATH",
+              "ENGLISH",
+              "GERMAN",
+              "FRENCH",
+              "POLISH",
+              "UKRAINIAN_LANGUAGE",
+              "UKRAINIAN_LITERATURE",
+              "WORLD_LITERATURE",
+              "PHYSICS",
+              "CHEMISTRY",
+              "BIOLOGY",
+              "GEOGRAPHY",
+              "HISTORY",
+              "WORLD_HISTORY",
+              "HISTORY_OF_UKRAINE",
+              "COMPUTER_SCIENCE",
+              "ECONOMICS",
+              "LAW",
+              "MUSIC",
+              "ART",
+              "PHYSICAL_EDUCATION",
+              "NMT_PREP",
+              "ZNO_PREP",
+              "IELTS_PREP",
+              "TOEFL_PREP",
+              "SAT_PREP"
+            ]
+          },
+          "hourlyRateMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "maximum": 2147483647,
+            "exclusiveMaximum": false
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "EUR",
+              "UAH",
+              "PLN",
+              "USD",
+              "GBP"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "ON_HOLD"
+            ],
+            "default": "ACTIVE"
+          },
+          "languageLevel": {
+            "type": "string",
+            "enum": [
+              "A1",
+              "A2",
+              "B1",
+              "B2",
+              "C1",
+              "C2"
+            ]
+          },
+          "knowledgeLevel": {
+            "type": "string",
+            "enum": [
+              "BEGINNER",
+              "INTERMEDIATE",
+              "ADVANCED"
+            ]
+          },
+          "age": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "maximum": 120,
+            "exclusiveMaximum": false
+          },
+          "grade": {
+            "type": "integer",
+            "minimum": 1,
+            "exclusiveMinimum": false,
+            "maximum": 12,
+            "exclusiveMaximum": false
+          },
+          "parentIds": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           "notes": {
             "type": "string",
@@ -2120,9 +2566,11 @@
           "email",
           "phone",
           "timezone",
-          "parentName",
-          "parentEmail",
-          "parentPhone",
+          "telegramUsername",
+          "subject",
+          "currency",
+          "languageLevel",
+          "knowledgeLevel",
           "notes"
         ]
       },
@@ -2151,17 +2599,117 @@
           "timezone": {
             "type": "string"
           },
-          "parentName": {
+          "telegramUsername": {
             "type": "string",
             "nullable": true
           },
-          "parentEmail": {
+          "subject": {
             "type": "string",
+            "enum": [
+              "MATH",
+              "ENGLISH",
+              "GERMAN",
+              "FRENCH",
+              "POLISH",
+              "UKRAINIAN_LANGUAGE",
+              "UKRAINIAN_LITERATURE",
+              "WORLD_LITERATURE",
+              "PHYSICS",
+              "CHEMISTRY",
+              "BIOLOGY",
+              "GEOGRAPHY",
+              "HISTORY",
+              "WORLD_HISTORY",
+              "HISTORY_OF_UKRAINE",
+              "COMPUTER_SCIENCE",
+              "ECONOMICS",
+              "LAW",
+              "MUSIC",
+              "ART",
+              "PHYSICAL_EDUCATION",
+              "NMT_PREP",
+              "ZNO_PREP",
+              "IELTS_PREP",
+              "TOEFL_PREP",
+              "SAT_PREP"
+            ],
             "nullable": true
           },
-          "parentPhone": {
-            "type": "string",
+          "hourlyRateMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false,
             "nullable": true
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "EUR",
+              "UAH",
+              "PLN",
+              "USD",
+              "GBP"
+            ],
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "ON_HOLD"
+            ]
+          },
+          "languageLevel": {
+            "type": "string",
+            "enum": [
+              "A1",
+              "A2",
+              "B1",
+              "B2",
+              "C1",
+              "C2"
+            ],
+            "nullable": true
+          },
+          "knowledgeLevel": {
+            "type": "string",
+            "enum": [
+              "BEGINNER",
+              "INTERMEDIATE",
+              "ADVANCED"
+            ],
+            "nullable": true
+          },
+          "age": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "nullable": true
+          },
+          "grade": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "nullable": true
+          },
+          "parents": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "fullName": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "fullName"
+              ]
+            }
           },
           "notes": {
             "type": "string",
@@ -2188,9 +2736,16 @@
           "email",
           "phone",
           "timezone",
-          "parentName",
-          "parentEmail",
-          "parentPhone",
+          "telegramUsername",
+          "subject",
+          "hourlyRateMinor",
+          "currency",
+          "status",
+          "languageLevel",
+          "knowledgeLevel",
+          "age",
+          "grade",
+          "parents",
           "notes",
           "createdAt",
           "updatedAt",
@@ -2222,17 +2777,117 @@
           "timezone": {
             "type": "string"
           },
-          "parentName": {
+          "telegramUsername": {
             "type": "string",
             "nullable": true
           },
-          "parentEmail": {
+          "subject": {
             "type": "string",
+            "enum": [
+              "MATH",
+              "ENGLISH",
+              "GERMAN",
+              "FRENCH",
+              "POLISH",
+              "UKRAINIAN_LANGUAGE",
+              "UKRAINIAN_LITERATURE",
+              "WORLD_LITERATURE",
+              "PHYSICS",
+              "CHEMISTRY",
+              "BIOLOGY",
+              "GEOGRAPHY",
+              "HISTORY",
+              "WORLD_HISTORY",
+              "HISTORY_OF_UKRAINE",
+              "COMPUTER_SCIENCE",
+              "ECONOMICS",
+              "LAW",
+              "MUSIC",
+              "ART",
+              "PHYSICAL_EDUCATION",
+              "NMT_PREP",
+              "ZNO_PREP",
+              "IELTS_PREP",
+              "TOEFL_PREP",
+              "SAT_PREP"
+            ],
             "nullable": true
           },
-          "parentPhone": {
-            "type": "string",
+          "hourlyRateMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false,
             "nullable": true
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "EUR",
+              "UAH",
+              "PLN",
+              "USD",
+              "GBP"
+            ],
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "ON_HOLD"
+            ]
+          },
+          "languageLevel": {
+            "type": "string",
+            "enum": [
+              "A1",
+              "A2",
+              "B1",
+              "B2",
+              "C1",
+              "C2"
+            ],
+            "nullable": true
+          },
+          "knowledgeLevel": {
+            "type": "string",
+            "enum": [
+              "BEGINNER",
+              "INTERMEDIATE",
+              "ADVANCED"
+            ],
+            "nullable": true
+          },
+          "age": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "nullable": true
+          },
+          "grade": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "nullable": true
+          },
+          "parents": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "fullName": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "fullName"
+              ]
+            }
           },
           "notes": {
             "type": "string",
@@ -2350,9 +3005,16 @@
           "email",
           "phone",
           "timezone",
-          "parentName",
-          "parentEmail",
-          "parentPhone",
+          "telegramUsername",
+          "subject",
+          "hourlyRateMinor",
+          "currency",
+          "status",
+          "languageLevel",
+          "knowledgeLevel",
+          "age",
+          "grade",
+          "parents",
           "notes",
           "createdAt",
           "updatedAt",
@@ -2386,28 +3048,391 @@
             "minLength": 1,
             "maxLength": 64
           },
-          "parentName": {
+          "telegramUsername": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 32,
+            "pattern": "^@?\\w{2,32}$",
+            "nullable": true
+          },
+          "subject": {
+            "type": "string",
+            "enum": [
+              "MATH",
+              "ENGLISH",
+              "GERMAN",
+              "FRENCH",
+              "POLISH",
+              "UKRAINIAN_LANGUAGE",
+              "UKRAINIAN_LITERATURE",
+              "WORLD_LITERATURE",
+              "PHYSICS",
+              "CHEMISTRY",
+              "BIOLOGY",
+              "GEOGRAPHY",
+              "HISTORY",
+              "WORLD_HISTORY",
+              "HISTORY_OF_UKRAINE",
+              "COMPUTER_SCIENCE",
+              "ECONOMICS",
+              "LAW",
+              "MUSIC",
+              "ART",
+              "PHYSICAL_EDUCATION",
+              "NMT_PREP",
+              "ZNO_PREP",
+              "IELTS_PREP",
+              "TOEFL_PREP",
+              "SAT_PREP"
+            ],
+            "nullable": true
+          },
+          "hourlyRateMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "maximum": 2147483647,
+            "exclusiveMaximum": false,
+            "nullable": true
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "EUR",
+              "UAH",
+              "PLN",
+              "USD",
+              "GBP"
+            ],
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "ON_HOLD"
+            ]
+          },
+          "languageLevel": {
+            "type": "string",
+            "enum": [
+              "A1",
+              "A2",
+              "B1",
+              "B2",
+              "C1",
+              "C2"
+            ],
+            "nullable": true
+          },
+          "knowledgeLevel": {
+            "type": "string",
+            "enum": [
+              "BEGINNER",
+              "INTERMEDIATE",
+              "ADVANCED"
+            ],
+            "nullable": true
+          },
+          "age": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "maximum": 120,
+            "exclusiveMaximum": false,
+            "nullable": true
+          },
+          "grade": {
+            "type": "integer",
+            "minimum": 1,
+            "exclusiveMinimum": false,
+            "maximum": 12,
+            "exclusiveMaximum": false,
+            "nullable": true
+          },
+          "parentIds": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 4000,
+            "nullable": true
+          }
+        }
+      },
+      "ParentListDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "fullName": {
+                  "type": "string"
+                },
+                "phone": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "telegramUsername": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "deletedAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                },
+                "students": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "fullName": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "fullName"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "fullName",
+                "phone",
+                "telegramUsername",
+                "deletedAt",
+                "students"
+              ]
+            }
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1,
+            "exclusiveMinimum": false
+          },
+          "pageSize": {
+            "type": "integer",
+            "minimum": 1,
+            "exclusiveMinimum": false
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "totalPages": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "total",
+          "totalPages"
+        ]
+      },
+      "CreateParentDto": {
+        "type": "object",
+        "properties": {
+          "fullName": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 120,
-            "nullable": true
+            "maxLength": 120
           },
-          "parentEmail": {
+          "phone": {
             "type": "string",
-            "format": "email",
-            "maxLength": 320,
+            "minLength": 3,
+            "maxLength": 32,
+            "pattern": "^\\+?[\\d ()-]+$"
+          },
+          "telegramUsername": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 32,
+            "pattern": "^@?\\w{2,32}$"
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "fullName",
+          "phone",
+          "telegramUsername",
+          "notes"
+        ]
+      },
+      "ParentDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string",
             "nullable": true
           },
-          "parentPhone": {
+          "telegramUsername": {
+            "type": "string",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "workspaceId",
+          "fullName",
+          "phone",
+          "telegramUsername",
+          "notes",
+          "createdAt",
+          "updatedAt",
+          "deletedAt"
+        ]
+      },
+      "ParentDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "telegramUsername": {
+            "type": "string",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "students": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "fullName": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "fullName"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "workspaceId",
+          "fullName",
+          "phone",
+          "telegramUsername",
+          "notes",
+          "createdAt",
+          "updatedAt",
+          "deletedAt",
+          "students"
+        ]
+      },
+      "UpdateParentDto": {
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "phone": {
             "type": "string",
             "minLength": 3,
             "maxLength": 32,
             "pattern": "^\\+?[\\d ()-]+$",
             "nullable": true
           },
+          "telegramUsername": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 32,
+            "pattern": "^@?\\w{2,32}$",
+            "nullable": true
+          },
           "notes": {
             "type": "string",
-            "maxLength": 4000,
+            "maxLength": 2000,
             "nullable": true
           }
         }
@@ -2427,6 +3452,27 @@
                 "name": {
                   "type": "string"
                 },
+                "pricePerLesson": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false,
+                  "nullable": true
+                },
+                "currency": {
+                  "type": "string",
+                  "enum": [
+                    "EUR",
+                    "UAH",
+                    "PLN",
+                    "USD",
+                    "GBP"
+                  ],
+                  "nullable": true
+                },
+                "notes": {
+                  "type": "string",
+                  "nullable": true
+                },
                 "deletedAt": {
                   "type": "string",
                   "format": "date-time",
@@ -2436,13 +3482,36 @@
                   "type": "integer",
                   "minimum": 0,
                   "exclusiveMinimum": false
+                },
+                "students": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "fullName": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "fullName"
+                    ]
+                  }
                 }
               },
               "required": [
                 "id",
                 "name",
+                "pricePerLesson",
+                "currency",
+                "notes",
                 "deletedAt",
-                "activeStudentCount"
+                "activeStudentCount",
+                "students"
               ]
             }
           },
@@ -2483,6 +3552,23 @@
             "minLength": 1,
             "maxLength": 120
           },
+          "pricePerLesson": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "maximum": 2147483647,
+            "exclusiveMaximum": false
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "EUR",
+              "UAH",
+              "PLN",
+              "USD",
+              "GBP"
+            ]
+          },
           "notes": {
             "type": "string",
             "maxLength": 2000
@@ -2506,6 +3592,23 @@
           "name": {
             "type": "string"
           },
+          "pricePerLesson": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "nullable": true
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "EUR",
+              "UAH",
+              "PLN",
+              "USD",
+              "GBP"
+            ],
+            "nullable": true
+          },
           "notes": {
             "type": "string",
             "nullable": true
@@ -2528,6 +3631,8 @@
           "id",
           "workspaceId",
           "name",
+          "pricePerLesson",
+          "currency",
           "notes",
           "createdAt",
           "updatedAt",
@@ -2547,6 +3652,23 @@
           },
           "name": {
             "type": "string"
+          },
+          "pricePerLesson": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "nullable": true
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "EUR",
+              "UAH",
+              "PLN",
+              "USD",
+              "GBP"
+            ],
+            "nullable": true
           },
           "notes": {
             "type": "string",
@@ -2647,6 +3769,8 @@
           "id",
           "workspaceId",
           "name",
+          "pricePerLesson",
+          "currency",
           "notes",
           "createdAt",
           "updatedAt",
@@ -2661,6 +3785,25 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 120
+          },
+          "pricePerLesson": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "maximum": 2147483647,
+            "exclusiveMaximum": false,
+            "nullable": true
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "EUR",
+              "UAH",
+              "PLN",
+              "USD",
+              "GBP"
+            ],
+            "nullable": true
           },
           "notes": {
             "type": "string",

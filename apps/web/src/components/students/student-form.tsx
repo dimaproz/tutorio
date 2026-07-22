@@ -1,13 +1,22 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
+import { XIcon } from 'lucide-react';
 import { toast } from 'sonner';
-import type { StudentDetail } from '@tutorio/validation';
+import {
+  STUDENT_KNOWLEDGE_LEVELS,
+  STUDENT_LANGUAGE_LEVELS,
+  STUDENT_SUBJECTS,
+  type StudentDetail,
+} from '@tutorio/validation';
+import { EntityCombobox } from '@/components/enrollments/entity-combobox';
+import { ParentFormDialog } from '@/components/parents/parent-form-dialog';
 import { detectTimezone, TimezoneCombobox } from '@/components/app/timezone-combobox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Field,
@@ -20,16 +29,32 @@ import {
   FieldSet,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { errorMessageKey } from '@/lib/api/error-message';
+import { useParentsQuery } from '@/lib/api/parents';
 import { useCreateStudentMutation, useUpdateStudentMutation } from '@/lib/api/students';
+import { useSession } from '@/components/app/session-provider';
 import { makeZodErrorMap } from '@/lib/forms/error-map';
 import {
   EMPTY_STUDENT_FORM,
   studentFormSchema,
   type StudentFormValues,
 } from '@/lib/forms/schemas';
+import { formatPriceInput, parsePriceInput } from '@/lib/money';
+
+const CURRENCIES = ['EUR', 'UAH', 'PLN', 'USD', 'GBP'] as const;
+const STUDENT_STATUSES = ['ACTIVE', 'ON_HOLD'] as const;
+// Sentinel for "unset" — Radix Select cannot hold an empty string value.
+const NONE = '__none__';
 
 // One component for both modes: creating sends only filled fields, editing
 // sends null for cleared ones so the API knows to erase them. Rendered inside
@@ -47,14 +72,25 @@ export function StudentForm({
 }) {
   const t = useTranslations('students.form');
   const tStudents = useTranslations('students');
+  const tSubject = useTranslations('subject');
+  const tLanguageLevel = useTranslations('languageLevel');
+  const tKnowledgeLevel = useTranslations('knowledgeLevel');
+  const tStudentStatus = useTranslations('studentStatus');
   const tErrors = useTranslations('errors');
   const tValidation = useTranslations('validation');
   const tCommon = useTranslations('common');
+  const session = useSession();
 
   const isEdit = Boolean(student);
   const createStudent = useCreateStudentMutation();
   const updateStudent = useUpdateStudentMutation(student?.id ?? '');
   const mutation = isEdit ? updateStudent : createStudent;
+
+  const [assignedParents, setAssignedParents] = useState<{ id: string; fullName: string }[]>(
+    student?.parents ?? [],
+  );
+  const [quickCreateOpen, setQuickCreateOpen] = useState(false);
+  const parentsQuery = useParentsQuery({ page: 1, pageSize: 100 });
 
   const form = useForm<StudentFormValues>({
     resolver: zodResolver(studentFormSchema, {
@@ -68,15 +104,25 @@ export function StudentForm({
           email: student.email ?? '',
           phone: student.phone ?? '',
           timezone: student.timezone,
-          parentName: student.parentName ?? '',
-          parentEmail: student.parentEmail ?? '',
-          parentPhone: student.parentPhone ?? '',
+          telegramUsername: student.telegramUsername ?? '',
+          subject: student.subject ?? '',
+          hourlyRate:
+            student.hourlyRateMinor != null ? formatPriceInput(student.hourlyRateMinor) : '',
+          currency:
+            (student.currency as StudentFormValues['currency'] | null) ??
+            (session.workspace.defaultCurrency as StudentFormValues['currency']),
+          status: student.status,
+          languageLevel: student.languageLevel ?? '',
+          knowledgeLevel: student.knowledgeLevel ?? '',
+          age: student.age != null ? String(student.age) : '',
+          grade: student.grade != null ? String(student.grade) : '',
+          parentIds: student.parents.map((parent) => parent.id),
           notes: student.notes ?? '',
         }
-      : EMPTY_STUDENT_FORM,
+      : { ...EMPTY_STUDENT_FORM, currency: session.workspace.defaultCurrency as StudentFormValues['currency'] },
   });
   const { errors, isSubmitting } = form.formState;
-  const timezone = form.watch('timezone');
+  const values = form.watch();
 
   // New students default to the browser timezone (Europe/Kyiv as fallback).
   useEffect(() => {
@@ -85,21 +131,57 @@ export function StudentForm({
     }
   }, [isEdit, form]);
 
-  const onSubmit = form.handleSubmit(async (values) => {
+  useEffect(() => {
+    form.setValue(
+      'parentIds',
+      assignedParents.map((parent) => parent.id),
+      { shouldValidate: true },
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- sync only on list change
+  }, [assignedParents]);
+
+  const parentOptions = useMemo(() => {
+    const assignedIds = new Set(assignedParents.map((parent) => parent.id));
+    return (parentsQuery.data?.items ?? [])
+      .filter((parent) => !assignedIds.has(parent.id))
+      .map((parent) => ({ value: parent.id, label: parent.fullName }));
+  }, [parentsQuery.data, assignedParents]);
+
+  function addParent(parent: { id: string; fullName: string }) {
+    setAssignedParents((current) =>
+      current.some((existing) => existing.id === parent.id) ? current : [...current, parent],
+    );
+  }
+
+  function removeParent(parentId: string) {
+    setAssignedParents((current) => current.filter((parent) => parent.id !== parentId));
+  }
+
+  const onSubmit = form.handleSubmit(async (formValues) => {
     const optional = (value: string) => (value.trim() === '' ? undefined : value);
+    const hourlyRateMinor =
+      formValues.hourlyRate.trim() === '' ? null : parsePriceInput(formValues.hourlyRate);
+
     try {
       if (student) {
         // PATCH: an emptied field becomes null so the API clears it.
         const cleared = (value: string) => (value.trim() === '' ? null : value);
         await updateStudent.mutateAsync({
-          fullName: values.fullName,
-          email: cleared(values.email),
-          phone: cleared(values.phone),
-          timezone: values.timezone,
-          parentName: cleared(values.parentName),
-          parentEmail: cleared(values.parentEmail),
-          parentPhone: cleared(values.parentPhone),
-          notes: cleared(values.notes),
+          fullName: formValues.fullName,
+          email: cleared(formValues.email),
+          phone: cleared(formValues.phone),
+          timezone: formValues.timezone,
+          telegramUsername: cleared(formValues.telegramUsername),
+          subject: formValues.subject === '' ? null : formValues.subject,
+          hourlyRateMinor,
+          currency: hourlyRateMinor === null ? null : formValues.currency,
+          status: formValues.status,
+          languageLevel: formValues.languageLevel === '' ? null : formValues.languageLevel,
+          knowledgeLevel: formValues.knowledgeLevel === '' ? null : formValues.knowledgeLevel,
+          age: formValues.age.trim() === '' ? null : Number(formValues.age),
+          grade: formValues.grade.trim() === '' ? null : Number(formValues.grade),
+          parentIds: formValues.parentIds,
+          notes: cleared(formValues.notes),
         });
         toast.success(tStudents('toasts.updated'));
         onSuccess?.();
@@ -107,14 +189,22 @@ export function StudentForm({
       }
 
       await createStudent.mutateAsync({
-        fullName: values.fullName,
-        email: optional(values.email),
-        phone: optional(values.phone),
-        timezone: values.timezone,
-        parentName: optional(values.parentName),
-        parentEmail: optional(values.parentEmail),
-        parentPhone: optional(values.parentPhone),
-        notes: optional(values.notes),
+        fullName: formValues.fullName,
+        email: optional(formValues.email),
+        phone: optional(formValues.phone),
+        timezone: formValues.timezone,
+        telegramUsername: optional(formValues.telegramUsername),
+        subject: formValues.subject === '' ? undefined : formValues.subject,
+        hourlyRateMinor: hourlyRateMinor ?? undefined,
+        currency: hourlyRateMinor === null ? undefined : formValues.currency,
+        status: formValues.status,
+        languageLevel: formValues.languageLevel === '' ? undefined : formValues.languageLevel,
+        knowledgeLevel:
+          formValues.knowledgeLevel === '' ? undefined : formValues.knowledgeLevel,
+        age: formValues.age.trim() === '' ? undefined : Number(formValues.age),
+        grade: formValues.grade.trim() === '' ? undefined : Number(formValues.grade),
+        parentIds: formValues.parentIds,
+        notes: optional(formValues.notes),
       });
       toast.success(tStudents('toasts.created'));
       onSuccess?.();
@@ -147,6 +237,57 @@ export function StudentForm({
               />
               <FieldError errors={[errors.fullName]} />
             </Field>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field>
+                <FieldLabel htmlFor="student-subject">{t('subject')}</FieldLabel>
+                <Select
+                  value={values.subject === '' ? NONE : values.subject}
+                  onValueChange={(value) =>
+                    form.setValue(
+                      'subject',
+                      value === NONE ? '' : (value as StudentFormValues['subject']),
+                    )
+                  }
+                >
+                  <SelectTrigger id="student-subject" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value={NONE}>{tCommon('notProvided')}</SelectItem>
+                      {STUDENT_SUBJECTS.map((subject) => (
+                        <SelectItem key={subject} value={subject}>
+                          {tSubject(subject)}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="student-status">{t('status')}</FieldLabel>
+                <Select
+                  value={values.status}
+                  onValueChange={(value) =>
+                    form.setValue('status', value as StudentFormValues['status'])
+                  }
+                >
+                  <SelectTrigger id="student-status" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {STUDENT_STATUSES.map((status) => (
+                        <SelectItem key={status} value={status}>
+                          {tStudentStatus(status)}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </Field>
+            </div>
           </FieldGroup>
         </FieldSet>
 
@@ -180,6 +321,17 @@ export function StudentForm({
               />
               <FieldError errors={[errors.phone]} />
             </Field>
+            <Field data-invalid={errors.telegramUsername ? true : undefined}>
+              <FieldLabel htmlFor="student-telegram">{t('telegramUsername')}</FieldLabel>
+              <Input
+                id="student-telegram"
+                autoComplete="off"
+                spellCheck={false}
+                aria-invalid={errors.telegramUsername ? true : undefined}
+                {...form.register('telegramUsername')}
+              />
+              <FieldError errors={[errors.telegramUsername]} />
+            </Field>
           </FieldGroup>
         </FieldSet>
 
@@ -192,7 +344,7 @@ export function StudentForm({
               <FieldLabel htmlFor="student-timezone">{t('timezone')}</FieldLabel>
               <TimezoneCombobox
                 id="student-timezone"
-                value={timezone}
+                value={values.timezone}
                 onChange={(value) =>
                   form.setValue('timezone', value, { shouldValidate: true })
                 }
@@ -210,41 +362,174 @@ export function StudentForm({
         <FieldSeparator />
 
         <FieldSet>
+          <FieldLegend>{t('academicSection')}</FieldLegend>
+          <FieldGroup>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field>
+                <FieldLabel htmlFor="student-language-level">{t('languageLevel')}</FieldLabel>
+                <Select
+                  value={values.languageLevel === '' ? NONE : values.languageLevel}
+                  onValueChange={(value) =>
+                    form.setValue(
+                      'languageLevel',
+                      value === NONE ? '' : (value as StudentFormValues['languageLevel']),
+                    )
+                  }
+                >
+                  <SelectTrigger id="student-language-level" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value={NONE}>{tCommon('notProvided')}</SelectItem>
+                      {STUDENT_LANGUAGE_LEVELS.map((level) => (
+                        <SelectItem key={level} value={level}>
+                          {tLanguageLevel(level)}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="student-knowledge-level">{t('knowledgeLevel')}</FieldLabel>
+                <Select
+                  value={values.knowledgeLevel === '' ? NONE : values.knowledgeLevel}
+                  onValueChange={(value) =>
+                    form.setValue(
+                      'knowledgeLevel',
+                      value === NONE ? '' : (value as StudentFormValues['knowledgeLevel']),
+                    )
+                  }
+                >
+                  <SelectTrigger id="student-knowledge-level" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value={NONE}>{tCommon('notProvided')}</SelectItem>
+                      {STUDENT_KNOWLEDGE_LEVELS.map((level) => (
+                        <SelectItem key={level} value={level}>
+                          {tKnowledgeLevel(level)}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </Field>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field data-invalid={errors.age ? true : undefined}>
+                <FieldLabel htmlFor="student-age">{t('age')}</FieldLabel>
+                <Input
+                  id="student-age"
+                  inputMode="numeric"
+                  aria-invalid={errors.age ? true : undefined}
+                  {...form.register('age')}
+                />
+                <FieldError errors={[errors.age]} />
+              </Field>
+              <Field data-invalid={errors.grade ? true : undefined}>
+                <FieldLabel htmlFor="student-grade">{t('grade')}</FieldLabel>
+                <Input
+                  id="student-grade"
+                  inputMode="numeric"
+                  aria-invalid={errors.grade ? true : undefined}
+                  {...form.register('grade')}
+                />
+                <FieldError errors={[errors.grade]} />
+              </Field>
+            </div>
+          </FieldGroup>
+        </FieldSet>
+
+        <FieldSeparator />
+
+        <FieldSet>
+          <FieldLegend>{t('pricingSection')}</FieldLegend>
+          <FieldDescription>{t('pricingHint')}</FieldDescription>
+          <FieldGroup>
+            <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
+              <Field data-invalid={errors.hourlyRate ? true : undefined}>
+                <FieldLabel htmlFor="student-hourly-rate">{t('hourlyRate')}</FieldLabel>
+                <Input
+                  id="student-hourly-rate"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  placeholder={t('hourlyRateHint')}
+                  aria-invalid={errors.hourlyRate ? true : undefined}
+                  {...form.register('hourlyRate')}
+                />
+                <FieldError errors={[errors.hourlyRate]} />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="student-currency">{t('currency')}</FieldLabel>
+                <Select
+                  value={values.currency}
+                  onValueChange={(value) =>
+                    form.setValue('currency', value as StudentFormValues['currency'])
+                  }
+                >
+                  <SelectTrigger id="student-currency" className="w-full sm:w-28">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {CURRENCIES.map((currency) => (
+                        <SelectItem key={currency} value={currency}>
+                          {currency}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </Field>
+            </div>
+          </FieldGroup>
+        </FieldSet>
+
+        <FieldSeparator />
+
+        <FieldSet>
           <FieldLegend>{t('parentSection')}</FieldLegend>
           <FieldDescription>{t('parentHint')}</FieldDescription>
           <FieldGroup>
-            <Field data-invalid={errors.parentName ? true : undefined}>
-              <FieldLabel htmlFor="student-parent-name">{t('parentName')}</FieldLabel>
-              <Input
-                id="student-parent-name"
-                aria-invalid={errors.parentName ? true : undefined}
-                {...form.register('parentName')}
+            {assignedParents.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {assignedParents.map((parent) => (
+                  <Badge key={parent.id} variant="secondary">
+                    {parent.fullName}
+                    <button
+                      type="button"
+                      onClick={() => removeParent(parent.id)}
+                      aria-label={t('removeParent', { name: parent.fullName })}
+                      className="ml-0.5 rounded-full outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                    >
+                      <XIcon data-icon />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            ) : null}
+            <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+              <EntityCombobox
+                id="student-add-parent"
+                value=""
+                options={parentOptions}
+                onChange={(parentId) => {
+                  const option = parentOptions.find((item) => item.value === parentId);
+                  if (option) {
+                    addParent({ id: option.value, fullName: option.label });
+                  }
+                }}
+                placeholder={t('addParentPlaceholder')}
+                searchPlaceholder={t('addParentSearch')}
+                emptyLabel={t('addParentEmpty')}
               />
-              <FieldError errors={[errors.parentName]} />
-            </Field>
-            <Field data-invalid={errors.parentEmail ? true : undefined}>
-              <FieldLabel htmlFor="student-parent-email">{t('parentEmail')}</FieldLabel>
-              <Input
-                id="student-parent-email"
-                type="email"
-                inputMode="email"
-                spellCheck={false}
-                aria-invalid={errors.parentEmail ? true : undefined}
-                {...form.register('parentEmail')}
-              />
-              <FieldError errors={[errors.parentEmail]} />
-            </Field>
-            <Field data-invalid={errors.parentPhone ? true : undefined}>
-              <FieldLabel htmlFor="student-parent-phone">{t('parentPhone')}</FieldLabel>
-              <Input
-                id="student-parent-phone"
-                type="tel"
-                inputMode="tel"
-                aria-invalid={errors.parentPhone ? true : undefined}
-                {...form.register('parentPhone')}
-              />
-              <FieldError errors={[errors.parentPhone]} />
-            </Field>
+              <Button type="button" variant="outline" onClick={() => setQuickCreateOpen(true)}>
+                {t('newParent')}
+              </Button>
+            </div>
           </FieldGroup>
         </FieldSet>
 
@@ -277,6 +562,12 @@ export function StudentForm({
           </Button>
         </div>
       </FieldGroup>
+
+      <ParentFormDialog
+        open={quickCreateOpen}
+        onOpenChange={setQuickCreateOpen}
+        onSuccess={(parent) => addParent(parent)}
+      />
     </form>
   );
 }

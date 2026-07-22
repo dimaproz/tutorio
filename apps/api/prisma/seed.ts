@@ -91,27 +91,86 @@ async function main() {
     return created;
   }
 
-  // Varied optional contacts: full parent contact, minimal card, adult
-  // student, and one soft-deleted record for the owner's trash view.
+  async function ensureParent(
+    data: Omit<Prisma.ParentUncheckedCreateInput, 'workspaceId'>,
+  ) {
+    const existing = await prisma.parent.findFirst({
+      where: { workspaceId: workspace.id, fullName: data.fullName },
+    });
+    if (existing) {
+      return existing;
+    }
+    const created = await prisma.parent.create({
+      data: { workspaceId: workspace.id, ...data },
+    });
+    await prisma.auditLog.create({
+      data: {
+        workspaceId: workspace.id,
+        actorId: owner.id,
+        action: 'CREATE',
+        entity: 'PARENT',
+        entityId: created.id,
+        diff: { fields: { fullName: { before: null, after: data.fullName } } },
+      },
+    });
+    return created;
+  }
+
+  async function ensureStudentParentLink(studentId: string, parentId: string) {
+    const existing = await prisma.studentParent.findFirst({
+      where: { studentId, parentId },
+    });
+    return existing ?? prisma.studentParent.create({ data: { studentId, parentId } });
+  }
+
+  // Varied optional fields: full academic profile + linked parent, minimal
+  // card, adult student, and one soft-deleted record for the owner's trash
+  // view.
   const alice = await ensureStudent({
     fullName: 'Alice Demo',
     email: 'alice.demo@example.com',
     phone: '+380 50 111 22 33',
     timezone: 'Europe/Kyiv',
-    parentName: 'Iryna Demo',
-    parentEmail: 'iryna.demo@example.com',
-    parentPhone: '+380 50 111 22 34',
+    telegramUsername: '@alice_demo',
+    subject: 'ENGLISH',
+    hourlyRateMinor: 45000,
+    currency: 'UAH',
+    status: 'ACTIVE',
+    languageLevel: 'B1',
+    knowledgeLevel: 'INTERMEDIATE',
+    age: 16,
+    grade: 10,
     notes: 'Preparing for B2 exam in spring.',
   });
+  const irynaParent = await ensureParent({
+    fullName: 'Iryna Demo',
+    phone: '+380 50 111 22 34',
+    telegramUsername: '@iryna_demo',
+    notes: 'Primary contact for billing questions.',
+  });
+  await ensureStudentParentLink(alice.id, irynaParent.id);
   const bohdan = await ensureStudent({
     fullName: 'Bohdan Demo',
     timezone: 'Europe/Warsaw',
     phone: '+48 600 100 200',
+    subject: 'MATH',
+    hourlyRateMinor: 8000,
+    currency: 'PLN',
+    status: 'ON_HOLD',
+    knowledgeLevel: 'BEGINNER',
+    age: 12,
+    grade: 6,
   });
   const clara = await ensureStudent({
     fullName: 'Clara Demo',
     email: 'clara.demo@example.com',
     timezone: 'Europe/London',
+    subject: 'IELTS_PREP',
+    hourlyRateMinor: 3500,
+    currency: 'GBP',
+    status: 'ACTIVE',
+    languageLevel: 'C1',
+    knowledgeLevel: 'ADVANCED',
     notes: 'Adult learner, invoices to company email.',
   });
   const deleted = await ensureStudent({
@@ -141,6 +200,8 @@ async function main() {
     data: {
       workspaceId: workspace.id,
       name: 'B1 English Evenings',
+      pricePerLesson: 30000,
+      currency: 'EUR',
       notes: 'Tuesday and Thursday, 19:00 Kyiv time.',
     },
   });

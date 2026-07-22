@@ -1,9 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { MoreHorizontalIcon, PencilIcon, RotateCcwIcon, Trash2Icon } from 'lucide-react';
+import {
+  MoreHorizontalIcon,
+  PauseIcon,
+  PencilIcon,
+  PlayIcon,
+  RotateCcwIcon,
+  Trash2Icon,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
+import type { StudentStatusDto } from '@tutorio/validation';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -14,20 +22,27 @@ import {
 import { ConfirmDialog } from '@/components/app/confirm-dialog';
 import { useSession } from '@/components/app/session-provider';
 import { errorMessageKey } from '@/lib/api/error-message';
-import { useDeleteStudentMutation, useRestoreStudentMutation } from '@/lib/api/students';
+import {
+  useDeleteStudentMutation,
+  useRestoreStudentMutation,
+  useUpdateStudentMutation,
+} from '@/lib/api/students';
 import { StudentFormDialog } from './student-form-dialog';
 
 // Deleted students can only be restored (owner) — never edited, never
-// permanently erased.
+// permanently erased. On-hold is a separate, non-destructive status toggle
+// (hides from active lists without soft-deleting).
 export function StudentRowActions({
   studentId,
   fullName,
   isDeleted,
+  status = 'ACTIVE',
   onDeleted,
 }: {
   studentId: string;
   fullName: string;
   isDeleted: boolean;
+  status?: StudentStatusDto;
   onDeleted?: () => void;
 }) {
   const t = useTranslations('students');
@@ -40,6 +55,7 @@ export function StudentRowActions({
 
   const deleteStudent = useDeleteStudentMutation();
   const restoreStudent = useRestoreStudentMutation();
+  const updateStudent = useUpdateStudentMutation(studentId);
 
   const handleDelete = () => {
     deleteStudent.mutate(studentId, {
@@ -60,6 +76,17 @@ export function StudentRowActions({
       onSuccess: () => toast.success(t('toasts.restored')),
       onError: (error) => toast.error(tErrors(errorMessageKey(error))),
     });
+  };
+
+  const handleToggleHold = () => {
+    updateStudent.mutate(
+      { status: status === 'ON_HOLD' ? 'ACTIVE' : 'ON_HOLD' },
+      {
+        onSuccess: () =>
+          toast.success(status === 'ON_HOLD' ? t('toasts.reactivated') : t('toasts.onHold')),
+        onError: (error) => toast.error(tErrors(errorMessageKey(error))),
+      },
+    );
   };
 
   return (
@@ -88,6 +115,19 @@ export function StudentRowActions({
               <DropdownMenuItem onSelect={() => setEditOpen(true)}>
                 <PencilIcon data-icon />
                 {tCommon('edit')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={handleToggleHold}>
+                {status === 'ON_HOLD' ? (
+                  <>
+                    <PlayIcon data-icon />
+                    {t('reactivate')}
+                  </>
+                ) : (
+                  <>
+                    <PauseIcon data-icon />
+                    {t('putOnHold')}
+                  </>
+                )}
               </DropdownMenuItem>
               <DropdownMenuItem variant="destructive" onSelect={() => setConfirmOpen(true)}>
                 <Trash2Icon data-icon />

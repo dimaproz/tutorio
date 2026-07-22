@@ -156,6 +156,19 @@ export function GroupDetailView({ groupId }: { groupId: string }) {
         </Alert>
       ) : null}
 
+      {data.pricePerLesson != null && data.currency ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('detail.priceTitle')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="tabular text-sm">
+              {formatMoneyDisplay(data.pricePerLesson, data.currency, locale)}
+            </p>
+          </CardContent>
+        </Card>
+      ) : null}
+
       {data.notes ? (
         <Card>
           <CardHeader>

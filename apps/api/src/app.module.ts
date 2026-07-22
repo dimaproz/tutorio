@@ -13,6 +13,7 @@ import { validateEnv } from './config/env';
 import { EnrollmentsModule } from './enrollments/enrollments.module';
 import { GroupsModule } from './groups/groups.module';
 import { HealthModule } from './health/health.module';
+import { ParentsModule } from './parents/parents.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { StudentsModule } from './students/students.module';
 import { WorkspacesModule } from './workspaces/workspaces.module';
@@ -30,6 +31,7 @@ import { WorkspacesModule } from './workspaces/workspaces.module';
     WorkspacesModule,
     AuditModule,
     StudentsModule,
+    ParentsModule,
     GroupsModule,
     EnrollmentsModule,
   ],

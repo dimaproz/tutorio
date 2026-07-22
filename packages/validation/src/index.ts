@@ -5,5 +5,6 @@ export * from './enrollments';
 export * from './groups';
 export * from './locale';
 export * from './pagination';
+export * from './parents';
 export * from './students';
 export * from './workspace-settings';

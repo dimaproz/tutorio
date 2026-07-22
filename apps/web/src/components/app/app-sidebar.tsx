@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   CalendarIcon,
+  ContactIcon,
   GraduationCapIcon,
   LayoutDashboardIcon,
   SettingsIcon,
@@ -25,9 +26,10 @@ import {
 } from '@/components/ui/sidebar';
 import { useSession } from './session-provider';
 
-// Live in Stage 2.
+// Live in Stage 2 / 2.5.
 const NAV_ITEMS = [
   { key: 'students', href: '/app/students', icon: UsersIcon },
+  { key: 'parents', href: '/app/parents', icon: ContactIcon },
   { key: 'groups', href: '/app/groups', icon: GraduationCapIcon },
 ] as const;
 

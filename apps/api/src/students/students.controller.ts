@@ -48,7 +48,7 @@ export class StudentsController {
     summary: 'List workspace students',
     description:
       'Paginated summaries with active enrollment counts and group names. ' +
-      'Search covers full name, contacts and parent contacts. ' +
+      'Search covers full name, contacts and Telegram username. ' +
       'state=deleted|all is owner-only.',
   })
   @ApiOkResponse({ type: StudentListDto })
