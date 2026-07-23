@@ -1,5 +1,12 @@
 import { z } from 'zod';
-import { isoDateTimeSchema, notesSchema, phoneSchema, recordStateSchema, uuidSchema } from './common';
+import {
+  avatarKeySchema,
+  isoDateTimeSchema,
+  notesSchema,
+  phoneSchema,
+  recordStateSchema,
+  uuidSchema,
+} from './common';
 import { paginatedResponseSchema, paginationQuerySchema } from './pagination';
 
 export const parentFullNameSchema = z.string().trim().min(1).max(120);
@@ -25,6 +32,7 @@ export const createParentSchema = z
     fullName: parentFullNameSchema,
     phone: optionalField(phoneSchema),
     telegramUsername: optionalField(telegramUsernameSchema),
+    avatarKey: optionalField(avatarKeySchema),
     notes: optionalField(notesSchema),
   })
   .strict();
@@ -37,6 +45,7 @@ export const updateParentSchema = z
     fullName: parentFullNameSchema,
     phone: phoneSchema.nullable(),
     telegramUsername: telegramUsernameSchema.nullable(),
+    avatarKey: avatarKeySchema.nullable(),
     notes: notesSchema.nullable(),
   })
   .partial()
@@ -49,6 +58,8 @@ export const listParentsQuerySchema = paginationQuerySchema
     search: z.string().trim().min(1).max(120).optional(),
     // deleted/all are OWNER-only (enforced by the service).
     state: recordStateSchema.default('active'),
+    // Filter to parents linked to a specific student.
+    studentId: uuidSchema.optional(),
   })
   .strict();
 
@@ -60,6 +71,7 @@ export const parentResponseSchema = z.object({
   fullName: z.string(),
   phone: z.string().nullable(),
   telegramUsername: z.string().nullable(),
+  avatarKey: avatarKeySchema.nullable(),
   notes: z.string().nullable(),
   createdAt: isoDateTimeSchema,
   updatedAt: isoDateTimeSchema,
@@ -73,6 +85,7 @@ export type ParentResponse = z.infer<typeof parentResponseSchema>;
 export const parentStudentRefSchema = z.object({
   id: uuidSchema,
   fullName: z.string(),
+  avatarKey: avatarKeySchema.nullable(),
 });
 
 export type ParentStudentRef = z.infer<typeof parentStudentRefSchema>;
@@ -83,6 +96,7 @@ export const parentListItemSchema = z.object({
   fullName: z.string(),
   phone: z.string().nullable(),
   telegramUsername: z.string().nullable(),
+  avatarKey: avatarKeySchema.nullable(),
   deletedAt: isoDateTimeSchema.nullable(),
   students: z.array(parentStudentRefSchema),
 });

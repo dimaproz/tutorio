@@ -18,7 +18,6 @@ describe('Stage 2 authorization metadata', () => {
   }
 
   it.each([
-    ['students restore', StudentsController.prototype, 'restore'],
     ['groups restore', GroupsController.prototype, 'restore'],
     ['enrollments restore', EnrollmentsController.prototype, 'restore'],
     ['workspace settings', WorkspacesController.prototype, 'updateSettings'],
@@ -30,7 +29,7 @@ describe('Stage 2 authorization metadata', () => {
     [
       'students CRUD',
       StudentsController.prototype,
-      ['list', 'create', 'getDetail', 'update', 'softDelete'],
+      ['list', 'create', 'getDetail', 'update', 'remove'],
     ],
     [
       'groups CRUD',

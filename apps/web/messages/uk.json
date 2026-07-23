@@ -134,7 +134,8 @@
   },
   "studentStatus": {
     "ACTIVE": "Активний",
-    "ON_HOLD": "На канікулах"
+    "ON_HOLD": "На канікулах",
+    "ARCHIVED": "Заархівовано"
   },
   "languageLevel": {
     "A1": "A1 — початковий",
@@ -234,7 +235,11 @@
       "student": "Учень",
       "status": "Статус",
       "contacts": "Контакти",
+      "group": "Група",
       "groups": "Групи",
+      "price": "Ціна за урок",
+      "phone": "Телефон",
+      "telegram": "Телеграм",
       "enrollments": "Записи",
       "timezone": "Часовий пояс",
       "actions": "Дії"
@@ -242,6 +247,12 @@
     "tableCaption": "Учні простору з групами та активними записами на навчання",
     "activeEnrollments": "{count, plural, =0 {Активних записів немає} one {# активний запис} few {# активні записи} many {# активних записів} other {# активного запису}}",
     "noGroups": "Лише індивідуально",
+    "individual": "Індивідуально",
+    "filters": {
+      "statusAll": "Усі статуси",
+      "subjectAll": "Усі предмети",
+      "groupAll": "Усі групи"
+    },
     "empty": {
       "title": "Учнів поки немає",
       "description": "Додайте першого учня, щоб почати складати розклад і абонементи.",
@@ -263,6 +274,8 @@
       "createSubtitle": "Обов'язкові лише ім'я та часовий пояс.",
       "editTitle": "Редагування учня",
       "editSubtitle": "Оновіть контакти та нотатки.",
+      "avatarSection": "Аватар",
+      "avatarInitials": "Ініціали",
       "basicSection": "Основна інформація",
       "contactsSection": "Контакти учня",
       "contactsHint": "Необов'язково — знадобиться для нагадувань.",
@@ -275,15 +288,23 @@
       "parentHint": "Прив'яжіть наявного з батьків або створіть нового.",
       "notesSection": "Нотатки",
       "fullName": "Повне ім'я",
+      "fullNamePlaceholder": "Напр., Анна Шевченко",
       "email": "Ел. пошта",
+      "emailPlaceholder": "name@example.com",
       "phone": "Телефон",
+      "phonePlaceholder": "+380 XX XXX XX XX",
       "telegramUsername": "Юзернейм у Telegram",
+      "telegramPlaceholder": "username",
       "subject": "Предмет",
       "status": "Статус",
       "languageLevel": "Рівень мови",
+      "languageLevelHint": "Для мовних курсів — рівень за шкалою CEFR.",
       "knowledgeLevel": "Рівень знань",
       "age": "Вік",
+      "agePlaceholder": "Напр., 14",
       "grade": "Клас",
+      "gradePlaceholder": "Оберіть клас",
+      "gradeOption": "{grade}-й клас",
       "hourlyRate": "Ціна за годину",
       "hourlyRateHint": "За урок, наприклад 500 або 500,50",
       "currency": "Валюта",
@@ -304,8 +325,13 @@
     "detail": {
       "contactsTitle": "Контактні дані",
       "academicTitle": "Навчальний профіль",
-      "pricingTitle": "Ціна за годину",
+      "pricingTitle": "Ставка та часовий пояс",
       "parentTitle": "Батьки",
+      "groupsTitle": "Групи",
+      "noGroups": "Груп поки немає",
+      "addedOn": "Додано {date}",
+      "ageYears": "{age} р.",
+      "gradeShort": "{grade}-й клас",
       "notesTitle": "Нотатки",
       "enrollmentsTitle": "Записи на навчання",
       "enrollmentsDescription": "Де навчається учень і як за це платить.",
@@ -324,15 +350,17 @@
     "toasts": {
       "created": "Учня створено",
       "updated": "Зміни збережено",
-      "deleted": "Учня перенесено в кошик",
-      "restored": "Учня відновлено",
+      "deleted": "Учня видалено назавжди",
+      "archived": "Учня заархівовано",
       "onHold": "Учня відправлено на канікули",
       "reactivated": "Учня повернено з канікул"
     },
     "deleteDialog": {
-      "title": "Перенести учня в кошик?",
-      "description": "{name} зникне зі списків, але нічого не буде стерто назавжди. Власник може відновити запис будь-коли.",
-      "confirm": "Перенести в кошик"
+      "title": "Видалити учня?",
+      "warning": "Це назавжди — учня та всі його зв'язки (записи на навчання, прив'язки до батьків) буде стерто без можливості відновлення.",
+      "archiveHint": "Не хочете втрачати дані? Заархівуйте — учень зникне зі списків, але залишиться в базі.",
+      "archiveAction": "Заархівувати",
+      "confirm": "Видалити назавжди"
     }
   },
   "groups": {
@@ -415,6 +443,12 @@
     "searchLabel": "Пошук батьків",
     "searchPlaceholder": "Ім'я, телефон або Telegram…",
     "deletedBadge": "У кошику",
+    "filters": {
+      "byStudent": "Учень",
+      "allStudents": "Усі учні",
+      "studentSearch": "Пошук учнів…",
+      "studentEmpty": "Учня не знайдено"
+    },
     "columns": {
       "parent": "Батьки",
       "contacts": "Контакти",
@@ -443,15 +477,20 @@
       "createSubtitle": "Обов'язкове лише ім'я.",
       "editTitle": "Редагування запису",
       "editSubtitle": "Оновіть контакти та нотатки.",
+      "avatarSection": "Аватар",
+      "avatarInitials": "Ініціали",
       "fullName": "Повне ім'я",
       "phone": "Телефон",
+      "phonePlaceholder": "+380 XX XXX XX XX",
       "telegramUsername": "Юзернейм у Telegram",
+      "telegramPlaceholder": "username",
       "notes": "Нотатки",
       "notesPlaceholder": "Усе важливе про цих батьків",
       "submitCreate": "Створити запис",
       "submitEdit": "Зберегти зміни"
     },
     "detail": {
+      "addedOn": "Додано {date}",
       "contactsTitle": "Контактні дані",
       "notesTitle": "Нотатки",
       "studentsTitle": "Пов'язані учні",
@@ -463,13 +502,12 @@
     "toasts": {
       "created": "Запис створено",
       "updated": "Зміни збережено",
-      "deleted": "Запис перенесено в кошик",
-      "restored": "Запис відновлено"
+      "deleted": "Запис батьків видалено назавжди"
     },
     "deleteDialog": {
-      "title": "Перенести цей запис у кошик?",
-      "description": "{name} зникне зі списків, але нічого не буде стерто назавжди. Власник може відновити запис будь-коли.",
-      "confirm": "Перенести в кошик"
+      "title": "Видалити запис батьків?",
+      "description": "{name} та всі прив'язки до учнів буде стерто назавжди, без можливості відновлення.",
+      "confirm": "Видалити назавжди"
     }
   },
   "enrollments": {
@@ -484,6 +522,7 @@
       "studentEmpty": "Учня не знайдено",
       "group": "Група",
       "groupPlaceholder": "Індивідуальні уроки",
+      "groupHint": "Оберіть групу або залиште «Індивідуальні уроки (без групи)» для занять сам на сам.",
       "groupNone": "Індивідуальні уроки (без групи)",
       "groupSearch": "Пошук груп…",
       "groupEmpty": "Групу не знайдено",
@@ -497,9 +536,12 @@
       "priceHint": "За урок або за місяць — залежно від типу оплати.",
       "currency": "Валюта",
       "policySection": "Правила скасування",
+      "deadlineTitle": "Дедлайн скасування",
+      "deadlineExplain": "За скільки часу до уроку учень може скасувати заняття без списання оплати. Після цього моменту урок вважається використаним.",
       "policyDefault": "Як у налаштуваннях простору",
       "policyCustom": "Власний дедлайн для цього запису",
       "customHours": "Годин до уроку",
+      "customHoursHint": "напр., 24",
       "effective": "Чинний дедлайн: {hours, plural, one {# година} few {# години} many {# годин} other {# години}} до уроку.",
       "submitCreate": "Створити запис",
       "submitEdit": "Зберегти зміни"

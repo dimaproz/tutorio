@@ -4,23 +4,21 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import type { ColumnDef } from '@tanstack/react-table';
-import { PlusIcon, UsersIcon } from 'lucide-react';
-import { useTranslations } from 'next-intl';
-import type { StudentListItem } from '@tutorio/validation';
-import { StudentCard, studentInitials } from './student-card';
+import { PlusIcon, SendIcon, UsersIcon } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
+import { STUDENT_SUBJECTS, type StudentListItem } from '@tutorio/validation';
+import { StudentCard } from './student-card';
 import { StudentFormDialog } from './student-form-dialog';
 import { StudentRowActions } from './student-row-actions';
 import { StudentStatusBadge } from './student-status-badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { EntityAvatar } from '@/components/app/entity-avatar';
 import { DataTable } from '@/components/app/data-table';
 import {
   ListPagination,
   ListSearchInput,
-  ListStateFilter,
+  ListSelectFilter,
 } from '@/components/app/list-controls';
 import { ListSkeleton, PageHeader, QueryErrorAlert } from '@/components/app/page-shell';
-import { useSession } from '@/components/app/session-provider';
-import { DeletedBadge } from '@/components/app/status-badges';
 import { Button } from '@/components/ui/button';
 import {
   Empty,
@@ -30,22 +28,39 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
-import { parsePageParam, parseStateParam } from '@/lib/api/filters';
+import { parsePageParam } from '@/lib/api/filters';
 import { useStudentsQuery } from '@/lib/api/students';
+import { useGroupsQuery } from '@/lib/api/groups';
+import { CURRENCY_META } from '@/components/app/currency-option';
+import { formatAmountDisplay } from '@/lib/money';
+
+const STUDENT_STATUSES = ['ACTIVE', 'ON_HOLD', 'ARCHIVED'] as const;
 
 export function StudentsList() {
   const t = useTranslations('students');
   const tSubject = useTranslations('subject');
+  const tStatus = useTranslations('studentStatus');
+  const tFilters = useTranslations('students.filters');
+  const tCommon = useTranslations('common');
+  const locale = useLocale();
   const searchParams = useSearchParams();
-  const session = useSession();
-  const isOwner = session.role === 'OWNER';
   const [createOpen, setCreateOpen] = useState(false);
 
   const page = parsePageParam(searchParams.get('page'));
   const search = searchParams.get('search')?.trim() || undefined;
-  const state = parseStateParam(searchParams.get('state'), isOwner);
+  const status = searchParams.get('status') || undefined;
+  const subject = searchParams.get('subject') || undefined;
+  const groupId = searchParams.get('groupId') || undefined;
 
-  const students = useStudentsQuery({ page, search, state });
+  const students = useStudentsQuery({ page, search, status, subject, groupId });
+  const groups = useGroupsQuery({ page: 1, pageSize: 100 });
+
+  const statusOptions = STUDENT_STATUSES.map((value) => ({ value, label: tStatus(value) }));
+  const subjectOptions = STUDENT_SUBJECTS.map((value) => ({ value, label: tSubject(value) }));
+  const groupOptions = (groups.data?.items ?? []).map((group) => ({
+    value: group.id,
+    label: group.name,
+  }));
 
   const columns = useMemo<ColumnDef<StudentListItem, unknown>[]>(
     () => [
@@ -54,20 +69,18 @@ export function StudentsList() {
         header: () => t('columns.student'),
         cell: ({ row }) => (
           <div className="flex min-w-0 items-center gap-3">
-            <Avatar size="lg">
-              <AvatarFallback>{studentInitials(row.original.fullName)}</AvatarFallback>
-            </Avatar>
+            <EntityAvatar
+              avatarKey={row.original.avatarKey}
+              fullName={row.original.fullName}
+              size="md"
+            />
             <div className="flex min-w-0 flex-col gap-1">
-              {row.original.deletedAt ? (
-                <span className="truncate font-medium">{row.original.fullName}</span>
-              ) : (
-                <Link
-                  href={`/app/students/${row.original.id}`}
-                  className="truncate font-medium underline-offset-4 hover:underline"
-                >
-                  {row.original.fullName}
-                </Link>
-              )}
+              <Link
+                href={`/app/students/${row.original.id}`}
+                className="truncate font-medium underline-offset-4 transition-colors hover:text-primary hover:underline"
+              >
+                {row.original.fullName}
+              </Link>
               {row.original.subject ? (
                 <span className="truncate text-xs text-muted-foreground">
                   {tSubject(row.original.subject)}
@@ -80,41 +93,66 @@ export function StudentsList() {
       {
         id: 'status',
         header: () => t('columns.status'),
-        cell: ({ row }) =>
-          row.original.deletedAt ? (
-            <DeletedBadge label={t('deletedBadge')} />
-          ) : (
-            <StudentStatusBadge status={row.original.status} />
-          ),
+        cell: ({ row }) => <StudentStatusBadge status={row.original.status} />,
       },
       {
-        id: 'contacts',
-        header: () => t('columns.contacts'),
-        cell: ({ row }) => <ContactSummary email={row.original.email} phone={row.original.phone} />,
-      },
-      {
-        id: 'groups',
-        header: () => t('columns.groups'),
+        id: 'group',
+        header: () => t('columns.group'),
         cell: ({ row }) =>
           row.original.groupNames.length > 0 ? (
             <span>{row.original.groupNames.join(', ')}</span>
           ) : (
-            <span className="text-muted-foreground">{t('noGroups')}</span>
+            <span className="text-muted-foreground">{t('individual')}</span>
           ),
       },
       {
-        id: 'enrollments',
-        header: () => t('columns.enrollments'),
-        cell: ({ row }) => (
-          <span className="tabular text-muted-foreground">
-            {t('activeEnrollments', { count: row.original.activeEnrollmentCount })}
-          </span>
-        ),
+        id: 'price',
+        header: () => t('columns.price'),
+        cell: ({ row }) =>
+          row.original.hourlyRateMinor != null && row.original.currency ? (
+            <span className="tabular font-medium whitespace-nowrap">
+              {formatAmountDisplay(row.original.hourlyRateMinor, locale)}{' '}
+              <span className="text-muted-foreground">
+                {CURRENCY_META[row.original.currency]?.symbol ?? row.original.currency}
+              </span>
+            </span>
+          ) : (
+            <span className="text-muted-foreground">{tCommon('notProvided')}</span>
+          ),
       },
       {
-        accessorKey: 'timezone',
-        header: () => t('columns.timezone'),
-        cell: ({ row }) => <span className="text-muted-foreground">{row.original.timezone}</span>,
+        id: 'phone',
+        header: () => t('columns.phone'),
+        cell: ({ row }) =>
+          row.original.phone ? (
+            <a
+              href={`tel:${row.original.phone}`}
+              className="tabular underline-offset-4 hover:underline"
+            >
+              {row.original.phone}
+            </a>
+          ) : (
+            <span className="text-muted-foreground">{tCommon('notProvided')}</span>
+          ),
+      },
+      {
+        id: 'telegram',
+        header: () => t('columns.telegram'),
+        cell: ({ row }) => {
+          const handle = row.original.telegramUsername?.replace(/^@/, '');
+          return handle ? (
+            <a
+              href={`https://t.me/${handle}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-primary underline-offset-4 hover:underline"
+            >
+              <SendIcon className="size-3.5" aria-hidden="true" />@{handle}
+            </a>
+          ) : (
+            <span className="text-muted-foreground">{tCommon('notProvided')}</span>
+          );
+        },
       },
       {
         id: 'actions',
@@ -124,14 +162,14 @@ export function StudentsList() {
             <StudentRowActions
               studentId={row.original.id}
               fullName={row.original.fullName}
-              isDeleted={Boolean(row.original.deletedAt)}
+              avatarKey={row.original.avatarKey}
               status={row.original.status}
             />
           </div>
         ),
       },
     ],
-    [t, tSubject],
+    [t, tSubject, tCommon, locale],
   );
 
   const items = students.data?.items ?? [];
@@ -150,9 +188,26 @@ export function StudentsList() {
         }
       />
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
         <ListSearchInput label={t('searchLabel')} placeholder={t('searchPlaceholder')} />
-        {isOwner ? <ListStateFilter value={state} /> : null}
+        <ListSelectFilter
+          paramKey="status"
+          value={status}
+          options={statusOptions}
+          label={tFilters('statusAll')}
+        />
+        <ListSelectFilter
+          paramKey="subject"
+          value={subject}
+          options={subjectOptions}
+          label={tFilters('subjectAll')}
+        />
+        <ListSelectFilter
+          paramKey="groupId"
+          value={groupId}
+          options={groupOptions}
+          label={tFilters('groupAll')}
+        />
       </div>
 
       {students.isPending ? <ListSkeleton /> : null}
@@ -166,7 +221,7 @@ export function StudentsList() {
       ) : null}
 
       {showEmpty ? (
-        <StudentsEmptyState search={search} state={state} onCreate={() => setCreateOpen(true)} />
+        <StudentsEmptyState search={search} onCreate={() => setCreateOpen(true)} />
       ) : null}
 
       {items.length > 0 ? (
@@ -190,30 +245,9 @@ export function StudentsList() {
   );
 }
 
-function ContactSummary({ email, phone }: { email: string | null; phone: string | null }) {
-  const tCommon = useTranslations('common');
-  if (!email && !phone) {
-    return <span className="text-muted-foreground">{tCommon('notProvided')}</span>;
-  }
-  return (
-    <div className="flex flex-col text-sm">
-      {email ? <span>{email}</span> : null}
-      {phone ? <span className="text-muted-foreground">{phone}</span> : null}
-    </div>
-  );
-}
-
-function StudentsEmptyState({
-  search,
-  state,
-  onCreate,
-}: {
-  search?: string;
-  state: 'active' | 'deleted' | 'all';
-  onCreate: () => void;
-}) {
+function StudentsEmptyState({ search, onCreate }: { search?: string; onCreate: () => void }) {
   const t = useTranslations('students');
-  const scope = search ? 'emptySearch' : state === 'deleted' ? 'emptyDeleted' : 'empty';
+  const scope = search ? 'emptySearch' : 'empty';
 
   return (
     <Empty className="border border-dashed">

@@ -6,9 +6,10 @@ import { StatusPill } from '@/components/app/status-badges';
 
 // ON_HOLD ("на канікулах") reuses the paused wash — a temporary, non-destructive
 // pause, mirroring the enrollment PAUSED look in the design lab.
-const STATUS_TOKEN: Record<StudentStatusDto, 'active' | 'paused'> = {
+const STATUS_TOKEN: Record<StudentStatusDto, 'active' | 'paused' | 'archived'> = {
   ACTIVE: 'active',
   ON_HOLD: 'paused',
+  ARCHIVED: 'archived',
 };
 
 export function StudentStatusBadge({ status }: { status: StudentStatusDto }) {

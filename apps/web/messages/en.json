@@ -134,7 +134,8 @@
   },
   "studentStatus": {
     "ACTIVE": "Active",
-    "ON_HOLD": "On hold"
+    "ON_HOLD": "On hold",
+    "ARCHIVED": "Archived"
   },
   "languageLevel": {
     "A1": "A1 — Beginner",
@@ -234,7 +235,11 @@
       "student": "Student",
       "status": "Status",
       "contacts": "Contacts",
+      "group": "Group",
       "groups": "Groups",
+      "price": "Price / lesson",
+      "phone": "Phone",
+      "telegram": "Telegram",
       "enrollments": "Enrollments",
       "timezone": "Timezone",
       "actions": "Actions"
@@ -242,6 +247,12 @@
     "tableCaption": "Workspace students with their groups and active enrollments",
     "activeEnrollments": "{count, plural, =0 {No active enrollments} one {# active enrollment} other {# active enrollments}}",
     "noGroups": "Individual only",
+    "individual": "Individual",
+    "filters": {
+      "statusAll": "All statuses",
+      "subjectAll": "All subjects",
+      "groupAll": "All groups"
+    },
     "empty": {
       "title": "No students yet",
       "description": "Add your first student to start building schedules and packages.",
@@ -263,6 +274,8 @@
       "createSubtitle": "Only the name and timezone are required.",
       "editTitle": "Edit student",
       "editSubtitle": "Update contact details and notes.",
+      "avatarSection": "Avatar",
+      "avatarInitials": "Initials",
       "basicSection": "Basic information",
       "contactsSection": "Student contacts",
       "contactsHint": "Optional — useful for reminders later.",
@@ -275,15 +288,23 @@
       "parentHint": "Link an existing parent or create a new one.",
       "notesSection": "Notes",
       "fullName": "Full name",
+      "fullNamePlaceholder": "e.g. Anna Shevchenko",
       "email": "Email",
+      "emailPlaceholder": "name@example.com",
       "phone": "Phone",
+      "phonePlaceholder": "+380 XX XXX XX XX",
       "telegramUsername": "Telegram username",
+      "telegramPlaceholder": "username",
       "subject": "Subject",
       "status": "Status",
       "languageLevel": "Language level",
+      "languageLevelHint": "For language courses — level on the CEFR scale.",
       "knowledgeLevel": "Knowledge level",
       "age": "Age",
+      "agePlaceholder": "e.g. 14",
       "grade": "Grade",
+      "gradePlaceholder": "Select grade",
+      "gradeOption": "Grade {grade}",
       "hourlyRate": "Hourly rate",
       "hourlyRateHint": "Per lesson, e.g. 500 or 500.50",
       "currency": "Currency",
@@ -304,8 +325,13 @@
     "detail": {
       "contactsTitle": "Contact details",
       "academicTitle": "Academic profile",
-      "pricingTitle": "Hourly rate",
+      "pricingTitle": "Rate & timezone",
       "parentTitle": "Parents",
+      "groupsTitle": "Groups",
+      "noGroups": "No groups yet",
+      "addedOn": "Added {date}",
+      "ageYears": "{age} y.o.",
+      "gradeShort": "Grade {grade}",
       "notesTitle": "Notes",
       "enrollmentsTitle": "Enrollments",
       "enrollmentsDescription": "Where this student learns and how they are billed.",
@@ -324,15 +350,17 @@
     "toasts": {
       "created": "Student created",
       "updated": "Changes saved",
-      "deleted": "Student moved to trash",
-      "restored": "Student restored",
+      "deleted": "Student permanently deleted",
+      "archived": "Student archived",
       "onHold": "Student put on hold",
       "reactivated": "Student reactivated"
     },
     "deleteDialog": {
-      "title": "Move this student to trash?",
-      "description": "{name} will be hidden from lists but nothing is erased permanently. An owner can restore them at any time.",
-      "confirm": "Move to trash"
+      "title": "Delete this student?",
+      "warning": "This is permanent — the student and all their links (enrollments, parent links) will be erased with no way to restore them.",
+      "archiveHint": "Don't want to lose the data? Archive instead — the student disappears from lists but stays in the database.",
+      "archiveAction": "Archive",
+      "confirm": "Delete permanently"
     }
   },
   "groups": {
@@ -415,6 +443,12 @@
     "searchLabel": "Search parents",
     "searchPlaceholder": "Name, phone or Telegram…",
     "deletedBadge": "In trash",
+    "filters": {
+      "byStudent": "Student",
+      "allStudents": "All students",
+      "studentSearch": "Search students…",
+      "studentEmpty": "No student found"
+    },
     "columns": {
       "parent": "Parent",
       "contacts": "Contacts",
@@ -443,15 +477,20 @@
       "createSubtitle": "Only the name is required.",
       "editTitle": "Edit parent",
       "editSubtitle": "Update contact details and notes.",
+      "avatarSection": "Avatar",
+      "avatarInitials": "Initials",
       "fullName": "Full name",
       "phone": "Phone",
+      "phonePlaceholder": "+380 XX XXX XX XX",
       "telegramUsername": "Telegram username",
+      "telegramPlaceholder": "username",
       "notes": "Notes",
       "notesPlaceholder": "Anything worth remembering about this parent",
       "submitCreate": "Create parent",
       "submitEdit": "Save changes"
     },
     "detail": {
+      "addedOn": "Added {date}",
       "contactsTitle": "Contact details",
       "notesTitle": "Notes",
       "studentsTitle": "Linked students",
@@ -463,13 +502,12 @@
     "toasts": {
       "created": "Parent created",
       "updated": "Changes saved",
-      "deleted": "Parent moved to trash",
-      "restored": "Parent restored"
+      "deleted": "Parent permanently deleted"
     },
     "deleteDialog": {
-      "title": "Move this parent to trash?",
-      "description": "{name} will be hidden from lists but nothing is erased permanently. An owner can restore them at any time.",
-      "confirm": "Move to trash"
+      "title": "Delete this parent?",
+      "description": "{name} and all their links to students will be erased permanently, with no way to restore them.",
+      "confirm": "Delete permanently"
     }
   },
   "enrollments": {
@@ -484,6 +522,7 @@
       "studentEmpty": "No student found",
       "group": "Group",
       "groupPlaceholder": "Individual lessons",
+      "groupHint": "Pick a group, or leave “Individual lessons (no group)” for one-on-one.",
       "groupNone": "Individual lessons (no group)",
       "groupSearch": "Search groups…",
       "groupEmpty": "No group found",
@@ -497,9 +536,12 @@
       "priceHint": "Per lesson or per month, depending on the billing type.",
       "currency": "Currency",
       "policySection": "Cancellation policy",
+      "deadlineTitle": "Cancellation deadline",
+      "deadlineExplain": "How long before a lesson a student may cancel it without being charged. Past this window the lesson counts as used.",
       "policyDefault": "Use the workspace default",
       "policyCustom": "Custom deadline for this enrollment",
       "customHours": "Hours before the lesson",
+      "customHoursHint": "e.g. 24",
       "effective": "Effective deadline: {hours, plural, one {# hour} other {# hours}} before the lesson.",
       "submitCreate": "Create enrollment",
       "submitEdit": "Save changes"

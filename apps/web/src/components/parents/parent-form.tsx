@@ -1,5 +1,6 @@
 'use client';
 
+import { type ChangeEvent } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
@@ -11,6 +12,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
+import { AvatarPicker } from '@/components/app/avatar-picker';
 import { errorMessageKey } from '@/lib/api/error-message';
 import { useCreateParentMutation, useUpdateParentMutation } from '@/lib/api/parents';
 import { makeZodErrorMap } from '@/lib/forms/error-map';
@@ -49,12 +51,34 @@ export function ParentForm({
       ? {
           fullName: parent.fullName,
           phone: parent.phone ?? '',
-          telegramUsername: parent.telegramUsername ?? '',
+          telegramUsername: (parent.telegramUsername ?? '').replace(/^@/, ''),
+          avatarKey: parent.avatarKey,
           notes: parent.notes ?? '',
         }
       : EMPTY_PARENT_FORM,
   });
   const { errors, isSubmitting } = form.formState;
+  const values = form.watch();
+
+  // Keep the phone field to digits, spaces and + ( ) - as the user types.
+  const phoneRegistration = form.register('phone');
+  const phoneField = {
+    ...phoneRegistration,
+    onChange: (event: ChangeEvent<HTMLInputElement>) => {
+      event.target.value = event.target.value.replace(/[^\d\s()+-]/g, '');
+      return phoneRegistration.onChange(event);
+    },
+  };
+
+  // Telegram handle: the "@" is a fixed prefix, so the value stays word-chars.
+  const telegramRegistration = form.register('telegramUsername');
+  const telegramField = {
+    ...telegramRegistration,
+    onChange: (event: ChangeEvent<HTMLInputElement>) => {
+      event.target.value = event.target.value.replace(/[^\w]/g, '');
+      return telegramRegistration.onChange(event);
+    },
+  };
 
   const onSubmit = form.handleSubmit(async (values) => {
     const optional = (value: string) => (value.trim() === '' ? undefined : value);
@@ -65,6 +89,7 @@ export function ParentForm({
           fullName: values.fullName,
           phone: cleared(values.phone),
           telegramUsername: cleared(values.telegramUsername),
+          avatarKey: values.avatarKey,
           notes: cleared(values.notes),
         });
         toast.success(tParents('toasts.updated'));
@@ -76,6 +101,7 @@ export function ParentForm({
         fullName: values.fullName,
         phone: optional(values.phone),
         telegramUsername: optional(values.telegramUsername),
+        avatarKey: values.avatarKey ?? undefined,
         notes: optional(values.notes),
       });
       toast.success(tParents('toasts.created'));
@@ -88,13 +114,32 @@ export function ParentForm({
   const pending = isSubmitting || mutation.isPending;
 
   return (
-    <form onSubmit={onSubmit} noValidate>
+    // stopPropagation: this dialog is portalled but stays a React descendant of
+    // the student form, so without it a submit here bubbles up and submits the
+    // student form too.
+    <form
+      onSubmit={(event) => {
+        event.stopPropagation();
+        void onSubmit(event);
+      }}
+      noValidate
+    >
       <FieldGroup>
         {mutation.error ? (
           <Alert variant="destructive" role="alert">
             <AlertDescription>{tErrors(errorMessageKey(mutation.error))}</AlertDescription>
           </Alert>
         ) : null}
+
+        <Field>
+          <FieldLabel htmlFor="parent-avatar">{t('avatarSection')}</FieldLabel>
+          <AvatarPicker
+            value={values.avatarKey ?? null}
+            onChange={(next) => form.setValue('avatarKey', next)}
+            fullName={values.fullName}
+            initialsLabel={t('avatarInitials')}
+          />
+        </Field>
 
         <Field data-invalid={errors.fullName ? true : undefined}>
           <FieldLabel htmlFor="parent-full-name">{t('fullName')}</FieldLabel>
@@ -114,21 +159,29 @@ export function ParentForm({
             type="tel"
             inputMode="tel"
             autoComplete="tel"
+            placeholder={t('phonePlaceholder')}
             aria-invalid={errors.phone ? true : undefined}
-            {...form.register('phone')}
+            {...phoneField}
           />
           <FieldError errors={[errors.phone]} />
         </Field>
 
         <Field data-invalid={errors.telegramUsername ? true : undefined}>
           <FieldLabel htmlFor="parent-telegram">{t('telegramUsername')}</FieldLabel>
-          <Input
-            id="parent-telegram"
-            autoComplete="off"
-            spellCheck={false}
-            aria-invalid={errors.telegramUsername ? true : undefined}
-            {...form.register('telegramUsername')}
-          />
+          <div className="relative">
+            <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted-foreground select-none">
+              @
+            </span>
+            <Input
+              id="parent-telegram"
+              autoComplete="off"
+              spellCheck={false}
+              className="pl-7"
+              placeholder={t('telegramPlaceholder')}
+              aria-invalid={errors.telegramUsername ? true : undefined}
+              {...telegramField}
+            />
+          </div>
           <FieldError errors={[errors.telegramUsername]} />
         </Field>
 

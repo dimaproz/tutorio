@@ -34,11 +34,12 @@ const studentRow = {
   knowledgeLevel: null,
   age: null,
   grade: null,
+  avatarKey: null,
   notes: null,
   createdAt: NOW,
   updatedAt: NOW,
   deletedAt: null,
-  parents: [] as { parent: { id: string; fullName: string } }[],
+  parents: [] as { parent: { id: string; fullName: string; avatarKey: string | null } }[],
 };
 
 function buildPrismaMock() {
@@ -49,8 +50,10 @@ function buildPrismaMock() {
       count: jest.fn().mockResolvedValue(0),
       create: jest.fn(),
       update: jest.fn(),
+      delete: jest.fn(),
     },
-    enrollment: { count: jest.fn().mockResolvedValue(0) },
+    studentParent: { deleteMany: jest.fn() },
+    enrollment: { count: jest.fn().mockResolvedValue(0), deleteMany: jest.fn() },
     auditLog: { create: jest.fn() },
     $transaction: jest.fn(),
   };
@@ -292,77 +295,29 @@ describe('StudentsService.update', () => {
   });
 });
 
-describe('StudentsService.softDelete', () => {
-  it('blocks deletion while active or paused enrollments exist', async () => {
+describe('StudentsService.remove', () => {
+  it('permanently deletes the student with its links and enrollments, audits DELETE', async () => {
     const { prisma, service } = buildService();
     prisma.student.findFirst.mockResolvedValue(studentRow);
-    prisma.enrollment.count.mockResolvedValue(2);
 
-    await expectBusinessError(
-      service.softDelete(owner, STUDENT_ID),
-      'ACTIVE_ENROLLMENTS_EXIST',
-      409,
-    );
-    expect(prisma.enrollment.count.mock.calls[0][0].where).toMatchObject({
+    await service.remove(owner, STUDENT_ID);
+
+    expect(prisma.studentParent.deleteMany.mock.calls[0][0].where).toEqual({
+      studentId: STUDENT_ID,
+    });
+    expect(prisma.enrollment.deleteMany.mock.calls[0][0].where).toMatchObject({
       studentId: STUDENT_ID,
       workspaceId: WORKSPACE_ID,
-      deletedAt: null,
-      status: { in: ['ACTIVE', 'PAUSED'] },
     });
-    expect(prisma.student.update).not.toHaveBeenCalled();
-  });
-
-  it('soft-deletes and audits when nothing blocks', async () => {
-    const { prisma, service } = buildService();
-    prisma.student.findFirst.mockResolvedValue(studentRow);
-
-    await service.softDelete(owner, STUDENT_ID);
-
-    expect(
-      prisma.student.update.mock.calls[0][0].data.deletedAt,
-    ).toBeInstanceOf(Date);
+    expect(prisma.student.delete.mock.calls[0][0].where).toEqual({ id: STUDENT_ID });
     expect(prisma.auditLog.create.mock.calls[0][0].data.action).toBe('DELETE');
   });
 
-  it('is idempotent for an already deleted student', async () => {
+  it('throws STUDENT_NOT_FOUND for a missing student', async () => {
     const { prisma, service } = buildService();
-    prisma.student.findFirst.mockResolvedValue({
-      ...studentRow,
-      deletedAt: NOW,
-    });
+    prisma.student.findFirst.mockResolvedValue(null);
 
-    await service.softDelete(owner, STUDENT_ID);
-
-    expect(prisma.student.update).not.toHaveBeenCalled();
-    expect(prisma.auditLog.create).not.toHaveBeenCalled();
-  });
-});
-
-describe('StudentsService.restore', () => {
-  it('clears deletedAt and audits RESTORE', async () => {
-    const { prisma, service } = buildService();
-    prisma.student.findFirst.mockResolvedValue({
-      ...studentRow,
-      deletedAt: NOW,
-    });
-    prisma.student.update.mockResolvedValue(studentRow);
-
-    const restored = await service.restore(owner, STUDENT_ID);
-
-    expect(prisma.student.update.mock.calls[0][0].data).toEqual({
-      deletedAt: null,
-    });
-    expect(prisma.auditLog.create.mock.calls[0][0].data.action).toBe('RESTORE');
-    expect(restored.deletedAt).toBeNull();
-  });
-
-  it('is idempotent for a live student', async () => {
-    const { prisma, service } = buildService();
-    prisma.student.findFirst.mockResolvedValue(studentRow);
-
-    await service.restore(owner, STUDENT_ID);
-
-    expect(prisma.student.update).not.toHaveBeenCalled();
-    expect(prisma.auditLog.create).not.toHaveBeenCalled();
+    await expectBusinessError(service.remove(owner, STUDENT_ID), 'STUDENT_NOT_FOUND', 404);
+    expect(prisma.student.delete).not.toHaveBeenCalled();
   });
 });

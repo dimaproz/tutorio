@@ -34,6 +34,7 @@ export function useParentsQuery(filters: ParentListFilters, enabled = true) {
           pageSize: filters.pageSize,
           search: filters.search,
           state: filters.state,
+          studentId: filters.studentId,
         })}`,
       ),
     placeholderData: (previous) => previous,

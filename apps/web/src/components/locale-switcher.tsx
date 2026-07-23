@@ -2,29 +2,29 @@
 
 import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckIcon, LanguagesIcon } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { Flag, type FlagCode } from '@/components/app/flag';
 import { setLocale } from '@/i18n/actions';
 import { LOCALES, type Locale } from '@/i18n/locale';
 
+// Which flag represents each supported UI language.
+const LOCALE_FLAG: Record<string, FlagCode> = {
+  uk: 'ua',
+  en: 'gb',
+};
+
+// Single button that flips between the two supported locales. With only uk/en a
+// toggle is clearer than a dropdown; the visible code shows the CURRENT locale.
 export function LocaleSwitcher() {
   const t = useTranslations('app.localeSwitcher');
   const locale = useLocale();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  function switchTo(next: Locale) {
-    if (next === locale) {
-      return;
-    }
+  const next: Locale = LOCALES.find((entry) => entry !== locale) ?? LOCALES[0];
+
+  function toggle() {
     startTransition(async () => {
       await setLocale(next);
       // Same URL, new locale: refresh re-renders the current route.
@@ -33,29 +33,20 @@ export function LocaleSwitcher() {
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          disabled={isPending}
-          aria-label={t('label')}
-          className="h-11 md:h-8"
-        >
-          <LanguagesIcon data-icon="inline-start" />
-          <span className="uppercase">{locale}</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuGroup>
-          {LOCALES.map((entry) => (
-            <DropdownMenuItem key={entry} onSelect={() => switchTo(entry)}>
-              {t(entry)}
-              {entry === locale ? <CheckIcon data-icon="inline-end" className="ml-auto" /> : null}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      disabled={isPending}
+      onClick={toggle}
+      aria-label={`${t('label')}: ${t(next)}`}
+      title={t(next)}
+    >
+      {LOCALE_FLAG[locale] ? (
+        <Flag code={LOCALE_FLAG[locale]} className="size-5" />
+      ) : (
+        <span className="text-xs uppercase">{locale}</span>
+      )}
+    </Button>
   );
 }

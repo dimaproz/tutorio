@@ -26,7 +26,7 @@ import {
 // Search, state filter and pagination all write to the URL, so a list view is
 // shareable and the browser back button behaves as users expect.
 
-function useUpdateSearchParams() {
+export function useUpdateSearchParams() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -132,6 +132,51 @@ export function ListStateFilter({ value }: { value: 'active' | 'deleted' | 'all'
         </SelectContent>
       </Select>
     </div>
+  );
+}
+
+// Generic URL-param facet filter: a select whose first option clears the
+// param. Reused for student status/subject/group and any future facet.
+const ALL = '__all__';
+
+export function ListSelectFilter({
+  paramKey,
+  value,
+  options,
+  label,
+}: {
+  paramKey: string;
+  value?: string;
+  options: { value: string; label: string }[];
+  /** Shown as the "no filter" option and the accessible name. */
+  label: string;
+}) {
+  const updateParams = useUpdateSearchParams();
+
+  return (
+    <Select
+      value={value ?? ALL}
+      onValueChange={(next) =>
+        updateParams({ [paramKey]: next === ALL ? undefined : next }, { resetPage: true })
+      }
+    >
+      <SelectTrigger
+        className="w-[170px] data-[size=default]:h-11 md:data-[size=default]:h-8"
+        aria-label={label}
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectGroup>
+          <SelectItem value={ALL}>{label}</SelectItem>
+          {options.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectGroup>
+      </SelectContent>
+    </Select>
   );
 }
 

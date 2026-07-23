@@ -5,6 +5,9 @@ export interface StudentListFilters {
   page: number;
   search?: string;
   state?: 'active' | 'deleted' | 'all';
+  status?: string;
+  subject?: string;
+  groupId?: string;
   /** Pickers need a longer page than the 20-row list default. */
   pageSize?: number;
 }
@@ -20,6 +23,7 @@ export interface ParentListFilters {
   page: number;
   search?: string;
   state?: 'active' | 'deleted' | 'all';
+  studentId?: string;
   pageSize?: number;
 }
 

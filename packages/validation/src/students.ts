@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { emailSchema } from './auth';
 import {
+  avatarKeySchema,
   currencyCodeSchema,
   isoDateTimeSchema,
   phoneSchema,
@@ -18,7 +19,7 @@ export const personNameSchema = z.string().trim().min(1).max(120);
 
 export const studentNotesSchema = z.string().trim().max(4000);
 
-export const studentStatusSchema = z.enum(['ACTIVE', 'ON_HOLD']);
+export const studentStatusSchema = z.enum(['ACTIVE', 'ON_HOLD', 'ARCHIVED']);
 export type StudentStatusDto = z.infer<typeof studentStatusSchema>;
 
 export const STUDENT_LANGUAGE_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const;
@@ -63,6 +64,22 @@ export const STUDENT_SUBJECTS = [
 export const studentSubjectSchema = z.enum(STUDENT_SUBJECTS);
 export type StudentSubjectDto = z.infer<typeof studentSubjectSchema>;
 
+// Subjects graded on the CEFR scale (A1–C2). Only for these does a language
+// level make sense — a maths or physics student has no CEFR level. The form
+// uses this to show/hide the language-level control.
+export const STUDENT_LANGUAGE_SUBJECTS = [
+  'ENGLISH',
+  'GERMAN',
+  'FRENCH',
+  'POLISH',
+  'IELTS_PREP',
+  'TOEFL_PREP',
+] as const satisfies readonly StudentSubjectDto[];
+
+export function isLanguageSubject(subject: StudentSubjectDto | null | undefined): boolean {
+  return subject != null && (STUDENT_LANGUAGE_SUBJECTS as readonly string[]).includes(subject);
+}
+
 export const studentAgeSchema = z.number().int().min(0).max(120);
 
 // Ukrainian school system: grades 1-12 (inclusive of vocational years).
@@ -95,6 +112,7 @@ export const createStudentSchema = z
     knowledgeLevel: optionalField(studentKnowledgeLevelSchema),
     age: studentAgeSchema.optional(),
     grade: studentGradeSchema.optional(),
+    avatarKey: optionalField(avatarKeySchema),
     // Existing parents to link at creation time; omitted/empty = none yet.
     parentIds: parentIdsSchema.optional(),
     notes: optionalField(studentNotesSchema),
@@ -120,6 +138,7 @@ export const updateStudentSchema = z
     knowledgeLevel: studentKnowledgeLevelSchema.nullable(),
     age: studentAgeSchema.nullable(),
     grade: studentGradeSchema.nullable(),
+    avatarKey: avatarKeySchema.nullable(),
     parentIds: parentIdsSchema,
     notes: studentNotesSchema.nullable(),
   })
@@ -133,16 +152,24 @@ export const listStudentsQuerySchema = paginationQuerySchema
     search: z.string().trim().min(1).max(120).optional(),
     // deleted/all are OWNER-only (enforced by the service).
     state: recordStateSchema.default('active'),
+    // Optional facet filters, combined with AND.
+    status: studentStatusSchema.optional(),
+    subject: studentSubjectSchema.optional(),
+    groupId: uuidSchema.optional(),
   })
   .strict();
 
 export type ListStudentsQueryDto = z.infer<typeof listStudentsQuerySchema>;
 
 // Compact parent reference shown on the student form/detail — avoids a
-// request waterfall to load full parent records.
+// request waterfall to load full parent records. Carries enough contact detail
+// for the shared ParentMiniCard to look identical in the form and on the page.
 export const studentParentRefSchema = z.object({
   id: uuidSchema,
   fullName: z.string(),
+  avatarKey: avatarKeySchema.nullable(),
+  phone: z.string().nullable(),
+  telegramUsername: z.string().nullable(),
 });
 
 export type StudentParentRef = z.infer<typeof studentParentRefSchema>;
@@ -163,6 +190,7 @@ export const studentResponseSchema = z.object({
   knowledgeLevel: studentKnowledgeLevelSchema.nullable(),
   age: z.number().int().nonnegative().nullable(),
   grade: z.number().int().nonnegative().nullable(),
+  avatarKey: avatarKeySchema.nullable(),
   parents: z.array(studentParentRefSchema),
   notes: z.string().nullable(),
   createdAt: isoDateTimeSchema,
@@ -178,9 +206,13 @@ export const studentListItemSchema = z.object({
   fullName: z.string(),
   email: z.string().nullable(),
   phone: z.string().nullable(),
+  telegramUsername: z.string().nullable(),
   timezone: z.string(),
   subject: studentSubjectSchema.nullable(),
   status: studentStatusSchema,
+  hourlyRateMinor: z.number().int().nonnegative().nullable(),
+  currency: currencyCodeSchema.nullable(),
+  avatarKey: avatarKeySchema.nullable(),
   deletedAt: isoDateTimeSchema.nullable(),
   activeEnrollmentCount: z.number().int().nonnegative(),
   groupNames: z.array(z.string()),

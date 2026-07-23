@@ -27,6 +27,24 @@ export const cancellationDeadlineHoursSchema = z.number().int().min(0).max(336);
 export const recordStateSchema = z.enum(['active', 'deleted', 'all']);
 export type RecordStateDto = z.infer<typeof recordStateSchema>;
 
+// Curated set of bundled illustration avatars a student/parent can pick from.
+// The key maps to `/images/tailadmin/avatars/{key}.jpg` on the web app; the API
+// never stores a free-form URL. Null/omitted = fall back to initials.
+export const AVATAR_KEYS = [
+  'user-1',
+  'user-2',
+  'user-3',
+  'user-4',
+  'user-5',
+  'user-6',
+  'user-7',
+  'user-8',
+  'user-9',
+  'user-10',
+] as const;
+export const avatarKeySchema = z.enum(AVATAR_KEYS);
+export type AvatarKeyDto = z.infer<typeof avatarKeySchema>;
+
 // IANA timezone identifier, verified against the runtime timezone database.
 export const timezoneSchema = z
   .string()
