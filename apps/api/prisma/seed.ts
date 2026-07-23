@@ -193,6 +193,60 @@ async function main() {
     });
   }
 
+  // Bulk roster so the students table paginates and every filter/sort has
+  // something to bite on (pageSize 20 → more than one page).
+  const SAMPLE_SUBJECTS = [
+    'MATH',
+    'ENGLISH',
+    'GERMAN',
+    'FRENCH',
+    'POLISH',
+    'PHYSICS',
+    'CHEMISTRY',
+    'BIOLOGY',
+    'HISTORY',
+    'IELTS_PREP',
+  ] as const;
+  const SAMPLE_STATUSES = ['ACTIVE', 'ACTIVE', 'ACTIVE', 'ON_HOLD', 'ARCHIVED'] as const;
+  const SAMPLE_CURRENCIES = ['UAH', 'EUR', 'PLN', 'USD', 'GBP'] as const;
+  const SAMPLE_TIMEZONES = ['Europe/Kyiv', 'Europe/Warsaw', 'Europe/London', 'Europe/Berlin'] as const;
+  const SAMPLE_NAMES = [
+    'Maryna',
+    'Petro',
+    'Sofiia',
+    'Yuriy',
+    'Kateryna',
+    'Andriy',
+    'Olha',
+    'Taras',
+    'Nadiia',
+    'Ihor',
+    'Vira',
+    'Dmytro',
+    'Halyna',
+    'Roman',
+    'Yuliia',
+    'Bohdana',
+    'Serhiy',
+    'Oksana',
+    'Vadym',
+    'Liudmyla',
+  ];
+  for (let i = 0; i < SAMPLE_NAMES.length; i++) {
+    await ensureStudent({
+      fullName: `${SAMPLE_NAMES[i]} Sample`,
+      timezone: SAMPLE_TIMEZONES[i % SAMPLE_TIMEZONES.length],
+      subject: SAMPLE_SUBJECTS[i % SAMPLE_SUBJECTS.length],
+      status: SAMPLE_STATUSES[i % SAMPLE_STATUSES.length],
+      hourlyRateMinor: 30000 + i * 1500,
+      currency: SAMPLE_CURRENCIES[i % SAMPLE_CURRENCIES.length],
+      age: 8 + (i % 10),
+      grade: 1 + (i % 12),
+      phone: `+380 50 ${String(1000000 + i).slice(1, 4)} ${String(1000 + i).slice(1)}`,
+      telegramUsername: `sample_${i + 1}`,
+    });
+  }
+
   let group = await prisma.group.findFirst({
     where: { workspaceId: workspace.id, name: 'B1 English Evenings' },
   });

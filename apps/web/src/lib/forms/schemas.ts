@@ -1,4 +1,5 @@
 import {
+  avatarKeySchema,
   billingTypeSchema,
   cancellationDeadlineHoursSchema,
   currencyCodeSchema,
@@ -77,6 +78,7 @@ export const studentFormSchema = z
     knowledgeLevel: optionalText(studentKnowledgeLevelSchema),
     age: optionalIntString(0, 120),
     grade: optionalIntString(1, 12),
+    avatarKey: avatarKeySchema.nullable(),
     parentIds: z.array(z.string().uuid()),
     notes: optionalText(studentNotesSchema),
   })
@@ -107,6 +109,7 @@ export const EMPTY_STUDENT_FORM: StudentFormValues = {
   knowledgeLevel: '',
   age: '',
   grade: '',
+  avatarKey: null,
   parentIds: [],
   notes: '',
 };
@@ -138,6 +141,7 @@ export const parentFormSchema = z.object({
   fullName: parentFullNameSchema,
   phone: optionalText(phoneSchema),
   telegramUsername: optionalText(telegramUsernameSchema),
+  avatarKey: avatarKeySchema.nullable(),
   notes: optionalText(notesSchema),
 });
 
@@ -147,6 +151,7 @@ export const EMPTY_PARENT_FORM: ParentFormValues = {
   fullName: '',
   phone: '',
   telegramUsername: '',
+  avatarKey: null,
   notes: '',
 };
 

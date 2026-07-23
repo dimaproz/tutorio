@@ -24,7 +24,6 @@ import {
 import { ZodSerializerDto } from 'nestjs-zod';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { Roles } from '../auth/decorators/roles.decorator';
 import { ApiErrorDto } from '../auth/dto/auth.dto';
 import {
   CreateParentDto,
@@ -103,27 +102,18 @@ export class ParentsController {
 
   @Delete(':parentId')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Soft-delete a parent (move to trash)' })
+  @ApiOperation({
+    summary: 'Permanently delete a parent',
+    description:
+      'Irreversible. Removes the parent together with its student links. ' +
+      'There is no trash and no restore.',
+  })
   @ApiNoContentResponse()
   @ApiNotFoundResponse({ type: ApiErrorDto })
-  softDelete(
+  remove(
     @CurrentUser() user: AuthenticatedUser,
     @Param('parentId', ParseUUIDPipe) parentId: string,
   ): Promise<void> {
-    return this.parents.softDelete(user, parentId);
-  }
-
-  @Post(':parentId/restore')
-  @Roles('OWNER')
-  @ApiOperation({ summary: 'Restore a soft-deleted parent (owner only)' })
-  @ApiOkResponse({ type: ParentDto })
-  @ApiForbiddenResponse({ type: ApiErrorDto })
-  @ApiNotFoundResponse({ type: ApiErrorDto })
-  @ZodSerializerDto(ParentDto)
-  restore(
-    @CurrentUser() user: AuthenticatedUser,
-    @Param('parentId', ParseUUIDPipe) parentId: string,
-  ): Promise<ParentDto> {
-    return this.parents.restore(user, parentId);
+    return this.parents.remove(user, parentId);
   }
 }

@@ -22,6 +22,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { errorMessageKey } from '@/lib/api/error-message';
 import { useCreateGroupMutation, useUpdateGroupMutation } from '@/lib/api/groups';
 import { useSession } from '@/components/app/session-provider';
+import { CurrencyOption } from '@/components/app/currency-option';
+import { MoneyInput } from '@/components/app/money-input';
 import { makeZodErrorMap } from '@/lib/forms/error-map';
 import { groupFormSchema, type GroupFormValues } from '@/lib/forms/schemas';
 import { formatPriceInput, parsePriceInput } from '@/lib/money';
@@ -125,10 +127,8 @@ export function GroupForm({
         <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
           <Field data-invalid={errors.pricePerLesson ? true : undefined}>
             <FieldLabel htmlFor="group-price">{t('pricePerLesson')}</FieldLabel>
-            <Input
+            <MoneyInput
               id="group-price"
-              inputMode="decimal"
-              autoComplete="off"
               placeholder={t('pricePerLessonHint')}
               aria-invalid={errors.pricePerLesson ? true : undefined}
               {...form.register('pricePerLesson')}
@@ -143,14 +143,14 @@ export function GroupForm({
                 form.setValue('currency', value as GroupFormValues['currency'])
               }
             >
-              <SelectTrigger id="group-currency" className="w-full sm:w-28">
+              <SelectTrigger id="group-currency" className="w-full sm:w-32">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
                   {CURRENCIES.map((currency) => (
                     <SelectItem key={currency} value={currency}>
-                      {currency}
+                      <CurrencyOption code={currency} />
                     </SelectItem>
                   ))}
                 </SelectGroup>

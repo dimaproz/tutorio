@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { useSession } from '@/components/app/session-provider';
+import { CurrencyOption } from '@/components/app/currency-option';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -119,7 +120,7 @@ export function WorkspaceSettingsForm() {
                   <SelectGroup>
                     {CURRENCIES.map((code) => (
                       <SelectItem key={code} value={code}>
-                        {code}
+                        <CurrencyOption code={code} />
                       </SelectItem>
                     ))}
                   </SelectGroup>

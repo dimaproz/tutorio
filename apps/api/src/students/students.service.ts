@@ -12,7 +12,6 @@ import { AuditService } from '../audit/audit.service';
 import { forbidden } from '../auth/auth.errors';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import {
-  activeEnrollmentsExist,
   invalidWorkspaceRelation,
   studentNotFound,
 } from '../common/business.errors';
@@ -28,7 +27,17 @@ import { PrismaService } from '../prisma/prisma.service';
 const parentLinksInclude = {
   parents: {
     where: { parent: { deletedAt: null } },
-    include: { parent: { select: { id: true, fullName: true } } },
+    include: {
+      parent: {
+        select: {
+          id: true,
+          fullName: true,
+          avatarKey: true,
+          phone: true,
+          telegramUsername: true,
+        },
+      },
+    },
     orderBy: { parent: { fullName: 'asc' as const } },
   },
 } satisfies Prisma.StudentInclude;
@@ -37,8 +46,14 @@ type StudentWithParentLinks = Prisma.StudentGetPayload<{
   include: typeof parentLinksInclude;
 }>;
 
-function toParentRefs(student: StudentWithParentLinks) {
-  return student.parents.map((link) => link.parent);
+function toParentRefs(student: StudentWithParentLinks): StudentResponse['parents'] {
+  return student.parents.map((link) => ({
+    id: link.parent.id,
+    fullName: link.parent.fullName,
+    avatarKey: link.parent.avatarKey as StudentResponse['parents'][number]['avatarKey'],
+    phone: link.parent.phone,
+    telegramUsername: link.parent.telegramUsername,
+  }));
 }
 
 function toResponse(student: StudentWithParentLinks): StudentResponse {
@@ -58,6 +73,7 @@ function toResponse(student: StudentWithParentLinks): StudentResponse {
     knowledgeLevel: student.knowledgeLevel as StudentResponse['knowledgeLevel'],
     age: student.age,
     grade: student.grade,
+    avatarKey: student.avatarKey as StudentResponse['avatarKey'],
     parents: toParentRefs(student),
     notes: student.notes,
     createdAt: student.createdAt.toISOString(),
@@ -103,6 +119,11 @@ export class StudentsService {
       workspaceId: auth.workspaceId,
       ...deletedAtFilter(query.state),
       ...search,
+      ...(query.status ? { status: query.status } : {}),
+      ...(query.subject ? { subject: query.subject } : {}),
+      ...(query.groupId
+        ? { enrollments: { some: { groupId: query.groupId, deletedAt: null } } }
+        : {}),
     };
 
     const [rows, total] = await this.prisma.$transaction([
@@ -129,9 +150,13 @@ export class StudentsService {
         fullName: row.fullName,
         email: row.email,
         phone: row.phone,
+        telegramUsername: row.telegramUsername,
         timezone: row.timezone,
         subject: row.subject as StudentListResponse['items'][number]['subject'],
         status: row.status,
+        hourlyRateMinor: row.hourlyRateMinor,
+        currency: row.currency as StudentListResponse['items'][number]['currency'],
+        avatarKey: row.avatarKey as StudentListResponse['items'][number]['avatarKey'],
         deletedAt: row.deletedAt?.toISOString() ?? null,
         activeEnrollmentCount: row.enrollments.filter(
           (enrollment) => enrollment.status === 'ACTIVE',
@@ -327,7 +352,12 @@ export class StudentsService {
     return toResponse(student);
   }
 
-  async softDelete(auth: AuthenticatedUser, studentId: string): Promise<void> {
+  /**
+   * Permanently delete a student and every link to it: parent links and
+   * enrollments go first (no FK cascade in the schema), then the record. There
+   * is no trash — the removal is irreversible.
+   */
+  async remove(auth: AuthenticatedUser, studentId: string): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
       const student = await tx.student.findFirst({
         where: { id: studentId, workspaceId: auth.workspaceId },
@@ -335,27 +365,12 @@ export class StudentsService {
       if (!student) {
         throw studentNotFound();
       }
-      if (student.deletedAt) {
-        // Idempotent: deleting an already deleted student is a no-op.
-        return;
-      }
 
-      const blockers = await tx.enrollment.count({
-        where: {
-          studentId: student.id,
-          workspaceId: auth.workspaceId,
-          deletedAt: null,
-          status: { in: ['ACTIVE', 'PAUSED'] },
-        },
+      await tx.studentParent.deleteMany({ where: { studentId: student.id } });
+      await tx.enrollment.deleteMany({
+        where: { studentId: student.id, workspaceId: auth.workspaceId },
       });
-      if (blockers > 0) {
-        throw activeEnrollmentsExist();
-      }
-
-      await tx.student.update({
-        where: { id: student.id },
-        data: { deletedAt: new Date() },
-      });
+      await tx.student.delete({ where: { id: student.id } });
       await this.audit.record(tx, {
         workspaceId: auth.workspaceId,
         actorId: auth.userId,
@@ -364,39 +379,5 @@ export class StudentsService {
         entityId: student.id,
       });
     });
-  }
-
-  async restore(
-    auth: AuthenticatedUser,
-    studentId: string,
-  ): Promise<StudentResponse> {
-    const student = await this.prisma.$transaction(async (tx) => {
-      const existing = await tx.student.findFirst({
-        where: { id: studentId, workspaceId: auth.workspaceId },
-        include: parentLinksInclude,
-      });
-      if (!existing) {
-        throw studentNotFound();
-      }
-      if (!existing.deletedAt) {
-        // Idempotent: restoring a live student is a no-op.
-        return existing;
-      }
-
-      const restored = await tx.student.update({
-        where: { id: existing.id },
-        data: { deletedAt: null },
-        include: parentLinksInclude,
-      });
-      await this.audit.record(tx, {
-        workspaceId: auth.workspaceId,
-        actorId: auth.userId,
-        action: 'RESTORE',
-        entity: 'STUDENT',
-        entityId: existing.id,
-      });
-      return restored;
-    });
-    return toResponse(student);
   }
 }

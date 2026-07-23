@@ -14,14 +14,12 @@ import { DataTable } from '@/components/app/data-table';
 import {
   ListPagination,
   ListSearchInput,
-  ListStateFilter,
+  useUpdateSearchParams,
 } from '@/components/app/list-controls';
+import { StudentFilterCombobox } from './student-filter-combobox';
 import { ListSkeleton, PageHeader, QueryErrorAlert } from '@/components/app/page-shell';
-import { useSession } from '@/components/app/session-provider';
-import { DeletedBadge } from '@/components/app/status-badges';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { EntityAvatar } from '@/components/app/entity-avatar';
 import { Button } from '@/components/ui/button';
-import { nameInitials } from '@/lib/utils';
 import {
   Empty,
   EmptyContent,
@@ -30,22 +28,21 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
-import { parsePageParam, parseStateParam } from '@/lib/api/filters';
+import { parsePageParam } from '@/lib/api/filters';
 import { useParentsQuery } from '@/lib/api/parents';
 
 export function ParentsList() {
   const t = useTranslations('parents');
   const tCommon = useTranslations('common');
   const searchParams = useSearchParams();
-  const session = useSession();
-  const isOwner = session.role === 'OWNER';
+  const updateParams = useUpdateSearchParams();
   const [createOpen, setCreateOpen] = useState(false);
 
   const page = parsePageParam(searchParams.get('page'));
   const search = searchParams.get('search')?.trim() || undefined;
-  const state = parseStateParam(searchParams.get('state'), isOwner);
+  const studentId = searchParams.get('studentId') || undefined;
 
-  const parents = useParentsQuery({ page, search, state });
+  const parents = useParentsQuery({ page, search, studentId });
 
   const columns = useMemo<ColumnDef<ParentListItem, unknown>[]>(
     () => [
@@ -54,21 +51,18 @@ export function ParentsList() {
         header: () => t('columns.parent'),
         cell: ({ row }) => (
           <div className="flex min-w-0 items-center gap-3">
-            <Avatar size="lg">
-              <AvatarFallback>{nameInitials(row.original.fullName)}</AvatarFallback>
-            </Avatar>
+            <EntityAvatar
+              avatarKey={row.original.avatarKey}
+              fullName={row.original.fullName}
+              size="md"
+            />
             <div className="flex min-w-0 flex-col gap-1">
-              {row.original.deletedAt ? (
-                <span className="truncate font-medium">{row.original.fullName}</span>
-              ) : (
-                <Link
-                  href={`/app/parents/${row.original.id}`}
-                  className="truncate font-medium underline-offset-4 hover:underline"
-                >
-                  {row.original.fullName}
-                </Link>
-              )}
-              {row.original.deletedAt ? <DeletedBadge label={t('deletedBadge')} /> : null}
+              <Link
+                href={`/app/parents/${row.original.id}`}
+                className="truncate font-medium underline-offset-4 transition-colors hover:text-primary hover:underline"
+              >
+                {row.original.fullName}
+              </Link>
             </div>
           </div>
         ),
@@ -106,7 +100,6 @@ export function ParentsList() {
             <ParentRowActions
               parentId={row.original.id}
               fullName={row.original.fullName}
-              isDeleted={Boolean(row.original.deletedAt)}
               showOpenLink={false}
             />
           </div>
@@ -134,7 +127,10 @@ export function ParentsList() {
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <ListSearchInput label={t('searchLabel')} placeholder={t('searchPlaceholder')} />
-        {isOwner ? <ListStateFilter value={state} /> : null}
+        <StudentFilterCombobox
+          value={studentId}
+          onChange={(next) => updateParams({ studentId: next }, { resetPage: true })}
+        />
       </div>
 
       {parents.isPending ? <ListSkeleton /> : null}
@@ -148,7 +144,7 @@ export function ParentsList() {
       ) : null}
 
       {showEmpty ? (
-        <ParentsEmptyState search={search} state={state} onCreate={() => setCreateOpen(true)} />
+        <ParentsEmptyState search={search} onCreate={() => setCreateOpen(true)} />
       ) : null}
 
       {items.length > 0 ? (
@@ -170,17 +166,9 @@ export function ParentsList() {
   );
 }
 
-function ParentsEmptyState({
-  search,
-  state,
-  onCreate,
-}: {
-  search?: string;
-  state: 'active' | 'deleted' | 'all';
-  onCreate: () => void;
-}) {
+function ParentsEmptyState({ search, onCreate }: { search?: string; onCreate: () => void }) {
   const t = useTranslations('parents');
-  const scope = search ? 'emptySearch' : state === 'deleted' ? 'emptyDeleted' : 'empty';
+  const scope = search ? 'emptySearch' : 'empty';
 
   return (
     <Empty className="border border-dashed">

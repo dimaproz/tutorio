@@ -7,6 +7,7 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/in
 import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { LocaleSwitcher } from '@/components/locale-switcher';
+import { ThemeToggle } from './theme-toggle';
 import { UserMenu } from './user-menu';
 import { useSession } from './session-provider';
 
@@ -37,18 +38,20 @@ export function AppHeader() {
         </InputGroup>
       </div>
 
-      <div className="ml-auto flex items-center gap-1.5">
+      <div className="ml-auto flex items-center gap-1">
+        <ThemeToggle />
+        <LocaleSwitcher />
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           size="icon"
           disabled
           aria-label={tHeader('notifications')}
-          className="hidden sm:inline-flex"
+          className="relative hidden size-9 sm:inline-flex"
         >
-          <BellIcon />
+          <BellIcon data-icon />
         </Button>
-        <LocaleSwitcher />
+        <Separator orientation="vertical" className="mx-1 hidden h-6 sm:block" />
         <UserMenu />
       </div>
     </header>

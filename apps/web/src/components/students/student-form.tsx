@@ -1,22 +1,39 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
-import { XIcon } from 'lucide-react';
+import {
+  BanknoteIcon,
+  GlobeIcon,
+  GraduationCapIcon,
+  ImageIcon,
+  PhoneIcon,
+  PlusIcon,
+  StickyNoteIcon,
+  UserIcon,
+  UsersRoundIcon,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import {
+  isLanguageSubject,
   STUDENT_KNOWLEDGE_LEVELS,
   STUDENT_LANGUAGE_LEVELS,
   STUDENT_SUBJECTS,
   type StudentDetail,
+  type StudentParentRef,
 } from '@tutorio/validation';
 import { EntityCombobox } from '@/components/enrollments/entity-combobox';
 import { ParentFormDialog } from '@/components/parents/parent-form-dialog';
+import { ParentMiniCard } from '@/components/parents/parent-mini-card';
+import { AvatarPicker } from '@/components/app/avatar-picker';
+import { CurrencyOption } from '@/components/app/currency-option';
+import { FormSection } from '@/components/app/form-section';
+import { MoneyInput } from '@/components/app/money-input';
+import { StatusSelect, useStudentStatusOptions } from '@/components/app/status-select';
 import { detectTimezone, TimezoneCombobox } from '@/components/app/timezone-combobox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Field,
@@ -24,9 +41,7 @@ import {
   FieldError,
   FieldGroup,
   FieldLabel,
-  FieldLegend,
   FieldSeparator,
-  FieldSet,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
@@ -52,9 +67,13 @@ import {
 import { formatPriceInput, parsePriceInput } from '@/lib/money';
 
 const CURRENCIES = ['EUR', 'UAH', 'PLN', 'USD', 'GBP'] as const;
-const STUDENT_STATUSES = ['ACTIVE', 'ON_HOLD'] as const;
+// Ukrainian school system: grades 1–12, offered as a closed dropdown.
+const GRADES = Array.from({ length: 12 }, (_, index) => String(index + 1));
 // Sentinel for "unset" — Radix Select cannot hold an empty string value.
 const NONE = '__none__';
+// Characters allowed while typing a phone number: digits, spaces and + ( ) -.
+const NON_PHONE = /[^\d\s()+-]/g;
+const NON_DIGIT = /\D/g;
 
 // One component for both modes: creating sends only filled fields, editing
 // sends null for cleared ones so the API knows to erase them. Rendered inside
@@ -75,10 +94,10 @@ export function StudentForm({
   const tSubject = useTranslations('subject');
   const tLanguageLevel = useTranslations('languageLevel');
   const tKnowledgeLevel = useTranslations('knowledgeLevel');
-  const tStudentStatus = useTranslations('studentStatus');
   const tErrors = useTranslations('errors');
   const tValidation = useTranslations('validation');
   const tCommon = useTranslations('common');
+  const statusOptions = useStudentStatusOptions();
   const session = useSession();
 
   const isEdit = Boolean(student);
@@ -86,7 +105,7 @@ export function StudentForm({
   const updateStudent = useUpdateStudentMutation(student?.id ?? '');
   const mutation = isEdit ? updateStudent : createStudent;
 
-  const [assignedParents, setAssignedParents] = useState<{ id: string; fullName: string }[]>(
+  const [assignedParents, setAssignedParents] = useState<StudentParentRef[]>(
     student?.parents ?? [],
   );
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
@@ -104,7 +123,7 @@ export function StudentForm({
           email: student.email ?? '',
           phone: student.phone ?? '',
           timezone: student.timezone,
-          telegramUsername: student.telegramUsername ?? '',
+          telegramUsername: (student.telegramUsername ?? '').replace(/^@/, ''),
           subject: student.subject ?? '',
           hourlyRate:
             student.hourlyRateMinor != null ? formatPriceInput(student.hourlyRateMinor) : '',
@@ -116,6 +135,7 @@ export function StudentForm({
           knowledgeLevel: student.knowledgeLevel ?? '',
           age: student.age != null ? String(student.age) : '',
           grade: student.grade != null ? String(student.grade) : '',
+          avatarKey: student.avatarKey,
           parentIds: student.parents.map((parent) => parent.id),
           notes: student.notes ?? '',
         }
@@ -123,6 +143,7 @@ export function StudentForm({
   });
   const { errors, isSubmitting } = form.formState;
   const values = form.watch();
+  const showLanguageLevel = isLanguageSubject(values.subject === '' ? null : values.subject);
 
   // New students default to the browser timezone (Europe/Kyiv as fallback).
   useEffect(() => {
@@ -140,6 +161,19 @@ export function StudentForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- sync only on list change
   }, [assignedParents]);
 
+  // A CEFR level is meaningless for a non-language subject — drop any leftover
+  // value when the subject moves away from a language so we never submit one.
+  useEffect(() => {
+    if (!showLanguageLevel && form.getValues('languageLevel') !== '') {
+      form.setValue('languageLevel', '');
+    }
+  }, [showLanguageLevel, form]);
+
+  const parentsById = useMemo(
+    () => new Map((parentsQuery.data?.items ?? []).map((parent) => [parent.id, parent])),
+    [parentsQuery.data],
+  );
+
   const parentOptions = useMemo(() => {
     const assignedIds = new Set(assignedParents.map((parent) => parent.id));
     return (parentsQuery.data?.items ?? [])
@@ -147,7 +181,7 @@ export function StudentForm({
       .map((parent) => ({ value: parent.id, label: parent.fullName }));
   }, [parentsQuery.data, assignedParents]);
 
-  function addParent(parent: { id: string; fullName: string }) {
+  function addParent(parent: StudentParentRef) {
     setAssignedParents((current) =>
       current.some((existing) => existing.id === parent.id) ? current : [...current, parent],
     );
@@ -155,6 +189,19 @@ export function StudentForm({
 
   function removeParent(parentId: string) {
     setAssignedParents((current) => current.filter((parent) => parent.id !== parentId));
+  }
+
+  // Register a text field but strip disallowed characters on every keystroke,
+  // so a phone/age field simply refuses letters rather than failing validation.
+  function sanitizedRegister(name: 'phone' | 'age' | 'telegramUsername', strip: RegExp) {
+    const registration = form.register(name);
+    return {
+      ...registration,
+      onChange: (event: ChangeEvent<HTMLInputElement>) => {
+        event.target.value = event.target.value.replace(strip, '');
+        return registration.onChange(event);
+      },
+    };
   }
 
   const onSubmit = form.handleSubmit(async (formValues) => {
@@ -180,6 +227,7 @@ export function StudentForm({
           knowledgeLevel: formValues.knowledgeLevel === '' ? null : formValues.knowledgeLevel,
           age: formValues.age.trim() === '' ? null : Number(formValues.age),
           grade: formValues.grade.trim() === '' ? null : Number(formValues.grade),
+          avatarKey: formValues.avatarKey,
           parentIds: formValues.parentIds,
           notes: cleared(formValues.notes),
         });
@@ -203,6 +251,7 @@ export function StudentForm({
           formValues.knowledgeLevel === '' ? undefined : formValues.knowledgeLevel,
         age: formValues.age.trim() === '' ? undefined : Number(formValues.age),
         grade: formValues.grade.trim() === '' ? undefined : Number(formValues.grade),
+        avatarKey: formValues.avatarKey ?? undefined,
         parentIds: formValues.parentIds,
         notes: optional(formValues.notes),
       });
@@ -224,91 +273,93 @@ export function StudentForm({
           </Alert>
         ) : null}
 
-        <FieldSet>
-          <FieldLegend>{t('basicSection')}</FieldLegend>
-          <FieldGroup>
-            <Field data-invalid={errors.fullName ? true : undefined}>
-              <FieldLabel htmlFor="student-full-name">{t('fullName')}</FieldLabel>
-              <Input
-                id="student-full-name"
-                autoComplete="name"
-                aria-invalid={errors.fullName ? true : undefined}
-                {...form.register('fullName')}
-              />
-              <FieldError errors={[errors.fullName]} />
-            </Field>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field>
-                <FieldLabel htmlFor="student-subject">{t('subject')}</FieldLabel>
-                <Select
-                  value={values.subject === '' ? NONE : values.subject}
-                  onValueChange={(value) =>
-                    form.setValue(
-                      'subject',
-                      value === NONE ? '' : (value as StudentFormValues['subject']),
-                    )
-                  }
-                >
-                  <SelectTrigger id="student-subject" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value={NONE}>{tCommon('notProvided')}</SelectItem>
-                      {STUDENT_SUBJECTS.map((subject) => (
-                        <SelectItem key={subject} value={subject}>
-                          {tSubject(subject)}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="student-status">{t('status')}</FieldLabel>
-                <Select
-                  value={values.status}
-                  onValueChange={(value) =>
-                    form.setValue('status', value as StudentFormValues['status'])
-                  }
-                >
-                  <SelectTrigger id="student-status" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      {STUDENT_STATUSES.map((status) => (
-                        <SelectItem key={status} value={status}>
-                          {tStudentStatus(status)}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </Field>
-            </div>
-          </FieldGroup>
-        </FieldSet>
+        <FormSection icon={ImageIcon} tone="fuchsia" title={t('avatarSection')}>
+          <AvatarPicker
+            value={values.avatarKey ?? null}
+            onChange={(next) => form.setValue('avatarKey', next)}
+            fullName={values.fullName}
+            initialsLabel={t('avatarInitials')}
+          />
+        </FormSection>
 
         <FieldSeparator />
 
-        <FieldSet>
-          <FieldLegend>{t('contactsSection')}</FieldLegend>
-          <FieldDescription>{t('contactsHint')}</FieldDescription>
-          <FieldGroup>
-            <Field data-invalid={errors.email ? true : undefined}>
-              <FieldLabel htmlFor="student-email">{t('email')}</FieldLabel>
-              <Input
-                id="student-email"
-                type="email"
-                inputMode="email"
-                spellCheck={false}
-                aria-invalid={errors.email ? true : undefined}
-                {...form.register('email')}
-              />
-              <FieldError errors={[errors.email]} />
+        <FormSection icon={UserIcon} tone="indigo" title={t('basicSection')}>
+          <Field data-invalid={errors.fullName ? true : undefined}>
+            <FieldLabel htmlFor="student-full-name">{t('fullName')}</FieldLabel>
+            <Input
+              id="student-full-name"
+              autoComplete="name"
+              placeholder={t('fullNamePlaceholder')}
+              aria-invalid={errors.fullName ? true : undefined}
+              {...form.register('fullName')}
+            />
+            <FieldError errors={[errors.fullName]} />
+          </Field>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field>
+              <FieldLabel htmlFor="student-subject">{t('subject')}</FieldLabel>
+              <Select
+                value={values.subject === '' ? NONE : values.subject}
+                onValueChange={(value) =>
+                  form.setValue(
+                    'subject',
+                    value === NONE ? '' : (value as StudentFormValues['subject']),
+                  )
+                }
+              >
+                <SelectTrigger id="student-subject" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value={NONE}>{tCommon('notProvided')}</SelectItem>
+                    {STUDENT_SUBJECTS.map((subject) => (
+                      <SelectItem key={subject} value={subject}>
+                        {tSubject(subject)}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             </Field>
+            <Field>
+              <FieldLabel htmlFor="student-status">{t('status')}</FieldLabel>
+              <StatusSelect
+                id="student-status"
+                value={values.status}
+                onValueChange={(value) =>
+                  form.setValue('status', value as StudentFormValues['status'])
+                }
+                options={statusOptions}
+              />
+            </Field>
+          </div>
+        </FormSection>
+
+        <FieldSeparator />
+
+        <FormSection
+          icon={PhoneIcon}
+          tone="sky"
+          title={t('contactsSection')}
+          description={t('contactsHint')}
+        >
+          <Field data-invalid={errors.email ? true : undefined}>
+            <FieldLabel htmlFor="student-email">{t('email')}</FieldLabel>
+            <Input
+              id="student-email"
+              type="email"
+              inputMode="email"
+              spellCheck={false}
+              placeholder={t('emailPlaceholder')}
+              aria-invalid={errors.email ? true : undefined}
+              {...form.register('email')}
+            />
+            <FieldError errors={[errors.email]} />
+          </Field>
+          <div className="grid gap-4 sm:grid-cols-2">
             <Field data-invalid={errors.phone ? true : undefined}>
               <FieldLabel htmlFor="student-phone">{t('phone')}</FieldLabel>
               <Input
@@ -316,55 +367,63 @@ export function StudentForm({
                 type="tel"
                 inputMode="tel"
                 autoComplete="tel"
+                placeholder={t('phonePlaceholder')}
                 aria-invalid={errors.phone ? true : undefined}
-                {...form.register('phone')}
+                {...sanitizedRegister('phone', NON_PHONE)}
               />
               <FieldError errors={[errors.phone]} />
             </Field>
             <Field data-invalid={errors.telegramUsername ? true : undefined}>
               <FieldLabel htmlFor="student-telegram">{t('telegramUsername')}</FieldLabel>
-              <Input
-                id="student-telegram"
-                autoComplete="off"
-                spellCheck={false}
-                aria-invalid={errors.telegramUsername ? true : undefined}
-                {...form.register('telegramUsername')}
-              />
+              <div className="relative">
+                <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted-foreground select-none">
+                  @
+                </span>
+                <Input
+                  id="student-telegram"
+                  autoComplete="off"
+                  spellCheck={false}
+                  className="pl-7"
+                  placeholder={t('telegramPlaceholder')}
+                  aria-invalid={errors.telegramUsername ? true : undefined}
+                  {...sanitizedRegister('telegramUsername', /[^\w]/g)}
+                />
+              </div>
               <FieldError errors={[errors.telegramUsername]} />
             </Field>
-          </FieldGroup>
-        </FieldSet>
+          </div>
+        </FormSection>
 
         <FieldSeparator />
 
-        <FieldSet>
-          <FieldLegend>{t('timezoneSection')}</FieldLegend>
-          <FieldGroup>
-            <Field data-invalid={errors.timezone ? true : undefined}>
-              <FieldLabel htmlFor="student-timezone">{t('timezone')}</FieldLabel>
-              <TimezoneCombobox
-                id="student-timezone"
-                value={values.timezone}
-                onChange={(value) =>
-                  form.setValue('timezone', value, { shouldValidate: true })
-                }
-                placeholder={t('timezonePlaceholder')}
-                searchPlaceholder={t('timezoneSearch')}
-                emptyLabel={t('timezoneEmpty')}
-                invalid={Boolean(errors.timezone)}
-              />
-              <FieldDescription>{t('timezoneHint')}</FieldDescription>
-              <FieldError errors={[errors.timezone]} />
-            </Field>
-          </FieldGroup>
-        </FieldSet>
+        <FormSection
+          icon={GlobeIcon}
+          tone="cyan"
+          title={t('timezoneSection')}
+          description={t('timezoneHint')}
+        >
+          <Field data-invalid={errors.timezone ? true : undefined}>
+            <FieldLabel htmlFor="student-timezone" className="sr-only">{t('timezone')}</FieldLabel>
+            <TimezoneCombobox
+              id="student-timezone"
+              value={values.timezone}
+              onChange={(value) => form.setValue('timezone', value, { shouldValidate: true })}
+              placeholder={t('timezonePlaceholder')}
+              searchPlaceholder={t('timezoneSearch')}
+              emptyLabel={t('timezoneEmpty')}
+              invalid={Boolean(errors.timezone)}
+            />
+            <FieldError errors={[errors.timezone]} />
+          </Field>
+        </FormSection>
 
         <FieldSeparator />
 
-        <FieldSet>
-          <FieldLegend>{t('academicSection')}</FieldLegend>
-          <FieldGroup>
-            <div className="grid gap-4 sm:grid-cols-2">
+        <FormSection icon={GraduationCapIcon} tone="violet" title={t('academicSection')}>
+          {/* Levels row: language level appears only for language subjects; when
+              hidden, the knowledge level sits alone on its row. */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            {showLanguageLevel ? (
               <Field>
                 <FieldLabel htmlFor="student-language-level">{t('languageLevel')}</FieldLabel>
                 <Select
@@ -390,167 +449,183 @@ export function StudentForm({
                     </SelectGroup>
                   </SelectContent>
                 </Select>
+                <FieldDescription>{t('languageLevelHint')}</FieldDescription>
               </Field>
-              <Field>
-                <FieldLabel htmlFor="student-knowledge-level">{t('knowledgeLevel')}</FieldLabel>
-                <Select
-                  value={values.knowledgeLevel === '' ? NONE : values.knowledgeLevel}
-                  onValueChange={(value) =>
-                    form.setValue(
-                      'knowledgeLevel',
-                      value === NONE ? '' : (value as StudentFormValues['knowledgeLevel']),
-                    )
-                  }
-                >
-                  <SelectTrigger id="student-knowledge-level" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value={NONE}>{tCommon('notProvided')}</SelectItem>
-                      {STUDENT_KNOWLEDGE_LEVELS.map((level) => (
-                        <SelectItem key={level} value={level}>
-                          {tKnowledgeLevel(level)}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </Field>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field data-invalid={errors.age ? true : undefined}>
-                <FieldLabel htmlFor="student-age">{t('age')}</FieldLabel>
-                <Input
-                  id="student-age"
-                  inputMode="numeric"
-                  aria-invalid={errors.age ? true : undefined}
-                  {...form.register('age')}
-                />
-                <FieldError errors={[errors.age]} />
-              </Field>
-              <Field data-invalid={errors.grade ? true : undefined}>
-                <FieldLabel htmlFor="student-grade">{t('grade')}</FieldLabel>
-                <Input
-                  id="student-grade"
-                  inputMode="numeric"
-                  aria-invalid={errors.grade ? true : undefined}
-                  {...form.register('grade')}
-                />
-                <FieldError errors={[errors.grade]} />
-              </Field>
-            </div>
-          </FieldGroup>
-        </FieldSet>
-
-        <FieldSeparator />
-
-        <FieldSet>
-          <FieldLegend>{t('pricingSection')}</FieldLegend>
-          <FieldDescription>{t('pricingHint')}</FieldDescription>
-          <FieldGroup>
-            <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
-              <Field data-invalid={errors.hourlyRate ? true : undefined}>
-                <FieldLabel htmlFor="student-hourly-rate">{t('hourlyRate')}</FieldLabel>
-                <Input
-                  id="student-hourly-rate"
-                  inputMode="decimal"
-                  autoComplete="off"
-                  placeholder={t('hourlyRateHint')}
-                  aria-invalid={errors.hourlyRate ? true : undefined}
-                  {...form.register('hourlyRate')}
-                />
-                <FieldError errors={[errors.hourlyRate]} />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="student-currency">{t('currency')}</FieldLabel>
-                <Select
-                  value={values.currency}
-                  onValueChange={(value) =>
-                    form.setValue('currency', value as StudentFormValues['currency'])
-                  }
-                >
-                  <SelectTrigger id="student-currency" className="w-full sm:w-28">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      {CURRENCIES.map((currency) => (
-                        <SelectItem key={currency} value={currency}>
-                          {currency}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </Field>
-            </div>
-          </FieldGroup>
-        </FieldSet>
-
-        <FieldSeparator />
-
-        <FieldSet>
-          <FieldLegend>{t('parentSection')}</FieldLegend>
-          <FieldDescription>{t('parentHint')}</FieldDescription>
-          <FieldGroup>
-            {assignedParents.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {assignedParents.map((parent) => (
-                  <Badge key={parent.id} variant="secondary">
-                    {parent.fullName}
-                    <button
-                      type="button"
-                      onClick={() => removeParent(parent.id)}
-                      aria-label={t('removeParent', { name: parent.fullName })}
-                      className="ml-0.5 rounded-full outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                    >
-                      <XIcon data-icon />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
             ) : null}
-            <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
-              <EntityCombobox
-                id="student-add-parent"
-                value=""
-                options={parentOptions}
-                onChange={(parentId) => {
-                  const option = parentOptions.find((item) => item.value === parentId);
-                  if (option) {
-                    addParent({ id: option.value, fullName: option.label });
-                  }
-                }}
-                placeholder={t('addParentPlaceholder')}
-                searchPlaceholder={t('addParentSearch')}
-                emptyLabel={t('addParentEmpty')}
+            <Field>
+              <FieldLabel htmlFor="student-knowledge-level">{t('knowledgeLevel')}</FieldLabel>
+              <Select
+                value={values.knowledgeLevel === '' ? NONE : values.knowledgeLevel}
+                onValueChange={(value) =>
+                  form.setValue(
+                    'knowledgeLevel',
+                    value === NONE ? '' : (value as StudentFormValues['knowledgeLevel']),
+                  )
+                }
+              >
+                <SelectTrigger id="student-knowledge-level" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value={NONE}>{tCommon('notProvided')}</SelectItem>
+                    {STUDENT_KNOWLEDGE_LEVELS.map((level) => (
+                      <SelectItem key={level} value={level}>
+                        {tKnowledgeLevel(level)}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </Field>
+          </div>
+          {/* Age and grade always share a row. */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field data-invalid={errors.age ? true : undefined}>
+              <FieldLabel htmlFor="student-age">{t('age')}</FieldLabel>
+              <Input
+                id="student-age"
+                inputMode="numeric"
+                maxLength={3}
+                placeholder={t('agePlaceholder')}
+                aria-invalid={errors.age ? true : undefined}
+                {...sanitizedRegister('age', NON_DIGIT)}
               />
-              <Button type="button" variant="outline" onClick={() => setQuickCreateOpen(true)}>
-                {t('newParent')}
-              </Button>
-            </div>
-          </FieldGroup>
-        </FieldSet>
+              <FieldError errors={[errors.age]} />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="student-grade">{t('grade')}</FieldLabel>
+              <Select
+                value={values.grade === '' ? NONE : values.grade}
+                onValueChange={(value) =>
+                  form.setValue('grade', value === NONE ? '' : value, { shouldValidate: true })
+                }
+              >
+                <SelectTrigger id="student-grade" className="w-full">
+                  <SelectValue placeholder={t('gradePlaceholder')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value={NONE}>{tCommon('notProvided')}</SelectItem>
+                    {GRADES.map((grade) => (
+                      <SelectItem key={grade} value={grade}>
+                        {t('gradeOption', { grade })}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </Field>
+          </div>
+        </FormSection>
 
         <FieldSeparator />
 
-        <FieldSet>
-          <FieldLegend>{t('notesSection')}</FieldLegend>
-          <FieldGroup>
-            <Field data-invalid={errors.notes ? true : undefined}>
-              <FieldLabel htmlFor="student-notes">{t('notes')}</FieldLabel>
-              <Textarea
-                id="student-notes"
-                rows={4}
-                placeholder={t('notesPlaceholder')}
-                aria-invalid={errors.notes ? true : undefined}
-                {...form.register('notes')}
+        <FormSection
+          icon={BanknoteIcon}
+          tone="emerald"
+          title={t('pricingSection')}
+          description={t('pricingHint')}
+        >
+          <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
+            <Field data-invalid={errors.hourlyRate ? true : undefined}>
+              <FieldLabel htmlFor="student-hourly-rate">{t('hourlyRate')}</FieldLabel>
+              <MoneyInput
+                id="student-hourly-rate"
+                placeholder={t('hourlyRateHint')}
+                aria-invalid={errors.hourlyRate ? true : undefined}
+                {...form.register('hourlyRate')}
               />
-              <FieldError errors={[errors.notes]} />
+              <FieldError errors={[errors.hourlyRate]} />
             </Field>
-          </FieldGroup>
-        </FieldSet>
+            <Field>
+              <FieldLabel htmlFor="student-currency">{t('currency')}</FieldLabel>
+              <Select
+                value={values.currency}
+                onValueChange={(value) =>
+                  form.setValue('currency', value as StudentFormValues['currency'])
+                }
+              >
+                <SelectTrigger id="student-currency" className="w-full sm:w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {CURRENCIES.map((currency) => (
+                      <SelectItem key={currency} value={currency}>
+                        <CurrencyOption code={currency} />
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </Field>
+          </div>
+        </FormSection>
+
+        <FieldSeparator />
+
+        <FormSection
+          icon={UsersRoundIcon}
+          tone="amber"
+          title={t('parentSection')}
+          description={t('parentHint')}
+          action={
+            <Button type="button" variant="outline" size="sm" onClick={() => setQuickCreateOpen(true)}>
+              <PlusIcon data-icon="inline-start" />
+              {t('newParent')}
+            </Button>
+          }
+        >
+          {assignedParents.length > 0 ? (
+            <div className="grid gap-2 sm:grid-cols-2">
+              {assignedParents.map((parent) => (
+                <ParentMiniCard
+                  key={parent.id}
+                  parent={parentsById.get(parent.id) ?? parent}
+                  onRemove={() => removeParent(parent.id)}
+                  removeLabel={t('removeParent', { name: parent.fullName })}
+                />
+              ))}
+            </div>
+          ) : null}
+          <EntityCombobox
+            id="student-add-parent"
+            value=""
+            options={parentOptions}
+            onChange={(parentId) => {
+              const item = parentsQuery.data?.items.find((parent) => parent.id === parentId);
+              if (item) {
+                addParent({
+                  id: item.id,
+                  fullName: item.fullName,
+                  avatarKey: item.avatarKey,
+                  phone: item.phone,
+                  telegramUsername: item.telegramUsername,
+                });
+              }
+            }}
+            placeholder={t('addParentPlaceholder')}
+            searchPlaceholder={t('addParentSearch')}
+            emptyLabel={t('addParentEmpty')}
+          />
+        </FormSection>
+
+        <FieldSeparator />
+
+        <FormSection icon={StickyNoteIcon} tone="rose" title={t('notesSection')}>
+          <Field data-invalid={errors.notes ? true : undefined}>
+            <FieldLabel htmlFor="student-notes" className="sr-only">{t('notes')}</FieldLabel>
+            <Textarea
+              id="student-notes"
+              rows={4}
+              placeholder={t('notesPlaceholder')}
+              aria-invalid={errors.notes ? true : undefined}
+              {...form.register('notes')}
+            />
+            <FieldError errors={[errors.notes]} />
+          </Field>
+        </FormSection>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
           <Button type="button" variant="outline" onClick={onCancel}>
@@ -566,7 +641,9 @@ export function StudentForm({
       <ParentFormDialog
         open={quickCreateOpen}
         onOpenChange={setQuickCreateOpen}
-        onSuccess={(parent) => addParent(parent)}
+        onSuccess={(parent) =>
+          addParent({ ...parent, avatarKey: null, phone: null, telegramUsername: null })
+        }
       />
     </form>
   );
