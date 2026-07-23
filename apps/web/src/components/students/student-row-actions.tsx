@@ -1,14 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  MoreHorizontalIcon,
-  PauseIcon,
-  PencilIcon,
-  PlayIcon,
-  RotateCcwIcon,
-  Trash2Icon,
-} from 'lucide-react';
+import { MoreHorizontalIcon, PauseIcon, PencilIcon, PlayIcon, Trash2Icon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { StudentStatusDto } from '@tutorio/validation';
@@ -19,64 +12,34 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ConfirmDialog } from '@/components/app/confirm-dialog';
-import { useSession } from '@/components/app/session-provider';
 import { errorMessageKey } from '@/lib/api/error-message';
-import {
-  useDeleteStudentMutation,
-  useRestoreStudentMutation,
-  useUpdateStudentMutation,
-} from '@/lib/api/students';
+import { useUpdateStudentMutation } from '@/lib/api/students';
+import { StudentDeleteDialog } from './student-delete-dialog';
 import { StudentFormDialog } from './student-form-dialog';
 
-// Deleted students can only be restored (owner) — never edited, never
-// permanently erased. On-hold is a separate, non-destructive status toggle
-// (hides from active lists without soft-deleting).
+// Row menu: edit, the on-hold toggle (a non-destructive status flip), and a
+// permanent delete that goes through the rich confirm dialog (which also offers
+// archiving as the safe alternative).
 export function StudentRowActions({
   studentId,
   fullName,
-  isDeleted,
+  avatarKey,
   status = 'ACTIVE',
   onDeleted,
 }: {
   studentId: string;
   fullName: string;
-  isDeleted: boolean;
+  avatarKey?: string | null;
   status?: StudentStatusDto;
   onDeleted?: () => void;
 }) {
   const t = useTranslations('students');
   const tCommon = useTranslations('common');
   const tErrors = useTranslations('errors');
-  const session = useSession();
-  const isOwner = session.role === 'OWNER';
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
 
-  const deleteStudent = useDeleteStudentMutation();
-  const restoreStudent = useRestoreStudentMutation();
   const updateStudent = useUpdateStudentMutation(studentId);
-
-  const handleDelete = () => {
-    deleteStudent.mutate(studentId, {
-      onSuccess: () => {
-        setConfirmOpen(false);
-        toast.success(t('toasts.deleted'));
-        onDeleted?.();
-      },
-      onError: (error) => {
-        setConfirmOpen(false);
-        toast.error(tErrors(errorMessageKey(error)));
-      },
-    });
-  };
-
-  const handleRestore = () => {
-    restoreStudent.mutate(studentId, {
-      onSuccess: () => toast.success(t('toasts.restored')),
-      onError: (error) => toast.error(tErrors(errorMessageKey(error))),
-    });
-  };
 
   const handleToggleHold = () => {
     updateStudent.mutate(
@@ -103,49 +66,35 @@ export function StudentRowActions({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          {isDeleted ? (
-            isOwner ? (
-              <DropdownMenuItem onSelect={handleRestore}>
-                <RotateCcwIcon data-icon />
-                {tCommon('restore')}
-              </DropdownMenuItem>
-            ) : null
-          ) : (
-            <>
-              <DropdownMenuItem onSelect={() => setEditOpen(true)}>
-                <PencilIcon data-icon />
-                {tCommon('edit')}
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={handleToggleHold}>
-                {status === 'ON_HOLD' ? (
-                  <>
-                    <PlayIcon data-icon />
-                    {t('reactivate')}
-                  </>
-                ) : (
-                  <>
-                    <PauseIcon data-icon />
-                    {t('putOnHold')}
-                  </>
-                )}
-              </DropdownMenuItem>
-              <DropdownMenuItem variant="destructive" onSelect={() => setConfirmOpen(true)}>
-                <Trash2Icon data-icon />
-                {tCommon('delete')}
-              </DropdownMenuItem>
-            </>
-          )}
+          <DropdownMenuItem onSelect={() => setEditOpen(true)}>
+            <PencilIcon data-icon />
+            {tCommon('edit')}
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={handleToggleHold}>
+            {status === 'ON_HOLD' ? (
+              <>
+                <PlayIcon data-icon />
+                {t('reactivate')}
+              </>
+            ) : (
+              <>
+                <PauseIcon data-icon />
+                {t('putOnHold')}
+              </>
+            )}
+          </DropdownMenuItem>
+          <DropdownMenuItem variant="destructive" onSelect={() => setConfirmOpen(true)}>
+            <Trash2Icon data-icon />
+            {tCommon('delete')}
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <ConfirmDialog
+      <StudentDeleteDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-        title={t('deleteDialog.title')}
-        description={t('deleteDialog.description', { name: fullName })}
-        confirmLabel={t('deleteDialog.confirm')}
-        onConfirm={handleDelete}
-        pending={deleteStudent.isPending}
+        student={{ id: studentId, fullName, avatarKey, status }}
+        onDeleted={onDeleted}
       />
 
       <StudentFormDialog open={editOpen} onOpenChange={setEditOpen} studentId={studentId} />

@@ -26,6 +26,7 @@ function toResponse(row: Parent): ParentResponse {
     fullName: row.fullName,
     phone: row.phone,
     telegramUsername: row.telegramUsername,
+    avatarKey: row.avatarKey as ParentResponse['avatarKey'],
     notes: row.notes,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
@@ -38,15 +39,19 @@ function toResponse(row: Parent): ParentResponse {
 const studentRosterInclude = {
   students: {
     where: { student: { deletedAt: null } },
-    include: { student: { select: { id: true, fullName: true } } },
+    include: { student: { select: { id: true, fullName: true, avatarKey: true } } },
     orderBy: { student: { fullName: 'asc' as const } },
   },
 } satisfies Prisma.ParentInclude;
 
 function toRoster(
   row: Prisma.ParentGetPayload<{ include: typeof studentRosterInclude }>,
-) {
-  return row.students.map((link) => link.student);
+): ParentDetail['students'] {
+  return row.students.map((link) => ({
+    id: link.student.id,
+    fullName: link.student.fullName,
+    avatarKey: link.student.avatarKey as ParentDetail['students'][number]['avatarKey'],
+  }));
 }
 
 @Injectable()
@@ -79,6 +84,9 @@ export class ParentsService {
       workspaceId: auth.workspaceId,
       ...deletedAtFilter(query.state),
       ...search,
+      ...(query.studentId
+        ? { students: { some: { studentId: query.studentId } } }
+        : {}),
     };
 
     const [rows, total] = await this.prisma.$transaction([
@@ -97,6 +105,7 @@ export class ParentsService {
         fullName: row.fullName,
         phone: row.phone,
         telegramUsername: row.telegramUsername,
+        avatarKey: row.avatarKey as ParentListResponse['items'][number]['avatarKey'],
         deletedAt: row.deletedAt?.toISOString() ?? null,
         students: toRoster(row),
       })),
@@ -181,7 +190,11 @@ export class ParentsService {
     return toResponse(parent);
   }
 
-  async softDelete(auth: AuthenticatedUser, parentId: string): Promise<void> {
+  /**
+   * Permanently delete a parent and its student links (no FK cascade in the
+   * schema). Irreversible — there is no trash and no restore.
+   */
+  async remove(auth: AuthenticatedUser, parentId: string): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
       const parent = await tx.parent.findFirst({
         where: { id: parentId, workspaceId: auth.workspaceId },
@@ -189,15 +202,9 @@ export class ParentsService {
       if (!parent) {
         throw parentNotFound();
       }
-      if (parent.deletedAt) {
-        // Idempotent: deleting an already deleted parent is a no-op.
-        return;
-      }
 
-      await tx.parent.update({
-        where: { id: parent.id },
-        data: { deletedAt: new Date() },
-      });
+      await tx.studentParent.deleteMany({ where: { parentId: parent.id } });
+      await tx.parent.delete({ where: { id: parent.id } });
       await this.audit.record(tx, {
         workspaceId: auth.workspaceId,
         actorId: auth.userId,
@@ -206,37 +213,5 @@ export class ParentsService {
         entityId: parent.id,
       });
     });
-  }
-
-  async restore(
-    auth: AuthenticatedUser,
-    parentId: string,
-  ): Promise<ParentResponse> {
-    const parent = await this.prisma.$transaction(async (tx) => {
-      const existing = await tx.parent.findFirst({
-        where: { id: parentId, workspaceId: auth.workspaceId },
-      });
-      if (!existing) {
-        throw parentNotFound();
-      }
-      if (!existing.deletedAt) {
-        // Idempotent: restoring a live parent is a no-op.
-        return existing;
-      }
-
-      const restored = await tx.parent.update({
-        where: { id: existing.id },
-        data: { deletedAt: null },
-      });
-      await this.audit.record(tx, {
-        workspaceId: auth.workspaceId,
-        actorId: auth.userId,
-        action: 'RESTORE',
-        entity: 'PARENT',
-        entityId: existing.id,
-      });
-      return restored;
-    });
-    return toResponse(parent);
   }
 }

@@ -13,7 +13,6 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
-  ApiConflictResponse,
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiNoContentResponse,
@@ -25,7 +24,6 @@ import {
 import { ZodSerializerDto } from 'nestjs-zod';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { Roles } from '../auth/decorators/roles.decorator';
 import { ApiErrorDto } from '../auth/dto/auth.dto';
 import {
   CreateStudentDto,
@@ -107,32 +105,17 @@ export class StudentsController {
   @Delete(':studentId')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
-    summary: 'Soft-delete a student (move to trash)',
+    summary: 'Permanently delete a student',
     description:
-      'Idempotent. Fails with ACTIVE_ENROLLMENTS_EXIST while the student ' +
-      'has active or paused enrollments.',
+      'Irreversible. Removes the student together with its parent links and ' +
+      'enrollments. There is no trash and no restore.',
   })
   @ApiNoContentResponse()
   @ApiNotFoundResponse({ type: ApiErrorDto })
-  @ApiConflictResponse({ type: ApiErrorDto })
-  softDelete(
+  remove(
     @CurrentUser() user: AuthenticatedUser,
     @Param('studentId', ParseUUIDPipe) studentId: string,
   ): Promise<void> {
-    return this.students.softDelete(user, studentId);
-  }
-
-  @Post(':studentId/restore')
-  @Roles('OWNER')
-  @ApiOperation({ summary: 'Restore a soft-deleted student (owner only)' })
-  @ApiOkResponse({ type: StudentDto })
-  @ApiForbiddenResponse({ type: ApiErrorDto })
-  @ApiNotFoundResponse({ type: ApiErrorDto })
-  @ZodSerializerDto(StudentDto)
-  restore(
-    @CurrentUser() user: AuthenticatedUser,
-    @Param('studentId', ParseUUIDPipe) studentId: string,
-  ): Promise<StudentDto> {
-    return this.students.restore(user, studentId);
+    return this.students.remove(user, studentId);
   }
 }

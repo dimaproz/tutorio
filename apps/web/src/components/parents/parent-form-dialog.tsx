@@ -34,28 +34,30 @@ export function ParentFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[90vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+        <DialogHeader className="shrink-0 border-b bg-popover px-6 py-4 pr-12">
           <DialogTitle>{isEdit ? t('editTitle') : t('createTitle')}</DialogTitle>
           <DialogDescription>{isEdit ? t('editSubtitle') : t('createSubtitle')}</DialogDescription>
         </DialogHeader>
 
-        {isEdit && parent.isPending ? (
-          <div className="flex flex-col gap-3" aria-hidden="true">
-            <Skeleton className="h-9 w-full" />
-            <Skeleton className="h-9 w-full" />
-            <Skeleton className="h-24 w-full" />
-          </div>
-        ) : (
-          <ParentForm
-            parent={parent.data}
-            onSuccess={(created) => {
-              onOpenChange(false);
-              onSuccess?.(created);
-            }}
-            onCancel={() => onOpenChange(false)}
-          />
-        )}
+        <div className="overflow-y-auto px-6 py-5">
+          {isEdit && parent.isPending ? (
+            <div className="flex flex-col gap-3" aria-hidden="true">
+              <Skeleton className="h-9 w-full" />
+              <Skeleton className="h-9 w-full" />
+              <Skeleton className="h-24 w-full" />
+            </div>
+          ) : (
+            <ParentForm
+              parent={parent.data}
+              onSuccess={(created) => {
+                onOpenChange(false);
+                onSuccess?.(created);
+              }}
+              onCancel={() => onOpenChange(false)}
+            />
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -51,6 +51,7 @@ enum AuditAction {
 enum StudentStatus {
   ACTIVE
   ON_HOLD
+  ARCHIVED
 
   @@map("student_status")
 }
@@ -156,6 +157,9 @@ model Student {
   knowledgeLevel  String?
   age         Int?
   grade       Int?
+  // One of a curated set of bundled illustration keys (validated at the app
+  // layer), e.g. "user-3" — never a free-form URL. Null = show initials.
+  avatarKey   String?
   notes       String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -180,6 +184,8 @@ model Parent {
   fullName         String
   phone            String?
   telegramUsername String?
+  // One of a curated set of bundled illustration keys — see Student.avatarKey.
+  avatarKey        String?
   notes            String?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt

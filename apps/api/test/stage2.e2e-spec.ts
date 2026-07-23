@@ -213,6 +213,7 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
           'knowledgeLevel',
           'age',
           'grade',
+          'avatarKey',
           'parents',
           'notes',
           'createdAt',
@@ -293,7 +294,13 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
         .set('Authorization', auth(ownerA))
         .expect(200);
       expect(relinked.body.parents).toEqual([
-        { id: parentId, fullName: 'Parent Learner' },
+        {
+          id: parentId,
+          fullName: 'Parent Learner',
+          avatarKey: null,
+          phone: '+380501112299',
+          telegramUsername: null,
+        },
       ]);
       expect(await auditCount('STUDENT', studentId, 'UPDATE')).toBe(before + 2);
     });
@@ -339,21 +346,14 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
       expect(listB.body.total).toBe(0);
     });
 
-    it('soft-deletes, excludes from default lists, and restores (owner only)', async () => {
+    it('permanently deletes a student and drops it from lists (no trash, no restore)', async () => {
       await server()
         .delete(`/api/students/${studentId}`)
         .set('Authorization', auth(ownerA))
         .expect(204);
       expect(await auditCount('STUDENT', studentId, 'DELETE')).toBe(1);
 
-      // Deleting again is idempotent and adds no audit row.
-      await server()
-        .delete(`/api/students/${studentId}`)
-        .set('Authorization', auth(ownerA))
-        .expect(204);
-      expect(await auditCount('STUDENT', studentId, 'DELETE')).toBe(1);
-
-      // Excluded from default list and detail…
+      // Gone from the default list and detail returns 404.
       const defaultList = await server()
         .get('/api/students')
         .set('Authorization', auth(ownerA))
@@ -364,31 +364,15 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
         .set('Authorization', auth(ownerA))
         .expect(404);
 
-      // …but visible to the owner via state=deleted.
-      const deletedList = await server()
-        .get('/api/students')
-        .query({ state: 'deleted' })
-        .set('Authorization', auth(ownerA))
-        .expect(200);
-      expect(deletedList.body.items[0].id).toBe(studentId);
-
-      // Teachers cannot see trash or restore.
+      // Deleting an already-gone student is a plain not-found; no restore route.
       await server()
-        .get('/api/students')
-        .query({ state: 'deleted' })
-        .set('Authorization', auth(teacherA))
-        .expect(403);
+        .delete(`/api/students/${studentId}`)
+        .set('Authorization', auth(ownerA))
+        .expect(404);
       await server()
         .post(`/api/students/${studentId}/restore`)
-        .set('Authorization', auth(teacherA))
-        .expect(403);
-
-      const restored = await server()
-        .post(`/api/students/${studentId}/restore`)
         .set('Authorization', auth(ownerA))
-        .expect(201);
-      expect(restored.body.deletedAt).toBeNull();
-      expect(await auditCount('STUDENT', studentId, 'RESTORE')).toBe(1);
+        .expect(404);
     });
   });
 
@@ -531,12 +515,13 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
       expect(crossTeacher.body.code).toBe('WORKSPACE_MEMBER_NOT_FOUND');
     });
 
-    it('blocks student/group deletion while ACTIVE or PAUSED enrollments exist', async () => {
-      const blockedStudent = await server()
-        .delete(`/api/students/${studentId}`)
+    it('blocks group deletion while ACTIVE or PAUSED enrollments exist', async () => {
+      // A group with an active enrollment cannot be soft-deleted.
+      const blockedGroup = await server()
+        .delete(`/api/groups/${groupId}`)
         .set('Authorization', auth(ownerA))
         .expect(409);
-      expect(blockedStudent.body.code).toBe('ACTIVE_ENROLLMENTS_EXIST');
+      expect(blockedGroup.body.code).toBe('ACTIVE_ENROLLMENTS_EXIST');
 
       // PAUSED still blocks.
       await server()
@@ -628,7 +613,7 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
         .set('Authorization', auth(ownerA))
         .expect(200);
       expect(withRoster.body.students).toEqual([
-        { id: studentId, fullName: 'Roster Learner' },
+        { id: studentId, fullName: 'Roster Learner', avatarKey: null },
       ]);
     });
 
@@ -674,47 +659,33 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
       expect(found.body.items[0].id).toBe(parentId);
     });
 
-    it('soft-deletes, drops out of the student roster, and restores (owner only)', async () => {
+    it('permanently deletes a parent and unlinks it from students (no restore)', async () => {
       await server()
         .delete(`/api/parents/${parentId}`)
         .set('Authorization', auth(ownerA))
         .expect(204);
       expect(await auditCount('PARENT', parentId, 'DELETE')).toBe(1);
 
-      // Idempotent: deleting again adds no audit row.
+      // Gone from detail, and the link is removed from the student it was on.
       await server()
-        .delete(`/api/parents/${parentId}`)
+        .get(`/api/parents/${parentId}`)
         .set('Authorization', auth(ownerA))
-        .expect(204);
-      expect(await auditCount('PARENT', parentId, 'DELETE')).toBe(1);
-
-      // The link row survives, but a soft-deleted parent no longer appears
-      // on the student it's linked to.
+        .expect(404);
       const student = await server()
         .get(`/api/students/${studentId}`)
         .set('Authorization', auth(ownerA))
         .expect(200);
       expect(student.body.parents).toEqual([]);
 
+      // No trash: deleting again is a plain not-found and there is no restore.
+      await server()
+        .delete(`/api/parents/${parentId}`)
+        .set('Authorization', auth(ownerA))
+        .expect(404);
       await server()
         .post(`/api/parents/${parentId}/restore`)
-        .set('Authorization', auth(teacherA))
-        .expect(403);
-
-      const restored = await server()
-        .post(`/api/parents/${parentId}/restore`)
         .set('Authorization', auth(ownerA))
-        .expect(201);
-      expect(restored.body.deletedAt).toBeNull();
-      expect(await auditCount('PARENT', parentId, 'RESTORE')).toBe(1);
-
-      const studentAfterRestore = await server()
-        .get(`/api/students/${studentId}`)
-        .set('Authorization', auth(ownerA))
-        .expect(200);
-      expect(studentAfterRestore.body.parents).toEqual([
-        { id: parentId, fullName: 'Standalone Parent' },
-      ]);
+        .expect(404);
     });
   });
 

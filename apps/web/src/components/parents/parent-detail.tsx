@@ -1,45 +1,45 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { PencilIcon, Trash2Icon } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import {
+  BookOpenIcon,
+  PencilIcon,
+  PhoneIcon,
+  SendIcon,
+  Trash2Icon,
+  UsersRoundIcon,
+} from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
+import { BackButton } from '@/components/app/back-button';
 import { ConfirmDialog } from '@/components/app/confirm-dialog';
-import { ListSkeleton, PageHeader, QueryErrorAlert } from '@/components/app/page-shell';
-import { DeletedBadge } from '@/components/app/status-badges';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { PersonMiniCard } from '@/components/app/person-mini-card';
+import { InfoRow, ProfileHeader, SectionTitle } from '@/components/app/detail-view';
+import { ListSkeleton, QueryErrorAlert } from '@/components/app/page-shell';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
 import { errorMessageKey } from '@/lib/api/error-message';
-import {
-  useDeleteParentMutation,
-  useParentQuery,
-  useRestoreParentMutation,
-} from '@/lib/api/parents';
+import { useDeleteParentMutation, useParentQuery } from '@/lib/api/parents';
 import type { GatewayError } from '@/lib/auth/client';
-import { useSession } from '@/components/app/session-provider';
 import { ParentFormDialog } from './parent-form-dialog';
 
 export function ParentDetailView({ parentId }: { parentId: string }) {
   const t = useTranslations('parents');
   const tCommon = useTranslations('common');
   const tErrors = useTranslations('errors');
+  const locale = useLocale();
   const router = useRouter();
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
 
   const parent = useParentQuery(parentId);
-  const session = useSession();
-  const isOwner = session.role === 'OWNER';
   const deleteParent = useDeleteParentMutation();
-  const restoreParent = useRestoreParentMutation();
 
   if (parent.isPending) {
-    return <ListSkeleton rows={4} />;
+    return <ListSkeleton rows={5} />;
   }
 
   if (parent.isError) {
@@ -53,7 +53,14 @@ export function ParentDetailView({ parentId }: { parentId: string }) {
   }
 
   const data = parent.data;
-  const isDeleted = Boolean(data.deletedAt);
+
+  const addedOn = t('detail.addedOn', {
+    date: new Intl.DateTimeFormat(locale, {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    }).format(new Date(data.createdAt)),
+  });
 
   async function onDelete() {
     try {
@@ -66,133 +73,116 @@ export function ParentDetailView({ parentId }: { parentId: string }) {
     }
   }
 
-  async function onRestore() {
-    try {
-      await restoreParent.mutateAsync(parentId);
-      toast.success(t('toasts.restored'));
-    } catch (error) {
-      toast.error(tErrors(errorMessageKey(error as GatewayError)));
-    }
-  }
-
   return (
     <>
-      <PageHeader
-        title={data.fullName}
-        description={data.phone ?? undefined}
-        action={
-          isDeleted ? (
-            isOwner ? (
-              <Button
-                type="button"
-                onClick={() => void onRestore()}
-                disabled={restoreParent.isPending}
-              >
-                {tCommon('restore')}
-              </Button>
-            ) : null
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" variant="outline" onClick={() => setEditOpen(true)}>
-                <PencilIcon data-icon="inline-start" />
-                {tCommon('edit')}
-              </Button>
-              <Button type="button" variant="outline" onClick={() => setDeleteOpen(true)}>
-                <Trash2Icon data-icon="inline-start" />
-                {tCommon('delete')}
-              </Button>
-            </div>
-          )
-        }
-      />
-
-      {isDeleted ? (
-        <Alert>
-          <AlertTitle className="flex items-center gap-2">
-            <DeletedBadge label={tCommon('deleted')} />
-            {t('detail.deletedTitle')}
-          </AlertTitle>
-          <AlertDescription>{t('detail.deletedDescription')}</AlertDescription>
-        </Alert>
-      ) : null}
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('detail.contactsTitle')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <dl className="grid gap-3 text-sm">
-              {data.phone ? (
-                <div className="flex flex-col gap-0.5">
-                  <dt className="text-muted-foreground">{t('form.phone')}</dt>
-                  <dd>
-                    <a className="underline underline-offset-4" href={`tel:${data.phone}`}>
-                      {data.phone}
-                    </a>
-                  </dd>
-                </div>
-              ) : null}
-              {data.telegramUsername ? (
-                <div className="flex flex-col gap-0.5">
-                  <dt className="text-muted-foreground">{t('form.telegramUsername')}</dt>
-                  <dd>@{data.telegramUsername.replace(/^@/, '')}</dd>
-                </div>
-              ) : null}
-              {!data.phone && !data.telegramUsername ? (
-                <span className="text-muted-foreground">{tCommon('notProvided')}</span>
-              ) : null}
-            </dl>
-          </CardContent>
-        </Card>
-
-        {data.notes ? (
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('detail.notesTitle')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm whitespace-pre-wrap">{data.notes}</p>
-            </CardContent>
-          </Card>
-        ) : null}
+      {/* Top bar: back link + primary actions. */}
+      <div className="flex items-center justify-between gap-3">
+        <BackButton href="/app/parents" />
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" variant="outline" onClick={() => setEditOpen(true)}>
+            <PencilIcon data-icon="inline-start" />
+            {tCommon('edit')}
+          </Button>
+          <Button type="button" variant="destructive" onClick={() => setDeleteOpen(true)}>
+            <Trash2Icon data-icon="inline-start" />
+            {tCommon('delete')}
+          </Button>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('detail.studentsTitle')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {data.students.length === 0 ? (
-            <Empty>
-              <EmptyHeader>
-                <EmptyTitle>{t('detail.noStudents')}</EmptyTitle>
-                <EmptyDescription>{t('detail.noStudentsDescription')}</EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {data.students.map((student) => (
-                <li key={student.id} className="rounded-lg border p-3">
-                  <Link
-                    href={`/app/students/${student.id}`}
-                    className="font-medium underline-offset-4 hover:underline"
-                  >
-                    {student.fullName}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+      {/* Profile header — sits on the page background, no card. */}
+      <ProfileHeader avatarKey={data.avatarKey} fullName={data.fullName} subtitle={addedOn} />
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Main column. */}
+        <div className="flex flex-col gap-6 lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <SectionTitle icon={BookOpenIcon} tone="rose">{t('detail.notesTitle')}</SectionTitle>
+            </CardHeader>
+            <CardContent>
+              {data.notes ? (
+                <p className="text-sm whitespace-pre-wrap">{data.notes}</p>
+              ) : (
+                <p className="text-sm text-muted-foreground">{tCommon('notProvided')}</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right column. */}
+        <div className="flex flex-col gap-6">
+          <Card>
+            <CardHeader>
+              <SectionTitle icon={PhoneIcon} tone="sky">{t('detail.contactsTitle')}</SectionTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3">
+              <InfoRow
+                icon={PhoneIcon}
+                label={t('form.phone')}
+                href={data.phone ? `tel:${data.phone}` : undefined}
+              >
+                {data.phone ?? (
+                  <span className="text-muted-foreground">{tCommon('notProvided')}</span>
+                )}
+              </InfoRow>
+              <InfoRow
+                icon={SendIcon}
+                label={t('form.telegramUsername')}
+                href={
+                  data.telegramUsername
+                    ? `https://t.me/${data.telegramUsername.replace(/^@/, '')}`
+                    : undefined
+                }
+                external={Boolean(data.telegramUsername)}
+              >
+                {data.telegramUsername ? (
+                  `@${data.telegramUsername.replace(/^@/, '')}`
+                ) : (
+                  <span className="text-muted-foreground">{tCommon('notProvided')}</span>
+                )}
+              </InfoRow>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <SectionTitle icon={UsersRoundIcon} tone="amber">
+                {t('detail.studentsTitle')}
+              </SectionTitle>
+            </CardHeader>
+            <CardContent>
+              {data.students.length === 0 ? (
+                <Empty>
+                  <EmptyHeader>
+                    <EmptyTitle>{t('detail.noStudents')}</EmptyTitle>
+                    <EmptyDescription>{t('detail.noStudentsDescription')}</EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              ) : (
+                <ul className="flex flex-col gap-2">
+                  {data.students.map((student) => (
+                    <li key={student.id}>
+                      <PersonMiniCard
+                        avatarKey={student.avatarKey}
+                        fullName={student.fullName}
+                        href={`/app/students/${student.id}`}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
       <ConfirmDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
         title={t('deleteDialog.title')}
         description={t('deleteDialog.description', { name: data.fullName })}
-        confirmLabel={tCommon('delete')}
+        confirmLabel={t('deleteDialog.confirm')}
         onConfirm={() => void onDelete()}
         pending={deleteParent.isPending}
       />

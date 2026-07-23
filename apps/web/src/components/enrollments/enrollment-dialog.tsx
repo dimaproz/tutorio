@@ -43,41 +43,54 @@ import { useGroupsQuery } from '@/lib/api/groups';
 import { useStudentsQuery } from '@/lib/api/students';
 import { useWorkspaceMembersQuery } from '@/lib/api/workspace';
 import { useSession } from '@/components/app/session-provider';
+import { CurrencyOption } from '@/components/app/currency-option';
+import { MoneyInput } from '@/components/app/money-input';
+import { PersonMiniCard } from '@/components/app/person-mini-card';
+import { StatusSelect, useEnrollmentStatusOptions } from '@/components/app/status-select';
 import { makeZodErrorMap } from '@/lib/forms/error-map';
 import { enrollmentFormSchema, type EnrollmentFormValues } from '@/lib/forms/schemas';
 import { formatPriceInput, parsePriceInput } from '@/lib/money';
 
-const ENROLLMENT_STATUSES = ['ACTIVE', 'PAUSED', 'ARCHIVED'] as const;
 const BILLING_TYPES = ['PACKAGE', 'MONTHLY', 'PER_LESSON'] as const;
 const CURRENCIES = ['EUR', 'UAH', 'PLN', 'USD', 'GBP'] as const;
 
 // Sentinel for "no group" — Radix Select cannot hold an empty string value.
 const INDIVIDUAL = 'individual';
 
+/** Minimal student identity shown as a read-only card when the student is fixed. */
+export interface LockedStudent {
+  id: string;
+  fullName: string;
+  avatarKey?: string | null;
+  subject?: string | null;
+}
+
 export function EnrollmentDialog({
   open,
   onOpenChange,
   enrollment,
-  lockedStudentId,
+  lockedStudent,
   lockedGroupId,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** Present when editing; absent when creating. */
   enrollment?: EnrollmentResponse;
-  /** Set when opened from a student page — the student cannot be changed. */
-  lockedStudentId?: string;
+  /** Set when opened from a student page — the student is fixed and shown as a card. */
+  lockedStudent?: LockedStudent;
   /** Set when opened from a group page — the group cannot be changed. */
   lockedGroupId?: string;
 }) {
   const t = useTranslations('enrollments');
-  const tStatus = useTranslations('enrollmentStatus');
+  const tSubject = useTranslations('subject');
   const tBilling = useTranslations('billingType');
   const tErrors = useTranslations('errors');
   const tValidation = useTranslations('validation');
   const tCommon = useTranslations('common');
+  const statusOptions = useEnrollmentStatusOptions();
 
   const isEdit = Boolean(enrollment);
+  const lockedStudentId = lockedStudent?.id;
   const createEnrollment = useCreateEnrollmentMutation();
   const updateEnrollment = useUpdateEnrollmentMutation();
   const mutation = isEdit ? updateEnrollment : createEnrollment;
@@ -164,6 +177,15 @@ export function EnrollmentDialog({
     [members.data],
   );
 
+  // Student / teacher become read-only cards once fixed: a locked or existing
+  // student, and — since it is immutable after creation — the teacher on edit.
+  const studentCard: LockedStudent | null = lockedStudent
+    ? lockedStudent
+    : enrollment
+      ? { id: enrollment.student.id, fullName: enrollment.student.fullName }
+      : null;
+  const teacherCard = enrollment ? enrollment.teacher : null;
+
   const effectiveDeadline = values.useCustomDeadline
     ? Number(values.cancellationDeadlineHours || 0)
     : workspaceDefaultDeadline;
@@ -211,16 +233,16 @@ export function EnrollmentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90vh] w-full flex-col sm:max-w-lg">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[90vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+        <DialogHeader className="shrink-0 border-b bg-popover px-6 py-4 pr-12">
           <DialogTitle>{isEdit ? t('editor.editTitle') : t('editor.createTitle')}</DialogTitle>
           <DialogDescription>
             {isEdit ? t('editor.editDescription') : t('editor.createDescription')}
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={onSubmit} noValidate className="flex min-h-0 flex-1 flex-col gap-4">
-          <div className="min-h-0 flex-1 overflow-y-auto">
+        <form onSubmit={onSubmit} noValidate className="flex min-h-0 flex-1 flex-col">
+          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
             <FieldGroup>
               {mutation.error ? (
                 <Alert variant="destructive" role="alert">
@@ -232,19 +254,28 @@ export function EnrollmentDialog({
 
               <Field data-invalid={errors.studentId ? true : undefined}>
                 <FieldLabel htmlFor="enrollment-student">{t('editor.student')}</FieldLabel>
-                <EntityCombobox
-                  id="enrollment-student"
-                  value={values.studentId}
-                  options={studentOptions}
-                  onChange={(value) =>
-                    form.setValue('studentId', value, { shouldValidate: true })
-                  }
-                  placeholder={t('editor.studentPlaceholder')}
-                  searchPlaceholder={t('editor.studentSearch')}
-                  emptyLabel={t('editor.studentEmpty')}
-                  disabled={isEdit || Boolean(lockedStudentId)}
-                  invalid={Boolean(errors.studentId)}
-                />
+                {studentCard ? (
+                  <PersonMiniCard
+                    avatarKey={studentCard.avatarKey}
+                    fullName={studentCard.fullName}
+                    subtitle={
+                      lockedStudent?.subject ? tSubject(lockedStudent.subject) : undefined
+                    }
+                  />
+                ) : (
+                  <EntityCombobox
+                    id="enrollment-student"
+                    value={values.studentId}
+                    options={studentOptions}
+                    onChange={(value) =>
+                      form.setValue('studentId', value, { shouldValidate: true })
+                    }
+                    placeholder={t('editor.studentPlaceholder')}
+                    searchPlaceholder={t('editor.studentSearch')}
+                    emptyLabel={t('editor.studentEmpty')}
+                    invalid={Boolean(errors.studentId)}
+                  />
+                )}
                 <FieldError errors={[errors.studentId]} />
               </Field>
 
@@ -269,48 +300,40 @@ export function EnrollmentDialog({
                     </SelectGroup>
                   </SelectContent>
                 </Select>
-                <FieldDescription>{t('editor.groupPlaceholder')}</FieldDescription>
+                <FieldDescription>{t('editor.groupHint')}</FieldDescription>
               </Field>
 
               <Field data-invalid={errors.teacherId ? true : undefined}>
                 <FieldLabel htmlFor="enrollment-teacher">{t('editor.teacher')}</FieldLabel>
-                <EntityCombobox
-                  id="enrollment-teacher"
-                  value={values.teacherId}
-                  options={teacherOptions}
-                  onChange={(value) =>
-                    form.setValue('teacherId', value, { shouldValidate: true })
-                  }
-                  placeholder={t('editor.teacherPlaceholder')}
-                  searchPlaceholder={t('editor.teacherSearch')}
-                  emptyLabel={t('editor.teacherEmpty')}
-                  disabled={isEdit}
-                  invalid={Boolean(errors.teacherId)}
-                />
+                {teacherCard ? (
+                  <PersonMiniCard fullName={teacherCard.name} />
+                ) : (
+                  <EntityCombobox
+                    id="enrollment-teacher"
+                    value={values.teacherId}
+                    options={teacherOptions}
+                    onChange={(value) =>
+                      form.setValue('teacherId', value, { shouldValidate: true })
+                    }
+                    placeholder={t('editor.teacherPlaceholder')}
+                    searchPlaceholder={t('editor.teacherSearch')}
+                    emptyLabel={t('editor.teacherEmpty')}
+                    invalid={Boolean(errors.teacherId)}
+                  />
+                )}
                 <FieldError errors={[errors.teacherId]} />
               </Field>
 
               <Field>
                 <FieldLabel htmlFor="enrollment-status">{t('editor.status')}</FieldLabel>
-                <Select
+                <StatusSelect
+                  id="enrollment-status"
                   value={values.status}
                   onValueChange={(value) =>
                     form.setValue('status', value as EnrollmentFormValues['status'])
                   }
-                >
-                  <SelectTrigger id="enrollment-status" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      {ENROLLMENT_STATUSES.map((status) => (
-                        <SelectItem key={status} value={status}>
-                          {tStatus(status)}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
+                  options={statusOptions}
+                />
               </Field>
 
               <Field>
@@ -339,10 +362,8 @@ export function EnrollmentDialog({
               <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
                 <Field data-invalid={errors.price ? true : undefined}>
                   <FieldLabel htmlFor="enrollment-price">{t('editor.price')}</FieldLabel>
-                  <Input
+                  <MoneyInput
                     id="enrollment-price"
-                    inputMode="decimal"
-                    autoComplete="off"
                     placeholder={t('editor.priceHint')}
                     aria-invalid={errors.price ? true : undefined}
                     {...form.register('price')}
@@ -359,14 +380,14 @@ export function EnrollmentDialog({
                       form.setValue('currency', value as EnrollmentFormValues['currency'])
                     }
                   >
-                    <SelectTrigger id="enrollment-currency" className="w-full sm:w-28">
+                    <SelectTrigger id="enrollment-currency" className="w-full sm:w-32">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
                         {CURRENCIES.map((currency) => (
                           <SelectItem key={currency} value={currency}>
-                            {currency}
+                            <CurrencyOption code={currency} />
                           </SelectItem>
                         ))}
                       </SelectGroup>
@@ -375,42 +396,49 @@ export function EnrollmentDialog({
                 </Field>
               </div>
 
-              <Field orientation="horizontal">
-                <Checkbox
-                  id="enrollment-custom-deadline"
-                  checked={values.useCustomDeadline}
-                  onCheckedChange={(checked) =>
-                    form.setValue('useCustomDeadline', checked === true)
-                  }
-                />
-                <FieldLabel htmlFor="enrollment-custom-deadline" className="font-normal">
-                  {t('editor.policyCustom')}
+              {/* Cancellation deadline: how late a student may cancel a lesson
+                  without being charged. */}
+              <Field>
+                <FieldLabel htmlFor="enrollment-custom-deadline">
+                  {t('editor.deadlineTitle')}
                 </FieldLabel>
-              </Field>
-
-              {values.useCustomDeadline ? (
-                <Field data-invalid={errors.cancellationDeadlineHours ? true : undefined}>
-                  <FieldLabel htmlFor="enrollment-deadline">
-                    {t('editor.customHours')}
-                  </FieldLabel>
-                  <Input
-                    id="enrollment-deadline"
-                    inputMode="numeric"
-                    aria-invalid={errors.cancellationDeadlineHours ? true : undefined}
-                    {...form.register('cancellationDeadlineHours')}
+                <FieldDescription>{t('editor.deadlineExplain')}</FieldDescription>
+                <label className="flex items-center gap-2 text-sm">
+                  <Checkbox
+                    id="enrollment-custom-deadline"
+                    checked={values.useCustomDeadline}
+                    onCheckedChange={(checked) =>
+                      form.setValue('useCustomDeadline', checked === true)
+                    }
                   />
-                  <FieldError errors={[errors.cancellationDeadlineHours]} />
-                </Field>
-              ) : null}
+                  {t('editor.policyCustom')}
+                </label>
 
-              <p className="text-muted-foreground text-sm" aria-live="polite">
-                {t('editor.effective', { hours: effectiveDeadline })}
-                {values.useCustomDeadline ? '' : ` ${t('editor.policyDefault')}`}
-              </p>
+                {values.useCustomDeadline ? (
+                  <div data-invalid={errors.cancellationDeadlineHours ? true : undefined}>
+                    <Input
+                      id="enrollment-deadline"
+                      inputMode="numeric"
+                      placeholder={t('editor.customHoursHint')}
+                      aria-invalid={errors.cancellationDeadlineHours ? true : undefined}
+                      onInput={(event) => {
+                        event.currentTarget.value = event.currentTarget.value.replace(/\D/g, '');
+                      }}
+                      {...form.register('cancellationDeadlineHours')}
+                    />
+                    <FieldError errors={[errors.cancellationDeadlineHours]} />
+                  </div>
+                ) : null}
+
+                <FieldDescription aria-live="polite">
+                  {t('editor.effective', { hours: effectiveDeadline })}
+                  {values.useCustomDeadline ? '' : ` ${t('editor.policyDefault')}`}
+                </FieldDescription>
+              </Field>
             </FieldGroup>
           </div>
 
-          <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+          <div className="flex shrink-0 flex-col gap-2 border-t px-6 py-4 sm:flex-row sm:justify-end">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               {tCommon('cancel')}
             </Button>

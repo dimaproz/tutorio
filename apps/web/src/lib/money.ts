@@ -27,6 +27,18 @@ export function formatPriceInput(amountMinor: number): string {
   return minorUnitsToDecimalString(amountMinor);
 }
 
+/**
+ * Amount only, no currency symbol — locale-aware thousands/decimals:
+ * 150050 → "1,500.50" (en) / "1 500,50" (uk). Pair with the currency code
+ * shown separately so every currency reads the same way (e.g. in a table).
+ */
+export function formatAmountDisplay(amountMinor: number, locale: string): string {
+  return new Intl.NumberFormat(locale, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amountMinor / 100);
+}
+
 /** Display formatting via Intl, locale-aware: 150050 EUR → "€1,500.50". */
 export function formatMoneyDisplay(
   amountMinor: number,
