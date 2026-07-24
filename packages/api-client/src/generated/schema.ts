@@ -227,10 +227,10 @@ export interface paths {
         put?: never;
         post?: never;
         /**
-         * Soft-delete a student (move to trash)
-         * @description Idempotent. Fails with ACTIVE_ENROLLMENTS_EXIST while the student has active or paused enrollments.
+         * Permanently delete a student
+         * @description Irreversible. Removes the student together with its parent links and enrollments. There is no trash and no restore.
          */
-        delete: operations["StudentsController_softDelete"];
+        delete: operations["StudentsController_remove"];
         options?: never;
         head?: never;
         /**
@@ -238,23 +238,6 @@ export interface paths {
          * @description PATCH semantics: omitted fields stay unchanged, null clears an optional field. A no-op update creates no audit entry.
          */
         patch: operations["StudentsController_update"];
-        trace?: never;
-    };
-    "/api/students/{studentId}/restore": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Restore a soft-deleted student (owner only) */
-        post: operations["StudentsController_restore"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
         trace?: never;
     };
     "/api/parents": {
@@ -289,8 +272,11 @@ export interface paths {
         get: operations["ParentsController_getDetail"];
         put?: never;
         post?: never;
-        /** Soft-delete a parent (move to trash) */
-        delete: operations["ParentsController_softDelete"];
+        /**
+         * Permanently delete a parent
+         * @description Irreversible. Removes the parent together with its student links. There is no trash and no restore.
+         */
+        delete: operations["ParentsController_remove"];
         options?: never;
         head?: never;
         /**
@@ -300,7 +286,50 @@ export interface paths {
         patch: operations["ParentsController_update"];
         trace?: never;
     };
-    "/api/parents/{parentId}/restore": {
+    "/api/teachers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List workspace teachers
+         * @description Paginated; search + status filter. state=deleted|all is owner-only.
+         */
+        get: operations["TeachersController_list"];
+        put?: never;
+        /** Create a teacher profile */
+        post: operations["TeachersController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teachers/{teacherId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a teacher profile */
+        get: operations["TeachersController_getDetail"];
+        put?: never;
+        post?: never;
+        /**
+         * Soft-delete a teacher
+         * @description Hides the teacher from pickers; enrollments/lessons keep the reference.
+         */
+        delete: operations["TeachersController_remove"];
+        options?: never;
+        head?: never;
+        /** Update a teacher */
+        patch: operations["TeachersController_update"];
+        trace?: never;
+    };
+    "/api/teachers/{teacherId}/restore": {
         parameters: {
             query?: never;
             header?: never;
@@ -309,8 +338,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Restore a soft-deleted parent (owner only) */
-        post: operations["ParentsController_restore"];
+        /** Restore a soft-deleted teacher */
+        post: operations["TeachersController_restore"];
         delete?: never;
         options?: never;
         head?: never;
@@ -449,6 +478,116 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lessons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List lessons in a time window (calendar feed)
+         * @description Returns every non-deleted lesson with startsAtUtc in [from, to).
+         */
+        get: operations["LessonsController_list"];
+        put?: never;
+        /**
+         * Create one or many one-off lessons
+         * @description startsAt accepts several dates for bulk creation. Overlapping the teacher returns 409 SCHEDULE_CONFLICT unless force=true.
+         */
+        post: operations["LessonsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/reschedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Reschedule a lesson
+         * @description scope=this detaches and moves a single lesson; scope=this_and_following shifts the series time onward. Conflicts return 409 unless force=true.
+         */
+        patch: operations["LessonsController_reschedule"];
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Change a lesson status
+         * @description Enforces the lesson state machine. Cancelling requires cancelledBy. No ledger effect in Stage 3.
+         */
+        patch: operations["LessonsController_transition"];
+        trace?: never;
+    };
+    "/api/lesson-series": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List recurring lesson patterns
+         * @description Paginated; state=deleted|all is owner-only.
+         */
+        get: operations["SeriesController_list"];
+        put?: never;
+        /** Create a recurring pattern and materialize its lessons */
+        post: operations["SeriesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lesson-series/{seriesId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a recurring pattern */
+        get: operations["SeriesController_getDetail"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete a recurring pattern
+         * @description Soft-deletes the pattern and its future scheduled lessons.
+         */
+        delete: operations["SeriesController_remove"];
+        options?: never;
+        head?: never;
+        /**
+         * Update a recurring pattern
+         * @description Changing a schedule field regenerates future SCHEDULED lessons; a price-only change leaves existing lessons untouched.
+         */
+        patch: operations["SeriesController_update"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -565,7 +704,7 @@ export interface components {
                     email: string;
                 } | null;
                 /** @enum {string} */
-                entity: "STUDENT" | "PARENT" | "GROUP" | "ENROLLMENT" | "WORKSPACE";
+                entity: "STUDENT" | "PARENT" | "GROUP" | "TEACHER" | "ENROLLMENT" | "WORKSPACE" | "LESSON" | "LESSON_SERIES";
                 entityId: string;
                 /** @enum {string} */
                 action: "CREATE" | "UPDATE" | "DELETE" | "RESTORE";
@@ -592,11 +731,17 @@ export interface components {
                 fullName: string;
                 email: string | null;
                 phone: string | null;
+                telegramUsername: string | null;
                 timezone: string;
                 /** @enum {string|null} */
                 subject: "MATH" | "ENGLISH" | "GERMAN" | "FRENCH" | "POLISH" | "UKRAINIAN_LANGUAGE" | "UKRAINIAN_LITERATURE" | "WORLD_LITERATURE" | "PHYSICS" | "CHEMISTRY" | "BIOLOGY" | "GEOGRAPHY" | "HISTORY" | "WORLD_HISTORY" | "HISTORY_OF_UKRAINE" | "COMPUTER_SCIENCE" | "ECONOMICS" | "LAW" | "MUSIC" | "ART" | "PHYSICAL_EDUCATION" | "NMT_PREP" | "ZNO_PREP" | "IELTS_PREP" | "TOEFL_PREP" | "SAT_PREP" | null;
                 /** @enum {string} */
-                status: "ACTIVE" | "ON_HOLD";
+                status: "ACTIVE" | "ON_HOLD" | "ARCHIVED";
+                hourlyRateMinor: number | null;
+                /** @enum {string|null} */
+                currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
+                /** @enum {string|null} */
+                avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
                 /** Format: date-time */
                 deletedAt: string | null;
                 activeEnrollmentCount: number;
@@ -623,13 +768,15 @@ export interface components {
              * @default ACTIVE
              * @enum {string}
              */
-            status: "ACTIVE" | "ON_HOLD";
+            status: "ACTIVE" | "ON_HOLD" | "ARCHIVED";
             /** @enum {string} */
             languageLevel: "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
             /** @enum {string} */
             knowledgeLevel: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
             age?: number;
             grade?: number;
+            /** @enum {string} */
+            avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10";
             parentIds?: string[];
             notes: string;
         };
@@ -649,17 +796,23 @@ export interface components {
             /** @enum {string|null} */
             currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
             /** @enum {string} */
-            status: "ACTIVE" | "ON_HOLD";
+            status: "ACTIVE" | "ON_HOLD" | "ARCHIVED";
             /** @enum {string|null} */
             languageLevel: "A1" | "A2" | "B1" | "B2" | "C1" | "C2" | null;
             /** @enum {string|null} */
             knowledgeLevel: "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | null;
             age: number | null;
             grade: number | null;
+            /** @enum {string|null} */
+            avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
             parents: {
                 /** Format: uuid */
                 id: string;
                 fullName: string;
+                /** @enum {string|null} */
+                avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
+                phone: string | null;
+                telegramUsername: string | null;
             }[];
             notes: string | null;
             /** Format: date-time */
@@ -685,17 +838,23 @@ export interface components {
             /** @enum {string|null} */
             currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
             /** @enum {string} */
-            status: "ACTIVE" | "ON_HOLD";
+            status: "ACTIVE" | "ON_HOLD" | "ARCHIVED";
             /** @enum {string|null} */
             languageLevel: "A1" | "A2" | "B1" | "B2" | "C1" | "C2" | null;
             /** @enum {string|null} */
             knowledgeLevel: "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | null;
             age: number | null;
             grade: number | null;
+            /** @enum {string|null} */
+            avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
             parents: {
                 /** Format: uuid */
                 id: string;
                 fullName: string;
+                /** @enum {string|null} */
+                avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
+                phone: string | null;
+                telegramUsername: string | null;
             }[];
             notes: string | null;
             /** Format: date-time */
@@ -724,6 +883,7 @@ export interface components {
                     /** Format: uuid */
                     id: string;
                     name: string;
+                    color: string | null;
                 };
             }[];
         };
@@ -740,13 +900,15 @@ export interface components {
             /** @enum {string|null} */
             currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
             /** @enum {string} */
-            status?: "ACTIVE" | "ON_HOLD";
+            status?: "ACTIVE" | "ON_HOLD" | "ARCHIVED";
             /** @enum {string|null} */
             languageLevel?: "A1" | "A2" | "B1" | "B2" | "C1" | "C2" | null;
             /** @enum {string|null} */
             knowledgeLevel?: "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | null;
             age?: number | null;
             grade?: number | null;
+            /** @enum {string|null} */
+            avatarKey?: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
             parentIds?: string[];
             notes?: string | null;
         };
@@ -757,12 +919,16 @@ export interface components {
                 fullName: string;
                 phone: string | null;
                 telegramUsername: string | null;
+                /** @enum {string|null} */
+                avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
                 /** Format: date-time */
                 deletedAt: string | null;
                 students: {
                     /** Format: uuid */
                     id: string;
                     fullName: string;
+                    /** @enum {string|null} */
+                    avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
                 }[];
             }[];
             page: number;
@@ -774,6 +940,8 @@ export interface components {
             fullName: string;
             phone: string;
             telegramUsername: string;
+            /** @enum {string} */
+            avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10";
             notes: string;
         };
         ParentDto: {
@@ -784,6 +952,8 @@ export interface components {
             fullName: string;
             phone: string | null;
             telegramUsername: string | null;
+            /** @enum {string|null} */
+            avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
             notes: string | null;
             /** Format: date-time */
             createdAt: string;
@@ -800,6 +970,8 @@ export interface components {
             fullName: string;
             phone: string | null;
             telegramUsername: string | null;
+            /** @enum {string|null} */
+            avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
             notes: string | null;
             /** Format: date-time */
             createdAt: string;
@@ -811,12 +983,124 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 fullName: string;
+                /** @enum {string|null} */
+                avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
             }[];
         };
         UpdateParentDto: {
             fullName?: string;
             phone?: string | null;
             telegramUsername?: string | null;
+            /** @enum {string|null} */
+            avatarKey?: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
+            notes?: string | null;
+        };
+        TeacherListDto: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                workspaceId: string;
+                fullName: string;
+                email: string | null;
+                phone: string | null;
+                telegramUsername: string | null;
+                subjects: ("MATH" | "ENGLISH" | "GERMAN" | "FRENCH" | "POLISH" | "UKRAINIAN_LANGUAGE" | "UKRAINIAN_LITERATURE" | "WORLD_LITERATURE" | "PHYSICS" | "CHEMISTRY" | "BIOLOGY" | "GEOGRAPHY" | "HISTORY" | "WORLD_HISTORY" | "HISTORY_OF_UKRAINE" | "COMPUTER_SCIENCE" | "ECONOMICS" | "LAW" | "MUSIC" | "ART" | "PHYSICAL_EDUCATION" | "NMT_PREP" | "ZNO_PREP" | "IELTS_PREP" | "TOEFL_PREP" | "SAT_PREP")[];
+                bio: string | null;
+                defaultRateMinor: number | null;
+                /** @enum {string|null} */
+                currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
+                color: string | null;
+                /** @enum {string|null} */
+                avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
+                /** @enum {string} */
+                status: "ACTIVE" | "ARCHIVED";
+                /** Format: uuid */
+                workspaceMemberId: string | null;
+                notes: string | null;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+                /** Format: date-time */
+                deletedAt: string | null;
+                activeEnrollmentCount: number;
+            }[];
+            page: number;
+            pageSize: number;
+            total: number;
+            totalPages: number;
+        };
+        CreateTeacherDto: {
+            fullName: string;
+            /** Format: email */
+            email?: string;
+            phone?: string;
+            telegramUsername?: string;
+            subjects?: ("MATH" | "ENGLISH" | "GERMAN" | "FRENCH" | "POLISH" | "UKRAINIAN_LANGUAGE" | "UKRAINIAN_LITERATURE" | "WORLD_LITERATURE" | "PHYSICS" | "CHEMISTRY" | "BIOLOGY" | "GEOGRAPHY" | "HISTORY" | "WORLD_HISTORY" | "HISTORY_OF_UKRAINE" | "COMPUTER_SCIENCE" | "ECONOMICS" | "LAW" | "MUSIC" | "ART" | "PHYSICAL_EDUCATION" | "NMT_PREP" | "ZNO_PREP" | "IELTS_PREP" | "TOEFL_PREP" | "SAT_PREP")[];
+            bio?: string;
+            defaultRateMinor?: number;
+            /** @enum {string} */
+            currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+            color?: string;
+            /** @enum {string} */
+            avatarKey?: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10";
+            /**
+             * @default ACTIVE
+             * @enum {string}
+             */
+            status: "ACTIVE" | "ARCHIVED";
+            /** Format: uuid */
+            workspaceMemberId?: string;
+            notes?: string;
+        };
+        TeacherDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            workspaceId: string;
+            fullName: string;
+            email: string | null;
+            phone: string | null;
+            telegramUsername: string | null;
+            subjects: ("MATH" | "ENGLISH" | "GERMAN" | "FRENCH" | "POLISH" | "UKRAINIAN_LANGUAGE" | "UKRAINIAN_LITERATURE" | "WORLD_LITERATURE" | "PHYSICS" | "CHEMISTRY" | "BIOLOGY" | "GEOGRAPHY" | "HISTORY" | "WORLD_HISTORY" | "HISTORY_OF_UKRAINE" | "COMPUTER_SCIENCE" | "ECONOMICS" | "LAW" | "MUSIC" | "ART" | "PHYSICAL_EDUCATION" | "NMT_PREP" | "ZNO_PREP" | "IELTS_PREP" | "TOEFL_PREP" | "SAT_PREP")[];
+            bio: string | null;
+            defaultRateMinor: number | null;
+            /** @enum {string|null} */
+            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
+            color: string | null;
+            /** @enum {string|null} */
+            avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
+            /** @enum {string} */
+            status: "ACTIVE" | "ARCHIVED";
+            /** Format: uuid */
+            workspaceMemberId: string | null;
+            notes: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            deletedAt: string | null;
+        };
+        UpdateTeacherDto: {
+            fullName?: string;
+            /** Format: email */
+            email?: string | null;
+            phone?: string | null;
+            telegramUsername?: string | null;
+            subjects?: ("MATH" | "ENGLISH" | "GERMAN" | "FRENCH" | "POLISH" | "UKRAINIAN_LANGUAGE" | "UKRAINIAN_LITERATURE" | "WORLD_LITERATURE" | "PHYSICS" | "CHEMISTRY" | "BIOLOGY" | "GEOGRAPHY" | "HISTORY" | "WORLD_HISTORY" | "HISTORY_OF_UKRAINE" | "COMPUTER_SCIENCE" | "ECONOMICS" | "LAW" | "MUSIC" | "ART" | "PHYSICAL_EDUCATION" | "NMT_PREP" | "ZNO_PREP" | "IELTS_PREP" | "TOEFL_PREP" | "SAT_PREP")[];
+            bio?: string | null;
+            defaultRateMinor?: number | null;
+            /** @enum {string|null} */
+            currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
+            color?: string | null;
+            /** @enum {string|null} */
+            avatarKey?: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
+            /** @enum {string} */
+            status?: "ACTIVE" | "ARCHIVED";
+            /** Format: uuid */
+            workspaceMemberId?: string | null;
             notes?: string | null;
         };
         GroupListDto: {
@@ -900,6 +1184,7 @@ export interface components {
                     /** Format: uuid */
                     id: string;
                     name: string;
+                    color: string | null;
                 };
             }[];
         };
@@ -935,9 +1220,8 @@ export interface components {
                 teacher: {
                     /** Format: uuid */
                     id: string;
-                    /** Format: uuid */
-                    userId: string;
                     name: string;
+                    color: string | null;
                 };
                 /** @enum {string} */
                 status: "ACTIVE" | "PAUSED" | "ARCHIVED";
@@ -1001,9 +1285,8 @@ export interface components {
             teacher: {
                 /** Format: uuid */
                 id: string;
-                /** Format: uuid */
-                userId: string;
                 name: string;
+                color: string | null;
             };
             /** @enum {string} */
             status: "ACTIVE" | "PAUSED" | "ARCHIVED";
@@ -1030,6 +1313,277 @@ export interface components {
             /** @enum {string} */
             currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
             cancellationDeadlineHours?: number | null;
+        };
+        LessonListDto: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                workspaceId: string;
+                /** Format: uuid */
+                enrollmentId: string | null;
+                /** Format: uuid */
+                groupId: string | null;
+                /** Format: uuid */
+                seriesId: string | null;
+                /** Format: uuid */
+                packageId: string | null;
+                /** Format: uuid */
+                teacherId: string;
+                /** Format: date-time */
+                startsAtUtc: string;
+                durationMin: number;
+                priceMinor: number;
+                /** @enum {string} */
+                currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+                /** @enum {string} */
+                status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED";
+                isDetached: boolean;
+                /** @enum {string|null} */
+                cancelledBy: "TEACHER" | "STUDENT" | "GROUP" | null;
+                cancelledReason: string | null;
+                /** Format: date-time */
+                cancelledAt: string | null;
+                /** Format: date-time */
+                completedAt: string | null;
+                notes: string | null;
+                student: {
+                    /** Format: uuid */
+                    id: string;
+                    fullName: string;
+                } | null;
+                group: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                } | null;
+                teacher: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    color: string | null;
+                };
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+                /** Format: date-time */
+                deletedAt: string | null;
+            }[];
+        };
+        CreateLessonDto: {
+            /** Format: uuid */
+            enrollmentId?: string | null;
+            /** Format: uuid */
+            groupId?: string | null;
+            /** Format: uuid */
+            teacherId: string;
+            startsAt: string[];
+            durationMin: number;
+            priceMinor: number;
+            /** @enum {string} */
+            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+            notes?: string | null;
+        };
+        RescheduleLessonDto: {
+            /** Format: date-time */
+            startsAtUtc: string;
+            durationMin?: number;
+            /**
+             * @default this
+             * @enum {string}
+             */
+            scope: "this" | "this_and_following";
+        };
+        LessonDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            workspaceId: string;
+            /** Format: uuid */
+            enrollmentId: string | null;
+            /** Format: uuid */
+            groupId: string | null;
+            /** Format: uuid */
+            seriesId: string | null;
+            /** Format: uuid */
+            packageId: string | null;
+            /** Format: uuid */
+            teacherId: string;
+            /** Format: date-time */
+            startsAtUtc: string;
+            durationMin: number;
+            priceMinor: number;
+            /** @enum {string} */
+            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+            /** @enum {string} */
+            status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED";
+            isDetached: boolean;
+            /** @enum {string|null} */
+            cancelledBy: "TEACHER" | "STUDENT" | "GROUP" | null;
+            cancelledReason: string | null;
+            /** Format: date-time */
+            cancelledAt: string | null;
+            /** Format: date-time */
+            completedAt: string | null;
+            notes: string | null;
+            student: {
+                /** Format: uuid */
+                id: string;
+                fullName: string;
+            } | null;
+            group: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
+            teacher: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                color: string | null;
+            };
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            deletedAt: string | null;
+        };
+        TransitionLessonDto: {
+            /** @enum {string} */
+            targetStatus: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED";
+            /** @enum {string} */
+            cancelledBy?: "TEACHER" | "STUDENT" | "GROUP";
+            cancelledReason?: string | null;
+        };
+        LessonSeriesListDto: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                workspaceId: string;
+                /** Format: uuid */
+                enrollmentId: string | null;
+                /** Format: uuid */
+                groupId: string | null;
+                /** Format: uuid */
+                packageId: string | null;
+                /** Format: uuid */
+                teacherId: string;
+                weekdays: number[];
+                localTime: string;
+                timezone: string;
+                durationMin: number;
+                priceMinor: number;
+                /** @enum {string} */
+                currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+                /** Format: date-time */
+                startDate: string;
+                /** Format: date-time */
+                horizonMaterializedUntil: string;
+                student: {
+                    /** Format: uuid */
+                    id: string;
+                    fullName: string;
+                } | null;
+                group: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                } | null;
+                teacher: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    color: string | null;
+                };
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+                /** Format: date-time */
+                deletedAt: string | null;
+            }[];
+            page: number;
+            pageSize: number;
+            total: number;
+            totalPages: number;
+        };
+        CreateLessonSeriesDto: {
+            /** Format: uuid */
+            enrollmentId?: string | null;
+            /** Format: uuid */
+            groupId?: string | null;
+            /** Format: uuid */
+            teacherId: string;
+            weekdays: number[];
+            localTime: string;
+            timezone: string;
+            durationMin: number;
+            priceMinor: number;
+            /** @enum {string} */
+            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+            /** Format: date-time */
+            startDate: string;
+        };
+        LessonSeriesDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            workspaceId: string;
+            /** Format: uuid */
+            enrollmentId: string | null;
+            /** Format: uuid */
+            groupId: string | null;
+            /** Format: uuid */
+            packageId: string | null;
+            /** Format: uuid */
+            teacherId: string;
+            weekdays: number[];
+            localTime: string;
+            timezone: string;
+            durationMin: number;
+            priceMinor: number;
+            /** @enum {string} */
+            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+            /** Format: date-time */
+            startDate: string;
+            /** Format: date-time */
+            horizonMaterializedUntil: string;
+            student: {
+                /** Format: uuid */
+                id: string;
+                fullName: string;
+            } | null;
+            group: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
+            teacher: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                color: string | null;
+            };
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            deletedAt: string | null;
+        };
+        UpdateLessonSeriesDto: {
+            weekdays?: number[];
+            localTime?: string;
+            timezone?: string;
+            durationMin?: number;
+            priceMinor?: number;
+            /** @enum {string} */
+            currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+            /** Format: date-time */
+            startDate?: string;
         };
     };
     responses: never;
@@ -1297,7 +1851,7 @@ export interface operations {
             query?: {
                 page?: number;
                 pageSize?: number;
-                entity?: "STUDENT" | "PARENT" | "GROUP" | "ENROLLMENT" | "WORKSPACE";
+                entity?: "STUDENT" | "PARENT" | "GROUP" | "TEACHER" | "ENROLLMENT" | "WORKSPACE" | "LESSON" | "LESSON_SERIES";
                 entityId?: string;
                 actorId?: string;
                 action?: "CREATE" | "UPDATE" | "DELETE" | "RESTORE";
@@ -1335,6 +1889,9 @@ export interface operations {
                 pageSize?: number;
                 search?: string;
                 state?: "active" | "deleted" | "all";
+                status?: "ACTIVE" | "ON_HOLD" | "ARCHIVED";
+                subject?: "MATH" | "ENGLISH" | "GERMAN" | "FRENCH" | "POLISH" | "UKRAINIAN_LANGUAGE" | "UKRAINIAN_LITERATURE" | "WORLD_LITERATURE" | "PHYSICS" | "CHEMISTRY" | "BIOLOGY" | "GEOGRAPHY" | "HISTORY" | "WORLD_HISTORY" | "HISTORY_OF_UKRAINE" | "COMPUTER_SCIENCE" | "ECONOMICS" | "LAW" | "MUSIC" | "ART" | "PHYSICAL_EDUCATION" | "NMT_PREP" | "ZNO_PREP" | "IELTS_PREP" | "TOEFL_PREP" | "SAT_PREP";
+                groupId?: string;
             };
             header?: never;
             path?: never;
@@ -1412,7 +1969,7 @@ export interface operations {
             };
         };
     };
-    StudentsController_softDelete: {
+    StudentsController_remove: {
         parameters: {
             query?: never;
             header?: never;
@@ -1430,14 +1987,6 @@ export interface operations {
                 content?: never;
             };
             404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1480,43 +2029,6 @@ export interface operations {
             };
         };
     };
-    StudentsController_restore: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                studentId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StudentDto"];
-                };
-            };
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
     ParentsController_list: {
         parameters: {
             query?: {
@@ -1524,6 +2036,7 @@ export interface operations {
                 pageSize?: number;
                 search?: string;
                 state?: "active" | "deleted" | "all";
+                studentId?: string;
             };
             header?: never;
             path?: never;
@@ -1601,7 +2114,7 @@ export interface operations {
             };
         };
     };
-    ParentsController_softDelete: {
+    ParentsController_remove: {
         parameters: {
             query?: never;
             header?: never;
@@ -1661,12 +2174,68 @@ export interface operations {
             };
         };
     };
-    ParentsController_restore: {
+    TeachersController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                search?: string;
+                status?: "ACTIVE" | "ARCHIVED";
+                state?: "active" | "deleted" | "all";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherListDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    TeachersController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTeacherDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherDto"];
+                };
+            };
+        };
+    };
+    TeachersController_getDetail: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                parentId: string;
+                teacherId: string;
             };
             cookie?: never;
         };
@@ -1677,15 +2246,96 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ParentDto"];
+                    "application/json": components["schemas"]["TeacherDto"];
                 };
             };
-            403: {
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    TeachersController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                teacherId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    TeachersController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                teacherId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateTeacherDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    TeachersController_restore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                teacherId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherDto"];
                 };
             };
             404: {
@@ -2086,6 +2736,299 @@ export interface operations {
                 };
             };
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    LessonsController_list: {
+        parameters: {
+            query: {
+                from: string;
+                to: string;
+                teacherId?: string;
+                enrollmentId?: string;
+                groupId?: string;
+                status?: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonListDto"];
+                };
+            };
+        };
+    };
+    LessonsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateLessonDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonListDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    LessonsController_reschedule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RescheduleLessonDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    LessonsController_transition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransitionLessonDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    SeriesController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                enrollmentId?: string;
+                groupId?: string;
+                teacherId?: string;
+                state?: "active" | "deleted" | "all";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonSeriesListDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    SeriesController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateLessonSeriesDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonSeriesDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    SeriesController_getDetail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                seriesId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonSeriesDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    SeriesController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                seriesId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    SeriesController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                seriesId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateLessonSeriesDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonSeriesDto"];
+                };
+            };
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

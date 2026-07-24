@@ -41,7 +41,7 @@ import {
 } from '@/lib/api/enrollments';
 import { useGroupsQuery } from '@/lib/api/groups';
 import { useStudentsQuery } from '@/lib/api/students';
-import { useWorkspaceMembersQuery } from '@/lib/api/workspace';
+import { useTeachersQuery } from '@/lib/api/teachers';
 import { useSession } from '@/components/app/session-provider';
 import { CurrencyOption } from '@/components/app/currency-option';
 import { MoneyInput } from '@/components/app/money-input';
@@ -98,7 +98,7 @@ export function EnrollmentDialog({
   // Pickers only need live records; one long page covers MVP workspace size.
   const students = useStudentsQuery({ page: 1, pageSize: 100 }, open && !lockedStudentId);
   const groups = useGroupsQuery({ page: 1, pageSize: 100 }, open && !lockedGroupId);
-  const members = useWorkspaceMembersQuery(open);
+  const teachers = useTeachersQuery({ page: 1, pageSize: 100 }, open);
   const session = useSession();
 
   const workspaceDefaultDeadline = session.workspace.cancellationDeadlineHours;
@@ -170,11 +170,11 @@ export function EnrollmentDialog({
   );
   const teacherOptions = useMemo(
     () =>
-      (members.data?.items ?? []).map((member) => ({
-        value: member.id,
-        label: member.name,
+      (teachers.data?.items ?? []).map((teacher) => ({
+        value: teacher.id,
+        label: teacher.fullName,
       })),
-    [members.data],
+    [teachers.data],
   );
 
   // Student / teacher become read-only cards once fixed: a locked or existing

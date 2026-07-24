@@ -51,6 +51,15 @@ export class AuthService {
         const membership = await tx.workspaceMember.create({
           data: { workspaceId: workspace.id, userId: user.id, role: 'OWNER' },
         });
+        // Every workspace starts with a teaching profile for the owner so
+        // enrollments/lessons can be created immediately (a solo tutor teaches).
+        await tx.teacher.create({
+          data: {
+            workspaceId: workspace.id,
+            fullName: user.name,
+            workspaceMemberId: membership.id,
+          },
+        });
         const tokens = await this.createSession(
           tx,
           user.id,

@@ -6,7 +6,16 @@ export const auditActionSchema = z.enum(['CREATE', 'UPDATE', 'DELETE', 'RESTORE'
 export type AuditActionDto = z.infer<typeof auditActionSchema>;
 
 // Entities auditable in Stage 2; later stages extend this list.
-export const auditEntitySchema = z.enum(['STUDENT', 'PARENT', 'GROUP', 'ENROLLMENT', 'WORKSPACE']);
+export const auditEntitySchema = z.enum([
+  'STUDENT',
+  'PARENT',
+  'GROUP',
+  'TEACHER',
+  'ENROLLMENT',
+  'WORKSPACE',
+  'LESSON',
+  'LESSON_SERIES',
+]);
 export type AuditEntityDto = z.infer<typeof auditEntitySchema>;
 
 export const listAuditLogsQuerySchema = paginationQuerySchema

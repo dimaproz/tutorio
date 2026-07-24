@@ -21,6 +21,9 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
   let workspaceAId: string;
   let ownerAMemberId: string;
   let teacherAMemberId: string;
+  // Teacher profiles (teacherId references Teacher, not the member).
+  let ownerTeacherId: string;
+  let secondTeacherId: string;
 
   const server = () => request(app.getHttpServer());
   const auth = (token: string) => `Bearer ${token}`;
@@ -96,6 +99,20 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
     teacherAMemberId = members.body.items.find(
       (m: { role: string }) => m.role === 'TEACHER',
     ).id;
+
+    // Registration auto-creates a teaching profile for the owner; a second one
+    // is created explicitly. Enrollments reference these Teacher ids.
+    const teachers = await server()
+      .get('/api/teachers')
+      .set('Authorization', auth(ownerA))
+      .expect(200);
+    ownerTeacherId = teachers.body.items[0].id;
+    const secondTeacher = await server()
+      .post('/api/teachers')
+      .set('Authorization', auth(ownerA))
+      .send({ fullName: 'Teacher A', workspaceMemberId: teacherAMemberId })
+      .expect(201);
+    secondTeacherId = secondTeacher.body.id;
   });
 
   afterAll(async () => {
@@ -115,6 +132,9 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
       where: { workspaceId: { in: workspaceIds } },
     });
     await prisma.enrollment.deleteMany({
+      where: { workspaceId: { in: workspaceIds } },
+    });
+    await prisma.teacher.deleteMany({
       where: { workspaceId: { in: workspaceIds } },
     });
     await prisma.studentParent.deleteMany({
@@ -415,7 +435,7 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
         .set('Authorization', auth(ownerA))
         .send({
           studentId,
-          teacherId: teacherAMemberId,
+          teacherId: secondTeacherId,
           billingType: 'PACKAGE',
           priceMinor: 45000,
           currency: 'UAH',
@@ -437,7 +457,7 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
         .set('Authorization', auth(ownerA))
         .send({
           studentId,
-          teacherId: teacherAMemberId,
+          teacherId: secondTeacherId,
           priceMinor: 50000,
           currency: 'UAH',
         })
@@ -452,7 +472,7 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
         .send({
           studentId,
           groupId,
-          teacherId: ownerAMemberId,
+          teacherId: ownerTeacherId,
           billingType: 'MONTHLY',
           priceMinor: 120000,
           currency: 'EUR',
@@ -475,7 +495,7 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
         .send({
           studentId,
           groupId,
-          teacherId: teacherAMemberId,
+          teacherId: secondTeacherId,
           priceMinor: 1,
           currency: 'EUR',
         })
@@ -495,7 +515,7 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
         .set('Authorization', auth(ownerA))
         .send({
           studentId: studentB.body.id,
-          teacherId: teacherAMemberId,
+          teacherId: secondTeacherId,
           priceMinor: 100,
           currency: 'EUR',
         })
@@ -507,12 +527,12 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
         .set('Authorization', auth(ownerB))
         .send({
           studentId: studentB.body.id,
-          teacherId: teacherAMemberId,
+          teacherId: secondTeacherId,
           priceMinor: 100,
           currency: 'EUR',
         })
         .expect(404);
-      expect(crossTeacher.body.code).toBe('WORKSPACE_MEMBER_NOT_FOUND');
+      expect(crossTeacher.body.code).toBe('TEACHER_NOT_FOUND');
     });
 
     it('blocks group deletion while ACTIVE or PAUSED enrollments exist', async () => {

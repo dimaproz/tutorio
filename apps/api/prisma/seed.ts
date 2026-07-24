@@ -66,6 +66,25 @@ async function main() {
     data: { workspaceId: workspace.id, userId: teacher.id, role: 'TEACHER' },
   });
 
+  // Teaching profiles (Enrollment.teacherId references Teacher, not the member).
+  async function ensureTeacher(memberId: string, fullName: string) {
+    const existing = await prisma.teacher.findFirst({
+      where: { workspaceId: workspace.id, workspaceMemberId: memberId },
+    });
+    return (
+      existing ??
+      (await prisma.teacher.create({
+        data: {
+          workspaceId: workspace.id,
+          fullName,
+          workspaceMemberId: memberId,
+        },
+      }))
+    );
+  }
+  const ownerTeacher = await ensureTeacher(ownerMembership.id, owner.name);
+  const tarasTeacher = await ensureTeacher(teacherMembership.id, teacher.name);
+
   async function ensureStudent(
     data: Omit<Prisma.StudentUncheckedCreateInput, 'workspaceId'>,
   ) {
@@ -291,28 +310,28 @@ async function main() {
   }
 
   // Individual + group enrollments across statuses and currencies.
-  await ensureEnrollment(alice.id, null, teacherMembership.id, {
+  await ensureEnrollment(alice.id, null, tarasTeacher.id, {
     status: 'ACTIVE',
     billingType: 'PACKAGE',
     priceMinor: 45000, // 450.00 UAH per lesson
     currency: 'UAH',
     cancellationDeadlineHours: null,
   });
-  await ensureEnrollment(alice.id, group.id, ownerMembership.id, {
+  await ensureEnrollment(alice.id, group.id, ownerTeacher.id, {
     status: 'ACTIVE',
     billingType: 'MONTHLY',
     priceMinor: 120000, // 1200.00 EUR per month
     currency: 'EUR',
     cancellationDeadlineHours: 48,
   });
-  await ensureEnrollment(bohdan.id, group.id, teacherMembership.id, {
+  await ensureEnrollment(bohdan.id, group.id, tarasTeacher.id, {
     status: 'PAUSED',
     billingType: 'PER_LESSON',
     priceMinor: 8000, // 80.00 PLN per lesson
     currency: 'PLN',
     cancellationDeadlineHours: null,
   });
-  await ensureEnrollment(clara.id, null, ownerMembership.id, {
+  await ensureEnrollment(clara.id, null, ownerTeacher.id, {
     status: 'ARCHIVED',
     billingType: 'PACKAGE',
     priceMinor: 3500, // 35.00 GBP per lesson

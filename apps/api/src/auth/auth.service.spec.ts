@@ -28,6 +28,7 @@ function buildPrismaMock() {
       findFirst: jest.fn(),
       findUnique: jest.fn(),
     },
+    teacher: { create: jest.fn() },
     authSession: {
       create: jest.fn(),
       findUnique: jest.fn(),

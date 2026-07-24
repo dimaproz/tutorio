@@ -241,9 +241,7 @@ export class StudentsService {
           orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
           include: {
             group: { select: { id: true, name: true } },
-            teacher: {
-              select: { id: true, user: { select: { name: true } } },
-            },
+            teacher: { select: { id: true, fullName: true, color: true } },
           },
         },
       },
@@ -267,7 +265,8 @@ export class StudentsService {
         group: enrollment.group,
         teacher: {
           id: enrollment.teacher.id,
-          name: enrollment.teacher.user.name,
+          name: enrollment.teacher.fullName,
+          color: enrollment.teacher.color,
         },
       })),
     };

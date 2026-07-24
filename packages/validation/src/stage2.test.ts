@@ -233,7 +233,7 @@ describe('audit filters', () => {
   });
 
   it('rejects unknown entities and actions', () => {
-    expect(listAuditLogsQuerySchema.safeParse({ entity: 'LESSON' }).success).toBe(false);
+    expect(listAuditLogsQuerySchema.safeParse({ entity: 'PLANET' }).success).toBe(false);
     expect(listAuditLogsQuerySchema.safeParse({ action: 'PURGE' }).success).toBe(false);
   });
 

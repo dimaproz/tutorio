@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
@@ -21,6 +22,11 @@ import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { errorMessageKey } from '@/lib/api/error-message';
 import { useCreateGroupMutation, useUpdateGroupMutation } from '@/lib/api/groups';
+import {
+  useCreateEnrollmentMutation,
+  useDeleteEnrollmentMutation,
+} from '@/lib/api/enrollments';
+import { GroupStudentsField, type GroupMemberRow } from './group-students-field';
 import { useSession } from '@/components/app/session-provider';
 import { CurrencyOption } from '@/components/app/currency-option';
 import { MoneyInput } from '@/components/app/money-input';
@@ -53,7 +59,54 @@ export function GroupForm({
   const createGroup = useCreateGroupMutation();
   const updateGroup = useUpdateGroupMutation(group?.id ?? '');
   const mutation = isEdit ? updateGroup : createGroup;
+  const createEnrollment = useCreateEnrollmentMutation();
+  const deleteEnrollment = useDeleteEnrollmentMutation();
   const session = useSession();
+
+  // Group members (enrollments), edited like the parents block on the student
+  // form: batched here and reconciled after the group itself is saved.
+  const [members, setMembers] = useState<GroupMemberRow[]>(() =>
+    (group?.enrollments ?? []).map((enrollment) => ({
+      key: enrollment.id,
+      enrollmentId: enrollment.id,
+      studentId: enrollment.student.id,
+      teacherId: enrollment.teacher.id,
+      price: formatPriceInput(enrollment.priceMinor),
+      currency: enrollment.currency as GroupMemberRow['currency'],
+    })),
+  );
+
+  // Creates new enrollments and soft-deletes removed ones for the saved group.
+  async function reconcileMembers(groupId: string) {
+    const originalIds = (group?.enrollments ?? []).map((enrollment) => enrollment.id);
+    const keptIds = new Set(
+      members.map((row) => row.enrollmentId).filter(Boolean) as string[],
+    );
+    for (const id of originalIds) {
+      if (!keptIds.has(id)) {
+        await deleteEnrollment.mutateAsync(id).catch(() => undefined);
+      }
+    }
+    for (const row of members) {
+      if (row.enrollmentId || !row.studentId || !row.teacherId) {
+        continue;
+      }
+      const priceMinor = parsePriceInput(row.price);
+      if (priceMinor === null) {
+        continue;
+      }
+      await createEnrollment
+        .mutateAsync({
+          studentId: row.studentId,
+          groupId,
+          teacherId: row.teacherId,
+          billingType: 'PACKAGE',
+          priceMinor,
+          currency: row.currency,
+        })
+        .catch(() => undefined);
+    }
+  }
 
   const form = useForm<GroupFormValues>({
     resolver: zodResolver(groupFormSchema, {
@@ -88,16 +141,18 @@ export function GroupForm({
           // An emptied field becomes null so the API clears it.
           notes: formValues.notes.trim() === '' ? null : formValues.notes,
         });
+        await reconcileMembers(group.id);
         toast.success(tGroups('toasts.updated'));
         onSuccess?.();
         return;
       }
-      await createGroup.mutateAsync({
+      const created = await createGroup.mutateAsync({
         name: formValues.name,
         pricePerLesson: pricePerLesson ?? undefined,
         currency: pricePerLesson === null ? undefined : formValues.currency,
         notes: formValues.notes.trim() === '' ? undefined : formValues.notes,
       });
+      await reconcileMembers(created.id);
       toast.success(tGroups('toasts.created'));
       onSuccess?.();
     } catch {
@@ -170,6 +225,13 @@ export function GroupForm({
           />
           <FieldError errors={[errors.notes]} />
         </Field>
+
+        <GroupStudentsField
+          rows={members}
+          onChange={setMembers}
+          defaultCurrency={values.currency}
+          enabled
+        />
 
         <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
           <Button type="button" variant="outline" onClick={onCancel}>

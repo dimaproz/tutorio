@@ -15,7 +15,7 @@ import {
   enrollmentNotFound,
   groupNotFound,
   studentNotFound,
-  workspaceMemberNotFound,
+  teacherNotFound,
 } from '../common/business.errors';
 import {
   buildPaginatedResponse,
@@ -28,9 +28,7 @@ import { PrismaService } from '../prisma/prisma.service';
 const enrollmentInclude = {
   student: { select: { id: true, fullName: true } },
   group: { select: { id: true, name: true } },
-  teacher: {
-    select: { id: true, userId: true, user: { select: { name: true } } },
-  },
+  teacher: { select: { id: true, fullName: true, color: true } },
 } satisfies Prisma.EnrollmentInclude;
 
 type EnrollmentRow = Prisma.EnrollmentGetPayload<{
@@ -51,8 +49,8 @@ function toResponse(
     group: row.group,
     teacher: {
       id: row.teacher.id,
-      userId: row.teacher.userId,
-      name: row.teacher.user.name,
+      name: row.teacher.fullName,
+      color: row.teacher.color,
     },
     status: row.status,
     billingType: row.billingType,
@@ -194,12 +192,16 @@ export class EnrollmentsService {
           }
         }
 
-        const teacher = await tx.workspaceMember.findFirst({
-          where: { id: dto.teacherId, workspaceId: auth.workspaceId },
+        const teacher = await tx.teacher.findFirst({
+          where: {
+            id: dto.teacherId,
+            workspaceId: auth.workspaceId,
+            deletedAt: null,
+          },
           select: { id: true },
         });
         if (!teacher) {
-          throw workspaceMemberNotFound();
+          throw teacherNotFound();
         }
 
         await this.assertNoLiveDuplicate(

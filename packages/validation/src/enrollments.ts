@@ -76,10 +76,12 @@ export const enrollmentGroupRefSchema = z.object({
   name: z.string(),
 });
 
+// Teacher is its own entity now (not the login member); the ref carries the
+// display name plus optional calendar color.
 export const enrollmentTeacherRefSchema = z.object({
   id: uuidSchema,
-  userId: uuidSchema,
   name: z.string(),
+  color: z.string().nullable(),
 });
 
 export const enrollmentResponseSchema = z.object({

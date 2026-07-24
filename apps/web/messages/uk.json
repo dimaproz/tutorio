@@ -21,7 +21,8 @@
     "required": "Обов'язково",
     "open": "Відкрити",
     "deleted": "Видалено",
-    "restoreOwnerOnly": "Відновити може лише власник"
+    "restoreOwnerOnly": "Відновити може лише власник",
+    "remove": "Прибрати"
   },
   "auth": {
     "login": {
@@ -74,7 +75,12 @@
     "SESSION_EXPIRED": "Ваша сесія закінчилася. Увійдіть знову.",
     "FORBIDDEN": "У вас немає прав для цієї дії.",
     "UNEXPECTED": "Щось пішло не так. Спробуйте ще раз.",
-    "generic": "Щось пішло не так. Спробуйте ще раз."
+    "generic": "Щось пішло не так. Спробуйте ще раз.",
+    "LESSON_NOT_FOUND": "Урок не знайдено.",
+    "LESSON_SERIES_NOT_FOUND": "Повторюваний шаблон не знайдено.",
+    "SCHEDULE_CONFLICT": "У викладача вже є урок у цей час.",
+    "INVALID_LESSON_TRANSITION": "Така зміна статусу уроку недопустима.",
+    "TEACHER_NOT_FOUND": "Викладача не знайдено."
   },
   "validation": {
     "emailInvalid": "Введіть коректну адресу ел. пошти",
@@ -189,7 +195,9 @@
       "calendar": "Календар",
       "finance": "Фінанси",
       "settings": "Налаштування",
-      "comingSoon": "Незабаром"
+      "comingSoon": "Незабаром",
+      "patterns": "Розклад",
+      "teachers": "Викладачі"
     },
     "sidebar": {
       "toggle": "Перемкнути бокову панель"
@@ -408,7 +416,19 @@
       "notes": "Нотатки",
       "notesPlaceholder": "Розклад, рівень, матеріали",
       "submitCreate": "Створити групу",
-      "submitEdit": "Зберегти зміни"
+      "submitEdit": "Зберегти зміни",
+      "students": {
+        "section": "Учні",
+        "hint": "Зарахуйте учнів до цієї групи.",
+        "add": "Додати учня",
+        "teacher": "Викладач",
+        "price": "Ціна",
+        "remove": "Прибрати",
+        "none": "Ще немає учнів.",
+        "student": "Учень",
+        "pickStudent": "Оберіть учня",
+        "pickTeacher": "Оберіть викладача"
+      }
     },
     "detail": {
       "priceTitle": "Ціна за урок",
@@ -692,5 +712,180 @@
     "groupId": "Група",
     "teacherId": "Викладач",
     "deletedAt": "Стан кошика"
+  },
+  "scheduling": {
+    "calendar": {
+      "title": "Календар",
+      "subtitle": "Уроки у вашому просторі.",
+      "newLesson": "Новий урок",
+      "empty": "У цьому діапазоні немає уроків."
+    },
+    "toolbar": {
+      "today": "Сьогодні",
+      "back": "Назад",
+      "next": "Далі",
+      "month": "Місяць",
+      "week": "Тиждень",
+      "day": "День",
+      "agenda": "Список",
+      "date": "Дата",
+      "time": "Час",
+      "event": "Урок",
+      "noEvents": "У цьому діапазоні немає уроків."
+    },
+    "status": {
+      "SCHEDULED": "Заплановано",
+      "COMPLETED": "Завершено",
+      "CANCELLED_CHARGED": "Скасовано (оплачено)",
+      "CANCELLED_UNCHARGED": "Скасовано (без оплати)"
+    },
+    "cancelledBy": {
+      "TEACHER": "Викладач",
+      "STUDENT": "Учень",
+      "GROUP": "Група"
+    },
+    "actions": {
+      "title": "Урок",
+      "complete": "Позначити завершеним",
+      "cancel": "Скасувати урок",
+      "reschedule": "Перенести",
+      "reactivate": "Відновити",
+      "close": "Закрити"
+    },
+    "conflict": {
+      "title": "Конфлікт часу",
+      "message": "У викладача вже є урок, що перетинається з цим часом.",
+      "force": "Все одно створити"
+    },
+    "lessonForm": {
+      "createTitle": "Новий урок",
+      "createSubtitle": "Заброньуйте один або кілька уроків.",
+      "enrollment": "Запис учня",
+      "enrollmentPlaceholder": "Оберіть запис",
+      "date": "Дата й час",
+      "duration": "Тривалість (хв)",
+      "price": "Ціна за урок",
+      "addDate": "Додати ще дату",
+      "removeDate": "Прибрати",
+      "submit": "Створити",
+      "cancel": "Скасувати",
+      "noEnrollments": "Спершу створіть запис."
+    },
+    "cancelDialog": {
+      "title": "Скасувати урок",
+      "subtitle": "Оберіть, як тарифікувати скасування.",
+      "charge": "Тарифікація",
+      "charged": "Списати урок",
+      "uncharged": "Не списувати (безкоштовно)",
+      "by": "Хто скасував",
+      "reason": "Причина (необов'язково)",
+      "submit": "Підтвердити скасування",
+      "cancel": "Назад"
+    },
+    "patterns": {
+      "title": "Розклад",
+      "subtitle": "Повторювані шаблони уроків.",
+      "newPattern": "Новий шаблон",
+      "empty": "Ще немає повторюваних шаблонів.",
+      "weekdays": "Дні тижня",
+      "time": "Час",
+      "duration": "Тривалість",
+      "target": "Учень",
+      "delete": "Видалити",
+      "deleteConfirm": "Видалити цей шаблон і його майбутні уроки?"
+    },
+    "seriesForm": {
+      "createTitle": "Новий шаблон",
+      "createSubtitle": "Автоматично генеруйте повторювані уроки.",
+      "editTitle": "Редагувати шаблон",
+      "editSubtitle": "Зміна розкладу перегенерує майбутні уроки.",
+      "enrollment": "Запис учня",
+      "weekdays": "Дні тижня",
+      "time": "Локальний час",
+      "timezone": "Часовий пояс",
+      "duration": "Тривалість (хв)",
+      "price": "Ціна за урок",
+      "startDate": "Дата початку",
+      "submit": "Зберегти",
+      "cancel": "Скасувати"
+    }
+  },
+  "teachers": {
+    "title": "Викладачі",
+    "subtitle": "Викладацький склад вашого простору.",
+    "add": "Додати викладача",
+    "searchLabel": "Пошук викладачів",
+    "searchPlaceholder": "Пошук за іменем або контактом…",
+    "tableCaption": "Викладачі простору",
+    "columns": {
+      "teacher": "Викладач",
+      "contacts": "Контакти",
+      "subjects": "Предмети",
+      "enrollments": "Записи",
+      "actions": "Дії"
+    },
+    "enrollmentsCount": "{count, plural, =0 {Немає записів} one {# запис} few {# записи} many {# записів} other {# записів}}",
+    "status": {
+      "ACTIVE": "Активний",
+      "ARCHIVED": "Архівований"
+    },
+    "empty": {
+      "title": "Ще немає викладачів",
+      "description": "Додайте першого викладача, щоб призначати уроки та записи.",
+      "action": "Додати викладача"
+    },
+    "emptySearch": {
+      "title": "Викладачів не знайдено",
+      "description": "Спробуйте інше ім'я або контакт."
+    },
+    "error": {
+      "title": "Не вдалося завантажити викладачів"
+    },
+    "deleteDialog": {
+      "title": "Видалити викладача",
+      "description": "Видалити {name}? Наявні уроки та записи збережуть посилання.",
+      "confirm": "Видалити"
+    },
+    "toasts": {
+      "created": "Викладача створено",
+      "updated": "Викладача оновлено",
+      "deleted": "Викладача видалено"
+    },
+    "detail": {
+      "addedOn": "Додано {date}",
+      "contactsTitle": "Контакти",
+      "teachingTitle": "Викладання",
+      "bioTitle": "Про викладача",
+      "notesTitle": "Нотатки",
+      "noSubjects": "Предмети не вказані",
+      "rate": "Ставка за замовч."
+    },
+    "form": {
+      "createTitle": "Додати викладача",
+      "editTitle": "Редагувати викладача",
+      "createSubtitle": "Створіть викладацький профіль.",
+      "editSubtitle": "Оновіть викладацький профіль.",
+      "avatarSection": "Аватар",
+      "avatarInitials": "Ініціали",
+      "fullName": "Повне ім'я",
+      "email": "Email",
+      "phone": "Телефон",
+      "phonePlaceholder": "+380 …",
+      "telegramUsername": "Telegram",
+      "telegramPlaceholder": "username",
+      "subjects": "Предмети",
+      "subjectsPlaceholder": "Додати предмет",
+      "defaultRate": "Ставка за замовч.",
+      "ratePlaceholder": "напр. 500",
+      "currency": "Валюта",
+      "color": "Колір у календарі",
+      "status": "Статус",
+      "bio": "Про викладача",
+      "bioPlaceholder": "Короткий опис для профілю.",
+      "notes": "Нотатки",
+      "notesPlaceholder": "Внутрішні нотатки.",
+      "submitCreate": "Створити викладача",
+      "submitEdit": "Зберегти зміни"
+    }
   }
 }

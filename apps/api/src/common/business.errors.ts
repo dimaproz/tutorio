@@ -9,8 +9,9 @@ export class BusinessApiException extends HttpException {
     readonly code: BusinessErrorCode,
     message: string,
     status: HttpStatus,
+    details?: Record<string, unknown>,
   ) {
-    super({ statusCode: status, code, message }, status);
+    super({ statusCode: status, code, message, ...(details ? { details } : {}) }, status);
   }
 }
 
@@ -39,6 +40,13 @@ export const enrollmentNotFound = () =>
   new BusinessApiException(
     'ENROLLMENT_NOT_FOUND',
     'Enrollment not found',
+    HttpStatus.NOT_FOUND,
+  );
+
+export const teacherNotFound = () =>
+  new BusinessApiException(
+    'TEACHER_NOT_FOUND',
+    'Teacher not found',
     HttpStatus.NOT_FOUND,
   );
 
@@ -75,6 +83,37 @@ export const invalidMoneyAmount = () =>
     'INVALID_MONEY_AMOUNT',
     'Money amount is invalid',
     HttpStatus.BAD_REQUEST,
+  );
+
+export const lessonNotFound = () =>
+  new BusinessApiException(
+    'LESSON_NOT_FOUND',
+    'Lesson not found',
+    HttpStatus.NOT_FOUND,
+  );
+
+export const lessonSeriesNotFound = () =>
+  new BusinessApiException(
+    'LESSON_SERIES_NOT_FOUND',
+    'Lesson series not found',
+    HttpStatus.NOT_FOUND,
+  );
+
+// 409 with the conflicting lesson ids in `details` — the web app offers a
+// "book anyway" retry with ?force=true.
+export const scheduleConflict = (conflictIds: string[]) =>
+  new BusinessApiException(
+    'SCHEDULE_CONFLICT',
+    'The teacher already has a lesson overlapping this time',
+    HttpStatus.CONFLICT,
+    { conflictIds },
+  );
+
+export const invalidLessonTransition = () =>
+  new BusinessApiException(
+    'INVALID_LESSON_TRANSITION',
+    'This lesson status change is not allowed',
+    HttpStatus.CONFLICT,
   );
 
 export const unexpected = () =>

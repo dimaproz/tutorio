@@ -7,6 +7,8 @@ import {
   ContactIcon,
   GraduationCapIcon,
   LayoutDashboardIcon,
+  PresentationIcon,
+  RepeatIcon,
   SettingsIcon,
   UsersIcon,
   WalletIcon,
@@ -42,13 +44,13 @@ const NAV_ITEMS: NavItem[] = [
   { key: 'students', href: '/app/students', icon: UsersIcon },
   { key: 'parents', href: '/app/parents', icon: ContactIcon },
   { key: 'groups', href: '/app/groups', icon: GraduationCapIcon },
+  { key: 'teachers', href: '/app/teachers', icon: PresentationIcon },
+  { key: 'calendar', href: '/app/calendar', icon: CalendarIcon },
+  { key: 'patterns', href: '/app/lessons/patterns', icon: RepeatIcon },
 ];
 
 // Enabled in later stages — shown disabled with a "coming soon" badge.
-const UPCOMING_ITEMS = [
-  { key: 'calendar', icon: CalendarIcon },
-  { key: 'finance', icon: WalletIcon },
-] as const;
+const UPCOMING_ITEMS = [{ key: 'finance', icon: WalletIcon }] as const;
 
 // Roomier rows than the shadcn default (h-8) — matches the design lab / TailAdmin
 // rail: larger hit area, size-5 icons, brand-tinted pill on the active item

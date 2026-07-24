@@ -34,11 +34,7 @@ const enrollmentRow = {
   deletedAt: null,
   student: { id: STUDENT_ID, fullName: 'Alice Example' },
   group: null,
-  teacher: {
-    id: TEACHER_ID,
-    userId: owner.userId,
-    user: { name: 'Olena' },
-  },
+  teacher: { id: TEACHER_ID, fullName: 'Olena', color: null },
 };
 
 const createDto = {
@@ -60,7 +56,7 @@ function buildPrismaMock() {
     },
     student: { findFirst: jest.fn().mockResolvedValue({ id: STUDENT_ID }) },
     group: { findFirst: jest.fn().mockResolvedValue({ id: GROUP_ID }) },
-    workspaceMember: {
+    teacher: {
       findFirst: jest.fn().mockResolvedValue({ id: TEACHER_ID }),
     },
     workspace: {
@@ -123,16 +119,17 @@ describe('EnrollmentsService.create', () => {
 
   it('validates the teacher against the same workspace', async () => {
     const { prisma, service } = buildService();
-    prisma.workspaceMember.findFirst.mockResolvedValue(null);
+    prisma.teacher.findFirst.mockResolvedValue(null);
 
     await expectBusinessError(
       service.create(owner, createDto),
-      'WORKSPACE_MEMBER_NOT_FOUND',
+      'TEACHER_NOT_FOUND',
       404,
     );
-    expect(
-      prisma.workspaceMember.findFirst.mock.calls[0][0].where,
-    ).toMatchObject({ id: TEACHER_ID, workspaceId: WORKSPACE_ID });
+    expect(prisma.teacher.findFirst.mock.calls[0][0].where).toMatchObject({
+      id: TEACHER_ID,
+      workspaceId: WORKSPACE_ID,
+    });
   });
 
   it('validates the group when provided', async () => {
