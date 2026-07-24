@@ -9,6 +9,7 @@ import {
 import { createEnrollmentSchema, updateEnrollmentSchema } from './enrollments';
 import { createGroupSchema, updateGroupSchema } from './groups';
 import { paginatedResponseSchema, paginationQuerySchema } from './pagination';
+import { createParentSchema, updateParentSchema } from './parents';
 import { z } from 'zod';
 import { createStudentSchema, updateStudentSchema } from './students';
 import { updateWorkspaceSettingsSchema } from './workspace-settings';
@@ -52,9 +53,7 @@ describe('pagination', () => {
     expect(
       schema.safeParse({ items: ['a'], page: 1, pageSize: 20, total: 1, totalPages: 1 }).success,
     ).toBe(true);
-    expect(schema.safeParse({ items: ['a'], page: 1, pageSize: 20, total: 1 }).success).toBe(
-      false,
-    );
+    expect(schema.safeParse({ items: ['a'], page: 1, pageSize: 20, total: 1 }).success).toBe(false);
   });
 
   it('exposes the shared record-state filter and business error codes', () => {
@@ -111,18 +110,17 @@ describe('students', () => {
     });
     expect(parsed.status).toBe('ON_HOLD');
     expect(parsed.parentIds).toEqual([UUID]);
-    expect(createStudentSchema.safeParse({ fullName: 'Alice', timezone: 'UTC', grade: 13 }).success).toBe(
-      false,
-    );
-    expect(createStudentSchema.safeParse({ fullName: 'Alice', timezone: 'UTC', age: -1 }).success).toBe(
-      false,
-    );
+    expect(
+      createStudentSchema.safeParse({ fullName: 'Alice', timezone: 'UTC', grade: 13 }).success,
+    ).toBe(false);
+    expect(
+      createStudentSchema.safeParse({ fullName: 'Alice', timezone: 'UTC', age: -1 }).success,
+    ).toBe(false);
   });
 
   it('rejects unknown keys and missing timezone', () => {
     expect(
-      createStudentSchema.safeParse({ fullName: 'Alice', timezone: 'UTC', role: 'admin' })
-        .success,
+      createStudentSchema.safeParse({ fullName: 'Alice', timezone: 'UTC', role: 'admin' }).success,
     ).toBe(false);
     expect(createStudentSchema.safeParse({ fullName: 'Alice' }).success).toBe(false);
   });
@@ -142,6 +140,24 @@ describe('groups', () => {
     expect(createGroupSchema.safeParse({ name: '' }).success).toBe(false);
     expect(updateGroupSchema.safeParse({ notes: null }).success).toBe(true);
     expect(updateGroupSchema.safeParse({ name: null }).success).toBe(false);
+  });
+});
+
+describe('parents', () => {
+  it('accepts linked students on create and replaces them on update', () => {
+    expect(
+      createParentSchema.parse({ fullName: 'Olena', studentIds: [UUID, UUID_2] }).studentIds,
+    ).toEqual([UUID, UUID_2]);
+    expect(updateParentSchema.safeParse({ studentIds: [] }).success).toBe(true);
+  });
+
+  it('rejects invalid student links and unknown fields', () => {
+    expect(
+      createParentSchema.safeParse({ fullName: 'Olena', studentIds: ['not-a-uuid'] }).success,
+    ).toBe(false);
+    expect(updateParentSchema.safeParse({ studentIds: [UUID], archived: true }).success).toBe(
+      false,
+    );
   });
 });
 
@@ -166,13 +182,13 @@ describe('enrollments', () => {
 
   it('bounds priceMinor to the PostgreSQL Int range', () => {
     expect(createEnrollmentSchema.safeParse({ ...base, priceMinor: 0 }).success).toBe(true);
-    expect(
-      createEnrollmentSchema.safeParse({ ...base, priceMinor: 2_147_483_647 }).success,
-    ).toBe(true);
+    expect(createEnrollmentSchema.safeParse({ ...base, priceMinor: 2_147_483_647 }).success).toBe(
+      true,
+    );
     expect(createEnrollmentSchema.safeParse({ ...base, priceMinor: -1 }).success).toBe(false);
-    expect(
-      createEnrollmentSchema.safeParse({ ...base, priceMinor: 2_147_483_648 }).success,
-    ).toBe(false);
+    expect(createEnrollmentSchema.safeParse({ ...base, priceMinor: 2_147_483_648 }).success).toBe(
+      false,
+    );
     expect(createEnrollmentSchema.safeParse({ ...base, priceMinor: 10.5 }).success).toBe(false);
   });
 
@@ -206,9 +222,9 @@ describe('workspace settings', () => {
   it('requires at least one field and validates values', () => {
     expect(updateWorkspaceSettingsSchema.safeParse({}).success).toBe(false);
     expect(updateWorkspaceSettingsSchema.safeParse({ defaultCurrency: 'UAH' }).success).toBe(true);
-    expect(
-      updateWorkspaceSettingsSchema.safeParse({ cancellationDeadlineHours: 24 }).success,
-    ).toBe(true);
+    expect(updateWorkspaceSettingsSchema.safeParse({ cancellationDeadlineHours: 24 }).success).toBe(
+      true,
+    );
     expect(
       updateWorkspaceSettingsSchema.safeParse({ cancellationDeadlineHours: 400 }).success,
     ).toBe(false);

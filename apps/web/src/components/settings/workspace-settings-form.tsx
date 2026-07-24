@@ -2,27 +2,16 @@
 
 import { useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
+import { SUPPORTED_CURRENCIES } from '@tutorio/domain';
 import { useSession } from '@/components/app/session-provider';
 import { CurrencyOption } from '@/components/app/currency-option';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from '@/components/ui/field';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -39,9 +28,7 @@ import { makeZodErrorMap } from '@/lib/forms/error-map';
 import {
   workspaceSettingsFormSchema,
   type WorkspaceSettingsFormValues,
-} from '@/lib/forms/schemas';
-
-const CURRENCIES = ['EUR', 'UAH', 'PLN', 'USD', 'GBP'] as const;
+} from '@/features/settings/model/form';
 
 export function WorkspaceSettingsForm() {
   const t = useTranslations('settings.general');
@@ -63,7 +50,10 @@ export function WorkspaceSettingsForm() {
     },
   });
   const { errors } = form.formState;
-  const currency = form.watch('defaultCurrency');
+  const currency = useWatch({
+    control: form.control,
+    name: 'defaultCurrency',
+  }) as WorkspaceSettingsFormValues['defaultCurrency'];
 
   // Keep the form in sync after the session query refetches post-save.
   useEffect(() => {
@@ -118,7 +108,7 @@ export function WorkspaceSettingsForm() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    {CURRENCIES.map((code) => (
+                    {SUPPORTED_CURRENCIES.map((code) => (
                       <SelectItem key={code} value={code}>
                         <CurrencyOption code={code} />
                       </SelectItem>

@@ -18,6 +18,8 @@ export const telegramUsernameSchema = z
   .max(32)
   .regex(/^@?\w{2,32}$/, 'Invalid Telegram username');
 
+const studentIdsSchema = z.array(uuidSchema).max(20);
+
 // HTML forms submit empty strings for untouched optional inputs; the API
 // treats them as "not provided".
 const emptyToUndefined = (value: unknown) =>
@@ -33,6 +35,7 @@ export const createParentSchema = z
     phone: optionalField(phoneSchema),
     telegramUsername: optionalField(telegramUsernameSchema),
     avatarKey: optionalField(avatarKeySchema),
+    studentIds: studentIdsSchema.optional(),
     notes: optionalField(notesSchema),
   })
   .strict();
@@ -46,6 +49,7 @@ export const updateParentSchema = z
     phone: phoneSchema.nullable(),
     telegramUsername: telegramUsernameSchema.nullable(),
     avatarKey: avatarKeySchema.nullable(),
+    studentIds: studentIdsSchema,
     notes: notesSchema.nullable(),
   })
   .partial()
@@ -86,6 +90,8 @@ export const parentStudentRefSchema = z.object({
   id: uuidSchema,
   fullName: z.string(),
   avatarKey: avatarKeySchema.nullable(),
+  subject: z.string().nullable(),
+  status: z.enum(['ACTIVE', 'ON_HOLD', 'ARCHIVED']),
 });
 
 export type ParentStudentRef = z.infer<typeof parentStudentRefSchema>;

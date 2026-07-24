@@ -22,8 +22,11 @@ import { useLocale, useTranslations } from 'next-intl';
 import type { EnrollmentResponse, StudentEnrollmentSummary } from '@tutorio/validation';
 import { BackButton } from '@/components/app/back-button';
 import { ListSkeleton, QueryErrorAlert } from '@/components/app/page-shell';
-import { BillingTypeBadge, EnrollmentStatusBadge } from '@/components/app/status-badges';
-import { StudentStatusBadge } from './student-status-badge';
+import {
+  BillingTypeBadge,
+  EnrollmentStatusBadge,
+  StudentStatusBadge,
+} from '@/components/app/status-badges';
 import { StudentDeleteDialog } from './student-delete-dialog';
 import { EnrollmentDialog } from '@/components/enrollments/enrollment-dialog';
 import { StudentFormDialog } from './student-form-dialog';
@@ -31,7 +34,13 @@ import { ParentMiniCard } from '@/components/parents/parent-mini-card';
 import { InfoRow, ProfileHeader, ProfileTag, SectionTitle } from '@/components/app/detail-view';
 import { Button } from '@/components/ui/button';
 import { Card, CardAction, CardContent, CardHeader } from '@/components/ui/card';
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
 import { useEnrollmentsQuery } from '@/lib/api/enrollments';
 import { useStudentQuery } from '@/lib/api/students';
 import { formatMoneyDisplay } from '@/lib/money';
@@ -147,7 +156,7 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
         <div className="flex flex-col gap-6 lg:col-span-2">
           <Card>
             <CardHeader>
-              <SectionTitle icon={BanknoteIcon} tone="emerald">
+              <SectionTitle icon={BanknoteIcon} tone="success">
                 {t('detail.pricingTitle')}
               </SectionTitle>
             </CardHeader>
@@ -171,7 +180,7 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
 
           <Card>
             <CardHeader>
-              <SectionTitle icon={GraduationCapIcon} tone="violet">
+              <SectionTitle icon={GraduationCapIcon} tone="primary">
                 {t('detail.enrollmentsTitle')}
               </SectionTitle>
               <CardAction>
@@ -239,7 +248,9 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
           {data.notes ? (
             <Card>
               <CardHeader>
-                <SectionTitle icon={BookOpenIcon} tone="rose">{t('detail.notesTitle')}</SectionTitle>
+                <SectionTitle icon={BookOpenIcon} tone="destructive">
+                  {t('detail.notesTitle')}
+                </SectionTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm whitespace-pre-wrap">{data.notes}</p>
@@ -252,7 +263,9 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
         <div className="flex flex-col gap-6">
           <Card>
             <CardHeader>
-              <SectionTitle icon={PhoneIcon} tone="sky">{t('detail.contactsTitle')}</SectionTitle>
+              <SectionTitle icon={PhoneIcon} tone="primary">
+                {t('detail.contactsTitle')}
+              </SectionTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
               <InfoRow
@@ -294,7 +307,7 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
 
           <Card>
             <CardHeader>
-              <SectionTitle icon={UsersRoundIcon} tone="amber">
+              <SectionTitle icon={UsersRoundIcon} tone="warning">
                 {t('detail.parentTitle')}
               </SectionTitle>
             </CardHeader>
@@ -315,7 +328,7 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
 
           <Card>
             <CardHeader>
-              <SectionTitle icon={GraduationCapIcon} tone="indigo">
+              <SectionTitle icon={GraduationCapIcon} tone="primary">
                 {t('detail.groupsTitle')}
               </SectionTitle>
             </CardHeader>

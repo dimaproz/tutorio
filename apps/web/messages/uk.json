@@ -499,12 +499,15 @@
       "editSubtitle": "Оновіть контакти та нотатки.",
       "avatarSection": "Аватар",
       "avatarInitials": "Ініціали",
+      "basicSection": "Основна інформація",
       "fullName": "Повне ім'я",
+      "contactsSection": "Контактні дані",
       "phone": "Телефон",
       "phonePlaceholder": "+380 XX XXX XX XX",
       "telegramUsername": "Юзернейм у Telegram",
       "telegramPlaceholder": "username",
       "notes": "Нотатки",
+      "notesSection": "Нотатки",
       "notesPlaceholder": "Усе важливе про цих батьків",
       "submitCreate": "Створити запис",
       "submitEdit": "Зберегти зміни"
@@ -515,7 +518,7 @@
       "notesTitle": "Нотатки",
       "studentsTitle": "Пов'язані учні",
       "noStudents": "Учнів поки не прив'язано",
-      "noStudentsDescription": "Прив'яжіть цей запис у формі редагування учня.",
+      "noStudentsDescription": "Знайдіть і прив'яжіть одного або кількох учнів.",
       "deletedTitle": "Цей запис у кошику",
       "deletedDescription": "Відновіть запис, щоб знову його редагувати."
     },
@@ -819,6 +822,7 @@
     "tableCaption": "Викладачі простору",
     "columns": {
       "teacher": "Викладач",
+      "status": "Статус",
       "contacts": "Контакти",
       "subjects": "Предмети",
       "enrollments": "Записи",

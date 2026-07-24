@@ -20,7 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { useRegisterMutation } from '@/lib/auth/client';
 import { makeZodErrorMap } from '@/lib/forms/error-map';
-import { registerFormSchema, type RegisterFormValues } from '@/lib/forms/schemas';
+import { registerFormSchema, type RegisterFormValues } from '@/features/auth/model/register-form';
 import { PasswordInput } from './password-input';
 import { authErrorMessageKey } from './error-message';
 

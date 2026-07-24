@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
-import { DashboardEmptyState, DashboardWelcome } from '@/components/app/dashboard';
+import { DashboardEmptyState, DashboardWelcome } from '@/features/dashboard';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('app.nav');

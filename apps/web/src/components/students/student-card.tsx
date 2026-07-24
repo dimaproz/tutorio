@@ -5,9 +5,16 @@ import { ClockIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { StudentListItem } from '@tutorio/validation';
 import { StudentRowActions } from './student-row-actions';
-import { StudentStatusBadge } from './student-status-badge';
+import { StudentStatusBadge } from '@/components/app/status-badges';
 import { EntityAvatar } from '@/components/app/entity-avatar';
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 
 // Mobile presentation of a student. The desktop table shows the same data as
 // an accessible table instead.
@@ -45,9 +52,7 @@ export function StudentCard({ student }: { student: StudentListItem }) {
       </CardHeader>
       <CardContent className="flex flex-col gap-2 text-sm">
         <div className="flex flex-wrap items-center gap-2">
-          {student.status !== 'ACTIVE' ? (
-            <StudentStatusBadge status={student.status} />
-          ) : null}
+          {student.status !== 'ACTIVE' ? <StudentStatusBadge status={student.status} /> : null}
           <span className="tabular text-muted-foreground">
             {t('activeEnrollments', { count: student.activeEnrollmentCount })}
           </span>

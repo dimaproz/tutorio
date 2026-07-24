@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
-import { SeriesManager } from '@/components/scheduling/series-manager';
+import { SeriesManager } from '@/features/scheduling';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('scheduling.patterns');

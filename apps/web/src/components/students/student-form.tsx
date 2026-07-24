@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
 import {
   BanknoteIcon,
@@ -16,6 +16,7 @@ import {
   UsersRoundIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { SUPPORTED_CURRENCIES } from '@tutorio/domain';
 import {
   isLanguageSubject,
   STUDENT_KNOWLEDGE_LEVELS,
@@ -24,9 +25,9 @@ import {
   type StudentDetail,
   type StudentParentRef,
 } from '@tutorio/validation';
-import { EntityCombobox } from '@/components/enrollments/entity-combobox';
 import { ParentFormDialog } from '@/components/parents/parent-form-dialog';
 import { ParentMiniCard } from '@/components/parents/parent-mini-card';
+import { EntityPicker, FormActions } from '@/components/shared';
 import { AvatarPicker } from '@/components/app/avatar-picker';
 import { CurrencyOption } from '@/components/app/currency-option';
 import { FormSection } from '@/components/app/form-section';
@@ -63,10 +64,9 @@ import {
   EMPTY_STUDENT_FORM,
   studentFormSchema,
   type StudentFormValues,
-} from '@/lib/forms/schemas';
+} from '@/features/students/model/form';
 import { formatPriceInput, parsePriceInput } from '@/lib/money';
 
-const CURRENCIES = ['EUR', 'UAH', 'PLN', 'USD', 'GBP'] as const;
 // Ukrainian school system: grades 1–12, offered as a closed dropdown.
 const GRADES = Array.from({ length: 12 }, (_, index) => String(index + 1));
 // Sentinel for "unset" — Radix Select cannot hold an empty string value.
@@ -139,10 +139,16 @@ export function StudentForm({
           parentIds: student.parents.map((parent) => parent.id),
           notes: student.notes ?? '',
         }
-      : { ...EMPTY_STUDENT_FORM, currency: session.workspace.defaultCurrency as StudentFormValues['currency'] },
+      : {
+          ...EMPTY_STUDENT_FORM,
+          currency: session.workspace.defaultCurrency as StudentFormValues['currency'],
+        },
   });
   const { errors, isSubmitting } = form.formState;
-  const values = form.watch();
+  const values = useWatch({
+    control: form.control,
+    defaultValue: form.getValues(),
+  }) as StudentFormValues;
   const showLanguageLevel = isLanguageSubject(values.subject === '' ? null : values.subject);
 
   // New students default to the browser timezone (Europe/Kyiv as fallback).
@@ -178,7 +184,7 @@ export function StudentForm({
     const assignedIds = new Set(assignedParents.map((parent) => parent.id));
     return (parentsQuery.data?.items ?? [])
       .filter((parent) => !assignedIds.has(parent.id))
-      .map((parent) => ({ value: parent.id, label: parent.fullName }));
+      .map((parent) => ({ value: parent.id, label: parent.fullName, avatarKey: parent.avatarKey }));
   }, [parentsQuery.data, assignedParents]);
 
   function addParent(parent: StudentParentRef) {
@@ -247,8 +253,7 @@ export function StudentForm({
         currency: hourlyRateMinor === null ? undefined : formValues.currency,
         status: formValues.status,
         languageLevel: formValues.languageLevel === '' ? undefined : formValues.languageLevel,
-        knowledgeLevel:
-          formValues.knowledgeLevel === '' ? undefined : formValues.knowledgeLevel,
+        knowledgeLevel: formValues.knowledgeLevel === '' ? undefined : formValues.knowledgeLevel,
         age: formValues.age.trim() === '' ? undefined : Number(formValues.age),
         grade: formValues.grade.trim() === '' ? undefined : Number(formValues.grade),
         avatarKey: formValues.avatarKey ?? undefined,
@@ -273,7 +278,7 @@ export function StudentForm({
           </Alert>
         ) : null}
 
-        <FormSection icon={ImageIcon} tone="fuchsia" title={t('avatarSection')}>
+        <FormSection icon={ImageIcon} tone="neutral" title={t('avatarSection')}>
           <AvatarPicker
             value={values.avatarKey ?? null}
             onChange={(next) => form.setValue('avatarKey', next)}
@@ -284,7 +289,7 @@ export function StudentForm({
 
         <FieldSeparator />
 
-        <FormSection icon={UserIcon} tone="indigo" title={t('basicSection')}>
+        <FormSection icon={UserIcon} tone="primary" title={t('basicSection')}>
           <Field data-invalid={errors.fullName ? true : undefined}>
             <FieldLabel htmlFor="student-full-name">{t('fullName')}</FieldLabel>
             <Input
@@ -342,7 +347,7 @@ export function StudentForm({
 
         <FormSection
           icon={PhoneIcon}
-          tone="sky"
+          tone="primary"
           title={t('contactsSection')}
           description={t('contactsHint')}
         >
@@ -398,12 +403,14 @@ export function StudentForm({
 
         <FormSection
           icon={GlobeIcon}
-          tone="cyan"
+          tone="primary"
           title={t('timezoneSection')}
           description={t('timezoneHint')}
         >
           <Field data-invalid={errors.timezone ? true : undefined}>
-            <FieldLabel htmlFor="student-timezone" className="sr-only">{t('timezone')}</FieldLabel>
+            <FieldLabel htmlFor="student-timezone" className="sr-only">
+              {t('timezone')}
+            </FieldLabel>
             <TimezoneCombobox
               id="student-timezone"
               value={values.timezone}
@@ -419,7 +426,7 @@ export function StudentForm({
 
         <FieldSeparator />
 
-        <FormSection icon={GraduationCapIcon} tone="violet" title={t('academicSection')}>
+        <FormSection icon={GraduationCapIcon} tone="primary" title={t('academicSection')}>
           {/* Levels row: language level appears only for language subjects; when
               hidden, the knowledge level sits alone on its row. */}
           <div className="grid gap-4 sm:grid-cols-2">
@@ -523,7 +530,7 @@ export function StudentForm({
 
         <FormSection
           icon={BanknoteIcon}
-          tone="emerald"
+          tone="success"
           title={t('pricingSection')}
           description={t('pricingHint')}
         >
@@ -551,7 +558,7 @@ export function StudentForm({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    {CURRENCIES.map((currency) => (
+                    {SUPPORTED_CURRENCIES.map((currency) => (
                       <SelectItem key={currency} value={currency}>
                         <CurrencyOption code={currency} />
                       </SelectItem>
@@ -567,18 +574,23 @@ export function StudentForm({
 
         <FormSection
           icon={UsersRoundIcon}
-          tone="amber"
+          tone="warning"
           title={t('parentSection')}
           description={t('parentHint')}
           action={
-            <Button type="button" variant="outline" size="sm" onClick={() => setQuickCreateOpen(true)}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setQuickCreateOpen(true)}
+            >
               <PlusIcon data-icon="inline-start" />
               {t('newParent')}
             </Button>
           }
         >
           {assignedParents.length > 0 ? (
-            <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid gap-2">
               {assignedParents.map((parent) => (
                 <ParentMiniCard
                   key={parent.id}
@@ -589,11 +601,13 @@ export function StudentForm({
               ))}
             </div>
           ) : null}
-          <EntityCombobox
+          <EntityPicker
             id="student-add-parent"
-            value=""
             options={parentOptions}
             onChange={(parentId) => {
+              if (!parentId) {
+                return;
+              }
               const item = parentsQuery.data?.items.find((parent) => parent.id === parentId);
               if (item) {
                 addParent({
@@ -613,9 +627,11 @@ export function StudentForm({
 
         <FieldSeparator />
 
-        <FormSection icon={StickyNoteIcon} tone="rose" title={t('notesSection')}>
+        <FormSection icon={StickyNoteIcon} tone="destructive" title={t('notesSection')}>
           <Field data-invalid={errors.notes ? true : undefined}>
-            <FieldLabel htmlFor="student-notes" className="sr-only">{t('notes')}</FieldLabel>
+            <FieldLabel htmlFor="student-notes" className="sr-only">
+              {t('notes')}
+            </FieldLabel>
             <Textarea
               id="student-notes"
               rows={4}
@@ -627,7 +643,7 @@ export function StudentForm({
           </Field>
         </FormSection>
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+        <FormActions>
           <Button type="button" variant="outline" onClick={onCancel}>
             {tCommon('cancel')}
           </Button>
@@ -635,7 +651,7 @@ export function StudentForm({
             {pending ? <Spinner data-icon="inline-start" /> : null}
             {isEdit ? t('submitEdit') : t('submitCreate')}
           </Button>
-        </div>
+        </FormActions>
       </FieldGroup>
 
       <ParentFormDialog

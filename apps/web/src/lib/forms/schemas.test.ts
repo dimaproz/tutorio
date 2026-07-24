@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { registerFormSchema } from './schemas';
+import { registerFormSchema } from '@/features/auth/model/register-form';
 
 const valid = {
   name: 'Olena',

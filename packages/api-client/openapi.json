@@ -4233,12 +4233,26 @@
                           "user-10"
                         ],
                         "nullable": true
+                      },
+                      "subject": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "ACTIVE",
+                          "ON_HOLD",
+                          "ARCHIVED"
+                        ]
                       }
                     },
                     "required": [
                       "id",
                       "fullName",
-                      "avatarKey"
+                      "avatarKey",
+                      "subject",
+                      "status"
                     ]
                   }
                 }
@@ -4317,6 +4331,14 @@
               "user-9",
               "user-10"
             ]
+          },
+          "studentIds": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           "notes": {
             "type": "string",
@@ -4482,12 +4504,26 @@
                     "user-10"
                   ],
                   "nullable": true
+                },
+                "subject": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "ACTIVE",
+                    "ON_HOLD",
+                    "ARCHIVED"
+                  ]
                 }
               },
               "required": [
                 "id",
                 "fullName",
-                "avatarKey"
+                "avatarKey",
+                "subject",
+                "status"
               ]
             }
           }
@@ -4543,6 +4579,14 @@
               "user-10"
             ],
             "nullable": true
+          },
+          "studentIds": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           "notes": {
             "type": "string",

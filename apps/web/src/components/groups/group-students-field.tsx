@@ -2,10 +2,12 @@
 
 import { PlusIcon, Trash2Icon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { SUPPORTED_CURRENCIES } from '@tutorio/domain';
 import type { CurrencyCodeDto } from '@tutorio/validation';
 import { Button } from '@/components/ui/button';
 import { FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { EntityPicker } from '@/components/shared';
 import {
   Select,
   SelectContent,
@@ -27,8 +29,6 @@ export interface GroupMemberRow {
   currency: CurrencyCodeDto;
 }
 
-const CURRENCIES: CurrencyCodeDto[] = ['EUR', 'UAH', 'PLN', 'USD', 'GBP'];
-
 let rowSeq = 0;
 export function newMemberRow(currency: CurrencyCodeDto): GroupMemberRow {
   rowSeq += 1;
@@ -47,6 +47,7 @@ export function GroupStudentsField({
   enabled: boolean;
 }) {
   const t = useTranslations('groups.form.students');
+  const tEnrollment = useTranslations('enrollments.editor');
   const students = useStudentsQuery({ page: 1, pageSize: 100 }, enabled);
   const teachers = useTeachersQuery({ page: 1, pageSize: 100 }, enabled);
 
@@ -71,9 +72,19 @@ export function GroupStudentsField({
               key={row.key}
               className="grid grid-cols-1 gap-2 rounded-lg border p-2 sm:grid-cols-[1fr_1fr_auto_auto]"
             >
-              <Select
-                value={row.studentId}
-                onValueChange={(value) => {
+              <EntityPicker
+                value={row.studentId || undefined}
+                options={(students.data?.items ?? [])
+                  .filter((item) => item.id === row.studentId || !pickedStudentIds.has(item.id))
+                  .map((item) => ({
+                    value: item.id,
+                    label: item.fullName,
+                    avatarKey: item.avatarKey,
+                  }))}
+                onChange={(value) => {
+                  if (!value) {
+                    return;
+                  }
                   const student = students.data?.items.find((item) => item.id === value);
                   update(row.key, {
                     studentId: value,
@@ -86,26 +97,24 @@ export function GroupStudentsField({
                     currency: (student?.currency as CurrencyCodeDto) ?? row.currency,
                   });
                 }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={t('pickStudent')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {(students.data?.items ?? [])
-                    .filter(
-                      (item) => item.id === row.studentId || !pickedStudentIds.has(item.id),
-                    )
-                    .map((item) => (
-                      <SelectItem key={item.id} value={item.id}>
-                        {item.fullName}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
+                placeholder={t('pickStudent')}
+                searchPlaceholder={tEnrollment('studentSearch')}
+                emptyLabel={tEnrollment('studentEmpty')}
+                disabled={students.isPending}
+                isLoading={students.isPending}
+              />
 
-              <Select
-                value={row.teacherId}
-                onValueChange={(value) => {
+              <EntityPicker
+                value={row.teacherId || undefined}
+                options={(teachers.data?.items ?? []).map((item) => ({
+                  value: item.id,
+                  label: item.fullName,
+                  avatarKey: item.avatarKey,
+                }))}
+                onChange={(value) => {
+                  if (!value) {
+                    return;
+                  }
                   const teacher = teachers.data?.items.find((item) => item.id === value);
                   update(row.key, {
                     teacherId: value,
@@ -116,18 +125,12 @@ export function GroupStudentsField({
                         : ''),
                   });
                 }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={t('pickTeacher')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {(teachers.data?.items ?? []).map((item) => (
-                    <SelectItem key={item.id} value={item.id}>
-                      {item.fullName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder={t('pickTeacher')}
+                searchPlaceholder={tEnrollment('teacherSearch')}
+                emptyLabel={tEnrollment('teacherEmpty')}
+                disabled={teachers.isPending}
+                isLoading={teachers.isPending}
+              />
 
               <Input
                 className="w-24"
@@ -143,7 +146,7 @@ export function GroupStudentsField({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {CURRENCIES.map((code) => (
+                  {SUPPORTED_CURRENCIES.map((code) => (
                     <SelectItem key={code} value={code}>
                       {code}
                     </SelectItem>

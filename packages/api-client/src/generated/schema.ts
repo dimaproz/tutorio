@@ -929,6 +929,9 @@ export interface components {
                     fullName: string;
                     /** @enum {string|null} */
                     avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
+                    subject: string | null;
+                    /** @enum {string} */
+                    status: "ACTIVE" | "ON_HOLD" | "ARCHIVED";
                 }[];
             }[];
             page: number;
@@ -942,6 +945,7 @@ export interface components {
             telegramUsername: string;
             /** @enum {string} */
             avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10";
+            studentIds?: string[];
             notes: string;
         };
         ParentDto: {
@@ -985,6 +989,9 @@ export interface components {
                 fullName: string;
                 /** @enum {string|null} */
                 avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
+                subject: string | null;
+                /** @enum {string} */
+                status: "ACTIVE" | "ON_HOLD" | "ARCHIVED";
             }[];
         };
         UpdateParentDto: {
@@ -993,6 +1000,7 @@ export interface components {
             telegramUsername?: string | null;
             /** @enum {string|null} */
             avatarKey?: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
+            studentIds?: string[];
             notes?: string | null;
         };
         TeacherListDto: {

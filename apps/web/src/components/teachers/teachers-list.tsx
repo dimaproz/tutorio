@@ -10,20 +10,19 @@ import type { TeacherListItem } from '@tutorio/validation';
 import { TeacherCard } from './teacher-card';
 import { TeacherFormDialog } from './teacher-form-dialog';
 import { TeacherRowActions } from './teacher-row-actions';
+import { TeacherStatusBadge } from './teacher-status-badge';
 import { DataTable } from '@/components/app/data-table';
 import { ListPagination, ListSearchInput } from '@/components/app/list-controls';
-import { ListSkeleton, PageHeader, QueryErrorAlert } from '@/components/app/page-shell';
+import {
+  ListSkeleton,
+  PageHeader,
+  QueryErrorAlert,
+  QueryRefreshIndicator,
+} from '@/components/app/page-shell';
 import { EntityAvatar } from '@/components/app/entity-avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '@/components/ui/empty';
+import { CollectionEmptyState, CollectionToolbar } from '@/components/shared';
 import { parsePageParam } from '@/lib/api/filters';
 import { useTeachersQuery } from '@/lib/api/teachers';
 
@@ -48,11 +47,6 @@ export function TeachersList() {
         header: () => t('columns.teacher'),
         cell: ({ row }) => (
           <div className="flex min-w-0 items-center gap-3">
-            <span
-              className="size-2.5 shrink-0 rounded-full"
-              style={{ backgroundColor: row.original.color ?? '#465FFF' }}
-              aria-hidden="true"
-            />
             <EntityAvatar
               avatarKey={row.original.avatarKey}
               fullName={row.original.fullName}
@@ -65,14 +59,14 @@ export function TeachersList() {
               >
                 {row.original.fullName}
               </Link>
-              {row.original.status === 'ARCHIVED' ? (
-                <Badge variant="outline" className="w-fit">
-                  {t('status.ARCHIVED')}
-                </Badge>
-              ) : null}
             </div>
           </div>
         ),
+      },
+      {
+        id: 'status',
+        header: () => t('columns.status'),
+        cell: ({ row }) => <TeacherStatusBadge status={row.original.status} />,
       },
       {
         id: 'contacts',
@@ -101,9 +95,7 @@ export function TeachersList() {
                 </Badge>
               ))}
               {row.original.subjects.length > SUBJECT_LIMIT ? (
-                <Badge variant="outline">
-                  +{row.original.subjects.length - SUBJECT_LIMIT}
-                </Badge>
+                <Badge variant="outline">+{row.original.subjects.length - SUBJECT_LIMIT}</Badge>
               ) : null}
             </div>
           ) : (
@@ -150,9 +142,11 @@ export function TeachersList() {
         }
       />
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <CollectionToolbar>
         <ListSearchInput label={t('searchLabel')} placeholder={t('searchPlaceholder')} />
-      </div>
+      </CollectionToolbar>
+
+      <QueryRefreshIndicator isFetching={teachers.isFetching && !teachers.isPending} />
 
       {teachers.isPending ? <ListSkeleton /> : null}
 
@@ -192,22 +186,18 @@ function TeachersEmptyState({ search, onCreate }: { search?: string; onCreate: (
   const scope = search ? 'emptySearch' : 'empty';
 
   return (
-    <Empty className="border border-dashed">
-      <EmptyHeader>
-        <EmptyMedia variant="icon">
-          <PresentationIcon />
-        </EmptyMedia>
-        <EmptyTitle>{t(`${scope}.title`)}</EmptyTitle>
-        <EmptyDescription>{t(`${scope}.description`)}</EmptyDescription>
-      </EmptyHeader>
-      {scope === 'empty' ? (
-        <EmptyContent>
+    <CollectionEmptyState
+      icon={PresentationIcon}
+      title={t(`${scope}.title`)}
+      description={t(`${scope}.description`)}
+      action={
+        scope === 'empty' ? (
           <Button onClick={onCreate}>
             <PlusIcon data-icon />
             {t('empty.action')}
           </Button>
-        </EmptyContent>
-      ) : null}
-    </Empty>
+        ) : undefined
+      }
+    />
   );
 }

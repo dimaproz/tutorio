@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import type { TeacherListItem } from '@tutorio/validation';
 import { TeacherRowActions } from './teacher-row-actions';
+import { TeacherStatusBadge } from './teacher-status-badge';
 import { EntityAvatar } from '@/components/app/entity-avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,11 +22,6 @@ export function TeacherCard({ teacher }: { teacher: TeacherListItem }) {
     <Card>
       <CardHeader>
         <div className="flex items-center gap-3">
-          <span
-            className="size-2.5 shrink-0 rounded-full"
-            style={{ backgroundColor: teacher.color ?? '#465FFF' }}
-            aria-hidden="true"
-          />
           <EntityAvatar avatarKey={teacher.avatarKey} fullName={teacher.fullName} size="sm" />
           <CardTitle className="min-w-0 truncate text-base">
             <Link
@@ -41,6 +37,7 @@ export function TeacherCard({ teacher }: { teacher: TeacherListItem }) {
         </CardAction>
       </CardHeader>
       <CardContent className="flex flex-col gap-2 text-sm">
+        <TeacherStatusBadge status={teacher.status} />
         {visible.length > 0 ? (
           <div className="flex flex-wrap gap-1.5">
             {visible.map((subject) => (

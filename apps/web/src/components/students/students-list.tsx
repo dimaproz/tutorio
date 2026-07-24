@@ -10,24 +10,13 @@ import { STUDENT_SUBJECTS, type StudentListItem } from '@tutorio/validation';
 import { StudentCard } from './student-card';
 import { StudentFormDialog } from './student-form-dialog';
 import { StudentRowActions } from './student-row-actions';
-import { StudentStatusBadge } from './student-status-badge';
+import { StudentStatusBadge } from '@/components/app/status-badges';
 import { EntityAvatar } from '@/components/app/entity-avatar';
 import { DataTable } from '@/components/app/data-table';
-import {
-  ListPagination,
-  ListSearchInput,
-  ListSelectFilter,
-} from '@/components/app/list-controls';
+import { ListPagination, ListSearchInput, ListSelectFilter } from '@/components/app/list-controls';
 import { ListSkeleton, PageHeader, QueryErrorAlert } from '@/components/app/page-shell';
 import { Button } from '@/components/ui/button';
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '@/components/ui/empty';
+import { CollectionEmptyState, CollectionToolbar } from '@/components/shared';
 import { parsePageParam } from '@/lib/api/filters';
 import { useStudentsQuery } from '@/lib/api/students';
 import { useGroupsQuery } from '@/lib/api/groups';
@@ -188,7 +177,7 @@ export function StudentsList() {
         }
       />
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+      <CollectionToolbar>
         <ListSearchInput label={t('searchLabel')} placeholder={t('searchPlaceholder')} />
         <ListSelectFilter
           paramKey="status"
@@ -208,7 +197,7 @@ export function StudentsList() {
           options={groupOptions}
           label={tFilters('groupAll')}
         />
-      </div>
+      </CollectionToolbar>
 
       {students.isPending ? <ListSkeleton /> : null}
 
@@ -250,22 +239,18 @@ function StudentsEmptyState({ search, onCreate }: { search?: string; onCreate: (
   const scope = search ? 'emptySearch' : 'empty';
 
   return (
-    <Empty className="border border-dashed">
-      <EmptyHeader>
-        <EmptyMedia variant="icon">
-          <UsersIcon />
-        </EmptyMedia>
-        <EmptyTitle>{t(`${scope}.title`)}</EmptyTitle>
-        <EmptyDescription>{t(`${scope}.description`)}</EmptyDescription>
-      </EmptyHeader>
-      {scope === 'empty' ? (
-        <EmptyContent>
+    <CollectionEmptyState
+      icon={UsersIcon}
+      title={t(`${scope}.title`)}
+      description={t(`${scope}.description`)}
+      action={
+        scope === 'empty' ? (
           <Button onClick={onCreate}>
             <PlusIcon data-icon />
             {t('empty.action')}
           </Button>
-        </EmptyContent>
-      ) : null}
-    </Empty>
+        ) : undefined
+      }
+    />
   );
 }

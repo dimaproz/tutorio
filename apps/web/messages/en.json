@@ -499,12 +499,15 @@
       "editSubtitle": "Update contact details and notes.",
       "avatarSection": "Avatar",
       "avatarInitials": "Initials",
+      "basicSection": "Basic information",
       "fullName": "Full name",
+      "contactsSection": "Contact details",
       "phone": "Phone",
       "phonePlaceholder": "+380 XX XXX XX XX",
       "telegramUsername": "Telegram username",
       "telegramPlaceholder": "username",
       "notes": "Notes",
+      "notesSection": "Notes",
       "notesPlaceholder": "Anything worth remembering about this parent",
       "submitCreate": "Create parent",
       "submitEdit": "Save changes"
@@ -515,7 +518,7 @@
       "notesTitle": "Notes",
       "studentsTitle": "Linked students",
       "noStudents": "No students linked yet",
-      "noStudentsDescription": "Link this parent from a student's edit form.",
+      "noStudentsDescription": "Search for and link one or more students.",
       "deletedTitle": "This parent is in the trash",
       "deletedDescription": "Restore the parent to edit them again."
     },
@@ -819,6 +822,7 @@
     "tableCaption": "Workspace teachers",
     "columns": {
       "teacher": "Teacher",
+      "status": "Status",
       "contacts": "Contacts",
       "subjects": "Subjects",
       "enrollments": "Enrollments",

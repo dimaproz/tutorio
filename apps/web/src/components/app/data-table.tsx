@@ -1,11 +1,6 @@
 'use client';
 
-import {
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-  type ColumnDef,
-} from '@tanstack/react-table';
+import { flexRender, getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table';
 import {
   Table,
   TableBody,
@@ -30,6 +25,9 @@ interface DataTableProps<TData> {
  * paginated page.
  */
 export function DataTable<TData>({ columns, data, caption }: DataTableProps<TData>) {
+  // TanStack Table intentionally returns imperative table methods. React
+  // Compiler safely skips this boundary; memoizing it would risk stale rows.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,

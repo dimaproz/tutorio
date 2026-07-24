@@ -16,21 +16,20 @@ import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { BackButton } from '@/components/app/back-button';
 import { ConfirmDialog } from '@/components/app/confirm-dialog';
-import { InfoRow, ProfileHeader, SectionTitle } from '@/components/app/detail-view';
-import { ListSkeleton, QueryErrorAlert } from '@/components/app/page-shell';
-import { Badge } from '@/components/ui/badge';
+import { InfoRow, ProfileHeader, ProfileTag, SectionTitle } from '@/components/app/detail-view';
+import { ListSkeleton, QueryErrorAlert, QueryRefreshIndicator } from '@/components/app/page-shell';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { errorMessageKey } from '@/lib/api/error-message';
 import { useDeleteTeacherMutation, useTeacherQuery } from '@/lib/api/teachers';
 import type { GatewayError } from '@/lib/auth/client';
-import { formatPriceInput } from '@/lib/money';
+import { formatMoneyDisplay } from '@/lib/money';
 import { TeacherFormDialog } from './teacher-form-dialog';
+import { TeacherStatusBadge } from './teacher-status-badge';
 
 export function TeacherDetail({ teacherId }: { teacherId: string }) {
   const t = useTranslations('teachers');
   const tDetail = useTranslations('teachers.detail');
-  const tStatus = useTranslations('teachers.status');
   const tForm = useTranslations('teachers.form');
   const tSubject = useTranslations('subject');
   const tCommon = useTranslations('common');
@@ -82,6 +81,7 @@ export function TeacherDetail({ teacherId }: { teacherId: string }) {
       <div className="flex items-center justify-between gap-3">
         <BackButton href="/app/teachers" />
         <div className="flex flex-wrap gap-2">
+          <QueryRefreshIndicator isFetching={teacher.isFetching && !teacher.isPending} />
           <Button type="button" variant="outline" onClick={() => setEditOpen(true)}>
             <PencilIcon data-icon="inline-start" />
             {tCommon('edit')}
@@ -97,20 +97,11 @@ export function TeacherDetail({ teacherId }: { teacherId: string }) {
         avatarKey={data.avatarKey}
         fullName={data.fullName}
         subtitle={addedOn}
-        badge={
-          <Badge variant="secondary" className="gap-1.5">
-            <span
-              className="size-2 rounded-full"
-              style={{ backgroundColor: data.color ?? '#465FFF' }}
-              aria-hidden="true"
-            />
-            {tStatus(data.status)}
-          </Badge>
-        }
+        badge={<TeacherStatusBadge status={data.status} />}
         tags={data.subjects.map((subject) => (
-          <Badge key={subject} variant="outline">
+          <ProfileTag key={subject} icon={BookOpenIcon}>
             {tSubject(subject)}
-          </Badge>
+          </ProfileTag>
         ))}
       />
 
@@ -118,7 +109,7 @@ export function TeacherDetail({ teacherId }: { teacherId: string }) {
         <div className="flex flex-col gap-6 lg:col-span-2">
           <Card>
             <CardHeader>
-              <SectionTitle icon={BookOpenIcon} tone="rose">
+              <SectionTitle icon={BookOpenIcon} tone="destructive">
                 {tDetail('bioTitle')}
               </SectionTitle>
             </CardHeader>
@@ -133,7 +124,7 @@ export function TeacherDetail({ teacherId }: { teacherId: string }) {
 
           <Card>
             <CardHeader>
-              <SectionTitle icon={NotebookPenIcon} tone="amber">
+              <SectionTitle icon={NotebookPenIcon} tone="warning">
                 {tDetail('notesTitle')}
               </SectionTitle>
             </CardHeader>
@@ -150,7 +141,7 @@ export function TeacherDetail({ teacherId }: { teacherId: string }) {
         <div className="flex flex-col gap-6">
           <Card>
             <CardHeader>
-              <SectionTitle icon={PhoneIcon} tone="sky">
+              <SectionTitle icon={PhoneIcon} tone="primary">
                 {tDetail('contactsTitle')}
               </SectionTitle>
             </CardHeader>
@@ -194,14 +185,14 @@ export function TeacherDetail({ teacherId }: { teacherId: string }) {
 
           <Card>
             <CardHeader>
-              <SectionTitle icon={BanknoteIcon} tone="emerald">
+              <SectionTitle icon={BanknoteIcon} tone="success">
                 {tDetail('teachingTitle')}
               </SectionTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
               <InfoRow icon={BanknoteIcon} label={tDetail('rate')}>
                 {data.defaultRateMinor != null ? (
-                  `${formatPriceInput(data.defaultRateMinor)} ${data.currency ?? ''}`
+                  formatMoneyDisplay(data.defaultRateMinor, data.currency ?? 'EUR', locale)
                 ) : (
                   <span className="text-muted-foreground">{tCommon('notProvided')}</span>
                 )}

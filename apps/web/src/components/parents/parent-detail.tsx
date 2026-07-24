@@ -15,8 +15,9 @@ import { toast } from 'sonner';
 import { BackButton } from '@/components/app/back-button';
 import { ConfirmDialog } from '@/components/app/confirm-dialog';
 import { PersonMiniCard } from '@/components/app/person-mini-card';
+import { StudentStatusBadge } from '@/components/app/status-badges';
 import { InfoRow, ProfileHeader, SectionTitle } from '@/components/app/detail-view';
-import { ListSkeleton, QueryErrorAlert } from '@/components/app/page-shell';
+import { ListSkeleton, QueryErrorAlert, QueryRefreshIndicator } from '@/components/app/page-shell';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
@@ -29,6 +30,7 @@ export function ParentDetailView({ parentId }: { parentId: string }) {
   const t = useTranslations('parents');
   const tCommon = useTranslations('common');
   const tErrors = useTranslations('errors');
+  const tSubject = useTranslations('subject');
   const locale = useLocale();
   const router = useRouter();
 
@@ -79,6 +81,7 @@ export function ParentDetailView({ parentId }: { parentId: string }) {
       <div className="flex items-center justify-between gap-3">
         <BackButton href="/app/parents" />
         <div className="flex flex-wrap gap-2">
+          <QueryRefreshIndicator isFetching={parent.isFetching && !parent.isPending} />
           <Button type="button" variant="outline" onClick={() => setEditOpen(true)}>
             <PencilIcon data-icon="inline-start" />
             {tCommon('edit')}
@@ -98,7 +101,9 @@ export function ParentDetailView({ parentId }: { parentId: string }) {
         <div className="flex flex-col gap-6 lg:col-span-2">
           <Card>
             <CardHeader>
-              <SectionTitle icon={BookOpenIcon} tone="rose">{t('detail.notesTitle')}</SectionTitle>
+              <SectionTitle icon={BookOpenIcon} tone="destructive">
+                {t('detail.notesTitle')}
+              </SectionTitle>
             </CardHeader>
             <CardContent>
               {data.notes ? (
@@ -114,7 +119,9 @@ export function ParentDetailView({ parentId }: { parentId: string }) {
         <div className="flex flex-col gap-6">
           <Card>
             <CardHeader>
-              <SectionTitle icon={PhoneIcon} tone="sky">{t('detail.contactsTitle')}</SectionTitle>
+              <SectionTitle icon={PhoneIcon} tone="primary">
+                {t('detail.contactsTitle')}
+              </SectionTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
               <InfoRow
@@ -147,7 +154,7 @@ export function ParentDetailView({ parentId }: { parentId: string }) {
 
           <Card>
             <CardHeader>
-              <SectionTitle icon={UsersRoundIcon} tone="amber">
+              <SectionTitle icon={UsersRoundIcon} tone="warning">
                 {t('detail.studentsTitle')}
               </SectionTitle>
             </CardHeader>
@@ -166,6 +173,8 @@ export function ParentDetailView({ parentId }: { parentId: string }) {
                       <PersonMiniCard
                         avatarKey={student.avatarKey}
                         fullName={student.fullName}
+                        subtitle={student.subject ? tSubject(student.subject) : undefined}
+                        badge={<StudentStatusBadge status={student.status} />}
                         href={`/app/students/${student.id}`}
                       />
                     </li>

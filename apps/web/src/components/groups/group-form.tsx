@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
+import { SUPPORTED_CURRENCIES } from '@tutorio/domain';
 import type { GroupDetail } from '@tutorio/validation';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -22,19 +23,15 @@ import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { errorMessageKey } from '@/lib/api/error-message';
 import { useCreateGroupMutation, useUpdateGroupMutation } from '@/lib/api/groups';
-import {
-  useCreateEnrollmentMutation,
-  useDeleteEnrollmentMutation,
-} from '@/lib/api/enrollments';
+import { useCreateEnrollmentMutation, useDeleteEnrollmentMutation } from '@/lib/api/enrollments';
 import { GroupStudentsField, type GroupMemberRow } from './group-students-field';
+import { FormActions } from '@/components/shared';
 import { useSession } from '@/components/app/session-provider';
 import { CurrencyOption } from '@/components/app/currency-option';
 import { MoneyInput } from '@/components/app/money-input';
 import { makeZodErrorMap } from '@/lib/forms/error-map';
-import { groupFormSchema, type GroupFormValues } from '@/lib/forms/schemas';
+import { groupFormSchema, type GroupFormValues } from '@/features/groups/model/form';
 import { formatPriceInput, parsePriceInput } from '@/lib/money';
-
-const CURRENCIES = ['EUR', 'UAH', 'PLN', 'USD', 'GBP'] as const;
 
 // One component for both create and edit, mirroring StudentForm. Rendered
 // inside a Dialog (see GroupFormDialog) — the caller owns the open state and
@@ -79,9 +76,7 @@ export function GroupForm({
   // Creates new enrollments and soft-deletes removed ones for the saved group.
   async function reconcileMembers(groupId: string) {
     const originalIds = (group?.enrollments ?? []).map((enrollment) => enrollment.id);
-    const keptIds = new Set(
-      members.map((row) => row.enrollmentId).filter(Boolean) as string[],
-    );
+    const keptIds = new Set(members.map((row) => row.enrollmentId).filter(Boolean) as string[]);
     for (const id of originalIds) {
       if (!keptIds.has(id)) {
         await deleteEnrollment.mutateAsync(id).catch(() => undefined);
@@ -116,8 +111,7 @@ export function GroupForm({
     }),
     defaultValues: {
       name: group?.name ?? '',
-      pricePerLesson:
-        group?.pricePerLesson != null ? formatPriceInput(group.pricePerLesson) : '',
+      pricePerLesson: group?.pricePerLesson != null ? formatPriceInput(group.pricePerLesson) : '',
       currency:
         (group?.currency as GroupFormValues['currency'] | undefined) ??
         (session.workspace.defaultCurrency as GroupFormValues['currency']),
@@ -125,13 +119,14 @@ export function GroupForm({
     },
   });
   const { errors } = form.formState;
-  const values = form.watch();
+  const values = useWatch({
+    control: form.control,
+    defaultValue: form.getValues(),
+  }) as GroupFormValues;
 
   const onSubmit = form.handleSubmit(async (formValues) => {
     const pricePerLesson =
-      formValues.pricePerLesson.trim() === ''
-        ? null
-        : parsePriceInput(formValues.pricePerLesson);
+      formValues.pricePerLesson.trim() === '' ? null : parsePriceInput(formValues.pricePerLesson);
     try {
       if (group) {
         await updateGroup.mutateAsync({
@@ -203,7 +198,7 @@ export function GroupForm({
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  {CURRENCIES.map((currency) => (
+                  {SUPPORTED_CURRENCIES.map((currency) => (
                     <SelectItem key={currency} value={currency}>
                       <CurrencyOption code={currency} />
                     </SelectItem>
@@ -233,7 +228,7 @@ export function GroupForm({
           enabled
         />
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+        <FormActions>
           <Button type="button" variant="outline" onClick={onCancel}>
             {tCommon('cancel')}
           </Button>
@@ -241,7 +236,7 @@ export function GroupForm({
             {mutation.isPending ? <Spinner data-icon="inline-start" /> : null}
             {isEdit ? t('submitEdit') : t('submitCreate')}
           </Button>
-        </div>
+        </FormActions>
       </FieldGroup>
     </form>
   );

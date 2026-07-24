@@ -5,12 +5,7 @@ import {
   REFRESH_COOKIE,
   setAuthCookies,
 } from '@/lib/auth/cookies';
-import {
-  apiUrl,
-  forbiddenResponse,
-  originAllowed,
-  rotateRefreshToken,
-} from '@/lib/auth/gateway';
+import { apiUrl, forbiddenResponse, originAllowed, rotateRefreshToken } from '@/lib/auth/gateway';
 import type { AuthTokens } from '@tutorio/validation';
 
 // Authenticated same-origin proxy to the Tutorio API. The upstream host is
@@ -110,10 +105,4 @@ async function handle(request: NextRequest, ctx: { params: Promise<{ path: strin
   return toGatewayResponse(retried, session.tokens);
 }
 
-export {
-  handle as GET,
-  handle as POST,
-  handle as PUT,
-  handle as PATCH,
-  handle as DELETE,
-};
+export { handle as GET, handle as POST, handle as PUT, handle as PATCH, handle as DELETE };
