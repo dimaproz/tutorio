@@ -20,6 +20,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { MaterializerService } from './materializer.service';
 import {
   assertTargetAndTeacher,
+  resolveStudentTarget,
   seriesInclude,
   toSeriesResponse,
 } from './scheduling.shared';
@@ -89,14 +90,51 @@ export class SeriesService {
     dto: CreateLessonSeriesDto,
   ): Promise<LessonSeriesResponse> {
     const startDate = new Date(dto.startDate);
-    const enrollmentId = dto.enrollmentId ?? null;
     const groupId = dto.groupId ?? null;
 
     const series = await this.prisma.$transaction(async (tx) => {
+      // Same tutor-facing shortcut as booking a one-off lesson: a bare student
+      // resolves to (or creates) the enrollment behind the pattern.
+      let enrollmentId = dto.enrollmentId ?? null;
+      let teacherId = dto.teacherId ?? '';
+      let priceMinor = dto.priceMinor ?? 0;
+      let currency = dto.currency ?? '';
+
+      if (dto.studentId) {
+        const workspace = await tx.workspace.findUniqueOrThrow({
+          where: { id: auth.workspaceId },
+          select: { cancellationDeadlineHours: true },
+        });
+        const resolved = await resolveStudentTarget(tx, auth.workspaceId, {
+          studentId: dto.studentId,
+          teacherId: dto.teacherId,
+          priceMinor: dto.priceMinor,
+          currency: dto.currency,
+          defaultCancellationDeadlineHours: workspace.cancellationDeadlineHours,
+        });
+        enrollmentId = resolved.enrollmentId;
+        teacherId = resolved.teacherId;
+        priceMinor = resolved.priceMinor;
+        currency = resolved.currency;
+        if (resolved.createdEnrollment) {
+          await this.audit.record(tx, {
+            workspaceId: auth.workspaceId,
+            actorId: auth.userId,
+            action: 'CREATE',
+            entity: 'ENROLLMENT',
+            entityId: resolved.enrollmentId,
+            changes: this.audit.buildChanges(
+              {},
+              { studentId: dto.studentId, teacherId, priceMinor, currency },
+            ),
+          });
+        }
+      }
+
       await assertTargetAndTeacher(tx, auth.workspaceId, {
         enrollmentId,
         groupId,
-        teacherId: dto.teacherId,
+        teacherId,
       });
 
       const created = await tx.lessonSeries.create({
@@ -104,13 +142,13 @@ export class SeriesService {
           workspaceId: auth.workspaceId,
           enrollmentId,
           groupId,
-          teacherId: dto.teacherId,
+          teacherId,
           weekdays: dto.weekdays,
           localTime: dto.localTime,
           timezone: dto.timezone,
           durationMin: dto.durationMin,
-          priceMinor: dto.priceMinor,
-          currency: dto.currency,
+          priceMinor,
+          currency,
           startDate,
           // materializeSeries bumps this to the real horizon below.
           horizonMaterializedUntil: startDate,
@@ -135,13 +173,13 @@ export class SeriesService {
           {
             enrollmentId,
             groupId,
-            teacherId: dto.teacherId,
+            teacherId,
             weekdays: dto.weekdays,
             localTime: dto.localTime,
             timezone: dto.timezone,
             durationMin: dto.durationMin,
-            priceMinor: dto.priceMinor,
-            currency: dto.currency,
+            priceMinor,
+            currency,
             startDate,
           },
         ),

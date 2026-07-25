@@ -95,6 +95,9 @@ model User {
   authSessions AuthSession[]
   auditLogs    AuditLog[]
 
+  creditEntries LessonCreditEntry[]
+  payments      Payment[]
+
   @@map("users")
 }
 
@@ -120,6 +123,11 @@ model Workspace {
   auditLogs    AuditLog[]
   lessons      Lesson[]
   lessonSeries LessonSeries[]
+
+  packages            LessonPackage[]
+  creditEntries       LessonCreditEntry[]
+  participantShares   PackageParticipantShare[]
+  payments            Payment[]
 
   @@map("workspaces")
 }
@@ -199,6 +207,7 @@ model Student {
   workspace   Workspace       @relation(fields: [workspaceId], references: [id])
   enrollments Enrollment[]
   parents     StudentParent[]
+  packages    LessonPackage[]
 
   @@index([workspaceId, deletedAt])
   @@index([workspaceId, fullName])
@@ -266,6 +275,7 @@ model Group {
   enrollments  Enrollment[]
   lessons      Lesson[]
   lessonSeries LessonSeries[]
+  packages     LessonPackage[]
 
   @@index([workspaceId, deletedAt])
   @@index([workspaceId, name])
@@ -301,6 +311,10 @@ model Enrollment {
   teacher      Teacher        @relation("EnrollmentTeacher", fields: [teacherId], references: [id])
   lessons      Lesson[]
   lessonSeries LessonSeries[]
+
+  creditEntries     LessonCreditEntry[]
+  participantShares PackageParticipantShare[]
+  payments          Payment[]
 
   // Uniqueness among non-deleted rows only (one active enrollment per
   // student+group, one active individual enrollment per student+teacher) is
@@ -443,6 +457,8 @@ model Lesson {
   series     LessonSeries? @relation(fields: [seriesId], references: [id])
   teacher    Teacher       @relation("LessonTeacher", fields: [teacherId], references: [id])
 
+  creditEntries LessonCreditEntry[]
+
   // One materialized slot per series instant — the materializer's idempotency key.
   @@unique([seriesId, startsAtUtc])
   @@index([workspaceId, startsAtUtc])
@@ -451,4 +467,191 @@ model Lesson {
   @@index([enrollmentId])
   @@index([groupId])
   @@map("lessons")
+}
+
+// ---------------------------------------------------------------------------
+// Stage 4 — packages, credit ledger, payments
+//
+// Two ledgers, never one: `Payment` is money (currency minor units) and
+// `LessonCreditEntry` is lesson credits (±N lessons). "+200 EUR" and
+// "+8 lessons" are different units and must not share a table.
+// ---------------------------------------------------------------------------
+
+// FIXED_COUNT: the tutor states how many lessons the package holds.
+// BY_PERIOD: lessons are generated up to an end date from a recurring pattern.
+enum PackageSizingMode {
+  FIXED_COUNT
+  BY_PERIOD
+
+  @@map("package_sizing_mode")
+}
+
+enum PackagePaymentStatus {
+  PENDING
+  PARTIAL
+  PAID
+
+  @@map("package_payment_status")
+}
+
+// Mirrors @tutorio/domain LedgerEntryType. `purchase` credits the package;
+// lesson_* entries are driven by the lesson state machine; manual_adjustment
+// is the tutor's own correction (never an edit of an existing row).
+enum CreditEntryType {
+  purchase
+  lesson_completed
+  late_cancellation
+  teacher_cancellation_refund
+  manual_adjustment
+
+  @@map("credit_entry_type")
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  OTHER
+  // Online acquiring (WayForPay/Stripe). The method a provider settled with.
+  CARD
+
+  @@map("payment_method")
+}
+
+// A manual payment is PAID the moment it is recorded — the tutor already has
+// the money. An online payment starts PENDING and only becomes PAID when the
+// provider confirms it, so the lifecycle has to exist before acquiring lands.
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+
+  @@map("payment_status")
+}
+
+// A block of prepaid lessons for one student or one whole group (exactly one
+// target). `totalPriceMinorSnapshot` is the immutable purchase-time value; the
+// *effective* total (adjusted for uncharged cancellations) is derived at read
+// time from the credit ledger and is deliberately not stored.
+model LessonPackage {
+  id                          String               @id @default(uuid())
+  workspaceId                 String
+  studentId                   String?
+  groupId                     String?
+  name                        String?
+  sizingMode                  PackageSizingMode    @default(FIXED_COUNT)
+  // Set for FIXED_COUNT; for BY_PERIOD it holds the generated count.
+  lessonsTotal                Int
+  // Set for BY_PERIOD only.
+  endDate                     DateTime?
+  pricePerLessonMinorSnapshot Int
+  totalPriceMinorSnapshot     Int
+  currency                    String
+  paymentStatus               PackagePaymentStatus @default(PENDING)
+  purchasedAt                 DateTime             @default(now())
+  expiresAt                   DateTime?
+  notes                       String?
+  createdAt                   DateTime             @default(now())
+  updatedAt                   DateTime             @updatedAt
+  deletedAt                   DateTime?
+
+  workspace    Workspace                  @relation(fields: [workspaceId], references: [id])
+  student      Student?                   @relation(fields: [studentId], references: [id])
+  group        Group?                     @relation(fields: [groupId], references: [id])
+  creditEntries LessonCreditEntry[]
+  shares       PackageParticipantShare[]
+  payments     Payment[]
+
+  @@index([workspaceId, deletedAt])
+  @@index([studentId])
+  @@index([groupId])
+  @@map("lesson_packages")
+}
+
+// Append-only credit ledger, in lesson units. Never updated, never deleted: a
+// correction is a new compensating row. `idempotencyKey` is what makes a
+// double click, a retry or a replayed job safe.
+model LessonCreditEntry {
+  id             String          @id @default(uuid())
+  workspaceId    String
+  packageId      String
+  enrollmentId   String?
+  lessonId       String?
+  delta          Int
+  type           CreditEntryType
+  idempotencyKey String          @unique
+  note           String?
+  createdById    String?
+  createdAt      DateTime        @default(now())
+
+  workspace  Workspace     @relation(fields: [workspaceId], references: [id])
+  package    LessonPackage @relation(fields: [packageId], references: [id])
+  enrollment Enrollment?   @relation(fields: [enrollmentId], references: [id])
+  lesson     Lesson?       @relation(fields: [lessonId], references: [id])
+  createdBy  User?         @relation(fields: [createdById], references: [id])
+
+  @@index([packageId, createdAt])
+  @@index([workspaceId, createdAt])
+  @@index([lessonId])
+  @@map("lesson_credit_entries")
+}
+
+// A group package shares one schedule but splits the money: each member owes
+// their own share and pays it separately.
+model PackageParticipantShare {
+  id           String   @id @default(uuid())
+  workspaceId  String
+  packageId    String
+  enrollmentId String
+  oweMinor     Int
+  paidMinor    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  workspace  Workspace     @relation(fields: [workspaceId], references: [id])
+  package    LessonPackage @relation(fields: [packageId], references: [id])
+  enrollment Enrollment    @relation(fields: [enrollmentId], references: [id])
+
+  // One share per member per package.
+  @@unique([packageId, enrollmentId])
+  @@index([workspaceId])
+  @@map("package_participant_shares")
+}
+
+// The money ledger: an actual payment received, in currency minor units.
+// Recording a payment never touches lesson credits directly.
+model Payment {
+  id           String        @id @default(uuid())
+  workspaceId  String
+  enrollmentId String
+  packageId    String?
+  amountMinor  Int
+  currency     String
+  method       PaymentMethod @default(CASH)
+  status       PaymentStatus @default(PAID)
+  // Which PaymentProvider settled this. "manual" is the tutor writing down
+  // money already received; an acquirer sets its own key here.
+  provider     String        @default("manual")
+  // The provider's own reference (order id / transaction id).
+  externalId   String?
+  // Guards against a replayed provider webhook recording the same money twice.
+  // Null for manual entries, which are created by a human, one click at a time.
+  idempotencyKey String?     @unique
+  paidAt       DateTime      @default(now())
+  note         String?
+  createdById  String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?
+
+  workspace  Workspace      @relation(fields: [workspaceId], references: [id])
+  enrollment Enrollment     @relation(fields: [enrollmentId], references: [id])
+  package    LessonPackage? @relation(fields: [packageId], references: [id])
+  createdBy  User?          @relation(fields: [createdById], references: [id])
+
+  @@index([workspaceId, paidAt])
+  @@index([enrollmentId])
+  @@index([packageId])
+  @@index([provider, externalId])
+  @@map("payments")
 }

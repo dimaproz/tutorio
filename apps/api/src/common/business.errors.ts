@@ -116,6 +116,43 @@ export const invalidLessonTransition = () =>
     HttpStatus.CONFLICT,
   );
 
+export const packageNotFound = () =>
+  new BusinessApiException(
+    'PACKAGE_NOT_FOUND',
+    'Lesson package not found',
+    HttpStatus.NOT_FOUND,
+  );
+
+export const paymentNotFound = () =>
+  new BusinessApiException(
+    'PAYMENT_NOT_FOUND',
+    'Payment not found',
+    HttpStatus.NOT_FOUND,
+  );
+
+// A lesson can only consume credits from a package that still covers it.
+export const noActivePackage = () =>
+  new BusinessApiException(
+    'NO_ACTIVE_PACKAGE',
+    'No active package covers this lesson',
+    HttpStatus.CONFLICT,
+  );
+
+export const invalidPackagePlan = (message: string) =>
+  new BusinessApiException(
+    'INVALID_PACKAGE_PLAN',
+    message,
+    HttpStatus.BAD_REQUEST,
+  );
+
+// Money is never summed or compared across currencies.
+export const currencyMismatch = () =>
+  new BusinessApiException(
+    'CURRENCY_MISMATCH',
+    'The currency does not match the target record',
+    HttpStatus.CONFLICT,
+  );
+
 export const unexpected = () =>
   new BusinessApiException(
     'UNEXPECTED',

@@ -1,9 +1,16 @@
-import { findConflicts, toInterval } from '@tutorio/domain';
+import {
+  effectiveDeadlineHours,
+  findConflicts,
+  resolveDefaultPrice,
+  toInterval,
+} from '@tutorio/domain';
 import { Prisma } from '@prisma/client';
+import type { CurrencyCode } from '@tutorio/domain';
 import type { LessonResponse, LessonSeriesResponse } from '@tutorio/validation';
 import {
   groupNotFound,
   invalidWorkspaceRelation,
+  studentNotFound,
   teacherNotFound,
 } from '../common/business.errors';
 
@@ -17,11 +24,18 @@ const BUSY_STATUSES: Prisma.LessonWhereInput['status'] = {
 };
 
 export const lessonInclude = {
+  // cancellationDeadlineHours travels with the lesson so the cancel dialog can
+  // tell the tutor whether cancelling now is late, without a second request.
   enrollment: {
-    select: { id: true, student: { select: { id: true, fullName: true } } },
+    select: {
+      id: true,
+      cancellationDeadlineHours: true,
+      student: { select: { id: true, fullName: true } },
+    },
   },
   group: { select: { id: true, name: true } },
   teacher: { select: { id: true, fullName: true, color: true } },
+  workspace: { select: { cancellationDeadlineHours: true } },
 } satisfies Prisma.LessonInclude;
 
 export type LessonRow = Prisma.LessonGetPayload<{
@@ -60,9 +74,17 @@ export function toLessonResponse(row: LessonRow): LessonResponse {
     cancelledAt: row.cancelledAt?.toISOString() ?? null,
     completedAt: row.completedAt?.toISOString() ?? null,
     notes: row.notes,
+    cancellationDeadlineHours: effectiveDeadlineHours(
+      row.enrollment?.cancellationDeadlineHours,
+      row.workspace.cancellationDeadlineHours,
+    ),
     student: row.enrollment?.student ?? null,
     group: row.group,
-    teacher: { id: row.teacher.id, name: row.teacher.fullName, color: row.teacher.color },
+    teacher: {
+      id: row.teacher.id,
+      name: row.teacher.fullName,
+      color: row.teacher.color,
+    },
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     deletedAt: row.deletedAt?.toISOString() ?? null,
@@ -87,7 +109,11 @@ export function toSeriesResponse(row: SeriesRow): LessonSeriesResponse {
     horizonMaterializedUntil: row.horizonMaterializedUntil.toISOString(),
     student: row.enrollment?.student ?? null,
     group: row.group,
-    teacher: { id: row.teacher.id, name: row.teacher.fullName, color: row.teacher.color },
+    teacher: {
+      id: row.teacher.id,
+      name: row.teacher.fullName,
+      color: row.teacher.color,
+    },
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     deletedAt: row.deletedAt?.toISOString() ?? null,
@@ -133,6 +159,149 @@ export async function assertTargetAndTeacher(
   if (!teacher) {
     throw teacherNotFound();
   }
+}
+
+/**
+ * What booking "for a student" resolves to: a concrete enrollment, teacher and
+ * price. `createdEnrollment` tells the caller to audit a new enrollment row.
+ */
+export interface ResolvedStudentTarget {
+  enrollmentId: string;
+  teacherId: string;
+  priceMinor: number;
+  currency: string;
+  createdEnrollment: boolean;
+}
+
+/**
+ * Resolves a bare `studentId` into a bookable enrollment so tutors never have
+ * to name an "enrollment" to schedule a lesson.
+ *
+ * Reuses the student's single active individual enrollment when one exists;
+ * otherwise creates a default one. The teacher is taken from the explicit
+ * argument, then from that enrollment, then from the workspace when it has
+ * exactly one teacher — anything ambiguous is rejected rather than guessed.
+ * The price falls back through student → group → teacher (`resolveDefaultPrice`).
+ */
+export async function resolveStudentTarget(
+  tx: Prisma.TransactionClient,
+  workspaceId: string,
+  input: {
+    studentId: string;
+    teacherId?: string | null;
+    priceMinor?: number | null;
+    currency?: string | null;
+    defaultCancellationDeadlineHours?: number | null;
+  },
+): Promise<ResolvedStudentTarget> {
+  const student = await tx.student.findFirst({
+    where: { id: input.studentId, workspaceId },
+    select: { id: true, hourlyRateMinor: true, currency: true },
+  });
+  if (!student) {
+    throw studentNotFound();
+  }
+
+  if (input.teacherId) {
+    const teacher = await tx.teacher.findFirst({
+      where: { id: input.teacherId, workspaceId, deletedAt: null },
+      select: { id: true },
+    });
+    if (!teacher) {
+      throw teacherNotFound();
+    }
+  }
+
+  // Prefer an existing active individual enrollment, optionally narrowed to the
+  // requested teacher.
+  const existing = await tx.enrollment.findFirst({
+    where: {
+      workspaceId,
+      studentId: student.id,
+      groupId: null,
+      status: 'ACTIVE',
+      deletedAt: null,
+      ...(input.teacherId ? { teacherId: input.teacherId } : {}),
+    },
+    orderBy: { createdAt: 'asc' },
+    select: { id: true, teacherId: true, priceMinor: true, currency: true },
+  });
+
+  if (existing) {
+    return {
+      enrollmentId: existing.id,
+      teacherId: existing.teacherId,
+      priceMinor: input.priceMinor ?? existing.priceMinor,
+      currency: input.currency ?? existing.currency,
+      createdEnrollment: false,
+    };
+  }
+
+  // No enrollment yet — pick the teacher, refusing to guess when ambiguous.
+  let teacherId = input.teacherId ?? null;
+  let teacherRate: { amountMinor?: number | null; currency?: string | null } =
+    {};
+  if (teacherId) {
+    const teacher = await tx.teacher.findFirstOrThrow({
+      where: { id: teacherId, workspaceId, deletedAt: null },
+      select: { defaultRateMinor: true, currency: true },
+    });
+    teacherRate = {
+      amountMinor: teacher.defaultRateMinor,
+      currency: teacher.currency,
+    };
+  } else {
+    const teachers = await tx.teacher.findMany({
+      where: { workspaceId, deletedAt: null, status: 'ACTIVE' },
+      take: 2,
+      select: { id: true, defaultRateMinor: true, currency: true },
+    });
+    if (teachers.length !== 1) {
+      throw teacherNotFound();
+    }
+    teacherId = teachers[0].id;
+    teacherRate = {
+      amountMinor: teachers[0].defaultRateMinor,
+      currency: teachers[0].currency,
+    };
+  }
+
+  const resolvedPrice =
+    input.priceMinor != null && input.currency != null
+      ? { priceMinor: input.priceMinor, currency: input.currency }
+      : (resolveDefaultPrice({
+          student: {
+            amountMinor: student.hourlyRateMinor,
+            currency: student.currency as CurrencyCode | null,
+          },
+          teacher: {
+            amountMinor: teacherRate.amountMinor,
+            currency: teacherRate.currency as CurrencyCode | null,
+          },
+        }) ?? { priceMinor: 0, currency: student.currency ?? 'EUR' });
+
+  const created = await tx.enrollment.create({
+    data: {
+      workspaceId,
+      studentId: student.id,
+      groupId: null,
+      teacherId,
+      status: 'ACTIVE',
+      billingType: 'PACKAGE',
+      priceMinor: resolvedPrice.priceMinor,
+      currency: resolvedPrice.currency,
+      cancellationDeadlineHours: input.defaultCancellationDeadlineHours ?? null,
+    },
+    select: { id: true },
+  });
+
+  return {
+    enrollmentId: created.id,
+    teacherId,
+    priceMinor: resolvedPrice.priceMinor,
+    currency: resolvedPrice.currency,
+    createdEnrollment: true,
+  };
 }
 
 /**

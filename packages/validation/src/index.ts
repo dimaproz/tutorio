@@ -4,6 +4,7 @@ export * from './common';
 export * from './enrollments';
 export * from './groups';
 export * from './locale';
+export * from './packages';
 export * from './pagination';
 export * from './parents';
 export * from './scheduling';

@@ -61,25 +61,79 @@ function requireExactlyOneTarget<T extends { enrollmentId?: string | null; group
   }
 }
 
+/**
+ * Lesson booking accepts a third, tutor-facing target: a bare `studentId`. The
+ * API then resolves (or creates) the enrollment behind it, so the product never
+ * asks a tutor to think in "enrollments" just to book a lesson.
+ */
+function requireExactlyOneLessonTarget<
+  T extends {
+    enrollmentId?: string | null;
+    studentId?: string | null;
+    groupId?: string | null;
+  },
+>(value: T, ctx: z.RefinementCtx): void {
+  const provided = [
+    value.enrollmentId != null,
+    value.studentId != null,
+    value.groupId != null,
+  ].filter(Boolean).length;
+  if (provided !== 1) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Provide exactly one of enrollmentId, studentId or groupId',
+      path: ['studentId'],
+    });
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Lesson series (recurring pattern)
 // ---------------------------------------------------------------------------
 
+// Like a lesson, a recurring pattern can be created for a bare `studentId`;
+// the API resolves the enrollment, teacher and price behind it.
 export const createLessonSeriesSchema = z
   .object({
     enrollmentId: uuidSchema.nullable().optional(),
+    studentId: uuidSchema.nullable().optional(),
     groupId: uuidSchema.nullable().optional(),
-    teacherId: uuidSchema,
+    teacherId: uuidSchema.optional(),
     weekdays: weekdaysSchema,
     localTime: localTimeSchema,
     timezone: timezoneSchema,
     durationMin: durationMinSchema,
-    priceMinor: priceMinorSchema,
-    currency: currencyCodeSchema,
+    priceMinor: priceMinorSchema.optional(),
+    currency: currencyCodeSchema.optional(),
     startDate: isoDateTimeSchema,
   })
   .strict()
-  .superRefine(requireExactlyOneTarget);
+  .superRefine((value, ctx) => {
+    requireExactlyOneLessonTarget(value, ctx);
+    if (value.studentId == null) {
+      if (value.teacherId == null) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'teacherId is required unless a studentId is provided',
+          path: ['teacherId'],
+        });
+      }
+      if (value.priceMinor == null || value.currency == null) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'priceMinor and currency are required unless a studentId is provided',
+          path: ['priceMinor'],
+        });
+      }
+    }
+    if ((value.priceMinor == null) !== (value.currency == null)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'priceMinor and currency must be provided together',
+        path: ['currency'],
+      });
+    }
+  });
 
 export type CreateLessonSeriesDto = z.infer<typeof createLessonSeriesSchema>;
 
@@ -118,21 +172,70 @@ export type ListLessonSeriesQueryDto = z.infer<typeof listLessonSeriesQuerySchem
 // A single create call books one or many one-off lessons that share the same
 // target/teacher/duration/price — the production "add another date" flow. One
 // date is the common case; the array covers bulk creation.
+// `studentId` books without naming an enrollment; `teacherId`, `priceMinor` and
+// `currency` are then optional and resolved server-side from the student's
+// active enrollment (or its defaults). Explicit values always win.
 export const createLessonSchema = z
   .object({
     enrollmentId: uuidSchema.nullable().optional(),
+    studentId: uuidSchema.nullable().optional(),
     groupId: uuidSchema.nullable().optional(),
-    teacherId: uuidSchema,
+    teacherId: uuidSchema.optional(),
     startsAt: z.array(isoDateTimeSchema).min(1).max(50),
     durationMin: durationMinSchema,
-    priceMinor: priceMinorSchema,
-    currency: currencyCodeSchema,
+    priceMinor: priceMinorSchema.optional(),
+    currency: currencyCodeSchema.optional(),
     notes: notesSchema.nullable().optional(),
   })
   .strict()
-  .superRefine(requireExactlyOneTarget);
+  .superRefine((value, ctx) => {
+    requireExactlyOneLessonTarget(value, ctx);
+    // Only the studentId path may omit the teacher and the price.
+    if (value.studentId == null) {
+      if (value.teacherId == null) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'teacherId is required unless a studentId is provided',
+          path: ['teacherId'],
+        });
+      }
+      if (value.priceMinor == null || value.currency == null) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'priceMinor and currency are required unless a studentId is provided',
+          path: ['priceMinor'],
+        });
+      }
+    }
+    // A price without its currency (or the reverse) is never usable.
+    if ((value.priceMinor == null) !== (value.currency == null)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'priceMinor and currency must be provided together',
+        path: ['currency'],
+      });
+    }
+  });
 
 export type CreateLessonDto = z.infer<typeof createLessonSchema>;
+
+// The fields a tutor can correct on a booked lesson. Time is not here: moving a
+// lesson goes through /reschedule, which also handles the series scope and the
+// conflict check.
+export const updateLessonSchema = z
+  .object({
+    notes: notesSchema.nullable(),
+    priceMinor: priceMinorSchema,
+    currency: currencyCodeSchema,
+  })
+  .partial()
+  .strict()
+  .refine(
+    (value) => (value.priceMinor == null) === (value.currency == null),
+    { message: 'priceMinor and currency must be provided together', path: ['currency'] },
+  );
+
+export type UpdateLessonDto = z.infer<typeof updateLessonSchema>;
 
 export const rescheduleScopeSchema = z.enum(['this', 'this_and_following']);
 export type RescheduleScopeDto = z.infer<typeof rescheduleScopeSchema>;
@@ -187,6 +290,8 @@ export const listLessonsQuerySchema = z
     to: isoDateTimeSchema,
     teacherId: uuidSchema.optional(),
     enrollmentId: uuidSchema.optional(),
+    // Every lesson of one student, across all of their enrollments.
+    studentId: uuidSchema.optional(),
     groupId: uuidSchema.optional(),
     status: lessonStatusSchema.optional(),
   })
@@ -236,6 +341,10 @@ export const lessonResponseSchema = z.object({
   cancelledAt: isoDateTimeSchema.nullable(),
   completedAt: isoDateTimeSchema.nullable(),
   notes: z.string().nullable(),
+  // The cancellation deadline that applies to this lesson (the enrollment's own
+  // value, else the workspace default). Lets the UI say whether cancelling now
+  // is late before the tutor commits to charging.
+  cancellationDeadlineHours: z.number().int(),
   // Compact refs for calendar event rendering (avoids request waterfalls).
   student: studentRefSchema.nullable(),
   group: groupRefSchema.nullable(),

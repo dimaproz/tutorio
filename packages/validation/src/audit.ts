@@ -15,6 +15,8 @@ export const auditEntitySchema = z.enum([
   'WORKSPACE',
   'LESSON',
   'LESSON_SERIES',
+  'LESSON_PACKAGE',
+  'PAYMENT',
 ]);
 export type AuditEntityDto = z.infer<typeof auditEntitySchema>;
 

@@ -15,6 +15,7 @@ import type {
   LessonSeriesResponse,
   RescheduleLessonDto,
   TransitionLessonDto,
+  UpdateLessonDto,
   UpdateLessonSeriesDto,
 } from '@tutorio/validation';
 import { gatewayFetch, type GatewayError } from '@/lib/auth/client';
@@ -44,6 +45,7 @@ export function useLessonsQuery(filters: LessonListFilters, enabled = true) {
           to: filters.to,
           teacherId: filters.teacherId,
           enrollmentId: filters.enrollmentId,
+          studentId: filters.studentId,
           groupId: filters.groupId,
           status: filters.status,
         })}`,
@@ -64,6 +66,31 @@ export function useCreateLessonMutation() {
         `/api/backend/lessons${force ? '?force=true' : ''}`,
         { method: 'POST', body: JSON.stringify(dto) },
       ),
+    onSuccess: () => invalidateSchedulingGraph(queryClient),
+  });
+}
+
+export function useUpdateLessonMutation() {
+  const queryClient = useQueryClient();
+  return useMutation<
+    LessonResponse,
+    GatewayError,
+    { lessonId: string; dto: UpdateLessonDto }
+  >({
+    mutationFn: ({ lessonId, dto }) =>
+      gatewayFetch<LessonResponse>(`/api/backend/lessons/${lessonId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(dto),
+      }),
+    onSuccess: () => invalidateSchedulingGraph(queryClient),
+  });
+}
+
+export function useDeleteLessonMutation() {
+  const queryClient = useQueryClient();
+  return useMutation<void, GatewayError, string>({
+    mutationFn: (lessonId) =>
+      gatewayFetch<void>(`/api/backend/lessons/${lessonId}`, { method: 'DELETE' }),
     onSuccess: () => invalidateSchedulingGraph(queryClient),
   });
 }

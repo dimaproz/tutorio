@@ -29,6 +29,7 @@ import {
 } from '@/components/app/status-badges';
 import { StudentDeleteDialog } from './student-delete-dialog';
 import { EnrollmentDialog } from '@/components/enrollments/enrollment-dialog';
+import { StudentLessonsCard } from '@/components/scheduling/student-lessons-card';
 import { StudentFormDialog } from './student-form-dialog';
 import { ParentMiniCard } from '@/components/parents/parent-mini-card';
 import { InfoRow, ProfileHeader, ProfileTag, SectionTitle } from '@/components/app/detail-view';
@@ -44,6 +45,7 @@ import {
 import { useEnrollmentsQuery } from '@/lib/api/enrollments';
 import { useStudentQuery } from '@/lib/api/students';
 import { formatMoneyDisplay } from '@/lib/money';
+import { useDateFormatters } from '@/lib/i18n/format';
 
 export function StudentDetailView({ studentId }: { studentId: string }) {
   const t = useTranslations('students');
@@ -52,6 +54,7 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
   const tLanguageLevel = useTranslations('languageLevel');
   const tKnowledgeLevel = useTranslations('knowledgeLevel');
   const locale = useLocale();
+  const format = useDateFormatters();
   const router = useRouter();
 
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -88,11 +91,7 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
   ];
 
   const addedOn = t('detail.addedOn', {
-    date: new Intl.DateTimeFormat(locale, {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    }).format(new Date(data.createdAt)),
+    date: format.longDate(data.createdAt),
   });
 
   function openCreate() {
@@ -177,6 +176,8 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
               </InfoRow>
             </CardContent>
           </Card>
+
+          <StudentLessonsCard studentId={data.id} />
 
           <Card>
             <CardHeader>

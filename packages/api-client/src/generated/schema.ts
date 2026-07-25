@@ -502,6 +502,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lessons/{lessonId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Soft-delete a lesson
+         * @description Idempotent. A series lesson is also detached so it is not regenerated.
+         */
+        delete: operations["LessonsController_remove"];
+        options?: never;
+        head?: never;
+        /**
+         * Correct a booked lesson
+         * @description Notes and price. Sending notes:null clears the note; price and currency travel together. Moving a lesson uses /reschedule.
+         */
+        patch: operations["LessonsController_update"];
+        trace?: never;
+    };
     "/api/lessons/{lessonId}/reschedule": {
         parameters: {
             query?: never;
@@ -586,6 +610,112 @@ export interface paths {
          * @description Changing a schedule field regenerates future SCHEDULED lessons; a price-only change leaves existing lessons untouched.
          */
         patch: operations["SeriesController_update"];
+        trace?: never;
+    };
+    "/api/packages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List lesson packages */
+        get: operations["PackagesController_list"];
+        put?: never;
+        /**
+         * Buy a lesson package
+         * @description Creates the package, its opening purchase entry, per-member shares for a group, and (with a schedule) the recurring series behind it.
+         */
+        post: operations["PackagesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/packages/{packageId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a package
+         * @description Balances, the effective total and payment status are derived from the credit ledger and recorded payments, never from a stored counter.
+         */
+        get: operations["PackagesController_getDetail"];
+        put?: never;
+        post?: never;
+        /**
+         * Soft-delete a package
+         * @description Idempotent. The credit ledger history is retained.
+         */
+        delete: operations["PackagesController_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/packages/{packageId}/ledger": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Credit ledger history
+         * @description Append-only entries explaining why the balance is what it is.
+         */
+        get: operations["PackagesController_getLedger"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/packages/{packageId}/adjust": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Manually adjust a package balance
+         * @description Appends a signed correction entry; never edits history.
+         */
+        post: operations["PackagesController_adjust"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List recorded payments */
+        get: operations["PaymentsController_list"];
+        put?: never;
+        /**
+         * Record a payment received
+         * @description Money only. Lesson credits live in the package ledger and are not touched here. Applies the amount to the member share when a package is given.
+         */
+        post: operations["PaymentsController_record"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
 }
@@ -704,7 +834,7 @@ export interface components {
                     email: string;
                 } | null;
                 /** @enum {string} */
-                entity: "STUDENT" | "PARENT" | "GROUP" | "TEACHER" | "ENROLLMENT" | "WORKSPACE" | "LESSON" | "LESSON_SERIES";
+                entity: "STUDENT" | "PARENT" | "GROUP" | "TEACHER" | "ENROLLMENT" | "WORKSPACE" | "LESSON" | "LESSON_SERIES" | "LESSON_PACKAGE" | "PAYMENT";
                 entityId: string;
                 /** @enum {string} */
                 action: "CREATE" | "UPDATE" | "DELETE" | "RESTORE";
@@ -1355,6 +1485,7 @@ export interface components {
                 /** Format: date-time */
                 completedAt: string | null;
                 notes: string | null;
+                cancellationDeadlineHours: number;
                 student: {
                     /** Format: uuid */
                     id: string;
@@ -1383,25 +1514,23 @@ export interface components {
             /** Format: uuid */
             enrollmentId?: string | null;
             /** Format: uuid */
+            studentId?: string | null;
+            /** Format: uuid */
             groupId?: string | null;
             /** Format: uuid */
-            teacherId: string;
+            teacherId?: string;
             startsAt: string[];
             durationMin: number;
-            priceMinor: number;
+            priceMinor?: number;
             /** @enum {string} */
-            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+            currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
             notes?: string | null;
         };
-        RescheduleLessonDto: {
-            /** Format: date-time */
-            startsAtUtc: string;
-            durationMin?: number;
-            /**
-             * @default this
-             * @enum {string}
-             */
-            scope: "this" | "this_and_following";
+        UpdateLessonDto: {
+            notes?: string | null;
+            priceMinor?: number;
+            /** @enum {string} */
+            currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
         };
         LessonDto: {
             /** Format: uuid */
@@ -1435,6 +1564,7 @@ export interface components {
             /** Format: date-time */
             completedAt: string | null;
             notes: string | null;
+            cancellationDeadlineHours: number;
             student: {
                 /** Format: uuid */
                 id: string;
@@ -1457,6 +1587,16 @@ export interface components {
             updatedAt: string;
             /** Format: date-time */
             deletedAt: string | null;
+        };
+        RescheduleLessonDto: {
+            /** Format: date-time */
+            startsAtUtc: string;
+            durationMin?: number;
+            /**
+             * @default this
+             * @enum {string}
+             */
+            scope: "this" | "this_and_following";
         };
         TransitionLessonDto: {
             /** @enum {string} */
@@ -1522,16 +1662,18 @@ export interface components {
             /** Format: uuid */
             enrollmentId?: string | null;
             /** Format: uuid */
+            studentId?: string | null;
+            /** Format: uuid */
             groupId?: string | null;
             /** Format: uuid */
-            teacherId: string;
+            teacherId?: string;
             weekdays: number[];
             localTime: string;
             timezone: string;
             durationMin: number;
-            priceMinor: number;
+            priceMinor?: number;
             /** @enum {string} */
-            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+            currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
             /** Format: date-time */
             startDate: string;
         };
@@ -1592,6 +1734,275 @@ export interface components {
             currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
             /** Format: date-time */
             startDate?: string;
+        };
+        PackageListDto: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                workspaceId: string;
+                /** Format: uuid */
+                studentId: string | null;
+                /** Format: uuid */
+                groupId: string | null;
+                name: string | null;
+                /** @enum {string} */
+                sizingMode: "FIXED_COUNT" | "BY_PERIOD";
+                lessonsTotal: number;
+                /** Format: date-time */
+                endDate: string | null;
+                pricePerLessonMinorSnapshot: number;
+                totalPriceMinorSnapshot: number;
+                effectiveTotalMinor: number;
+                remainingCredits: number;
+                consumedCredits: number;
+                paidMinor: number;
+                /** @enum {string} */
+                currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+                /** @enum {string} */
+                paymentStatus: "PENDING" | "PARTIAL" | "PAID";
+                /** Format: date-time */
+                purchasedAt: string;
+                /** Format: date-time */
+                expiresAt: string | null;
+                notes: string | null;
+                student: {
+                    /** Format: uuid */
+                    id: string;
+                    fullName: string;
+                } | null;
+                group: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                } | null;
+                shares: {
+                    /** Format: uuid */
+                    id: string;
+                    /** Format: uuid */
+                    enrollmentId: string;
+                    student: {
+                        /** Format: uuid */
+                        id: string;
+                        fullName: string;
+                    };
+                    oweMinor: number;
+                    paidMinor: number;
+                    /** @enum {string} */
+                    paymentStatus: "PENDING" | "PARTIAL" | "PAID";
+                }[];
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+                /** Format: date-time */
+                deletedAt: string | null;
+            }[];
+            page: number;
+            pageSize: number;
+            total: number;
+            totalPages: number;
+        };
+        PackageDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            workspaceId: string;
+            /** Format: uuid */
+            studentId: string | null;
+            /** Format: uuid */
+            groupId: string | null;
+            name: string | null;
+            /** @enum {string} */
+            sizingMode: "FIXED_COUNT" | "BY_PERIOD";
+            lessonsTotal: number;
+            /** Format: date-time */
+            endDate: string | null;
+            pricePerLessonMinorSnapshot: number;
+            totalPriceMinorSnapshot: number;
+            effectiveTotalMinor: number;
+            remainingCredits: number;
+            consumedCredits: number;
+            paidMinor: number;
+            /** @enum {string} */
+            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+            /** @enum {string} */
+            paymentStatus: "PENDING" | "PARTIAL" | "PAID";
+            /** Format: date-time */
+            purchasedAt: string;
+            /** Format: date-time */
+            expiresAt: string | null;
+            notes: string | null;
+            student: {
+                /** Format: uuid */
+                id: string;
+                fullName: string;
+            } | null;
+            group: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
+            shares: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                enrollmentId: string;
+                student: {
+                    /** Format: uuid */
+                    id: string;
+                    fullName: string;
+                };
+                oweMinor: number;
+                paidMinor: number;
+                /** @enum {string} */
+                paymentStatus: "PENDING" | "PARTIAL" | "PAID";
+            }[];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            deletedAt: string | null;
+        };
+        CreditLedgerDto: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                packageId: string;
+                /** Format: uuid */
+                enrollmentId: string | null;
+                /** Format: uuid */
+                lessonId: string | null;
+                delta: number;
+                /** @enum {string} */
+                type: "purchase" | "lesson_completed" | "late_cancellation" | "teacher_cancellation_refund" | "manual_adjustment";
+                note: string | null;
+                /** Format: date-time */
+                createdAt: string;
+            }[];
+            balance: number;
+        };
+        CreatePackageDto: {
+            /** Format: uuid */
+            studentId?: string | null;
+            /** Format: uuid */
+            groupId?: string | null;
+            name?: string | null;
+            /**
+             * @default FIXED_COUNT
+             * @enum {string}
+             */
+            sizingMode: "FIXED_COUNT" | "BY_PERIOD";
+            lessonsTotal?: number;
+            /** Format: date-time */
+            endDate?: string;
+            pricePerLessonMinor: number;
+            /** @enum {string} */
+            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+            /** Format: date-time */
+            purchasedAt?: string;
+            /** Format: date-time */
+            expiresAt?: string | null;
+            notes?: string | null;
+            schedule?: {
+                weekdays: number[];
+                localTime: string;
+                timezone: string;
+                durationMin: number;
+                /** Format: date-time */
+                startDate: string;
+            } | null;
+        };
+        AdjustBalanceDto: {
+            delta: number;
+            note: string;
+        };
+        PaymentListDto: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                workspaceId: string;
+                /** Format: uuid */
+                enrollmentId: string;
+                /** Format: uuid */
+                packageId: string | null;
+                amountMinor: number;
+                /** @enum {string} */
+                currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+                /** @enum {string} */
+                method: "CASH" | "BANK_TRANSFER" | "OTHER" | "CARD";
+                /** @enum {string} */
+                status: "PENDING" | "PAID" | "FAILED" | "REFUNDED";
+                provider: string;
+                externalId: string | null;
+                /** Format: date-time */
+                paidAt: string;
+                note: string | null;
+                student: {
+                    /** Format: uuid */
+                    id: string;
+                    fullName: string;
+                };
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+            }[];
+            page: number;
+            pageSize: number;
+            total: number;
+            totalPages: number;
+        };
+        RecordPaymentDto: {
+            /** Format: uuid */
+            enrollmentId: string;
+            /** Format: uuid */
+            packageId?: string | null;
+            amountMinor: number;
+            /** @enum {string} */
+            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+            /**
+             * @default CASH
+             * @enum {string}
+             */
+            method: "CASH" | "BANK_TRANSFER" | "OTHER" | "CARD";
+            /** Format: date-time */
+            paidAt?: string;
+            note?: string | null;
+        };
+        PaymentDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            workspaceId: string;
+            /** Format: uuid */
+            enrollmentId: string;
+            /** Format: uuid */
+            packageId: string | null;
+            amountMinor: number;
+            /** @enum {string} */
+            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+            /** @enum {string} */
+            method: "CASH" | "BANK_TRANSFER" | "OTHER" | "CARD";
+            /** @enum {string} */
+            status: "PENDING" | "PAID" | "FAILED" | "REFUNDED";
+            provider: string;
+            externalId: string | null;
+            /** Format: date-time */
+            paidAt: string;
+            note: string | null;
+            student: {
+                /** Format: uuid */
+                id: string;
+                fullName: string;
+            };
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
         };
     };
     responses: never;
@@ -1859,7 +2270,7 @@ export interface operations {
             query?: {
                 page?: number;
                 pageSize?: number;
-                entity?: "STUDENT" | "PARENT" | "GROUP" | "TEACHER" | "ENROLLMENT" | "WORKSPACE" | "LESSON" | "LESSON_SERIES";
+                entity?: "STUDENT" | "PARENT" | "GROUP" | "TEACHER" | "ENROLLMENT" | "WORKSPACE" | "LESSON" | "LESSON_SERIES" | "LESSON_PACKAGE" | "PAYMENT";
                 entityId?: string;
                 actorId?: string;
                 action?: "CREATE" | "UPDATE" | "DELETE" | "RESTORE";
@@ -2760,6 +3171,7 @@ export interface operations {
                 to: string;
                 teacherId?: string;
                 enrollmentId?: string;
+                studentId?: string;
                 groupId?: string;
                 status?: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED";
             };
@@ -2801,6 +3213,58 @@ export interface operations {
                 };
             };
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    LessonsController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    LessonsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateLessonDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonDto"];
+                };
+            };
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3037,6 +3501,245 @@ export interface operations {
                 };
             };
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    PackagesController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                studentId?: string;
+                groupId?: string;
+                paymentStatus?: "PENDING" | "PARTIAL" | "PAID";
+                state?: "active" | "deleted" | "all";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PackageListDto"];
+                };
+            };
+        };
+    };
+    PackagesController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePackageDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PackageDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    PackagesController_getDetail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                packageId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PackageDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    PackagesController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                packageId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PackagesController_getLedger: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                packageId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreditLedgerDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    PackagesController_adjust: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                packageId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdjustBalanceDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PackageDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    PaymentsController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                enrollmentId?: string;
+                packageId?: string;
+                studentId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentListDto"];
+                };
+            };
+        };
+    };
+    PaymentsController_record: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordPaymentDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

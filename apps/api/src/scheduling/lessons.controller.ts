@@ -1,7 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   ParseUUIDPipe,
   Patch,
@@ -12,6 +15,7 @@ import {
   ApiBearerAuth,
   ApiConflictResponse,
   ApiCreatedResponse,
+  ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -29,6 +33,7 @@ import {
   ListLessonsQueryDto,
   RescheduleLessonDto,
   TransitionLessonDto,
+  UpdateLessonDto,
 } from './dto/scheduling.dto';
 import { LessonsService } from './lessons.service';
 
@@ -69,6 +74,39 @@ export class LessonsController {
     @Query() query: ForceQueryDto,
   ): Promise<LessonListDto> {
     return this.lessons.create(user, dto, query.force);
+  }
+
+  @Patch(':lessonId')
+  @ApiOperation({
+    summary: 'Correct a booked lesson',
+    description:
+      'Notes and price. Sending notes:null clears the note; price and currency ' +
+      'travel together. Moving a lesson uses /reschedule.',
+  })
+  @ApiOkResponse({ type: LessonDto })
+  @ApiNotFoundResponse({ type: ApiErrorDto })
+  @ZodSerializerDto(LessonDto)
+  update(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('lessonId', ParseUUIDPipe) lessonId: string,
+    @Body() dto: UpdateLessonDto,
+  ): Promise<LessonDto> {
+    return this.lessons.update(user, lessonId, dto);
+  }
+
+  @Delete(':lessonId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Soft-delete a lesson',
+    description:
+      'Idempotent. A series lesson is also detached so it is not regenerated.',
+  })
+  @ApiNoContentResponse()
+  remove(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('lessonId', ParseUUIDPipe) lessonId: string,
+  ): Promise<void> {
+    return this.lessons.remove(user, lessonId);
   }
 
   @Patch(':lessonId/reschedule')

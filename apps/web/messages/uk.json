@@ -80,7 +80,12 @@
     "LESSON_SERIES_NOT_FOUND": "Повторюваний шаблон не знайдено.",
     "SCHEDULE_CONFLICT": "У викладача вже є урок у цей час.",
     "INVALID_LESSON_TRANSITION": "Така зміна статусу уроку недопустима.",
-    "TEACHER_NOT_FOUND": "Викладача не знайдено."
+    "TEACHER_NOT_FOUND": "Викладача не знайдено.",
+    "PACKAGE_NOT_FOUND": "Пакет не знайдено.",
+    "PAYMENT_NOT_FOUND": "Платіж не знайдено.",
+    "NO_ACTIVE_PACKAGE": "Немає активного пакета, який покриває цей урок.",
+    "INVALID_PACKAGE_PLAN": "Некоректні параметри пакета.",
+    "CURRENCY_MISMATCH": "Валюта не збігається з валютою запису."
   },
   "validation": {
     "emailInvalid": "Введіть коректну адресу ел. пошти",
@@ -103,7 +108,21 @@
     "priceInvalid": "Введіть суму, наприклад 1500 або 1500,50",
     "priceRequired": "Введіть ціну",
     "deadlineRange": "Введіть кількість годин від 0 до 336",
-    "invalid": "Некоректне значення"
+    "invalid": "Некоректне значення",
+    "durationRange": "Тривалість — від 5 до 720 хвилин",
+    "dateRequired": "Оберіть дату",
+    "timeInvalid": "Введіть час у форматі 00:00",
+    "weekdaysRequired": "Оберіть щонайменше один день",
+    "lessonsTotalRange": "Кількість уроків — від 1 до 500",
+    "scheduleRequiredForPeriod": "Для пакета за періодом потрібен розклад",
+    "amountPositive": "Сума має бути більшою за нуль",
+    "deltaInvalid": "Введіть ціле число уроків",
+    "deltaNotZero": "Зміна не може бути нульовою",
+    "deltaRange": "Зміна — від -500 до 500",
+    "noteRequired": "Вкажіть причину",
+    "studentRequired": "Оберіть учня",
+    "groupRequired": "Оберіть групу",
+    "intRange": "Введіть число від {min} до {max}"
   },
   "pagination": {
     "label": "Сторінки",
@@ -225,8 +244,15 @@
     },
     "dashboard": {
       "welcome": "Вітаємо, {name}!",
+      "today": "Сьогодні",
+      "lessonsToday": "Уроків сьогодні",
+      "lessonsWeek": "Цього тижня",
+      "noToday": "На сьогодні уроків немає.",
+      "openCalendar": "Відкрити календар",
       "emptyTitle": "Ваш простір готовий",
-      "emptyDescription": "Учні, групи, календар і фінанси з'являться тут на наступних етапах. А поки роздивіться навігацію та налаштування акаунта."
+      "emptyDescription": "Учні, групи, календар і фінанси з'являться тут на наступних етапах. А поки роздивіться навігацію та налаштування акаунта.",
+      "noneThisWeek": "На цьому тижні уроків немає.",
+      "noneThisWeekHint": "Створіть урок або налаштуйте регулярний розклад."
     }
   },
   "students": {
@@ -721,7 +747,11 @@
       "title": "Календар",
       "subtitle": "Уроки у вашому просторі.",
       "newLesson": "Новий урок",
-      "empty": "У цьому діапазоні немає уроків."
+      "empty": "У цьому діапазоні немає уроків.",
+      "loading": "Оновлення…",
+      "filterTeacher": "Викладач",
+      "filterStatus": "Статус",
+      "filterAll": "Усі"
     },
     "toolbar": {
       "today": "Сьогодні",
@@ -753,7 +783,25 @@
       "cancel": "Скасувати урок",
       "reschedule": "Перенести",
       "reactivate": "Відновити",
-      "close": "Закрити"
+      "notes": "Нотатки до уроку",
+      "notesPlaceholder": "Напр.: пройшли Past Simple, ДЗ стор. 42",
+      "saveNotes": "Зберегти нотатку",
+      "close": "Закрити",
+      "rescheduleTitle": "Перенести урок",
+      "rescheduleSubtitle": "Оберіть новий час. Конфлікт можна перекрити вручну.",
+      "newTime": "Новий час",
+      "scope": "Що переносимо",
+      "scopeThis": "Лише цей урок",
+      "scopeFollowing": "Цей і наступні",
+      "delete": "Видалити урок",
+      "deleteTitle": "Видалити урок?",
+      "deleteDescription": "Урок зникне з календаря. Якщо він зі шаблону — не буде згенерований знову.",
+      "deadlineLate": "До уроку {hours} год, дедлайн {deadline} год — це пізнє скасування.",
+      "deadlineOnTime": "До уроку {hours} год, дедлайн {deadline} год — скасування вчасно.",
+      "deadlineStarted": "Урок уже розпочався — це пізнє скасування.",
+      "toastRescheduled": "Урок перенесено.",
+      "toastDeleted": "Урок видалено.",
+      "toastUpdated": "Урок оновлено."
     },
     "conflict": {
       "title": "Конфлікт часу",
@@ -763,16 +811,32 @@
     "lessonForm": {
       "createTitle": "Новий урок",
       "createSubtitle": "Заброньуйте один або кілька уроків.",
-      "enrollment": "Запис учня",
-      "enrollmentPlaceholder": "Оберіть запис",
+      "student": "Учень",
+      "studentPlaceholder": "Оберіть учня",
+      "studentSearch": "Пошук учнів…",
+      "studentEmpty": "Учня не знайдено",
+      "studentHint": "Ціна підставиться зі ставки учня — її можна змінити.",
+      "teacher": "Викладач",
+      "teacherPlaceholder": "Оберіть викладача",
+      "teacherSearch": "Пошук викладачів…",
+      "teacherEmpty": "Викладача не знайдено",
       "date": "Дата й час",
       "duration": "Тривалість (хв)",
       "price": "Ціна за урок",
+      "pricePlaceholder": "Зі ставки учня",
+      "notes": "Нотатки до уроку",
+      "notesPlaceholder": "Напр.: пройшли Past Simple, ДЗ стор. 42",
       "addDate": "Додати ще дату",
       "removeDate": "Прибрати",
-      "submit": "Створити",
-      "cancel": "Скасувати",
-      "noEnrollments": "Спершу створіть запис."
+      "submit": "Створити"
+    },
+    "studentLessons": {
+      "title": "Уроки",
+      "addLesson": "Додати урок",
+      "upcoming": "Найближчі ({count})",
+      "past": "Минулі ({count})",
+      "noUpcoming": "Запланованих уроків немає.",
+      "noPast": "Проведених уроків ще немає."
     },
     "cancelDialog": {
       "title": "Скасувати урок",
@@ -782,6 +846,7 @@
       "uncharged": "Не списувати (безкоштовно)",
       "by": "Хто скасував",
       "reason": "Причина (необов'язково)",
+      "billingPending": "Вибір тарифікації зберігається вже зараз, але баланси й повернення почнуть працювати з появою розділу «Фінанси».",
       "submit": "Підтвердити скасування",
       "cancel": "Назад"
     },
@@ -795,14 +860,26 @@
       "duration": "Тривалість",
       "target": "Учень",
       "delete": "Видалити",
-      "deleteConfirm": "Видалити цей шаблон і його майбутні уроки?"
+      "deleteConfirm": "Видалити цей шаблон і його майбутні уроки?",
+      "toastCreated": "Шаблон створено.",
+      "toastUpdated": "Шаблон оновлено.",
+      "toastDeleted": "Шаблон видалено.",
+      "deleteTitle": "Видалити шаблон?",
+      "minutes": "{count} хв"
     },
     "seriesForm": {
       "createTitle": "Новий шаблон",
       "createSubtitle": "Автоматично генеруйте повторювані уроки.",
       "editTitle": "Редагувати шаблон",
       "editSubtitle": "Зміна розкладу перегенерує майбутні уроки.",
-      "enrollment": "Запис учня",
+      "student": "Учень",
+      "studentPlaceholder": "Оберіть учня",
+      "studentSearch": "Пошук учнів…",
+      "studentEmpty": "Учня не знайдено",
+      "teacher": "Викладач",
+      "teacherPlaceholder": "Оберіть викладача",
+      "teacherSearch": "Пошук викладачів…",
+      "teacherEmpty": "Викладача не знайдено",
       "weekdays": "Дні тижня",
       "time": "Локальний час",
       "timezone": "Часовий пояс",
@@ -891,5 +968,131 @@
       "submitCreate": "Створити викладача",
       "submitEdit": "Зберегти зміни"
     }
+  },
+  "packages": {
+    "title": "Фінанси",
+    "subtitle": "Пакети уроків, баланси та оплати.",
+    "add": "Новий пакет",
+    "empty": "Пакетів ще немає.",
+    "emptyHint": "Створіть пакет, щоб вести баланс уроків і оплати.",
+    "tableCaption": "Пакети уроків",
+    "paymentStatus": {
+      "PAID": "Оплачено",
+      "PARTIAL": "Частково",
+      "PENDING": "Не оплачено"
+    },
+    "paymentState": {
+      "PAID": "Зараховано",
+      "PENDING": "Очікує",
+      "FAILED": "Помилка",
+      "REFUNDED": "Повернено"
+    },
+    "method": {
+      "CASH": "Готівка",
+      "BANK_TRANSFER": "Переказ",
+      "OTHER": "Інше",
+      "CARD": "Картка"
+    },
+    "entryType": {
+      "purchase": "Придбання пакета",
+      "lesson_completed": "Урок проведено",
+      "late_cancellation": "Пізнє скасування",
+      "teacher_cancellation_refund": "Скасування без оплати",
+      "manual_adjustment": "Ручна корекція"
+    },
+    "columns": {
+      "package": "Пакет",
+      "owner": "Учень або група",
+      "balance": "Баланс",
+      "total": "Сума",
+      "status": "Оплата",
+      "actions": "Дії"
+    },
+    "card": {
+      "remaining": "Залишок уроків",
+      "of": "з {total}",
+      "effectiveTotal": "З урахуванням пропущених",
+      "paid": "Сплачено",
+      "purchasedAt": "Придбано {date}"
+    },
+    "detail": {
+      "historyTitle": "Історія",
+      "historySubtitle": "Кожен рух балансу — окремий запис. Нічого не переписується.",
+      "sharesTitle": "Оплати учасників групи",
+      "recordPayment": "Внести оплату",
+      "adjust": "Скоригувати баланс",
+      "paymentsTitle": "Платежі",
+      "noPayments": "Платежів ще немає.",
+      "noEntries": "Записів ще немає.",
+      "owes": "Має сплатити"
+    },
+    "form": {
+      "createTitle": "Новий пакет",
+      "createSubtitle": "Пакет одразу нараховує уроки на баланс.",
+      "targetKind": "Для кого",
+      "targetStudent": "Учень",
+      "targetGroup": "Група",
+      "student": "Учень",
+      "studentPlaceholder": "Оберіть учня",
+      "studentSearch": "Пошук учнів…",
+      "studentEmpty": "Учня не знайдено",
+      "group": "Група",
+      "groupPlaceholder": "Оберіть групу",
+      "name": "Назва (необовʼязково)",
+      "namePlaceholder": "напр. Осінь, 8 уроків",
+      "sizingMode": "Розмір пакета",
+      "fixedCount": "Фіксована кількість",
+      "byPeriod": "За періодом",
+      "lessonsTotal": "Кількість уроків",
+      "endDate": "Діє до",
+      "pricePerLesson": "Ціна за урок",
+      "currency": "Валюта",
+      "notes": "Нотатки",
+      "scheduleEnabled": "Створити регулярний розклад",
+      "scheduleHint": "Уроки згенеруються автоматично за цим розкладом.",
+      "weekdays": "Дні тижня",
+      "time": "Час",
+      "timezone": "Часовий пояс",
+      "duration": "Тривалість (хв)",
+      "submit": "Створити пакет",
+      "period": "Період дії"
+    },
+    "payment": {
+      "title": "Внести оплату",
+      "subtitle": "Записуємо гроші, які вже отримані.",
+      "student": "Учень",
+      "amount": "Сума",
+      "method": "Спосіб",
+      "note": "Нотатка",
+      "submit": "Зберегти оплату"
+    },
+    "adjustDialog": {
+      "title": "Скоригувати баланс",
+      "subtitle": "Додається новий запис — історія не переписується.",
+      "delta": "Зміна (уроків)",
+      "deltaHint": "Додатне число нараховує, відʼємне — списує.",
+      "note": "Причина",
+      "submit": "Застосувати"
+    },
+    "toasts": {
+      "created": "Пакет створено.",
+      "paymentRecorded": "Оплату записано.",
+      "adjusted": "Баланс скориговано.",
+      "deleted": "Пакет видалено."
+    },
+    "deleteDialog": {
+      "title": "Видалити пакет?",
+      "description": "Історія балансу збережеться, але пакет зникне зі списку."
+    }
+  },
+  "datePicker": {
+    "pickDate": "Оберіть дату",
+    "pickRange": "Оберіть період",
+    "pickTime": "Оберіть час",
+    "clear": "Очистити",
+    "pickDateFirst": "Спершу оберіть дату",
+    "pickRangeEnd": "Оберіть кінець періоду",
+    "nights": "{count, plural, one {# день} few {# дні} many {# днів} other {# дня}}",
+    "pickSlot": "Оберіть дату й час"
   }
 }

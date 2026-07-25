@@ -24,6 +24,7 @@ import { errorMessageKey } from '@/lib/api/error-message';
 import { useDeleteTeacherMutation, useTeacherQuery } from '@/lib/api/teachers';
 import type { GatewayError } from '@/lib/auth/client';
 import { formatMoneyDisplay } from '@/lib/money';
+import { useDateFormatters } from '@/lib/i18n/format';
 import { TeacherFormDialog } from './teacher-form-dialog';
 import { TeacherStatusBadge } from './teacher-status-badge';
 
@@ -35,6 +36,7 @@ export function TeacherDetail({ teacherId }: { teacherId: string }) {
   const tCommon = useTranslations('common');
   const tErrors = useTranslations('errors');
   const locale = useLocale();
+  const format = useDateFormatters();
   const router = useRouter();
 
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -58,11 +60,7 @@ export function TeacherDetail({ teacherId }: { teacherId: string }) {
 
   const data = teacher.data;
   const addedOn = tDetail('addedOn', {
-    date: new Intl.DateTimeFormat(locale, {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    }).format(new Date(data.createdAt)),
+    date: format.longDate(data.createdAt),
   });
 
   async function onDelete() {

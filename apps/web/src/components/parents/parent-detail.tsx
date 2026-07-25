@@ -10,7 +10,7 @@ import {
   Trash2Icon,
   UsersRoundIcon,
 } from 'lucide-react';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { BackButton } from '@/components/app/back-button';
 import { ConfirmDialog } from '@/components/app/confirm-dialog';
@@ -24,6 +24,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/u
 import { errorMessageKey } from '@/lib/api/error-message';
 import { useDeleteParentMutation, useParentQuery } from '@/lib/api/parents';
 import type { GatewayError } from '@/lib/auth/client';
+import { useDateFormatters } from '@/lib/i18n/format';
 import { ParentFormDialog } from './parent-form-dialog';
 
 export function ParentDetailView({ parentId }: { parentId: string }) {
@@ -31,7 +32,7 @@ export function ParentDetailView({ parentId }: { parentId: string }) {
   const tCommon = useTranslations('common');
   const tErrors = useTranslations('errors');
   const tSubject = useTranslations('subject');
-  const locale = useLocale();
+  const format = useDateFormatters();
   const router = useRouter();
 
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -57,11 +58,7 @@ export function ParentDetailView({ parentId }: { parentId: string }) {
   const data = parent.data;
 
   const addedOn = t('detail.addedOn', {
-    date: new Intl.DateTimeFormat(locale, {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    }).format(new Date(data.createdAt)),
+    date: format.longDate(data.createdAt),
   });
 
   async function onDelete() {

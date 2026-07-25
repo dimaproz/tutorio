@@ -165,6 +165,122 @@ describe('Stage 3: scheduling — series, lessons, reschedule, cancel (e2e)', ()
       .expect(409);
   });
 
+  it('books by studentId alone, creating the enrollment behind the scenes', async () => {
+    // A brand-new student with no enrollment — the tutor-facing path.
+    const student = await server()
+      .post('/api/students')
+      .set('Authorization', auth(owner))
+      .send({
+        fullName: 'Walk-in Student',
+        timezone: 'Europe/Kyiv',
+        hourlyRateMinor: 42000,
+        currency: 'UAH',
+      })
+      .expect(201);
+
+    // Early morning UTC, clear of the 10:00 Kyiv series materialized above.
+    const start = new Date(Date.now() + 5 * DAY_MS);
+    start.setUTCHours(3, 0, 0, 0);
+
+    const created = await server()
+      .post('/api/lessons')
+      .set('Authorization', auth(owner))
+      .send({
+        studentId: student.body.id,
+        startsAt: [start.toISOString()],
+        durationMin: 60,
+      })
+      .expect(201);
+
+    const lesson = created.body.items[0];
+    expect(lesson.student.id).toBe(student.body.id);
+    // Teacher auto-resolved (the workspace has exactly one) and the price came
+    // from the student's own hourly rate.
+    expect(lesson.teacherId).toBe(ownerTeacherId);
+    expect(lesson.priceMinor).toBe(42000);
+    expect(lesson.currency).toBe('UAH');
+    expect(lesson.enrollmentId).not.toBeNull();
+
+    // Booking the same student again reuses that enrollment instead of piling
+    // up duplicates.
+    const second = await server()
+      .post('/api/lessons')
+      .set('Authorization', auth(owner))
+      .send({
+        studentId: student.body.id,
+        startsAt: [new Date(start.getTime() + 2 * 60 * 60_000).toISOString()],
+        durationMin: 60,
+      })
+      .expect(201);
+    expect(second.body.items[0].enrollmentId).toBe(lesson.enrollmentId);
+
+    // Per-lesson notes round-trip.
+    const noted = await server()
+      .patch(`/api/lessons/${lesson.id}`)
+      .set('Authorization', auth(owner))
+      .send({ notes: 'Covered Past Simple; homework p.42' })
+      .expect(200);
+    expect(noted.body.notes).toBe('Covered Past Simple; homework p.42');
+  });
+
+  it('corrects a booked lesson and deletes it', async () => {
+    const student = await server()
+      .post('/api/students')
+      .set('Authorization', auth(owner))
+      .send({ fullName: 'Correctable Student', timezone: 'Europe/Kyiv' })
+      .expect(201);
+
+    const start = new Date(Date.now() + 6 * DAY_MS);
+    start.setUTCHours(2, 0, 0, 0);
+    const created = await server()
+      .post('/api/lessons')
+      .set('Authorization', auth(owner))
+      .send({
+        studentId: student.body.id,
+        startsAt: [start.toISOString()],
+        durationMin: 60,
+        priceMinor: 30000,
+        currency: 'UAH',
+      })
+      .expect(201);
+    const lesson = created.body.items[0];
+
+    // The cancellation deadline travels with the lesson so the cancel dialog can
+    // tell the tutor whether cancelling now is late.
+    expect(lesson.cancellationDeadlineHours).toBe(24);
+
+    const fixed = await server()
+      .patch(`/api/lessons/${lesson.id}`)
+      .set('Authorization', auth(owner))
+      .send({ priceMinor: 55000, currency: 'UAH', notes: 'Rate corrected' })
+      .expect(200);
+    expect(fixed.body.priceMinor).toBe(55000);
+    expect(fixed.body.notes).toBe('Rate corrected');
+
+    await server()
+      .delete(`/api/lessons/${lesson.id}`)
+      .set('Authorization', auth(owner))
+      .expect(204);
+
+    // Idempotent: deleting again is still a no-op.
+    await server()
+      .delete(`/api/lessons/${lesson.id}`)
+      .set('Authorization', auth(owner))
+      .expect(204);
+
+    const remaining = await server()
+      .get('/api/lessons')
+      .query({
+        from: new Date(Date.now() + 5 * DAY_MS).toISOString(),
+        to: new Date(Date.now() + 7 * DAY_MS).toISOString(),
+      })
+      .set('Authorization', auth(owner))
+      .expect(200);
+    expect(
+      remaining.body.items.some((item: { id: string }) => item.id === lesson.id),
+    ).toBe(false);
+  });
+
   it('rejects a double-booking with 409 unless forced', async () => {
     const start = new Date(Date.now() + 3 * DAY_MS);
     start.setUTCHours(8, 0, 0, 0);

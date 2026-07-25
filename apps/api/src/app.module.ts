@@ -13,6 +13,7 @@ import { validateEnv } from './config/env';
 import { EnrollmentsModule } from './enrollments/enrollments.module';
 import { GroupsModule } from './groups/groups.module';
 import { HealthModule } from './health/health.module';
+import { PackagesModule } from './packages/packages.module';
 import { ParentsModule } from './parents/parents.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { SchedulingModule } from './scheduling/scheduling.module';
@@ -38,6 +39,7 @@ import { WorkspacesModule } from './workspaces/workspaces.module';
     GroupsModule,
     EnrollmentsModule,
     SchedulingModule,
+    PackagesModule,
   ],
   providers: [
     { provide: APP_PIPE, useClass: ZodValidationPipe },

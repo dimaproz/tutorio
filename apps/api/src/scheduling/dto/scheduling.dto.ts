@@ -9,12 +9,14 @@ import {
   listLessonsQuerySchema,
   rescheduleLessonSchema,
   transitionLessonSchema,
+  updateLessonSchema,
   updateLessonSeriesSchema,
 } from '@tutorio/validation';
 import { createZodDto } from 'nestjs-zod';
 
 // Request DTOs — validation rules live in @tutorio/validation only.
 export class CreateLessonDto extends createZodDto(createLessonSchema) {}
+export class UpdateLessonDto extends createZodDto(updateLessonSchema) {}
 export class RescheduleLessonDto extends createZodDto(rescheduleLessonSchema) {}
 export class TransitionLessonDto extends createZodDto(transitionLessonSchema) {}
 export class ListLessonsQueryDto extends createZodDto(listLessonsQuerySchema) {}

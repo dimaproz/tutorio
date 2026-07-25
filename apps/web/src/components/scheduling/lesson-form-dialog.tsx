@@ -1,186 +1,264 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { PlusIcon, Trash2Icon } from 'lucide-react';
+import { useEffect, useMemo } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
+import {
+  BanknoteIcon,
+  CalendarClockIcon,
+  PlusIcon,
+  StickyNoteIcon,
+  Trash2Icon,
+  UserRoundIcon,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import type { CreateLessonDto } from '@tutorio/validation';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Field, FieldLabel } from '@/components/ui/field';
+import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
+import { Textarea } from '@/components/ui/textarea';
+import { FormSection } from '@/components/app/form-section';
+import { MoneyInput } from '@/components/app/money-input';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { useEnrollmentsQuery } from '@/lib/api/enrollments';
+  DateTimePicker,
+  EntityFormDialog,
+  EntityPicker,
+  FormActions,
+} from '@/components/shared';
+import {
+  buildCreateLessonDto,
+  effectiveTeacherId,
+  EMPTY_LESSON_FORM,
+  lessonFormSchema,
+  prefillPriceMinor,
+  type LessonFormValues,
+} from '@/features/scheduling/model/lesson-form';
+import { errorMessageKey } from '@/lib/api/error-message';
 import { useCreateLessonMutation } from '@/lib/api/scheduling';
-import { formatPriceInput, parsePriceInput } from '@/lib/money';
-
-// datetime-local value ("2026-07-24T10:00") → ISO in the browser's timezone.
-function localInputToIso(value: string): string {
-  return new Date(value).toISOString();
-}
+import { useStudentsQuery } from '@/lib/api/students';
+import { useTeachersQuery } from '@/lib/api/teachers';
+import { toLocalDateTimeInput } from '@/lib/datetime';
+import { makeZodErrorMap } from '@/lib/forms/error-map';
+import { scrollToFirstError } from '@/lib/forms/focus-error';
+import { formatPriceInput } from '@/lib/money';
 
 export function LessonFormDialog({
   open,
   onOpenChange,
   initialStart,
+  lockedStudentId,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialStart?: Date;
+  /** Set when opened from a student page — the student is fixed. */
+  lockedStudentId?: string;
 }) {
   const t = useTranslations('scheduling.lessonForm');
   const tConflict = useTranslations('scheduling.conflict');
-  const enrollments = useEnrollmentsQuery({ page: 1 }, open);
+  const tCommon = useTranslations('common');
+  const tErrors = useTranslations('errors');
+  const tValidation = useTranslations('validation');
+
+  const students = useStudentsQuery({ page: 1, pageSize: 100 }, open);
+  const teachers = useTeachersQuery({ page: 1, pageSize: 100 }, open);
   const createLesson = useCreateLessonMutation();
 
-  const [enrollmentId, setEnrollmentId] = useState('');
-  const [duration, setDuration] = useState('60');
-  const [price, setPrice] = useState('');
-  const [dates, setDates] = useState<string[]>(['']);
+  const form = useForm<LessonFormValues>({
+    resolver: zodResolver(lessonFormSchema, {
+      errorMap: makeZodErrorMap(tValidation, {
+        studentId: { invalid: 'studentRequired' },
+      }),
+      path: [],
+      async: true,
+    }),
+    defaultValues: EMPTY_LESSON_FORM,
+  });
+  const { errors } = form.formState;
+  const dates = useFieldArray({ control: form.control, name: 'startsAt' });
+  const studentId = useWatch({ control: form.control, name: 'studentId' });
+  const teacherId = useWatch({ control: form.control, name: 'teacherId' });
 
-  const selected = useMemo(
-    () => enrollments.data?.items.find((item) => item.id === enrollmentId),
-    [enrollments.data, enrollmentId],
-  );
-
-  // Reset to a clean form each time the dialog opens.
-  const [wasOpen, setWasOpen] = useState(false);
-  if (open && !wasOpen) {
-    setWasOpen(true);
-    setEnrollmentId('');
-    setDuration('60');
-    setPrice('');
-    const start = initialStart
-      ? // Trim seconds/tz to a datetime-local string in browser time.
-        new Date(initialStart.getTime() - initialStart.getTimezoneOffset() * 60000)
-          .toISOString()
-          .slice(0, 16)
-      : '';
-    setDates([start]);
-  }
-  if (!open && wasOpen) {
-    setWasOpen(false);
-  }
-
-  const onPickEnrollment = (id: string) => {
-    setEnrollmentId(id);
-    const enrollment = enrollments.data?.items.find((item) => item.id === id);
-    if (enrollment) {
-      setPrice(formatPriceInput(enrollment.priceMinor));
-    }
-  };
-
-  const submit = async (force = false) => {
-    const priceMinor = parsePriceInput(price);
-    if (!selected || priceMinor === null) {
+  // Refill whenever the dialog opens so a reopened form never shows stale data.
+  useEffect(() => {
+    if (!open) {
       return;
     }
-    const dto: CreateLessonDto = {
-      enrollmentId: selected.id,
-      teacherId: selected.teacher.id,
-      startsAt: dates.filter(Boolean).map(localInputToIso),
-      durationMin: Number(duration),
-      priceMinor,
-      currency: selected.currency,
-    };
-    try {
-      await createLesson.mutateAsync({ dto, force });
-      onOpenChange(false);
-    } catch (error) {
-      if ((error as { status?: number }).status === 409) {
-        toast.error(tConflict('message'), {
-          action: { label: tConflict('force'), onClick: () => void submit(true) },
-        });
-        return;
-      }
-      throw error;
-    }
+    createLesson.reset();
+    form.reset({
+      ...EMPTY_LESSON_FORM,
+      studentId: lockedStudentId ?? '',
+      startsAt: [{ value: initialStart ? toLocalDateTimeInput(initialStart) : '' }],
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset only on open
+  }, [open, lockedStudentId, initialStart]);
+
+  const studentOptions = useMemo(
+    () =>
+      (students.data?.items ?? []).map((student) => ({
+        value: student.id,
+        label: student.fullName,
+        avatarKey: student.avatarKey,
+      })),
+    [students.data],
+  );
+  const teacherOptions = useMemo(
+    () =>
+      (teachers.data?.items ?? []).map((teacher) => ({
+        value: teacher.id,
+        label: teacher.fullName,
+        avatarKey: teacher.avatarKey,
+      })),
+    [teachers.data],
+  );
+
+  // A single-teacher workspace never asks who is teaching.
+  const resolvedTeacherId = effectiveTeacherId(teacherId, teacherOptions);
+  const selectedStudent = students.data?.items.find((item) => item.id === studentId);
+
+  /** Prefills the price from the most specific configured rate; still editable. */
+  const applyDefaultPrice = (nextStudentId: string, nextTeacherId: string) => {
+    const minor = prefillPriceMinor(
+      students.data?.items.find((item) => item.id === nextStudentId),
+      teachers.data?.items.find((item) => item.id === nextTeacherId),
+    );
+    form.setValue('price', minor === null ? '' : formatPriceInput(minor));
   };
 
-  const canSubmit = Boolean(selected) && dates.some(Boolean);
+  const onSubmit = (force: boolean) =>
+    form.handleSubmit(async (values) => {
+      const dto = buildCreateLessonDto(values, {
+        teacherId: resolvedTeacherId,
+        currency: selectedStudent?.currency,
+      });
+      try {
+        await createLesson.mutateAsync({ dto, force });
+        onOpenChange(false);
+      } catch (error) {
+        if ((error as { status?: number }).status === 409) {
+          toast.error(tConflict('message'), {
+            action: {
+              label: tConflict('force'),
+              onClick: () => void onSubmit(true)(),
+            },
+          });
+          return;
+        }
+        // Surfaced by the alert below.
+      }
+    }, scrollToFirstError);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{t('createTitle')}</DialogTitle>
-          <DialogDescription>{t('createSubtitle')}</DialogDescription>
-        </DialogHeader>
+    <EntityFormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={t('createTitle')}
+      description={t('createSubtitle')}
+    >
+      <form onSubmit={onSubmit(false)} noValidate className="flex flex-col gap-7">
+        {createLesson.error && createLesson.error.status !== 409 ? (
+          <Alert variant="destructive" role="alert">
+            <AlertDescription>
+              {tErrors(errorMessageKey(createLesson.error))}
+            </AlertDescription>
+          </Alert>
+        ) : null}
 
-        <div className="flex flex-col gap-4">
-          <Field>
-            <FieldLabel>{t('enrollment')}</FieldLabel>
-            <Select value={enrollmentId} onValueChange={onPickEnrollment}>
-              <SelectTrigger>
-                <SelectValue placeholder={t('enrollmentPlaceholder')} />
-              </SelectTrigger>
-              <SelectContent>
-                {enrollments.data?.items.map((item) => (
-                  <SelectItem key={item.id} value={item.id}>
-                    {item.student.fullName}
-                    {item.group ? ` · ${item.group.name}` : ''}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {enrollments.data && enrollments.data.items.length === 0 ? (
-              <p className="text-xs text-muted-foreground">{t('noEnrollments')}</p>
-            ) : null}
-          </Field>
+        <FormSection
+          icon={UserRoundIcon}
+          title={t('student')}
+          description={t('studentHint')}
+          tone="primary"
+        >
+          {!lockedStudentId ? (
+            <Controller
+              control={form.control}
+              name="studentId"
+              render={({ field }) => (
+                <Field data-invalid={errors.studentId ? true : undefined}>
+                  <FieldLabel htmlFor="lesson-student">{t('student')}</FieldLabel>
+                  <EntityPicker
+                    id="lesson-student"
+                    value={field.value}
+                    options={studentOptions}
+                    onChange={(value) => {
+                      field.onChange(value ?? '');
+                      applyDefaultPrice(value ?? '', resolvedTeacherId);
+                    }}
+                    placeholder={t('studentPlaceholder')}
+                    searchPlaceholder={t('studentSearch')}
+                    emptyLabel={t('studentEmpty')}
+                    invalid={Boolean(errors.studentId)}
+                    isLoading={students.isPending}
+                  />
+                  <FieldError errors={[errors.studentId]} />
+                </Field>
+              )}
+            />
+          ) : null}
 
-          <div className="grid grid-cols-2 gap-3">
-            <Field>
-              <FieldLabel>{t('duration')}</FieldLabel>
-              <Input
-                type="number"
-                min={5}
-                max={720}
-                value={duration}
-                onChange={(event) => setDuration(event.target.value)}
-              />
-            </Field>
-            <Field>
-              <FieldLabel>{t('price')}</FieldLabel>
-              <Input value={price} onChange={(event) => setPrice(event.target.value)} />
-            </Field>
-          </div>
+          {/* One teacher in the workspace: nothing to choose. */}
+          {teacherOptions.length > 1 ? (
+            <Controller
+              control={form.control}
+              name="teacherId"
+              render={({ field }) => (
+                <Field data-invalid={errors.teacherId ? true : undefined}>
+                  <FieldLabel htmlFor="lesson-teacher">{t('teacher')}</FieldLabel>
+                  <EntityPicker
+                    id="lesson-teacher"
+                    value={field.value}
+                    options={teacherOptions}
+                    onChange={(value) => {
+                      field.onChange(value ?? '');
+                      applyDefaultPrice(studentId, value ?? '');
+                    }}
+                    placeholder={t('teacherPlaceholder')}
+                    searchPlaceholder={t('teacherSearch')}
+                    emptyLabel={t('teacherEmpty')}
+                    invalid={Boolean(errors.teacherId)}
+                    isLoading={teachers.isPending}
+                  />
+                  <FieldError errors={[errors.teacherId]} />
+                </Field>
+              )}
+            />
+          ) : null}
+        </FormSection>
 
-          <Field>
+        <FormSection
+          icon={CalendarClockIcon}
+          title={t('date')}
+          description={t('addDate')}
+          tone="warning"
+        >
+          <Field data-invalid={errors.startsAt ? true : undefined}>
             <FieldLabel>{t('date')}</FieldLabel>
             <div className="flex flex-col gap-2">
-              {dates.map((value, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <Input
-                    type="datetime-local"
-                    value={value}
-                    onChange={(event) =>
-                      setDates((prev) =>
-                        prev.map((item, i) => (i === index ? event.target.value : item)),
-                      )
-                    }
+              {dates.fields.map((entry, index) => (
+                <div key={entry.id} className="flex items-start gap-2">
+                  <Controller
+                    control={form.control}
+                    name={`startsAt.${index}.value` as const}
+                    render={({ field }) => (
+                      <DateTimePicker
+                        value={field.value}
+                        onChange={field.onChange}
+                        invalid={Boolean(errors.startsAt)}
+                      />
+                    )}
                   />
-                  {dates.length > 1 ? (
+                  {dates.fields.length > 1 ? (
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon"
-                      onClick={() => setDates((prev) => prev.filter((_, i) => i !== index))}
+                      onClick={() => dates.remove(index)}
                       aria-label={t('removeDate')}
                     >
-                      <Trash2Icon className="size-4" />
+                      <Trash2Icon />
                     </Button>
                   ) : null}
                 </div>
@@ -190,24 +268,65 @@ export function LessonFormDialog({
                 variant="outline"
                 size="sm"
                 className="self-start"
-                onClick={() => setDates((prev) => [...prev, ''])}
+                onClick={() => dates.append({ value: '' })}
               >
-                <PlusIcon className="size-4" />
+                <PlusIcon data-icon="inline-start" />
                 {t('addDate')}
               </Button>
             </div>
+            <FieldError errors={[errors.startsAt?.root ?? errors.startsAt]} />
           </Field>
-        </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            {t('cancel')}
+          <Field data-invalid={errors.durationMin ? true : undefined}>
+            <FieldLabel htmlFor="lesson-duration">{t('duration')}</FieldLabel>
+            <Input
+              id="lesson-duration"
+              type="number"
+              min={5}
+              max={720}
+              aria-invalid={errors.durationMin ? true : undefined}
+              {...form.register('durationMin')}
+            />
+            <FieldError errors={[errors.durationMin]} />
+          </Field>
+        </FormSection>
+
+        <FormSection icon={BanknoteIcon} title={t('price')} tone="success">
+          <Field data-invalid={errors.price ? true : undefined}>
+            <FieldLabel htmlFor="lesson-price">{t('price')}</FieldLabel>
+            <MoneyInput
+              id="lesson-price"
+              placeholder={t('pricePlaceholder')}
+              aria-invalid={errors.price ? true : undefined}
+              {...form.register('price')}
+            />
+            <FieldDescription>{t('studentHint')}</FieldDescription>
+            <FieldError errors={[errors.price]} />
+          </Field>
+        </FormSection>
+
+        <FormSection icon={StickyNoteIcon} title={t('notes')} tone="neutral">
+          <Field data-invalid={errors.notes ? true : undefined}>
+            <FieldLabel htmlFor="lesson-notes">{t('notes')}</FieldLabel>
+            <Textarea
+              id="lesson-notes"
+              placeholder={t('notesPlaceholder')}
+              {...form.register('notes')}
+            />
+            <FieldError errors={[errors.notes]} />
+          </Field>
+        </FormSection>
+
+        <FormActions>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            {tCommon('cancel')}
           </Button>
-          <Button disabled={!canSubmit || createLesson.isPending} onClick={() => void submit()}>
+          <Button type="submit" disabled={createLesson.isPending}>
+            {createLesson.isPending ? <Spinner data-icon="inline-start" /> : null}
             {t('submit')}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </FormActions>
+      </form>
+    </EntityFormDialog>
   );
 }

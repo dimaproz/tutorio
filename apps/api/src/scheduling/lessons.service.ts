@@ -8,6 +8,7 @@ import type {
   ListLessonsQueryDto,
   RescheduleLessonDto,
   TransitionLessonDto,
+  UpdateLessonDto,
 } from '@tutorio/validation';
 import { AuditService } from '../audit/audit.service';
 import type { AuthenticatedUser } from '../auth/auth.types';
@@ -16,6 +17,7 @@ import {
   lessonNotFound,
   scheduleConflict,
 } from '../common/business.errors';
+import { LedgerService } from '../packages/ledger.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { MaterializerService } from './materializer.service';
 import {
@@ -23,6 +25,7 @@ import {
   findLessonConflicts,
   lessonInclude,
   localHourMinute,
+  resolveStudentTarget,
   toLessonResponse,
 } from './scheduling.shared';
 
@@ -32,6 +35,7 @@ export class LessonsService {
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
     private readonly materializer: MaterializerService,
+    private readonly ledger: LedgerService,
   ) {}
 
   /** Calendar feed: every non-deleted lesson inside the requested time window. */
@@ -46,6 +50,9 @@ export class LessonsService {
         startsAtUtc: { gte: new Date(query.from), lt: new Date(query.to) },
         ...(query.teacherId ? { teacherId: query.teacherId } : {}),
         ...(query.enrollmentId ? { enrollmentId: query.enrollmentId } : {}),
+        ...(query.studentId
+          ? { enrollment: { studentId: query.studentId } }
+          : {}),
         ...(query.groupId ? { groupId: query.groupId } : {}),
         ...(query.status ? { status: query.status } : {}),
       },
@@ -60,15 +67,52 @@ export class LessonsService {
     dto: CreateLessonDto,
     force: boolean,
   ): Promise<LessonListResponse> {
-    const enrollmentId = dto.enrollmentId ?? null;
     const groupId = dto.groupId ?? null;
     const starts = dto.startsAt.map((iso) => new Date(iso));
 
     const rows = await this.prisma.$transaction(async (tx) => {
+      // The tutor-facing path books by student; everything else still names its
+      // target explicitly.
+      let enrollmentId = dto.enrollmentId ?? null;
+      let teacherId = dto.teacherId ?? '';
+      let priceMinor = dto.priceMinor ?? 0;
+      let currency = dto.currency ?? '';
+
+      if (dto.studentId) {
+        const workspace = await tx.workspace.findUniqueOrThrow({
+          where: { id: auth.workspaceId },
+          select: { cancellationDeadlineHours: true },
+        });
+        const resolved = await resolveStudentTarget(tx, auth.workspaceId, {
+          studentId: dto.studentId,
+          teacherId: dto.teacherId,
+          priceMinor: dto.priceMinor,
+          currency: dto.currency,
+          defaultCancellationDeadlineHours: workspace.cancellationDeadlineHours,
+        });
+        enrollmentId = resolved.enrollmentId;
+        teacherId = resolved.teacherId;
+        priceMinor = resolved.priceMinor;
+        currency = resolved.currency;
+        if (resolved.createdEnrollment) {
+          await this.audit.record(tx, {
+            workspaceId: auth.workspaceId,
+            actorId: auth.userId,
+            action: 'CREATE',
+            entity: 'ENROLLMENT',
+            entityId: resolved.enrollmentId,
+            changes: this.audit.buildChanges(
+              {},
+              { studentId: dto.studentId, teacherId, priceMinor, currency },
+            ),
+          });
+        }
+      }
+
       await assertTargetAndTeacher(tx, auth.workspaceId, {
         enrollmentId,
         groupId,
-        teacherId: dto.teacherId,
+        teacherId,
       });
 
       if (!force) {
@@ -76,7 +120,7 @@ export class LessonsService {
         for (const start of starts) {
           const dbConflicts = await findLessonConflicts(tx, {
             workspaceId: auth.workspaceId,
-            teacherId: dto.teacherId,
+            teacherId,
             start,
             durationMin: dto.durationMin,
           });
@@ -103,11 +147,11 @@ export class LessonsService {
             workspaceId: auth.workspaceId,
             enrollmentId,
             groupId,
-            teacherId: dto.teacherId,
+            teacherId,
             startsAtUtc,
             durationMin: dto.durationMin,
-            priceMinor: dto.priceMinor,
-            currency: dto.currency,
+            priceMinor,
+            currency,
             notes: dto.notes ?? null,
           },
         });
@@ -123,11 +167,11 @@ export class LessonsService {
             {
               enrollmentId,
               groupId,
-              teacherId: dto.teacherId,
+              teacherId,
               startsAtUtc,
               durationMin: dto.durationMin,
-              priceMinor: dto.priceMinor,
-              currency: dto.currency,
+              priceMinor,
+              currency,
             },
           ),
         });
@@ -141,6 +185,80 @@ export class LessonsService {
     });
 
     return { items: rows.map(toLessonResponse) };
+  }
+
+  /** Per-lesson notes. Status and timing have their own dedicated endpoints. */
+  async update(
+    auth: AuthenticatedUser,
+    lessonId: string,
+    dto: UpdateLessonDto,
+  ): Promise<LessonResponse> {
+    const row = await this.prisma.$transaction(async (tx) => {
+      const lesson = await tx.lesson.findFirst({
+        where: { id: lessonId, workspaceId: auth.workspaceId, deletedAt: null },
+        include: lessonInclude,
+      });
+      if (!lesson) {
+        throw lessonNotFound();
+      }
+      // PATCH semantics: an omitted field is unchanged; `notes: null` clears it.
+      const data: Prisma.LessonUpdateInput = {
+        ...('notes' in dto ? { notes: dto.notes ?? null } : {}),
+        ...(dto.priceMinor != null && dto.currency != null
+          ? { priceMinor: dto.priceMinor, currency: dto.currency }
+          : {}),
+      };
+      if (Object.keys(data).length === 0) {
+        return lesson;
+      }
+
+      const updated = await tx.lesson.update({
+        where: { id: lesson.id },
+        data,
+        include: lessonInclude,
+      });
+      await this.audit.record(tx, {
+        workspaceId: auth.workspaceId,
+        actorId: auth.userId,
+        action: 'UPDATE',
+        entity: 'LESSON',
+        entityId: lesson.id,
+        changes: this.audit.buildChanges(lesson, data),
+      });
+      return updated;
+    });
+
+    return toLessonResponse(row);
+  }
+
+  /**
+   * Soft-deletes a lesson. A lesson generated by a series is also detached, so
+   * the materializer does not simply recreate it on the next run.
+   */
+  async remove(auth: AuthenticatedUser, lessonId: string): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      const lesson = await tx.lesson.findFirst({
+        where: { id: lessonId, workspaceId: auth.workspaceId, deletedAt: null },
+        select: { id: true, seriesId: true },
+      });
+      if (!lesson) {
+        return; // Idempotent: deleting an already-deleted lesson is a no-op.
+      }
+      await tx.lesson.update({
+        where: { id: lesson.id },
+        data: {
+          deletedAt: new Date(),
+          isDetached: lesson.seriesId ? true : undefined,
+        },
+      });
+      await this.audit.record(tx, {
+        workspaceId: auth.workspaceId,
+        actorId: auth.userId,
+        action: 'DELETE',
+        entity: 'LESSON',
+        entityId: lesson.id,
+      });
+    });
   }
 
   async reschedule(
@@ -272,6 +390,39 @@ export class LessonsService {
         data,
         include: lessonInclude,
       });
+
+      // Stage 4: the transition now moves the credit balance. Idempotent, so a
+      // repeated click cannot charge twice; a lesson with no package behind it
+      // simply has no ledger effect.
+      const effect = await this.ledger.applyTransition(tx, {
+        workspaceId: auth.workspaceId,
+        actorId: auth.userId,
+        lesson: {
+          id: lesson.id,
+          packageId: lesson.packageId,
+          enrollmentId: lesson.enrollmentId,
+          groupId: lesson.groupId,
+          status: lesson.status,
+        },
+        targetStatus: dto.targetStatus,
+      });
+
+      // Cancelling without charge keeps the paid slot alive: the student is
+      // owed a replacement lesson from the same pattern.
+      if (effect.rebookReplacement && lesson.seriesId) {
+        const series = await tx.lessonSeries.findUnique({
+          where: { id: lesson.seriesId },
+        });
+        if (series) {
+          await this.materializer.materializeSeries(
+            tx,
+            series,
+            this.materializer.horizonUntil(),
+            new Date(),
+          );
+        }
+      }
+
       await this.audit.record(tx, {
         workspaceId: auth.workspaceId,
         actorId: auth.userId,

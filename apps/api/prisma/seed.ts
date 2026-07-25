@@ -310,14 +310,14 @@ async function main() {
   }
 
   // Individual + group enrollments across statuses and currencies.
-  await ensureEnrollment(alice.id, null, tarasTeacher.id, {
+  const aliceIndividual = await ensureEnrollment(alice.id, null, tarasTeacher.id, {
     status: 'ACTIVE',
     billingType: 'PACKAGE',
     priceMinor: 45000, // 450.00 UAH per lesson
     currency: 'UAH',
     cancellationDeadlineHours: null,
   });
-  await ensureEnrollment(alice.id, group.id, ownerTeacher.id, {
+  const aliceGroup = await ensureEnrollment(alice.id, group.id, ownerTeacher.id, {
     status: 'ACTIVE',
     billingType: 'MONTHLY',
     priceMinor: 120000, // 1200.00 EUR per month
@@ -338,6 +338,57 @@ async function main() {
     currency: 'GBP',
     cancellationDeadlineHours: 24,
   });
+
+  // Demo lessons across the current week so the calendar and the dashboard
+  // "Today" widget have data. Idempotent by (enrollment, startsAtUtc).
+  type LessonEnrollment = {
+    id: string;
+    teacherId: string;
+    groupId: string | null;
+    priceMinor: number;
+    currency: string;
+  };
+  async function ensureLesson(
+    enrollment: LessonEnrollment,
+    startsAtUtc: Date,
+    status: 'SCHEDULED' | 'COMPLETED' = 'SCHEDULED',
+  ) {
+    const existing = await prisma.lesson.findFirst({
+      where: { workspaceId: workspace.id, enrollmentId: enrollment.id, startsAtUtc },
+    });
+    if (existing) {
+      return existing;
+    }
+    return prisma.lesson.create({
+      data: {
+        workspaceId: workspace.id,
+        enrollmentId: enrollment.id,
+        groupId: enrollment.groupId,
+        teacherId: enrollment.teacherId,
+        startsAtUtc,
+        durationMin: 60,
+        priceMinor: enrollment.priceMinor,
+        currency: enrollment.currency,
+        status,
+        completedAt: status === 'COMPLETED' ? startsAtUtc : null,
+      },
+    });
+  }
+
+  // Local wall-clock relative to today; stored as UTC on write.
+  function at(dayOffset: number, hour: number, minute = 0): Date {
+    const d = new Date();
+    d.setDate(d.getDate() + dayOffset);
+    d.setHours(hour, minute, 0, 0);
+    return d;
+  }
+
+  await ensureLesson(aliceIndividual, at(0, 10)); // today, morning
+  await ensureLesson(aliceIndividual, at(0, 15)); // today, afternoon
+  await ensureLesson(aliceGroup, at(0, 19)); // today, evening group
+  await ensureLesson(aliceIndividual, at(1, 11)); // tomorrow
+  await ensureLesson(aliceGroup, at(2, 19)); // in two days
+  await ensureLesson(aliceIndividual, at(-1, 9), 'COMPLETED'); // yesterday, done
 
   console.log('Seed complete.');
   console.log(`  Workspace: ${workspace.name} (${workspace.id})`);

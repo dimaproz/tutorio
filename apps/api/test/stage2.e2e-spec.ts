@@ -632,8 +632,15 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
         .get(`/api/parents/${parentId}`)
         .set('Authorization', auth(ownerA))
         .expect(200);
+      // The roster ref carries the badge fields the parent list renders.
       expect(withRoster.body.students).toEqual([
-        { id: studentId, fullName: 'Roster Learner', avatarKey: null },
+        {
+          id: studentId,
+          fullName: 'Roster Learner',
+          avatarKey: null,
+          status: 'ACTIVE',
+          subject: null,
+        },
       ]);
     });
 

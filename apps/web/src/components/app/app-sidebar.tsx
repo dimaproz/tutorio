@@ -47,10 +47,11 @@ const NAV_ITEMS: NavItem[] = [
   { key: 'teachers', href: '/app/teachers', icon: PresentationIcon },
   { key: 'calendar', href: '/app/calendar', icon: CalendarIcon },
   { key: 'patterns', href: '/app/lessons/patterns', icon: RepeatIcon },
+  { key: 'finance', href: '/app/finance', icon: WalletIcon },
 ];
 
 // Enabled in later stages — shown disabled with a "coming soon" badge.
-const UPCOMING_ITEMS = [{ key: 'finance', icon: WalletIcon }] as const;
+const UPCOMING_ITEMS: { key: string; icon: typeof WalletIcon }[] = [];
 
 // Roomier rows than the shadcn default (h-8) — matches the design lab / TailAdmin
 // rail: larger hit area, size-5 icons, brand-tinted pill on the active item
@@ -125,6 +126,7 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
+        {UPCOMING_ITEMS.length > 0 ? (
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-medium tracking-wider uppercase">
             {t('comingSoon')}
@@ -148,6 +150,7 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        ) : null}
       </SidebarContent>
 
       <SidebarFooter>
