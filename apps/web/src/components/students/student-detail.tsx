@@ -22,19 +22,31 @@ import { useLocale, useTranslations } from 'next-intl';
 import type { EnrollmentResponse, StudentEnrollmentSummary } from '@tutorio/validation';
 import { BackButton } from '@/components/app/back-button';
 import { ListSkeleton, QueryErrorAlert } from '@/components/app/page-shell';
-import { BillingTypeBadge, EnrollmentStatusBadge } from '@/components/app/status-badges';
-import { StudentStatusBadge } from './student-status-badge';
+import { useIsSoloWorkspace } from '@/components/app/session-provider';
+import {
+  BillingTypeBadge,
+  EnrollmentStatusBadge,
+  StudentStatusBadge,
+} from '@/components/app/status-badges';
 import { StudentDeleteDialog } from './student-delete-dialog';
 import { EnrollmentDialog } from '@/components/enrollments/enrollment-dialog';
+import { StudentLessonsCard } from '@/components/scheduling/student-lessons-card';
 import { StudentFormDialog } from './student-form-dialog';
 import { ParentMiniCard } from '@/components/parents/parent-mini-card';
 import { InfoRow, ProfileHeader, ProfileTag, SectionTitle } from '@/components/app/detail-view';
 import { Button } from '@/components/ui/button';
 import { Card, CardAction, CardContent, CardHeader } from '@/components/ui/card';
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
 import { useEnrollmentsQuery } from '@/lib/api/enrollments';
 import { useStudentQuery } from '@/lib/api/students';
 import { formatMoneyDisplay } from '@/lib/money';
+import { useDateFormatters } from '@/lib/i18n/format';
 
 export function StudentDetailView({ studentId }: { studentId: string }) {
   const t = useTranslations('students');
@@ -43,6 +55,7 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
   const tLanguageLevel = useTranslations('languageLevel');
   const tKnowledgeLevel = useTranslations('knowledgeLevel');
   const locale = useLocale();
+  const format = useDateFormatters();
   const router = useRouter();
 
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -50,8 +63,9 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<EnrollmentResponse | undefined>();
 
+  const isSolo = useIsSoloWorkspace();
   const student = useStudentQuery(studentId);
-  const enrollments = useEnrollmentsQuery({ page: 1, studentId });
+  const enrollments = useEnrollmentsQuery({ page: 1, studentId }, !isSolo);
 
   if (student.isPending) {
     return <ListSkeleton rows={5} />;
@@ -79,11 +93,7 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
   ];
 
   const addedOn = t('detail.addedOn', {
-    date: new Intl.DateTimeFormat(locale, {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    }).format(new Date(data.createdAt)),
+    date: format.longDate(data.createdAt),
   });
 
   function openCreate() {
@@ -147,7 +157,7 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
         <div className="flex flex-col gap-6 lg:col-span-2">
           <Card>
             <CardHeader>
-              <SectionTitle icon={BanknoteIcon} tone="emerald">
+              <SectionTitle icon={BanknoteIcon} tone="success">
                 {t('detail.pricingTitle')}
               </SectionTitle>
             </CardHeader>
@@ -169,77 +179,87 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <SectionTitle icon={GraduationCapIcon} tone="violet">
-                {t('detail.enrollmentsTitle')}
-              </SectionTitle>
-              <CardAction>
-                <Button type="button" size="sm" onClick={openCreate}>
-                  <PlusIcon data-icon="inline-start" />
-                  {t('detail.addEnrollment')}
-                </Button>
-              </CardAction>
-            </CardHeader>
-            <CardContent>
-              {data.enrollments.length === 0 ? (
-                <Empty>
-                  <EmptyHeader>
-                    <EmptyTitle>{t('detail.noEnrollments')}</EmptyTitle>
-                    <EmptyDescription>{t('detail.noEnrollmentsDescription')}</EmptyDescription>
-                  </EmptyHeader>
-                  <EmptyContent>
-                    <Button type="button" onClick={openCreate}>
-                      <PlusIcon data-icon="inline-start" />
-                      {t('detail.addEnrollment')}
-                    </Button>
-                  </EmptyContent>
-                </Empty>
-              ) : (
-                <ul className="flex flex-col gap-3">
-                  {data.enrollments.map((enrollment) => (
-                    <li
-                      key={enrollment.id}
-                      className="flex flex-col gap-3 rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between"
-                    >
-                      <div className="flex min-w-0 flex-col gap-2">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-medium">
-                            {enrollment.group?.name ?? t('detail.individual')}
-                          </span>
-                          <EnrollmentStatusBadge status={enrollment.status} />
-                          <BillingTypeBadge billingType={enrollment.billingType} />
-                        </div>
-                        <p className="tabular text-muted-foreground text-sm">
-                          {`${t('detail.teacher')}: ${enrollment.teacher.name} · ${t('detail.price')}: ${formatMoneyDisplay(
-                            enrollment.priceMinor,
-                            enrollment.currency,
-                            locale,
-                          )} · ${t('detail.deadline')}: ${t('detail.deadlineHours', {
-                            hours: enrollment.effectiveCancellationDeadlineHours,
-                          })}`}
-                        </p>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openEdit(enrollment)}
-                        disabled={enrollments.isPending}
-                      >
-                        {tCommon('edit')}
+          <StudentLessonsCard studentId={data.id} />
+
+          {/* A solo tutor never manages enrollments by hand: scheduling a
+              lesson creates one behind the scenes, the rate lives on the
+              student card, and there is no teacher to assign. Group membership
+              still goes through the enrollment editor on the group page. */}
+          {isSolo ? null : (
+            <Card>
+              <CardHeader>
+                <SectionTitle icon={GraduationCapIcon} tone="primary">
+                  {t('detail.enrollmentsTitle')}
+                </SectionTitle>
+                <CardAction>
+                  <Button type="button" size="sm" onClick={openCreate}>
+                    <PlusIcon data-icon="inline-start" />
+                    {t('detail.addEnrollment')}
+                  </Button>
+                </CardAction>
+              </CardHeader>
+              <CardContent>
+                {data.enrollments.length === 0 ? (
+                  <Empty>
+                    <EmptyHeader>
+                      <EmptyTitle>{t('detail.noEnrollments')}</EmptyTitle>
+                      <EmptyDescription>{t('detail.noEnrollmentsDescription')}</EmptyDescription>
+                    </EmptyHeader>
+                    <EmptyContent>
+                      <Button type="button" onClick={openCreate}>
+                        <PlusIcon data-icon="inline-start" />
+                        {t('detail.addEnrollment')}
                       </Button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
+                    </EmptyContent>
+                  </Empty>
+                ) : (
+                  <ul className="flex flex-col gap-3">
+                    {data.enrollments.map((enrollment) => (
+                      <li
+                        key={enrollment.id}
+                        className="flex flex-col gap-3 rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between"
+                      >
+                        <div className="flex min-w-0 flex-col gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-medium">
+                              {enrollment.group?.name ?? t('detail.individual')}
+                            </span>
+                            <EnrollmentStatusBadge status={enrollment.status} />
+                            <BillingTypeBadge billingType={enrollment.billingType} />
+                          </div>
+                          <p className="tabular text-muted-foreground text-sm">
+                            {`${t('detail.teacher')}: ${enrollment.teacher.name} · ${t('detail.price')}: ${formatMoneyDisplay(
+                              enrollment.priceMinor,
+                              enrollment.currency,
+                              locale,
+                            )} · ${t('detail.deadline')}: ${t('detail.deadlineHours', {
+                              hours: enrollment.effectiveCancellationDeadlineHours,
+                            })}`}
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openEdit(enrollment)}
+                          disabled={enrollments.isPending}
+                        >
+                          {tCommon('edit')}
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {data.notes ? (
             <Card>
               <CardHeader>
-                <SectionTitle icon={BookOpenIcon} tone="rose">{t('detail.notesTitle')}</SectionTitle>
+                <SectionTitle icon={BookOpenIcon} tone="destructive">
+                  {t('detail.notesTitle')}
+                </SectionTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm whitespace-pre-wrap">{data.notes}</p>
@@ -252,7 +272,9 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
         <div className="flex flex-col gap-6">
           <Card>
             <CardHeader>
-              <SectionTitle icon={PhoneIcon} tone="sky">{t('detail.contactsTitle')}</SectionTitle>
+              <SectionTitle icon={PhoneIcon} tone="primary">
+                {t('detail.contactsTitle')}
+              </SectionTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
               <InfoRow
@@ -294,7 +316,7 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
 
           <Card>
             <CardHeader>
-              <SectionTitle icon={UsersRoundIcon} tone="amber">
+              <SectionTitle icon={UsersRoundIcon} tone="warning">
                 {t('detail.parentTitle')}
               </SectionTitle>
             </CardHeader>
@@ -315,7 +337,7 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
 
           <Card>
             <CardHeader>
-              <SectionTitle icon={GraduationCapIcon} tone="indigo">
+              <SectionTitle icon={GraduationCapIcon} tone="primary">
                 {t('detail.groupsTitle')}
               </SectionTitle>
             </CardHeader>

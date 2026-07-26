@@ -13,12 +13,19 @@ export const userNameSchema = z.string().trim().min(1).max(120);
 
 export const workspaceNameSchema = z.string().trim().min(2).max(80);
 
+// How the workspace presents itself: a solo tutor never picks a teacher,
+// a school always does. Purely a presentation contract — the data model is
+// multi-teacher in both modes.
+export const workspaceModeSchema = z.enum(['SOLO', 'SCHOOL']);
+export type WorkspaceMode = z.infer<typeof workspaceModeSchema>;
+
 export const registerSchema = z
   .object({
     name: userNameSchema,
     workspaceName: workspaceNameSchema,
     email: emailSchema,
     password: passwordSchema,
+    mode: workspaceModeSchema.default('SOLO'),
   })
   .strict();
 
@@ -67,6 +74,7 @@ export const authWorkspaceSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
   plan: workspacePlanSchema,
+  mode: workspaceModeSchema,
   defaultCurrency: z.string(),
   cancellationDeadlineHours: z.number().int(),
 });

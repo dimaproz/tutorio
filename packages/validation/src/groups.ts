@@ -100,7 +100,7 @@ export const groupEnrollmentSummarySchema = z.object({
   priceMinor: z.number().int().nonnegative(),
   currency: z.string(),
   student: z.object({ id: uuidSchema, fullName: z.string() }),
-  teacher: z.object({ id: uuidSchema, name: z.string() }),
+  teacher: z.object({ id: uuidSchema, name: z.string(), color: z.string().nullable() }),
 });
 
 export type GroupEnrollmentSummary = z.infer<typeof groupEnrollmentSummarySchema>;

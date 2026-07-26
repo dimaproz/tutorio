@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import type { RegisterDto } from '@tutorio/validation';
 import type { PrismaService } from '../prisma/prisma.service';
 import { AuthApiException } from './auth.errors';
 import { AuthService } from './auth.service';
@@ -28,6 +29,7 @@ function buildPrismaMock() {
       findFirst: jest.fn(),
       findUnique: jest.fn(),
     },
+    teacher: { create: jest.fn() },
     authSession: {
       create: jest.fn(),
       findUnique: jest.fn(),
@@ -96,7 +98,8 @@ describe('AuthService', () => {
       workspaceName: 'SpeakWise',
       email: 'olena@example.com',
       password: 'correct horse battery staple',
-    };
+      mode: 'SOLO',
+    } satisfies RegisterDto;
 
     beforeEach(() => {
       prisma.user.create.mockResolvedValue(userRow);

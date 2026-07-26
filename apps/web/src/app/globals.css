@@ -1,6 +1,6 @@
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -30,6 +30,8 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-warning: var(--warning);
+  --color-success: var(--success);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -118,6 +120,8 @@
   --accent: var(--gray-100);
   --accent-foreground: var(--gray-800);
   --destructive: var(--error-500);
+  --warning: var(--warning-600);
+  --success: var(--success-600);
   --border: var(--gray-200);
   --input: var(--gray-300);
   --ring: var(--brand-500);
@@ -129,20 +133,6 @@
   --chart-3: var(--success-500);
   --chart-4: var(--warning-500);
   --chart-5: var(--gray-300);
-
-  /* Six product statuses as TailAdmin "light" badges (50-tint bg, 600 text). */
-  --status-active: var(--brand-500);
-  --status-active-wash: var(--brand-50);
-  --status-paused: var(--warning-600);
-  --status-paused-wash: #fffaeb;
-  --status-overdue: var(--error-600);
-  --status-overdue-wash: #fef3f2;
-  --status-paid: var(--success-600);
-  --status-paid-wash: #ecfdf3;
-  --status-cancelled: var(--gray-500);
-  --status-cancelled-wash: var(--gray-100);
-  --status-archived: var(--gray-600);
-  --status-archived-wash: var(--gray-100);
 
   /* Register cells (lesson package meter). */
   --cell-empty: #ffffff;
@@ -190,22 +180,11 @@
   --accent: rgba(255, 255, 255, 0.05);
   --accent-foreground: #ffffff;
   --destructive: var(--error-500);
+  --warning: #fdb022;
+  --success: #6ce9a6;
   --border: rgba(255, 255, 255, 0.1);
   --input: rgba(255, 255, 255, 0.12);
   --ring: var(--brand-400);
-
-  --status-active: var(--brand-400);
-  --status-active-wash: rgba(70, 95, 255, 0.15);
-  --status-paused: #fdb022;
-  --status-paused-wash: rgba(247, 144, 9, 0.15);
-  --status-overdue: #fda29b;
-  --status-overdue-wash: rgba(240, 68, 56, 0.15);
-  --status-paid: #6ce9a6;
-  --status-paid-wash: rgba(18, 183, 106, 0.15);
-  --status-cancelled: var(--gray-400);
-  --status-cancelled-wash: rgba(255, 255, 255, 0.06);
-  --status-archived: var(--gray-400);
-  --status-archived-wash: rgba(255, 255, 255, 0.06);
 
   --cell-empty: rgba(255, 255, 255, 0.03);
   --cell-rule: rgba(255, 255, 255, 0.15);
@@ -228,7 +207,6 @@
   border-color: var(--border);
   box-shadow: var(--shadow-card);
 }
-
 
 @layer base {
   * {

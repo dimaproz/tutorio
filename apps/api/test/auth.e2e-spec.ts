@@ -57,6 +57,9 @@ describe('Auth + Workspace (e2e)', () => {
       ),
     ];
     await prisma.authSession.deleteMany({ where: { userId: { in: userIds } } });
+    await prisma.teacher.deleteMany({
+      where: { workspaceId: { in: workspaceIds } },
+    });
     await prisma.workspaceMember.deleteMany({
       where: { workspaceId: { in: workspaceIds } },
     });

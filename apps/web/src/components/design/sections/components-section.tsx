@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import {
-  CalendarIcon,
   ChevronDownIcon,
   MoreHorizontalIcon,
   PlusIcon,
@@ -33,7 +32,6 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -103,12 +101,21 @@ import { LabBlock, LabSection } from '@/components/design/lab-kit';
 import { Sparkline } from '@/components/design/sparkline';
 import { StatusBadge } from '@/components/design/status-badge';
 import { formatMoney, LESSONS_PER_WEEK, STUDENTS } from '@/components/design/demo-data';
+import {
+  AppointmentField,
+  AppointmentPicker,
+  DatePicker,
+  DateRangePicker,
+  DateTimePicker,
+  TimePicker,
+} from '@/components/shared';
 
 export function ComponentsSection() {
   return (
     <div className="flex flex-col gap-10">
       <ButtonsBlock />
       <FormsBlock />
+      <DateTimeBlock />
       <SelectionBlock />
       <DisplayBlock />
       <TableBlock />
@@ -265,21 +272,100 @@ function FormsBlock() {
             </Popover>
           </Field>
 
-          <Field>
-            <FieldLabel>Дата заняття</FieldLabel>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full justify-start font-normal">
-                  <CalendarIcon data-icon="inline-start" />
-                  20 липня 2026
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" defaultMonth={new Date('2026-07-20')} />
-              </PopoverContent>
-            </Popover>
-          </Field>
         </div>
+      </div>
+    </LabSection>
+  );
+}
+
+// Every date/time control the scheduling and finance forms use. All of them are
+// built on the one calendar engine (react-day-picker, via the shadcn Calendar)
+// and exchange plain strings, so they drop into a form without a mapper.
+function DateTimeBlock() {
+  const [date, setDate] = useState('2026-07-20');
+  const [range, setRange] = useState({ from: '2026-09-01', to: '2026-09-30' });
+  const [time, setTime] = useState('10:00');
+  const [dateTime, setDateTime] = useState('2026-07-20T10:00');
+  const [appointment, setAppointment] = useState('2026-07-20T10:00');
+  const [slotField, setSlotField] = useState('');
+
+  return (
+    <LabSection
+      title="Дата й час"
+      description="Пікери дати, періоду, часу та бронювання уроку."
+    >
+      <div className="grid gap-6 lg:grid-cols-2">
+        <LabBlock label="Дата" hint='значення — "YYYY-MM-DD"'>
+          <Field>
+            <FieldLabel htmlFor="lab-date">Дата уроку</FieldLabel>
+            <DatePicker id="lab-date" value={date} onChange={setDate} clearable />
+            <FieldDescription className="tabular">{date || '—'}</FieldDescription>
+          </Field>
+        </LabBlock>
+
+        <LabBlock label="Період" hint="діапазон, два місяці одразу">
+          <Field>
+            <FieldLabel htmlFor="lab-range">Період дії пакета</FieldLabel>
+            <DateRangePicker id="lab-range" value={range} onChange={setRange} />
+            <FieldDescription className="tabular">
+              {range.from || '—'} → {range.to || '—'}
+            </FieldDescription>
+          </Field>
+        </LabBlock>
+
+        <LabBlock label="Час" hint='значення — "HH:mm"'>
+          <Field>
+            <FieldLabel htmlFor="lab-time">Час початку</FieldLabel>
+            <TimePicker id="lab-time" value={time} onChange={setTime} />
+            <FieldDescription className="tabular">{time || '—'}</FieldDescription>
+          </Field>
+        </LabBlock>
+
+        <LabBlock label="Дата й час" hint="календар + час поруч">
+          <Field>
+            <FieldLabel htmlFor="lab-datetime">Початок уроку</FieldLabel>
+            <DateTimePicker
+              id="lab-datetime"
+              value={dateTime}
+              onChange={setDateTime}
+              clearable
+            />
+            <FieldDescription className="tabular">{dateTime || '—'}</FieldDescription>
+          </Field>
+        </LabBlock>
+
+        <LabBlock label="Дата й час — поле" hint="той самий вибір слоту, але компактно">
+          <Field>
+            <FieldLabel htmlFor="lab-slot">Час уроку</FieldLabel>
+            <AppointmentField
+              id="lab-slot"
+              value={slotField}
+              onChange={setSlotField}
+              slots={{ from: '09:00', to: '18:00', stepMin: 30 }}
+              isSlotUnavailable={(_, slot) => slot === '12:00' || slot === '12:30'}
+              clearable
+            />
+            <FieldDescription className="tabular">{slotField || '—'}</FieldDescription>
+          </Field>
+        </LabBlock>
+
+        <LabBlock
+          label="Бронювання"
+          hint="день + вільні слоти; зайняті — неактивні"
+          className="lg:col-span-2"
+        >
+          <AppointmentPicker
+            value={appointment}
+            onChange={setAppointment}
+            slots={{ from: '09:00', to: '18:00', stepMin: 30 }}
+            // Demo only: pretend the lunch hour is already booked.
+            isSlotUnavailable={(_, slot) => slot === '12:00' || slot === '12:30'}
+            fromDate={new Date('2026-07-01')}
+          />
+          <p className="text-muted-foreground tabular mt-3 text-xs">
+            {appointment || '—'}
+          </p>
+        </LabBlock>
       </div>
     </LabSection>
   );

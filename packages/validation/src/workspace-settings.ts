@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { workspaceRoleSchema } from './auth';
+import { workspaceModeSchema, workspaceRoleSchema } from './auth';
 import {
   cancellationDeadlineHoursSchema,
   currencyCodeSchema,
@@ -12,6 +12,8 @@ export const updateWorkspaceSettingsSchema = z
   .object({
     defaultCurrency: currencyCodeSchema,
     cancellationDeadlineHours: cancellationDeadlineHoursSchema,
+    // Switching to SOLO is refused while a second active teacher exists.
+    mode: workspaceModeSchema,
   })
   .partial()
   .strict()
@@ -24,6 +26,7 @@ export type UpdateWorkspaceSettingsDto = z.infer<typeof updateWorkspaceSettingsS
 export const workspaceSettingsResponseSchema = z.object({
   defaultCurrency: currencyCodeSchema,
   cancellationDeadlineHours: cancellationDeadlineHoursSchema,
+  mode: workspaceModeSchema,
 });
 
 export type WorkspaceSettingsResponse = z.infer<typeof workspaceSettingsResponseSchema>;

@@ -14,6 +14,15 @@ enum WorkspacePlan {
   @@map("workspace_plan")
 }
 
+// Presentation mode, not a data-model fork: lessons always carry a teacher.
+// SOLO hides every teacher control and implies the owner's own profile.
+enum WorkspaceMode {
+  SOLO
+  SCHOOL
+
+  @@map("workspace_mode")
+}
+
 enum WorkspaceRole {
   OWNER
   TEACHER
@@ -56,6 +65,32 @@ enum StudentStatus {
   @@map("student_status")
 }
 
+enum LessonStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED_CHARGED
+  CANCELLED_UNCHARGED
+
+  @@map("lesson_status")
+}
+
+enum CancelledBy {
+  TEACHER
+  STUDENT
+  GROUP
+
+  @@map("cancelled_by")
+}
+
+// ARCHIVED hides a teacher from active pickers without deleting their history
+// (distinct from deletedAt).
+enum TeacherStatus {
+  ACTIVE
+  ARCHIVED
+
+  @@map("teacher_status")
+}
+
 model User {
   id           String    @id @default(uuid())
   email        String    @unique
@@ -69,6 +104,9 @@ model User {
   authSessions AuthSession[]
   auditLogs    AuditLog[]
 
+  creditEntries LessonCreditEntry[]
+  payments      Payment[]
+
   @@map("users")
 }
 
@@ -76,8 +114,11 @@ model Workspace {
   id                        String        @id @default(uuid())
   name                      String
   plan                      WorkspacePlan @default(FREE)
+  mode                      WorkspaceMode @default(SOLO)
   defaultCurrency           String        @default("EUR")
   cancellationDeadlineHours Int           @default(24)
+  // Default IANA timezone for new lesson series; Stage 8 adds the settings UI.
+  timezone                  String        @default("Europe/Kyiv")
   createdAt                 DateTime      @default(now())
   updatedAt                 DateTime      @updatedAt
   deletedAt                 DateTime?
@@ -86,9 +127,17 @@ model Workspace {
   authSessions AuthSession[]
   students     Student[]
   parents      Parent[]
+  teachers     Teacher[]
   groups       Group[]
   enrollments  Enrollment[]
   auditLogs    AuditLog[]
+  lessons      Lesson[]
+  lessonSeries LessonSeries[]
+
+  packages            LessonPackage[]
+  creditEntries       LessonCreditEntry[]
+  participantShares   PackageParticipantShare[]
+  payments            Payment[]
 
   @@map("workspaces")
 }
@@ -106,7 +155,7 @@ model WorkspaceMember {
   workspace Workspace @relation(fields: [workspaceId], references: [id])
   user      User      @relation(fields: [userId], references: [id])
 
-  enrollmentsAsTeacher Enrollment[] @relation("EnrollmentTeacher")
+  teacherProfile Teacher?
 
   @@unique([workspaceId, userId])
   @@index([userId])
@@ -136,38 +185,39 @@ model AuthSession {
 }
 
 model Student {
-  id          String    @id @default(uuid())
-  workspaceId String
-  fullName    String
+  id               String        @id @default(uuid())
+  workspaceId      String
+  fullName         String
   // Not unique: siblings may share a contact.
-  email       String?
-  phone       String?
-  timezone    String
+  email            String?
+  phone            String?
+  timezone         String
   telegramUsername String?
   // Free-text label validated against a curated list at the app layer
   // (@tutorio/validation), not a DB enum — the catalogue is expected to grow.
-  subject     String?
+  subject          String?
   // Default price/currency for this student's enrollments; Enrollment.priceMinor
   // is the per-enrollment override, non-negative (DB CHECK below).
-  hourlyRateMinor Int?
-  currency    String?
-  status      StudentStatus @default(ACTIVE)
+  hourlyRateMinor  Int?
+  currency         String?
+  status           StudentStatus @default(ACTIVE)
   // Free-text labels validated against curated enums at the app layer.
-  languageLevel   String?
-  knowledgeLevel  String?
-  age         Int?
-  grade       Int?
+  languageLevel    String?
+  knowledgeLevel   String?
+  age              Int?
+  grade            Int?
   // One of a curated set of bundled illustration keys (validated at the app
   // layer), e.g. "user-3" — never a free-form URL. Null = show initials.
-  avatarKey   String?
-  notes       String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
+  avatarKey        String?
+  notes            String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  deletedAt        DateTime?
 
   workspace   Workspace       @relation(fields: [workspaceId], references: [id])
   enrollments Enrollment[]
   parents     StudentParent[]
+  packages    LessonPackage[]
 
   @@index([workspaceId, deletedAt])
   @@index([workspaceId, fullName])
@@ -219,20 +269,23 @@ model StudentParent {
 }
 
 model Group {
-  id          String    @id @default(uuid())
-  workspaceId String
-  name        String
-  notes       String?
+  id             String    @id @default(uuid())
+  workspaceId    String
+  name           String
+  notes          String?
   // Group-level default price/currency; Enrollment.priceMinor is the
   // per-enrollment override, non-negative (DB CHECK below).
   pricePerLesson Int?
-  currency    String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
+  currency       String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
 
-  workspace   Workspace    @relation(fields: [workspaceId], references: [id])
-  enrollments Enrollment[]
+  workspace    Workspace      @relation(fields: [workspaceId], references: [id])
+  enrollments  Enrollment[]
+  lessons      Lesson[]
+  lessonSeries LessonSeries[]
+  packages     LessonPackage[]
 
   @@index([workspaceId, deletedAt])
   @@index([workspaceId, name])
@@ -262,10 +315,16 @@ model Enrollment {
   updatedAt                 DateTime         @updatedAt
   deletedAt                 DateTime?
 
-  workspace Workspace       @relation(fields: [workspaceId], references: [id])
-  student   Student         @relation(fields: [studentId], references: [id])
-  group     Group?          @relation(fields: [groupId], references: [id])
-  teacher   WorkspaceMember @relation("EnrollmentTeacher", fields: [teacherId], references: [id])
+  workspace    Workspace      @relation(fields: [workspaceId], references: [id])
+  student      Student        @relation(fields: [studentId], references: [id])
+  group        Group?         @relation(fields: [groupId], references: [id])
+  teacher      Teacher        @relation("EnrollmentTeacher", fields: [teacherId], references: [id])
+  lessons      Lesson[]
+  lessonSeries LessonSeries[]
+
+  creditEntries     LessonCreditEntry[]
+  participantShares PackageParticipantShare[]
+  payments          Payment[]
 
   // Uniqueness among non-deleted rows only (one active enrollment per
   // student+group, one active individual enrollment per student+teacher) is
@@ -296,4 +355,321 @@ model AuditLog {
   @@index([workspaceId, createdAt])
   @@index([workspaceId, entity, entityId])
   @@map("audit_logs")
+}
+
+// A teaching profile, decoupled from the login account. Enrollment/Lesson/
+// LessonSeries.teacherId reference this, not WorkspaceMember. A teacher may
+// have no login (workspaceMemberId null) — a hired tutor tracked for scheduling
+// and billing without an account. subjects/color are validated at the app layer.
+model Teacher {
+  id                String        @id @default(uuid())
+  workspaceId       String
+  fullName          String
+  email             String?
+  phone             String?
+  telegramUsername  String?
+  subjects          String[]
+  bio               String?
+  // Default per-lesson rate (minor units) prefilled onto new enrollments.
+  defaultRateMinor  Int?
+  currency          String?
+  // Hex tint (#RRGGBB) for this teacher's calendar events.
+  color             String?
+  avatarKey         String?
+  status            TeacherStatus @default(ACTIVE)
+  // Optional link to a login account; unique so one member maps to one profile.
+  workspaceMemberId String?       @unique
+  notes             String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  deletedAt         DateTime?
+
+  workspace       Workspace        @relation(fields: [workspaceId], references: [id])
+  workspaceMember WorkspaceMember? @relation(fields: [workspaceMemberId], references: [id])
+  enrollments     Enrollment[]     @relation("EnrollmentTeacher")
+  lessons         Lesson[]         @relation("LessonTeacher")
+  lessonSeries    LessonSeries[]   @relation("LessonSeriesTeacher")
+
+  @@index([workspaceId, deletedAt])
+  @@index([workspaceId, fullName])
+  @@index([workspaceId, status])
+  @@map("teachers")
+}
+
+// A recurring lesson pattern stored in local time (weekday + wall-clock time +
+// tz); concrete Lessons are materialized to UTC over a rolling horizon by the
+// cron job. Exactly one of enrollmentId / groupId is set. packageId is null and
+// unused until Stage 4 (packages own the series).
+model LessonSeries {
+  id                       String    @id @default(uuid())
+  workspaceId              String
+  enrollmentId             String?
+  groupId                  String?
+  packageId                String?
+  // Denormalized from the enrollment/group so conflict detection and calendar
+  // filtering hit an index without joining.
+  teacherId                String
+  weekdays                 Int[]
+  localTime                String
+  timezone                 String
+  durationMin              Int
+  priceMinor               Int
+  currency                 String
+  startDate                DateTime
+  horizonMaterializedUntil DateTime
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+  deletedAt                DateTime?
+
+  workspace  Workspace   @relation(fields: [workspaceId], references: [id])
+  enrollment Enrollment? @relation(fields: [enrollmentId], references: [id])
+  group      Group?      @relation(fields: [groupId], references: [id])
+  teacher    Teacher     @relation("LessonSeriesTeacher", fields: [teacherId], references: [id])
+  lessons    Lesson[]
+
+  @@index([workspaceId, deletedAt])
+  @@index([enrollmentId])
+  @@index([groupId])
+  @@index([teacherId])
+  @@map("lesson_series")
+}
+
+// A concrete lesson at a UTC instant. Generated from a LessonSeries or created
+// as a one-off (seriesId null). isDetached marks a series lesson that was
+// rescheduled/cancelled individually and must not be regenerated. No financial
+// data beyond the status machine — the credit ledger is Stage 4.
+model Lesson {
+  id              String       @id @default(uuid())
+  workspaceId     String
+  enrollmentId    String?
+  groupId         String?
+  seriesId        String?
+  packageId       String?
+  teacherId       String
+  startsAtUtc     DateTime
+  durationMin     Int
+  priceMinor      Int
+  currency        String
+  status          LessonStatus @default(SCHEDULED)
+  isDetached      Boolean      @default(false)
+  // Reschedule history, kept as counters because no LessonStatus expresses
+  // "moved": a rescheduled lesson stays SCHEDULED, and isDetached is also set
+  // when a single lesson leaves its series for any other reason. Stage 5
+  // analytics buckets lessons by these instead of parsing AuditLog.diff.
+  rescheduledCount Int         @default(0)
+  rescheduledAt    DateTime?
+  cancelledBy     CancelledBy?
+  cancelledReason String?
+  cancelledAt     DateTime?
+  completedAt     DateTime?
+  notes           String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  deletedAt       DateTime?
+
+  workspace  Workspace     @relation(fields: [workspaceId], references: [id])
+  enrollment Enrollment?   @relation(fields: [enrollmentId], references: [id])
+  group      Group?        @relation(fields: [groupId], references: [id])
+  series     LessonSeries? @relation(fields: [seriesId], references: [id])
+  teacher    Teacher       @relation("LessonTeacher", fields: [teacherId], references: [id])
+
+  creditEntries LessonCreditEntry[]
+
+  // One materialized slot per series instant — the materializer's idempotency key.
+  @@unique([seriesId, startsAtUtc])
+  @@index([workspaceId, startsAtUtc])
+  @@index([teacherId, startsAtUtc])
+  @@index([seriesId])
+  @@index([enrollmentId])
+  @@index([groupId])
+  @@map("lessons")
+}
+
+// ---------------------------------------------------------------------------
+// Stage 4 — packages, credit ledger, payments
+//
+// Two ledgers, never one: `Payment` is money (currency minor units) and
+// `LessonCreditEntry` is lesson credits (±N lessons). "+200 EUR" and
+// "+8 lessons" are different units and must not share a table.
+// ---------------------------------------------------------------------------
+
+// FIXED_COUNT: the tutor states how many lessons the package holds.
+// BY_PERIOD: lessons are generated up to an end date from a recurring pattern.
+enum PackageSizingMode {
+  FIXED_COUNT
+  BY_PERIOD
+
+  @@map("package_sizing_mode")
+}
+
+enum PackagePaymentStatus {
+  PENDING
+  PARTIAL
+  PAID
+
+  @@map("package_payment_status")
+}
+
+// Mirrors @tutorio/domain LedgerEntryType. `purchase` credits the package;
+// lesson_* entries are driven by the lesson state machine; manual_adjustment
+// is the tutor's own correction (never an edit of an existing row).
+enum CreditEntryType {
+  purchase
+  lesson_completed
+  late_cancellation
+  teacher_cancellation_refund
+  manual_adjustment
+
+  @@map("credit_entry_type")
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  OTHER
+  // Online acquiring (WayForPay/Stripe). The method a provider settled with.
+  CARD
+
+  @@map("payment_method")
+}
+
+// A manual payment is PAID the moment it is recorded — the tutor already has
+// the money. An online payment starts PENDING and only becomes PAID when the
+// provider confirms it, so the lifecycle has to exist before acquiring lands.
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+
+  @@map("payment_status")
+}
+
+// A block of prepaid lessons for one student or one whole group (exactly one
+// target). `totalPriceMinorSnapshot` is the immutable purchase-time value; the
+// *effective* total (adjusted for uncharged cancellations) is derived at read
+// time from the credit ledger and is deliberately not stored.
+model LessonPackage {
+  id                          String               @id @default(uuid())
+  workspaceId                 String
+  studentId                   String?
+  groupId                     String?
+  name                        String?
+  sizingMode                  PackageSizingMode    @default(FIXED_COUNT)
+  // Set for FIXED_COUNT; for BY_PERIOD it holds the generated count.
+  lessonsTotal                Int
+  // Set for BY_PERIOD only.
+  endDate                     DateTime?
+  pricePerLessonMinorSnapshot Int
+  totalPriceMinorSnapshot     Int
+  currency                    String
+  paymentStatus               PackagePaymentStatus @default(PENDING)
+  purchasedAt                 DateTime             @default(now())
+  expiresAt                   DateTime?
+  notes                       String?
+  createdAt                   DateTime             @default(now())
+  updatedAt                   DateTime             @updatedAt
+  deletedAt                   DateTime?
+
+  workspace    Workspace                  @relation(fields: [workspaceId], references: [id])
+  student      Student?                   @relation(fields: [studentId], references: [id])
+  group        Group?                     @relation(fields: [groupId], references: [id])
+  creditEntries LessonCreditEntry[]
+  shares       PackageParticipantShare[]
+  payments     Payment[]
+
+  @@index([workspaceId, deletedAt])
+  // Revenue by period scans packages by purchase date (Stage 5 analytics).
+  @@index([workspaceId, purchasedAt])
+  @@index([studentId])
+  @@index([groupId])
+  @@map("lesson_packages")
+}
+
+// Append-only credit ledger, in lesson units. Never updated, never deleted: a
+// correction is a new compensating row. `idempotencyKey` is what makes a
+// double click, a retry or a replayed job safe.
+model LessonCreditEntry {
+  id             String          @id @default(uuid())
+  workspaceId    String
+  packageId      String
+  enrollmentId   String?
+  lessonId       String?
+  delta          Int
+  type           CreditEntryType
+  idempotencyKey String          @unique
+  note           String?
+  createdById    String?
+  createdAt      DateTime        @default(now())
+
+  workspace  Workspace     @relation(fields: [workspaceId], references: [id])
+  package    LessonPackage @relation(fields: [packageId], references: [id])
+  enrollment Enrollment?   @relation(fields: [enrollmentId], references: [id])
+  lesson     Lesson?       @relation(fields: [lessonId], references: [id])
+  createdBy  User?         @relation(fields: [createdById], references: [id])
+
+  @@index([packageId, createdAt])
+  @@index([workspaceId, createdAt])
+  @@index([lessonId])
+  @@map("lesson_credit_entries")
+}
+
+// A group package shares one schedule but splits the money: each member owes
+// their own share and pays it separately.
+model PackageParticipantShare {
+  id           String   @id @default(uuid())
+  workspaceId  String
+  packageId    String
+  enrollmentId String
+  oweMinor     Int
+  paidMinor    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  workspace  Workspace     @relation(fields: [workspaceId], references: [id])
+  package    LessonPackage @relation(fields: [packageId], references: [id])
+  enrollment Enrollment    @relation(fields: [enrollmentId], references: [id])
+
+  // One share per member per package.
+  @@unique([packageId, enrollmentId])
+  @@index([workspaceId])
+  @@map("package_participant_shares")
+}
+
+// The money ledger: an actual payment received, in currency minor units.
+// Recording a payment never touches lesson credits directly.
+model Payment {
+  id           String        @id @default(uuid())
+  workspaceId  String
+  enrollmentId String
+  packageId    String?
+  amountMinor  Int
+  currency     String
+  method       PaymentMethod @default(CASH)
+  status       PaymentStatus @default(PAID)
+  // Which PaymentProvider settled this. "manual" is the tutor writing down
+  // money already received; an acquirer sets its own key here.
+  provider     String        @default("manual")
+  // The provider's own reference (order id / transaction id).
+  externalId   String?
+  // Guards against a replayed provider webhook recording the same money twice.
+  // Null for manual entries, which are created by a human, one click at a time.
+  idempotencyKey String?     @unique
+  paidAt       DateTime      @default(now())
+  note         String?
+  createdById  String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?
+
+  workspace  Workspace      @relation(fields: [workspaceId], references: [id])
+  enrollment Enrollment     @relation(fields: [enrollmentId], references: [id])
+  package    LessonPackage? @relation(fields: [packageId], references: [id])
+  createdBy  User?          @relation(fields: [createdById], references: [id])
+
+  @@index([workspaceId, paidAt])
+  @@index([enrollmentId])
+  @@index([packageId])
+  @@index([provider, externalId])
+  @@map("payments")
 }

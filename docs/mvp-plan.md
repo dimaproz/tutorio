@@ -106,7 +106,8 @@ packages/
 
 - `Workspace` (plan, defaultCurrency, cancellationDeadlineHours, **timezone**, **meetingLink**)
 - `WorkspaceReceiptSettings` (workspaceId 1:1, businessName, recipientLine, email, phone, taxId, address, primaryColor, secondaryColor, invoicePrefix, currencySymbol, paymentRequisites, footerText)
-- `User`, `WorkspaceMember` (role: owner | teacher)
+- `User`, `WorkspaceMember` (role: owner | teacher) — the login/auth identity
+- `Teacher` (workspaceId, fullName, email?, phone?, telegramUsername?, subjects[] (validated against the subject catalogue at the app layer), bio?, defaultRateMinor?+currency?, color? (hex, per-teacher calendar tint), avatarKey?, status: active|archived, workspaceMemberId? (unique; links a teacher profile to a login account — null for account-less teachers), notes) — the **teaching profile**, decoupled from the login account. A teacher may exist without a `User`/`WorkspaceMember` (a hired tutor with no login). `Enrollment.teacherId`, `Lesson.teacherId` and `LessonSeries.teacherId` reference **`Teacher`**, not `WorkspaceMember` (repointed 2026-07-24; a `Teacher` row is backfilled for every existing teacher member in the migration).
 - `TelegramLink` (workspaceMemberId, chatId, connectedAt) — teacher's own bot connection for the daily digest; a student's reminder link instead keys off `Student.telegramUsername` + the bot's own chat-start webhook to capture `Student.telegramChatId`
 - `Student` (fullName, phone?, **telegramUsername?**, **telegramChatId?**, **subject?**, **hourlyRateMinor**, currency, timezone, notes, **status: active|on_hold**, **languageLevel?** (CEFR), **knowledgeLevel?**, **age?**, **grade?**, publicToken) — `parentName/parentEmail/parentPhone` are replaced by the `Parent` relation below
 - `Parent` (fullName, phone?, telegramUsername?, notes)
@@ -149,17 +150,151 @@ CRUD for students, groups, enrollments with statuses and individual rules (price
 - Verified live in the browser: created a student with every new field plus a linked parent, edited a group's price, confirmed both persist and render correctly; e2e (25 tests) and unit suites green across `apps/api`, `packages/validation`, `apps/web`.
 - **Update (redesign session, 2026-07-23) — supersedes the soft-delete/restore pattern above for two entities:** `Student` and `Parent` now hard-delete (irreversible; removes the record plus every link to it — `StudentParent` rows, and for students, `Enrollment` rows — in one transaction). There is no trash, no `state=deleted|all` filter, and no `/restore` endpoint for these two anymore; `Group`/`Enrollment` are untouched and still soft-delete. Added `Student.status: ARCHIVED` (third value alongside `ACTIVE`/`ON_HOLD`) as the non-destructive alternative surfaced right in the delete-confirmation dialog. Also shipped in this pass: student list filters (status/subject/group) and a parent list filter by linked student (avatar + search combobox), plus a redesigned delete-confirmation dialog (shows the person card, an explicit "this is permanent" warning, and an inline archive action). `docs/mvp-plan.md` line noting "`deletedAt` for soft delete" for all business tables amended accordingly.
 
-**Stage 3. Scheduling core** — the riskiest stage, unchanged in substance from the original plan
+**Stage 3. Scheduling core** — ✅ done · the riskiest stage, unchanged in substance from the original plan
 `packages/domain`: recurrence + materialization with tests for DST transitions. `LessonSeries` (now optionally owned by a package, see decision #4 above), cron materialization, day/week/month calendar with drag-and-drop rescheduling, conflict detection, bulk one-off lesson creation (multiple explicit dates in one form, as seen in production), rescheduling ("only this / this and following"), lesson statuses and the state machine of transitions, and the cancellation dialog (charge y/n + attributed to teacher/student/group). No financial consequences beyond the state machine yet — ledger wiring is Stage 4.
 
-**Stage 4. Packages, ledger, payments** — the product core
+**Stage 3.6. Teachers (staff directory)** — ✅ done · inserted 2026-07-24
+`Teacher` entity + `teachers` NestJS module (CRUD + soft delete/restore, OWNER-only, same audit-in-transaction pattern as students/groups). Repoint `Enrollment/Lesson/LessonSeries.teacherId` from `WorkspaceMember` to `Teacher` (backfill migration). Teacher list + detail web pages, sidebar nav. The teacher selector in the enrollment editor, lesson form and series form switches from the workspace-members roster to the teachers list. The group create/edit form gains a member block (student + teacher + price + currency) that creates/reconciles `Enrollment`s for the group. `Teacher.defaultRateMinor` prefills the enrollment price; `Teacher.color` will tint that teacher's calendar events.
+
+**Stage 4. Packages, ledger, payments** — ✅ done · the product core
 `packages/domain`: the "status transition → ledger operation" rules with full test coverage (all 8 complex cases from the original plan: 8 lessons for 9 lessons in a month, late cancellation, refund on teacher cancellation, freeze, price snapshot, etc., plus the confirmed auto-rebook-on-uncharged-cancel behavior). `LessonPackage` supporting **both** `studentId` and `groupId` targets, fixed-count and by-period sizing, `LessonCreditEntry` with idempotency, manual `Payment`, **per-participant payment shares for group packages** (`PackageParticipantShare`, equal split by default, each with its own paid/pending/partial badge and "record payment" action), manual balance adjustment, a student/group finance screen with a "why the balance is what it is" ledger history (mirrors the production "Історія" tab). The package-creation flow's optional recurring schedule (weekdays + time + timezone) is what actually creates the `LessonSeries` from Stage 3, alongside a standalone pattern-management view (`/lessons/patterns` equivalent) — build the package form and the series materializer together.
 
-**Stage 4.5. Leads / CRM funnel**
-`Lead` entity + 6-stage pipeline (new → contacted → trial_scheduled → trial_completed → converted → lost), kanban board with drag-between-stages, funnel stats (active leads, trials this week, converted this month, conversion %, potential revenue, trial revenue), trial-lesson scheduling (free or paid, produces a `Lesson` flagged as a trial), one-click convert-lead-to-student (creates `Student` [+ `Enrollment`] from the lead's data). Depends on Stage 3 for trial-lesson scheduling but is otherwise independent — can run in parallel with Stage 4 if capacity allows.
-
 **Stage 5. Dashboard, Analytics, and Telegram**
+
 Real dashboard widgets replacing the current empty-state (`apps/web/src/components/app/dashboard.tsx`): today's lessons, low-balance/debtor alerts, monthly income per currency. A dedicated `analytics` module: period presets + custom range, revenue/lessons/new-students KPI cards with period-over-period change, revenue-by-source chart (lessons vs. packages), lesson-status breakdown, top earners, day-by-day table, and a payment report with Excel export. Telegram integration — corrected from "out of MVP" per the audit: student reminders (timezone-aware, includes the workspace meeting link, sent **24h and 1h** before), homework delivery (triggered from a lesson journal entry, with attachments), and the teacher's own daily digest bot. Cron-driven, `@nestjs/schedule` is sufficient at this volume.
+
+### Stage 5 analytics contract
+
+Written up front because the aggregation semantics are not derivable from the
+Stage 4 schema alone, and two of them require migrations that are cheap now and
+expensive once the widgets exist.
+
+#### Three money figures, never one
+
+The product has two ledgers (`Payment` = money, `LessonCreditEntry` = lesson
+credits), so "income" is ambiguous until it is split:
+
+| Figure | Definition | Answers |
+| --- | --- | --- |
+| **Accrued** | What the tutor has earned, paid or not | "How much did I make in July?" |
+| **Received** | `Payment` rows with `status = PAID` | "How much money actually arrived?" |
+| **Expected** | Earned-but-unpaid plus scheduled-but-unearned | "What is still coming?" |
+
+`Accrued − Received` is student debt. Reporting `Payment` alone would silently
+drop every pay-as-you-go lesson — the default flow for a solo tutor who bills at
+month end — which is precisely the hole Stage 4 leaves open (it can only express
+debt as a negative package balance, and only when a package exists at all).
+
+Recognition rules — each event contributes to exactly one figure, at one
+timestamp, for one amount:
+
+| Event | Figure | Timestamp | Amount |
+| --- | --- | --- | --- |
+| Package purchased | accrued | `purchasedAt` | `totalPriceMinorSnapshot` |
+| Uncovered lesson reaches `COMPLETED` or `CANCELLED_CHARGED` | accrued | `startsAtUtc` | `Lesson.priceMinor` |
+| Payment recorded `PAID` | received | `paidAt` | `amountMinor` |
+| Package with unsettled remainder | expected | — | total − payments |
+| Uncovered future lesson still `SCHEDULED` | expected | `startsAtUtc` | `Lesson.priceMinor` |
+
+Lessons are recognised on `startsAtUtc`, not `completedAt`: a tutor reconciling
+a month means "the lessons that happened in it", and it keeps the chart's lesson
+series aligned with the calendar. Note the two series in the revenue chart are
+therefore driven by **different events** — packages by purchase date, lessons by
+lesson date — which is why a single package can spike one day while lessons
+trickle across the others.
+
+#### The double-counting invariant
+
+A lesson contributes to accrued revenue **only when no `LessonCreditEntry`
+references it**. Money for a covered lesson was already recognised inside its
+package total.
+
+Do **not** express "uncovered" as `Lesson.packageId IS NULL`. That is the trap:
+`LedgerService.resolvePackageForLesson` falls back to the student's (or group's)
+most recent package when the lesson carries no `packageId` of its own, so a
+lesson with a null `packageId` can still have consumed a credit. The only honest
+test is the ledger itself:
+
+```sql
+LEFT JOIN lesson_credit_entries lce ON lce."lessonId" = l.id
+WHERE lce.id IS NULL
+```
+
+Related rules that fall out of the same principle:
+
+- `CANCELLED_UNCHARGED` never accrues; `CANCELLED_CHARGED` accrues exactly like
+  `COMPLETED` (mirror `planTransition` in `packages/domain/src/ledger.ts` rather
+  than re-deciding it in SQL).
+- `manual_adjustment` entries move credits, never money — they must never appear
+  in any revenue figure.
+- A group package accrues **once** (`totalPriceMinorSnapshot`); the per-member
+  `PackageParticipantShare` rows are a split of that same money, not extra
+  revenue. Received still comes from `Payment`, which resolves per enrollment.
+- `REFUNDED` and `FAILED` payments are excluded from received; a refund reduces
+  it. `PENDING` (online acquiring) counts as expected, not received.
+
+#### Schema work that must land before the widgets
+
+1. **Reschedule tracking — done ahead of the stage** (migration
+   `20260725200000_lesson_reschedule_tracking`). The "Перенесені на ін. день"
+   slice had no source: `LessonStatus` has four values and none of them is
+   "rescheduled" — a reschedule moves `startsAtUtc` and sets `isDetached`,
+   leaving the lesson `SCHEDULED`. `isDetached` cannot stand in for it (it is
+   also set when a single lesson of a series is cancelled, and means "this slot
+   left the pattern"), and deriving it from `AuditLog.diff` means parsing JSON
+   per row on every dashboard load. `Lesson.rescheduledCount` /
+   `Lesson.rescheduledAt` are now bumped by `LessonsService.reschedule` in both
+   scopes — `this` on the lesson itself, `this_and_following` on the regenerated
+   lesson occupying the new slot — and exposed on `lessonResponseSchema`. Brought
+   forward because every move made before it existed is unrecoverable; rows
+   predating the migration start at 0 and are deliberately not backfilled.
+   Still open for the stage: decide whether the donut slices are mutually
+   exclusive — a rescheduled lesson is still `SCHEDULED`, so either "rescheduled"
+   wins over "scheduled" or the slices stop summing to 100%.
+2. **Revenue target — deferred to the stage on purpose.** "Виконання плану" has
+   nothing to render against: no goal exists anywhere in the model. Add
+   `Workspace.monthlyRevenueTargetMinor Int?` (denominated in `defaultCurrency`)
+   plus a settings field. Unlike the counters above, nothing is lost by waiting —
+   a target is a static setting, not accumulating history — and shipping the
+   settings control before any widget consumes it would be dead UI. A per-period
+   goal table is not worth it for the MVP.
+3. **Index `LessonPackage @@index([workspaceId, purchasedAt])` — done** (same
+   migration). Revenue by period scans packages by purchase date and only
+   `[workspaceId, deletedAt]` existed. `Payment` already has
+   `[workspaceId, paidAt]` and `Lesson` has `[workspaceId, startsAtUtc]`; no work
+   needed there.
+
+#### Currency and time
+
+- **Never sum across currencies** (constraint 10). Every response is a list keyed
+  by currency; the UI renders the workspace default first and the rest beneath.
+  A KPI tile that adds UAH to EUR is a bug, not a rounding detail.
+- **Period bounds are computed in `Workspace.timezone`**, then converted to UTC
+  once for the query. Day buckets for the chart need per-row conversion:
+  `date_trunc('day', l."startsAtUtc" AT TIME ZONE $tz)`. Getting this wrong shows
+  up as lessons landing in the wrong day at the month boundary.
+- Period-over-period compares against the immediately preceding window of equal
+  length. An empty period returns zeros, never a 404.
+
+#### Module shape
+
+Read-only `analytics` module: no writes, no audit rows, no side effects.
+Aggregate in SQL (`groupBy` / `$queryRaw`) — never load lesson rows into JS to
+sum them. Every query filters `deletedAt IS NULL` on lessons, packages, payments
+and students alike.
+
+Access follows the workspace mode: an `OWNER` sees the whole workspace; in
+`SCHOOL` mode a `TEACHER` sees only rows for their own `teacherId`. The "top
+earners" widget is meaningless in `SOLO` mode and is hidden there, the same way
+every other teacher control is.
+
+Endpoints (all take `from`, `to`, optional `teacherId`):
+`GET /api/analytics/summary` (KPI tiles + period-over-period),
+`GET /api/analytics/revenue-series` (daily buckets, split lessons/packages),
+`GET /api/analytics/lesson-breakdown` (donut),
+`GET /api/analytics/top-teachers` (SCHOOL only),
+`GET /api/analytics/payments/export` (streamed XLSX — build the sheet from the
+payment rows, not from the aggregates, so the export reconciles with "received").
 
 **Stage 6. Learning progress tracking**
 `ProgressEntry` (date/topic/homework-done/engagement rating, not lesson-linked), `TestResult` (optionally lesson-linked, with passing-score pass/fail), `LessonJournalEntry` (title/description/homework text + attachments, with a "send homework to Telegram" action), `AttendanceRecord` for group lessons (present / absent-paid / absent-unpaid tri-state). Surface all three as tabs on the student detail page (as in production) plus a standalone Progress page for picking a student or a whole group. Depends on Stage 3 (`Lesson` must exist for the optional links) and benefits from Stage 5's Telegram module (homework send action).
@@ -172,6 +307,10 @@ A mobile page by token link: upcoming lessons, balance, payment history, lesson 
 
 **Stage 9. Import, SpeakWise pilot, and the in-app Features catalogue**
 CSV import of students/schedule/balances, migration of real SpeakWise data, a full payment month through the system, recording every manual fix as a bug report, bugfixes. GDPR minimum: privacy policy, workspace export/deletion. Optionally add the `/features` ("Можливості") in-app catalogue page last — it's pure static content linking to real routes, cheapest to build once everything else exists.
+
+**Stage 9.5. Leads / CRM funnel** — moved back from 4.5 on 2026-07-26
+Deliberately after the pilot: a lead funnel wins new students, it does not run the ones already enrolled, so nothing here blocks launching the system or migrating SpeakWise.
+`Lead` entity + 6-stage pipeline (new → contacted → trial_scheduled → trial_completed → converted → lost), kanban board with drag-between-stages, funnel stats (active leads, trials this week, converted this month, conversion %, potential revenue, trial revenue), trial-lesson scheduling (free or paid, produces a `Lesson` flagged as a trial), one-click convert-lead-to-student (creates `Student` [+ `Enrollment`] from the lead's data). Depends only on Stage 3 for trial-lesson scheduling, so it can be pulled forward if paid acquisition starts before the pilot ends.
 
 **Out of MVP (next stages, when ready):** Stripe/WayForPay payment links + webhooks, Google Calendar sync, Expo app on top of the finished API, SaaS subscription billing, multi-currency FX-rate rollup in analytics (production does this nightly; defer until real multi-currency workspaces exist).
 

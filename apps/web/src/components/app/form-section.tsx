@@ -13,7 +13,7 @@ export function FormSection({
   title,
   description,
   action,
-  tone = 'indigo',
+  tone = 'primary',
   children,
   className,
 }: {

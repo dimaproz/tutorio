@@ -21,7 +21,8 @@
     "required": "Required",
     "open": "Open",
     "deleted": "Deleted",
-    "restoreOwnerOnly": "Only the owner can restore"
+    "restoreOwnerOnly": "Only the owner can restore",
+    "remove": "Remove"
   },
   "auth": {
     "login": {
@@ -47,7 +48,12 @@
       "confirmPassword": "Confirm password",
       "submit": "Create workspace",
       "haveAccount": "Already have an account?",
-      "loginLink": "Sign in"
+      "loginLink": "Sign in",
+      "mode": "How do you work?",
+      "modeSolo": "I tutor on my own",
+      "modeSchool": "We are a school with several teachers",
+      "modeSoloHint": "No teacher pickers anywhere — every lesson is yours. Changeable later in settings.",
+      "modeSchoolHint": "Lessons and enrollments record which teacher they belong to."
     },
     "errors": {
       "EMAIL_TAKEN": "This email is already registered. Try signing in instead.",
@@ -74,7 +80,18 @@
     "SESSION_EXPIRED": "Your session has expired. Please sign in again.",
     "FORBIDDEN": "You don't have permission to do that.",
     "UNEXPECTED": "Something went wrong. Please try again.",
-    "generic": "Something went wrong. Please try again."
+    "generic": "Something went wrong. Please try again.",
+    "LESSON_NOT_FOUND": "Lesson not found.",
+    "LESSON_SERIES_NOT_FOUND": "Recurring pattern not found.",
+    "SCHEDULE_CONFLICT": "The teacher already has a lesson at that time.",
+    "INVALID_LESSON_TRANSITION": "This lesson status change is not allowed.",
+    "TEACHER_NOT_FOUND": "Teacher not found.",
+    "PACKAGE_NOT_FOUND": "Package not found.",
+    "PAYMENT_NOT_FOUND": "Payment not found.",
+    "NO_ACTIVE_PACKAGE": "No active package covers this lesson.",
+    "INVALID_PACKAGE_PLAN": "The package settings are not valid.",
+    "CURRENCY_MISMATCH": "The currency does not match the record.",
+    "SOLO_MODE_SINGLE_TEACHER": "A solo workspace keeps a single teacher. Switch to school mode in settings to add more."
   },
   "validation": {
     "emailInvalid": "Enter a valid email address",
@@ -97,7 +114,21 @@
     "priceInvalid": "Enter an amount like 1500 or 1500.50",
     "priceRequired": "Enter a price",
     "deadlineRange": "Enter a number of hours between 0 and 336",
-    "invalid": "This value is invalid"
+    "invalid": "This value is invalid",
+    "durationRange": "Duration must be between 5 and 720 minutes",
+    "dateRequired": "Choose a date",
+    "timeInvalid": "Enter a time like 00:00",
+    "weekdaysRequired": "Choose at least one weekday",
+    "lessonsTotalRange": "Lesson count must be between 1 and 500",
+    "scheduleRequiredForPeriod": "A by-period package needs a schedule",
+    "amountPositive": "Amount must be greater than zero",
+    "deltaInvalid": "Enter a whole number of lessons",
+    "deltaNotZero": "The change cannot be zero",
+    "deltaRange": "The change must be between -500 and 500",
+    "noteRequired": "Add a reason",
+    "studentRequired": "Choose a student",
+    "groupRequired": "Choose a group",
+    "intRange": "Enter a number between {min} and {max}"
   },
   "pagination": {
     "label": "Pagination",
@@ -189,7 +220,9 @@
       "calendar": "Calendar",
       "finance": "Finance",
       "settings": "Settings",
-      "comingSoon": "Coming soon"
+      "comingSoon": "Coming soon",
+      "patterns": "Schedule",
+      "teachers": "Teachers"
     },
     "sidebar": {
       "toggle": "Toggle sidebar"
@@ -217,8 +250,15 @@
     },
     "dashboard": {
       "welcome": "Welcome, {name}!",
+      "today": "Today",
+      "lessonsToday": "Lessons today",
+      "lessonsWeek": "This week",
+      "noToday": "No lessons scheduled today.",
+      "openCalendar": "Open calendar",
       "emptyTitle": "Your workspace is ready",
-      "emptyDescription": "Students, groups, calendar and finance will appear here in the next stages. For now, explore the navigation and account settings."
+      "emptyDescription": "Students, groups, calendar and finance will appear here in the next stages. For now, explore the navigation and account settings.",
+      "noneThisWeek": "No lessons this week.",
+      "noneThisWeekHint": "Book a lesson or set up a recurring schedule."
     }
   },
   "students": {
@@ -408,7 +448,19 @@
       "notes": "Notes",
       "notesPlaceholder": "Schedule, level, materials",
       "submitCreate": "Create group",
-      "submitEdit": "Save changes"
+      "submitEdit": "Save changes",
+      "students": {
+        "section": "Students",
+        "hint": "Enroll students into this group.",
+        "add": "Add student",
+        "teacher": "Teacher",
+        "price": "Price",
+        "remove": "Remove",
+        "none": "No students yet.",
+        "student": "Student",
+        "pickStudent": "Select a student",
+        "pickTeacher": "Select a teacher"
+      }
     },
     "detail": {
       "priceTitle": "Price per lesson",
@@ -479,12 +531,15 @@
       "editSubtitle": "Update contact details and notes.",
       "avatarSection": "Avatar",
       "avatarInitials": "Initials",
+      "basicSection": "Basic information",
       "fullName": "Full name",
+      "contactsSection": "Contact details",
       "phone": "Phone",
       "phonePlaceholder": "+380 XX XXX XX XX",
       "telegramUsername": "Telegram username",
       "telegramPlaceholder": "username",
       "notes": "Notes",
+      "notesSection": "Notes",
       "notesPlaceholder": "Anything worth remembering about this parent",
       "submitCreate": "Create parent",
       "submitEdit": "Save changes"
@@ -495,7 +550,7 @@
       "notesTitle": "Notes",
       "studentsTitle": "Linked students",
       "noStudents": "No students linked yet",
-      "noStudentsDescription": "Link this parent from a student's edit form.",
+      "noStudentsDescription": "Search for and link one or more students.",
       "deletedTitle": "This parent is in the trash",
       "deletedDescription": "Restore the parent to edit them again."
     },
@@ -573,7 +628,12 @@
       "priceNotice": "Existing enrollments keep the currency and price you configured for them — changing the default never rewrites them.",
       "deadlineNotice": "Enrollments without their own deadline will immediately follow the new default.",
       "submit": "Save settings",
-      "saved": "Settings saved"
+      "saved": "Settings saved",
+      "mode": "Workspace mode",
+      "modeSolo": "Solo tutor",
+      "modeSchool": "School with several teachers",
+      "modeSoloHint": "Teacher controls stay hidden and every lesson is yours. Switch to school mode when someone joins you.",
+      "modeSchoolHint": "Lessons, enrollments and the calendar ask which teacher they belong to."
     },
     "audit": {
       "title": "Audit log",
@@ -692,5 +752,359 @@
     "groupId": "Group",
     "teacherId": "Teacher",
     "deletedAt": "Trash status"
+  },
+  "scheduling": {
+    "calendar": {
+      "title": "Calendar",
+      "subtitle": "Lessons across your workspace.",
+      "newLesson": "New lesson",
+      "empty": "No lessons in this range.",
+      "loading": "Updating…",
+      "filterTeacher": "Teacher",
+      "filterStatus": "Status",
+      "filterAll": "All"
+    },
+    "toolbar": {
+      "today": "Today",
+      "back": "Back",
+      "next": "Next",
+      "month": "Month",
+      "week": "Week",
+      "day": "Day",
+      "agenda": "Agenda",
+      "date": "Date",
+      "time": "Time",
+      "event": "Lesson",
+      "noEvents": "No lessons in this range."
+    },
+    "status": {
+      "SCHEDULED": "Scheduled",
+      "COMPLETED": "Completed",
+      "CANCELLED_CHARGED": "Cancelled (charged)",
+      "CANCELLED_UNCHARGED": "Cancelled (free)"
+    },
+    "cancelledBy": {
+      "TEACHER": "Teacher",
+      "STUDENT": "Student",
+      "GROUP": "Group"
+    },
+    "actions": {
+      "title": "Lesson",
+      "complete": "Mark completed",
+      "cancel": "Cancel lesson",
+      "reschedule": "Reschedule",
+      "reactivate": "Reactivate",
+      "notes": "Lesson notes",
+      "notesPlaceholder": "e.g. covered Past Simple, homework p. 42",
+      "saveNotes": "Save note",
+      "close": "Close",
+      "rescheduleTitle": "Reschedule lesson",
+      "rescheduleSubtitle": "Pick a new time. A conflict can still be overridden.",
+      "newTime": "New time",
+      "scope": "What to move",
+      "scopeThis": "This lesson only",
+      "scopeFollowing": "This and following",
+      "delete": "Delete lesson",
+      "deleteTitle": "Delete this lesson?",
+      "deleteDescription": "The lesson leaves the calendar. If it came from a pattern, it will not be regenerated.",
+      "deadlineLate": "{hours} h until the lesson, deadline {deadline} h — this is a late cancellation.",
+      "deadlineOnTime": "{hours} h until the lesson, deadline {deadline} h — cancelling on time.",
+      "deadlineStarted": "The lesson has already started — this is a late cancellation.",
+      "toastRescheduled": "Lesson rescheduled.",
+      "toastDeleted": "Lesson deleted.",
+      "toastUpdated": "Lesson updated."
+    },
+    "conflict": {
+      "title": "Time conflict",
+      "message": "The teacher already has a lesson overlapping this time.",
+      "force": "Book anyway"
+    },
+    "lessonForm": {
+      "createTitle": "New lesson",
+      "createSubtitle": "Book one or more lessons.",
+      "student": "Student",
+      "studentPlaceholder": "Select a student",
+      "studentSearch": "Search students…",
+      "studentEmpty": "No student found",
+      "studentHint": "The price is prefilled from the student's rate — you can change it.",
+      "teacher": "Teacher",
+      "teacherPlaceholder": "Select a teacher",
+      "teacherSearch": "Search teachers…",
+      "teacherEmpty": "No teacher found",
+      "date": "Date and time",
+      "duration": "Duration (min)",
+      "price": "Price per lesson",
+      "pricePlaceholder": "From the student's rate",
+      "notes": "Lesson notes",
+      "notesPlaceholder": "e.g. covered Past Simple, homework p. 42",
+      "addDate": "Add another date",
+      "removeDate": "Remove",
+      "submit": "Create"
+    },
+    "studentLessons": {
+      "title": "Lessons",
+      "addLesson": "Add lesson",
+      "upcoming": "Upcoming ({count})",
+      "past": "Past ({count})",
+      "noUpcoming": "No lessons scheduled.",
+      "noPast": "No lessons yet."
+    },
+    "cancelDialog": {
+      "title": "Cancel lesson",
+      "subtitle": "Choose how this cancellation is billed.",
+      "charge": "Billing",
+      "charged": "Charge the lesson",
+      "uncharged": "Do not charge (free)",
+      "by": "Cancelled by",
+      "reason": "Reason (optional)",
+      "billingPending": "The billing choice is recorded now, but balances and refunds start working once the Finance section ships.",
+      "submit": "Confirm cancellation",
+      "cancel": "Back"
+    },
+    "patterns": {
+      "title": "Schedule",
+      "subtitle": "Recurring lesson patterns.",
+      "newPattern": "New pattern",
+      "empty": "No recurring patterns yet.",
+      "weekdays": "Weekdays",
+      "time": "Time",
+      "duration": "Duration",
+      "target": "Student",
+      "delete": "Delete",
+      "deleteConfirm": "Delete this pattern and its future lessons?",
+      "toastCreated": "Pattern created.",
+      "toastUpdated": "Pattern updated.",
+      "toastDeleted": "Pattern deleted.",
+      "deleteTitle": "Delete this pattern?",
+      "minutes": "{count} min"
+    },
+    "seriesForm": {
+      "createTitle": "New pattern",
+      "createSubtitle": "Generate recurring lessons automatically.",
+      "editTitle": "Edit pattern",
+      "editSubtitle": "Changing the schedule regenerates future lessons.",
+      "student": "Student",
+      "studentPlaceholder": "Select a student",
+      "studentSearch": "Search students…",
+      "studentEmpty": "No student found",
+      "teacher": "Teacher",
+      "teacherPlaceholder": "Select a teacher",
+      "teacherSearch": "Search teachers…",
+      "teacherEmpty": "No teacher found",
+      "weekdays": "Weekdays",
+      "time": "Local time",
+      "timezone": "Timezone",
+      "duration": "Duration (min)",
+      "price": "Price per lesson",
+      "startDate": "Start date",
+      "submit": "Save",
+      "cancel": "Cancel"
+    }
+  },
+  "teachers": {
+    "title": "Teachers",
+    "subtitle": "Teaching staff of your workspace.",
+    "add": "Add teacher",
+    "searchLabel": "Search teachers",
+    "searchPlaceholder": "Search by name or contact…",
+    "tableCaption": "Workspace teachers",
+    "columns": {
+      "teacher": "Teacher",
+      "status": "Status",
+      "contacts": "Contacts",
+      "subjects": "Subjects",
+      "enrollments": "Enrollments",
+      "actions": "Actions"
+    },
+    "enrollmentsCount": "{count, plural, =0 {No enrollments} one {# enrollment} other {# enrollments}}",
+    "status": {
+      "ACTIVE": "Active",
+      "ARCHIVED": "Archived"
+    },
+    "empty": {
+      "title": "No teachers yet",
+      "description": "Add your first teacher to assign lessons and enrollments.",
+      "action": "Add teacher"
+    },
+    "emptySearch": {
+      "title": "No teachers found",
+      "description": "Try a different name or contact."
+    },
+    "error": {
+      "title": "Couldn't load teachers"
+    },
+    "deleteDialog": {
+      "title": "Delete teacher",
+      "description": "Delete {name}? Existing lessons and enrollments keep the reference.",
+      "confirm": "Delete"
+    },
+    "toasts": {
+      "created": "Teacher created",
+      "updated": "Teacher updated",
+      "deleted": "Teacher deleted"
+    },
+    "detail": {
+      "addedOn": "Added {date}",
+      "contactsTitle": "Contacts",
+      "teachingTitle": "Teaching",
+      "bioTitle": "About",
+      "notesTitle": "Notes",
+      "noSubjects": "No subjects set",
+      "rate": "Default rate"
+    },
+    "form": {
+      "createTitle": "Add teacher",
+      "editTitle": "Edit teacher",
+      "createSubtitle": "Create a teaching profile.",
+      "editSubtitle": "Update the teaching profile.",
+      "avatarSection": "Avatar",
+      "avatarInitials": "Initials",
+      "fullName": "Full name",
+      "email": "Email",
+      "phone": "Phone",
+      "phonePlaceholder": "+380 …",
+      "telegramUsername": "Telegram",
+      "telegramPlaceholder": "username",
+      "subjects": "Subjects",
+      "subjectsPlaceholder": "Add a subject",
+      "defaultRate": "Default rate",
+      "ratePlaceholder": "e.g. 500",
+      "currency": "Currency",
+      "color": "Calendar color",
+      "status": "Status",
+      "bio": "About",
+      "bioPlaceholder": "Short description shown on the profile.",
+      "notes": "Notes",
+      "notesPlaceholder": "Internal notes.",
+      "submitCreate": "Create teacher",
+      "submitEdit": "Save changes"
+    },
+    "you": "You"
+  },
+  "packages": {
+    "title": "Finance",
+    "subtitle": "Lesson packages, balances and payments.",
+    "add": "New package",
+    "empty": "No packages yet.",
+    "emptyHint": "Create a package to track lesson balances and payments.",
+    "tableCaption": "Lesson packages",
+    "paymentStatus": {
+      "PAID": "Paid",
+      "PARTIAL": "Partial",
+      "PENDING": "Unpaid"
+    },
+    "paymentState": {
+      "PAID": "Settled",
+      "PENDING": "Pending",
+      "FAILED": "Failed",
+      "REFUNDED": "Refunded"
+    },
+    "method": {
+      "CASH": "Cash",
+      "BANK_TRANSFER": "Transfer",
+      "OTHER": "Other",
+      "CARD": "Card"
+    },
+    "entryType": {
+      "purchase": "Package purchased",
+      "lesson_completed": "Lesson completed",
+      "late_cancellation": "Late cancellation",
+      "teacher_cancellation_refund": "Cancelled without charge",
+      "manual_adjustment": "Manual adjustment"
+    },
+    "columns": {
+      "package": "Package",
+      "owner": "Student or group",
+      "balance": "Balance",
+      "total": "Total",
+      "status": "Payment",
+      "actions": "Actions"
+    },
+    "card": {
+      "remaining": "Lessons left",
+      "of": "of {total}",
+      "effectiveTotal": "Adjusted for missed lessons",
+      "paid": "Paid",
+      "purchasedAt": "Purchased {date}"
+    },
+    "detail": {
+      "historyTitle": "History",
+      "historySubtitle": "Every balance move is its own entry. Nothing is rewritten.",
+      "sharesTitle": "Group member payments",
+      "recordPayment": "Record payment",
+      "adjust": "Adjust balance",
+      "paymentsTitle": "Payments",
+      "noPayments": "No payments yet.",
+      "noEntries": "No entries yet.",
+      "owes": "Owes"
+    },
+    "form": {
+      "createTitle": "New package",
+      "createSubtitle": "A package credits its lessons to the balance right away.",
+      "targetKind": "For whom",
+      "targetStudent": "Student",
+      "targetGroup": "Group",
+      "student": "Student",
+      "studentPlaceholder": "Select a student",
+      "studentSearch": "Search students…",
+      "studentEmpty": "No student found",
+      "group": "Group",
+      "groupPlaceholder": "Select a group",
+      "name": "Name (optional)",
+      "namePlaceholder": "e.g. Autumn, 8 lessons",
+      "sizingMode": "Package size",
+      "fixedCount": "Fixed count",
+      "byPeriod": "By period",
+      "lessonsTotal": "Number of lessons",
+      "endDate": "Valid until",
+      "pricePerLesson": "Price per lesson",
+      "currency": "Currency",
+      "notes": "Notes",
+      "scheduleEnabled": "Create a recurring schedule",
+      "scheduleHint": "Lessons are generated automatically from this schedule.",
+      "weekdays": "Weekdays",
+      "time": "Time",
+      "timezone": "Timezone",
+      "duration": "Duration (min)",
+      "submit": "Create package",
+      "period": "Active period"
+    },
+    "payment": {
+      "title": "Record payment",
+      "subtitle": "Writing down money you have already received.",
+      "student": "Student",
+      "amount": "Amount",
+      "method": "Method",
+      "note": "Note",
+      "submit": "Save payment"
+    },
+    "adjustDialog": {
+      "title": "Adjust balance",
+      "subtitle": "Adds a new entry - history is never rewritten.",
+      "delta": "Change (lessons)",
+      "deltaHint": "A positive number credits, a negative one consumes.",
+      "note": "Reason",
+      "submit": "Apply"
+    },
+    "toasts": {
+      "created": "Package created.",
+      "paymentRecorded": "Payment recorded.",
+      "adjusted": "Balance adjusted.",
+      "deleted": "Package deleted."
+    },
+    "deleteDialog": {
+      "title": "Delete this package?",
+      "description": "The balance history is kept, but the package leaves the list."
+    }
+  },
+  "datePicker": {
+    "pickDate": "Pick a date",
+    "pickRange": "Pick a period",
+    "pickTime": "Pick a time",
+    "clear": "Clear",
+    "pickDateFirst": "Pick a date first",
+    "pickRangeEnd": "Pick the end of the period",
+    "nights": "{count, plural, one {# day} other {# days}}",
+    "pickSlot": "Pick a date and time"
   }
 }

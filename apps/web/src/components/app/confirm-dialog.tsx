@@ -11,6 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Spinner } from '@/components/ui/spinner';
 
 // Every destructive action goes through this dialog. The copy always says the
 // record is moved to trash — Stage 2 has no permanent deletion at all.
@@ -49,6 +50,7 @@ export function ConfirmDialog({
             }}
             disabled={pending}
           >
+            {pending ? <Spinner data-icon="inline-start" /> : null}
             {confirmLabel}
           </AlertDialogAction>
         </AlertDialogFooter>

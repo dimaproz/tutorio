@@ -6,22 +6,11 @@ import { LayersIcon, PlusIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { GroupCard } from './group-card';
 import { GroupFormDialog } from './group-form-dialog';
-import {
-  ListPagination,
-  ListSearchInput,
-  ListStateFilter,
-} from '@/components/app/list-controls';
+import { ListPagination, ListSearchInput, ListStateFilter } from '@/components/app/list-controls';
 import { ListSkeleton, PageHeader, QueryErrorAlert } from '@/components/app/page-shell';
 import { useSession } from '@/components/app/session-provider';
 import { Button } from '@/components/ui/button';
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '@/components/ui/empty';
+import { CollectionEmptyState, CollectionToolbar } from '@/components/shared';
 import { parsePageParam, parseStateParam } from '@/lib/api/filters';
 import { useGroupsQuery } from '@/lib/api/groups';
 
@@ -54,10 +43,10 @@ export function GroupsList() {
         }
       />
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <CollectionToolbar>
         <ListSearchInput label={t('searchLabel')} placeholder={t('searchPlaceholder')} />
         {isOwner ? <ListStateFilter value={state} /> : null}
-      </div>
+      </CollectionToolbar>
 
       {groups.isPending ? <ListSkeleton /> : null}
 
@@ -102,22 +91,18 @@ function GroupsEmptyState({
   const scope = search ? 'emptySearch' : state === 'deleted' ? 'emptyDeleted' : 'empty';
 
   return (
-    <Empty className="border border-dashed">
-      <EmptyHeader>
-        <EmptyMedia variant="icon">
-          <LayersIcon />
-        </EmptyMedia>
-        <EmptyTitle>{t(`${scope}.title`)}</EmptyTitle>
-        <EmptyDescription>{t(`${scope}.description`)}</EmptyDescription>
-      </EmptyHeader>
-      {scope === 'empty' ? (
-        <EmptyContent>
+    <CollectionEmptyState
+      icon={LayersIcon}
+      title={t(`${scope}.title`)}
+      description={t(`${scope}.description`)}
+      action={
+        scope === 'empty' ? (
           <Button onClick={onCreate}>
             <PlusIcon data-icon />
             {t('empty.action')}
           </Button>
-        </EmptyContent>
-      ) : null}
-    </Empty>
+        ) : undefined
+      }
+    />
   );
 }

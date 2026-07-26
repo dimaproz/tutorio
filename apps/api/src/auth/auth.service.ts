@@ -46,10 +46,19 @@ export class AuthService {
           data: { email: dto.email, passwordHash, name: dto.name },
         });
         const workspace = await tx.workspace.create({
-          data: { name: dto.workspaceName },
+          data: { name: dto.workspaceName, mode: dto.mode },
         });
         const membership = await tx.workspaceMember.create({
           data: { workspaceId: workspace.id, userId: user.id, role: 'OWNER' },
+        });
+        // Every workspace starts with a teaching profile for the owner so
+        // enrollments/lessons can be created immediately (a solo tutor teaches).
+        await tx.teacher.create({
+          data: {
+            workspaceId: workspace.id,
+            fullName: user.name,
+            workspaceMemberId: membership.id,
+          },
         });
         const tokens = await this.createSession(
           tx,
@@ -283,6 +292,7 @@ export class AuthService {
       id: workspace.id,
       name: workspace.name,
       plan: workspace.plan,
+      mode: workspace.mode,
       defaultCurrency: workspace.defaultCurrency,
       cancellationDeadlineHours: workspace.cancellationDeadlineHours,
     };
