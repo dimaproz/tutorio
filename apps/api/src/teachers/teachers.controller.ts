@@ -43,7 +43,8 @@ export class TeachersController {
   @Get()
   @ApiOperation({
     summary: 'List workspace teachers',
-    description: 'Paginated; search + status filter. state=deleted|all is owner-only.',
+    description:
+      'Paginated; search + status filter. state=deleted|all is owner-only.',
   })
   @ApiOkResponse({ type: TeacherListDto })
   @ApiForbiddenResponse({ type: ApiErrorDto })
@@ -95,7 +96,8 @@ export class TeachersController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Soft-delete a teacher',
-    description: 'Hides the teacher from pickers; enrollments/lessons keep the reference.',
+    description:
+      'Hides the teacher from pickers; enrollments/lessons keep the reference.',
   })
   @ApiNoContentResponse()
   @ApiNotFoundResponse({ type: ApiErrorDto })

@@ -7,11 +7,26 @@ const valid = {
   email: 'olena@example.com',
   password: 'correct horse battery',
   confirmPassword: 'correct horse battery',
+  mode: 'SCHOOL' as const,
 };
 
 describe('registerFormSchema (web-only)', () => {
   it('accepts matching passwords', () => {
     expect(registerFormSchema.safeParse(valid).success).toBe(true);
+  });
+
+  // Solo mode hides the workspace-name field, so the length rule has to move
+  // onto the name the tutor can actually see and fix.
+  it('validates the workspace name only in school mode', () => {
+    const solo = { ...valid, mode: 'SOLO' as const, workspaceName: '' };
+    expect(registerFormSchema.safeParse(solo).success).toBe(true);
+    expect(registerFormSchema.safeParse({ ...valid, workspaceName: '' }).success).toBe(false);
+
+    const shortSoloName = registerFormSchema.safeParse({ ...solo, name: 'O' });
+    expect(shortSoloName.success).toBe(false);
+    if (!shortSoloName.success) {
+      expect(shortSoloName.error.issues.some((issue) => issue.path[0] === 'name')).toBe(true);
+    }
   });
 
   it('rejects mismatched confirmation on the confirmPassword path', () => {

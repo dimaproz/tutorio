@@ -37,7 +37,12 @@ export function TeacherCard({ teacher }: { teacher: TeacherListItem }) {
         </CardAction>
       </CardHeader>
       <CardContent className="flex flex-col gap-2 text-sm">
-        <TeacherStatusBadge status={teacher.status} />
+        <div className="flex flex-wrap items-center gap-1.5">
+          <TeacherStatusBadge status={teacher.status} />
+          {/* The owner's own profile is created with the workspace — labelling
+              it stops a duplicate "me" being added by hand. */}
+          {teacher.isMe ? <Badge variant="primary">{t('you')}</Badge> : null}
+        </div>
         {visible.length > 0 ? (
           <div className="flex flex-wrap gap-1.5">
             {visible.map((subject) => (

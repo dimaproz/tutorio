@@ -47,6 +47,7 @@ export function WorkspaceSettingsForm() {
       defaultCurrency: session.workspace
         .defaultCurrency as WorkspaceSettingsFormValues['defaultCurrency'],
       cancellationDeadlineHours: session.workspace.cancellationDeadlineHours,
+      mode: session.workspace.mode,
     },
   });
   const { errors } = form.formState;
@@ -54,6 +55,7 @@ export function WorkspaceSettingsForm() {
     control: form.control,
     name: 'defaultCurrency',
   }) as WorkspaceSettingsFormValues['defaultCurrency'];
+  const mode = useWatch({ control: form.control, name: 'mode' });
 
   // Keep the form in sync after the session query refetches post-save.
   useEffect(() => {
@@ -61,9 +63,14 @@ export function WorkspaceSettingsForm() {
       defaultCurrency: session.workspace
         .defaultCurrency as WorkspaceSettingsFormValues['defaultCurrency'],
       cancellationDeadlineHours: session.workspace.cancellationDeadlineHours,
+      mode: session.workspace.mode,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- sync on server values
-  }, [session.workspace.defaultCurrency, session.workspace.cancellationDeadlineHours]);
+  }, [
+    session.workspace.defaultCurrency,
+    session.workspace.cancellationDeadlineHours,
+    session.workspace.mode,
+  ]);
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {
@@ -90,6 +97,33 @@ export function WorkspaceSettingsForm() {
                 </AlertDescription>
               </Alert>
             ) : null}
+
+            {/* Presentation only: SOLO hides every teacher control, the data
+                model stays multi-teacher either way. */}
+            <Field>
+              <FieldLabel htmlFor="settings-mode">{t('mode')}</FieldLabel>
+              <Select
+                value={mode}
+                onValueChange={(value) =>
+                  form.setValue('mode', value as WorkspaceSettingsFormValues['mode'], {
+                    shouldDirty: true,
+                  })
+                }
+              >
+                <SelectTrigger id="settings-mode" className="w-full sm:w-56">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="SOLO">{t('modeSolo')}</SelectItem>
+                    <SelectItem value="SCHOOL">{t('modeSchool')}</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              <FieldDescription>
+                {mode === 'SOLO' ? t('modeSoloHint') : t('modeSchoolHint')}
+              </FieldDescription>
+            </Field>
 
             <Field>
               <FieldLabel htmlFor="settings-currency">{t('defaultCurrency')}</FieldLabel>

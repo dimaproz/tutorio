@@ -48,7 +48,12 @@
       "confirmPassword": "Confirm password",
       "submit": "Create workspace",
       "haveAccount": "Already have an account?",
-      "loginLink": "Sign in"
+      "loginLink": "Sign in",
+      "mode": "How do you work?",
+      "modeSolo": "I tutor on my own",
+      "modeSchool": "We are a school with several teachers",
+      "modeSoloHint": "No teacher pickers anywhere — every lesson is yours. Changeable later in settings.",
+      "modeSchoolHint": "Lessons and enrollments record which teacher they belong to."
     },
     "errors": {
       "EMAIL_TAKEN": "This email is already registered. Try signing in instead.",
@@ -85,7 +90,8 @@
     "PAYMENT_NOT_FOUND": "Payment not found.",
     "NO_ACTIVE_PACKAGE": "No active package covers this lesson.",
     "INVALID_PACKAGE_PLAN": "The package settings are not valid.",
-    "CURRENCY_MISMATCH": "The currency does not match the record."
+    "CURRENCY_MISMATCH": "The currency does not match the record.",
+    "SOLO_MODE_SINGLE_TEACHER": "A solo workspace keeps a single teacher. Switch to school mode in settings to add more."
   },
   "validation": {
     "emailInvalid": "Enter a valid email address",
@@ -622,7 +628,12 @@
       "priceNotice": "Existing enrollments keep the currency and price you configured for them — changing the default never rewrites them.",
       "deadlineNotice": "Enrollments without their own deadline will immediately follow the new default.",
       "submit": "Save settings",
-      "saved": "Settings saved"
+      "saved": "Settings saved",
+      "mode": "Workspace mode",
+      "modeSolo": "Solo tutor",
+      "modeSchool": "School with several teachers",
+      "modeSoloHint": "Teacher controls stay hidden and every lesson is yours. Switch to school mode when someone joins you.",
+      "modeSchoolHint": "Lessons, enrollments and the calendar ask which teacher they belong to."
     },
     "audit": {
       "title": "Audit log",
@@ -967,7 +978,8 @@
       "notesPlaceholder": "Internal notes.",
       "submitCreate": "Create teacher",
       "submitEdit": "Save changes"
-    }
+    },
+    "you": "You"
   },
   "packages": {
     "title": "Finance",

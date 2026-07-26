@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { AuthMe, LoginDto } from '@tutorio/validation';
+import type { AuthMe, LoginDto, WorkspaceMode } from '@tutorio/validation';
 
 // Client-side access to the same-origin auth gateway. Tokens live in
 // HttpOnly cookies — this module only ever sees safe session data.
@@ -48,6 +48,7 @@ export interface RegisterPayload {
   workspaceName: string;
   email: string;
   password: string;
+  mode: WorkspaceMode;
 }
 
 export function useLoginMutation() {

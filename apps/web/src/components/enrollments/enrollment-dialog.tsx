@@ -33,7 +33,7 @@ import { useCreateEnrollmentMutation, useUpdateEnrollmentMutation } from '@/lib/
 import { useGroupsQuery } from '@/lib/api/groups';
 import { useStudentsQuery } from '@/lib/api/students';
 import { useTeachersQuery } from '@/lib/api/teachers';
-import { useSession } from '@/components/app/session-provider';
+import { useIsSoloWorkspace, useSession } from '@/components/app/session-provider';
 import { CurrencyOption } from '@/components/app/currency-option';
 import { MoneyInput } from '@/components/app/money-input';
 import { PersonMiniCard } from '@/components/app/person-mini-card';
@@ -91,6 +91,7 @@ export function EnrollmentDialog({
   const groups = useGroupsQuery({ page: 1, pageSize: 100 }, open && !lockedGroupId);
   const teachers = useTeachersQuery({ page: 1, pageSize: 100 }, open);
   const session = useSession();
+  const isSolo = useIsSoloWorkspace();
 
   const workspaceDefaultDeadline = session.workspace.cancellationDeadlineHours;
 
@@ -170,6 +171,15 @@ export function EnrollmentDialog({
       })),
     [teachers.data],
   );
+
+  // Solo workspaces never render the picker, so the single teaching profile is
+  // filled in silently — the field is still required by the API contract.
+  useEffect(() => {
+    if (!open || !isSolo || values.teacherId || teacherOptions.length !== 1) {
+      return;
+    }
+    form.setValue('teacherId', teacherOptions[0].value, { shouldValidate: true });
+  }, [open, isSolo, values.teacherId, teacherOptions, form]);
 
   // Student / teacher become read-only cards once fixed: a locked or existing
   // student, and — since it is immutable after creation — the teacher on edit.
@@ -295,28 +305,31 @@ export function EnrollmentDialog({
                 <FieldDescription>{t('editor.groupHint')}</FieldDescription>
               </Field>
 
-              <Field data-invalid={errors.teacherId ? true : undefined}>
-                <FieldLabel htmlFor="enrollment-teacher">{t('editor.teacher')}</FieldLabel>
-                {teacherCard ? (
-                  <PersonMiniCard fullName={teacherCard.name} />
-                ) : (
-                  <EntityPicker
-                    id="enrollment-teacher"
-                    value={values.teacherId}
-                    options={teacherOptions}
-                    onChange={(value) => {
-                      if (value) {
-                        form.setValue('teacherId', value, { shouldValidate: true });
-                      }
-                    }}
-                    placeholder={t('editor.teacherPlaceholder')}
-                    searchPlaceholder={t('editor.teacherSearch')}
-                    emptyLabel={t('editor.teacherEmpty')}
-                    invalid={Boolean(errors.teacherId)}
-                  />
-                )}
-                <FieldError errors={[errors.teacherId]} />
-              </Field>
+              {/* Solo workspace: the only teacher is implied, never asked for. */}
+              {isSolo ? null : (
+                <Field data-invalid={errors.teacherId ? true : undefined}>
+                  <FieldLabel htmlFor="enrollment-teacher">{t('editor.teacher')}</FieldLabel>
+                  {teacherCard ? (
+                    <PersonMiniCard fullName={teacherCard.name} />
+                  ) : (
+                    <EntityPicker
+                      id="enrollment-teacher"
+                      value={values.teacherId}
+                      options={teacherOptions}
+                      onChange={(value) => {
+                        if (value) {
+                          form.setValue('teacherId', value, { shouldValidate: true });
+                        }
+                      }}
+                      placeholder={t('editor.teacherPlaceholder')}
+                      searchPlaceholder={t('editor.teacherSearch')}
+                      emptyLabel={t('editor.teacherEmpty')}
+                      invalid={Boolean(errors.teacherId)}
+                    />
+                  )}
+                  <FieldError errors={[errors.teacherId]} />
+                </Field>
+              )}
 
               <Field>
                 <FieldLabel htmlFor="enrollment-status">{t('editor.status')}</FieldLabel>

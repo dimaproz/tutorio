@@ -106,6 +106,9 @@ export const teacherResponseSchema = z.object({
   avatarKey: avatarKeySchema.nullable(),
   status: teacherStatusSchema,
   workspaceMemberId: uuidSchema.nullable(),
+  // True when this profile belongs to the caller's own account — the UI
+  // labels it instead of offering it as just another teacher.
+  isMe: z.boolean(),
   notes: z.string().nullable(),
   createdAt: isoDateTimeSchema,
   updatedAt: isoDateTimeSchema,

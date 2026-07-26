@@ -19,7 +19,6 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
   let teacherA: string;
   let ownerB: string;
   let workspaceAId: string;
-  let ownerAMemberId: string;
   let teacherAMemberId: string;
   // Teacher profiles (teacherId references Teacher, not the member).
   let ownerTeacherId: string;
@@ -38,6 +37,8 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
     await app.init();
     prisma = app.get(PrismaService);
 
+    // Workspace A runs two teachers below, so it registers as a school: SOLO
+    // workspaces refuse a second teaching profile by design.
     const registerA = await server()
       .post('/api/auth/register')
       .send({
@@ -45,6 +46,7 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
         workspaceName: `E2E WS A ${runId}`,
         email: emailFor('owner-a'),
         password: 'correct horse battery staple',
+        mode: 'SCHOOL',
       })
       .expect(201);
     ownerA = registerA.body.tokens.accessToken;
@@ -93,9 +95,6 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
       .get('/api/workspaces/current/members')
       .set('Authorization', auth(ownerA))
       .expect(200);
-    ownerAMemberId = members.body.items.find(
-      (m: { role: string }) => m.role === 'OWNER',
-    ).id;
     teacherAMemberId = members.body.items.find(
       (m: { role: string }) => m.role === 'TEACHER',
     ).id;

@@ -14,6 +14,15 @@ enum WorkspacePlan {
   @@map("workspace_plan")
 }
 
+// Presentation mode, not a data-model fork: lessons always carry a teacher.
+// SOLO hides every teacher control and implies the owner's own profile.
+enum WorkspaceMode {
+  SOLO
+  SCHOOL
+
+  @@map("workspace_mode")
+}
+
 enum WorkspaceRole {
   OWNER
   TEACHER
@@ -105,6 +114,7 @@ model Workspace {
   id                        String        @id @default(uuid())
   name                      String
   plan                      WorkspacePlan @default(FREE)
+  mode                      WorkspaceMode @default(SOLO)
   defaultCurrency           String        @default("EUR")
   cancellationDeadlineHours Int           @default(24)
   // Default IANA timezone for new lesson series; Stage 8 adds the settings UI.

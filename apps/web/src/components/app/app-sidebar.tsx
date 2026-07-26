@@ -29,7 +29,7 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { nameInitials } from '@/lib/utils';
-import { useSession } from './session-provider';
+import { useIsSoloWorkspace, useSession } from './session-provider';
 
 // Primary product sections (Stage 2 / 2.5).
 type NavItem = {
@@ -65,6 +65,10 @@ export function AppSidebar() {
   const pathname = usePathname();
   const session = useSession();
   const isOwner = session.role === 'OWNER';
+  // A solo workspace has nothing to browse under "teachers": the only profile
+  // is the owner's own, managed from settings.
+  const isSolo = useIsSoloWorkspace();
+  const navItems = isSolo ? NAV_ITEMS.filter((item) => item.key !== 'teachers') : NAV_ITEMS;
 
   const isActive = (href: string, exact?: boolean) =>
     exact ? pathname === href : pathname.startsWith(href);
@@ -92,7 +96,7 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu aria-label={t('label')} className="gap-1">
-              {NAV_ITEMS.map(({ key, href, icon: Icon, exact }) => (
+              {navItems.map(({ key, href, icon: Icon, exact }) => (
                 <SidebarMenuItem key={key}>
                   <SidebarMenuButton
                     asChild

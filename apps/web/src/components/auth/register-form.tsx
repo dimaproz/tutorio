@@ -3,12 +3,13 @@
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Spinner } from '@/components/ui/spinner';
 import { useRegisterMutation } from '@/lib/auth/client';
 import { makeZodErrorMap } from '@/lib/forms/error-map';
@@ -29,18 +30,29 @@ export function RegisterForm() {
       path: [],
       async: true,
     }),
-    defaultValues: { name: '', workspaceName: '', email: '', password: '', confirmPassword: '' },
+    defaultValues: {
+      name: '',
+      workspaceName: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      mode: 'SOLO',
+    },
   });
   const { errors, isSubmitting } = form.formState;
+  const mode = useWatch({ control: form.control, name: 'mode' });
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {
       // confirmPassword is browser-only and never sent to the API.
       await register.mutateAsync({
         name: values.name,
-        workspaceName: values.workspaceName,
+        // A solo tutor names no organisation: the workspace carries their name.
+        workspaceName:
+          values.mode === 'SOLO' ? values.name.trim() : values.workspaceName,
         email: values.email,
         password: values.password,
+        mode: values.mode,
       });
       router.replace('/app');
     } catch {
@@ -65,6 +77,43 @@ export function RegisterForm() {
               <AlertDescription>{tErrors(authErrorMessageKey(register.error))}</AlertDescription>
             </Alert>
           ) : null}
+          {/* Decides whether the product ever asks "which teacher?" — stored on
+              the workspace and switchable later in settings. */}
+          <Field>
+            {/* Caption for the group, not for one radio — hence no htmlFor. */}
+            <FieldLabel>{t('mode')}</FieldLabel>
+            <RadioGroup
+              aria-label={t('mode')}
+              value={mode}
+              onValueChange={(value) =>
+                form.setValue('mode', value as RegisterFormValues['mode'], {
+                  shouldValidate: true,
+                })
+              }
+            >
+              <FieldLabel
+                htmlFor="register-mode-solo"
+                className="flex items-start gap-2 font-normal"
+              >
+                <RadioGroupItem id="register-mode-solo" value="SOLO" className="mt-0.5" />
+                <span className="flex flex-col gap-0.5">
+                  <span className="font-medium">{t('modeSolo')}</span>
+                  <span className="text-muted-foreground text-xs">{t('modeSoloHint')}</span>
+                </span>
+              </FieldLabel>
+              <FieldLabel
+                htmlFor="register-mode-school"
+                className="flex items-start gap-2 font-normal"
+              >
+                <RadioGroupItem id="register-mode-school" value="SCHOOL" className="mt-0.5" />
+                <span className="flex flex-col gap-0.5">
+                  <span className="font-medium">{t('modeSchool')}</span>
+                  <span className="text-muted-foreground text-xs">{t('modeSchoolHint')}</span>
+                </span>
+              </FieldLabel>
+            </RadioGroup>
+          </Field>
+
           <Field data-invalid={errors.name ? true : undefined}>
             <FieldLabel htmlFor="register-name">{t('name')}</FieldLabel>
             <Input
@@ -75,20 +124,24 @@ export function RegisterForm() {
             />
             <FieldError errors={[errors.name]} />
           </Field>
-          <Field data-invalid={errors.workspaceName ? true : undefined}>
-            <FieldLabel htmlFor="register-workspace">{t('workspaceName')}</FieldLabel>
-            <Input
-              id="register-workspace"
-              autoComplete="organization"
-              aria-invalid={errors.workspaceName ? true : undefined}
-              aria-describedby="register-workspace-hint"
-              {...form.register('workspaceName')}
-            />
-            <FieldDescription id="register-workspace-hint">
-              {t('workspaceNameHint')}
-            </FieldDescription>
-            <FieldError errors={[errors.workspaceName]} />
-          </Field>
+          {/* A solo tutor has no organisation to name: the workspace takes
+              their own name. */}
+          {mode === 'SCHOOL' ? (
+            <Field data-invalid={errors.workspaceName ? true : undefined}>
+              <FieldLabel htmlFor="register-workspace">{t('workspaceName')}</FieldLabel>
+              <Input
+                id="register-workspace"
+                autoComplete="organization"
+                aria-invalid={errors.workspaceName ? true : undefined}
+                aria-describedby="register-workspace-hint"
+                {...form.register('workspaceName')}
+              />
+              <FieldDescription id="register-workspace-hint">
+                {t('workspaceNameHint')}
+              </FieldDescription>
+              <FieldError errors={[errors.workspaceName]} />
+            </Field>
+          ) : null}
           <Field data-invalid={errors.email ? true : undefined}>
             <FieldLabel htmlFor="register-email">{t('email')}</FieldLabel>
             <Input

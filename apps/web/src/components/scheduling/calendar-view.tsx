@@ -39,6 +39,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import { PageHeader } from '@/components/app/page-shell';
+import { useIsSoloWorkspace } from '@/components/app/session-provider';
 import {
   useLessonsQuery,
   useRescheduleLessonMutation,
@@ -89,12 +90,17 @@ function rangeFor(view: View, date: Date): { from: Date; to: Date } {
 /** The event body: time, who, and the teacher when there is room. */
 function EventContent({ event }: { event: LessonEvent }) {
   const lesson = event.resource;
+  // Solo workspaces teach every lesson themselves — naming the teacher on each
+  // event is noise.
+  const isSolo = useIsSoloWorkspace();
   return (
     <div className="flex min-w-0 flex-col leading-tight">
       <span className="truncate font-medium">
         {lesson.student?.fullName ?? lesson.group?.name ?? '—'}
       </span>
-      <span className="truncate text-[11px] opacity-80">{lesson.teacher.name}</span>
+      {isSolo ? null : (
+        <span className="truncate text-[11px] opacity-80">{lesson.teacher.name}</span>
+      )}
     </div>
   );
 }
@@ -128,7 +134,8 @@ export function CalendarView() {
     });
   };
 
-  const teachers = useTeachersQuery({ page: 1, pageSize: 100 });
+  const isSolo = useIsSoloWorkspace();
+  const teachers = useTeachersQuery({ page: 1, pageSize: 100 }, !isSolo);
   const [selected, setSelected] = useState<LessonResponse | null>(null);
   const [actionsOpen, setActionsOpen] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
@@ -210,24 +217,27 @@ export function CalendarView() {
       />
 
       <div className="flex flex-wrap items-center gap-2">
-        <Select
-          value={teacherFilter || 'all'}
-          onValueChange={(value) => setFilter('teacherId', value === 'all' ? '' : value)}
-        >
-          <SelectTrigger className="w-full sm:w-52" aria-label={t('filterTeacher')}>
-            <SelectValue placeholder={t('filterTeacher')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectItem value="all">{t('filterAll')}</SelectItem>
-              {(teachers.data?.items ?? []).map((teacher) => (
-                <SelectItem key={teacher.id} value={teacher.id}>
-                  {teacher.fullName}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
+        {/* One teacher in the workspace: nothing to filter by. */}
+        {isSolo ? null : (
+          <Select
+            value={teacherFilter || 'all'}
+            onValueChange={(value) => setFilter('teacherId', value === 'all' ? '' : value)}
+          >
+            <SelectTrigger className="w-full sm:w-52" aria-label={t('filterTeacher')}>
+              <SelectValue placeholder={t('filterTeacher')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectItem value="all">{t('filterAll')}</SelectItem>
+                {(teachers.data?.items ?? []).map((teacher) => (
+                  <SelectItem key={teacher.id} value={teacher.id}>
+                    {teacher.fullName}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        )}
 
         <Select
           value={statusFilter || 'all'}

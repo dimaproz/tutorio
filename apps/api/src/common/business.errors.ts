@@ -11,7 +11,10 @@ export class BusinessApiException extends HttpException {
     status: HttpStatus,
     details?: Record<string, unknown>,
   ) {
-    super({ statusCode: status, code, message, ...(details ? { details } : {}) }, status);
+    super(
+      { statusCode: status, code, message, ...(details ? { details } : {}) },
+      status,
+    );
   }
 }
 
@@ -48,6 +51,15 @@ export const teacherNotFound = () =>
     'TEACHER_NOT_FOUND',
     'Teacher not found',
     HttpStatus.NOT_FOUND,
+  );
+
+// A SOLO workspace shows no teacher controls, so it must stay single-teacher:
+// raised both when adding a second teacher and when switching back to SOLO.
+export const soloModeSingleTeacher = () =>
+  new BusinessApiException(
+    'SOLO_MODE_SINGLE_TEACHER',
+    'Solo workspaces support a single teacher',
+    HttpStatus.CONFLICT,
   );
 
 export const workspaceMemberNotFound = () =>

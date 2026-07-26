@@ -20,6 +20,7 @@ import {
   QueryRefreshIndicator,
 } from '@/components/app/page-shell';
 import { EntityAvatar } from '@/components/app/entity-avatar';
+import { useIsSoloWorkspace } from '@/components/app/session-provider';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CollectionEmptyState, CollectionToolbar } from '@/components/shared';
@@ -33,6 +34,7 @@ export function TeachersList() {
   const tCommon = useTranslations('common');
   const tSubject = useTranslations('subject');
   const searchParams = useSearchParams();
+  const isSolo = useIsSoloWorkspace();
   const [createOpen, setCreateOpen] = useState(false);
 
   const page = parsePageParam(searchParams.get('page'));
@@ -66,7 +68,14 @@ export function TeachersList() {
       {
         id: 'status',
         header: () => t('columns.status'),
-        cell: ({ row }) => <TeacherStatusBadge status={row.original.status} />,
+        cell: ({ row }) => (
+          <div className="flex flex-wrap items-center gap-1.5">
+            <TeacherStatusBadge status={row.original.status} />
+            {/* Created with the workspace: labelled so nobody adds a second
+                profile for themselves. */}
+            {row.original.isMe ? <Badge variant="primary">{t('you')}</Badge> : null}
+          </div>
+        ),
       },
       {
         id: 'contacts',
@@ -135,10 +144,13 @@ export function TeachersList() {
         title={t('title')}
         description={t('subtitle')}
         action={
-          <Button className="h-11 md:h-9" onClick={() => setCreateOpen(true)}>
-            <PlusIcon data-icon />
-            {t('add')}
-          </Button>
+          // A solo workspace keeps exactly one teaching profile — the owner's.
+          isSolo ? undefined : (
+            <Button className="h-11 md:h-9" onClick={() => setCreateOpen(true)}>
+              <PlusIcon data-icon />
+              {t('add')}
+            </Button>
+          )
         }
       />
 

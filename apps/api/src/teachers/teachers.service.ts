@@ -12,6 +12,7 @@ import { forbidden } from '../auth/auth.errors';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import {
   invalidWorkspaceRelation,
+  soloModeSingleTeacher,
   teacherNotFound,
 } from '../common/business.errors';
 import {
@@ -21,9 +22,17 @@ import {
 } from '../common/pagination';
 import { PrismaService } from '../prisma/prisma.service';
 
-type TeacherRow = Prisma.TeacherGetPayload<true>;
+type TeacherRow = Prisma.TeacherGetPayload<{
+  include: { workspaceMember: { select: { userId: true } } };
+}>;
 
-function toResponse(row: TeacherRow): TeacherResponse {
+// Resolved through the linked membership so the flag survives a member being
+// re-invited: identity is the user account, not the membership row.
+const withMemberUser = {
+  workspaceMember: { select: { userId: true } },
+} satisfies Prisma.TeacherInclude;
+
+function toResponse(row: TeacherRow, viewerUserId: string): TeacherResponse {
   return {
     id: row.id,
     workspaceId: row.workspaceId,
@@ -39,6 +48,7 @@ function toResponse(row: TeacherRow): TeacherResponse {
     avatarKey: row.avatarKey as TeacherResponse['avatarKey'],
     status: row.status,
     workspaceMemberId: row.workspaceMemberId,
+    isMe: row.workspaceMember?.userId === viewerUserId,
     notes: row.notes,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
@@ -63,9 +73,11 @@ export class TeachersService {
 
     const search = query.search
       ? {
-          OR: ['fullName', 'email', 'phone', 'telegramUsername'].map((field) => ({
-            [field]: { contains: query.search, mode: 'insensitive' as const },
-          })),
+          OR: ['fullName', 'email', 'phone', 'telegramUsername'].map(
+            (field) => ({
+              [field]: { contains: query.search, mode: 'insensitive' as const },
+            }),
+          ),
         }
       : {};
 
@@ -82,6 +94,7 @@ export class TeachersService {
         orderBy: [{ fullName: 'asc' }, { id: 'asc' }],
         ...toSkipTake(query),
         include: {
+          ...withMemberUser,
           _count: {
             select: {
               enrollments: { where: { deletedAt: null, status: 'ACTIVE' } },
@@ -94,7 +107,7 @@ export class TeachersService {
 
     return buildPaginatedResponse(
       rows.map((row) => ({
-        ...toResponse(row),
+        ...toResponse(row, auth.userId),
         activeEnrollmentCount: row._count.enrollments,
       })),
       total,
@@ -108,11 +121,12 @@ export class TeachersService {
   ): Promise<TeacherResponse> {
     const row = await this.prisma.teacher.findFirst({
       where: { id: teacherId, workspaceId: auth.workspaceId, deletedAt: null },
+      include: withMemberUser,
     });
     if (!row) {
       throw teacherNotFound();
     }
-    return toResponse(row);
+    return toResponse(row, auth.userId);
   }
 
   /** Throws if the linked member is missing/foreign or already linked. */
@@ -147,10 +161,33 @@ export class TeachersService {
   ): Promise<TeacherResponse> {
     const teacher = await this.prisma.$transaction(async (tx) => {
       if (dto.workspaceMemberId) {
-        await this.assertMemberLinkable(tx, auth.workspaceId, dto.workspaceMemberId);
+        await this.assertMemberLinkable(
+          tx,
+          auth.workspaceId,
+          dto.workspaceMemberId,
+        );
+      }
+      // SOLO workspaces already own the caller's teaching profile and show no
+      // teacher controls: a second one would be invisible and unusable.
+      const workspace = await tx.workspace.findFirstOrThrow({
+        where: { id: auth.workspaceId },
+        select: { mode: true },
+      });
+      if (workspace.mode === 'SOLO') {
+        const existing = await tx.teacher.count({
+          where: {
+            workspaceId: auth.workspaceId,
+            deletedAt: null,
+            status: 'ACTIVE',
+          },
+        });
+        if (existing > 0) {
+          throw soloModeSingleTeacher();
+        }
       }
       const created = await tx.teacher.create({
         data: { workspaceId: auth.workspaceId, ...dto },
+        include: withMemberUser,
       });
       await this.audit.record(tx, {
         workspaceId: auth.workspaceId,
@@ -162,7 +199,7 @@ export class TeachersService {
       });
       return created;
     });
-    return toResponse(teacher);
+    return toResponse(teacher, auth.userId);
   }
 
   async update(
@@ -172,7 +209,12 @@ export class TeachersService {
   ): Promise<TeacherResponse> {
     const teacher = await this.prisma.$transaction(async (tx) => {
       const before = await tx.teacher.findFirst({
-        where: { id: teacherId, workspaceId: auth.workspaceId, deletedAt: null },
+        where: {
+          id: teacherId,
+          workspaceId: auth.workspaceId,
+          deletedAt: null,
+        },
+        include: withMemberUser,
       });
       if (!before) {
         throw teacherNotFound();
@@ -192,6 +234,7 @@ export class TeachersService {
       const updated = await tx.teacher.update({
         where: { id: before.id },
         data: dto,
+        include: withMemberUser,
       });
       await this.audit.record(tx, {
         workspaceId: auth.workspaceId,
@@ -203,7 +246,7 @@ export class TeachersService {
       });
       return updated;
     });
-    return toResponse(teacher);
+    return toResponse(teacher, auth.userId);
   }
 
   /** Soft-delete; the teacher is hidden from pickers but keeps its history. */
@@ -239,6 +282,7 @@ export class TeachersService {
     const teacher = await this.prisma.$transaction(async (tx) => {
       const existing = await tx.teacher.findFirst({
         where: { id: teacherId, workspaceId: auth.workspaceId },
+        include: withMemberUser,
       });
       if (!existing) {
         throw teacherNotFound();
@@ -249,6 +293,7 @@ export class TeachersService {
       const restored = await tx.teacher.update({
         where: { id: existing.id },
         data: { deletedAt: null },
+        include: withMemberUser,
       });
       await this.audit.record(tx, {
         workspaceId: auth.workspaceId,
@@ -259,6 +304,6 @@ export class TeachersService {
       });
       return restored;
     });
-    return toResponse(teacher);
+    return toResponse(teacher, auth.userId);
   }
 }

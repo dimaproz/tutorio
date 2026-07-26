@@ -22,6 +22,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import type { EnrollmentResponse, StudentEnrollmentSummary } from '@tutorio/validation';
 import { BackButton } from '@/components/app/back-button';
 import { ListSkeleton, QueryErrorAlert } from '@/components/app/page-shell';
+import { useIsSoloWorkspace } from '@/components/app/session-provider';
 import {
   BillingTypeBadge,
   EnrollmentStatusBadge,
@@ -62,8 +63,9 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<EnrollmentResponse | undefined>();
 
+  const isSolo = useIsSoloWorkspace();
   const student = useStudentQuery(studentId);
-  const enrollments = useEnrollmentsQuery({ page: 1, studentId });
+  const enrollments = useEnrollmentsQuery({ page: 1, studentId }, !isSolo);
 
   if (student.isPending) {
     return <ListSkeleton rows={5} />;
@@ -179,72 +181,78 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
 
           <StudentLessonsCard studentId={data.id} />
 
-          <Card>
-            <CardHeader>
-              <SectionTitle icon={GraduationCapIcon} tone="primary">
-                {t('detail.enrollmentsTitle')}
-              </SectionTitle>
-              <CardAction>
-                <Button type="button" size="sm" onClick={openCreate}>
-                  <PlusIcon data-icon="inline-start" />
-                  {t('detail.addEnrollment')}
-                </Button>
-              </CardAction>
-            </CardHeader>
-            <CardContent>
-              {data.enrollments.length === 0 ? (
-                <Empty>
-                  <EmptyHeader>
-                    <EmptyTitle>{t('detail.noEnrollments')}</EmptyTitle>
-                    <EmptyDescription>{t('detail.noEnrollmentsDescription')}</EmptyDescription>
-                  </EmptyHeader>
-                  <EmptyContent>
-                    <Button type="button" onClick={openCreate}>
-                      <PlusIcon data-icon="inline-start" />
-                      {t('detail.addEnrollment')}
-                    </Button>
-                  </EmptyContent>
-                </Empty>
-              ) : (
-                <ul className="flex flex-col gap-3">
-                  {data.enrollments.map((enrollment) => (
-                    <li
-                      key={enrollment.id}
-                      className="flex flex-col gap-3 rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between"
-                    >
-                      <div className="flex min-w-0 flex-col gap-2">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-medium">
-                            {enrollment.group?.name ?? t('detail.individual')}
-                          </span>
-                          <EnrollmentStatusBadge status={enrollment.status} />
-                          <BillingTypeBadge billingType={enrollment.billingType} />
-                        </div>
-                        <p className="tabular text-muted-foreground text-sm">
-                          {`${t('detail.teacher')}: ${enrollment.teacher.name} · ${t('detail.price')}: ${formatMoneyDisplay(
-                            enrollment.priceMinor,
-                            enrollment.currency,
-                            locale,
-                          )} · ${t('detail.deadline')}: ${t('detail.deadlineHours', {
-                            hours: enrollment.effectiveCancellationDeadlineHours,
-                          })}`}
-                        </p>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openEdit(enrollment)}
-                        disabled={enrollments.isPending}
-                      >
-                        {tCommon('edit')}
+          {/* A solo tutor never manages enrollments by hand: scheduling a
+              lesson creates one behind the scenes, the rate lives on the
+              student card, and there is no teacher to assign. Group membership
+              still goes through the enrollment editor on the group page. */}
+          {isSolo ? null : (
+            <Card>
+              <CardHeader>
+                <SectionTitle icon={GraduationCapIcon} tone="primary">
+                  {t('detail.enrollmentsTitle')}
+                </SectionTitle>
+                <CardAction>
+                  <Button type="button" size="sm" onClick={openCreate}>
+                    <PlusIcon data-icon="inline-start" />
+                    {t('detail.addEnrollment')}
+                  </Button>
+                </CardAction>
+              </CardHeader>
+              <CardContent>
+                {data.enrollments.length === 0 ? (
+                  <Empty>
+                    <EmptyHeader>
+                      <EmptyTitle>{t('detail.noEnrollments')}</EmptyTitle>
+                      <EmptyDescription>{t('detail.noEnrollmentsDescription')}</EmptyDescription>
+                    </EmptyHeader>
+                    <EmptyContent>
+                      <Button type="button" onClick={openCreate}>
+                        <PlusIcon data-icon="inline-start" />
+                        {t('detail.addEnrollment')}
                       </Button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
+                    </EmptyContent>
+                  </Empty>
+                ) : (
+                  <ul className="flex flex-col gap-3">
+                    {data.enrollments.map((enrollment) => (
+                      <li
+                        key={enrollment.id}
+                        className="flex flex-col gap-3 rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between"
+                      >
+                        <div className="flex min-w-0 flex-col gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-medium">
+                              {enrollment.group?.name ?? t('detail.individual')}
+                            </span>
+                            <EnrollmentStatusBadge status={enrollment.status} />
+                            <BillingTypeBadge billingType={enrollment.billingType} />
+                          </div>
+                          <p className="tabular text-muted-foreground text-sm">
+                            {`${t('detail.teacher')}: ${enrollment.teacher.name} · ${t('detail.price')}: ${formatMoneyDisplay(
+                              enrollment.priceMinor,
+                              enrollment.currency,
+                              locale,
+                            )} · ${t('detail.deadline')}: ${t('detail.deadlineHours', {
+                              hours: enrollment.effectiveCancellationDeadlineHours,
+                            })}`}
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openEdit(enrollment)}
+                          disabled={enrollments.isPending}
+                        >
+                          {tCommon('edit')}
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {data.notes ? (
             <Card>
