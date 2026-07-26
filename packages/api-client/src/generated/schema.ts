@@ -728,6 +728,11 @@ export interface components {
             /** Format: email */
             email: string;
             password: string;
+            /**
+             * @default SOLO
+             * @enum {string}
+             */
+            mode: "SOLO" | "SCHOOL";
         };
         AuthSessionDto: {
             tokens: {
@@ -747,6 +752,8 @@ export interface components {
                 name: string;
                 /** @enum {string} */
                 plan: "FREE" | "PRO";
+                /** @enum {string} */
+                mode: "SOLO" | "SCHOOL";
                 defaultCurrency: string;
                 cancellationDeadlineHours: number;
             };
@@ -783,6 +790,8 @@ export interface components {
                 name: string;
                 /** @enum {string} */
                 plan: "FREE" | "PRO";
+                /** @enum {string} */
+                mode: "SOLO" | "SCHOOL";
                 defaultCurrency: string;
                 cancellationDeadlineHours: number;
             };
@@ -796,6 +805,8 @@ export interface components {
                 name: string;
                 /** @enum {string} */
                 plan: "FREE" | "PRO";
+                /** @enum {string} */
+                mode: "SOLO" | "SCHOOL";
                 defaultCurrency: string;
                 cancellationDeadlineHours: number;
             };
@@ -806,6 +817,8 @@ export interface components {
             /** @enum {string} */
             defaultCurrency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
             cancellationDeadlineHours?: number;
+            /** @enum {string} */
+            mode?: "SOLO" | "SCHOOL";
         };
         WorkspaceMemberListDto: {
             items: {
@@ -1155,6 +1168,7 @@ export interface components {
                 status: "ACTIVE" | "ARCHIVED";
                 /** Format: uuid */
                 workspaceMemberId: string | null;
+                isMe: boolean;
                 notes: string | null;
                 /** Format: date-time */
                 createdAt: string;
@@ -1213,6 +1227,7 @@ export interface components {
             status: "ACTIVE" | "ARCHIVED";
             /** Format: uuid */
             workspaceMemberId: string | null;
+            isMe: boolean;
             notes: string | null;
             /** Format: date-time */
             createdAt: string;
@@ -1477,6 +1492,9 @@ export interface components {
                 /** @enum {string} */
                 status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED";
                 isDetached: boolean;
+                rescheduledCount: number;
+                /** Format: date-time */
+                rescheduledAt: string | null;
                 /** @enum {string|null} */
                 cancelledBy: "TEACHER" | "STUDENT" | "GROUP" | null;
                 cancelledReason: string | null;
@@ -1556,6 +1574,9 @@ export interface components {
             /** @enum {string} */
             status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED";
             isDetached: boolean;
+            rescheduledCount: number;
+            /** Format: date-time */
+            rescheduledAt: string | null;
             /** @enum {string|null} */
             cancelledBy: "TEACHER" | "STUDENT" | "GROUP" | null;
             cancelledReason: string | null;

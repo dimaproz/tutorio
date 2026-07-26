@@ -3215,6 +3215,14 @@
             "type": "string",
             "minLength": 12,
             "maxLength": 128
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "SOLO",
+              "SCHOOL"
+            ],
+            "default": "SOLO"
           }
         },
         "required": [
@@ -3280,6 +3288,13 @@
                   "PRO"
                 ]
               },
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "SOLO",
+                  "SCHOOL"
+                ]
+              },
               "defaultCurrency": {
                 "type": "string"
               },
@@ -3291,6 +3306,7 @@
               "id",
               "name",
               "plan",
+              "mode",
               "defaultCurrency",
               "cancellationDeadlineHours"
             ]
@@ -3413,6 +3429,13 @@
                   "PRO"
                 ]
               },
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "SOLO",
+                  "SCHOOL"
+                ]
+              },
               "defaultCurrency": {
                 "type": "string"
               },
@@ -3424,6 +3447,7 @@
               "id",
               "name",
               "plan",
+              "mode",
               "defaultCurrency",
               "cancellationDeadlineHours"
             ]
@@ -3462,6 +3486,13 @@
                   "PRO"
                 ]
               },
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "SOLO",
+                  "SCHOOL"
+                ]
+              },
               "defaultCurrency": {
                 "type": "string"
               },
@@ -3473,6 +3504,7 @@
               "id",
               "name",
               "plan",
+              "mode",
               "defaultCurrency",
               "cancellationDeadlineHours"
             ]
@@ -3509,6 +3541,13 @@
             "exclusiveMinimum": false,
             "maximum": 336,
             "exclusiveMaximum": false
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "SOLO",
+              "SCHOOL"
+            ]
           }
         }
       },
@@ -5279,6 +5318,9 @@
                   "format": "uuid",
                   "nullable": true
                 },
+                "isMe": {
+                  "type": "boolean"
+                },
                 "notes": {
                   "type": "string",
                   "nullable": true
@@ -5317,6 +5359,7 @@
                 "avatarKey",
                 "status",
                 "workspaceMemberId",
+                "isMe",
                 "notes",
                 "createdAt",
                 "updatedAt",
@@ -5586,6 +5629,9 @@
             "format": "uuid",
             "nullable": true
           },
+          "isMe": {
+            "type": "boolean"
+          },
           "notes": {
             "type": "string",
             "nullable": true
@@ -5619,6 +5665,7 @@
           "avatarKey",
           "status",
           "workspaceMemberId",
+          "isMe",
           "notes",
           "createdAt",
           "updatedAt",
@@ -6660,6 +6707,16 @@
                 "isDetached": {
                   "type": "boolean"
                 },
+                "rescheduledCount": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                },
+                "rescheduledAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                },
                 "cancelledBy": {
                   "type": "string",
                   "enum": [
@@ -6773,6 +6830,8 @@
                 "currency",
                 "status",
                 "isDetached",
+                "rescheduledCount",
+                "rescheduledAt",
                 "cancelledBy",
                 "cancelledReason",
                 "cancelledAt",
@@ -6961,6 +7020,16 @@
           "isDetached": {
             "type": "boolean"
           },
+          "rescheduledCount": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "rescheduledAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "cancelledBy": {
             "type": "string",
             "enum": [
@@ -7074,6 +7143,8 @@
           "currency",
           "status",
           "isDetached",
+          "rescheduledCount",
+          "rescheduledAt",
           "cancelledBy",
           "cancelledReason",
           "cancelledAt",
