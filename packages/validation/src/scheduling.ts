@@ -45,22 +45,6 @@ export const localTimeSchema = z
 // Lesson length in minutes: 5 minutes to 12 hours.
 export const durationMinSchema = z.number().int().min(5).max(720);
 
-// Exactly one of enrollmentId / groupId identifies the lesson/series target.
-function requireExactlyOneTarget<T extends { enrollmentId?: string | null; groupId?: string | null }>(
-  value: T,
-  ctx: z.RefinementCtx,
-): void {
-  const hasEnrollment = value.enrollmentId != null;
-  const hasGroup = value.groupId != null;
-  if (hasEnrollment === hasGroup) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: 'Provide exactly one of enrollmentId or groupId',
-      path: [hasEnrollment ? 'groupId' : 'enrollmentId'],
-    });
-  }
-}
-
 /**
  * Lesson booking accepts a third, tutor-facing target: a bare `studentId`. The
  * API then resolves (or creates) the enrollment behind it, so the product never
@@ -336,6 +320,10 @@ export const lessonResponseSchema = z.object({
   currency: currencyCodeSchema,
   status: lessonStatusSchema,
   isDetached: z.boolean(),
+  // How many times this lesson has been moved, and when it was moved last.
+  // No lesson status expresses "rescheduled" — these carry that history.
+  rescheduledCount: z.number().int().nonnegative(),
+  rescheduledAt: isoDateTimeSchema.nullable(),
   cancelledBy: cancelledBySchema.nullable(),
   cancelledReason: z.string().nullable(),
   cancelledAt: isoDateTimeSchema.nullable(),

@@ -69,6 +69,8 @@ export function toLessonResponse(row: LessonRow): LessonResponse {
     currency: row.currency as LessonResponse['currency'],
     status: row.status,
     isDetached: row.isDetached,
+    rescheduledCount: row.rescheduledCount,
+    rescheduledAt: row.rescheduledAt?.toISOString() ?? null,
     cancelledBy: row.cancelledBy,
     cancelledReason: row.cancelledReason,
     cancelledAt: row.cancelledAt?.toISOString() ?? null,

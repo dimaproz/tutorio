@@ -19,7 +19,6 @@ describe('Stage 3: scheduling — series, lessons, reschedule, cancel (e2e)', ()
 
   let owner: string;
   let workspaceId: string;
-  let ownerMemberId: string;
   let ownerTeacherId: string;
   let enrollmentId: string;
 
@@ -47,12 +46,6 @@ describe('Stage 3: scheduling — series, lessons, reschedule, cancel (e2e)', ()
       .expect(201);
     owner = register.body.tokens.accessToken;
     workspaceId = register.body.workspace.id;
-
-    const members = await server()
-      .get('/api/workspaces/current/members')
-      .set('Authorization', auth(owner))
-      .expect(200);
-    ownerMemberId = members.body.items[0].id;
 
     const teachers = await server()
       .get('/api/teachers')
@@ -134,7 +127,9 @@ describe('Stage 3: scheduling — series, lessons, reschedule, cancel (e2e)', ()
     expect(lesson.isDetached).toBe(false);
 
     // Reschedule this single occurrence — it detaches from the series.
-    const newStart = new Date(new Date(lesson.startsAtUtc).getTime() + 90 * 60_000);
+    const newStart = new Date(
+      new Date(lesson.startsAtUtc).getTime() + 90 * 60_000,
+    );
     const moved = await server()
       .patch(`/api/lessons/${lesson.id}/reschedule`)
       .set('Authorization', auth(owner))
@@ -142,6 +137,10 @@ describe('Stage 3: scheduling — series, lessons, reschedule, cancel (e2e)', ()
       .expect(200);
     expect(moved.body.isDetached).toBe(true);
     expect(new Date(moved.body.startsAtUtc).getTime()).toBe(newStart.getTime());
+    // The move is counted: no status expresses "rescheduled", so Stage 5
+    // analytics reads this instead of reconstructing it from audit rows.
+    expect(moved.body.rescheduledCount).toBe(1);
+    expect(moved.body.rescheduledAt).not.toBeNull();
 
     // Cancel it with a charge, attributed to the student.
     const cancelled = await server()
@@ -163,6 +162,63 @@ describe('Stage 3: scheduling — series, lessons, reschedule, cancel (e2e)', ()
       .set('Authorization', auth(owner))
       .send({ targetStatus: 'COMPLETED' })
       .expect(409);
+  });
+
+  it('shifts the pattern on "this and following" and counts the move', async () => {
+    const startDate = new Date(Date.now() + DAY_MS);
+    const series = await server()
+      .post('/api/lesson-series')
+      .set('Authorization', auth(owner))
+      .send({
+        enrollmentId,
+        teacherId: ownerTeacherId,
+        weekdays: [0, 1, 2, 3, 4, 5, 6],
+        // Clear of the 10:00 series above so the conflict check stays quiet.
+        localTime: '16:00',
+        timezone: 'Europe/Kyiv',
+        durationMin: 60,
+        priceMinor: 50000,
+        currency: 'UAH',
+        startDate: startDate.toISOString(),
+      })
+      .expect(201);
+
+    const listed = await server()
+      .get('/api/lessons')
+      .query({
+        from: new Date().toISOString(),
+        to: new Date(Date.now() + 28 * DAY_MS).toISOString(),
+        enrollmentId,
+      })
+      .set('Authorization', auth(owner))
+      .expect(200);
+    const lesson = listed.body.items.find(
+      (item: { seriesId: string | null }) => item.seriesId === series.body.id,
+    );
+    expect(lesson).toBeDefined();
+
+    // Move this occurrence and every later one by an hour: the series pattern
+    // shifts and the lesson now occupying the slot carries the move.
+    const newStart = new Date(
+      new Date(lesson.startsAtUtc).getTime() + 60 * 60_000,
+    );
+    const moved = await server()
+      .patch(`/api/lessons/${lesson.id}/reschedule`)
+      .set('Authorization', auth(owner))
+      .send({
+        startsAtUtc: newStart.toISOString(),
+        scope: 'this_and_following',
+      })
+      .expect(200);
+    expect(new Date(moved.body.startsAtUtc).getTime()).toBe(newStart.getTime());
+    expect(moved.body.rescheduledCount).toBe(1);
+    expect(moved.body.rescheduledAt).not.toBeNull();
+
+    const reloaded = await server()
+      .get(`/api/lesson-series/${series.body.id}`)
+      .set('Authorization', auth(owner))
+      .expect(200);
+    expect(reloaded.body.localTime).toBe('17:00');
   });
 
   it('books by studentId alone, creating the enrollment behind the scenes', async () => {
@@ -277,7 +333,9 @@ describe('Stage 3: scheduling — series, lessons, reschedule, cancel (e2e)', ()
       .set('Authorization', auth(owner))
       .expect(200);
     expect(
-      remaining.body.items.some((item: { id: string }) => item.id === lesson.id),
+      remaining.body.items.some(
+        (item: { id: string }) => item.id === lesson.id,
+      ),
     ).toBe(false);
   });
 

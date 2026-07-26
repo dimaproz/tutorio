@@ -452,6 +452,12 @@ model Lesson {
   currency        String
   status          LessonStatus @default(SCHEDULED)
   isDetached      Boolean      @default(false)
+  // Reschedule history, kept as counters because no LessonStatus expresses
+  // "moved": a rescheduled lesson stays SCHEDULED, and isDetached is also set
+  // when a single lesson leaves its series for any other reason. Stage 5
+  // analytics buckets lessons by these instead of parsing AuditLog.diff.
+  rescheduledCount Int         @default(0)
+  rescheduledAt    DateTime?
   cancelledBy     CancelledBy?
   cancelledReason String?
   cancelledAt     DateTime?
@@ -573,6 +579,8 @@ model LessonPackage {
   payments     Payment[]
 
   @@index([workspaceId, deletedAt])
+  // Revenue by period scans packages by purchase date (Stage 5 analytics).
+  @@index([workspaceId, purchasedAt])
   @@index([studentId])
   @@index([groupId])
   @@map("lesson_packages")

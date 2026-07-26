@@ -317,12 +317,23 @@ export class LessonsService {
           entityId: series.id,
           changes: this.audit.buildChanges(series, { localTime, durationMin }),
         });
-        // Return the regenerated lesson now occupying the new slot.
+        // Return the regenerated lesson now occupying the new slot, carrying
+        // this move in its reschedule history.
         const moved = await tx.lesson.findFirst({
           where: { seriesId: series.id, startsAtUtc: newStart },
+          select: { id: true },
+        });
+        if (!moved) {
+          return lesson;
+        }
+        return tx.lesson.update({
+          where: { id: moved.id },
+          data: {
+            rescheduledCount: { increment: 1 },
+            rescheduledAt: new Date(),
+          },
           include: lessonInclude,
         });
-        return moved ?? lesson;
       }
 
       const updated = await tx.lesson.update({
@@ -331,6 +342,8 @@ export class LessonsService {
           startsAtUtc: newStart,
           durationMin,
           isDetached: lesson.seriesId ? true : lesson.isDetached,
+          rescheduledCount: { increment: 1 },
+          rescheduledAt: new Date(),
         },
         include: lessonInclude,
       });
