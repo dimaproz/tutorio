@@ -4,6 +4,7 @@ import {
   creditBalance,
   lessonEntryKey,
   planTransition,
+  type LedgerEntryLike,
 } from './ledger';
 import { InvalidTransitionError } from './lesson-state';
 
@@ -89,9 +90,11 @@ describe('creditBalance', () => {
 // The scenarios the product positioning promises to handle correctly.
 describe('canonical scenarios', () => {
   it('8 lessons bought for a 9-week month leaves the balance short, not negative by accident', () => {
-    const entries = [{ delta: 8, type: 'purchase' as const }];
+    // Annotated: inference from the first element would pin the array to
+    // `purchase` and reject every lesson entry pushed below.
+    const entries: LedgerEntryLike[] = [{ delta: 8, type: 'purchase' }];
     for (let i = 0; i < 8; i++) {
-      entries.push({ delta: -1, type: 'lesson_completed' as const });
+      entries.push({ delta: -1, type: 'lesson_completed' });
     }
     expect(creditBalance(entries)).toBe(0);
     // The ninth lesson is scheduled but unpaid — it drives the balance negative,

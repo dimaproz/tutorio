@@ -143,10 +143,9 @@ describe('Stage 4: packages, credit ledger, payments (e2e)', () => {
       .set('Authorization', auth(owner))
       .expect(200);
     expect(ledger.body.balance).toBe(7);
-    expect(ledger.body.items.map((item: { type: string }) => item.type)).toEqual([
-      'lesson_completed',
-      'purchase',
-    ]);
+    expect(
+      ledger.body.items.map((item: { type: string }) => item.type),
+    ).toEqual(['lesson_completed', 'purchase']);
   });
 
   it('buys a package for a student who has never been scheduled', async () => {
@@ -204,7 +203,8 @@ describe('Stage 4: packages, credit ledger, payments (e2e)', () => {
   });
 
   it('never charges twice for the same lesson', async () => {
-    const pkg = await server()
+    // The package only has to exist for the lesson to resolve against it.
+    await server()
       .post('/api/packages')
       .set('Authorization', auth(owner))
       .send({
