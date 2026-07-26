@@ -2,27 +2,16 @@
 
 import { useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
+import { SUPPORTED_CURRENCIES } from '@tutorio/domain';
 import { useSession } from '@/components/app/session-provider';
 import { CurrencyOption } from '@/components/app/currency-option';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from '@/components/ui/field';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -39,9 +28,7 @@ import { makeZodErrorMap } from '@/lib/forms/error-map';
 import {
   workspaceSettingsFormSchema,
   type WorkspaceSettingsFormValues,
-} from '@/lib/forms/schemas';
-
-const CURRENCIES = ['EUR', 'UAH', 'PLN', 'USD', 'GBP'] as const;
+} from '@/features/settings/model/form';
 
 export function WorkspaceSettingsForm() {
   const t = useTranslations('settings.general');
@@ -60,10 +47,15 @@ export function WorkspaceSettingsForm() {
       defaultCurrency: session.workspace
         .defaultCurrency as WorkspaceSettingsFormValues['defaultCurrency'],
       cancellationDeadlineHours: session.workspace.cancellationDeadlineHours,
+      mode: session.workspace.mode,
     },
   });
   const { errors } = form.formState;
-  const currency = form.watch('defaultCurrency');
+  const currency = useWatch({
+    control: form.control,
+    name: 'defaultCurrency',
+  }) as WorkspaceSettingsFormValues['defaultCurrency'];
+  const mode = useWatch({ control: form.control, name: 'mode' });
 
   // Keep the form in sync after the session query refetches post-save.
   useEffect(() => {
@@ -71,9 +63,14 @@ export function WorkspaceSettingsForm() {
       defaultCurrency: session.workspace
         .defaultCurrency as WorkspaceSettingsFormValues['defaultCurrency'],
       cancellationDeadlineHours: session.workspace.cancellationDeadlineHours,
+      mode: session.workspace.mode,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- sync on server values
-  }, [session.workspace.defaultCurrency, session.workspace.cancellationDeadlineHours]);
+  }, [
+    session.workspace.defaultCurrency,
+    session.workspace.cancellationDeadlineHours,
+    session.workspace.mode,
+  ]);
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {
@@ -101,6 +98,33 @@ export function WorkspaceSettingsForm() {
               </Alert>
             ) : null}
 
+            {/* Presentation only: SOLO hides every teacher control, the data
+                model stays multi-teacher either way. */}
+            <Field>
+              <FieldLabel htmlFor="settings-mode">{t('mode')}</FieldLabel>
+              <Select
+                value={mode}
+                onValueChange={(value) =>
+                  form.setValue('mode', value as WorkspaceSettingsFormValues['mode'], {
+                    shouldDirty: true,
+                  })
+                }
+              >
+                <SelectTrigger id="settings-mode" className="w-full sm:w-56">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="SOLO">{t('modeSolo')}</SelectItem>
+                    <SelectItem value="SCHOOL">{t('modeSchool')}</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              <FieldDescription>
+                {mode === 'SOLO' ? t('modeSoloHint') : t('modeSchoolHint')}
+              </FieldDescription>
+            </Field>
+
             <Field>
               <FieldLabel htmlFor="settings-currency">{t('defaultCurrency')}</FieldLabel>
               <Select
@@ -118,7 +142,7 @@ export function WorkspaceSettingsForm() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    {CURRENCIES.map((code) => (
+                    {SUPPORTED_CURRENCIES.map((code) => (
                       <SelectItem key={code} value={code}>
                         <CurrencyOption code={code} />
                       </SelectItem>

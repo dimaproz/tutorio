@@ -1,0 +1,730 @@
+<style>
+  :root {
+    --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-num: "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+
+    --bg: #FBFCFE;
+    --bg-grid: rgba(70, 95, 255, 0.05);
+    --surface: #FFFFFF;
+    --surface-2: #F6F8FC;
+    --ink: #0E1220;
+    --ink-soft: #475069;
+    --muted: #737E99;
+    --line: #E7EAF2;
+    --line-soft: #EEF1F8;
+
+    --accent: #465FFF;
+    --accent-ink: #3345DB;
+    --accent-wash: #EDF0FF;
+
+    --done: #12B76A;
+    --now: #465FFF;
+    --next: #7A5AF8;
+    --later: #F79009;
+    --beyond: #737E99;
+
+    --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06);
+    --shadow-md: 0 4px 20px -4px rgba(16, 24, 40, 0.08), 0 2px 6px -2px rgba(16, 24, 40, 0.05);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0A0C14;
+      --bg-grid: rgba(126, 141, 255, 0.06);
+      --surface: #12151F;
+      --surface-2: #171B27;
+      --ink: #F4F6FB;
+      --ink-soft: #C3C9DA;
+      --muted: #868EA6;
+      --line: #242938;
+      --line-soft: #1D2130;
+      --accent: #8394FF;
+      --accent-ink: #A3AFFF;
+      --accent-wash: rgba(131, 148, 255, 0.11);
+      --done: #47CD89;
+      --next: #A48AFB;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 8px 30px -6px rgba(0, 0, 0, 0.5);
+    }
+  }
+
+  :root[data-theme="light"] {
+    --bg: #FBFCFE; --bg-grid: rgba(70,95,255,0.05); --surface: #FFFFFF; --surface-2: #F6F8FC;
+    --ink: #0E1220; --ink-soft: #475069; --muted: #737E99; --line: #E7EAF2; --line-soft: #EEF1F8;
+    --accent: #465FFF; --accent-ink: #3345DB; --accent-wash: #EDF0FF;
+    --done: #12B76A; --next: #7A5AF8; --later: #F79009; --beyond: #737E99;
+    --shadow-sm: 0 1px 2px rgba(16,24,40,0.04), 0 1px 3px rgba(16,24,40,0.06);
+    --shadow-md: 0 4px 20px -4px rgba(16,24,40,0.08), 0 2px 6px -2px rgba(16,24,40,0.05);
+  }
+  :root[data-theme="dark"] {
+    --bg: #0A0C14; --bg-grid: rgba(126,141,255,0.06); --surface: #12151F; --surface-2: #171B27;
+    --ink: #F4F6FB; --ink-soft: #C3C9DA; --muted: #868EA6; --line: #242938; --line-soft: #1D2130;
+    --accent: #8394FF; --accent-ink: #A3AFFF; --accent-wash: rgba(131,148,255,0.11);
+    --done: #47CD89; --next: #A48AFB; --later: #F79009; --beyond: #737E99;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+    --shadow-md: 0 8px 30px -6px rgba(0,0,0,0.5);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+  .prose { max-width: 68ch; }
+
+  a { color: var(--accent-ink); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ---------- Header ---------- */
+  .topbar {
+    position: sticky; top: 0; z-index: 20;
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar-inner { display: flex; align-items: center; justify-content: space-between; height: 60px; }
+  .brand { display: flex; align-items: center; gap: 11px; font-weight: 700; letter-spacing: -0.01em; }
+  .brand-mark {
+    width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center;
+    background: var(--accent); color: #fff; box-shadow: var(--shadow-sm);
+  }
+  .brand-mark svg { width: 17px; height: 17px; }
+  .brand small { display: block; font-weight: 500; font-size: 11px; color: var(--muted); letter-spacing: 0.02em; }
+  .topbar-meta { font-size: 12.5px; color: var(--muted); font-weight: 500; }
+
+  /* ---------- Eyebrow / headings ---------- */
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--accent-ink);
+  }
+  .eyebrow::before { content: ""; width: 22px; height: 2px; border-radius: 2px; background: var(--accent); }
+
+  h1, h2, h3 { text-wrap: balance; letter-spacing: -0.02em; margin: 0; }
+  h1 { font-size: clamp(2.1rem, 5vw, 3.3rem); font-weight: 800; line-height: 1.05; }
+  h2 { font-size: clamp(1.5rem, 3vw, 2.05rem); font-weight: 750; line-height: 1.12; }
+  h3 { font-size: 1.14rem; font-weight: 700; letter-spacing: -0.01em; }
+  .lead { font-size: clamp(1.05rem, 1.6vw, 1.25rem); color: var(--ink-soft); line-height: 1.55; }
+
+  section { padding: 68px 0; border-top: 1px solid var(--line-soft); }
+  section:first-of-type { border-top: none; }
+  .sec-head { max-width: 62ch; margin-bottom: 40px; }
+  .sec-head h2 { margin-top: 14px; }
+  .sec-head p { color: var(--ink-soft); margin: 14px 0 0; font-size: 1.05rem; }
+
+  /* ---------- Hero ---------- */
+  .hero { position: relative; padding: 84px 0 60px; overflow: hidden; }
+  .hero::before {
+    content: ""; position: absolute; inset: 0; z-index: 0;
+    background-image: linear-gradient(var(--bg-grid) 1px, transparent 1px), linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
+    background-size: 46px 46px;
+    -webkit-mask-image: radial-gradient(115% 90% at 78% 0%, #000 5%, transparent 62%);
+    mask-image: radial-gradient(115% 90% at 78% 0%, #000 5%, transparent 62%);
+  }
+  .hero .wrap { position: relative; z-index: 1; }
+  .hero h1 { margin-top: 20px; max-width: 16ch; }
+  .hero .lead { margin-top: 22px; max-width: 60ch; }
+  .accent-word { color: var(--accent-ink); }
+
+  .northstar {
+    margin-top: 34px; display: inline-flex; flex-wrap: wrap; align-items: center; gap: 14px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 16px 20px; box-shadow: var(--shadow-md);
+  }
+  .northstar .ns-label { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  .northstar .ns-value { font-size: 15px; font-weight: 650; color: var(--ink); }
+  .ns-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px var(--accent-wash); }
+
+  .pill-row { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 13px; font-weight: 600; color: var(--ink-soft);
+    background: var(--surface); border: 1px solid var(--line);
+    padding: 8px 14px; border-radius: 999px; box-shadow: var(--shadow-sm);
+  }
+  .pill i { width: 7px; height: 7px; border-radius: 50%; }
+
+  /* ---------- Generic cards / grids ---------- */
+  .grid { display: grid; gap: 18px; }
+  .g2 { grid-template-columns: repeat(2, 1fr); }
+  .g3 { grid-template-columns: repeat(3, 1fr); }
+  .g4 { grid-template-columns: repeat(4, 1fr); }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 26px; box-shadow: var(--shadow-sm);
+  }
+  .card h3 { margin-bottom: 8px; }
+  .card p { color: var(--ink-soft); font-size: 0.95rem; margin: 0; }
+
+  .card-ico {
+    width: 42px; height: 42px; border-radius: 11px; display: grid; place-items: center;
+    background: var(--accent-wash); color: var(--accent-ink); margin-bottom: 16px;
+  }
+  .card-ico svg { width: 21px; height: 21px; }
+
+  /* Persona */
+  .persona .role { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-ink); }
+  .persona .who { font-size: 1.18rem; font-weight: 750; margin: 6px 0 12px; letter-spacing: -0.01em; }
+  .persona .kv { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line-soft); }
+  .persona .kv span { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
+  .persona .kv p { font-size: 0.92rem; }
+
+  /* Principles list */
+  .principles { counter-reset: p; display: grid; gap: 2px; }
+  .principle {
+    display: grid; grid-template-columns: 54px 1fr; gap: 18px; align-items: start;
+    padding: 22px 4px; border-bottom: 1px solid var(--line-soft);
+  }
+  .principle:last-child { border-bottom: none; }
+  .principle .num {
+    counter-increment: p; font-family: var(--font-num); font-variant-numeric: tabular-nums;
+    font-size: 15px; font-weight: 700; color: var(--accent-ink);
+    width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center;
+    background: var(--accent-wash);
+  }
+  .principle .num::before { content: counter(p, decimal-leading-zero); }
+  .principle h3 { margin-bottom: 5px; }
+  .principle p { color: var(--ink-soft); font-size: 0.97rem; margin: 0; }
+
+  /* ---------- Roadmap timeline ---------- */
+  .timeline { position: relative; margin-top: 12px; }
+  .timeline::before {
+    content: ""; position: absolute; left: 19px; top: 8px; bottom: 8px; width: 2px;
+    background: linear-gradient(var(--line), var(--line-soft));
+  }
+  .phase { position: relative; padding-left: 62px; padding-bottom: 34px; }
+  .phase:last-child { padding-bottom: 0; }
+  .phase .node {
+    position: absolute; left: 8px; top: 4px; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--surface); border: 3px solid var(--pc, var(--accent)); box-shadow: 0 0 0 5px var(--bg);
+    display: grid; place-items: center;
+  }
+  .phase .node::after { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--pc, var(--accent)); }
+  .phase-card {
+    background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--pc, var(--accent));
+    border-radius: var(--radius); padding: 24px 26px; box-shadow: var(--shadow-sm);
+  }
+  .phase-top { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 6px; }
+  .phase-h { font-size: 1.28rem; font-weight: 780; letter-spacing: -0.015em; }
+  .status {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 4px 11px; border-radius: 999px; color: var(--pc); background: color-mix(in srgb, var(--pc) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--pc) 26%, transparent);
+  }
+  .phase-when { margin-left: auto; font-size: 12.5px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .outcome {
+    font-size: 1rem; color: var(--ink); font-weight: 550; margin: 12px 0 18px;
+    padding-left: 15px; border-left: 2px solid var(--pc); line-height: 1.5;
+  }
+  .outcome b { color: var(--pc); font-weight: 700; }
+  .dl { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; }
+  .dl li { position: relative; padding-left: 26px; font-size: 0.95rem; color: var(--ink-soft); }
+  .dl li::before {
+    content: ""; position: absolute; left: 3px; top: 8px; width: 6px; height: 6px; border-radius: 2px;
+    background: var(--pc); opacity: 0.55;
+  }
+  .dl li b { color: var(--ink); font-weight: 650; }
+  .tag-new {
+    display: inline-block; margin-left: 7px; font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em;
+    color: var(--next); background: color-mix(in srgb, var(--next) 13%, transparent);
+    border: 1px solid color-mix(in srgb, var(--next) 30%, transparent);
+    padding: 1px 7px; border-radius: 999px; vertical-align: 1px;
+  }
+
+  /* ---------- Student portal band ---------- */
+  .band { background: var(--surface-2); }
+  .portal-stages { counter-reset: st; display: grid; gap: 18px; margin-top: 8px; }
+  .pstage {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 24px 26px; box-shadow: var(--shadow-sm);
+    display: grid; grid-template-columns: auto 1fr; gap: 20px; align-items: start;
+  }
+  .pstage .stg {
+    counter-increment: st; font-family: var(--font-num); font-variant-numeric: tabular-nums;
+    font-size: 1.3rem; font-weight: 800; color: #fff; background: var(--accent);
+    width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; box-shadow: var(--shadow-sm);
+  }
+  .pstage .stg::before { content: counter(st); }
+  .pstage h3 { margin-bottom: 5px; }
+  .pstage .sub { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--accent-ink); margin-bottom: 8px; }
+  .pstage p { color: var(--ink-soft); font-size: 0.95rem; margin: 0; }
+
+  /* ---------- Metrics (KPI cards, TailAdmin analytics style) ---------- */
+  .kpi { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow-sm); }
+  .kpi .kpi-ico { width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; background: var(--accent-wash); color: var(--accent-ink); margin-bottom: 16px; }
+  .kpi .kpi-ico svg { width: 20px; height: 20px; }
+  .kpi .kpi-name { font-size: 12.5px; font-weight: 600; color: var(--muted); }
+  .kpi .kpi-val { font-size: 1.05rem; font-weight: 700; color: var(--ink); margin-top: 4px; line-height: 1.35; letter-spacing: -0.01em; }
+  .kpi.star { border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); background: linear-gradient(180deg, var(--accent-wash), var(--surface)); }
+
+  /* ---------- Monetization tiers ---------- */
+  .tier { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 26px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; }
+  .tier.feature { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); box-shadow: var(--shadow-md); position: relative; }
+  .tier .t-name { font-size: 1.15rem; font-weight: 780; letter-spacing: -0.01em; }
+  .tier .t-for { font-size: 0.9rem; color: var(--muted); margin: 4px 0 18px; }
+  .tier ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .tier li { position: relative; padding-left: 24px; font-size: 0.92rem; color: var(--ink-soft); }
+  .tier li::before { content: ""; position: absolute; left: 2px; top: 7px; width: 11px; height: 6px; border-left: 2px solid var(--accent); border-bottom: 2px solid var(--accent); transform: rotate(-45deg); }
+  .badge-top { position: absolute; top: -11px; right: 20px; font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #fff; background: var(--accent); padding: 4px 11px; border-radius: 999px; }
+
+  /* ---------- Moat / callout ---------- */
+  .callout {
+    background: var(--accent); color: #fff; border-radius: var(--radius); padding: 40px;
+    box-shadow: var(--shadow-md);
+  }
+  :root[data-theme="dark"] .callout, .callout { background: linear-gradient(135deg, #465FFF, #6B54F0); }
+  .callout .eyebrow { color: rgba(255,255,255,0.85); }
+  .callout .eyebrow::before { background: rgba(255,255,255,0.7); }
+  .callout h2 { color: #fff; margin: 14px 0 10px; }
+  .callout p { color: rgba(255,255,255,0.9); font-size: 1.05rem; max-width: 60ch; }
+
+  .footer { padding: 44px 0 60px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+  .footer .brand { color: var(--ink); }
+
+  /* Design-note inline chip (TailAdmin sourcing) */
+  .designnote {
+    margin-top: 20px; display: flex; align-items: flex-start; gap: 12px;
+    background: var(--surface-2); border: 1px dashed var(--line); border-radius: var(--radius-sm);
+    padding: 14px 16px; font-size: 0.88rem; color: var(--ink-soft);
+  }
+  .designnote svg { width: 17px; height: 17px; color: var(--accent-ink); flex-shrink: 0; margin-top: 2px; }
+  .designnote b { color: var(--ink); font-weight: 650; }
+
+  /* motion */
+  .rise { opacity: 0; transform: translateY(14px); animation: rise 0.7s cubic-bezier(0.22,1,0.36,1) forwards; }
+  .rise.d1 { animation-delay: 0.06s; } .rise.d2 { animation-delay: 0.12s; } .rise.d3 { animation-delay: 0.18s; }
+  @keyframes rise { to { opacity: 1; transform: none; } }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rise { animation: none; opacity: 1; transform: none; }
+    .topbar { backdrop-filter: none; }
+  }
+
+  @media (max-width: 860px) {
+    .g4 { grid-template-columns: repeat(2, 1fr); }
+    .g3 { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    .wrap { padding: 0 18px; }
+    .g2, .g4 { grid-template-columns: 1fr; }
+    .pstage { grid-template-columns: 1fr; }
+    .phase { padding-left: 50px; }
+    .topbar-meta { display: none; }
+    section { padding: 52px 0; }
+  }
+</style>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+      </span>
+      <span>Tutorio<small>Продуктовая стратегия</small></span>
+    </div>
+    <span class="topbar-meta">Видение и дорожная карта · 2026</span>
+  </div>
+</header>
+
+<main>
+  <!-- HERO -->
+  <div class="hero">
+    <div class="wrap">
+      <span class="eyebrow rise">Продуктовое видение</span>
+      <h1 class="rise d1">Операционная система репетитора — где <span class="accent-word">расписание и деньги</span> живут в одном месте, которому доверяешь.</h1>
+      <p class="lead rise d2">Tutorio превращает разрозненные таблицы, заметки и переписки в единый источник правды: кого учить сегодня, кто сколько должен и почему. Не ещё один календарь — финансовый календарь для частных репетиторов и небольших школ.</p>
+
+      <div class="northstar rise d2">
+        <span class="ns-dot" aria-hidden="true"></span>
+        <span class="ns-label">Главная метрика</span>
+        <span class="ns-value">Оплаченные уроки, проведённые через систему за месяц</span>
+      </div>
+
+      <div class="pill-row rise d3">
+        <span class="pill"><i style="background:var(--now)"></i>Планирование</span>
+        <span class="pill"><i style="background:var(--next)"></i>Финансы</span>
+        <span class="pill"><i style="background:var(--later)"></i>Отношения и рост</span>
+        <span class="pill"><i style="background:var(--done)"></i>Прозрачность для ученика</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- STARTING POINT -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Точка отсчёта</span>
+        <h2>Фундамент уже стоит — и он крепкий</h2>
+        <p>Прежде чем строить видение, честно о базе. Каркас продукта готов и покрыт тестами; не хватает именно того слоя ценности, который идёт следующим.</p>
+      </div>
+      <div class="grid g4">
+        <div class="card">
+          <div class="card-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg></div>
+          <h3>Люди</h3>
+          <p>Ученики, родители, группы, преподаватели — полный CRUD, аудит, богатые профили.</p>
+        </div>
+        <div class="card">
+          <div class="card-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+          <h3>Расписание</h3>
+          <p>Календарь с переносом, рекуррентные серии, конфликты, материализация на 12 недель.</p>
+        </div>
+        <div class="card">
+          <div class="card-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+          <h3>Доменная логика</h3>
+          <p>Стейт-машина статусов урока с описанием финансовых эффектов — ядро, покрытое тестами.</p>
+        </div>
+        <div class="card">
+          <div class="card-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6"/></svg></div>
+          <h3>Локализация</h3>
+          <p>Украинский и английский с первого дня, готовность к часовым поясам и Telegram.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PERSONAS -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Для кого мы это строим</span>
+        <h2>Три роли, одна общая правда о деньгах и времени</h2>
+        <p>Мы обслуживаем не «пользователя вообще». У каждой роли своя боль — и продукт выигрывает, когда закрывает все три.</p>
+      </div>
+      <div class="grid g3">
+        <div class="card persona">
+          <span class="role">Соло-репетитор</span>
+          <div class="who">Марія, англійська</div>
+          <p>Ведёт 15–30 учеников в Google-таблице и заметках телефона. Теряет время на подсчёт балансов и напоминания вручную.</p>
+          <div class="kv"><span>Что ей нужно</span><p>Открыть утром и сразу увидеть день и долги. Ноль ручной бухгалтерии.</p></div>
+        </div>
+        <div class="card persona">
+          <span class="role">Маленькая школа</span>
+          <div class="who">SpeakWise · 2–5 преподавателей</div>
+          <p>Общий поток учеников, разные ставки, групповые пакеты, зарплаты. Хаос при переходе из таблиц.</p>
+          <div class="kv"><span>Что ей нужно</span><p>Общий календарь и финансы по преподавателям, роли и права, экспорт и отчёты.</p></div>
+        </div>
+        <div class="card persona">
+          <span class="role">Ученик и родитель</span>
+          <div class="who">Получатель ценности</div>
+          <p>Не видит своего расписания, баланса и прогресса. Родитель несовершеннолетнего платит «вслепую».</p>
+          <div class="kv"><span>Что им нужно</span><p>Прозрачность: уроки, оплаты, оценки и рост — в своём личном кабинете. <span class="tag-new" style="margin:0">будущее ядро</span></p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRINCIPLES -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Во что мы верим</span>
+        <h2>Продуктовые принципы</h2>
+        <p>Правила, которые решают споры за нас. Каждая фича проверяется на соответствие им — и на соответствие визуальному языку TailAdmin.</p>
+      </div>
+      <div class="principles">
+        <div class="principle"><span class="num" aria-hidden="true"></span><div><h3>Деньги — это правда, а не поле <code>balance</code></h3><p>Мы храним не изменяемое число, а леджер операций. Всегда можно ответить на вопрос «почему баланс именно такой» — это ядро доверия и наш ров.</p></div></div>
+        <div class="principle"><span class="num" aria-hidden="true"></span><div><h3>Календарь без денег — просто календарь</h3><p>Ценность рождается на стыке расписания и финансов. Любая фича приближает продукт к «единственному источнику правды», а не дублирует Google Calendar.</p></div></div>
+        <div class="principle"><span class="num" aria-hidden="true"></span><div><h3>Язык тьютора, а не язык базы данных</h3><p>Репетитор «ставит урок Пете», а не «создаёт enrollment». Технические сущности прячутся под понятные действия. Меньше жаргона — ниже барьер входа.</p></div></div>
+        <div class="principle"><span class="num" aria-hidden="true"></span><div><h3>Данные тьютора неприкосновенны</h3><p>Soft-delete, аудит, экспорт, GDPR-минимум. Репетитор будет ошибаться — «удалить навсегда» почти всегда должно быть обратимым и объяснимым.</p></div></div>
+        <div class="principle"><span class="num" aria-hidden="true"></span><div><h3>Один визуальный язык: TailAdmin</h3><p>Дизайн каждой фичи начинается с поиска ближайшего паттерна в TailAdmin, а не с изобретения. Единый бренд <code>#465FFF</code>, узнаваемые карточки, предсказуемое поведение.</p></div></div>
+        <div class="principle"><span class="num" aria-hidden="true"></span><div><h3>Автоматизируем рутину, а не отношения</h3><p>Напоминания, дайджесты, авто-перенос уроков экономят часы. Но живую связь «репетитор ↔ ученик» продукт усиливает, а не заменяет.</p></div></div>
+      </div>
+
+      <div class="designnote">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        <span><b>Правило разработки.</b> Перед реализацией любой фичи агент сначала ищет похожую реализацию в TailAdmin — галерея компонентов <a href="https://react.tailwind-admin.com/">react.tailwind-admin.com</a> и дашборд-паттерны <a href="https://demo.tailadmin.com/analytics">demo.tailadmin.com/analytics</a> — и воспроизводит её на нашем стеке shadcn/ui + Tailwind. Это часть Definition of Done, а не пожелание.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- PILLARS -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Архитектура ценности</span>
+        <h2>Четыре столпа продукта</h2>
+        <p>Всё, что мы строим, укладывается в один из четырёх столпов. Они растут по очереди, но в итоге держат единую крышу.</p>
+      </div>
+      <div class="grid g2">
+        <div class="card">
+          <div class="card-ico" style="background:color-mix(in srgb,var(--now) 14%,transparent);color:var(--now)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01"/></svg></div>
+          <h3>Планирование</h3>
+          <p>Календарь, серии, конфликты, стейт-машина статусов. Основа, вокруг которой крутится всё остальное. <b style="color:var(--done)">— готово</b></p>
+        </div>
+        <div class="card">
+          <div class="card-ico" style="background:color-mix(in srgb,var(--next) 14%,transparent);color:var(--next)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></svg></div>
+          <h3>Финансы</h3>
+          <p>Пакеты, кредит-леджер, платежи, долги, доли групп. Дифференциатор — то, ради чего продукт существует.</p>
+        </div>
+        <div class="card">
+          <div class="card-ico" style="background:color-mix(in srgb,var(--later) 14%,transparent);color:var(--later)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4Z"/></svg></div>
+          <h3>Отношения и рост</h3>
+          <p>Лиды и воронка, Telegram-напоминания и дайджесты, аналитика. Привлекаем, удерживаем, экономим время.</p>
+        </div>
+        <div class="card">
+          <div class="card-ico" style="background:color-mix(in srgb,var(--done) 14%,transparent);color:var(--done)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5ZM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+          <h3>Прозрачность для ученика</h3>
+          <p>Портал ученика: профиль, оценки, успеваемость, ДЗ. Будущее ядро — двусторонняя ценность и сетевой эффект.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ROADMAP -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Дорожная карта</span>
+        <h2>Шесть горизонтов: от каркаса к платформе</h2>
+        <p>Не список задач, а последовательность результатов. Каждый горизонт заканчивается тем, что тьютор может делать нового — и почему это важно именно сейчас.</p>
+      </div>
+
+      <div class="timeline">
+
+        <div class="phase" style="--pc:var(--done)">
+          <span class="node" aria-hidden="true"></span>
+          <div class="phase-card">
+            <div class="phase-top"><span class="phase-h">Горизонт 0 · Фундамент</span><span class="status">Сделано</span></div>
+            <p class="outcome"><b>Результат:</b> каркас, которому можно доверить данные.</p>
+            <ul class="dl">
+              <li><b>Аутентификация и воркспейсы</b>, роли владельца и преподавателя, uk/en.</li>
+              <li><b>Люди:</b> ученики, родители, группы, преподаватели — CRUD, аудит, фильтры.</li>
+              <li><b>Расписание:</b> календарь с drag-and-drop, серии, конфликты, материализатор.</li>
+              <li><b>Стейт-машина</b> переходов статусов урока с тестами.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="phase" style="--pc:var(--now)">
+          <span class="node" aria-hidden="true"></span>
+          <div class="phase-card">
+            <div class="phase-top"><span class="phase-h">Горизонт 1 · Юзабельно сегодня</span><span class="status">Сейчас</span><span class="phase-when">≈ 4–6 недель</span></div>
+            <p class="outcome"><b>Результат:</b> тьютор открывает Tutorio каждое утро вместо блокнота и Google-календаря.</p>
+            <ul class="dl">
+              <li><b>Дашборд «Сегодня»:</b> уроки дня, счётчик недели, быстрые действия. <span class="tag-new">новое · раньше плана</span></li>
+              <li><b>Язык тьютора вместо жаргона:</b> выбор ученика, а не «enrollment»; авто-подстановка единственного преподавателя. <span class="tag-new">новое</span></li>
+              <li><b>Карточка ученика как хаб:</b> ближайшие и прошедшие уроки + урок в один клик. <span class="tag-new">новое</span></li>
+              <li><b>Единый поиск-пикер</b> человека во всех формах. <span class="tag-new">новое</span></li>
+              <li><b>Заметки к уроку</b> и честная маркировка «биллинг скоро». <span class="tag-new">новое</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="phase" style="--pc:var(--next)">
+          <span class="node" aria-hidden="true"></span>
+          <div class="phase-card">
+            <div class="phase-top"><span class="phase-h">Горизонт 2 · Финансовый калькулятор оживает</span><span class="status">Дальше · ядро</span></div>
+            <p class="outcome"><b>Результат:</b> единый источник правды о деньгах — тьютор всегда знает, кто сколько должен и почему.</p>
+            <ul class="dl">
+              <li><b>Пакеты уроков</b> (фикс-количество и по периоду) — для ученика и для группы.</li>
+              <li><b>Кредит-леджер</b> с идемпотентностью и историей «почему баланс такой».</li>
+              <li><b>Правила «статус → операция»</b> с полным покрытием: 8 кейсов, авто-перенос при отмене без оплаты.</li>
+              <li><b>Ручные платежи</b> и доли участников групповых пакетов.</li>
+              <li><b>Финансовый экран</b> ученика и группы, ручная корректировка баланса.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="phase" style="--pc:var(--later)">
+          <span class="node" aria-hidden="true"></span>
+          <div class="phase-card">
+            <div class="phase-top"><span class="phase-h">Горизонт 3 · Меньше ручного труда</span><span class="status">Дальше</span></div>
+            <p class="outcome"><b>Результат:</b> продукт экономит часы в неделю и начинает удерживать.</p>
+            <ul class="dl">
+              <li><b>Telegram:</b> напоминания ученику за 24 и 1 час (со ссылкой на встречу), дневной дайджест преподавателю.</li>
+              <li><b>Лиды и воронка:</b> канбан, пробные уроки, конверсия лида в ученика в один клик.</li>
+              <li><b>Аналитика:</b> KPI-карточки, выручка по источникам и валютам, экспорт в Excel.</li>
+              <li><b>Публичная страница ученика</b> (read-only по токену): уроки, баланс, подтверждение и отмена.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="phase" style="--pc:var(--next)">
+          <span class="node" aria-hidden="true"></span>
+          <div class="phase-card">
+            <div class="phase-top"><span class="phase-h">Горизонт 4 · Прозрачность и успеваемость</span><span class="status">Позже · платформа ученика</span></div>
+            <p class="outcome"><b>Результат:</b> ценность не только тьютору, но ученику и родителю — появляется сарафанное радио.</p>
+            <ul class="dl">
+              <li><b>Портал ученика</b> с личным кабинетом: профиль, расписание, баланс, история оплат.</li>
+              <li><b>Прогресс:</b> журнал уроков, оценки и тесты, посещаемость, домашние задания.</li>
+              <li><b>Оценки и рост, видимые ученику</b>, с мягкой геймификацией мотивации.</li>
+              <li><b>Квитанции и брендинг PDF</b>, часовой пояс воркспейса, ссылка на встречу.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="phase" style="--pc:var(--beyond)">
+          <span class="node" aria-hidden="true"></span>
+          <div class="phase-card">
+            <div class="phase-top"><span class="phase-h">Горизонт 5 · Масштаб</span><span class="status">Горизонт</span></div>
+            <p class="outcome"><b>Результат:</b> от инструмента одного тьютора — к платформе для школ.</p>
+            <ul class="dl">
+              <li><b>Онлайн-приём платежей</b> (Stripe / WayForPay) и платёжные ссылки.</li>
+              <li><b>Мобильное приложение</b> (Expo) поверх готового API.</li>
+              <li><b>Синхронизация с Google Calendar</b>, мультивалютный roll-up в аналитике.</li>
+              <li><b>SaaS-биллинг и тарифы</b>, расширенные роли и права, CSV-импорт и миграция школ.</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- STUDENT PORTAL DEEP DIVE -->
+  <section class="band">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Будущее ядро</span>
+        <h2>Портал ученика — от «окна» к вовлечению</h2>
+        <p>Твоя идея дать ученику видеть свой профиль, оценки и успеваемость — это не фича, а стратегический разворот: продукт становится двусторонним. Мы разворачиваем его в три этапа зрелости.</p>
+      </div>
+
+      <div class="portal-stages">
+        <div class="pstage">
+          <span class="stg" aria-hidden="true"></span>
+          <div>
+            <div class="sub">Read-only · Горизонт 3</div>
+            <h3>Окно</h3>
+            <p>Публичная страница по неугадываемому токену, без регистрации. Ученик видит ближайшие уроки, баланс и историю оплат, может подтвердить или отменить урок с учётом дедлайна. Минимальный вход, максимум доверия.</p>
+          </div>
+        </div>
+        <div class="pstage">
+          <span class="stg" aria-hidden="true"></span>
+          <div>
+            <div class="sub">Личный кабинет · Горизонт 4</div>
+            <h3>Кабинет</h3>
+            <p>Аккаунт ученика и родителя: личный профиль, полная история, оценки и результаты тестов, журнал уроков с домашними заданиями и материалами, посещаемость. Родитель несовершеннолетнего видит платежи и прогресс ребёнка.</p>
+          </div>
+        </div>
+        <div class="pstage">
+          <span class="stg" aria-hidden="true"></span>
+          <div>
+            <div class="sub">Вовлечение · Горизонт 5+</div>
+            <h3>Рост</h3>
+            <p>Визуализация прогресса во времени, достижения и бейджи, цели и серии посещений — мягкая геймификация, которая мотивирует учиться и снижает отток. Ученик становится причиной остаться в Tutorio, а не только тьютор.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="designnote" style="margin-top:24px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        <span><b>Почему это ров.</b> Портал создаёт сетевой эффект: чем прозрачнее ученику и родителю, тем труднее тьютору уйти на голый календарь. Плюс — доверие родителей и естественное сарафанное радио, самый дешёвый канал роста.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- MONETIZATION -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Как продукт зарабатывает</span>
+        <h2>Монетизируем ПО, а не чужой денежный поток</h2>
+        <p>Мы не принимаем деньги учеников на свой счёт. Зарабатываем на подписке за инструмент; онлайн-приём платежей — сервис поверх, не эскроу.</p>
+      </div>
+      <div class="grid g3">
+        <div class="tier">
+          <div class="t-name">Free</div>
+          <div class="t-for">Соло-репетитор, старт</div>
+          <ul>
+            <li>Один преподаватель</li>
+            <li>Ученики, группы, родители</li>
+            <li>Календарь и серии уроков</li>
+            <li>Ручные платежи и балансы</li>
+          </ul>
+        </div>
+        <div class="tier feature">
+          <span class="badge-top">Ядро выручки</span>
+          <div class="t-name">Pro</div>
+          <div class="t-for">Растущий репетитор и школа</div>
+          <ul>
+            <li>Без лимитов по ученикам</li>
+            <li>Telegram-напоминания и дайджесты</li>
+            <li>Аналитика и экспорт</li>
+            <li>Квитанции и брендинг PDF</li>
+            <li>Портал ученика</li>
+            <li>Роли и права для команды</li>
+          </ul>
+        </div>
+        <div class="tier">
+          <div class="t-name">Позже</div>
+          <div class="t-for">Масштаб и школы</div>
+          <ul>
+            <li>Надбавка за онлайн-приём платежей</li>
+            <li>Посадочные места для больших школ</li>
+            <li>Приоритетная поддержка и SLA</li>
+            <li>Расширенная аналитика по преподавателям</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- METRICS -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Как измеряем успех</span>
+        <h2>Одна главная метрика, четыре поддерживающих</h2>
+        <p>North Star растёт только тогда, когда тьютор и планирует уроки, и ведёт по ним деньги в Tutorio — то есть когда продукт реально стал операционной системой, а не просто календарём.</p>
+      </div>
+      <div class="grid g4">
+        <div class="kpi star">
+          <div class="kpi-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg></div>
+          <div class="kpi-name">North Star</div>
+          <div class="kpi-val">Оплаченные уроки, проведённые через систему за месяц</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg></div>
+          <div class="kpi-name">Активация</div>
+          <div class="kpi-val">Время до первого оплаченного пакета</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 14l4-4 3 3 5-6"/></svg></div>
+          <div class="kpi-name">Вовлечённость</div>
+          <div class="kpi-val">WAU тьюторов · доля воркспейсов с настроенным биллингом</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.2-8.5"/><path d="M21 3v6h-6"/></svg></div>
+          <div class="kpi-name">Удержание и качество</div>
+          <div class="kpi-val">Месячный retention · доля уроков без ручных правок в БД · NPS</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MOAT / CLOSER -->
+  <section>
+    <div class="wrap">
+      <div class="callout">
+        <span class="eyebrow">Наш ров</span>
+        <h2>Почему это трудно скопировать</h2>
+        <p>Календарь напишет любой. Наша защита — в глубине: доменная логика пакетов, отмен и возвратов как ядро; леджер вместо мутабельного баланса; локализация под рынок с Telegram там, где люди уже общаются; и портал ученика, создающий двусторонний сетевой эффект. Вместе это — операционная система, а не набор экранов.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="wrap">
+      <div class="brand" style="margin-bottom:10px">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span>
+        <span>Tutorio</span>
+      </div>
+      Продуктовое видение и дорожная карта · 2026. Дизайн каждой фичи сверяется с TailAdmin. Живой источник плана — <code>docs/mvp-plan.md</code> в репозитории.
+    </div>
+  </footer>
+</main>

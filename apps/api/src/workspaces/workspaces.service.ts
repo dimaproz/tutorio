@@ -6,6 +6,7 @@ import type {
 } from '@tutorio/validation';
 import { AuditService } from '../audit/audit.service';
 import type { AuthenticatedUser } from '../auth/auth.types';
+import { soloModeSingleTeacher } from '../common/business.errors';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -33,6 +34,7 @@ export class WorkspacesService {
         id: membership.workspace.id,
         name: membership.workspace.name,
         plan: membership.workspace.plan,
+        mode: membership.workspace.mode,
         defaultCurrency: membership.workspace.defaultCurrency,
         cancellationDeadlineHours:
           membership.workspace.cancellationDeadlineHours,
@@ -63,6 +65,21 @@ export class WorkspacesService {
       if (!changes) {
         // No-op PATCH: nothing to persist, no audit row.
         return;
+      }
+
+      // SOLO implies "the owner is the only teacher": switching back while a
+      // second active profile exists would hide schedules nobody can reach.
+      if (dto.mode === 'SOLO' && before.mode !== 'SOLO') {
+        const activeTeachers = await tx.teacher.count({
+          where: {
+            workspaceId: before.id,
+            deletedAt: null,
+            status: 'ACTIVE',
+          },
+        });
+        if (activeTeachers > 1) {
+          throw soloModeSingleTeacher();
+        }
       }
 
       await tx.workspace.update({

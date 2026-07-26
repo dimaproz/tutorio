@@ -17,17 +17,15 @@ import {
   useUpdateSearchParams,
 } from '@/components/app/list-controls';
 import { StudentFilterCombobox } from './student-filter-combobox';
-import { ListSkeleton, PageHeader, QueryErrorAlert } from '@/components/app/page-shell';
+import {
+  ListSkeleton,
+  PageHeader,
+  QueryErrorAlert,
+  QueryRefreshIndicator,
+} from '@/components/app/page-shell';
 import { EntityAvatar } from '@/components/app/entity-avatar';
 import { Button } from '@/components/ui/button';
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '@/components/ui/empty';
+import { CollectionEmptyState, CollectionToolbar } from '@/components/shared';
 import { parsePageParam } from '@/lib/api/filters';
 import { useParentsQuery } from '@/lib/api/parents';
 
@@ -74,7 +72,9 @@ export function ParentsList() {
           <div className="flex flex-col text-sm">
             {row.original.phone ? <span>{row.original.phone}</span> : null}
             {row.original.telegramUsername ? (
-              <span className="text-muted-foreground">@{row.original.telegramUsername.replace(/^@/, '')}</span>
+              <span className="text-muted-foreground">
+                @{row.original.telegramUsername.replace(/^@/, '')}
+              </span>
             ) : null}
             {!row.original.phone && !row.original.telegramUsername ? (
               <span className="text-muted-foreground">{tCommon('notProvided')}</span>
@@ -125,13 +125,15 @@ export function ParentsList() {
         }
       />
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <CollectionToolbar>
         <ListSearchInput label={t('searchLabel')} placeholder={t('searchPlaceholder')} />
         <StudentFilterCombobox
           value={studentId}
           onChange={(next) => updateParams({ studentId: next }, { resetPage: true })}
         />
-      </div>
+      </CollectionToolbar>
+
+      <QueryRefreshIndicator isFetching={parents.isFetching && !parents.isPending} />
 
       {parents.isPending ? <ListSkeleton /> : null}
 
@@ -171,22 +173,18 @@ function ParentsEmptyState({ search, onCreate }: { search?: string; onCreate: ()
   const scope = search ? 'emptySearch' : 'empty';
 
   return (
-    <Empty className="border border-dashed">
-      <EmptyHeader>
-        <EmptyMedia variant="icon">
-          <ContactIcon />
-        </EmptyMedia>
-        <EmptyTitle>{t(`${scope}.title`)}</EmptyTitle>
-        <EmptyDescription>{t(`${scope}.description`)}</EmptyDescription>
-      </EmptyHeader>
-      {scope === 'empty' ? (
-        <EmptyContent>
+    <CollectionEmptyState
+      icon={ContactIcon}
+      title={t(`${scope}.title`)}
+      description={t(`${scope}.description`)}
+      action={
+        scope === 'empty' ? (
           <Button onClick={onCreate}>
             <PlusIcon data-icon />
             {t('empty.action')}
           </Button>
-        </EmptyContent>
-      ) : null}
-    </Empty>
+        ) : undefined
+      }
+    />
   );
 }

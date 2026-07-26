@@ -11,7 +11,10 @@ import type {
 import { AuditService } from '../audit/audit.service';
 import { forbidden } from '../auth/auth.errors';
 import type { AuthenticatedUser } from '../auth/auth.types';
-import { parentNotFound } from '../common/business.errors';
+import {
+  invalidWorkspaceRelation,
+  parentNotFound,
+} from '../common/business.errors';
 import {
   buildPaginatedResponse,
   deletedAtFilter,
@@ -39,7 +42,17 @@ function toResponse(row: Parent): ParentResponse {
 const studentRosterInclude = {
   students: {
     where: { student: { deletedAt: null } },
-    include: { student: { select: { id: true, fullName: true, avatarKey: true } } },
+    include: {
+      student: {
+        select: {
+          id: true,
+          fullName: true,
+          avatarKey: true,
+          subject: true,
+          status: true,
+        },
+      },
+    },
     orderBy: { student: { fullName: 'asc' as const } },
   },
 } satisfies Prisma.ParentInclude;
@@ -50,7 +63,10 @@ function toRoster(
   return row.students.map((link) => ({
     id: link.student.id,
     fullName: link.student.fullName,
-    avatarKey: link.student.avatarKey as ParentDetail['students'][number]['avatarKey'],
+    avatarKey: link.student
+      .avatarKey as ParentDetail['students'][number]['avatarKey'],
+    subject: link.student.subject,
+    status: link.student.status,
   }));
 }
 
@@ -60,6 +76,22 @@ export class ParentsService {
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
   ) {}
+
+  private async assertStudentsBelongToWorkspace(
+    tx: Prisma.TransactionClient,
+    workspaceId: string,
+    studentIds: readonly string[],
+  ) {
+    if (studentIds.length === 0) {
+      return;
+    }
+    const count = await tx.student.count({
+      where: { id: { in: [...studentIds] }, workspaceId, deletedAt: null },
+    });
+    if (count !== new Set(studentIds).size) {
+      throw invalidWorkspaceRelation();
+    }
+  }
 
   async list(
     auth: AuthenticatedUser,
@@ -105,7 +137,8 @@ export class ParentsService {
         fullName: row.fullName,
         phone: row.phone,
         telegramUsername: row.telegramUsername,
-        avatarKey: row.avatarKey as ParentListResponse['items'][number]['avatarKey'],
+        avatarKey:
+          row.avatarKey as ParentListResponse['items'][number]['avatarKey'],
         deletedAt: row.deletedAt?.toISOString() ?? null,
         students: toRoster(row),
       })),
@@ -119,16 +152,31 @@ export class ParentsService {
     dto: CreateParentDto,
   ): Promise<ParentResponse> {
     const parent = await this.prisma.$transaction(async (tx) => {
+      const { studentIds: rawStudentIds = [], ...scalarDto } = dto;
+      const studentIds = [...new Set(rawStudentIds)];
+      await this.assertStudentsBelongToWorkspace(
+        tx,
+        auth.workspaceId,
+        studentIds,
+      );
       const created = await tx.parent.create({
-        data: { workspaceId: auth.workspaceId, ...dto },
+        data: { workspaceId: auth.workspaceId, ...scalarDto },
       });
+      if (studentIds.length > 0) {
+        await tx.studentParent.createMany({
+          data: studentIds.map((studentId) => ({
+            studentId,
+            parentId: created.id,
+          })),
+        });
+      }
       await this.audit.record(tx, {
         workspaceId: auth.workspaceId,
         actorId: auth.userId,
         action: 'CREATE',
         entity: 'PARENT',
         entityId: created.id,
-        changes: this.audit.buildChanges({}, { ...dto }),
+        changes: this.audit.buildChanges({}, { ...scalarDto, studentIds }),
       });
       return created;
     });
@@ -156,18 +204,40 @@ export class ParentsService {
     dto: UpdateParentDto,
   ): Promise<ParentResponse> {
     const parent = await this.prisma.$transaction(async (tx) => {
+      const { studentIds: rawStudentIds, ...scalarDto } = dto;
+      const studentIds =
+        rawStudentIds === undefined ? undefined : [...new Set(rawStudentIds)];
       const before = await tx.parent.findFirst({
         where: {
           id: parentId,
           workspaceId: auth.workspaceId,
           deletedAt: null,
         },
+        include: { students: { select: { studentId: true } } },
       });
       if (!before) {
         throw parentNotFound();
       }
+      if (studentIds !== undefined) {
+        await this.assertStudentsBelongToWorkspace(
+          tx,
+          auth.workspaceId,
+          studentIds,
+        );
+      }
 
-      const changes = this.audit.buildChanges(before, { ...dto });
+      const changes = this.audit.buildChanges(
+        {
+          ...before,
+          studentIds: before.students.map((link) => link.studentId).sort(),
+        },
+        {
+          ...scalarDto,
+          ...(studentIds === undefined
+            ? {}
+            : { studentIds: [...studentIds].sort() }),
+        },
+      );
       if (!changes) {
         // No-op PATCH: nothing to persist, no audit row.
         return before;
@@ -175,8 +245,19 @@ export class ParentsService {
 
       const updated = await tx.parent.update({
         where: { id: before.id },
-        data: dto,
+        data: scalarDto,
       });
+      if (studentIds !== undefined) {
+        await tx.studentParent.deleteMany({ where: { parentId: before.id } });
+        if (studentIds.length > 0) {
+          await tx.studentParent.createMany({
+            data: studentIds.map((studentId) => ({
+              studentId,
+              parentId: before.id,
+            })),
+          });
+        }
+      }
       await this.audit.record(tx, {
         workspaceId: auth.workspaceId,
         actorId: auth.userId,

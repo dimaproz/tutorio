@@ -9,8 +9,12 @@ export class BusinessApiException extends HttpException {
     readonly code: BusinessErrorCode,
     message: string,
     status: HttpStatus,
+    details?: Record<string, unknown>,
   ) {
-    super({ statusCode: status, code, message }, status);
+    super(
+      { statusCode: status, code, message, ...(details ? { details } : {}) },
+      status,
+    );
   }
 }
 
@@ -40,6 +44,22 @@ export const enrollmentNotFound = () =>
     'ENROLLMENT_NOT_FOUND',
     'Enrollment not found',
     HttpStatus.NOT_FOUND,
+  );
+
+export const teacherNotFound = () =>
+  new BusinessApiException(
+    'TEACHER_NOT_FOUND',
+    'Teacher not found',
+    HttpStatus.NOT_FOUND,
+  );
+
+// A SOLO workspace shows no teacher controls, so it must stay single-teacher:
+// raised both when adding a second teacher and when switching back to SOLO.
+export const soloModeSingleTeacher = () =>
+  new BusinessApiException(
+    'SOLO_MODE_SINGLE_TEACHER',
+    'Solo workspaces support a single teacher',
+    HttpStatus.CONFLICT,
   );
 
 export const workspaceMemberNotFound = () =>
@@ -75,6 +95,74 @@ export const invalidMoneyAmount = () =>
     'INVALID_MONEY_AMOUNT',
     'Money amount is invalid',
     HttpStatus.BAD_REQUEST,
+  );
+
+export const lessonNotFound = () =>
+  new BusinessApiException(
+    'LESSON_NOT_FOUND',
+    'Lesson not found',
+    HttpStatus.NOT_FOUND,
+  );
+
+export const lessonSeriesNotFound = () =>
+  new BusinessApiException(
+    'LESSON_SERIES_NOT_FOUND',
+    'Lesson series not found',
+    HttpStatus.NOT_FOUND,
+  );
+
+// 409 with the conflicting lesson ids in `details` — the web app offers a
+// "book anyway" retry with ?force=true.
+export const scheduleConflict = (conflictIds: string[]) =>
+  new BusinessApiException(
+    'SCHEDULE_CONFLICT',
+    'The teacher already has a lesson overlapping this time',
+    HttpStatus.CONFLICT,
+    { conflictIds },
+  );
+
+export const invalidLessonTransition = () =>
+  new BusinessApiException(
+    'INVALID_LESSON_TRANSITION',
+    'This lesson status change is not allowed',
+    HttpStatus.CONFLICT,
+  );
+
+export const packageNotFound = () =>
+  new BusinessApiException(
+    'PACKAGE_NOT_FOUND',
+    'Lesson package not found',
+    HttpStatus.NOT_FOUND,
+  );
+
+export const paymentNotFound = () =>
+  new BusinessApiException(
+    'PAYMENT_NOT_FOUND',
+    'Payment not found',
+    HttpStatus.NOT_FOUND,
+  );
+
+// A lesson can only consume credits from a package that still covers it.
+export const noActivePackage = () =>
+  new BusinessApiException(
+    'NO_ACTIVE_PACKAGE',
+    'No active package covers this lesson',
+    HttpStatus.CONFLICT,
+  );
+
+export const invalidPackagePlan = (message: string) =>
+  new BusinessApiException(
+    'INVALID_PACKAGE_PLAN',
+    message,
+    HttpStatus.BAD_REQUEST,
+  );
+
+// Money is never summed or compared across currencies.
+export const currencyMismatch = () =>
+  new BusinessApiException(
+    'CURRENCY_MISMATCH',
+    'The currency does not match the target record',
+    HttpStatus.CONFLICT,
   );
 
 export const unexpected = () =>

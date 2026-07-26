@@ -44,6 +44,15 @@ export function useSession(): AuthMe {
   return session;
 }
 
+/**
+ * A solo workspace is a single-teacher one: every teacher control is hidden and
+ * the owner's own profile is implied. Presentation only — lessons still carry a
+ * teacher, and the mode is switchable in workspace settings.
+ */
+export function useIsSoloWorkspace(): boolean {
+  return useSession().workspace.mode === 'SOLO';
+}
+
 function SessionSkeleton() {
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 md:p-6">

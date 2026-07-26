@@ -2,11 +2,11 @@
 
 import { useEffect, useMemo } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
+import { SUPPORTED_CURRENCIES } from '@tutorio/domain';
 import type { EnrollmentResponse } from '@tutorio/validation';
-import { EntityCombobox } from './entity-combobox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -17,13 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from '@/components/ui/field';
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -35,24 +29,21 @@ import {
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import { errorMessageKey } from '@/lib/api/error-message';
-import {
-  useCreateEnrollmentMutation,
-  useUpdateEnrollmentMutation,
-} from '@/lib/api/enrollments';
+import { useCreateEnrollmentMutation, useUpdateEnrollmentMutation } from '@/lib/api/enrollments';
 import { useGroupsQuery } from '@/lib/api/groups';
 import { useStudentsQuery } from '@/lib/api/students';
-import { useWorkspaceMembersQuery } from '@/lib/api/workspace';
-import { useSession } from '@/components/app/session-provider';
+import { useTeachersQuery } from '@/lib/api/teachers';
+import { useIsSoloWorkspace, useSession } from '@/components/app/session-provider';
 import { CurrencyOption } from '@/components/app/currency-option';
 import { MoneyInput } from '@/components/app/money-input';
 import { PersonMiniCard } from '@/components/app/person-mini-card';
 import { StatusSelect, useEnrollmentStatusOptions } from '@/components/app/status-select';
+import { EntityPicker } from '@/components/shared';
 import { makeZodErrorMap } from '@/lib/forms/error-map';
-import { enrollmentFormSchema, type EnrollmentFormValues } from '@/lib/forms/schemas';
+import { enrollmentFormSchema, type EnrollmentFormValues } from '@/features/enrollments/model/form';
 import { formatPriceInput, parsePriceInput } from '@/lib/money';
 
 const BILLING_TYPES = ['PACKAGE', 'MONTHLY', 'PER_LESSON'] as const;
-const CURRENCIES = ['EUR', 'UAH', 'PLN', 'USD', 'GBP'] as const;
 
 // Sentinel for "no group" — Radix Select cannot hold an empty string value.
 const INDIVIDUAL = 'individual';
@@ -98,8 +89,9 @@ export function EnrollmentDialog({
   // Pickers only need live records; one long page covers MVP workspace size.
   const students = useStudentsQuery({ page: 1, pageSize: 100 }, open && !lockedStudentId);
   const groups = useGroupsQuery({ page: 1, pageSize: 100 }, open && !lockedGroupId);
-  const members = useWorkspaceMembersQuery(open);
+  const teachers = useTeachersQuery({ page: 1, pageSize: 100 }, open);
   const session = useSession();
+  const isSolo = useIsSoloWorkspace();
 
   const workspaceDefaultDeadline = session.workspace.cancellationDeadlineHours;
 
@@ -122,7 +114,10 @@ export function EnrollmentDialog({
     },
   });
   const { errors } = form.formState;
-  const values = form.watch();
+  const values = useWatch({
+    control: form.control,
+    defaultValue: form.getValues(),
+  }) as EnrollmentFormValues;
 
   // Refill whenever the dialog opens so a reopened editor never shows stale data.
   useEffect(() => {
@@ -140,8 +135,7 @@ export function EnrollmentDialog({
         price: formatPriceInput(enrollment.priceMinor),
         currency: enrollment.currency,
         useCustomDeadline: enrollment.cancellationDeadlineHours !== null,
-        cancellationDeadlineHours:
-          enrollment.cancellationDeadlineHours?.toString() ?? '',
+        cancellationDeadlineHours: enrollment.cancellationDeadlineHours?.toString() ?? '',
       });
       return;
     }
@@ -152,8 +146,7 @@ export function EnrollmentDialog({
       status: 'ACTIVE',
       billingType: 'PACKAGE',
       price: '',
-      currency: session.workspace
-        .defaultCurrency as EnrollmentFormValues['currency'],
+      currency: session.workspace.defaultCurrency as EnrollmentFormValues['currency'],
       useCustomDeadline: false,
       cancellationDeadlineHours: '',
     });
@@ -165,17 +158,28 @@ export function EnrollmentDialog({
       (students.data?.items ?? []).map((student) => ({
         value: student.id,
         label: student.fullName,
+        avatarKey: student.avatarKey,
       })),
     [students.data],
   );
   const teacherOptions = useMemo(
     () =>
-      (members.data?.items ?? []).map((member) => ({
-        value: member.id,
-        label: member.name,
+      (teachers.data?.items ?? []).map((teacher) => ({
+        value: teacher.id,
+        label: teacher.fullName,
+        avatarKey: teacher.avatarKey,
       })),
-    [members.data],
+    [teachers.data],
   );
+
+  // Solo workspaces never render the picker, so the single teaching profile is
+  // filled in silently — the field is still required by the API contract.
+  useEffect(() => {
+    if (!open || !isSolo || values.teacherId || teacherOptions.length !== 1) {
+      return;
+    }
+    form.setValue('teacherId', teacherOptions[0].value, { shouldValidate: true });
+  }, [open, isSolo, values.teacherId, teacherOptions, form]);
 
   // Student / teacher become read-only cards once fixed: a locked or existing
   // student, and — since it is immutable after creation — the teacher on edit.
@@ -246,9 +250,7 @@ export function EnrollmentDialog({
             <FieldGroup>
               {mutation.error ? (
                 <Alert variant="destructive" role="alert">
-                  <AlertDescription>
-                    {tErrors(errorMessageKey(mutation.error))}
-                  </AlertDescription>
+                  <AlertDescription>{tErrors(errorMessageKey(mutation.error))}</AlertDescription>
                 </Alert>
               ) : null}
 
@@ -258,18 +260,18 @@ export function EnrollmentDialog({
                   <PersonMiniCard
                     avatarKey={studentCard.avatarKey}
                     fullName={studentCard.fullName}
-                    subtitle={
-                      lockedStudent?.subject ? tSubject(lockedStudent.subject) : undefined
-                    }
+                    subtitle={lockedStudent?.subject ? tSubject(lockedStudent.subject) : undefined}
                   />
                 ) : (
-                  <EntityCombobox
+                  <EntityPicker
                     id="enrollment-student"
                     value={values.studentId}
                     options={studentOptions}
-                    onChange={(value) =>
-                      form.setValue('studentId', value, { shouldValidate: true })
-                    }
+                    onChange={(value) => {
+                      if (value) {
+                        form.setValue('studentId', value, { shouldValidate: true });
+                      }
+                    }}
                     placeholder={t('editor.studentPlaceholder')}
                     searchPlaceholder={t('editor.studentSearch')}
                     emptyLabel={t('editor.studentEmpty')}
@@ -303,26 +305,31 @@ export function EnrollmentDialog({
                 <FieldDescription>{t('editor.groupHint')}</FieldDescription>
               </Field>
 
-              <Field data-invalid={errors.teacherId ? true : undefined}>
-                <FieldLabel htmlFor="enrollment-teacher">{t('editor.teacher')}</FieldLabel>
-                {teacherCard ? (
-                  <PersonMiniCard fullName={teacherCard.name} />
-                ) : (
-                  <EntityCombobox
-                    id="enrollment-teacher"
-                    value={values.teacherId}
-                    options={teacherOptions}
-                    onChange={(value) =>
-                      form.setValue('teacherId', value, { shouldValidate: true })
-                    }
-                    placeholder={t('editor.teacherPlaceholder')}
-                    searchPlaceholder={t('editor.teacherSearch')}
-                    emptyLabel={t('editor.teacherEmpty')}
-                    invalid={Boolean(errors.teacherId)}
-                  />
-                )}
-                <FieldError errors={[errors.teacherId]} />
-              </Field>
+              {/* Solo workspace: the only teacher is implied, never asked for. */}
+              {isSolo ? null : (
+                <Field data-invalid={errors.teacherId ? true : undefined}>
+                  <FieldLabel htmlFor="enrollment-teacher">{t('editor.teacher')}</FieldLabel>
+                  {teacherCard ? (
+                    <PersonMiniCard fullName={teacherCard.name} />
+                  ) : (
+                    <EntityPicker
+                      id="enrollment-teacher"
+                      value={values.teacherId}
+                      options={teacherOptions}
+                      onChange={(value) => {
+                        if (value) {
+                          form.setValue('teacherId', value, { shouldValidate: true });
+                        }
+                      }}
+                      placeholder={t('editor.teacherPlaceholder')}
+                      searchPlaceholder={t('editor.teacherSearch')}
+                      emptyLabel={t('editor.teacherEmpty')}
+                      invalid={Boolean(errors.teacherId)}
+                    />
+                  )}
+                  <FieldError errors={[errors.teacherId]} />
+                </Field>
+              )}
 
               <Field>
                 <FieldLabel htmlFor="enrollment-status">{t('editor.status')}</FieldLabel>
@@ -371,9 +378,7 @@ export function EnrollmentDialog({
                   <FieldError errors={[errors.price]} />
                 </Field>
                 <Field>
-                  <FieldLabel htmlFor="enrollment-currency">
-                    {t('editor.currency')}
-                  </FieldLabel>
+                  <FieldLabel htmlFor="enrollment-currency">{t('editor.currency')}</FieldLabel>
                   <Select
                     value={values.currency}
                     onValueChange={(value) =>
@@ -385,7 +390,7 @@ export function EnrollmentDialog({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
-                        {CURRENCIES.map((currency) => (
+                        {SUPPORTED_CURRENCIES.map((currency) => (
                           <SelectItem key={currency} value={currency}>
                             <CurrencyOption code={currency} />
                           </SelectItem>

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
-import { GroupsList } from '@/components/groups/groups-list';
+import { GroupsList } from '@/features/groups';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('groups');

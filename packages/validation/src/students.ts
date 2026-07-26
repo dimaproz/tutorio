@@ -234,7 +234,7 @@ export const studentEnrollmentSummarySchema = z.object({
   cancellationDeadlineHours: z.number().int().nonnegative().nullable(),
   effectiveCancellationDeadlineHours: z.number().int().nonnegative(),
   group: z.object({ id: uuidSchema, name: z.string() }).nullable(),
-  teacher: z.object({ id: uuidSchema, name: z.string() }),
+  teacher: z.object({ id: uuidSchema, name: z.string(), color: z.string().nullable() }),
 });
 
 export type StudentEnrollmentSummary = z.infer<typeof studentEnrollmentSummarySchema>;

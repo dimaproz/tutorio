@@ -12,7 +12,17 @@ const validRegister = {
 
 describe('registerSchema', () => {
   it('accepts a valid payload', () => {
-    expect(registerSchema.parse(validRegister)).toEqual(validRegister);
+    expect(registerSchema.parse(validRegister)).toEqual({
+      ...validRegister,
+      mode: 'SOLO',
+    });
+  });
+
+  // Solo is the default so an omitted mode never turns a lone tutor into a
+  // school; school mode has to be asked for explicitly.
+  it('keeps an explicit school mode and rejects unknown modes', () => {
+    expect(registerSchema.parse({ ...validRegister, mode: 'SCHOOL' }).mode).toBe('SCHOOL');
+    expect(registerSchema.safeParse({ ...validRegister, mode: 'AGENCY' }).success).toBe(false);
   });
 
   it('normalizes email with trim + lowercase', () => {

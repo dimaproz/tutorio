@@ -58,10 +58,7 @@ export function SectionTitle({
   return (
     <CardTitle className="flex items-center gap-2.5 text-base">
       <span
-        className={cn(
-          'grid size-8 shrink-0 place-items-center rounded-lg',
-          sectionToneClass[tone],
-        )}
+        className={cn('grid size-8 shrink-0 place-items-center rounded-lg', sectionToneClass[tone])}
       >
         <Icon className="size-4" />
       </span>
@@ -102,12 +99,10 @@ export function InfoRow({
   return (
     <div className="flex items-center gap-3 rounded-xl border p-3">
       <span
-        className="grid size-10 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground"
-        style={
-          accent
-            ? { backgroundColor: 'var(--status-paid-wash)', color: 'var(--status-paid)' }
-            : undefined
-        }
+        className={cn(
+          'grid size-10 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground',
+          accent && 'bg-success/10 text-success',
+        )}
       >
         <Icon className="size-5" />
       </span>
@@ -120,7 +115,13 @@ export function InfoRow({
 }
 
 // Small pill used in a profile header for subject / level / age / grade.
-export function ProfileTag({ icon: Icon, children }: { icon?: IconType; children: React.ReactNode }) {
+export function ProfileTag({
+  icon: Icon,
+  children,
+}: {
+  icon?: IconType;
+  children: React.ReactNode;
+}) {
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
       {Icon ? <Icon className="size-3.5" /> : null}

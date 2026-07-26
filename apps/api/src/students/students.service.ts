@@ -46,11 +46,14 @@ type StudentWithParentLinks = Prisma.StudentGetPayload<{
   include: typeof parentLinksInclude;
 }>;
 
-function toParentRefs(student: StudentWithParentLinks): StudentResponse['parents'] {
+function toParentRefs(
+  student: StudentWithParentLinks,
+): StudentResponse['parents'] {
   return student.parents.map((link) => ({
     id: link.parent.id,
     fullName: link.parent.fullName,
-    avatarKey: link.parent.avatarKey as StudentResponse['parents'][number]['avatarKey'],
+    avatarKey: link.parent
+      .avatarKey as StudentResponse['parents'][number]['avatarKey'],
     phone: link.parent.phone,
     telegramUsername: link.parent.telegramUsername,
   }));
@@ -155,8 +158,10 @@ export class StudentsService {
         subject: row.subject as StudentListResponse['items'][number]['subject'],
         status: row.status,
         hourlyRateMinor: row.hourlyRateMinor,
-        currency: row.currency as StudentListResponse['items'][number]['currency'],
-        avatarKey: row.avatarKey as StudentListResponse['items'][number]['avatarKey'],
+        currency:
+          row.currency as StudentListResponse['items'][number]['currency'],
+        avatarKey:
+          row.avatarKey as StudentListResponse['items'][number]['avatarKey'],
         deletedAt: row.deletedAt?.toISOString() ?? null,
         activeEnrollmentCount: row.enrollments.filter(
           (enrollment) => enrollment.status === 'ACTIVE',
@@ -241,9 +246,7 @@ export class StudentsService {
           orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
           include: {
             group: { select: { id: true, name: true } },
-            teacher: {
-              select: { id: true, user: { select: { name: true } } },
-            },
+            teacher: { select: { id: true, fullName: true, color: true } },
           },
         },
       },
@@ -267,7 +270,8 @@ export class StudentsService {
         group: enrollment.group,
         teacher: {
           id: enrollment.teacher.id,
-          name: enrollment.teacher.user.name,
+          name: enrollment.teacher.fullName,
+          color: enrollment.teacher.color,
         },
       })),
     };

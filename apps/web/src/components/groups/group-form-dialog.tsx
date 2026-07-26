@@ -1,14 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Skeleton } from '@/components/ui/skeleton';
+import { EntityFormDialog } from '@/components/shared';
 import { useGroupQuery } from '@/lib/api/groups';
 import { GroupForm } from './group-form';
 
@@ -34,29 +27,21 @@ export function GroupFormDialog({
   const group = useGroupQuery(groupId ?? '', open && isEdit);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{isEdit ? t('editTitle') : t('createTitle')}</DialogTitle>
-          <DialogDescription>{isEdit ? t('editSubtitle') : t('createSubtitle')}</DialogDescription>
-        </DialogHeader>
-
-        {isEdit && group.isPending ? (
-          <div className="flex flex-col gap-3" aria-hidden="true">
-            <Skeleton className="h-9 w-full" />
-            <Skeleton className="h-24 w-full" />
-          </div>
-        ) : (
-          <GroupForm
-            group={group.data}
-            onSuccess={() => {
-              onOpenChange(false);
-              onSuccess?.();
-            }}
-            onCancel={() => onOpenChange(false)}
-          />
-        )}
-      </DialogContent>
-    </Dialog>
+    <EntityFormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={isEdit ? t('editTitle') : t('createTitle')}
+      description={isEdit ? t('editSubtitle') : t('createSubtitle')}
+      isLoading={isEdit && group.isPending}
+    >
+      <GroupForm
+        group={group.data}
+        onSuccess={() => {
+          onOpenChange(false);
+          onSuccess?.();
+        }}
+        onCancel={() => onOpenChange(false)}
+      />
+    </EntityFormDialog>
   );
 }

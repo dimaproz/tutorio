@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Spinner } from '@/components/ui/spinner';
 import { errorMessageKey } from '@/lib/api/error-message';
 import type { GatewayError } from '@/lib/auth/client';
 
@@ -35,6 +36,22 @@ export function ListSkeleton({ rows = 5 }: { rows?: number }) {
         <Skeleton key={index} className="h-16 w-full rounded-lg" />
       ))}
     </div>
+  );
+}
+
+/** Visible but non-blocking feedback while cached query data is refreshing. */
+export function QueryRefreshIndicator({ isFetching }: { isFetching: boolean }) {
+  const t = useTranslations('common');
+
+  if (!isFetching) {
+    return null;
+  }
+
+  return (
+    <span role="status" className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+      <Spinner aria-hidden="true" />
+      {t('loading')}
+    </span>
   );
 }
 

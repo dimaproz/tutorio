@@ -43,6 +43,48 @@ export interface AuditListFilters {
   action?: string;
 }
 
+export interface TeacherListFilters {
+  page: number;
+  search?: string;
+  state?: 'active' | 'deleted' | 'all';
+  status?: string;
+  pageSize?: number;
+}
+
+export interface LessonListFilters {
+  from: string;
+  to: string;
+  teacherId?: string;
+  enrollmentId?: string;
+  studentId?: string;
+  groupId?: string;
+  status?: string;
+}
+
+export interface PackageListFilters {
+  page: number;
+  pageSize?: number;
+  studentId?: string;
+  groupId?: string;
+  paymentStatus?: string;
+}
+
+export interface PaymentListFilters {
+  page: number;
+  pageSize?: number;
+  enrollmentId?: string;
+  packageId?: string;
+  studentId?: string;
+}
+
+export interface SeriesListFilters {
+  page: number;
+  enrollmentId?: string;
+  groupId?: string;
+  teacherId?: string;
+  pageSize?: number;
+}
+
 export const queryKeys = {
   students: {
     all: ['students'] as const,
@@ -66,6 +108,30 @@ export const queryKeys = {
   audit: {
     all: ['audit'] as const,
     lists: (filters: AuditListFilters) => ['audit', 'list', filters] as const,
+  },
+  teachers: {
+    all: ['teachers'] as const,
+    lists: (filters: TeacherListFilters) => ['teachers', 'list', filters] as const,
+    detail: (teacherId: string) => ['teachers', 'detail', teacherId] as const,
+  },
+  lessons: {
+    all: ['lessons'] as const,
+    lists: (filters: LessonListFilters) => ['lessons', 'list', filters] as const,
+  },
+  series: {
+    all: ['series'] as const,
+    lists: (filters: SeriesListFilters) => ['series', 'list', filters] as const,
+    detail: (seriesId: string) => ['series', 'detail', seriesId] as const,
+  },
+  packages: {
+    all: ['packages'] as const,
+    lists: (filters: PackageListFilters) => ['packages', 'list', filters] as const,
+    detail: (packageId: string) => ['packages', 'detail', packageId] as const,
+    ledger: (packageId: string) => ['packages', 'ledger', packageId] as const,
+  },
+  payments: {
+    all: ['payments'] as const,
+    lists: (filters: PaymentListFilters) => ['payments', 'list', filters] as const,
   },
   workspace: {
     current: ['workspace', 'current'] as const,

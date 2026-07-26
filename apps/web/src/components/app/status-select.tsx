@@ -1,6 +1,6 @@
 'use client';
 
-import type { ComponentType, CSSProperties } from 'react';
+import type { ComponentType } from 'react';
 import { ArchiveIcon, CircleCheckIcon, CirclePauseIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import {
@@ -13,10 +13,10 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
-// Lifecycle colours share the semantic --status-* tokens the badges use, so a
-// status looks the same as a pill and as a select row.
-export type StatusTone = 'active' | 'paused' | 'archived' | 'overdue' | 'paid' | 'neutral';
-type IconType = ComponentType<{ className?: string; style?: CSSProperties }>;
+// Lifecycle names map to the same configurable semantic roles as Badge.
+export type StatusTone =
+  'primary' | 'warning' | 'secondary' | 'destructive' | 'success' | 'neutral';
+type IconType = ComponentType<{ className?: string }>;
 
 export interface StatusOption {
   value: string;
@@ -25,15 +25,20 @@ export interface StatusOption {
   icon: IconType;
 }
 
-function toneStyle(tone: StatusTone): CSSProperties | undefined {
-  return tone === 'neutral' ? undefined : { color: `var(--status-${tone})` };
-}
+const toneClass: Record<StatusTone, string> = {
+  primary: 'text-primary',
+  warning: 'text-warning',
+  secondary: 'text-secondary-foreground',
+  destructive: 'text-destructive',
+  success: 'text-success',
+  neutral: 'text-muted-foreground',
+};
 
 function StatusRow({ option }: { option: StatusOption }) {
   const Icon = option.icon;
   return (
     <span className="flex items-center gap-2">
-      <Icon className="size-4 shrink-0" style={toneStyle(option.tone)} />
+      <Icon className={cn('size-4 shrink-0', toneClass[option.tone])} />
       {option.label}
     </span>
   );
@@ -59,7 +64,11 @@ export function StatusSelect({
 }) {
   return (
     <Select value={value} onValueChange={onValueChange}>
-      <SelectTrigger id={id} className={cn('w-full', className)} aria-invalid={invalid || undefined}>
+      <SelectTrigger
+        id={id}
+        className={cn('w-full', className)}
+        aria-invalid={invalid || undefined}
+      >
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
@@ -78,17 +87,17 @@ export function StatusSelect({
 export function useStudentStatusOptions(): StatusOption[] {
   const t = useTranslations('studentStatus');
   return [
-    { value: 'ACTIVE', label: t('ACTIVE'), tone: 'active', icon: CircleCheckIcon },
-    { value: 'ON_HOLD', label: t('ON_HOLD'), tone: 'paused', icon: CirclePauseIcon },
-    { value: 'ARCHIVED', label: t('ARCHIVED'), tone: 'archived', icon: ArchiveIcon },
+    { value: 'ACTIVE', label: t('ACTIVE'), tone: 'primary', icon: CircleCheckIcon },
+    { value: 'ON_HOLD', label: t('ON_HOLD'), tone: 'warning', icon: CirclePauseIcon },
+    { value: 'ARCHIVED', label: t('ARCHIVED'), tone: 'secondary', icon: ArchiveIcon },
   ];
 }
 
 export function useEnrollmentStatusOptions(): StatusOption[] {
   const t = useTranslations('enrollmentStatus');
   return [
-    { value: 'ACTIVE', label: t('ACTIVE'), tone: 'active', icon: CircleCheckIcon },
-    { value: 'PAUSED', label: t('PAUSED'), tone: 'paused', icon: CirclePauseIcon },
-    { value: 'ARCHIVED', label: t('ARCHIVED'), tone: 'archived', icon: ArchiveIcon },
+    { value: 'ACTIVE', label: t('ACTIVE'), tone: 'primary', icon: CircleCheckIcon },
+    { value: 'PAUSED', label: t('PAUSED'), tone: 'warning', icon: CirclePauseIcon },
+    { value: 'ARCHIVED', label: t('ARCHIVED'), tone: 'secondary', icon: ArchiveIcon },
   ];
 }
