@@ -39,7 +39,9 @@ const studentRow = {
   createdAt: NOW,
   updatedAt: NOW,
   deletedAt: null,
-  parents: [] as { parent: { id: string; fullName: string; avatarKey: string | null } }[],
+  parents: [] as {
+    parent: { id: string; fullName: string; avatarKey: string | null };
+  }[],
 };
 
 function buildPrismaMock() {
@@ -53,7 +55,10 @@ function buildPrismaMock() {
       delete: jest.fn(),
     },
     studentParent: { deleteMany: jest.fn() },
-    enrollment: { count: jest.fn().mockResolvedValue(0), deleteMany: jest.fn() },
+    enrollment: {
+      count: jest.fn().mockResolvedValue(0),
+      deleteMany: jest.fn(),
+    },
     auditLog: { create: jest.fn() },
     $transaction: jest.fn(),
   };
@@ -309,7 +314,9 @@ describe('StudentsService.remove', () => {
       studentId: STUDENT_ID,
       workspaceId: WORKSPACE_ID,
     });
-    expect(prisma.student.delete.mock.calls[0][0].where).toEqual({ id: STUDENT_ID });
+    expect(prisma.student.delete.mock.calls[0][0].where).toEqual({
+      id: STUDENT_ID,
+    });
     expect(prisma.auditLog.create.mock.calls[0][0].data.action).toBe('DELETE');
   });
 
@@ -317,7 +324,11 @@ describe('StudentsService.remove', () => {
     const { prisma, service } = buildService();
     prisma.student.findFirst.mockResolvedValue(null);
 
-    await expectBusinessError(service.remove(owner, STUDENT_ID), 'STUDENT_NOT_FOUND', 404);
+    await expectBusinessError(
+      service.remove(owner, STUDENT_ID),
+      'STUDENT_NOT_FOUND',
+      404,
+    );
     expect(prisma.student.delete).not.toHaveBeenCalled();
   });
 });
