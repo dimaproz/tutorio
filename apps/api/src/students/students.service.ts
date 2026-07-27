@@ -85,6 +85,28 @@ function toResponse(student: StudentWithParentLinks): StudentResponse {
   };
 }
 
+// Columns that are nullable in the schema: a tutor sorting by price or phone
+// wants the filled-in rows first in both directions, so blanks always sink.
+const NULLABLE_SORT_FIELDS = new Set<ListStudentsQueryDto['sort']>([
+  'subject',
+  'hourlyRateMinor',
+  'phone',
+  'telegramUsername',
+]);
+
+/** `id` is the tiebreaker, so paging never repeats or drops a row. */
+function buildStudentOrderBy(
+  query: ListStudentsQueryDto,
+): Prisma.StudentOrderByWithRelationInput[] {
+  const { sort, order } = query;
+  return [
+    NULLABLE_SORT_FIELDS.has(sort)
+      ? { [sort]: { sort: order, nulls: 'last' } }
+      : { [sort]: order },
+    { id: 'asc' },
+  ];
+}
+
 /** Sorted, deduped copy — a stable shape for audit-diff comparison. */
 function sortedIds(ids: readonly string[]): string[] {
   return [...new Set(ids)].sort();
@@ -132,7 +154,7 @@ export class StudentsService {
     const [rows, total] = await this.prisma.$transaction([
       this.prisma.student.findMany({
         where,
-        orderBy: [{ fullName: 'asc' }, { id: 'asc' }],
+        orderBy: buildStudentOrderBy(query),
         ...toSkipTake(query),
         include: {
           enrollments: {

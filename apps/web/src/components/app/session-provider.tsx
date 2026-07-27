@@ -3,7 +3,7 @@
 import { createContext, use, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import type { AuthMe } from '@tutorio/validation';
-import { Skeleton } from '@/components/ui/skeleton';
+import { LoadingScreen } from '@/components/shared';
 import { useSessionQuery } from '@/lib/auth/client';
 
 const SessionContext = createContext<AuthMe | null>(null);
@@ -24,13 +24,13 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   }, [unauthenticated, router]);
 
   if (session.isPending || unauthenticated) {
-    return <SessionSkeleton />;
+    return <LoadingScreen />;
   }
 
   if (session.isError) {
     // Non-auth failure (network, 5xx): rendering nothing would trap the user,
-    // so keep the skeleton — TanStack Query retries in the background.
-    return <SessionSkeleton />;
+    // so keep the spinner — TanStack Query retries in the background.
+    return <LoadingScreen />;
   }
 
   return <SessionContext value={session.data}>{children}</SessionContext>;
@@ -53,12 +53,3 @@ export function useIsSoloWorkspace(): boolean {
   return useSession().workspace.mode === 'SOLO';
 }
 
-function SessionSkeleton() {
-  return (
-    <div className="flex flex-1 flex-col gap-4 p-4 md:p-6">
-      <Skeleton className="h-8 w-48" />
-      <Skeleton className="h-32 w-full max-w-2xl" />
-      <Skeleton className="h-32 w-full max-w-2xl" />
-    </div>
-  );
-}

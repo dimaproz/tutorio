@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import { BackButton } from '@/components/app/back-button';
 import { ConfirmDialog } from '@/components/app/confirm-dialog';
 import { SectionTitle } from '@/components/app/detail-view';
-import { ListSkeleton, QueryErrorAlert } from '@/components/app/page-shell';
+import { QueryErrorAlert } from '@/components/app/page-shell';
 import { useSession } from '@/components/app/session-provider';
 import {
   PackagePaymentStatusBadge,
@@ -24,7 +24,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardAction, CardContent, CardHeader } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
   useDeletePackageMutation,
   usePackageLedgerQuery,
@@ -35,6 +34,7 @@ import { formatMoneyDisplay } from '@/lib/money';
 import { useDateFormatters } from '@/lib/i18n/format';
 import { AdjustBalanceDialog } from './adjust-balance-dialog';
 import { PaymentDialog, type PaymentTarget } from './payment-dialog';
+import { LoadingPanel } from '@/components/shared';
 
 export function PackageDetailView({ packageId }: { packageId: string }) {
   const t = useTranslations('packages');
@@ -58,7 +58,7 @@ export function PackageDetailView({ packageId }: { packageId: string }) {
   const deletePackage = useDeletePackageMutation();
 
   if (pkg.isPending) {
-    return <ListSkeleton rows={5} />;
+    return <LoadingPanel size="lg" />;
   }
   if (pkg.isError) {
     return (
@@ -257,11 +257,7 @@ export function PackageDetailView({ packageId }: { packageId: string }) {
             </CardHeader>
             <CardContent>
               {ledger.isPending ? (
-                <div className="flex flex-col gap-3" aria-busy="true">
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-2/3" />
-                </div>
+                <LoadingPanel size="sm" className="min-h-32 rounded-xl border-0 bg-transparent" />
               ) : ledger.data && ledger.data.items.length > 0 ? (
                 <ul className="flex flex-col gap-3">
                   {ledger.data.items.map((entry) => (
@@ -308,10 +304,7 @@ export function PackageDetailView({ packageId }: { packageId: string }) {
             </CardHeader>
             <CardContent>
               {payments.isPending ? (
-                <div className="flex flex-col gap-3" aria-busy="true">
-                  <Skeleton className="h-8 w-full" />
-                  <Skeleton className="h-8 w-3/4" />
-                </div>
+                <LoadingPanel size="sm" className="min-h-28 rounded-xl border-0 bg-transparent" />
               ) : payments.data && payments.data.items.length > 0 ? (
                 <ul className="flex flex-col gap-3">
                   {payments.data.items.map((payment) => (

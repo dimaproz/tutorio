@@ -1,7 +1,5 @@
 'use client';
 
-import type { ComponentType } from 'react';
-import { ArchiveIcon, CircleCheckIcon, CirclePauseIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import {
   Select,
@@ -11,35 +9,39 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  ENROLLMENT_STATUS_META,
+  LESSON_STATUS_META,
+  STUDENT_STATUS_META,
+  toneTextClass,
+  type StatusIcon,
+  type StatusTone,
+} from '@/components/app/status-meta';
 import { cn } from '@/lib/utils';
 
-// Lifecycle names map to the same configurable semantic roles as Badge.
-export type StatusTone =
-  'primary' | 'warning' | 'secondary' | 'destructive' | 'success' | 'neutral';
-type IconType = ComponentType<{ className?: string }>;
+export type { StatusTone };
 
 export interface StatusOption {
   value: string;
   label: string;
   tone: StatusTone;
-  icon: IconType;
+  icon: StatusIcon;
 }
 
-const toneClass: Record<StatusTone, string> = {
-  primary: 'text-primary',
-  warning: 'text-warning',
-  secondary: 'text-secondary-foreground',
-  destructive: 'text-destructive',
-  success: 'text-success',
-  neutral: 'text-muted-foreground',
-};
-
-function StatusRow({ option }: { option: StatusOption }) {
-  const Icon = option.icon;
+/** Icon + label line shared by the status picker and the list status filter. */
+export function StatusRow({
+  icon: Icon,
+  tone,
+  label,
+}: {
+  icon: StatusIcon;
+  tone: StatusTone;
+  label: string;
+}) {
   return (
     <span className="flex items-center gap-2">
-      <Icon className={cn('size-4 shrink-0', toneClass[option.tone])} />
-      {option.label}
+      <Icon className={cn('size-4 shrink-0', toneTextClass[tone])} />
+      {label}
     </span>
   );
 }
@@ -74,8 +76,8 @@ export function StatusSelect({
       <SelectContent>
         <SelectGroup>
           {options.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              <StatusRow option={option} />
+            <SelectItem key={option.value} value={option.value} className="focus:text-primary">
+              <StatusRow icon={option.icon} tone={option.tone} label={option.label} />
             </SelectItem>
           ))}
         </SelectGroup>
@@ -87,17 +89,35 @@ export function StatusSelect({
 export function useStudentStatusOptions(): StatusOption[] {
   const t = useTranslations('studentStatus');
   return [
-    { value: 'ACTIVE', label: t('ACTIVE'), tone: 'primary', icon: CircleCheckIcon },
-    { value: 'ON_HOLD', label: t('ON_HOLD'), tone: 'warning', icon: CirclePauseIcon },
-    { value: 'ARCHIVED', label: t('ARCHIVED'), tone: 'secondary', icon: ArchiveIcon },
+    { value: 'ACTIVE', label: t('ACTIVE'), ...STUDENT_STATUS_META.ACTIVE },
+    { value: 'ON_HOLD', label: t('ON_HOLD'), ...STUDENT_STATUS_META.ON_HOLD },
+    { value: 'ARCHIVED', label: t('ARCHIVED'), ...STUDENT_STATUS_META.ARCHIVED },
+  ];
+}
+
+export function useLessonStatusOptions(): StatusOption[] {
+  const t = useTranslations('scheduling.status');
+  return [
+    { value: 'SCHEDULED', label: t('SCHEDULED'), ...LESSON_STATUS_META.SCHEDULED },
+    { value: 'COMPLETED', label: t('COMPLETED'), ...LESSON_STATUS_META.COMPLETED },
+    {
+      value: 'CANCELLED_UNCHARGED',
+      label: t('CANCELLED_UNCHARGED'),
+      ...LESSON_STATUS_META.CANCELLED_UNCHARGED,
+    },
+    {
+      value: 'CANCELLED_CHARGED',
+      label: t('CANCELLED_CHARGED'),
+      ...LESSON_STATUS_META.CANCELLED_CHARGED,
+    },
   ];
 }
 
 export function useEnrollmentStatusOptions(): StatusOption[] {
   const t = useTranslations('enrollmentStatus');
   return [
-    { value: 'ACTIVE', label: t('ACTIVE'), tone: 'primary', icon: CircleCheckIcon },
-    { value: 'PAUSED', label: t('PAUSED'), tone: 'warning', icon: CirclePauseIcon },
-    { value: 'ARCHIVED', label: t('ARCHIVED'), tone: 'secondary', icon: ArchiveIcon },
+    { value: 'ACTIVE', label: t('ACTIVE'), ...ENROLLMENT_STATUS_META.ACTIVE },
+    { value: 'PAUSED', label: t('PAUSED'), ...ENROLLMENT_STATUS_META.PAUSED },
+    { value: 'ARCHIVED', label: t('ARCHIVED'), ...ENROLLMENT_STATUS_META.ARCHIVED },
   ];
 }

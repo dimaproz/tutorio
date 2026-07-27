@@ -11,12 +11,18 @@ import { StudentCard } from './student-card';
 import { StudentFormDialog } from './student-form-dialog';
 import { StudentRowActions } from './student-row-actions';
 import { StudentStatusBadge } from '@/components/app/status-badges';
+import { STUDENT_STATUS_META } from '@/components/app/status-meta';
 import { EntityAvatar } from '@/components/app/entity-avatar';
 import { DataTable } from '@/components/app/data-table';
-import { ListPagination, ListSearchInput, ListSelectFilter } from '@/components/app/list-controls';
-import { ListSkeleton, PageHeader, QueryErrorAlert } from '@/components/app/page-shell';
+import {
+  ListPagination,
+  ListSearchInput,
+  ListSelectFilter,
+  useListSort,
+} from '@/components/app/list-controls';
+import { PageHeader, QueryErrorAlert } from '@/components/app/page-shell';
 import { Button } from '@/components/ui/button';
-import { CollectionEmptyState, CollectionToolbar } from '@/components/shared';
+import { CollectionEmptyState, CollectionToolbar, LoadingPanel } from '@/components/shared';
 import { parsePageParam } from '@/lib/api/filters';
 import { useStudentsQuery } from '@/lib/api/students';
 import { useGroupsQuery } from '@/lib/api/groups';
@@ -41,10 +47,24 @@ export function StudentsList() {
   const subject = searchParams.get('subject') || undefined;
   const groupId = searchParams.get('groupId') || undefined;
 
-  const students = useStudentsQuery({ page, search, status, subject, groupId });
+  // `fullName` matches the API default, so an unsorted URL stays clean.
+  const sort = useListSort('fullName');
+  const students = useStudentsQuery({
+    page,
+    search,
+    status,
+    subject,
+    groupId,
+    sort: sort.field,
+    order: sort.order,
+  });
   const groups = useGroupsQuery({ page: 1, pageSize: 100 });
 
-  const statusOptions = STUDENT_STATUSES.map((value) => ({ value, label: tStatus(value) }));
+  const statusOptions = STUDENT_STATUSES.map((value) => ({
+    value,
+    label: tStatus(value),
+    ...STUDENT_STATUS_META[value],
+  }));
   const subjectOptions = STUDENT_SUBJECTS.map((value) => ({ value, label: tSubject(value) }));
   const groupOptions = (groups.data?.items ?? []).map((group) => ({
     value: group.id,
@@ -56,6 +76,7 @@ export function StudentsList() {
       {
         accessorKey: 'fullName',
         header: () => t('columns.student'),
+        meta: { sortField: 'fullName' },
         cell: ({ row }) => (
           <div className="flex min-w-0 items-center gap-3">
             <EntityAvatar
@@ -82,6 +103,7 @@ export function StudentsList() {
       {
         id: 'status',
         header: () => t('columns.status'),
+        meta: { sortField: 'status' },
         cell: ({ row }) => <StudentStatusBadge status={row.original.status} />,
       },
       {
@@ -97,6 +119,7 @@ export function StudentsList() {
       {
         id: 'price',
         header: () => t('columns.price'),
+        meta: { sortField: 'hourlyRateMinor' },
         cell: ({ row }) =>
           row.original.hourlyRateMinor != null && row.original.currency ? (
             <span className="tabular font-medium whitespace-nowrap">
@@ -112,6 +135,7 @@ export function StudentsList() {
       {
         id: 'phone',
         header: () => t('columns.phone'),
+        meta: { sortField: 'phone' },
         cell: ({ row }) =>
           row.original.phone ? (
             <a
@@ -127,6 +151,7 @@ export function StudentsList() {
       {
         id: 'telegram',
         header: () => t('columns.telegram'),
+        meta: { sortField: 'telegramUsername' },
         cell: ({ row }) => {
           const handle = row.original.telegramUsername?.replace(/^@/, '');
           return handle ? (
@@ -199,7 +224,7 @@ export function StudentsList() {
         />
       </CollectionToolbar>
 
-      {students.isPending ? <ListSkeleton /> : null}
+      {students.isPending ? <LoadingPanel size="lg" /> : null}
 
       {students.isError ? (
         <QueryErrorAlert
@@ -223,7 +248,13 @@ export function StudentsList() {
             ))}
           </div>
           <div className="hidden md:block">
-            <DataTable columns={columns} data={items} caption={t('tableCaption')} />
+            <DataTable
+              columns={columns}
+              data={items}
+              caption={t('tableCaption')}
+              sort={sort}
+              loading={students.isFetching}
+            />
           </div>
           <ListPagination page={page} totalPages={students.data?.totalPages ?? 1} />
         </>

@@ -1,51 +1,23 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { CalendarIcon, PlusIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { LessonResponse } from '@tutorio/validation';
 import { SectionTitle } from '@/components/app/detail-view';
-import { LessonStatusBadge } from '@/components/app/status-badges';
 import { Button } from '@/components/ui/button';
 import { Card, CardAction, CardContent, CardHeader } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { LoadingPanel } from '@/components/shared';
+import { Tabs, TabsBadge, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLessonsQuery } from '@/lib/api/scheduling';
-import { useDateFormatters } from '@/lib/i18n/format';
-import { LessonActionsDialog } from './lesson-actions-dialog';
+import { LessonActionsDialog, type LessonDialogMode } from './lesson-actions-dialog';
 import { LessonFormDialog } from './lesson-form-dialog';
+import { LessonsTable } from './lessons-table';
 
 // How far back and forward a student's schedule is read on their profile.
 const PAST_DAYS = 120;
 const FUTURE_DAYS = 120;
 const DAY_MS = 24 * 60 * 60 * 1000;
-
-function LessonRow({
-  lesson,
-  when,
-  onSelect,
-}: {
-  lesson: LessonResponse;
-  /** Pre-formatted by the parent: one formatter for the whole list. */
-  when: string;
-  onSelect: (lesson: LessonResponse) => void;
-}) {
-  return (
-    <li>
-      <button
-        type="button"
-        onClick={() => onSelect(lesson)}
-        className="hover:bg-muted/60 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors"
-      >
-        <span className="tabular w-32 shrink-0 text-sm font-medium">{when}</span>
-        <span className="text-muted-foreground min-w-0 flex-1 truncate text-sm">
-          {lesson.teacher.name}
-        </span>
-        <LessonStatusBadge status={lesson.status} />
-      </button>
-    </li>
-  );
-}
 
 /**
  * The student's own schedule, right where the tutor already is. Upcoming and
@@ -54,10 +26,10 @@ function LessonRow({
  */
 export function StudentLessonsCard({ studentId }: { studentId: string }) {
   const t = useTranslations('scheduling.studentLessons');
-  const format = useDateFormatters();
 
   const [selected, setSelected] = useState<LessonResponse | null>(null);
   const [actionsOpen, setActionsOpen] = useState(false);
+  const [actionsMode, setActionsMode] = useState<LessonDialogMode>('menu');
   const [formOpen, setFormOpen] = useState(false);
 
   // Pinned once per mount: the window and the upcoming/past split must not
@@ -84,10 +56,12 @@ export function StudentLessonsCard({ studentId }: { studentId: string }) {
     };
   }, [lessons.data, now]);
 
-  const openLesson = (lesson: LessonResponse) => {
+  // One dialog for the whole card: the row menu only says which panel to show.
+  const openLesson = useCallback((lesson: LessonResponse, mode: LessonDialogMode = 'menu') => {
     setSelected(lesson);
+    setActionsMode(mode);
     setActionsOpen(true);
-  };
+  }, []);
 
   return (
     <Card>
@@ -104,49 +78,34 @@ export function StudentLessonsCard({ studentId }: { studentId: string }) {
       </CardHeader>
       <CardContent>
         {lessons.isPending ? (
-          <div className="flex flex-col gap-2">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-          </div>
+          <LoadingPanel size="md" className="min-h-32 rounded-xl border-0 bg-transparent" />
         ) : (
           <Tabs defaultValue="upcoming">
-            <TabsList>
+            <TabsList size="sm">
               <TabsTrigger value="upcoming">
-                {t('upcoming', { count: upcoming.length })}
+                {t('upcoming')}
+                <TabsBadge>{upcoming.length}</TabsBadge>
               </TabsTrigger>
-              <TabsTrigger value="past">{t('past', { count: past.length })}</TabsTrigger>
+              <TabsTrigger value="past">
+                {t('past')}
+                <TabsBadge>{past.length}</TabsBadge>
+              </TabsTrigger>
             </TabsList>
-            <TabsContent value="upcoming">
-              {upcoming.length === 0 ? (
-                <p className="text-muted-foreground py-3 text-sm">{t('noUpcoming')}</p>
-              ) : (
-                <ul className="flex flex-col gap-1 pt-2">
-                  {upcoming.map((lesson) => (
-                    <LessonRow
-                      key={lesson.id}
-                      lesson={lesson}
-                      when={format.dayMonthTime(lesson.startsAtUtc)}
-                      onSelect={openLesson}
-                    />
-                  ))}
-                </ul>
-              )}
+            <TabsContent value="upcoming" className="pt-3">
+              <LessonsTable
+                lessons={upcoming}
+                emptyMessage={t('noUpcoming')}
+                loading={lessons.isFetching}
+                onOpenDialog={openLesson}
+              />
             </TabsContent>
-            <TabsContent value="past">
-              {past.length === 0 ? (
-                <p className="text-muted-foreground py-3 text-sm">{t('noPast')}</p>
-              ) : (
-                <ul className="flex flex-col gap-1 pt-2">
-                  {past.map((lesson) => (
-                    <LessonRow
-                      key={lesson.id}
-                      lesson={lesson}
-                      when={format.dayMonthTime(lesson.startsAtUtc)}
-                      onSelect={openLesson}
-                    />
-                  ))}
-                </ul>
-              )}
+            <TabsContent value="past" className="pt-3">
+              <LessonsTable
+                lessons={past}
+                emptyMessage={t('noPast')}
+                loading={lessons.isFetching}
+                onOpenDialog={openLesson}
+              />
             </TabsContent>
           </Tabs>
         )}
@@ -156,6 +115,7 @@ export function StudentLessonsCard({ studentId }: { studentId: string }) {
         open={actionsOpen}
         onOpenChange={setActionsOpen}
         lesson={selected}
+        initialMode={actionsMode}
       />
       <LessonFormDialog
         open={formOpen}

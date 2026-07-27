@@ -159,6 +159,30 @@ export type ListLessonSeriesQueryDto = z.infer<typeof listLessonSeriesQuerySchem
 // `studentId` books without naming an enrollment; `teacherId`, `priceMinor` and
 // `currency` are then optional and resolved server-side from the student's
 // active enrollment (or its defaults). Explicit values always win.
+/** Cancelling always records who cancelled; nothing else may. */
+function requireCancellationAuthor(
+  status: z.infer<typeof lessonStatusSchema>,
+  cancelledBy: z.infer<typeof cancelledBySchema> | undefined,
+  ctx: z.RefinementCtx,
+): void {
+  const isCancel =
+    status === 'CANCELLED_CHARGED' || status === 'CANCELLED_UNCHARGED';
+  if (isCancel && cancelledBy == null) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'cancelledBy is required when cancelling',
+      path: ['cancelledBy'],
+    });
+  }
+  if (!isCancel && cancelledBy != null) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'cancelledBy is only allowed when cancelling',
+      path: ['cancelledBy'],
+    });
+  }
+}
+
 export const createLessonSchema = z
   .object({
     enrollmentId: uuidSchema.nullable().optional(),
@@ -169,11 +193,21 @@ export const createLessonSchema = z
     durationMin: durationMinSchema,
     priceMinor: priceMinorSchema.optional(),
     currency: currencyCodeSchema.optional(),
+    // A lesson may be booked in a state other than SCHEDULED: tutors record
+    // lessons after the fact ("this one already happened"). The server runs the
+    // very same transition the status endpoint would, so the credit ledger sees
+    // one code path whichever way a lesson reaches its status.
+    status: lessonStatusSchema.default('SCHEDULED'),
+    cancelledBy: cancelledBySchema.optional(),
+    cancelledReason: notesSchema.nullable().optional(),
+    // When the money arrived. Null on a completed lesson means "paid on the day".
+    paidAt: isoDateTimeSchema.nullable().optional(),
     notes: notesSchema.nullable().optional(),
   })
   .strict()
   .superRefine((value, ctx) => {
     requireExactlyOneLessonTarget(value, ctx);
+    requireCancellationAuthor(value.status, value.cancelledBy, ctx);
     // Only the studentId path may omit the teacher and the price.
     if (value.studentId == null) {
       if (value.teacherId == null) {
@@ -211,6 +245,7 @@ export const updateLessonSchema = z
     notes: notesSchema.nullable(),
     priceMinor: priceMinorSchema,
     currency: currencyCodeSchema,
+    paidAt: isoDateTimeSchema.nullable(),
   })
   .partial()
   .strict()
@@ -246,23 +281,7 @@ export const transitionLessonSchema = z
   })
   .strict()
   .superRefine((value, ctx) => {
-    const isCancel =
-      value.targetStatus === 'CANCELLED_CHARGED' ||
-      value.targetStatus === 'CANCELLED_UNCHARGED';
-    if (isCancel && value.cancelledBy == null) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'cancelledBy is required when cancelling',
-        path: ['cancelledBy'],
-      });
-    }
-    if (!isCancel && value.cancelledBy != null) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'cancelledBy is only allowed when cancelling',
-        path: ['cancelledBy'],
-      });
-    }
+    requireCancellationAuthor(value.targetStatus, value.cancelledBy, ctx);
   });
 
 export type TransitionLessonDto = z.infer<typeof transitionLessonSchema>;
@@ -328,6 +347,7 @@ export const lessonResponseSchema = z.object({
   cancelledReason: z.string().nullable(),
   cancelledAt: isoDateTimeSchema.nullable(),
   completedAt: isoDateTimeSchema.nullable(),
+  paidAt: isoDateTimeSchema.nullable(),
   notes: z.string().nullable(),
   // The cancellation deadline that applies to this lesson (the enrollment's own
   // value, else the workspace default). Lets the UI say whether cancelling now

@@ -18,14 +18,13 @@ import {
 } from '@/components/app/list-controls';
 import { StudentFilterCombobox } from './student-filter-combobox';
 import {
-  ListSkeleton,
   PageHeader,
   QueryErrorAlert,
   QueryRefreshIndicator,
 } from '@/components/app/page-shell';
 import { EntityAvatar } from '@/components/app/entity-avatar';
 import { Button } from '@/components/ui/button';
-import { CollectionEmptyState, CollectionToolbar } from '@/components/shared';
+import { CollectionEmptyState, CollectionToolbar, LoadingPanel } from '@/components/shared';
 import { parsePageParam } from '@/lib/api/filters';
 import { useParentsQuery } from '@/lib/api/parents';
 
@@ -135,7 +134,7 @@ export function ParentsList() {
 
       <QueryRefreshIndicator isFetching={parents.isFetching && !parents.isPending} />
 
-      {parents.isPending ? <ListSkeleton /> : null}
+      {parents.isPending ? <LoadingPanel size="lg" /> : null}
 
       {parents.isError ? (
         <QueryErrorAlert
@@ -157,7 +156,12 @@ export function ParentsList() {
             ))}
           </div>
           <div className="hidden md:block">
-            <DataTable columns={columns} data={items} caption={t('tableCaption')} />
+            <DataTable
+              columns={columns}
+              data={items}
+              caption={t('tableCaption')}
+              loading={parents.isFetching}
+            />
           </div>
           <ListPagination page={page} totalPages={parents.data?.totalPages ?? 1} />
         </>

@@ -186,7 +186,7 @@ export function AppointmentField({
           <Button
             id={id}
             type="button"
-            variant="outline"
+            variant="neutral"
             disabled={props.disabled}
             aria-invalid={props.invalid || undefined}
             className={cn(

@@ -22,7 +22,9 @@
     "open": "Відкрити",
     "deleted": "Видалено",
     "restoreOwnerOnly": "Відновити може лише власник",
-    "remove": "Прибрати"
+    "remove": "Прибрати",
+    "durationMinutes": "{minutes} хв",
+    "durationChoiceHint": "Оберіть популярну тривалість або введіть свою вручну."
   },
   "auth": {
     "login": {
@@ -128,13 +130,15 @@
     "noteRequired": "Вкажіть причину",
     "studentRequired": "Оберіть учня",
     "groupRequired": "Оберіть групу",
-    "intRange": "Введіть число від {min} до {max}"
+    "intRange": "Введіть число від {min} до {max}",
+    "cancelledByRequired": "Вкажіть, хто скасував урок"
   },
   "pagination": {
     "label": "Сторінки",
     "previous": "Назад",
     "next": "Далі",
     "summary": "Сторінка {page} з {totalPages}",
+    "goToPage": "Перейти на сторінку {page}",
     "total": "{count, plural, =0 {Записів немає} one {# запис} few {# записи} many {# записів} other {# запису}}"
   },
   "filters": {
@@ -355,7 +359,7 @@
       "addParentPlaceholder": "Прив'язати наявного з батьків",
       "addParentSearch": "Пошук батьків…",
       "addParentEmpty": "Батьків не знайдено",
-      "newParent": "Новий з батьків",
+      "newParent": "Створити нового",
       "removeParent": "Прибрати {name}",
       "notes": "Нотатки",
       "notesPlaceholder": "Цілі, побажання, усе важливе",
@@ -812,7 +816,8 @@
       "deadlineStarted": "Урок уже розпочався — це пізнє скасування.",
       "toastRescheduled": "Урок перенесено.",
       "toastDeleted": "Урок видалено.",
-      "toastUpdated": "Урок оновлено."
+      "toastUpdated": "Урок оновлено.",
+      "details": "Деталі та нотатки"
     },
     "conflict": {
       "title": "Конфлікт часу",
@@ -832,22 +837,53 @@
       "teacherSearch": "Пошук викладачів…",
       "teacherEmpty": "Викладача не знайдено",
       "date": "Дата й час",
+      "schedule": "Розклад",
+      "lessonType": "Тип уроку",
+      "lessonTypeHint": "Оберіть, для кого створюємо урок.",
       "duration": "Тривалість (хв)",
       "price": "Ціна за урок",
-      "pricePlaceholder": "Зі ставки учня",
+      "pricePlaceholder": "Ціна за урок",
       "notes": "Нотатки до уроку",
       "notesPlaceholder": "Напр.: пройшли Past Simple, ДЗ стор. 42",
       "addDate": "Додати ще дату",
       "removeDate": "Прибрати",
-      "submit": "Створити"
+      "submit": "Створити",
+      "targetStudent": "Учень",
+      "targetGroup": "Група",
+      "targetHint": "Кого записуємо на урок.",
+      "group": "Група",
+      "groupPlaceholder": "Оберіть групу",
+      "groupSearch": "Пошук групи",
+      "groupEmpty": "Групи не знайдено",
+      "dateHint": "Оберіть день і вільний час — зайняті слоти вимкнено.",
+      "groupPriceHint": "Ціна підставиться зі ставки групи — її можна змінити.",
+      "currency": "Валюта",
+      "statusSection": "Статус уроку",
+      "statusHint": "Урок можна одразу записати як проведений або скасований.",
+      "status": "Статус",
+      "cancelledBy": "Хто скасував",
+      "cancelledByPlaceholder": "Оберіть, хто скасував",
+      "paidAt": "Дата оплати",
+      "paidAtHint": "Для проведеного уроку порожнє поле означає оплату в день заняття.",
+      "paidAtMultipleHint": "Дату оплати вказують для одного уроку — для кількох дат заповніть її пізніше в самому уроці."
     },
     "studentLessons": {
       "title": "Уроки",
       "addLesson": "Додати урок",
-      "upcoming": "Найближчі ({count})",
-      "past": "Минулі ({count})",
+      "upcoming": "Найближчі",
+      "past": "Минулі",
       "noUpcoming": "Запланованих уроків немає.",
-      "noPast": "Проведених уроків ще немає."
+      "noPast": "Проведених уроків ще немає.",
+      "tableCaption": "Уроки учня",
+      "durationMinutes": "{minutes} хв",
+      "columns": {
+        "datetime": "Дата і час",
+        "duration": "Тривалість",
+        "status": "Статус",
+        "kind": "Тип",
+        "price": "Ціна",
+        "actions": "Дії"
+      }
     },
     "cancelDialog": {
       "title": "Скасувати урок",
@@ -868,7 +904,7 @@
       "empty": "Ще немає повторюваних шаблонів.",
       "weekdays": "Дні тижня",
       "time": "Час",
-      "duration": "Тривалість",
+      "duration": "Тривалість (хв)",
       "target": "Учень",
       "delete": "Видалити",
       "deleteConfirm": "Видалити цей шаблон і його майбутні уроки?",
@@ -899,6 +935,10 @@
       "startDate": "Дата початку",
       "submit": "Зберегти",
       "cancel": "Скасувати"
+    },
+    "lessonKind": {
+      "INDIVIDUAL": "Індивідуальний",
+      "GROUP": "Груповий"
     }
   },
   "teachers": {
@@ -1065,7 +1105,7 @@
       "weekdays": "Дні тижня",
       "time": "Час",
       "timezone": "Часовий пояс",
-      "duration": "Тривалість (хв)",
+      "duration": "Тривалість",
       "submit": "Створити пакет",
       "period": "Період дії"
     },

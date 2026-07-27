@@ -22,7 +22,9 @@
     "open": "Open",
     "deleted": "Deleted",
     "restoreOwnerOnly": "Only the owner can restore",
-    "remove": "Remove"
+    "remove": "Remove",
+    "durationMinutes": "{minutes} min",
+    "durationChoiceHint": "Choose a common duration or enter your own."
   },
   "auth": {
     "login": {
@@ -128,13 +130,15 @@
     "noteRequired": "Add a reason",
     "studentRequired": "Choose a student",
     "groupRequired": "Choose a group",
-    "intRange": "Enter a number between {min} and {max}"
+    "intRange": "Enter a number between {min} and {max}",
+    "cancelledByRequired": "Say who cancelled the lesson"
   },
   "pagination": {
     "label": "Pagination",
     "previous": "Previous",
     "next": "Next",
     "summary": "Page {page} of {totalPages}",
+    "goToPage": "Go to page {page}",
     "total": "{count, plural, =0 {No records} one {# record} other {# records}}"
   },
   "filters": {
@@ -355,7 +359,7 @@
       "addParentPlaceholder": "Link an existing parent",
       "addParentSearch": "Search parents…",
       "addParentEmpty": "No parent found",
-      "newParent": "New parent",
+      "newParent": "Create new",
       "removeParent": "Remove {name}",
       "notes": "Notes",
       "notesPlaceholder": "Goals, preferences, anything worth remembering",
@@ -812,7 +816,8 @@
       "deadlineStarted": "The lesson has already started — this is a late cancellation.",
       "toastRescheduled": "Lesson rescheduled.",
       "toastDeleted": "Lesson deleted.",
-      "toastUpdated": "Lesson updated."
+      "toastUpdated": "Lesson updated.",
+      "details": "Details & notes"
     },
     "conflict": {
       "title": "Time conflict",
@@ -832,22 +837,53 @@
       "teacherSearch": "Search teachers…",
       "teacherEmpty": "No teacher found",
       "date": "Date and time",
+      "schedule": "Schedule",
+      "lessonType": "Lesson type",
+      "lessonTypeHint": "Choose who this lesson is for.",
       "duration": "Duration (min)",
       "price": "Price per lesson",
-      "pricePlaceholder": "From the student's rate",
+      "pricePlaceholder": "Price per lesson",
       "notes": "Lesson notes",
       "notesPlaceholder": "e.g. covered Past Simple, homework p. 42",
       "addDate": "Add another date",
       "removeDate": "Remove",
-      "submit": "Create"
+      "submit": "Create",
+      "targetStudent": "Student",
+      "targetGroup": "Group",
+      "targetHint": "Who the lesson is booked for.",
+      "group": "Group",
+      "groupPlaceholder": "Choose a group",
+      "groupSearch": "Search groups",
+      "groupEmpty": "No groups found",
+      "dateHint": "Pick a day and a free slot — busy times are disabled.",
+      "groupPriceHint": "The price comes from the group's rate — you can change it.",
+      "currency": "Currency",
+      "statusSection": "Lesson status",
+      "statusHint": "A lesson can be recorded as already completed or cancelled.",
+      "status": "Status",
+      "cancelledBy": "Cancelled by",
+      "cancelledByPlaceholder": "Choose who cancelled",
+      "paidAt": "Payment date",
+      "paidAtHint": "For a completed lesson, an empty field means it was paid on the day.",
+      "paidAtMultipleHint": "A payment date belongs to a single lesson — for several dates, set it later on the lesson itself."
     },
     "studentLessons": {
       "title": "Lessons",
       "addLesson": "Add lesson",
-      "upcoming": "Upcoming ({count})",
-      "past": "Past ({count})",
+      "upcoming": "Upcoming",
+      "past": "Past",
       "noUpcoming": "No lessons scheduled.",
-      "noPast": "No lessons yet."
+      "noPast": "No lessons yet.",
+      "tableCaption": "Student lessons",
+      "durationMinutes": "{minutes} min",
+      "columns": {
+        "datetime": "Date & time",
+        "duration": "Duration",
+        "status": "Status",
+        "kind": "Type",
+        "price": "Price",
+        "actions": "Actions"
+      }
     },
     "cancelDialog": {
       "title": "Cancel lesson",
@@ -868,7 +904,7 @@
       "empty": "No recurring patterns yet.",
       "weekdays": "Weekdays",
       "time": "Time",
-      "duration": "Duration",
+      "duration": "Duration (min)",
       "target": "Student",
       "delete": "Delete",
       "deleteConfirm": "Delete this pattern and its future lessons?",
@@ -899,6 +935,10 @@
       "startDate": "Start date",
       "submit": "Save",
       "cancel": "Cancel"
+    },
+    "lessonKind": {
+      "INDIVIDUAL": "One-to-one",
+      "GROUP": "Group"
     }
   },
   "teachers": {
@@ -1065,7 +1105,7 @@
       "weekdays": "Weekdays",
       "time": "Time",
       "timezone": "Timezone",
-      "duration": "Duration (min)",
+      "duration": "Duration",
       "submit": "Create package",
       "period": "Active period"
     },

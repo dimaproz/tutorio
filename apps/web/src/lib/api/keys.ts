@@ -8,6 +8,9 @@ export interface StudentListFilters {
   status?: string;
   subject?: string;
   groupId?: string;
+  /** Server-side column sorting; both fall back to the API defaults. */
+  sort?: string;
+  order?: 'asc' | 'desc';
   /** Pickers need a longer page than the 20-row list default. */
   pageSize?: number;
 }

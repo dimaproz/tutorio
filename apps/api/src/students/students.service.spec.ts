@@ -1,3 +1,4 @@
+import type { ListStudentsQueryDto } from '@tutorio/validation';
 import { AuditService } from '../audit/audit.service';
 import { AuthApiException } from '../auth/auth.errors';
 import type { AuthenticatedUser } from '../auth/auth.types';
@@ -17,6 +18,18 @@ const owner: AuthenticatedUser = {
 };
 
 const teacher: AuthenticatedUser = { ...owner, role: 'TEACHER' };
+
+// The service always receives a query the Zod schema has already defaulted.
+const listQuery = (
+  overrides: Partial<ListStudentsQueryDto> = {},
+): ListStudentsQueryDto => ({
+  page: 1,
+  pageSize: 20,
+  state: 'active',
+  sort: 'fullName',
+  order: 'asc',
+  ...overrides,
+});
 
 const studentRow = {
   id: STUDENT_ID,
@@ -99,7 +112,7 @@ describe('StudentsService.list', () => {
   it('scopes both the page query and the count to the workspace', async () => {
     const { prisma, service } = buildService();
 
-    await service.list(owner, { page: 1, pageSize: 20, state: 'active' });
+    await service.list(owner, listQuery());
 
     expect(prisma.student.findMany.mock.calls[0][0].where).toMatchObject({
       workspaceId: WORKSPACE_ID,
@@ -114,22 +127,17 @@ describe('StudentsService.list', () => {
   it('rejects non-owner access to deleted/all states', async () => {
     const { service } = buildService();
     await expect(
-      service.list(teacher, { page: 1, pageSize: 20, state: 'deleted' }),
+      service.list(teacher, listQuery({ state: 'deleted' })),
     ).rejects.toBeInstanceOf(AuthApiException);
     await expect(
-      service.list(teacher, { page: 1, pageSize: 20, state: 'all' }),
+      service.list(teacher, listQuery({ state: 'all' })),
     ).rejects.toBeInstanceOf(AuthApiException);
   });
 
   it('searches across student contact fields', async () => {
     const { prisma, service } = buildService();
 
-    await service.list(owner, {
-      page: 1,
-      pageSize: 20,
-      state: 'active',
-      search: 'alice',
-    });
+    await service.list(owner, listQuery({ search: 'alice' }));
 
     const where = prisma.student.findMany.mock.calls[0][0].where;
     const searchedFields = (where.OR as Record<string, unknown>[]).map(
@@ -140,6 +148,28 @@ describe('StudentsService.list', () => {
       'email',
       'phone',
       'telegramUsername',
+    ]);
+  });
+
+  it('orders by the requested column with a stable id tiebreaker', async () => {
+    const { prisma, service } = buildService();
+
+    await service.list(owner, listQuery({ sort: 'status', order: 'desc' }));
+
+    expect(prisma.student.findMany.mock.calls[0][0].orderBy).toEqual([
+      { status: 'desc' },
+      { id: 'asc' },
+    ]);
+  });
+
+  it('sinks blanks to the bottom when sorting a nullable column', async () => {
+    const { prisma, service } = buildService();
+
+    await service.list(owner, listQuery({ sort: 'hourlyRateMinor' }));
+
+    expect(prisma.student.findMany.mock.calls[0][0].orderBy).toEqual([
+      { hourlyRateMinor: { sort: 'asc', nulls: 'last' } },
+      { id: 'asc' },
     ]);
   });
 
@@ -158,11 +188,7 @@ describe('StudentsService.list', () => {
     ]);
     prisma.student.count.mockResolvedValue(1);
 
-    const result = await service.list(owner, {
-      page: 1,
-      pageSize: 20,
-      state: 'active',
-    });
+    const result = await service.list(owner, listQuery());
 
     expect(result.items[0]).toMatchObject({
       activeEnrollmentCount: 2,

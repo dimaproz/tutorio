@@ -27,6 +27,10 @@ export const cancellationDeadlineHoursSchema = z.number().int().min(0).max(336);
 export const recordStateSchema = z.enum(['active', 'deleted', 'all']);
 export type RecordStateDto = z.infer<typeof recordStateSchema>;
 
+// Sort direction shared by every list endpoint that exposes column sorting.
+export const sortOrderSchema = z.enum(['asc', 'desc']);
+export type SortOrderDto = z.infer<typeof sortOrderSchema>;
+
 // Curated set of bundled illustration avatars a student/parent can pick from.
 // The key maps to `/images/tailadmin/avatars/{key}.jpg` on the web app; the API
 // never stores a free-form URL. Null/omitted = fall back to initials.

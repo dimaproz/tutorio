@@ -8,7 +8,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { EnrollmentResponse, GroupEnrollmentSummary } from '@tutorio/validation';
 import { ConfirmDialog } from '@/components/app/confirm-dialog';
-import { ListSkeleton, PageHeader, QueryErrorAlert } from '@/components/app/page-shell';
+import { PageHeader, QueryErrorAlert } from '@/components/app/page-shell';
 import { useSession } from '@/components/app/session-provider';
 import {
   BillingTypeBadge,
@@ -42,6 +42,7 @@ import {
 } from '@/lib/api/groups';
 import type { GatewayError } from '@/lib/auth/client';
 import { formatMoneyDisplay } from '@/lib/money';
+import { LoadingPanel } from '@/components/shared';
 
 export function GroupDetailView({ groupId }: { groupId: string }) {
   const t = useTranslations('groups');
@@ -63,7 +64,7 @@ export function GroupDetailView({ groupId }: { groupId: string }) {
   const restoreGroup = useRestoreGroupMutation();
 
   if (group.isPending) {
-    return <ListSkeleton rows={4} />;
+    return <LoadingPanel size="lg" />;
   }
 
   if (group.isError) {

@@ -3,12 +3,7 @@
 import { useEffect, useMemo } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm, useWatch } from 'react-hook-form';
-import {
-  BanknoteIcon,
-  CalendarClockIcon,
-  StickyNoteIcon,
-  UserRoundIcon,
-} from 'lucide-react';
+import { BanknoteIcon, CalendarClockIcon, StickyNoteIcon, UserRoundIcon } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { SUPPORTED_CURRENCIES } from '@tutorio/domain';
@@ -29,13 +24,11 @@ import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { CurrencyOption } from '@/components/app/currency-option';
+import { DurationInput } from '@/components/app/duration-input';
 import { FormSection } from '@/components/app/form-section';
 import { MoneyInput } from '@/components/app/money-input';
 import { useSession } from '@/components/app/session-provider';
-import {
-  detectTimezone,
-  TimezoneCombobox,
-} from '@/components/app/timezone-combobox';
+import { detectTimezone, TimezoneCombobox } from '@/components/app/timezone-combobox';
 import {
   DatePicker,
   DateRangePicker,
@@ -189,9 +182,7 @@ export function PackageFormDialog({
       <form onSubmit={onSubmit} noValidate className="flex flex-col gap-7">
         {createPackage.error ? (
           <Alert variant="destructive" role="alert">
-            <AlertDescription>
-              {tErrors(errorMessageKey(createPackage.error))}
-            </AlertDescription>
+            <AlertDescription>{tErrors(errorMessageKey(createPackage.error))}</AlertDescription>
           </Alert>
         ) : null}
 
@@ -222,12 +213,8 @@ export function PackageFormDialog({
                         form.setValue('targetId', '');
                       }}
                     >
-                      <ToggleGroupItem value="student">
-                        {t('targetStudent')}
-                      </ToggleGroupItem>
-                      <ToggleGroupItem value="group">
-                        {t('targetGroup')}
-                      </ToggleGroupItem>
+                      <ToggleGroupItem value="student">{t('targetStudent')}</ToggleGroupItem>
+                      <ToggleGroupItem value="group">{t('targetGroup')}</ToggleGroupItem>
                     </ToggleGroup>
                   </Field>
                 )}
@@ -312,9 +299,7 @@ export function PackageFormDialog({
                   value={field.value}
                   onValueChange={(value) => value && field.onChange(value)}
                 >
-                  <ToggleGroupItem value="FIXED_COUNT">
-                    {t('fixedCount')}
-                  </ToggleGroupItem>
+                  <ToggleGroupItem value="FIXED_COUNT">{t('fixedCount')}</ToggleGroupItem>
                   <ToggleGroupItem value="BY_PERIOD">{t('byPeriod')}</ToggleGroupItem>
                 </ToggleGroup>
               </Field>
@@ -441,9 +426,7 @@ export function PackageFormDialog({
                       onChange={field.onChange}
                       invalid={Boolean(errors.weekdays)}
                     />
-                    <FieldError
-                      errors={[errors.weekdays as { message?: string } | undefined]}
-                    />
+                    <FieldError errors={[errors.weekdays as { message?: string } | undefined]} />
                   </Field>
                 )}
               />
@@ -467,13 +450,18 @@ export function PackageFormDialog({
                 />
                 <Field data-invalid={errors.durationMin ? true : undefined}>
                   <FieldLabel htmlFor="package-duration">{t('duration')}</FieldLabel>
-                  <Input
-                    id="package-duration"
-                    type="number"
-                    min={5}
-                    max={720}
-                    aria-invalid={errors.durationMin ? true : undefined}
-                    {...form.register('durationMin')}
+                  <Controller
+                    control={form.control}
+                    name="durationMin"
+                    render={({ field }) => (
+                      <DurationInput
+                        id="package-duration"
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        onBlur={field.onBlur}
+                        invalid={Boolean(errors.durationMin)}
+                      />
+                    )}
                   />
                   <FieldError errors={[errors.durationMin]} />
                 </Field>
@@ -486,9 +474,7 @@ export function PackageFormDialog({
                   name="scheduleStartDate"
                   render={({ field }) => (
                     <Field data-invalid={errors.scheduleStartDate ? true : undefined}>
-                      <FieldLabel htmlFor="package-schedule-start">
-                        {t('startDate')}
-                      </FieldLabel>
+                      <FieldLabel htmlFor="package-schedule-start">{t('startDate')}</FieldLabel>
                       <DatePicker
                         id="package-schedule-start"
                         value={field.value}

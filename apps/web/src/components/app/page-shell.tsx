@@ -4,7 +4,6 @@ import { AlertCircleIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import { errorMessageKey } from '@/lib/api/error-message';
 import type { GatewayError } from '@/lib/auth/client';
@@ -25,16 +24,6 @@ export function PageHeader({
         {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
       </div>
       {action ? <div className="shrink-0">{action}</div> : null}
-    </div>
-  );
-}
-
-export function ListSkeleton({ rows = 5 }: { rows?: number }) {
-  return (
-    <div className="flex flex-col gap-3" aria-hidden="true">
-      {Array.from({ length: rows }, (_, index) => (
-        <Skeleton key={index} className="h-16 w-full rounded-lg" />
-      ))}
     </div>
   );
 }

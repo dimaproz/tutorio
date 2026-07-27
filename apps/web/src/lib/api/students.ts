@@ -38,6 +38,8 @@ export function useStudentsQuery(filters: StudentListFilters, enabled = true) {
           status: filters.status,
           subject: filters.subject,
           groupId: filters.groupId,
+          sort: filters.sort,
+          order: filters.order,
         })}`,
       ),
     placeholderData: (previous) => previous,

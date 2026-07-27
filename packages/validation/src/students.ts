@@ -6,6 +6,7 @@ import {
   isoDateTimeSchema,
   phoneSchema,
   recordStateSchema,
+  sortOrderSchema,
   timezoneSchema,
   uuidSchema,
 } from './common';
@@ -147,6 +148,21 @@ export const updateStudentSchema = z
 
 export type UpdateStudentDto = z.infer<typeof updateStudentSchema>;
 
+// Columns the list can be sorted by. Scalar student fields only: relation
+// aggregates (group names, enrollment counts) are computed per row and cannot
+// be ordered by the database without changing the query shape.
+export const STUDENT_SORT_FIELDS = [
+  'fullName',
+  'status',
+  'subject',
+  'hourlyRateMinor',
+  'phone',
+  'telegramUsername',
+  'createdAt',
+] as const;
+export const studentSortFieldSchema = z.enum(STUDENT_SORT_FIELDS);
+export type StudentSortField = z.infer<typeof studentSortFieldSchema>;
+
 export const listStudentsQuerySchema = paginationQuerySchema
   .extend({
     search: z.string().trim().min(1).max(120).optional(),
@@ -156,6 +172,10 @@ export const listStudentsQuerySchema = paginationQuerySchema
     status: studentStatusSchema.optional(),
     subject: studentSubjectSchema.optional(),
     groupId: uuidSchema.optional(),
+    // Sorting is server-side so it applies to the whole collection, not just
+    // the page the client happens to hold.
+    sort: studentSortFieldSchema.default('fullName'),
+    order: sortOrderSchema.default('asc'),
   })
   .strict();
 

@@ -2,16 +2,15 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { MoreHorizontalIcon, PencilIcon, Trash2Icon } from 'lucide-react';
+import { PencilIcon, Trash2Icon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/app/confirm-dialog';
-import { Button } from '@/components/ui/button';
+import { RowActionsTrigger } from '@/components/shared';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { errorMessageKey } from '@/lib/api/error-message';
 import { useDeleteParentMutation } from '@/lib/api/parents';
@@ -50,17 +49,7 @@ export function ParentRowActions({
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="size-11 md:size-8"
-            aria-label={tCommon('openMenu')}
-          >
-            <MoreHorizontalIcon data-icon />
-          </Button>
-        </DropdownMenuTrigger>
+        <RowActionsTrigger />
         <DropdownMenuContent align="end">
           {showOpenLink ? (
             <DropdownMenuItem asChild>

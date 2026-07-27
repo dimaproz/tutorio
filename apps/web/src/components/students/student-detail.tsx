@@ -21,7 +21,7 @@ import {
 import { useLocale, useTranslations } from 'next-intl';
 import type { EnrollmentResponse, StudentEnrollmentSummary } from '@tutorio/validation';
 import { BackButton } from '@/components/app/back-button';
-import { ListSkeleton, QueryErrorAlert } from '@/components/app/page-shell';
+import { QueryErrorAlert } from '@/components/app/page-shell';
 import { useIsSoloWorkspace } from '@/components/app/session-provider';
 import {
   BillingTypeBadge,
@@ -47,6 +47,7 @@ import { useEnrollmentsQuery } from '@/lib/api/enrollments';
 import { useStudentQuery } from '@/lib/api/students';
 import { formatMoneyDisplay } from '@/lib/money';
 import { useDateFormatters } from '@/lib/i18n/format';
+import { LoadingPanel } from '@/components/shared';
 
 export function StudentDetailView({ studentId }: { studentId: string }) {
   const t = useTranslations('students');
@@ -68,7 +69,7 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
   const enrollments = useEnrollmentsQuery({ page: 1, studentId }, !isSolo);
 
   if (student.isPending) {
-    return <ListSkeleton rows={5} />;
+    return <LoadingPanel size="lg" />;
   }
 
   if (student.isError) {
@@ -112,7 +113,7 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
       <div className="flex items-center justify-between gap-3">
         <BackButton href="/app/students" />
         <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="outline" onClick={() => setEditOpen(true)}>
+          <Button type="button" variant="default" onClick={() => setEditOpen(true)}>
             <PencilIcon data-icon="inline-start" />
             {tCommon('edit')}
           </Button>

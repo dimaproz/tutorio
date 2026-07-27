@@ -140,6 +140,14 @@ export class LessonsService {
         }
       }
 
+      // A lesson booked straight into a finished state still has to walk the
+      // status machine: the ledger, not the row, is the source of truth for
+      // credits, and it only learns about a lesson through a transition.
+      const now = new Date();
+      const isCancel =
+        dto.status === 'CANCELLED_CHARGED' ||
+        dto.status === 'CANCELLED_UNCHARGED';
+
       const created: string[] = [];
       for (const startsAtUtc of starts) {
         const lesson = await tx.lesson.create({
@@ -152,10 +160,33 @@ export class LessonsService {
             durationMin: dto.durationMin,
             priceMinor,
             currency,
+            status: dto.status,
+            completedAt: dto.status === 'COMPLETED' ? now : null,
+            cancelledBy: isCancel ? (dto.cancelledBy ?? null) : null,
+            cancelledReason: isCancel ? (dto.cancelledReason ?? null) : null,
+            cancelledAt: isCancel ? now : null,
+            paidAt: dto.paidAt ? new Date(dto.paidAt) : null,
             notes: dto.notes ?? null,
           },
         });
         created.push(lesson.id);
+
+        if (dto.status !== 'SCHEDULED') {
+          await this.ledger.applyTransition(tx, {
+            workspaceId: auth.workspaceId,
+            actorId: auth.userId,
+            lesson: {
+              id: lesson.id,
+              packageId: lesson.packageId,
+              enrollmentId,
+              groupId,
+              // The ledger diffs against where the lesson came from, and every
+              // lesson is born SCHEDULED.
+              status: 'SCHEDULED',
+            },
+            targetStatus: dto.status,
+          });
+        }
         await this.audit.record(tx, {
           workspaceId: auth.workspaceId,
           actorId: auth.userId,
@@ -172,6 +203,8 @@ export class LessonsService {
               durationMin: dto.durationMin,
               priceMinor,
               currency,
+              status: dto.status,
+              paidAt: dto.paidAt ?? null,
             },
           ),
         });
@@ -187,7 +220,8 @@ export class LessonsService {
     return { items: rows.map(toLessonResponse) };
   }
 
-  /** Per-lesson notes. Status and timing have their own dedicated endpoints. */
+  /** Per-lesson notes, price and payment date. Status and timing have their own
+   * dedicated endpoints. */
   async update(
     auth: AuthenticatedUser,
     lessonId: string,
@@ -206,6 +240,9 @@ export class LessonsService {
         ...('notes' in dto ? { notes: dto.notes ?? null } : {}),
         ...(dto.priceMinor != null && dto.currency != null
           ? { priceMinor: dto.priceMinor, currency: dto.currency }
+          : {}),
+        ...('paidAt' in dto
+          ? { paidAt: dto.paidAt ? new Date(dto.paidAt) : null }
           : {}),
       };
       if (Object.keys(data).length === 0) {

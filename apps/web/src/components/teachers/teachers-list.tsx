@@ -14,7 +14,6 @@ import { TeacherStatusBadge } from './teacher-status-badge';
 import { DataTable } from '@/components/app/data-table';
 import { ListPagination, ListSearchInput } from '@/components/app/list-controls';
 import {
-  ListSkeleton,
   PageHeader,
   QueryErrorAlert,
   QueryRefreshIndicator,
@@ -23,7 +22,7 @@ import { EntityAvatar } from '@/components/app/entity-avatar';
 import { useIsSoloWorkspace } from '@/components/app/session-provider';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CollectionEmptyState, CollectionToolbar } from '@/components/shared';
+import { CollectionEmptyState, CollectionToolbar, LoadingPanel } from '@/components/shared';
 import { parsePageParam } from '@/lib/api/filters';
 import { useTeachersQuery } from '@/lib/api/teachers';
 
@@ -160,7 +159,7 @@ export function TeachersList() {
 
       <QueryRefreshIndicator isFetching={teachers.isFetching && !teachers.isPending} />
 
-      {teachers.isPending ? <ListSkeleton /> : null}
+      {teachers.isPending ? <LoadingPanel size="lg" /> : null}
 
       {teachers.isError ? (
         <QueryErrorAlert
@@ -182,7 +181,12 @@ export function TeachersList() {
             ))}
           </div>
           <div className="hidden md:block">
-            <DataTable columns={columns} data={items} caption={t('tableCaption')} />
+            <DataTable
+              columns={columns}
+              data={items}
+              caption={t('tableCaption')}
+              loading={teachers.isFetching}
+            />
           </div>
           <ListPagination page={page} totalPages={teachers.data?.totalPages ?? 1} />
         </>

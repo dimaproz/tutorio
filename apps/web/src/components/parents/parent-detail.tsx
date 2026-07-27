@@ -17,7 +17,7 @@ import { ConfirmDialog } from '@/components/app/confirm-dialog';
 import { PersonMiniCard } from '@/components/app/person-mini-card';
 import { StudentStatusBadge } from '@/components/app/status-badges';
 import { InfoRow, ProfileHeader, SectionTitle } from '@/components/app/detail-view';
-import { ListSkeleton, QueryErrorAlert, QueryRefreshIndicator } from '@/components/app/page-shell';
+import { QueryErrorAlert, QueryRefreshIndicator } from '@/components/app/page-shell';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
@@ -26,6 +26,7 @@ import { useDeleteParentMutation, useParentQuery } from '@/lib/api/parents';
 import type { GatewayError } from '@/lib/auth/client';
 import { useDateFormatters } from '@/lib/i18n/format';
 import { ParentFormDialog } from './parent-form-dialog';
+import { LoadingPanel } from '@/components/shared';
 
 export function ParentDetailView({ parentId }: { parentId: string }) {
   const t = useTranslations('parents');
@@ -42,7 +43,7 @@ export function ParentDetailView({ parentId }: { parentId: string }) {
   const deleteParent = useDeleteParentMutation();
 
   if (parent.isPending) {
-    return <ListSkeleton rows={5} />;
+    return <LoadingPanel size="lg" />;
   }
 
   if (parent.isError) {

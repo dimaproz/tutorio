@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import {
   Pagination,
   PaginationContent,
+  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
@@ -22,6 +23,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { StatusRow } from '@/components/app/status-select';
+import { buildPageSlots, PAGE_ELLIPSIS } from '@/lib/pagination';
+import type { StatusIcon, StatusTone } from '@/components/app/status-meta';
 
 // Search, state filter and pagination all write to the URL, so a list view is
 // shareable and the browser back button behaves as users expect.
@@ -118,7 +122,7 @@ export function ListStateFilter({ value }: { value: 'active' | 'deleted' | 'all'
             so the responsive override has to match that specificity. */}
         <SelectTrigger
           id="list-state"
-          className="w-[150px] data-[size=default]:h-11 md:data-[size=default]:h-8"
+          className="w-[150px] data-[size=default]:h-11 md:data-[size=default]:h-9"
           aria-label={t('state')}
         >
           <SelectValue />
@@ -139,6 +143,14 @@ export function ListStateFilter({ value }: { value: 'active' | 'deleted' | 'all'
 // param. Reused for student status/subject/group and any future facet.
 const ALL = '__all__';
 
+export interface ListFilterOption {
+  value: string;
+  label: string;
+  /** Lifecycle facets carry the same icon + role as their badge and picker. */
+  icon?: StatusIcon;
+  tone?: StatusTone;
+}
+
 export function ListSelectFilter({
   paramKey,
   value,
@@ -147,7 +159,7 @@ export function ListSelectFilter({
 }: {
   paramKey: string;
   value?: string;
-  options: { value: string; label: string }[];
+  options: ListFilterOption[];
   /** Shown as the "no filter" option and the accessible name. */
   label: string;
 }) {
@@ -161,7 +173,7 @@ export function ListSelectFilter({
       }
     >
       <SelectTrigger
-        className="w-[170px] data-[size=default]:h-11 md:data-[size=default]:h-8"
+        className="w-[170px] data-[size=default]:h-11 md:data-[size=default]:h-9"
         aria-label={label}
       >
         <SelectValue />
@@ -171,13 +183,76 @@ export function ListSelectFilter({
           <SelectItem value={ALL}>{label}</SelectItem>
           {options.map((option) => (
             <SelectItem key={option.value} value={option.value}>
-              {option.label}
+              {option.icon ? (
+                <StatusRow
+                  icon={option.icon}
+                  tone={option.tone ?? 'neutral'}
+                  label={option.label}
+                />
+              ) : (
+                option.label
+              )}
             </SelectItem>
           ))}
         </SelectGroup>
       </SelectContent>
     </Select>
   );
+}
+
+export type SortOrder = 'asc' | 'desc';
+
+export interface ListSort {
+  field?: string;
+  order: SortOrder;
+  /** Toggles direction on the active column, otherwise switches column. */
+  onSort: (field: string) => void;
+}
+
+/**
+ * Column sorting held in the URL like every other list filter, so a sorted
+ * view is shareable and survives the back button. The server owns the actual
+ * ordering — the table only reports which column was clicked.
+ */
+export function useListSort(defaultField: string): ListSort {
+  const searchParams = useSearchParams();
+  const updateParams = useUpdateSearchParams();
+  const field = searchParams.get('sort') ?? defaultField;
+  const order: SortOrder = searchParams.get('order') === 'desc' ? 'desc' : 'asc';
+
+  return {
+    field,
+    order,
+    onSort: (next: string) => {
+      const nextOrder: SortOrder = next === field && order === 'asc' ? 'desc' : 'asc';
+      updateParams(
+        {
+          sort: next === defaultField && nextOrder === 'asc' ? undefined : next,
+          order: nextOrder === 'asc' ? undefined : nextOrder,
+        },
+        { resetPage: true },
+      );
+    },
+  };
+}
+
+/**
+ * Sorting for a table whose rows are already in memory (a detail-page card,
+ * an in-dialog list). Same shape as {@link useListSort} so `DataTable` cannot
+ * tell the two apart — only the ordering itself is done by the caller.
+ */
+export function useLocalSort(defaultField: string, defaultOrder: SortOrder = 'asc'): ListSort {
+  const [state, setState] = useState({ field: defaultField, order: defaultOrder });
+
+  return {
+    field: state.field,
+    order: state.order,
+    onSort: (next: string) =>
+      setState((prev) => ({
+        field: next,
+        order: prev.field === next && prev.order === 'asc' ? 'desc' : 'asc',
+      })),
+  };
 }
 
 export function ListPagination({
@@ -207,10 +282,13 @@ export function ListPagination({
 
   return (
     <Pagination aria-label={t('label')}>
-      <PaginationContent>
+      {/* Previous and Next sit on the edges with the page numbers centred —
+          the TailAdmin table pager. */}
+      <PaginationContent className="w-full justify-between gap-2">
         <PaginationItem>
           <PaginationPrevious
             href="#"
+            text={t('previous')}
             aria-disabled={page <= 1}
             className={page <= 1 ? 'pointer-events-none opacity-50' : undefined}
             onClick={(event) => {
@@ -219,18 +297,43 @@ export function ListPagination({
                 goTo(page - 1);
               }
             }}
-          >
-            {t('previous')}
-          </PaginationPrevious>
+          />
         </PaginationItem>
-        <PaginationItem>
-          <PaginationLink href="#" aria-current="page" onClick={(event) => event.preventDefault()}>
-            {t('summary', { page, totalPages })}
-          </PaginationLink>
+
+        {/* Numbers need room; on phones the pager falls back to a summary. */}
+        <PaginationItem className="text-sm text-muted-foreground sm:hidden">
+          {t('summary', { page, totalPages })}
         </PaginationItem>
+        <PaginationItem className="hidden sm:block">
+          <ul className="flex items-center gap-1">
+            {buildPageSlots(page, totalPages).map((slot, index) =>
+              slot === PAGE_ELLIPSIS ? (
+                <li key={`gap-${index}`}>
+                  <PaginationEllipsis />
+                </li>
+              ) : (
+                <li key={slot}>
+                  <PaginationLink
+                    href="#"
+                    isActive={slot === page}
+                    aria-label={t('goToPage', { page: slot })}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      goTo(slot);
+                    }}
+                  >
+                    {slot}
+                  </PaginationLink>
+                </li>
+              ),
+            )}
+          </ul>
+        </PaginationItem>
+
         <PaginationItem>
           <PaginationNext
             href="#"
+            text={t('next')}
             aria-disabled={page >= totalPages}
             className={page >= totalPages ? 'pointer-events-none opacity-50' : undefined}
             onClick={(event) => {
@@ -239,11 +342,10 @@ export function ListPagination({
                 goTo(page + 1);
               }
             }}
-          >
-            {t('next')}
-          </PaginationNext>
+          />
         </PaginationItem>
       </PaginationContent>
     </Pagination>
   );
 }
+

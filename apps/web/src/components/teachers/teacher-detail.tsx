@@ -17,7 +17,7 @@ import { toast } from 'sonner';
 import { BackButton } from '@/components/app/back-button';
 import { ConfirmDialog } from '@/components/app/confirm-dialog';
 import { InfoRow, ProfileHeader, ProfileTag, SectionTitle } from '@/components/app/detail-view';
-import { ListSkeleton, QueryErrorAlert, QueryRefreshIndicator } from '@/components/app/page-shell';
+import { QueryErrorAlert, QueryRefreshIndicator } from '@/components/app/page-shell';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { errorMessageKey } from '@/lib/api/error-message';
@@ -27,6 +27,7 @@ import { formatMoneyDisplay } from '@/lib/money';
 import { useDateFormatters } from '@/lib/i18n/format';
 import { TeacherFormDialog } from './teacher-form-dialog';
 import { TeacherStatusBadge } from './teacher-status-badge';
+import { LoadingPanel } from '@/components/shared';
 
 export function TeacherDetail({ teacherId }: { teacherId: string }) {
   const t = useTranslations('teachers');
@@ -46,7 +47,7 @@ export function TeacherDetail({ teacherId }: { teacherId: string }) {
   const deleteTeacher = useDeleteTeacherMutation();
 
   if (teacher.isPending) {
-    return <ListSkeleton rows={5} />;
+    return <LoadingPanel size="lg" />;
   }
   if (teacher.isError) {
     return (

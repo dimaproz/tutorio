@@ -462,6 +462,10 @@ model Lesson {
   cancelledReason String?
   cancelledAt     DateTime?
   completedAt     DateTime?
+  // When the money for this lesson arrived. Only meaningful for lessons billed
+  // one by one — package lessons are paid through the package's own Payment
+  // rows. Null on a completed lesson reads as "paid on the day".
+  paidAt          DateTime?
   notes           String?
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt

@@ -8,15 +8,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Skeleton } from '@/components/ui/skeleton';
+import { LoadingPanel } from '@/components/shared/loading';
 import { cn } from '@/lib/utils';
 
 type DialogWidth = 'sm' | 'md' | 'lg';
 
 const widthClass: Record<DialogWidth, string> = {
   sm: 'sm:max-w-lg',
-  md: 'sm:max-w-2xl',
-  lg: 'sm:max-w-4xl',
+  md: 'sm:max-w-xl',
+  lg: 'sm:max-w-2xl',
 };
 
 /**
@@ -50,19 +50,10 @@ export function EntityFormDialog({
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <div className="min-h-0 overflow-y-auto px-6 py-5">
-          {isLoading ? <FormDialogSkeleton /> : children}
+          {isLoading ? <LoadingPanel className="min-h-48 rounded-xl border-0 bg-transparent" /> : children}
         </div>
       </DialogContent>
     </Dialog>
   );
 }
 
-export function FormDialogSkeleton({ rows = 3 }: { rows?: number }) {
-  return (
-    <div className="flex flex-col gap-3" aria-hidden="true">
-      {Array.from({ length: rows }, (_, index) => (
-        <Skeleton key={index} className={index === rows - 1 ? 'h-24 w-full' : 'h-9 w-full'} />
-      ))}
-    </div>
-  );
-}

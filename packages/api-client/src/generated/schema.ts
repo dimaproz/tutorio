@@ -1502,6 +1502,8 @@ export interface components {
                 cancelledAt: string | null;
                 /** Format: date-time */
                 completedAt: string | null;
+                /** Format: date-time */
+                paidAt: string | null;
                 notes: string | null;
                 cancellationDeadlineHours: number;
                 student: {
@@ -1542,6 +1544,16 @@ export interface components {
             priceMinor?: number;
             /** @enum {string} */
             currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+            /**
+             * @default SCHEDULED
+             * @enum {string}
+             */
+            status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED";
+            /** @enum {string} */
+            cancelledBy?: "TEACHER" | "STUDENT" | "GROUP";
+            cancelledReason?: string | null;
+            /** Format: date-time */
+            paidAt?: string | null;
             notes?: string | null;
         };
         UpdateLessonDto: {
@@ -1549,6 +1561,8 @@ export interface components {
             priceMinor?: number;
             /** @enum {string} */
             currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+            /** Format: date-time */
+            paidAt?: string | null;
         };
         LessonDto: {
             /** Format: uuid */
@@ -1584,6 +1598,8 @@ export interface components {
             cancelledAt: string | null;
             /** Format: date-time */
             completedAt: string | null;
+            /** Format: date-time */
+            paidAt: string | null;
             notes: string | null;
             cancellationDeadlineHours: number;
             student: {
@@ -2332,6 +2348,8 @@ export interface operations {
                 status?: "ACTIVE" | "ON_HOLD" | "ARCHIVED";
                 subject?: "MATH" | "ENGLISH" | "GERMAN" | "FRENCH" | "POLISH" | "UKRAINIAN_LANGUAGE" | "UKRAINIAN_LITERATURE" | "WORLD_LITERATURE" | "PHYSICS" | "CHEMISTRY" | "BIOLOGY" | "GEOGRAPHY" | "HISTORY" | "WORLD_HISTORY" | "HISTORY_OF_UKRAINE" | "COMPUTER_SCIENCE" | "ECONOMICS" | "LAW" | "MUSIC" | "ART" | "PHYSICAL_EDUCATION" | "NMT_PREP" | "ZNO_PREP" | "IELTS_PREP" | "TOEFL_PREP" | "SAT_PREP";
                 groupId?: string;
+                sort?: "fullName" | "status" | "subject" | "hourlyRateMinor" | "phone" | "telegramUsername" | "createdAt";
+                order?: "asc" | "desc";
             };
             header?: never;
             path?: never;

@@ -7,10 +7,10 @@ import { useTranslations } from 'next-intl';
 import { GroupCard } from './group-card';
 import { GroupFormDialog } from './group-form-dialog';
 import { ListPagination, ListSearchInput, ListStateFilter } from '@/components/app/list-controls';
-import { ListSkeleton, PageHeader, QueryErrorAlert } from '@/components/app/page-shell';
+import { PageHeader, QueryErrorAlert } from '@/components/app/page-shell';
 import { useSession } from '@/components/app/session-provider';
 import { Button } from '@/components/ui/button';
-import { CollectionEmptyState, CollectionToolbar } from '@/components/shared';
+import { CollectionEmptyState, CollectionToolbar, LoadingPanel } from '@/components/shared';
 import { parsePageParam, parseStateParam } from '@/lib/api/filters';
 import { useGroupsQuery } from '@/lib/api/groups';
 
@@ -48,7 +48,7 @@ export function GroupsList() {
         {isOwner ? <ListStateFilter value={state} /> : null}
       </CollectionToolbar>
 
-      {groups.isPending ? <ListSkeleton /> : null}
+      {groups.isPending ? <LoadingPanel size="lg" /> : null}
 
       {groups.isError ? (
         <QueryErrorAlert

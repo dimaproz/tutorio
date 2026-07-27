@@ -75,6 +75,7 @@ export function toLessonResponse(row: LessonRow): LessonResponse {
     cancelledReason: row.cancelledReason,
     cancelledAt: row.cancelledAt?.toISOString() ?? null,
     completedAt: row.completedAt?.toISOString() ?? null,
+    paidAt: row.paidAt?.toISOString() ?? null,
     notes: row.notes,
     cancellationDeadlineHours: effectiveDeadlineHours(
       row.enrollment?.cancellationDeadlineHours,

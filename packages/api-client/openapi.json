@@ -555,6 +555,37 @@
               "format": "uuid",
               "type": "string"
             }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "fullName",
+              "type": "string",
+              "enum": [
+                "fullName",
+                "status",
+                "subject",
+                "hourlyRateMinor",
+                "phone",
+                "telegramUsername",
+                "createdAt"
+              ]
+            }
+          },
+          {
+            "name": "order",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "asc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
           }
         ],
         "responses": {
@@ -6740,6 +6771,11 @@
                   "format": "date-time",
                   "nullable": true
                 },
+                "paidAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                },
                 "notes": {
                   "type": "string",
                   "nullable": true
@@ -6836,6 +6872,7 @@
                 "cancelledReason",
                 "cancelledAt",
                 "completedAt",
+                "paidAt",
                 "notes",
                 "cancellationDeadlineHours",
                 "student",
@@ -6907,6 +6944,34 @@
               "GBP"
             ]
           },
+          "status": {
+            "type": "string",
+            "enum": [
+              "SCHEDULED",
+              "COMPLETED",
+              "CANCELLED_CHARGED",
+              "CANCELLED_UNCHARGED"
+            ],
+            "default": "SCHEDULED"
+          },
+          "cancelledBy": {
+            "type": "string",
+            "enum": [
+              "TEACHER",
+              "STUDENT",
+              "GROUP"
+            ]
+          },
+          "cancelledReason": {
+            "type": "string",
+            "maxLength": 2000,
+            "nullable": true
+          },
+          "paidAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "notes": {
             "type": "string",
             "maxLength": 2000,
@@ -6942,6 +7007,11 @@
               "USD",
               "GBP"
             ]
+          },
+          "paidAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           }
         }
       },
@@ -7053,6 +7123,11 @@
             "format": "date-time",
             "nullable": true
           },
+          "paidAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "notes": {
             "type": "string",
             "nullable": true
@@ -7149,6 +7224,7 @@
           "cancelledReason",
           "cancelledAt",
           "completedAt",
+          "paidAt",
           "notes",
           "cancellationDeadlineHours",
           "student",
