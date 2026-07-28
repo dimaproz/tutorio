@@ -409,19 +409,34 @@
   },
   "groups": {
     "title": "Групи",
-    "subtitle": "Заняття, які учні відвідують разом.",
+    "subtitle": "Групи учнів, які навчаються разом.",
     "add": "Додати групу",
     "searchLabel": "Пошук груп",
     "searchPlaceholder": "Назва групи…",
     "deletedBadge": "У кошику",
     "columns": {
       "group": "Група",
+      "schedule": "Уроки",
       "students": "Учні",
-      "statuses": "Записи",
+      "price": "Ціна",
+      "status": "Статус",
       "actions": "Дії"
     },
     "tableCaption": "Групи простору з кількістю записаних учнів",
     "studentCount": "{count, plural, =0 {Учнів немає} one {# учень} few {# учні} many {# учнів} other {# учня}}",
+    "scheduleMore": "+{count} ще",
+    "filters": {
+      "statusAll": "Усі статуси",
+      "scheduleAll": "Усі розклади",
+      "studentAll": "Усі учні",
+      "WITH_SCHEDULE": "З уроками",
+      "WITHOUT_SCHEDULE": "Без уроків"
+    },
+    "status": {
+      "ACTIVE": "Активна",
+      "EMPTY": "Без учнів",
+      "ARCHIVED": "У кошику"
+    },
     "empty": {
       "title": "Груп поки немає",
       "description": "Створіть групу, щоб об'єднати кількох учнів одним заняттям.",
@@ -440,30 +455,32 @@
     },
     "form": {
       "createTitle": "Нова група",
-      "createSubtitle": "Дайте групі назву, зрозумілу вашим учням.",
+      "createSubtitle": "Заповніть профіль групи, спільну ціну та список учнів.",
       "editTitle": "Редагування групи",
-      "editSubtitle": "Оновіть назву та нотатки.",
+      "editSubtitle": "Оновіть профіль групи, спільну ціну та список учнів.",
       "detailsSection": "Дані групи",
       "name": "Назва",
       "namePlaceholder": "Наприклад, B1 English вечірня",
+      "pricingSection": "Спільна ціна",
+      "pricingHint": "Використовується, коли ви додаєте учнів до цієї групи. Індивідуальні правила запису можна змінити пізніше.",
       "pricePerLesson": "Ціна за урок",
       "pricePerLessonHint": "За замовчуванням для записів цієї групи, наприклад 500 або 500,50",
       "currency": "Валюта",
-      "notes": "Нотатки",
-      "notesPlaceholder": "Розклад, рівень, матеріали",
+      "descriptionSection": "Опис",
+      "description": "Опис",
+      "descriptionPlaceholder": "Розклад, рівень, матеріали або важливі деталі про групу",
       "submitCreate": "Створити групу",
       "submitEdit": "Зберегти зміни",
       "students": {
         "section": "Учні",
-        "hint": "Зарахуйте учнів до цієї групи.",
-        "add": "Додати учня",
-        "teacher": "Викладач",
-        "price": "Ціна",
+        "hint": "Оберіть наявних учнів або створіть нового просто тут.",
+        "newStudent": "Створити нового",
         "remove": "Прибрати",
         "none": "Ще немає учнів.",
         "student": "Учень",
         "pickStudent": "Оберіть учня",
-        "pickTeacher": "Оберіть викладача"
+        "studentSearch": "Пошук учнів...",
+        "studentEmpty": "Учня не знайдено"
       }
     },
     "detail": {
@@ -507,9 +524,10 @@
     },
     "columns": {
       "parent": "Батьки",
-      "contacts": "Контакти",
       "students": "Учні",
-      "actions": "Дії"
+      "actions": "Дії",
+      "phone": "Телефон",
+      "telegram": "Telegram"
     },
     "tableCaption": "Батьки простору з пов'язаними учнями",
     "empty": {

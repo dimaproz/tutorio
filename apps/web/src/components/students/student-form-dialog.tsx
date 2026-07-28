@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import type { StudentResponse } from '@tutorio/validation';
 import { EntityFormDialog } from '@/components/shared';
 import { useStudentQuery } from '@/lib/api/students';
 import { StudentForm } from './student-form';
@@ -20,7 +21,7 @@ export function StudentFormDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   studentId?: string;
-  onSuccess?: () => void;
+  onSuccess?: (student?: StudentResponse) => void;
 }) {
   const t = useTranslations('students.form');
   const isEdit = Boolean(studentId);
@@ -37,9 +38,9 @@ export function StudentFormDialog({
     >
       <StudentForm
         student={student.data}
-        onSuccess={() => {
+        onSuccess={(saved) => {
           onOpenChange(false);
-          onSuccess?.();
+          onSuccess?.(saved);
         }}
         onCancel={() => onOpenChange(false)}
       />

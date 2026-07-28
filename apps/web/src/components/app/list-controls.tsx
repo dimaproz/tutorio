@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { SearchIcon } from 'lucide-react';
+import { ArchiveIcon, CircleCheckIcon, LayersIcon, SearchIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
 import { Label } from '@/components/ui/label';
@@ -106,6 +106,16 @@ export function ListSearchInput({ label, placeholder }: { label: string; placeho
 export function ListStateFilter({ value }: { value: 'active' | 'deleted' | 'all' }) {
   const t = useTranslations('filters');
   const updateParams = useUpdateSearchParams();
+  const options = [
+    { value: 'active', label: t('stateActive'), icon: CircleCheckIcon, tone: 'primary' },
+    { value: 'deleted', label: t('stateDeleted'), icon: ArchiveIcon, tone: 'secondary' },
+    { value: 'all', label: t('stateAll'), icon: LayersIcon, tone: 'neutral' },
+  ] satisfies Array<{
+    value: 'active' | 'deleted' | 'all';
+    label: string;
+    icon: StatusIcon;
+    tone: StatusTone;
+  }>;
 
   return (
     <div className="flex items-center gap-2">
@@ -129,9 +139,11 @@ export function ListStateFilter({ value }: { value: 'active' | 'deleted' | 'all'
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
-            <SelectItem value="active">{t('stateActive')}</SelectItem>
-            <SelectItem value="deleted">{t('stateDeleted')}</SelectItem>
-            <SelectItem value="all">{t('stateAll')}</SelectItem>
+            {options.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                <StatusRow icon={option.icon} tone={option.tone} label={option.label} />
+              </SelectItem>
+            ))}
           </SelectGroup>
         </SelectContent>
       </Select>
@@ -348,4 +360,3 @@ export function ListPagination({
     </Pagination>
   );
 }
-

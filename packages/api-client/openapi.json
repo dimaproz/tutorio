@@ -1435,6 +1435,67 @@
                 "all"
               ]
             }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ACTIVE",
+                "EMPTY"
+              ]
+            }
+          },
+          {
+            "name": "schedule",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "WITH_SCHEDULE",
+                "WITHOUT_SCHEDULE"
+              ]
+            }
+          },
+          {
+            "name": "studentId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "name",
+              "type": "string",
+              "enum": [
+                "name",
+                "pricePerLesson",
+                "activeStudentCount",
+                "schedule"
+              ]
+            }
+          },
+          {
+            "name": "order",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "asc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
           }
         ],
         "responses": {
@@ -1551,7 +1612,7 @@
         ]
       },
       "patch": {
-        "description": "PATCH semantics: omitted fields stay unchanged, null clears an optional field. A no-op update creates no audit entry.",
+        "description": "PATCH semantics: omitted fields stay unchanged, null clears an optional field. A no-op update creates no audit entry. `students` carries the complete roster and is reconciled into enrollments in the same transaction — added students are enrolled, dropped ones are archived — so a roster edit never costs one request per student.",
         "operationId": "GroupsController_update",
         "parameters": [
           {
@@ -5868,6 +5929,14 @@
                   "format": "date-time",
                   "nullable": true
                 },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "ACTIVE",
+                    "EMPTY",
+                    "ARCHIVED"
+                  ]
+                },
                 "activeStudentCount": {
                   "type": "integer",
                   "minimum": 0,
@@ -5884,11 +5953,57 @@
                       },
                       "fullName": {
                         "type": "string"
+                      },
+                      "avatarKey": {
+                        "type": "string",
+                        "enum": [
+                          "user-1",
+                          "user-2",
+                          "user-3",
+                          "user-4",
+                          "user-5",
+                          "user-6",
+                          "user-7",
+                          "user-8",
+                          "user-9",
+                          "user-10"
+                        ],
+                        "nullable": true
                       }
                     },
                     "required": [
                       "id",
-                      "fullName"
+                      "fullName",
+                      "avatarKey"
+                    ]
+                  }
+                },
+                "schedules": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "weekdays": {
+                        "type": "array",
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "exclusiveMinimum": false,
+                          "maximum": 6,
+                          "exclusiveMaximum": false
+                        }
+                      },
+                      "localTime": {
+                        "type": "string"
+                      },
+                      "timezone": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "weekdays",
+                      "localTime",
+                      "timezone"
                     ]
                   }
                 }
@@ -5900,8 +6015,10 @@
                 "currency",
                 "notes",
                 "deletedAt",
+                "status",
                 "activeStudentCount",
-                "students"
+                "students",
+                "schedules"
               ]
             }
           },
@@ -5962,6 +6079,27 @@
           "notes": {
             "type": "string",
             "maxLength": 2000
+          },
+          "students": {
+            "type": "object",
+            "properties": {
+              "studentIds": {
+                "type": "array",
+                "maxItems": 200,
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "teacherId": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "studentIds",
+              "teacherId"
+            ]
           }
         },
         "required": [
@@ -6204,6 +6342,27 @@
             "type": "string",
             "maxLength": 2000,
             "nullable": true
+          },
+          "students": {
+            "type": "object",
+            "properties": {
+              "studentIds": {
+                "type": "array",
+                "maxItems": 200,
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "teacherId": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "studentIds",
+              "teacherId"
+            ]
           }
         }
       },

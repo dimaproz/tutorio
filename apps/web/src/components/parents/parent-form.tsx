@@ -11,7 +11,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
   Field,
-  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -226,9 +225,14 @@ export function ParentForm({
 
         <FieldSeparator />
 
-        <FormSection icon={UsersRoundIcon} tone="warning" title={tParents('detail.studentsTitle')}>
+        <FormSection
+          icon={UsersRoundIcon}
+          tone="warning"
+          title={tParents('detail.studentsTitle')}
+          description={tParents('detail.noStudentsDescription')}
+        >
           <Field>
-            <FieldLabel>{tParents('detail.studentsTitle')}</FieldLabel>
+            <FieldLabel className="sr-only">{tParents('detail.studentsTitle')}</FieldLabel>
             <EntityMultiSelect
               options={studentOptions}
               selectedIds={values.studentIds}
@@ -242,7 +246,6 @@ export function ParentForm({
               disabled={students.isPending}
               isLoading={students.isPending}
             />
-            <FieldDescription>{tParents('detail.noStudentsDescription')}</FieldDescription>
           </Field>
         </FormSection>
 

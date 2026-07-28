@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import type {
   BillingTypeDto,
   EnrollmentStatusDto,
+  GroupStatusDto,
   LessonStatusDto,
   PackagePaymentStatusDto,
   PaymentStatusDto,
@@ -41,10 +42,18 @@ export function EnrollmentStatusBadge({ status }: { status: EnrollmentStatusDto 
   return <StatusMetaBadge meta={ENROLLMENT_STATUS_META[status]} label={t(status)} />;
 }
 
-const LESSON_VARIANT: Record<
-  LessonStatusDto,
-  'primary' | 'success' | 'destructive' | 'warning'
-> = {
+const GROUP_VARIANT: Record<GroupStatusDto, 'primary' | 'warning' | 'secondary'> = {
+  ACTIVE: 'primary',
+  EMPTY: 'warning',
+  ARCHIVED: 'secondary',
+};
+
+export function GroupStatusBadge({ status }: { status: GroupStatusDto }) {
+  const t = useTranslations('groups.status');
+  return <Badge variant={GROUP_VARIANT[status]}>{t(status)}</Badge>;
+}
+
+const LESSON_VARIANT: Record<LessonStatusDto, 'primary' | 'success' | 'destructive' | 'warning'> = {
   SCHEDULED: 'primary',
   COMPLETED: 'success',
   CANCELLED_CHARGED: 'destructive',
@@ -70,11 +79,7 @@ const PACKAGE_PAYMENT_VARIANT: Record<
   PENDING: 'destructive',
 };
 
-export function PackagePaymentStatusBadge({
-  status,
-}: {
-  status: PackagePaymentStatusDto;
-}) {
+export function PackagePaymentStatusBadge({ status }: { status: PackagePaymentStatusDto }) {
   const t = useTranslations('packages.paymentStatus');
   return <Badge variant={PACKAGE_PAYMENT_VARIANT[status]}>{t(status)}</Badge>;
 }

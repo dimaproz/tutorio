@@ -1,10 +1,9 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import type { ColumnDef } from '@tanstack/react-table';
-import { PlusIcon, SendIcon, UsersIcon } from 'lucide-react';
+import { PlusIcon, UsersIcon } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { STUDENT_SUBJECTS, type StudentListItem } from '@tutorio/validation';
 import { StudentCard } from './student-card';
@@ -12,8 +11,8 @@ import { StudentFormDialog } from './student-form-dialog';
 import { StudentRowActions } from './student-row-actions';
 import { StudentStatusBadge } from '@/components/app/status-badges';
 import { STUDENT_STATUS_META } from '@/components/app/status-meta';
-import { EntityAvatar } from '@/components/app/entity-avatar';
 import { DataTable } from '@/components/app/data-table';
+import { PersonCell, PhoneCell, TelegramCell } from '@/components/app/table-cells';
 import {
   ListPagination,
   ListSearchInput,
@@ -78,26 +77,12 @@ export function StudentsList() {
         header: () => t('columns.student'),
         meta: { sortField: 'fullName' },
         cell: ({ row }) => (
-          <div className="flex min-w-0 items-center gap-3">
-            <EntityAvatar
-              avatarKey={row.original.avatarKey}
-              fullName={row.original.fullName}
-              size="md"
-            />
-            <div className="flex min-w-0 flex-col gap-1">
-              <Link
-                href={`/app/students/${row.original.id}`}
-                className="truncate font-medium underline-offset-4 transition-colors hover:text-primary hover:underline"
-              >
-                {row.original.fullName}
-              </Link>
-              {row.original.subject ? (
-                <span className="truncate text-xs text-muted-foreground">
-                  {tSubject(row.original.subject)}
-                </span>
-              ) : null}
-            </div>
-          </div>
+          <PersonCell
+            avatarKey={row.original.avatarKey}
+            fullName={row.original.fullName}
+            href={`/app/students/${row.original.id}`}
+            subtitle={row.original.subject ? tSubject(row.original.subject) : undefined}
+          />
         ),
       },
       {
@@ -136,37 +121,13 @@ export function StudentsList() {
         id: 'phone',
         header: () => t('columns.phone'),
         meta: { sortField: 'phone' },
-        cell: ({ row }) =>
-          row.original.phone ? (
-            <a
-              href={`tel:${row.original.phone}`}
-              className="tabular underline-offset-4 hover:underline"
-            >
-              {row.original.phone}
-            </a>
-          ) : (
-            <span className="text-muted-foreground">{tCommon('notProvided')}</span>
-          ),
+        cell: ({ row }) => <PhoneCell phone={row.original.phone} />,
       },
       {
         id: 'telegram',
         header: () => t('columns.telegram'),
         meta: { sortField: 'telegramUsername' },
-        cell: ({ row }) => {
-          const handle = row.original.telegramUsername?.replace(/^@/, '');
-          return handle ? (
-            <a
-              href={`https://t.me/${handle}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-primary underline-offset-4 hover:underline"
-            >
-              <SendIcon className="size-3.5" aria-hidden="true" />@{handle}
-            </a>
-          ) : (
-            <span className="text-muted-foreground">{tCommon('notProvided')}</span>
-          );
-        },
+        cell: ({ row }) => <TelegramCell username={row.original.telegramUsername} />,
       },
       {
         id: 'actions',

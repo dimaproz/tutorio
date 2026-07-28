@@ -387,7 +387,7 @@ export interface paths {
         head?: never;
         /**
          * Update a group
-         * @description PATCH semantics: omitted fields stay unchanged, null clears an optional field. A no-op update creates no audit entry.
+         * @description PATCH semantics: omitted fields stay unchanged, null clears an optional field. A no-op update creates no audit entry. `students` carries the complete roster and is reconciled into enrollments in the same transaction — added students are enrolled, dropped ones are archived — so a roster edit never costs one request per student.
          */
         patch: operations["GroupsController_update"];
         trace?: never;
@@ -1267,11 +1267,20 @@ export interface components {
                 notes: string | null;
                 /** Format: date-time */
                 deletedAt: string | null;
+                /** @enum {string} */
+                status: "ACTIVE" | "EMPTY" | "ARCHIVED";
                 activeStudentCount: number;
                 students: {
                     /** Format: uuid */
                     id: string;
                     fullName: string;
+                    /** @enum {string|null} */
+                    avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
+                }[];
+                schedules: {
+                    weekdays: number[];
+                    localTime: string;
+                    timezone: string;
                 }[];
             }[];
             page: number;
@@ -1285,6 +1294,11 @@ export interface components {
             /** @enum {string} */
             currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
             notes?: string;
+            students?: {
+                studentIds: string[];
+                /** Format: uuid */
+                teacherId: string;
+            };
         };
         GroupDto: {
             /** Format: uuid */
@@ -1347,6 +1361,11 @@ export interface components {
             /** @enum {string|null} */
             currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
             notes?: string | null;
+            students?: {
+                studentIds: string[];
+                /** Format: uuid */
+                teacherId: string;
+            };
         };
         EnrollmentListDto: {
             items: {
@@ -2813,6 +2832,11 @@ export interface operations {
                 pageSize?: number;
                 search?: string;
                 state?: "active" | "deleted" | "all";
+                status?: "ACTIVE" | "EMPTY";
+                schedule?: "WITH_SCHEDULE" | "WITHOUT_SCHEDULE";
+                studentId?: string;
+                sort?: "name" | "pricePerLesson" | "activeStudentCount" | "schedule";
+                order?: "asc" | "desc";
             };
             header?: never;
             path?: never;

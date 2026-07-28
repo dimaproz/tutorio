@@ -19,6 +19,11 @@ export interface GroupListFilters {
   page: number;
   search?: string;
   state?: 'active' | 'deleted' | 'all';
+  status?: string;
+  schedule?: string;
+  studentId?: string;
+  sort?: string;
+  order?: 'asc' | 'desc';
   pageSize?: number;
 }
 

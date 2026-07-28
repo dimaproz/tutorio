@@ -409,19 +409,34 @@
   },
   "groups": {
     "title": "Groups",
-    "subtitle": "Classes that several students attend together.",
+    "subtitle": "Student groups you teach together.",
     "add": "Add group",
     "searchLabel": "Search groups",
     "searchPlaceholder": "Group name…",
     "deletedBadge": "In trash",
     "columns": {
       "group": "Group",
+      "schedule": "Lessons",
       "students": "Students",
-      "statuses": "Enrollments",
+      "price": "Price",
+      "status": "Status",
       "actions": "Actions"
     },
     "tableCaption": "Workspace groups with the number of enrolled students",
     "studentCount": "{count, plural, =0 {No students} one {# student} other {# students}}",
+    "scheduleMore": "+{count} more",
+    "filters": {
+      "statusAll": "All statuses",
+      "scheduleAll": "All schedules",
+      "studentAll": "All students",
+      "WITH_SCHEDULE": "With lessons",
+      "WITHOUT_SCHEDULE": "No lessons"
+    },
+    "status": {
+      "ACTIVE": "Active",
+      "EMPTY": "No students",
+      "ARCHIVED": "In trash"
+    },
     "empty": {
       "title": "No groups yet",
       "description": "Create a group to bill several students under one class.",
@@ -440,30 +455,32 @@
     },
     "form": {
       "createTitle": "New group",
-      "createSubtitle": "Give the group a name your students will recognise.",
+      "createSubtitle": "Set up the group profile, shared price and student roster.",
       "editTitle": "Edit group",
-      "editSubtitle": "Update the group name and notes.",
+      "editSubtitle": "Update the group profile, shared price and student roster.",
       "detailsSection": "Group details",
       "name": "Name",
       "namePlaceholder": "For example, B1 English Evenings",
+      "pricingSection": "Shared price",
+      "pricingHint": "Used when adding students to this group. Individual enrollment settings can still be edited later.",
       "pricePerLesson": "Price per lesson",
       "pricePerLessonHint": "Default for this group's enrollments, e.g. 500 or 500.50",
       "currency": "Currency",
-      "notes": "Notes",
-      "notesPlaceholder": "Schedule, level, materials",
+      "descriptionSection": "Description",
+      "description": "Description",
+      "descriptionPlaceholder": "Schedule, level, materials or anything important about the group",
       "submitCreate": "Create group",
       "submitEdit": "Save changes",
       "students": {
         "section": "Students",
-        "hint": "Enroll students into this group.",
-        "add": "Add student",
-        "teacher": "Teacher",
-        "price": "Price",
+        "hint": "Choose existing students or create a new one right here.",
+        "newStudent": "Create new",
         "remove": "Remove",
         "none": "No students yet.",
         "student": "Student",
         "pickStudent": "Select a student",
-        "pickTeacher": "Select a teacher"
+        "studentSearch": "Search students...",
+        "studentEmpty": "No student found"
       }
     },
     "detail": {
@@ -507,9 +524,10 @@
     },
     "columns": {
       "parent": "Parent",
-      "contacts": "Contacts",
       "students": "Students",
-      "actions": "Actions"
+      "actions": "Actions",
+      "phone": "Phone",
+      "telegram": "Telegram"
     },
     "tableCaption": "Workspace parents with their linked students",
     "empty": {

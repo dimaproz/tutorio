@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import type { ColumnDef } from '@tanstack/react-table';
 import { ContactIcon, PlusIcon } from 'lucide-react';
@@ -12,6 +11,12 @@ import { ParentFormDialog } from './parent-form-dialog';
 import { ParentRowActions } from './parent-row-actions';
 import { DataTable } from '@/components/app/data-table';
 import {
+  PeopleCell,
+  PersonCell,
+  PhoneCell,
+  TelegramCell,
+} from '@/components/app/table-cells';
+import {
   ListPagination,
   ListSearchInput,
   useUpdateSearchParams,
@@ -20,9 +25,7 @@ import { StudentFilterCombobox } from './student-filter-combobox';
 import {
   PageHeader,
   QueryErrorAlert,
-  QueryRefreshIndicator,
 } from '@/components/app/page-shell';
-import { EntityAvatar } from '@/components/app/entity-avatar';
 import { Button } from '@/components/ui/button';
 import { CollectionEmptyState, CollectionToolbar, LoadingPanel } from '@/components/shared';
 import { parsePageParam } from '@/lib/api/filters';
@@ -30,7 +33,7 @@ import { useParentsQuery } from '@/lib/api/parents';
 
 export function ParentsList() {
   const t = useTranslations('parents');
-  const tCommon = useTranslations('common');
+  const tSubject = useTranslations('subject');
   const searchParams = useSearchParams();
   const updateParams = useUpdateSearchParams();
   const [createOpen, setCreateOpen] = useState(false);
@@ -47,49 +50,37 @@ export function ParentsList() {
         accessorKey: 'fullName',
         header: () => t('columns.parent'),
         cell: ({ row }) => (
-          <div className="flex min-w-0 items-center gap-3">
-            <EntityAvatar
-              avatarKey={row.original.avatarKey}
-              fullName={row.original.fullName}
-              size="md"
-            />
-            <div className="flex min-w-0 flex-col gap-1">
-              <Link
-                href={`/app/parents/${row.original.id}`}
-                className="truncate font-medium underline-offset-4 transition-colors hover:text-primary hover:underline"
-              >
-                {row.original.fullName}
-              </Link>
-            </div>
-          </div>
+          <PersonCell
+            avatarKey={row.original.avatarKey}
+            fullName={row.original.fullName}
+            href={`/app/parents/${row.original.id}`}
+          />
         ),
       },
       {
-        id: 'contacts',
-        header: () => t('columns.contacts'),
-        cell: ({ row }) => (
-          <div className="flex flex-col text-sm">
-            {row.original.phone ? <span>{row.original.phone}</span> : null}
-            {row.original.telegramUsername ? (
-              <span className="text-muted-foreground">
-                @{row.original.telegramUsername.replace(/^@/, '')}
-              </span>
-            ) : null}
-            {!row.original.phone && !row.original.telegramUsername ? (
-              <span className="text-muted-foreground">{tCommon('notProvided')}</span>
-            ) : null}
-          </div>
-        ),
+        id: 'phone',
+        header: () => t('columns.phone'),
+        cell: ({ row }) => <PhoneCell phone={row.original.phone} />,
+      },
+      {
+        id: 'telegram',
+        header: () => t('columns.telegram'),
+        cell: ({ row }) => <TelegramCell username={row.original.telegramUsername} />,
       },
       {
         id: 'students',
         header: () => t('columns.students'),
-        cell: ({ row }) =>
-          row.original.students.length > 0 ? (
-            <span>{row.original.students.map((student) => student.fullName).join(', ')}</span>
-          ) : (
-            <span className="text-muted-foreground">{tCommon('notProvided')}</span>
-          ),
+        cell: ({ row }) => (
+          <PeopleCell
+            people={row.original.students.map((student) => ({
+              id: student.id,
+              fullName: student.fullName,
+              avatarKey: student.avatarKey,
+              subtitle: student.subject ? tSubject(student.subject) : undefined,
+            }))}
+            hrefFor={(id) => `/app/students/${id}`}
+          />
+        ),
       },
       {
         id: 'actions',
@@ -105,7 +96,7 @@ export function ParentsList() {
         ),
       },
     ],
-    [t, tCommon],
+    [t, tSubject],
   );
 
   const items = parents.data?.items ?? [];
@@ -131,8 +122,6 @@ export function ParentsList() {
           onChange={(next) => updateParams({ studentId: next }, { resetPage: true })}
         />
       </CollectionToolbar>
-
-      <QueryRefreshIndicator isFetching={parents.isFetching && !parents.isPending} />
 
       {parents.isPending ? <LoadingPanel size="lg" /> : null}
 

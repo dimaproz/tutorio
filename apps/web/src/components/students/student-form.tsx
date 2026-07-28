@@ -24,6 +24,7 @@ import {
   STUDENT_SUBJECTS,
   type StudentDetail,
   type StudentParentRef,
+  type StudentResponse,
 } from '@tutorio/validation';
 import { ParentFormDialog } from '@/components/parents/parent-form-dialog';
 import { ParentMiniCard } from '@/components/parents/parent-mini-card';
@@ -86,7 +87,7 @@ export function StudentForm({
   onCancel,
 }: {
   student?: StudentDetail;
-  onSuccess?: () => void;
+  onSuccess?: (student: StudentResponse) => void;
   onCancel?: () => void;
 }) {
   const t = useTranslations('students.form');
@@ -219,7 +220,7 @@ export function StudentForm({
       if (student) {
         // PATCH: an emptied field becomes null so the API clears it.
         const cleared = (value: string) => (value.trim() === '' ? null : value);
-        await updateStudent.mutateAsync({
+        const updated = await updateStudent.mutateAsync({
           fullName: formValues.fullName,
           email: cleared(formValues.email),
           phone: cleared(formValues.phone),
@@ -238,11 +239,11 @@ export function StudentForm({
           notes: cleared(formValues.notes),
         });
         toast.success(tStudents('toasts.updated'));
-        onSuccess?.();
+        onSuccess?.(updated);
         return;
       }
 
-      await createStudent.mutateAsync({
+      const created = await createStudent.mutateAsync({
         fullName: formValues.fullName,
         email: optional(formValues.email),
         phone: optional(formValues.phone),
@@ -261,7 +262,7 @@ export function StudentForm({
         notes: optional(formValues.notes),
       });
       toast.success(tStudents('toasts.created'));
-      onSuccess?.();
+      onSuccess?.(created);
     } catch {
       // Surfaced by the alert below.
     }
@@ -270,7 +271,13 @@ export function StudentForm({
   const pending = isSubmitting || mutation.isPending;
 
   return (
-    <form onSubmit={onSubmit} noValidate>
+    <form
+      onSubmit={(event) => {
+        event.stopPropagation();
+        void onSubmit(event);
+      }}
+      noValidate
+    >
       <FieldGroup>
         {mutation.error ? (
           <Alert variant="destructive" role="alert">

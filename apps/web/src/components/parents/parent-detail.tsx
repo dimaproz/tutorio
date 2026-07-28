@@ -99,29 +99,11 @@ export function ParentDetailView({ parentId }: { parentId: string }) {
         <div className="flex flex-col gap-6 lg:col-span-2">
           <Card>
             <CardHeader>
-              <SectionTitle icon={BookOpenIcon} tone="destructive">
-                {t('detail.notesTitle')}
-              </SectionTitle>
-            </CardHeader>
-            <CardContent>
-              {data.notes ? (
-                <p className="text-sm whitespace-pre-wrap">{data.notes}</p>
-              ) : (
-                <p className="text-sm text-muted-foreground">{tCommon('notProvided')}</p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Right column. */}
-        <div className="flex flex-col gap-6">
-          <Card>
-            <CardHeader>
               <SectionTitle icon={PhoneIcon} tone="primary">
                 {t('detail.contactsTitle')}
               </SectionTitle>
             </CardHeader>
-            <CardContent className="flex flex-col gap-3">
+            <CardContent className="grid gap-3 sm:grid-cols-2">
               <InfoRow
                 icon={PhoneIcon}
                 label={t('form.phone')}
@@ -150,6 +132,24 @@ export function ParentDetailView({ parentId }: { parentId: string }) {
             </CardContent>
           </Card>
 
+          <Card>
+            <CardHeader>
+              <SectionTitle icon={BookOpenIcon} tone="destructive">
+                {t('detail.notesTitle')}
+              </SectionTitle>
+            </CardHeader>
+            <CardContent>
+              {data.notes ? (
+                <p className="text-sm whitespace-pre-wrap">{data.notes}</p>
+              ) : (
+                <p className="text-sm text-muted-foreground">{tCommon('notProvided')}</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right column. */}
+        <div className="flex flex-col gap-6">
           <Card>
             <CardHeader>
               <SectionTitle icon={UsersRoundIcon} tone="warning">
