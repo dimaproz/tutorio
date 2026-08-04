@@ -152,7 +152,7 @@ export function ListStateFilter({ value }: { value: 'active' | 'deleted' | 'all'
 }
 
 // Generic URL-param facet filter: a select whose first option clears the
-// param. Reused for student status/subject/group and any future facet.
+// param. Reused for student status/group and any future facet.
 const ALL = '__all__';
 
 export interface ListFilterOption {

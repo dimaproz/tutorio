@@ -36,7 +36,6 @@ export function useStudentsQuery(filters: StudentListFilters, enabled = true) {
           search: filters.search,
           state: filters.state,
           status: filters.status,
-          subject: filters.subject,
           groupId: filters.groupId,
           sort: filters.sort,
           order: filters.order,

@@ -13,7 +13,6 @@ import { AuditService } from '../audit/audit.service';
 import { forbidden } from '../auth/auth.errors';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import {
-  activeEnrollmentsExist,
   groupNotFound,
   studentNotFound,
   teacherNotFound,
@@ -139,15 +138,7 @@ export class GroupsService {
     };
 
     const rows = await this.prisma.group.findMany({
-      where: {
-        ...where,
-        ...(query.schedule === 'WITH_SCHEDULE'
-          ? { lessonSeries: { some: { deletedAt: null } } }
-          : {}),
-        ...(query.schedule === 'WITHOUT_SCHEDULE'
-          ? { lessonSeries: { none: { deletedAt: null } } }
-          : {}),
-      },
+      where,
       include: {
         enrollments: {
           where: liveEnrollment,
@@ -158,7 +149,12 @@ export class GroupsService {
         },
         lessonSeries: {
           where: { deletedAt: null },
-          select: { weekdays: true, localTime: true, timezone: true },
+          select: {
+            weekdays: true,
+            localTime: true,
+            durationMin: true,
+            timezone: true,
+          },
           orderBy: [{ localTime: 'asc' }, { id: 'asc' }],
         },
       },
@@ -183,13 +179,9 @@ export class GroupsService {
           row.currency as GroupListResponse['items'][number]['currency'],
         notes: row.notes,
         deletedAt: row.deletedAt?.toISOString() ?? null,
-        // Derived, never stored: a removed group is archived, a group nobody
-        // is enrolled in is empty, anything else is running.
-        status: row.deletedAt
-          ? ('ARCHIVED' as const)
-          : students.length > 0
-            ? ('ACTIVE' as const)
-            : ('EMPTY' as const),
+        // Derived, never stored: roster state and record deletion are
+        // independent so the UI never mistakes the trash for a group status.
+        status: students.length > 0 ? ('ACTIVE' as const) : ('EMPTY' as const),
         activeStudentCount: students.length,
         students: students.map((student) => ({
           ...student,
@@ -359,7 +351,7 @@ export class GroupsService {
           where: { deletedAt: null },
           orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
           include: {
-            student: { select: { id: true, fullName: true } },
+            student: { select: { id: true, fullName: true, avatarKey: true } },
             teacher: { select: { id: true, fullName: true, color: true } },
           },
         },
@@ -373,11 +365,21 @@ export class GroupsService {
       ...toResponse(group),
       enrollments: group.enrollments.map((enrollment) => ({
         id: enrollment.id,
+        studentId: enrollment.studentId,
+        groupId: enrollment.groupId!,
+        teacherId: enrollment.teacherId,
         status: enrollment.status,
         billingType: enrollment.billingType,
         priceMinor: enrollment.priceMinor,
-        currency: enrollment.currency,
-        student: enrollment.student,
+        currency:
+          enrollment.currency as GroupDetail['enrollments'][number]['currency'],
+        cancellationDeadlineHours: enrollment.cancellationDeadlineHours,
+        student: {
+          id: enrollment.student.id,
+          fullName: enrollment.student.fullName,
+          avatarKey: enrollment.student
+            .avatarKey as GroupDetail['enrollments'][number]['student']['avatarKey'],
+        },
         teacher: {
           id: enrollment.teacher.id,
           name: enrollment.teacher.fullName,
@@ -443,21 +445,48 @@ export class GroupsService {
         return;
       }
 
-      const blockers = await tx.enrollment.count({
+      const deletedAt = new Date();
+      const groupWhere = {
+        workspaceId: auth.workspaceId,
+        groupId: group.id,
+        deletedAt: null,
+      };
+
+      // Payments must be hidden before enrollment.groupId is cleared below.
+      // Ledger entries and audit history are append-only evidence, while the
+      // package/enrollment tombstones make them unreachable in the product UI.
+      await tx.payment.updateMany({
         where: {
-          groupId: group.id,
           workspaceId: auth.workspaceId,
           deletedAt: null,
-          status: { in: ['ACTIVE', 'PAUSED'] },
+          OR: [
+            { package: { is: { groupId: group.id } } },
+            { enrollment: { is: { groupId: group.id } } },
+          ],
         },
+        data: { deletedAt },
       });
-      if (blockers > 0) {
-        throw activeEnrollmentsExist();
-      }
+
+      await tx.lesson.updateMany({ where: groupWhere, data: { deletedAt } });
+      await tx.lessonSeries.updateMany({
+        where: groupWhere,
+        data: { deletedAt },
+      });
+      await tx.lessonPackage.updateMany({
+        where: groupWhere,
+        data: { deletedAt },
+      });
+
+      // An enrollment is the student-to-group link. Keeping the student while
+      // tombstoning this record and clearing groupId leaves no live membership.
+      await tx.enrollment.updateMany({
+        where: groupWhere,
+        data: { deletedAt, groupId: null },
+      });
 
       await tx.group.update({
         where: { id: group.id },
-        data: { deletedAt: new Date() },
+        data: { deletedAt },
       });
       await this.audit.record(tx, {
         workspaceId: auth.workspaceId,

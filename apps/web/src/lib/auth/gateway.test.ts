@@ -21,6 +21,8 @@ const SESSION_PAYLOAD = {
     mode: 'SOLO',
     defaultCurrency: 'EUR',
     cancellationDeadlineHours: 24,
+    primaryColor: '#5D87FF',
+    secondaryColor: '#49BEFF',
   },
   role: 'OWNER',
 };
@@ -282,10 +284,7 @@ describe('GET /api/backend/[...path]', () => {
   });
 
   it('returns 401 without contacting the API when no cookies exist', async () => {
-    const response = await backendGet(
-      makeRequest('/api/backend/auth/me', { method: 'GET' }),
-      ctx,
-    );
+    const response = await backendGet(makeRequest('/api/backend/auth/me', { method: 'GET' }), ctx);
     expect(response.status).toBe(401);
     expect(fetchMock).not.toHaveBeenCalled();
   });

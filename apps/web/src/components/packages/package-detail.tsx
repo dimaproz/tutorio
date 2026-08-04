@@ -16,10 +16,7 @@ import { ConfirmDialog } from '@/components/app/confirm-dialog';
 import { SectionTitle } from '@/components/app/detail-view';
 import { QueryErrorAlert } from '@/components/app/page-shell';
 import { useSession } from '@/components/app/session-provider';
-import {
-  PackagePaymentStatusBadge,
-  PaymentStatusBadge,
-} from '@/components/app/status-badges';
+import { PackagePaymentStatusBadge, PaymentStatusBadge } from '@/components/app/status-badges';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardAction, CardContent, CardHeader } from '@/components/ui/card';
@@ -62,11 +59,7 @@ export function PackageDetailView({ packageId }: { packageId: string }) {
   }
   if (pkg.isError) {
     return (
-      <QueryErrorAlert
-        error={pkg.error}
-        title={t('title')}
-        onRetry={() => void pkg.refetch()}
-      />
+      <QueryErrorAlert error={pkg.error} title={t('title')} onRetry={() => void pkg.refetch()} />
     );
   }
 
@@ -80,12 +73,7 @@ export function PackageDetailView({ packageId }: { packageId: string }) {
   // A snapshot that no longer matches reality is shown struck through.
   const adjustedDown = data.effectiveTotalMinor < data.totalPriceMinorSnapshot;
 
-
-  const openPaymentFor = (
-    enrollmentId: string,
-    fullName: string,
-    oweMinor?: number,
-  ) => {
+  const openPaymentFor = (enrollmentId: string, fullName: string, oweMinor?: number) => {
     setPaymentTarget({ enrollmentId, fullName, oweMinor });
     setPaymentOpen(true);
   };
@@ -94,7 +82,7 @@ export function PackageDetailView({ packageId }: { packageId: string }) {
     try {
       await deletePackage.mutateAsync(packageId);
       toast.success(t('toasts.deleted'));
-      router.push('/app/finance');
+      router.push('/app/packages');
     } catch {
       // Surfaced by the mutation error state.
     }
@@ -103,7 +91,7 @@ export function PackageDetailView({ packageId }: { packageId: string }) {
   return (
     <>
       <div className="flex items-center justify-between gap-3">
-        <BackButton href="/app/finance" />
+        <BackButton href="/app/packages" />
         <div className="flex flex-wrap gap-2">
           {isOwner ? (
             <Button variant="outline" onClick={() => setAdjustOpen(true)}>
@@ -123,9 +111,7 @@ export function PackageDetailView({ packageId }: { packageId: string }) {
           <h1 className="text-2xl font-semibold tracking-tight">{owner}</h1>
           <PackagePaymentStatusBadge status={data.paymentStatus} />
         </div>
-        {data.name ? (
-          <p className="text-muted-foreground text-sm">{data.name}</p>
-        ) : null}
+        {data.name ? <p className="text-muted-foreground text-sm">{data.name}</p> : null}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -143,8 +129,7 @@ export function PackageDetailView({ packageId }: { packageId: string }) {
                       openPaymentFor(
                         // An individual package books money against the single
                         // enrollment behind its purchase entry.
-                        ledger.data?.items.find((entry) => entry.enrollmentId)
-                          ?.enrollmentId ?? '',
+                        ledger.data?.items.find((entry) => entry.enrollmentId)?.enrollmentId ?? '',
                         owner,
                         Math.max(0, data.effectiveTotalMinor - data.paidMinor),
                       )
@@ -158,9 +143,7 @@ export function PackageDetailView({ packageId }: { packageId: string }) {
             <CardContent className="flex flex-col gap-5">
               <div className="flex flex-col gap-2">
                 <div className="flex items-baseline justify-between">
-                  <span className="tabular text-3xl font-semibold">
-                    {data.remainingCredits}
-                  </span>
+                  <span className="tabular text-3xl font-semibold">{data.remainingCredits}</span>
                   <span className="text-muted-foreground text-sm">
                     {tCard('of', { total: data.lessonsTotal })}
                   </span>
@@ -177,11 +160,7 @@ export function PackageDetailView({ packageId }: { packageId: string }) {
                     {formatMoneyDisplay(data.effectiveTotalMinor, data.currency, locale)}
                     {adjustedDown ? (
                       <s className="text-muted-foreground font-normal">
-                        {formatMoneyDisplay(
-                          data.totalPriceMinorSnapshot,
-                          data.currency,
-                          locale,
-                        )}
+                        {formatMoneyDisplay(data.totalPriceMinorSnapshot, data.currency, locale)}
                       </s>
                     ) : null}
                   </span>
@@ -251,9 +230,7 @@ export function PackageDetailView({ packageId }: { packageId: string }) {
               <SectionTitle icon={HistoryIcon} tone="primary">
                 {tDetail('historyTitle')}
               </SectionTitle>
-              <p className="text-muted-foreground text-sm">
-                {tDetail('historySubtitle')}
-              </p>
+              <p className="text-muted-foreground text-sm">{tDetail('historySubtitle')}</p>
             </CardHeader>
             <CardContent>
               {ledger.isPending ? (
@@ -275,16 +252,12 @@ export function PackageDetailView({ packageId }: { packageId: string }) {
                         {entry.delta > 0 ? `+${entry.delta}` : entry.delta}
                       </Badge>
                       <div className="flex min-w-0 flex-col">
-                        <span className="text-sm font-medium">
-                          {t(`entryType.${entry.type}`)}
-                        </span>
+                        <span className="text-sm font-medium">{t(`entryType.${entry.type}`)}</span>
                         <span className="text-muted-foreground text-xs">
                           {format.dayMonthTime(entry.createdAt)}
                         </span>
                         {entry.note ? (
-                          <span className="text-muted-foreground text-xs">
-                            {entry.note}
-                          </span>
+                          <span className="text-muted-foreground text-xs">{entry.note}</span>
                         ) : null}
                       </div>
                     </li>
@@ -311,15 +284,10 @@ export function PackageDetailView({ packageId }: { packageId: string }) {
                     <li key={payment.id} className="flex items-center justify-between gap-2">
                       <div className="flex min-w-0 flex-col">
                         <span className="tabular text-sm font-medium">
-                          {formatMoneyDisplay(
-                            payment.amountMinor,
-                            payment.currency,
-                            locale,
-                          )}
+                          {formatMoneyDisplay(payment.amountMinor, payment.currency, locale)}
                         </span>
                         <span className="text-muted-foreground text-xs">
-                          {t(`method.${payment.method}`)} ·{' '}
-                          {format.dayMonthTime(payment.paidAt)}
+                          {t(`method.${payment.method}`)} · {format.dayMonthTime(payment.paidAt)}
                         </span>
                       </div>
                       <PaymentStatusBadge status={payment.status} />
@@ -341,11 +309,7 @@ export function PackageDetailView({ packageId }: { packageId: string }) {
         currency={data.currency}
         target={paymentTarget}
       />
-      <AdjustBalanceDialog
-        open={adjustOpen}
-        onOpenChange={setAdjustOpen}
-        packageId={data.id}
-      />
+      <AdjustBalanceDialog open={adjustOpen} onOpenChange={setAdjustOpen} packageId={data.id} />
       <ConfirmDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}

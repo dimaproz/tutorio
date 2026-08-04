@@ -26,6 +26,7 @@ export function LessonTargetSection({
   isLoadingGroups,
   isLoadingTeachers,
   lockedStudentId,
+  lockedGroupId,
   onTargetChange,
   onStudentChange,
   onGroupChange,
@@ -39,6 +40,8 @@ export function LessonTargetSection({
   isLoadingTeachers: boolean;
   /** Set when opened from a student page — the target is fixed. */
   lockedStudentId?: string;
+  /** Set when opened from a group page — the target is fixed. */
+  lockedGroupId?: string;
   onTargetChange: (target: LessonTarget) => void;
   onStudentChange: (studentId: string) => void;
   onGroupChange: (groupId: string) => void;
@@ -56,7 +59,7 @@ export function LessonTargetSection({
       description={t('lessonTypeHint')}
       tone="primary"
     >
-      {!lockedStudentId ? (
+      {!lockedStudentId && !lockedGroupId ? (
         <Controller
           control={form.control}
           name="target"
@@ -82,7 +85,7 @@ export function LessonTargetSection({
         />
       ) : null}
 
-      {!lockedStudentId && target === 'student' ? (
+      {!lockedStudentId && !lockedGroupId && target === 'student' ? (
         <Controller
           control={form.control}
           name="studentId"
@@ -111,7 +114,7 @@ export function LessonTargetSection({
         />
       ) : null}
 
-      {!lockedStudentId && target === 'group' ? (
+      {!lockedStudentId && !lockedGroupId && target === 'group' ? (
         <Controller
           control={form.control}
           name="groupId"

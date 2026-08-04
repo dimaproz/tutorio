@@ -6,7 +6,6 @@ export interface StudentListFilters {
   search?: string;
   state?: 'active' | 'deleted' | 'all';
   status?: string;
-  subject?: string;
   groupId?: string;
   /** Server-side column sorting; both fall back to the API defaults. */
   sort?: string;
@@ -20,7 +19,6 @@ export interface GroupListFilters {
   search?: string;
   state?: 'active' | 'deleted' | 'all';
   status?: string;
-  schedule?: string;
   studentId?: string;
   sort?: string;
   order?: 'asc' | 'desc';

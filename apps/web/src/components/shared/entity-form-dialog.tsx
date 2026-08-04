@@ -43,17 +43,20 @@ export function EntityFormDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className={cn('flex max-h-[90vh] flex-col gap-0 overflow-hidden p-0', widthClass[width])}
+        className={cn('flex max-h-[90vh] flex-col gap-0 p-0', widthClass[width])}
       >
         <DialogHeader className="shrink-0 border-b bg-popover px-6 py-4 pr-12">
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <div className="min-h-0 overflow-y-auto px-6 py-5">
-          {isLoading ? <LoadingPanel className="min-h-48 rounded-xl border-0 bg-transparent" /> : children}
+          {isLoading ? (
+            <LoadingPanel className="min-h-48 rounded-xl border-0 bg-transparent" />
+          ) : (
+            children
+          )}
         </div>
       </DialogContent>
     </Dialog>
   );
 }
-

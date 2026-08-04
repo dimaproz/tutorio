@@ -42,12 +42,15 @@ export function LessonFormDialog({
   onOpenChange,
   initialStart,
   lockedStudentId,
+  lockedGroupId,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialStart?: Date;
   /** Set when opened from a student page — the student is fixed. */
   lockedStudentId?: string;
+  /** Set when opened from a group page — the group is fixed. */
+  lockedGroupId?: string;
 }) {
   const t = useTranslations('scheduling.lessonForm');
   const tConflict = useTranslations('scheduling.conflict');
@@ -84,11 +87,13 @@ export function LessonFormDialog({
     form.reset({
       ...EMPTY_LESSON_FORM,
       currency: session.workspace.defaultCurrency as LessonFormValues['currency'],
+      target: lockedGroupId ? 'group' : 'student',
       studentId: lockedStudentId ?? '',
+      groupId: lockedGroupId ?? '',
       startsAt: [{ value: initialStart ? toLocalDateTimeInput(initialStart) : '' }],
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- reset only on open
-  }, [open, lockedStudentId, initialStart]);
+  }, [open, lockedStudentId, lockedGroupId, initialStart]);
 
   const studentOptions = useMemo(
     () =>
@@ -120,6 +125,17 @@ export function LessonFormDialog({
   // A single-teacher workspace never asks who is teaching.
   const resolvedTeacherId = effectiveTeacherId(teacherId, teacherOptions);
 
+  useEffect(() => {
+    if (!open || !lockedGroupId) {
+      return;
+    }
+    const rate = prefillFromGroup(groups.data?.items.find((item) => item.id === lockedGroupId));
+    if (rate) {
+      form.setValue('price', formatPriceInput(rate.priceMinor));
+      form.setValue('currency', rate.currency as LessonFormValues['currency']);
+    }
+  }, [form, groups.data, lockedGroupId, open]);
+
   /** Prefills price and currency from the most specific configured rate. */
   const applyDefaultPrice = (
     next: Partial<Pick<LessonFormValues, 'target' | 'studentId' | 'groupId' | 'teacherId'>>,
@@ -132,12 +148,8 @@ export function LessonFormDialog({
             groups.data?.items.find((item) => item.id === (next.groupId ?? values.groupId)),
           )
         : prefillFromStudent(
-            students.data?.items.find(
-              (item) => item.id === (next.studentId ?? values.studentId),
-            ),
-            teachers.data?.items.find(
-              (item) => item.id === (next.teacherId ?? resolvedTeacherId),
-            ),
+            students.data?.items.find((item) => item.id === (next.studentId ?? values.studentId)),
+            teachers.data?.items.find((item) => item.id === (next.teacherId ?? resolvedTeacherId)),
           );
 
     form.setValue('price', resolved ? formatPriceInput(resolved.priceMinor) : '');
@@ -178,9 +190,7 @@ export function LessonFormDialog({
         <form onSubmit={onSubmit(false)} noValidate className="flex flex-col gap-7">
           {createLesson.error && createLesson.error.status !== 409 ? (
             <Alert variant="destructive" role="alert">
-              <AlertDescription>
-                {tErrors(errorMessageKey(createLesson.error))}
-              </AlertDescription>
+              <AlertDescription>{tErrors(errorMessageKey(createLesson.error))}</AlertDescription>
             </Alert>
           ) : null}
 
@@ -192,12 +202,11 @@ export function LessonFormDialog({
             isLoadingGroups={groups.isPending}
             isLoadingTeachers={teachers.isPending}
             lockedStudentId={lockedStudentId}
+            lockedGroupId={lockedGroupId}
             onTargetChange={(target: LessonTarget) => applyDefaultPrice({ target })}
             onStudentChange={(studentId) => applyDefaultPrice({ studentId })}
             onGroupChange={(groupId) => applyDefaultPrice({ groupId })}
-            onTeacherChange={(nextTeacherId) =>
-              applyDefaultPrice({ teacherId: nextTeacherId })
-            }
+            onTeacherChange={(nextTeacherId) => applyDefaultPrice({ teacherId: nextTeacherId })}
           />
 
           <LessonScheduleSection teacherId={resolvedTeacherId} />

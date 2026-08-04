@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   badgeVariantForTone,
   ENROLLMENT_STATUS_META,
+  GROUP_STATUS_META,
   STUDENT_STATUS_META,
   type StatusMeta,
 } from '@/components/app/status-meta';
@@ -42,15 +43,9 @@ export function EnrollmentStatusBadge({ status }: { status: EnrollmentStatusDto 
   return <StatusMetaBadge meta={ENROLLMENT_STATUS_META[status]} label={t(status)} />;
 }
 
-const GROUP_VARIANT: Record<GroupStatusDto, 'primary' | 'warning' | 'secondary'> = {
-  ACTIVE: 'primary',
-  EMPTY: 'warning',
-  ARCHIVED: 'secondary',
-};
-
 export function GroupStatusBadge({ status }: { status: GroupStatusDto }) {
   const t = useTranslations('groups.status');
-  return <Badge variant={GROUP_VARIANT[status]}>{t(status)}</Badge>;
+  return <StatusMetaBadge meta={GROUP_STATUS_META[status]} label={t(status)} />;
 }
 
 const LESSON_VARIANT: Record<LessonStatusDto, 'primary' | 'success' | 'destructive' | 'warning'> = {

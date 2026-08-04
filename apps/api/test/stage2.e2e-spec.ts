@@ -187,7 +187,6 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
           phone: '+380501112233',
           timezone: 'Europe/Kyiv',
           telegramUsername: 'alice_e2e',
-          subject: 'ENGLISH',
           hourlyRateMinor: 45000,
           currency: 'UAH',
           languageLevel: 'B1',
@@ -224,7 +223,6 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
           'phone',
           'timezone',
           'telegramUsername',
-          'subject',
           'hourlyRateMinor',
           'currency',
           'status',
@@ -638,7 +636,6 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
           fullName: 'Roster Learner',
           avatarKey: null,
           status: 'ACTIVE',
-          subject: null,
         },
       ]);
     });

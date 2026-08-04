@@ -20,7 +20,6 @@ export function GroupStudentsField({
 }) {
   const t = useTranslations('groups.form.students');
   const tCommon = useTranslations('common');
-  const tSubject = useTranslations('subject');
   const students = useStudentsQuery({ page: 1, pageSize: 100 }, enabled);
 
   const options = useMemo(() => {
@@ -31,10 +30,9 @@ export function GroupStudentsField({
       value: student.id,
       label: student.fullName,
       avatarKey: student.avatarKey,
-      description: student.subject ? tSubject(student.subject) : undefined,
       badges: [<StudentStatusBadge key="status" status={student.status} />],
     }));
-  }, [extraStudents, students.data, tSubject]);
+  }, [extraStudents, students.data]);
 
   return (
     <EntityMultiSelect

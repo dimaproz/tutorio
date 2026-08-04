@@ -99,7 +99,6 @@ describe('students', () => {
     const parsed = createStudentSchema.parse({
       fullName: 'Alice',
       timezone: 'UTC',
-      subject: 'ENGLISH',
       hourlyRateMinor: 5000,
       currency: 'EUR',
       status: 'ON_HOLD',
@@ -155,22 +154,20 @@ describe('groups', () => {
     expect(updateGroupSchema.safeParse({ students: null }).success).toBe(false);
   });
 
-  it('accepts list filters and sort fields for the groups table', () => {
+  it('accepts group filters and list sort fields', () => {
     const parsed = listGroupsQuerySchema.parse({
       status: 'ACTIVE',
-      schedule: 'WITH_SCHEDULE',
       studentId: UUID,
       sort: 'activeStudentCount',
       order: 'desc',
     });
     expect(parsed).toMatchObject({
       status: 'ACTIVE',
-      schedule: 'WITH_SCHEDULE',
       studentId: UUID,
       sort: 'activeStudentCount',
       order: 'desc',
     });
-    expect(listGroupsQuerySchema.safeParse({ schedule: 'MONDAY' }).success).toBe(false);
+    expect(listGroupsQuerySchema.safeParse({ schedule: 'WITH_SCHEDULE' }).success).toBe(false);
     expect(listGroupsQuerySchema.safeParse({ sort: 'students' }).success).toBe(false);
   });
 });
@@ -254,6 +251,10 @@ describe('workspace settings', () => {
   it('requires at least one field and validates values', () => {
     expect(updateWorkspaceSettingsSchema.safeParse({}).success).toBe(false);
     expect(updateWorkspaceSettingsSchema.safeParse({ defaultCurrency: 'UAH' }).success).toBe(true);
+    expect(updateWorkspaceSettingsSchema.safeParse({ primaryColor: '#5d87ff' }).success).toBe(true);
+    expect(updateWorkspaceSettingsSchema.safeParse({ secondaryColor: '#12345' }).success).toBe(
+      false,
+    );
     expect(updateWorkspaceSettingsSchema.safeParse({ cancellationDeadlineHours: 24 }).success).toBe(
       true,
     );

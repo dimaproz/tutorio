@@ -4,6 +4,7 @@ import { createContext, use, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import type { AuthMe } from '@tutorio/validation';
 import { LoadingScreen } from '@/components/shared';
+import { WorkspaceTheme } from './workspace-theme';
 import { useSessionQuery } from '@/lib/auth/client';
 
 const SessionContext = createContext<AuthMe | null>(null);
@@ -33,7 +34,16 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     return <LoadingScreen />;
   }
 
-  return <SessionContext value={session.data}>{children}</SessionContext>;
+  return (
+    <SessionContext value={session.data}>
+      <WorkspaceTheme
+        primaryColor={session.data.workspace.primaryColor}
+        secondaryColor={session.data.workspace.secondaryColor}
+      >
+        {children}
+      </WorkspaceTheme>
+    </SessionContext>
+  );
 }
 
 export function useSession(): AuthMe {
@@ -52,4 +62,3 @@ export function useSession(): AuthMe {
 export function useIsSoloWorkspace(): boolean {
   return useSession().workspace.mode === 'SOLO';
 }
-

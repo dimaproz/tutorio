@@ -48,12 +48,26 @@ const BILLING_TYPES = ['PACKAGE', 'MONTHLY', 'PER_LESSON'] as const;
 // Sentinel for "no group" — Radix Select cannot hold an empty string value.
 const INDIVIDUAL = 'individual';
 
+type EnrollmentDialogEnrollment = Pick<
+  EnrollmentResponse,
+  | 'id'
+  | 'studentId'
+  | 'groupId'
+  | 'teacherId'
+  | 'student'
+  | 'teacher'
+  | 'status'
+  | 'billingType'
+  | 'priceMinor'
+  | 'currency'
+  | 'cancellationDeadlineHours'
+>;
+
 /** Minimal student identity shown as a read-only card when the student is fixed. */
 export interface LockedStudent {
   id: string;
   fullName: string;
   avatarKey?: string | null;
-  subject?: string | null;
 }
 
 export function EnrollmentDialog({
@@ -66,14 +80,13 @@ export function EnrollmentDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** Present when editing; absent when creating. */
-  enrollment?: EnrollmentResponse;
+  enrollment?: EnrollmentDialogEnrollment;
   /** Set when opened from a student page — the student is fixed and shown as a card. */
   lockedStudent?: LockedStudent;
   /** Set when opened from a group page — the group cannot be changed. */
   lockedGroupId?: string;
 }) {
   const t = useTranslations('enrollments');
-  const tSubject = useTranslations('subject');
   const tBilling = useTranslations('billingType');
   const tErrors = useTranslations('errors');
   const tValidation = useTranslations('validation');
@@ -237,7 +250,7 @@ export function EnrollmentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+      <DialogContent className="flex max-h-[90vh] flex-col gap-0 p-0 sm:max-w-lg">
         <DialogHeader className="shrink-0 border-b bg-popover px-6 py-4 pr-12">
           <DialogTitle>{isEdit ? t('editor.editTitle') : t('editor.createTitle')}</DialogTitle>
           <DialogDescription>
@@ -260,7 +273,6 @@ export function EnrollmentDialog({
                   <PersonMiniCard
                     avatarKey={studentCard.avatarKey}
                     fullName={studentCard.fullName}
-                    subtitle={lockedStudent?.subject ? tSubject(lockedStudent.subject) : undefined}
                   />
                 ) : (
                   <EntityPicker

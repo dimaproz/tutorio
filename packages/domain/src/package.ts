@@ -18,7 +18,10 @@ export interface PackagePlanInput {
   /** Required for FIXED_COUNT. */
   lessonsTotal?: number | null;
   /** Required for BY_PERIOD — the recurrence and the window it runs over. */
+  /** Kept for backwards compatibility with a single-slot schedule. */
   rule?: RecurrenceRule | null;
+  /** One recurrence rule per weekday/time slot. */
+  rules?: readonly RecurrenceRule[] | null;
   startsAt?: Date | null;
   endDate?: Date | null;
 }
@@ -53,16 +56,20 @@ export function planPackage(input: PackagePlanInput): PackagePlan {
     }
     lessonsTotal = input.lessonsTotal as number;
   } else {
-    if (!input.rule || !input.startsAt || !input.endDate) {
+    const rules = input.rules ?? (input.rule ? [input.rule] : []);
+    if (rules.length === 0 || !input.startsAt || !input.endDate) {
       throw new InvalidPackagePlanError(
         'A by-period package needs a recurrence rule, a start and an end date',
       );
     }
     // The end date is inclusive for the tutor, exclusive for the expansion.
-    lessonsTotal = expandSeries(input.rule, {
+    lessonsTotal = expandPackageSchedule(rules, {
       from: input.startsAt,
       until: new Date(input.endDate.getTime() + 1),
     }).length;
+    if (lessonsTotal < 1) {
+      throw new InvalidPackagePlanError('A by-period package needs at least one scheduled lesson');
+    }
   }
 
   return {
@@ -70,6 +77,20 @@ export function planPackage(input: PackagePlanInput): PackagePlan {
     pricePerLessonMinor: input.pricePerLessonMinor,
     totalPriceMinor: lessonsTotal * input.pricePerLessonMinor,
   };
+}
+
+/** Expands all package slots into one ordered list without duplicate instants. */
+export function expandPackageSchedule(
+  rules: readonly RecurrenceRule[],
+  window: { from: Date; until: Date },
+): Date[] {
+  const unique = new Map<number, Date>();
+  for (const rule of rules) {
+    for (const start of expandSeries(rule, window)) {
+      unique.set(start.getTime(), start);
+    }
+  }
+  return [...unique.values()].sort((a, b) => a.getTime() - b.getTime());
 }
 
 /**
@@ -82,8 +103,7 @@ export function effectiveTotalMinor(
   pricePerLessonMinorSnapshot: number,
   unchargedCancellations: number,
 ): number {
-  const adjusted =
-    totalPriceMinorSnapshot - unchargedCancellations * pricePerLessonMinorSnapshot;
+  const adjusted = totalPriceMinorSnapshot - unchargedCancellations * pricePerLessonMinorSnapshot;
   return Math.max(0, adjusted);
 }
 

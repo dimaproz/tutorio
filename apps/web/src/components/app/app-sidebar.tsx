@@ -8,6 +8,7 @@ import {
   GraduationCapIcon,
   LayoutDashboardIcon,
   PresentationIcon,
+  PackageIcon,
   RepeatIcon,
   SettingsIcon,
   UsersIcon,
@@ -47,16 +48,14 @@ const NAV_ITEMS: NavItem[] = [
   { key: 'teachers', href: '/app/teachers', icon: PresentationIcon },
   { key: 'calendar', href: '/app/calendar', icon: CalendarIcon },
   { key: 'patterns', href: '/app/lessons/patterns', icon: RepeatIcon },
-  { key: 'finance', href: '/app/finance', icon: WalletIcon },
+  { key: 'packages', href: '/app/packages', icon: PackageIcon },
 ];
 
 // Enabled in later stages — shown disabled with a "coming soon" badge.
 const UPCOMING_ITEMS: { key: string; icon: typeof WalletIcon }[] = [];
 
-// Roomier rows than the shadcn default (h-8) — matches the design lab / TailAdmin
-// rail: larger hit area, size-5 icons, brand-tinted pill on the active item
-// (driven by --sidebar-accent).
-const ITEM_CLASS = 'h-11 gap-3 rounded-lg px-3 [&_svg]:size-5';
+// The shared shadcn sidebar owns row spacing and active/hover states.
+const ITEM_CLASS = '[&_svg]:size-5';
 
 export function AppSidebar() {
   const t = useTranslations('app.nav');
@@ -76,24 +75,20 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="offcanvas">
       <SidebarHeader>
-        <div className="flex items-center gap-2.5 px-2 py-2">
+        <div className="flex h-20 items-center gap-2.5 overflow-hidden px-6">
           <span className="bg-primary text-primary-foreground grid size-9 shrink-0 place-items-center rounded-lg">
             <GraduationCapIcon className="size-5" aria-hidden="true" />
           </span>
           <div className="flex min-w-0 flex-col">
             <span className="truncate text-sm font-semibold">{tCommon('appName')}</span>
-            <span className="text-muted-foreground truncate text-xs">
-              {session.workspace.name}
-            </span>
+            <span className="text-muted-foreground truncate text-xs">{session.workspace.name}</span>
           </div>
         </div>
       </SidebarHeader>
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-xs font-medium tracking-wider uppercase">
-            {t('menuLabel')}
-          </SidebarGroupLabel>
+          <SidebarGroupLabel className="uppercase">{t('menuLabel')}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu aria-label={t('label')} className="gap-1">
               {navItems.map(({ key, href, icon: Icon, exact }) => (
@@ -131,44 +126,40 @@ export function AppSidebar() {
         </SidebarGroup>
 
         {UPCOMING_ITEMS.length > 0 ? (
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-xs font-medium tracking-wider uppercase">
-            {t('comingSoon')}
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu className="gap-1">
-              {UPCOMING_ITEMS.map(({ key, icon: Icon }) => (
-                <SidebarMenuItem key={key}>
-                  <SidebarMenuButton
-                    aria-disabled="true"
-                    className={`${ITEM_CLASS} pointer-events-none opacity-60`}
-                  >
-                    <Icon />
-                    <span>{t(key)}</span>
-                  </SidebarMenuButton>
-                  <SidebarMenuBadge className="top-3 text-xs text-muted-foreground">
-                    {t('comingSoon')}
-                  </SidebarMenuBadge>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-xs font-medium tracking-wider uppercase">
+              {t('comingSoon')}
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu className="gap-1">
+                {UPCOMING_ITEMS.map(({ key, icon: Icon }) => (
+                  <SidebarMenuItem key={key}>
+                    <SidebarMenuButton
+                      aria-disabled="true"
+                      className={`${ITEM_CLASS} pointer-events-none opacity-60`}
+                    >
+                      <Icon />
+                      <span>{t(key)}</span>
+                    </SidebarMenuButton>
+                    <SidebarMenuBadge className="top-3 text-xs text-muted-foreground">
+                      {t('comingSoon')}
+                    </SidebarMenuBadge>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
         ) : null}
       </SidebarContent>
 
       <SidebarFooter>
-        <div className="flex items-center gap-3 rounded-xl bg-sidebar-accent/60 px-3 py-2.5">
+        <div className="mx-6 my-4 flex items-center gap-3 overflow-hidden rounded-md bg-light-secondary px-4 py-4">
           <Avatar className="size-9">
-            <AvatarFallback className="text-xs">
-              {nameInitials(session.user.name)}
-            </AvatarFallback>
+            <AvatarFallback className="text-xs">{nameInitials(session.user.name)}</AvatarFallback>
           </Avatar>
           <div className="flex min-w-0 flex-col leading-tight">
             <span className="truncate text-sm font-medium">{session.user.name}</span>
-            <span className="truncate text-xs text-muted-foreground">
-              {tRoles(session.role)}
-            </span>
+            <span className="truncate text-xs text-muted-foreground">{tRoles(session.role)}</span>
           </div>
         </div>
       </SidebarFooter>

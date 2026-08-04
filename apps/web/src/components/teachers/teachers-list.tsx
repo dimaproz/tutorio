@@ -13,11 +13,7 @@ import { TeacherRowActions } from './teacher-row-actions';
 import { TeacherStatusBadge } from './teacher-status-badge';
 import { DataTable } from '@/components/app/data-table';
 import { ListPagination, ListSearchInput } from '@/components/app/list-controls';
-import {
-  PageHeader,
-  QueryErrorAlert,
-  QueryRefreshIndicator,
-} from '@/components/app/page-shell';
+import { PageHeader, QueryErrorAlert, QueryRefreshIndicator } from '@/components/app/page-shell';
 import { EntityAvatar } from '@/components/app/entity-avatar';
 import { useIsSoloWorkspace } from '@/components/app/session-provider';
 import { Badge } from '@/components/ui/badge';
@@ -26,12 +22,9 @@ import { CollectionEmptyState, CollectionToolbar, LoadingPanel } from '@/compone
 import { parsePageParam } from '@/lib/api/filters';
 import { useTeachersQuery } from '@/lib/api/teachers';
 
-const SUBJECT_LIMIT = 3;
-
 export function TeachersList() {
   const t = useTranslations('teachers');
   const tCommon = useTranslations('common');
-  const tSubject = useTranslations('subject');
   const searchParams = useSearchParams();
   const isSolo = useIsSoloWorkspace();
   const [createOpen, setCreateOpen] = useState(false);
@@ -92,25 +85,6 @@ export function TeachersList() {
         ),
       },
       {
-        id: 'subjects',
-        header: () => t('columns.subjects'),
-        cell: ({ row }) =>
-          row.original.subjects.length > 0 ? (
-            <div className="flex flex-wrap gap-1.5">
-              {row.original.subjects.slice(0, SUBJECT_LIMIT).map((subject) => (
-                <Badge key={subject} variant="secondary">
-                  {tSubject(subject)}
-                </Badge>
-              ))}
-              {row.original.subjects.length > SUBJECT_LIMIT ? (
-                <Badge variant="outline">+{row.original.subjects.length - SUBJECT_LIMIT}</Badge>
-              ) : null}
-            </div>
-          ) : (
-            <span className="text-muted-foreground">{tCommon('notProvided')}</span>
-          ),
-      },
-      {
         id: 'enrollments',
         header: () => t('columns.enrollments'),
         cell: ({ row }) => (
@@ -131,7 +105,7 @@ export function TeachersList() {
         ),
       },
     ],
-    [t, tCommon, tSubject],
+    [t, tCommon],
   );
 
   const items = teachers.data?.items ?? [];

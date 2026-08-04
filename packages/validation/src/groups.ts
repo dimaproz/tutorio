@@ -59,10 +59,9 @@ export const updateGroupSchema = z
 
 export type UpdateGroupDto = z.infer<typeof updateGroupSchema>;
 
-// A group has no status column: what a tutor calls its state is whether anyone
-// is still enrolled, and whether the group was removed. Derived on read so the
-// two can never fall out of sync with the enrollments.
-export const GROUP_STATUSES = ['ACTIVE', 'EMPTY', 'ARCHIVED'] as const;
+// A group has no stored lifecycle status. Its user-facing status is derived
+// from its live roster; deletion remains a separate record state (`deletedAt`).
+export const GROUP_STATUSES = ['ACTIVE', 'EMPTY'] as const;
 export const groupStatusSchema = z.enum(GROUP_STATUSES);
 export type GroupStatusDto = z.infer<typeof groupStatusSchema>;
 
@@ -81,9 +80,8 @@ export const listGroupsQuerySchema = paginationQuerySchema
     search: z.string().trim().min(1).max(120).optional(),
     // deleted/all are OWNER-only (enforced by the service).
     state: recordStateSchema.default('active'),
-    // ARCHIVED is expressed through `state`; this narrows the live groups.
+    // Deletion is expressed through `state`; this narrows the live groups.
     status: z.enum(['ACTIVE', 'EMPTY']).optional(),
-    schedule: z.enum(['WITH_SCHEDULE', 'WITHOUT_SCHEDULE']).optional(),
     /** Only groups this student is enrolled in. */
     studentId: uuidSchema.optional(),
     sort: groupSortFieldSchema.default('name'),
@@ -119,6 +117,7 @@ export const groupScheduleSchema = z.object({
   weekdays: z.array(z.number().int().min(0).max(6)),
   /** "HH:mm" in the pattern's own timezone. */
   localTime: z.string(),
+  durationMin: z.number().int().positive(),
   timezone: z.string(),
 });
 
@@ -150,11 +149,19 @@ export type GroupListResponse = z.infer<typeof groupListResponseSchema>;
 // Compact enrollment summary shown on the group page.
 export const groupEnrollmentSummarySchema = z.object({
   id: uuidSchema,
+  studentId: uuidSchema,
+  groupId: uuidSchema,
+  teacherId: uuidSchema,
   status: enrollmentStatusSchema,
   billingType: billingTypeSchema,
   priceMinor: z.number().int().nonnegative(),
-  currency: z.string(),
-  student: z.object({ id: uuidSchema, fullName: z.string() }),
+  currency: currencyCodeSchema,
+  cancellationDeadlineHours: z.number().int().nonnegative().nullable(),
+  student: z.object({
+    id: uuidSchema,
+    fullName: z.string(),
+    avatarKey: avatarKeySchema.nullable(),
+  }),
   teacher: z.object({ id: uuidSchema, name: z.string(), color: z.string().nullable() }),
 });
 

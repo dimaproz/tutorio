@@ -10,22 +10,14 @@ import { ParentCard } from './parent-card';
 import { ParentFormDialog } from './parent-form-dialog';
 import { ParentRowActions } from './parent-row-actions';
 import { DataTable } from '@/components/app/data-table';
-import {
-  PeopleCell,
-  PersonCell,
-  PhoneCell,
-  TelegramCell,
-} from '@/components/app/table-cells';
+import { PeopleCell, PersonCell, PhoneCell, TelegramCell } from '@/components/app/table-cells';
 import {
   ListPagination,
   ListSearchInput,
   useUpdateSearchParams,
 } from '@/components/app/list-controls';
 import { StudentFilterCombobox } from './student-filter-combobox';
-import {
-  PageHeader,
-  QueryErrorAlert,
-} from '@/components/app/page-shell';
+import { PageHeader, QueryErrorAlert } from '@/components/app/page-shell';
 import { Button } from '@/components/ui/button';
 import { CollectionEmptyState, CollectionToolbar, LoadingPanel } from '@/components/shared';
 import { parsePageParam } from '@/lib/api/filters';
@@ -33,7 +25,6 @@ import { useParentsQuery } from '@/lib/api/parents';
 
 export function ParentsList() {
   const t = useTranslations('parents');
-  const tSubject = useTranslations('subject');
   const searchParams = useSearchParams();
   const updateParams = useUpdateSearchParams();
   const [createOpen, setCreateOpen] = useState(false);
@@ -76,7 +67,6 @@ export function ParentsList() {
               id: student.id,
               fullName: student.fullName,
               avatarKey: student.avatarKey,
-              subtitle: student.subject ? tSubject(student.subject) : undefined,
             }))}
             hrefFor={(id) => `/app/students/${id}`}
           />
@@ -96,7 +86,7 @@ export function ParentsList() {
         ),
       },
     ],
-    [t, tSubject],
+    [t],
   );
 
   const items = parents.data?.items ?? [];

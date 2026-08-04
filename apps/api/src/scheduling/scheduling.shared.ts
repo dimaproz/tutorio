@@ -109,6 +109,7 @@ export function toSeriesResponse(row: SeriesRow): LessonSeriesResponse {
     priceMinor: row.priceMinor,
     currency: row.currency as LessonSeriesResponse['currency'],
     startDate: row.startDate.toISOString(),
+    endsAt: row.endsAt?.toISOString() ?? null,
     horizonMaterializedUntil: row.horizonMaterializedUntil.toISOString(),
     student: row.enrollment?.student ?? null,
     group: row.group,

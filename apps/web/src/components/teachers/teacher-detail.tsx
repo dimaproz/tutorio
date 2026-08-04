@@ -16,7 +16,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { BackButton } from '@/components/app/back-button';
 import { ConfirmDialog } from '@/components/app/confirm-dialog';
-import { InfoRow, ProfileHeader, ProfileTag, SectionTitle } from '@/components/app/detail-view';
+import { InfoRow, ProfileHeader, SectionTitle } from '@/components/app/detail-view';
 import { QueryErrorAlert, QueryRefreshIndicator } from '@/components/app/page-shell';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -33,7 +33,6 @@ export function TeacherDetail({ teacherId }: { teacherId: string }) {
   const t = useTranslations('teachers');
   const tDetail = useTranslations('teachers.detail');
   const tForm = useTranslations('teachers.form');
-  const tSubject = useTranslations('subject');
   const tCommon = useTranslations('common');
   const tErrors = useTranslations('errors');
   const locale = useLocale();
@@ -97,11 +96,6 @@ export function TeacherDetail({ teacherId }: { teacherId: string }) {
         fullName={data.fullName}
         subtitle={addedOn}
         badge={<TeacherStatusBadge status={data.status} />}
-        tags={data.subjects.map((subject) => (
-          <ProfileTag key={subject} icon={BookOpenIcon}>
-            {tSubject(subject)}
-          </ProfileTag>
-        ))}
       />
 
       <div className="grid gap-6 lg:grid-cols-3">

@@ -13,10 +13,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useLogoutMutation } from '@/lib/auth/client';
-import { nameInitials } from '@/lib/utils';
+import { cn, nameInitials } from '@/lib/utils';
 import { useSession } from './session-provider';
 
-export function UserMenu() {
+export function UserMenu({ className }: { className?: string }) {
   const t = useTranslations('app.userMenu');
   const tErrors = useTranslations('auth.errors');
   const router = useRouter();
@@ -40,7 +40,7 @@ export function UserMenu() {
           variant="ghost"
           size="icon"
           aria-label={t('label')}
-          className="size-11 rounded-full md:size-9"
+          className={cn('size-11 rounded-full md:size-9', className)}
         >
           <Avatar className="size-8">
             <AvatarFallback>{nameInitials(session.user.name)}</AvatarFallback>

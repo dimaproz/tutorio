@@ -18,6 +18,10 @@ function invalidateGroupGraph(queryClient: QueryClient) {
   void queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
   void queryClient.invalidateQueries({ queryKey: queryKeys.enrollments.all });
   void queryClient.invalidateQueries({ queryKey: queryKeys.students.all });
+  void queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all });
+  void queryClient.invalidateQueries({ queryKey: queryKeys.series.all });
+  void queryClient.invalidateQueries({ queryKey: queryKeys.packages.all });
+  void queryClient.invalidateQueries({ queryKey: queryKeys.payments.all });
   void queryClient.invalidateQueries({ queryKey: queryKeys.audit.all });
 }
 
@@ -33,7 +37,6 @@ export function useGroupsQuery(filters: GroupListFilters, enabled = true) {
           search: filters.search,
           state: filters.state,
           status: filters.status,
-          schedule: filters.schedule,
           studentId: filters.studentId,
           sort: filters.sort,
           order: filters.order,

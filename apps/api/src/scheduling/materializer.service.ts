@@ -23,6 +23,7 @@ type SeriesForMaterialize = Pick<
   | 'priceMinor'
   | 'currency'
   | 'startDate'
+  | 'endsAt'
   | 'horizonMaterializedUntil'
 >;
 
@@ -49,6 +50,13 @@ export class MaterializerService {
     horizonUntil: Date,
     from: Date = series.startDate,
   ): Promise<Date[]> {
+    const effectiveUntil =
+      series.endsAt && series.endsAt < horizonUntil
+        ? series.endsAt
+        : horizonUntil;
+    if (effectiveUntil <= from) {
+      return [];
+    }
     const existing = await tx.lesson.findMany({
       where: { seriesId: series.id },
       select: { startsAtUtc: true },
@@ -62,7 +70,7 @@ export class MaterializerService {
         startDate: series.startDate,
       },
       from,
-      horizonUntil,
+      horizonUntil: effectiveUntil,
       existingSlots: existing.map((row) => row.startsAtUtc),
     });
 
@@ -83,10 +91,10 @@ export class MaterializerService {
       });
     }
 
-    if (horizonUntil > series.horizonMaterializedUntil) {
+    if (effectiveUntil > series.horizonMaterializedUntil) {
       await tx.lessonSeries.update({
         where: { id: series.id },
-        data: { horizonMaterializedUntil: horizonUntil },
+        data: { horizonMaterializedUntil: effectiveUntil },
       });
     }
 

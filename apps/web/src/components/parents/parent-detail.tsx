@@ -32,7 +32,6 @@ export function ParentDetailView({ parentId }: { parentId: string }) {
   const t = useTranslations('parents');
   const tCommon = useTranslations('common');
   const tErrors = useTranslations('errors');
-  const tSubject = useTranslations('subject');
   const format = useDateFormatters();
   const router = useRouter();
 
@@ -171,7 +170,6 @@ export function ParentDetailView({ parentId }: { parentId: string }) {
                       <PersonMiniCard
                         avatarKey={student.avatarKey}
                         fullName={student.fullName}
-                        subtitle={student.subject ? tSubject(student.subject) : undefined}
                         badge={<StudentStatusBadge status={student.status} />}
                         href={`/app/students/${student.id}`}
                       />

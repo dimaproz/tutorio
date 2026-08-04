@@ -295,6 +295,8 @@ export class AuthService {
       mode: workspace.mode,
       defaultCurrency: workspace.defaultCurrency,
       cancellationDeadlineHours: workspace.cancellationDeadlineHours,
+      primaryColor: workspace.primaryColor,
+      secondaryColor: workspace.secondaryColor,
     };
   }
 

@@ -90,7 +90,6 @@ export const parentStudentRefSchema = z.object({
   id: uuidSchema,
   fullName: z.string(),
   avatarKey: avatarKeySchema.nullable(),
-  subject: z.string().nullable(),
   status: z.enum(['ACTIVE', 'ON_HOLD', 'ARCHIVED']),
 });
 

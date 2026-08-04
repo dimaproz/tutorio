@@ -38,7 +38,7 @@ function PackageCard({ item }: { item: PackageResponse }) {
       : 0;
 
   return (
-    <Link href={`/app/finance/${item.id}`} className="block">
+    <Link href={`/app/packages/${item.id}`} className="block">
       <Card className="transition-colors hover:border-primary/40">
         <CardContent className="flex flex-col gap-4 py-5">
           <div className="flex items-start justify-between gap-3">

@@ -56,9 +56,58 @@ describe('planPackage — by period', () => {
   });
 
   it('requires the full window', () => {
+    expect(() => planPackage({ sizingMode: 'BY_PERIOD', pricePerLessonMinor: 100 })).toThrow(
+      InvalidPackagePlanError,
+    );
+  });
+
+  it('rejects a period that contains no scheduled lessons', () => {
+    const startDate = new Date('2026-09-01T00:00:00.000Z');
     expect(() =>
-      planPackage({ sizingMode: 'BY_PERIOD', pricePerLessonMinor: 100 }),
+      planPackage({
+        sizingMode: 'BY_PERIOD',
+        pricePerLessonMinor: 100,
+        rules: [
+          {
+            weekdays: [6],
+            localTime: '10:00',
+            timezone: 'Europe/Paris',
+            startDate,
+          },
+        ],
+        startsAt: startDate,
+        endDate: new Date('2026-09-01T23:59:59.999Z'),
+      }),
     ).toThrow(InvalidPackagePlanError);
+  });
+});
+
+describe('planPackage - multiple slots', () => {
+  it('combines different weekday times through the inclusive end date', () => {
+    const startDate = new Date('2026-09-01T00:00:00.000Z');
+    const plan = planPackage({
+      sizingMode: 'BY_PERIOD',
+      pricePerLessonMinor: 100,
+      rules: [
+        {
+          weekdays: [1],
+          localTime: '09:00',
+          timezone: 'Europe/Paris',
+          startDate,
+        },
+        {
+          weekdays: [6],
+          localTime: '11:30',
+          timezone: 'Europe/Paris',
+          startDate,
+        },
+      ],
+      startsAt: startDate,
+      endDate: new Date('2026-09-12T23:59:59.999Z'),
+    });
+
+    expect(plan.lessonsTotal).toBe(3);
+    expect(plan.totalPriceMinor).toBe(300);
   });
 });
 

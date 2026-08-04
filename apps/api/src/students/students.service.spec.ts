@@ -39,7 +39,6 @@ const studentRow = {
   phone: null,
   timezone: 'Europe/Kyiv',
   telegramUsername: null,
-  subject: null,
   hourlyRateMinor: null,
   currency: null,
   status: 'ACTIVE' as const,

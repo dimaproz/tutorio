@@ -165,8 +165,7 @@ function requireCancellationAuthor(
   cancelledBy: z.infer<typeof cancelledBySchema> | undefined,
   ctx: z.RefinementCtx,
 ): void {
-  const isCancel =
-    status === 'CANCELLED_CHARGED' || status === 'CANCELLED_UNCHARGED';
+  const isCancel = status === 'CANCELLED_CHARGED' || status === 'CANCELLED_UNCHARGED';
   if (isCancel && cancelledBy == null) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
@@ -249,10 +248,10 @@ export const updateLessonSchema = z
   })
   .partial()
   .strict()
-  .refine(
-    (value) => (value.priceMinor == null) === (value.currency == null),
-    { message: 'priceMinor and currency must be provided together', path: ['currency'] },
-  );
+  .refine((value) => (value.priceMinor == null) === (value.currency == null), {
+    message: 'priceMinor and currency must be provided together',
+    path: ['currency'],
+  });
 
 export type UpdateLessonDto = z.infer<typeof updateLessonSchema>;
 
@@ -307,9 +306,7 @@ export const listLessonsQuerySchema = z
 export type ListLessonsQueryDto = z.infer<typeof listLessonsQuerySchema>;
 
 // Override conflict rejection on create/reschedule (double-booking on purpose).
-export const forceQuerySchema = z
-  .object({ force: z.coerce.boolean().default(false) })
-  .strict();
+export const forceQuerySchema = z.object({ force: z.coerce.boolean().default(false) }).strict();
 
 export type ForceQueryDto = z.infer<typeof forceQuerySchema>;
 
@@ -385,6 +382,7 @@ export const lessonSeriesResponseSchema = z.object({
   priceMinor: priceMinorSchema,
   currency: currencyCodeSchema,
   startDate: isoDateTimeSchema,
+  endsAt: isoDateTimeSchema.nullable(),
   horizonMaterializedUntil: isoDateTimeSchema,
   student: studentRefSchema.nullable(),
   group: groupRefSchema.nullable(),
@@ -396,8 +394,6 @@ export const lessonSeriesResponseSchema = z.object({
 
 export type LessonSeriesResponse = z.infer<typeof lessonSeriesResponseSchema>;
 
-export const lessonSeriesListResponseSchema = paginatedResponseSchema(
-  lessonSeriesResponseSchema,
-);
+export const lessonSeriesListResponseSchema = paginatedResponseSchema(lessonSeriesResponseSchema);
 
 export type LessonSeriesListResponse = z.infer<typeof lessonSeriesListResponseSchema>;

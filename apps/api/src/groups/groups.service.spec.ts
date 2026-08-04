@@ -51,7 +51,12 @@ function buildPrismaMock() {
         ...(data as object),
       })),
       update: jest.fn(),
+      updateMany: jest.fn(),
     },
+    lesson: { updateMany: jest.fn() },
+    lessonSeries: { updateMany: jest.fn() },
+    lessonPackage: { updateMany: jest.fn() },
+    payment: { updateMany: jest.fn() },
     workspace: {
       findUniqueOrThrow: jest.fn().mockResolvedValue({
         defaultCurrency: 'EUR',
@@ -209,5 +214,47 @@ describe('GroupsService roster reconciliation', () => {
       404,
     );
     expect(prisma.enrollment.create).not.toHaveBeenCalled();
+  });
+
+  it('removes the group graph and detaches enrolled students', async () => {
+    const { prisma, service } = buildService();
+
+    await service.softDelete(owner, GROUP_ID);
+
+    expect(prisma.lesson.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ groupId: GROUP_ID, deletedAt: null }),
+      }),
+    );
+    expect(prisma.lessonSeries.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ groupId: GROUP_ID, deletedAt: null }),
+      }),
+    );
+    expect(prisma.lessonPackage.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ groupId: GROUP_ID, deletedAt: null }),
+      }),
+    );
+    expect(prisma.payment.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          OR: [
+            { package: { is: { groupId: GROUP_ID } } },
+            { enrollment: { is: { groupId: GROUP_ID } } },
+          ],
+        }),
+      }),
+    );
+    expect(prisma.enrollment.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ groupId: null }),
+      }),
+    );
+    expect(prisma.group.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ deletedAt: expect.any(Date) }),
+      }),
+    );
   });
 });

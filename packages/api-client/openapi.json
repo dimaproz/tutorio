@@ -278,7 +278,7 @@
             "bearer": []
           }
         ],
-        "summary": "Update workspace default currency and cancellation deadline",
+        "summary": "Update workspace defaults and theme colours",
         "tags": [
           "workspaces"
         ]
@@ -512,42 +512,6 @@
             }
           },
           {
-            "name": "subject",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "MATH",
-                "ENGLISH",
-                "GERMAN",
-                "FRENCH",
-                "POLISH",
-                "UKRAINIAN_LANGUAGE",
-                "UKRAINIAN_LITERATURE",
-                "WORLD_LITERATURE",
-                "PHYSICS",
-                "CHEMISTRY",
-                "BIOLOGY",
-                "GEOGRAPHY",
-                "HISTORY",
-                "WORLD_HISTORY",
-                "HISTORY_OF_UKRAINE",
-                "COMPUTER_SCIENCE",
-                "ECONOMICS",
-                "LAW",
-                "MUSIC",
-                "ART",
-                "PHYSICAL_EDUCATION",
-                "NMT_PREP",
-                "ZNO_PREP",
-                "IELTS_PREP",
-                "TOEFL_PREP",
-                "SAT_PREP"
-              ]
-            }
-          },
-          {
             "name": "groupId",
             "required": false,
             "in": "query",
@@ -566,7 +530,6 @@
               "enum": [
                 "fullName",
                 "status",
-                "subject",
                 "hourlyRateMinor",
                 "phone",
                 "telegramUsername",
@@ -1445,18 +1408,6 @@
               "enum": [
                 "ACTIVE",
                 "EMPTY"
-              ]
-            }
-          },
-          {
-            "name": "schedule",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "WITH_SCHEDULE",
-                "WITHOUT_SCHEDULE"
               ]
             }
           },
@@ -2899,7 +2850,16 @@
       "post": {
         "description": "Creates the package, its opening purchase entry, per-member shares for a group, and (with a schedule) the recurring series behind it.",
         "operationId": "PackagesController_create",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "force",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -3392,6 +3352,14 @@
               },
               "cancellationDeadlineHours": {
                 "type": "integer"
+              },
+              "primaryColor": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$"
+              },
+              "secondaryColor": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$"
               }
             },
             "required": [
@@ -3400,7 +3368,9 @@
               "plan",
               "mode",
               "defaultCurrency",
-              "cancellationDeadlineHours"
+              "cancellationDeadlineHours",
+              "primaryColor",
+              "secondaryColor"
             ]
           },
           "role": {
@@ -3533,6 +3503,14 @@
               },
               "cancellationDeadlineHours": {
                 "type": "integer"
+              },
+              "primaryColor": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$"
+              },
+              "secondaryColor": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$"
               }
             },
             "required": [
@@ -3541,7 +3519,9 @@
               "plan",
               "mode",
               "defaultCurrency",
-              "cancellationDeadlineHours"
+              "cancellationDeadlineHours",
+              "primaryColor",
+              "secondaryColor"
             ]
           },
           "role": {
@@ -3590,6 +3570,14 @@
               },
               "cancellationDeadlineHours": {
                 "type": "integer"
+              },
+              "primaryColor": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$"
+              },
+              "secondaryColor": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$"
               }
             },
             "required": [
@@ -3598,7 +3586,9 @@
               "plan",
               "mode",
               "defaultCurrency",
-              "cancellationDeadlineHours"
+              "cancellationDeadlineHours",
+              "primaryColor",
+              "secondaryColor"
             ]
           },
           "role": {
@@ -3640,6 +3630,14 @@
               "SOLO",
               "SCHOOL"
             ]
+          },
+          "primaryColor": {
+            "type": "string",
+            "pattern": "^#[0-9A-Fa-f]{6}$"
+          },
+          "secondaryColor": {
+            "type": "string",
+            "pattern": "^#[0-9A-Fa-f]{6}$"
           }
         }
       },
@@ -3856,38 +3854,6 @@
                 "timezone": {
                   "type": "string"
                 },
-                "subject": {
-                  "type": "string",
-                  "enum": [
-                    "MATH",
-                    "ENGLISH",
-                    "GERMAN",
-                    "FRENCH",
-                    "POLISH",
-                    "UKRAINIAN_LANGUAGE",
-                    "UKRAINIAN_LITERATURE",
-                    "WORLD_LITERATURE",
-                    "PHYSICS",
-                    "CHEMISTRY",
-                    "BIOLOGY",
-                    "GEOGRAPHY",
-                    "HISTORY",
-                    "WORLD_HISTORY",
-                    "HISTORY_OF_UKRAINE",
-                    "COMPUTER_SCIENCE",
-                    "ECONOMICS",
-                    "LAW",
-                    "MUSIC",
-                    "ART",
-                    "PHYSICAL_EDUCATION",
-                    "NMT_PREP",
-                    "ZNO_PREP",
-                    "IELTS_PREP",
-                    "TOEFL_PREP",
-                    "SAT_PREP"
-                  ],
-                  "nullable": true
-                },
                 "status": {
                   "type": "string",
                   "enum": [
@@ -3953,7 +3919,6 @@
                 "phone",
                 "telegramUsername",
                 "timezone",
-                "subject",
                 "status",
                 "hourlyRateMinor",
                 "currency",
@@ -4022,37 +3987,6 @@
             "minLength": 2,
             "maxLength": 32,
             "pattern": "^@?\\w{2,32}$"
-          },
-          "subject": {
-            "type": "string",
-            "enum": [
-              "MATH",
-              "ENGLISH",
-              "GERMAN",
-              "FRENCH",
-              "POLISH",
-              "UKRAINIAN_LANGUAGE",
-              "UKRAINIAN_LITERATURE",
-              "WORLD_LITERATURE",
-              "PHYSICS",
-              "CHEMISTRY",
-              "BIOLOGY",
-              "GEOGRAPHY",
-              "HISTORY",
-              "WORLD_HISTORY",
-              "HISTORY_OF_UKRAINE",
-              "COMPUTER_SCIENCE",
-              "ECONOMICS",
-              "LAW",
-              "MUSIC",
-              "ART",
-              "PHYSICAL_EDUCATION",
-              "NMT_PREP",
-              "ZNO_PREP",
-              "IELTS_PREP",
-              "TOEFL_PREP",
-              "SAT_PREP"
-            ]
           },
           "hourlyRateMinor": {
             "type": "integer",
@@ -4147,7 +4081,6 @@
           "phone",
           "timezone",
           "telegramUsername",
-          "subject",
           "currency",
           "languageLevel",
           "knowledgeLevel",
@@ -4182,38 +4115,6 @@
           },
           "telegramUsername": {
             "type": "string",
-            "nullable": true
-          },
-          "subject": {
-            "type": "string",
-            "enum": [
-              "MATH",
-              "ENGLISH",
-              "GERMAN",
-              "FRENCH",
-              "POLISH",
-              "UKRAINIAN_LANGUAGE",
-              "UKRAINIAN_LITERATURE",
-              "WORLD_LITERATURE",
-              "PHYSICS",
-              "CHEMISTRY",
-              "BIOLOGY",
-              "GEOGRAPHY",
-              "HISTORY",
-              "WORLD_HISTORY",
-              "HISTORY_OF_UKRAINE",
-              "COMPUTER_SCIENCE",
-              "ECONOMICS",
-              "LAW",
-              "MUSIC",
-              "ART",
-              "PHYSICAL_EDUCATION",
-              "NMT_PREP",
-              "ZNO_PREP",
-              "IELTS_PREP",
-              "TOEFL_PREP",
-              "SAT_PREP"
-            ],
             "nullable": true
           },
           "hourlyRateMinor": {
@@ -4362,7 +4263,6 @@
           "phone",
           "timezone",
           "telegramUsername",
-          "subject",
           "hourlyRateMinor",
           "currency",
           "status",
@@ -4405,38 +4305,6 @@
           },
           "telegramUsername": {
             "type": "string",
-            "nullable": true
-          },
-          "subject": {
-            "type": "string",
-            "enum": [
-              "MATH",
-              "ENGLISH",
-              "GERMAN",
-              "FRENCH",
-              "POLISH",
-              "UKRAINIAN_LANGUAGE",
-              "UKRAINIAN_LITERATURE",
-              "WORLD_LITERATURE",
-              "PHYSICS",
-              "CHEMISTRY",
-              "BIOLOGY",
-              "GEOGRAPHY",
-              "HISTORY",
-              "WORLD_HISTORY",
-              "HISTORY_OF_UKRAINE",
-              "COMPUTER_SCIENCE",
-              "ECONOMICS",
-              "LAW",
-              "MUSIC",
-              "ART",
-              "PHYSICAL_EDUCATION",
-              "NMT_PREP",
-              "ZNO_PREP",
-              "IELTS_PREP",
-              "TOEFL_PREP",
-              "SAT_PREP"
-            ],
             "nullable": true
           },
           "hourlyRateMinor": {
@@ -4681,7 +4549,6 @@
           "phone",
           "timezone",
           "telegramUsername",
-          "subject",
           "hourlyRateMinor",
           "currency",
           "status",
@@ -4729,38 +4596,6 @@
             "minLength": 2,
             "maxLength": 32,
             "pattern": "^@?\\w{2,32}$",
-            "nullable": true
-          },
-          "subject": {
-            "type": "string",
-            "enum": [
-              "MATH",
-              "ENGLISH",
-              "GERMAN",
-              "FRENCH",
-              "POLISH",
-              "UKRAINIAN_LANGUAGE",
-              "UKRAINIAN_LITERATURE",
-              "WORLD_LITERATURE",
-              "PHYSICS",
-              "CHEMISTRY",
-              "BIOLOGY",
-              "GEOGRAPHY",
-              "HISTORY",
-              "WORLD_HISTORY",
-              "HISTORY_OF_UKRAINE",
-              "COMPUTER_SCIENCE",
-              "ECONOMICS",
-              "LAW",
-              "MUSIC",
-              "ART",
-              "PHYSICAL_EDUCATION",
-              "NMT_PREP",
-              "ZNO_PREP",
-              "IELTS_PREP",
-              "TOEFL_PREP",
-              "SAT_PREP"
-            ],
             "nullable": true
           },
           "hourlyRateMinor": {
@@ -4930,10 +4765,6 @@
                         ],
                         "nullable": true
                       },
-                      "subject": {
-                        "type": "string",
-                        "nullable": true
-                      },
                       "status": {
                         "type": "string",
                         "enum": [
@@ -4947,7 +4778,6 @@
                       "id",
                       "fullName",
                       "avatarKey",
-                      "subject",
                       "status"
                     ]
                   }
@@ -5201,10 +5031,6 @@
                   ],
                   "nullable": true
                 },
-                "subject": {
-                  "type": "string",
-                  "nullable": true
-                },
                 "status": {
                   "type": "string",
                   "enum": [
@@ -5218,7 +5044,6 @@
                 "id",
                 "fullName",
                 "avatarKey",
-                "subject",
                 "status"
               ]
             }
@@ -5322,40 +5147,6 @@
                   "type": "string",
                   "nullable": true
                 },
-                "subjects": {
-                  "type": "array",
-                  "items": {
-                    "type": "string",
-                    "enum": [
-                      "MATH",
-                      "ENGLISH",
-                      "GERMAN",
-                      "FRENCH",
-                      "POLISH",
-                      "UKRAINIAN_LANGUAGE",
-                      "UKRAINIAN_LITERATURE",
-                      "WORLD_LITERATURE",
-                      "PHYSICS",
-                      "CHEMISTRY",
-                      "BIOLOGY",
-                      "GEOGRAPHY",
-                      "HISTORY",
-                      "WORLD_HISTORY",
-                      "HISTORY_OF_UKRAINE",
-                      "COMPUTER_SCIENCE",
-                      "ECONOMICS",
-                      "LAW",
-                      "MUSIC",
-                      "ART",
-                      "PHYSICAL_EDUCATION",
-                      "NMT_PREP",
-                      "ZNO_PREP",
-                      "IELTS_PREP",
-                      "TOEFL_PREP",
-                      "SAT_PREP"
-                    ]
-                  }
-                },
                 "bio": {
                   "type": "string",
                   "nullable": true
@@ -5443,7 +5234,6 @@
                 "email",
                 "phone",
                 "telegramUsername",
-                "subjects",
                 "bio",
                 "defaultRateMinor",
                 "currency",
@@ -5510,41 +5300,6 @@
           "telegramUsername": {
             "type": "string",
             "maxLength": 64
-          },
-          "subjects": {
-            "type": "array",
-            "maxItems": 30,
-            "items": {
-              "type": "string",
-              "enum": [
-                "MATH",
-                "ENGLISH",
-                "GERMAN",
-                "FRENCH",
-                "POLISH",
-                "UKRAINIAN_LANGUAGE",
-                "UKRAINIAN_LITERATURE",
-                "WORLD_LITERATURE",
-                "PHYSICS",
-                "CHEMISTRY",
-                "BIOLOGY",
-                "GEOGRAPHY",
-                "HISTORY",
-                "WORLD_HISTORY",
-                "HISTORY_OF_UKRAINE",
-                "COMPUTER_SCIENCE",
-                "ECONOMICS",
-                "LAW",
-                "MUSIC",
-                "ART",
-                "PHYSICAL_EDUCATION",
-                "NMT_PREP",
-                "ZNO_PREP",
-                "IELTS_PREP",
-                "TOEFL_PREP",
-                "SAT_PREP"
-              ]
-            }
           },
           "bio": {
             "type": "string",
@@ -5633,40 +5388,6 @@
             "type": "string",
             "nullable": true
           },
-          "subjects": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "MATH",
-                "ENGLISH",
-                "GERMAN",
-                "FRENCH",
-                "POLISH",
-                "UKRAINIAN_LANGUAGE",
-                "UKRAINIAN_LITERATURE",
-                "WORLD_LITERATURE",
-                "PHYSICS",
-                "CHEMISTRY",
-                "BIOLOGY",
-                "GEOGRAPHY",
-                "HISTORY",
-                "WORLD_HISTORY",
-                "HISTORY_OF_UKRAINE",
-                "COMPUTER_SCIENCE",
-                "ECONOMICS",
-                "LAW",
-                "MUSIC",
-                "ART",
-                "PHYSICAL_EDUCATION",
-                "NMT_PREP",
-                "ZNO_PREP",
-                "IELTS_PREP",
-                "TOEFL_PREP",
-                "SAT_PREP"
-              ]
-            }
-          },
           "bio": {
             "type": "string",
             "nullable": true
@@ -5749,7 +5470,6 @@
           "email",
           "phone",
           "telegramUsername",
-          "subjects",
           "bio",
           "defaultRateMinor",
           "currency",
@@ -5788,41 +5508,6 @@
             "type": "string",
             "maxLength": 64,
             "nullable": true
-          },
-          "subjects": {
-            "type": "array",
-            "maxItems": 30,
-            "items": {
-              "type": "string",
-              "enum": [
-                "MATH",
-                "ENGLISH",
-                "GERMAN",
-                "FRENCH",
-                "POLISH",
-                "UKRAINIAN_LANGUAGE",
-                "UKRAINIAN_LITERATURE",
-                "WORLD_LITERATURE",
-                "PHYSICS",
-                "CHEMISTRY",
-                "BIOLOGY",
-                "GEOGRAPHY",
-                "HISTORY",
-                "WORLD_HISTORY",
-                "HISTORY_OF_UKRAINE",
-                "COMPUTER_SCIENCE",
-                "ECONOMICS",
-                "LAW",
-                "MUSIC",
-                "ART",
-                "PHYSICAL_EDUCATION",
-                "NMT_PREP",
-                "ZNO_PREP",
-                "IELTS_PREP",
-                "TOEFL_PREP",
-                "SAT_PREP"
-              ]
-            }
           },
           "bio": {
             "type": "string",
@@ -5933,8 +5618,7 @@
                   "type": "string",
                   "enum": [
                     "ACTIVE",
-                    "EMPTY",
-                    "ARCHIVED"
+                    "EMPTY"
                   ]
                 },
                 "activeStudentCount": {
@@ -5996,6 +5680,11 @@
                       "localTime": {
                         "type": "string"
                       },
+                      "durationMin": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "exclusiveMinimum": true
+                      },
                       "timezone": {
                         "type": "string"
                       }
@@ -6003,6 +5692,7 @@
                     "required": [
                       "weekdays",
                       "localTime",
+                      "durationMin",
                       "timezone"
                     ]
                   }
@@ -6224,6 +5914,18 @@
                   "type": "string",
                   "format": "uuid"
                 },
+                "studentId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "groupId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "teacherId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
                 "status": {
                   "type": "string",
                   "enum": [
@@ -6246,7 +5948,20 @@
                   "exclusiveMinimum": false
                 },
                 "currency": {
-                  "type": "string"
+                  "type": "string",
+                  "enum": [
+                    "EUR",
+                    "UAH",
+                    "PLN",
+                    "USD",
+                    "GBP"
+                  ]
+                },
+                "cancellationDeadlineHours": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false,
+                  "nullable": true
                 },
                 "student": {
                   "type": "object",
@@ -6257,11 +5972,28 @@
                     },
                     "fullName": {
                       "type": "string"
+                    },
+                    "avatarKey": {
+                      "type": "string",
+                      "enum": [
+                        "user-1",
+                        "user-2",
+                        "user-3",
+                        "user-4",
+                        "user-5",
+                        "user-6",
+                        "user-7",
+                        "user-8",
+                        "user-9",
+                        "user-10"
+                      ],
+                      "nullable": true
                     }
                   },
                   "required": [
                     "id",
-                    "fullName"
+                    "fullName",
+                    "avatarKey"
                   ]
                 },
                 "teacher": {
@@ -6288,10 +6020,14 @@
               },
               "required": [
                 "id",
+                "studentId",
+                "groupId",
+                "teacherId",
                 "status",
                 "billingType",
                 "priceMinor",
                 "currency",
+                "cancellationDeadlineHours",
                 "student",
                 "teacher"
               ]
@@ -7531,6 +7267,11 @@
                   "type": "string",
                   "format": "date-time"
                 },
+                "endsAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                },
                 "horizonMaterializedUntil": {
                   "type": "string",
                   "format": "date-time"
@@ -7618,6 +7359,7 @@
                 "priceMinor",
                 "currency",
                 "startDate",
+                "endsAt",
                 "horizonMaterializedUntil",
                 "student",
                 "group",
@@ -7812,6 +7554,11 @@
             "type": "string",
             "format": "date-time"
           },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "horizonMaterializedUntil": {
             "type": "string",
             "format": "date-time"
@@ -7899,6 +7646,7 @@
           "priceMinor",
           "currency",
           "startDate",
+          "endsAt",
           "horizonMaterializedUntil",
           "student",
           "group",
@@ -8576,21 +8324,30 @@
           "schedule": {
             "type": "object",
             "properties": {
-              "weekdays": {
+              "slots": {
                 "type": "array",
                 "minItems": 1,
                 "maxItems": 7,
                 "items": {
-                  "type": "integer",
-                  "minimum": 0,
-                  "exclusiveMinimum": false,
-                  "maximum": 6,
-                  "exclusiveMaximum": false
+                  "type": "object",
+                  "properties": {
+                    "weekday": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": false,
+                      "maximum": 6,
+                      "exclusiveMaximum": false
+                    },
+                    "localTime": {
+                      "type": "string",
+                      "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+                    }
+                  },
+                  "required": [
+                    "weekday",
+                    "localTime"
+                  ]
                 }
-              },
-              "localTime": {
-                "type": "string",
-                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
               },
               "timezone": {
                 "type": "string",
@@ -8609,11 +8366,31 @@
               }
             },
             "required": [
-              "weekdays",
-              "localTime",
+              "slots",
               "timezone",
               "durationMin",
               "startDate"
+            ],
+            "nullable": true
+          },
+          "initialPayment": {
+            "type": "object",
+            "properties": {
+              "amountMinor": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false,
+                "maximum": 2147483647,
+                "exclusiveMaximum": false
+              },
+              "paidAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "amountMinor",
+              "paidAt"
             ],
             "nullable": true
           }

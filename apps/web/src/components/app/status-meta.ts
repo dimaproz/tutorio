@@ -6,9 +6,11 @@ import {
   CircleSlashIcon,
   CircleXIcon,
   TreePalmIcon,
+  UsersRoundIcon,
 } from 'lucide-react';
 import type {
   EnrollmentStatusDto,
+  GroupStatusDto,
   LessonStatusDto,
   StudentStatusDto,
   TeacherStatusDto,
@@ -18,12 +20,7 @@ import type {
 // filter all read it, so a status looks the same everywhere it appears.
 // Lifecycle names map to configurable semantic theme roles, never to a colour.
 export type StatusTone =
-  | 'primary'
-  | 'warning'
-  | 'secondary'
-  | 'destructive'
-  | 'success'
-  | 'neutral';
+  'primary' | 'warning' | 'secondary' | 'destructive' | 'success' | 'neutral';
 
 export type StatusIcon = ComponentType<{ className?: string }>;
 
@@ -59,6 +56,11 @@ export const ENROLLMENT_STATUS_META: Record<EnrollmentStatusDto, StatusMeta> = {
   ACTIVE: { tone: 'primary', icon: CircleCheckIcon },
   PAUSED: { tone: 'warning', icon: TreePalmIcon },
   ARCHIVED: { tone: 'secondary', icon: ArchiveIcon },
+};
+
+export const GROUP_STATUS_META: Record<GroupStatusDto, StatusMeta> = {
+  ACTIVE: { tone: 'primary', icon: CircleCheckIcon },
+  EMPTY: { tone: 'warning', icon: UsersRoundIcon },
 };
 
 // A charged cancellation still costs the student a lesson, so it reads as a

@@ -5,10 +5,11 @@ import { useSearchParams } from 'next/navigation';
 import type { ColumnDef } from '@tanstack/react-table';
 import { PlusIcon, UsersIcon } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { STUDENT_SUBJECTS, type StudentListItem } from '@tutorio/validation';
+import type { StudentListItem } from '@tutorio/validation';
 import { StudentCard } from './student-card';
 import { StudentFormDialog } from './student-form-dialog';
 import { StudentRowActions } from './student-row-actions';
+import { StudentsListSkeleton } from './students-list-skeleton';
 import { StudentStatusBadge } from '@/components/app/status-badges';
 import { STUDENT_STATUS_META } from '@/components/app/status-meta';
 import { DataTable } from '@/components/app/data-table';
@@ -21,7 +22,7 @@ import {
 } from '@/components/app/list-controls';
 import { PageHeader, QueryErrorAlert } from '@/components/app/page-shell';
 import { Button } from '@/components/ui/button';
-import { CollectionEmptyState, CollectionToolbar, LoadingPanel } from '@/components/shared';
+import { CollectionEmptyState, CollectionToolbar } from '@/components/shared';
 import { parsePageParam } from '@/lib/api/filters';
 import { useStudentsQuery } from '@/lib/api/students';
 import { useGroupsQuery } from '@/lib/api/groups';
@@ -32,7 +33,6 @@ const STUDENT_STATUSES = ['ACTIVE', 'ON_HOLD', 'ARCHIVED'] as const;
 
 export function StudentsList() {
   const t = useTranslations('students');
-  const tSubject = useTranslations('subject');
   const tStatus = useTranslations('studentStatus');
   const tFilters = useTranslations('students.filters');
   const tCommon = useTranslations('common');
@@ -43,7 +43,6 @@ export function StudentsList() {
   const page = parsePageParam(searchParams.get('page'));
   const search = searchParams.get('search')?.trim() || undefined;
   const status = searchParams.get('status') || undefined;
-  const subject = searchParams.get('subject') || undefined;
   const groupId = searchParams.get('groupId') || undefined;
 
   // `fullName` matches the API default, so an unsorted URL stays clean.
@@ -52,7 +51,6 @@ export function StudentsList() {
     page,
     search,
     status,
-    subject,
     groupId,
     sort: sort.field,
     order: sort.order,
@@ -64,7 +62,6 @@ export function StudentsList() {
     label: tStatus(value),
     ...STUDENT_STATUS_META[value],
   }));
-  const subjectOptions = STUDENT_SUBJECTS.map((value) => ({ value, label: tSubject(value) }));
   const groupOptions = (groups.data?.items ?? []).map((group) => ({
     value: group.id,
     label: group.name,
@@ -81,7 +78,6 @@ export function StudentsList() {
             avatarKey={row.original.avatarKey}
             fullName={row.original.fullName}
             href={`/app/students/${row.original.id}`}
-            subtitle={row.original.subject ? tSubject(row.original.subject) : undefined}
           />
         ),
       },
@@ -144,7 +140,7 @@ export function StudentsList() {
         ),
       },
     ],
-    [t, tSubject, tCommon, locale],
+    [t, tCommon, locale],
   );
 
   const items = students.data?.items ?? [];
@@ -172,12 +168,6 @@ export function StudentsList() {
           label={tFilters('statusAll')}
         />
         <ListSelectFilter
-          paramKey="subject"
-          value={subject}
-          options={subjectOptions}
-          label={tFilters('subjectAll')}
-        />
-        <ListSelectFilter
           paramKey="groupId"
           value={groupId}
           options={groupOptions}
@@ -185,7 +175,9 @@ export function StudentsList() {
         />
       </CollectionToolbar>
 
-      {students.isPending ? <LoadingPanel size="lg" /> : null}
+      {students.isPending ? (
+        <StudentsListSkeleton caption={t('tableCaption')} loadingLabel={tCommon('loading')} />
+      ) : null}
 
       {students.isError ? (
         <QueryErrorAlert
