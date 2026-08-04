@@ -2,6 +2,7 @@ import { CalendarDaysIcon } from 'lucide-react';
 import { EntityAvatar } from '@/components/app/entity-avatar';
 import { sectionToneClass, type SectionTone } from '@/components/app/section-tone';
 import { CardTitle } from '@/components/ui/card';
+import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle } from '@/components/ui/item';
 import { cn } from '@/lib/utils';
 
 type IconType = React.ComponentType<{ className?: string }>;
@@ -86,7 +87,7 @@ export function InfoRow({
 }) {
   const value = href ? (
     <a
-      className="truncate text-sm font-medium underline-offset-4 transition-colors hover:text-primary hover:underline"
+      className="truncate font-medium text-foreground transition-colors hover:text-primary"
       href={href}
       target={external ? '_blank' : undefined}
       rel={external ? 'noopener noreferrer' : undefined}
@@ -94,27 +95,24 @@ export function InfoRow({
       {children}
     </a>
   ) : (
-    <span className="truncate text-sm font-medium">{children}</span>
+    <span className="truncate font-medium text-foreground">{children}</span>
   );
   return (
-    <div className="flex items-center gap-3 rounded-xl border p-3">
-      <span
-        className={cn(
-          'grid size-10 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground',
-          accent && 'bg-success/10 text-success',
-        )}
-      >
-        <Icon className="size-5" />
-      </span>
-      <div className="flex min-w-0 flex-col">
-        <span className="text-xs text-muted-foreground">{label}</span>
-        {value}
-      </div>
-    </div>
+    <Item variant="outline">
+      <ItemMedia variant="icon" className={accent ? 'bg-success/10 text-success' : undefined}>
+        <Icon aria-hidden="true" />
+      </ItemMedia>
+      <ItemContent>
+        <ItemTitle className="font-normal text-muted-foreground">{label}</ItemTitle>
+        <ItemDescription className="[&>a]:no-underline [&>a:hover]:no-underline">
+          {value}
+        </ItemDescription>
+      </ItemContent>
+    </Item>
   );
 }
 
-// Small pill used in a profile header for subject / level / age / grade.
+// Small pill used in a profile header for level / age / grade.
 export function ProfileTag({
   icon: Icon,
   children,

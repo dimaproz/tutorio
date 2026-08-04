@@ -36,7 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
+import { LoadingPanel } from '@/components/shared';
 import { Spinner } from '@/components/ui/spinner';
 import { PageHeader } from '@/components/app/page-shell';
 import { useIsSoloWorkspace } from '@/components/app/session-provider';
@@ -269,13 +269,7 @@ export function CalendarView() {
         ) : null}
 
         {lessons.isPending ? (
-          <div className="flex flex-col gap-2 p-2" aria-busy="true">
-            <div className="flex items-center justify-between gap-3">
-              <Skeleton className="h-9 w-48" />
-              <Skeleton className="h-9 w-64" />
-            </div>
-            <Skeleton className="h-[62vh] w-full" />
-          </div>
+          <LoadingPanel size="lg" className="m-2 h-[70vh] rounded-xl border-0" />
         ) : (
           <div className="tutorio-calendar h-[70vh]">
             <DnDCalendar

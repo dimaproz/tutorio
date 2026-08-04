@@ -18,7 +18,7 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { Progress } from '@/components/ui/progress';
-import { Skeleton } from '@/components/ui/skeleton';
+import { LoadingPanel } from '@/components/shared';
 import { usePackagesQuery } from '@/lib/api/packages';
 import { formatMoneyDisplay } from '@/lib/money';
 import { PackageFormDialog } from './package-form-dialog';
@@ -38,7 +38,7 @@ function PackageCard({ item }: { item: PackageResponse }) {
       : 0;
 
   return (
-    <Link href={`/app/finance/${item.id}`} className="block">
+    <Link href={`/app/packages/${item.id}`} className="block">
       <Card className="transition-colors hover:border-primary/40">
         <CardContent className="flex flex-col gap-4 py-5">
           <div className="flex items-start justify-between gap-3">
@@ -94,24 +94,7 @@ export function PackagesList() {
       />
 
       {packages.isPending ? (
-        // Card-shaped placeholders so the grid does not jump when data lands.
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" aria-busy="true">
-          {Array.from({ length: 6 }, (_, index) => (
-            <Card key={index}>
-              <CardContent className="flex flex-col gap-4 py-5">
-                <div className="flex items-start justify-between gap-3">
-                  <Skeleton className="h-5 w-32" />
-                  <Skeleton className="h-5 w-16 rounded-full" />
-                </div>
-                <Skeleton className="h-2 w-full" />
-                <div className="flex justify-between gap-2">
-                  <Skeleton className="h-4 w-20" />
-                  <Skeleton className="h-4 w-24" />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <LoadingPanel size="lg" className="min-h-72" />
       ) : packages.isError ? (
         <QueryErrorAlert
           error={packages.error}

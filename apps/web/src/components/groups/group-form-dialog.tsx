@@ -32,6 +32,7 @@ export function GroupFormDialog({
       onOpenChange={onOpenChange}
       title={isEdit ? t('editTitle') : t('createTitle')}
       description={isEdit ? t('editSubtitle') : t('createSubtitle')}
+      width="md"
       isLoading={isEdit && group.isPending}
     >
       <GroupForm

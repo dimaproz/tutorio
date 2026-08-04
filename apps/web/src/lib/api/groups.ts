@@ -12,14 +12,17 @@ import { gatewayFetch, type GatewayError } from '@/lib/auth/client';
 import { buildQueryString } from './filters';
 import { queryKeys, type GroupListFilters } from './keys';
 
-function invalidateGroupGraph(queryClient: QueryClient, groupId?: string) {
+// `groups.all` is a key prefix, so it already covers every group list and
+// detail — invalidating a detail key on top of it only buys a second refetch.
+function invalidateGroupGraph(queryClient: QueryClient) {
   void queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
   void queryClient.invalidateQueries({ queryKey: queryKeys.enrollments.all });
   void queryClient.invalidateQueries({ queryKey: queryKeys.students.all });
+  void queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all });
+  void queryClient.invalidateQueries({ queryKey: queryKeys.series.all });
+  void queryClient.invalidateQueries({ queryKey: queryKeys.packages.all });
+  void queryClient.invalidateQueries({ queryKey: queryKeys.payments.all });
   void queryClient.invalidateQueries({ queryKey: queryKeys.audit.all });
-  if (groupId) {
-    void queryClient.invalidateQueries({ queryKey: queryKeys.groups.detail(groupId) });
-  }
 }
 
 export function useGroupsQuery(filters: GroupListFilters, enabled = true) {
@@ -33,6 +36,10 @@ export function useGroupsQuery(filters: GroupListFilters, enabled = true) {
           pageSize: filters.pageSize,
           search: filters.search,
           state: filters.state,
+          status: filters.status,
+          studentId: filters.studentId,
+          sort: filters.sort,
+          order: filters.order,
         })}`,
       ),
     placeholderData: (previous) => previous,
@@ -55,8 +62,8 @@ export function useCreateGroupMutation() {
         method: 'POST',
         body: JSON.stringify(dto),
       }),
-    onSuccess: (group) => {
-      invalidateGroupGraph(queryClient, group.id);
+    onSuccess: () => {
+      invalidateGroupGraph(queryClient);
     },
   });
 }
@@ -70,7 +77,7 @@ export function useUpdateGroupMutation(groupId: string) {
         body: JSON.stringify(dto),
       }),
     onSuccess: () => {
-      invalidateGroupGraph(queryClient, groupId);
+      invalidateGroupGraph(queryClient);
     },
   });
 }
@@ -80,8 +87,8 @@ export function useDeleteGroupMutation() {
   return useMutation<void, GatewayError, string>({
     mutationFn: (groupId) =>
       gatewayFetch<void>(`/api/backend/groups/${groupId}`, { method: 'DELETE' }),
-    onSuccess: (_result, groupId) => {
-      invalidateGroupGraph(queryClient, groupId);
+    onSuccess: () => {
+      invalidateGroupGraph(queryClient);
     },
   });
 }
@@ -91,8 +98,8 @@ export function useRestoreGroupMutation() {
   return useMutation<GroupResponse, GatewayError, string>({
     mutationFn: (groupId) =>
       gatewayFetch<GroupResponse>(`/api/backend/groups/${groupId}/restore`, { method: 'POST' }),
-    onSuccess: (group) => {
-      invalidateGroupGraph(queryClient, group.id);
+    onSuccess: () => {
+      invalidateGroupGraph(queryClient);
     },
   });
 }

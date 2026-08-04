@@ -29,12 +29,21 @@ export interface ExpansionWindow {
 }
 
 const LOCAL_TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
+const LOCAL_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 export class InvalidLocalTimeError extends Error {
   constructor(value: string) {
     super(`Invalid local time (expected "HH:mm"): "${value}"`);
     this.name = 'InvalidLocalTimeError';
   }
+}
+
+/** Converts a calendar date at local midnight in `timezone` to a UTC instant. */
+export function localDateStartUtc(localDate: string, timezone: string): Date {
+  if (!LOCAL_DATE_RE.test(localDate)) {
+    throw new InvalidLocalTimeError(localDate);
+  }
+  return fromZonedTime(`${localDate}T00:00:00`, timezone);
 }
 
 interface CalendarDate {

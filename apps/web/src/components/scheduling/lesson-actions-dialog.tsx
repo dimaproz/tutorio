@@ -55,16 +55,21 @@ import { useDateFormatters } from '@/lib/i18n/format';
 const CANCELLED_BY: CancelledByDto[] = ['TEACHER', 'STUDENT', 'GROUP'];
 
 /** Which panel of the dialog is showing. */
-type Mode = 'menu' | 'cancel' | 'reschedule';
+export type LessonDialogMode = 'menu' | 'cancel' | 'reschedule';
+
+type Mode = LessonDialogMode;
 
 export function LessonActionsDialog({
   open,
   onOpenChange,
   lesson,
+  initialMode = 'menu',
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   lesson: LessonResponse | null;
+  /** Which panel to open on: a row menu can jump straight to reschedule. */
+  initialMode?: Mode;
 }) {
   const t = useTranslations('scheduling.actions');
   const tBy = useTranslations('scheduling.cancelledBy');
@@ -102,7 +107,7 @@ export function LessonActionsDialog({
   const [openedFor, setOpenedFor] = useState<string | null>(null);
   if (open && lesson && openedFor !== lesson.id) {
     setOpenedFor(lesson.id);
-    setMode('menu');
+    setMode(initialMode);
     setCancelledBy('STUDENT');
     setReason('');
     setNotes(lesson.notes ?? '');

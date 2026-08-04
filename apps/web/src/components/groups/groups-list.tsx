@@ -6,16 +6,21 @@ import { LayersIcon, PlusIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { GroupCard } from './group-card';
 import { GroupFormDialog } from './group-form-dialog';
-import { ListPagination, ListSearchInput, ListStateFilter } from '@/components/app/list-controls';
-import { ListSkeleton, PageHeader, QueryErrorAlert } from '@/components/app/page-shell';
+import { ListPagination, ListSearchInput, ListSelectFilter } from '@/components/app/list-controls';
+import { PageHeader, QueryErrorAlert } from '@/components/app/page-shell';
 import { useSession } from '@/components/app/session-provider';
 import { Button } from '@/components/ui/button';
-import { CollectionEmptyState, CollectionToolbar } from '@/components/shared';
+import { CollectionEmptyState, CollectionToolbar, LoadingPanel } from '@/components/shared';
 import { parsePageParam, parseStateParam } from '@/lib/api/filters';
 import { useGroupsQuery } from '@/lib/api/groups';
+import { useStudentsQuery } from '@/lib/api/students';
+
+const GROUP_STATUSES = ['ACTIVE', 'EMPTY'] as const;
 
 export function GroupsList() {
   const t = useTranslations('groups');
+  const tStatus = useTranslations('groups.status');
+  const tFilters = useTranslations('groups.filters');
   const searchParams = useSearchParams();
   const session = useSession();
   const isOwner = session.role === 'OWNER';
@@ -24,8 +29,28 @@ export function GroupsList() {
   const page = parsePageParam(searchParams.get('page'));
   const search = searchParams.get('search')?.trim() || undefined;
   const state = parseStateParam(searchParams.get('state'), isOwner);
+  const status = searchParams.get('status') || undefined;
+  const studentId = searchParams.get('studentId') || undefined;
 
-  const groups = useGroupsQuery({ page, search, state });
+  const groups = useGroupsQuery({
+    page,
+    search,
+    state,
+    status,
+    studentId,
+    sort: 'name',
+    order: 'asc',
+  });
+  const students = useStudentsQuery({ page: 1, pageSize: 100 });
+
+  const statusOptions = GROUP_STATUSES.map((value) => ({
+    value,
+    label: tStatus(value),
+  }));
+  const studentOptions = (students.data?.items ?? []).map((student) => ({
+    value: student.id,
+    label: student.fullName,
+  }));
 
   const items = groups.data?.items ?? [];
   const showEmpty = groups.isSuccess && items.length === 0;
@@ -45,10 +70,21 @@ export function GroupsList() {
 
       <CollectionToolbar>
         <ListSearchInput label={t('searchLabel')} placeholder={t('searchPlaceholder')} />
-        {isOwner ? <ListStateFilter value={state} /> : null}
+        <ListSelectFilter
+          paramKey="status"
+          value={status}
+          options={statusOptions}
+          label={tFilters('statusAll')}
+        />
+        <ListSelectFilter
+          paramKey="studentId"
+          value={studentId}
+          options={studentOptions}
+          label={tFilters('studentAll')}
+        />
       </CollectionToolbar>
 
-      {groups.isPending ? <ListSkeleton /> : null}
+      {groups.isPending ? <LoadingPanel size="lg" /> : null}
 
       {groups.isError ? (
         <QueryErrorAlert
@@ -64,7 +100,7 @@ export function GroupsList() {
 
       {items.length > 0 ? (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 xl:grid-cols-3">
             {items.map((group) => (
               <GroupCard key={group.id} group={group} />
             ))}

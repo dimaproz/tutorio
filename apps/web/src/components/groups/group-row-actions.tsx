@@ -2,18 +2,13 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { MoreHorizontalIcon } from 'lucide-react';
+import { ExternalLinkIcon, PencilIcon, RotateCcwIcon, Trash2Icon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/app/confirm-dialog';
 import { useSession } from '@/components/app/session-provider';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { RowActionsTrigger } from '@/components/shared';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { errorMessageKey } from '@/lib/api/error-message';
 import { useDeleteGroupMutation, useRestoreGroupMutation } from '@/lib/api/groups';
 import type { GatewayError } from '@/lib/auth/client';
@@ -61,21 +56,14 @@ export function GroupRowActions({
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="size-11 md:size-8" aria-label={tCommon('openMenu')}>
-            <MoreHorizontalIcon />
-          </Button>
-        </DropdownMenuTrigger>
+        <RowActionsTrigger busy={restoreGroup.isPending} />
         <DropdownMenuContent align="end">
           {isDeleted ? (
             // Deleted records cannot be edited — only restored, and only by
             // an owner. There is no permanent deletion anywhere in Stage 2.
             isOwner ? (
               <DropdownMenuItem onSelect={() => void onRestore()}>
+                <RotateCcwIcon data-icon />
                 {tCommon('restore')}
               </DropdownMenuItem>
             ) : (
@@ -84,12 +72,17 @@ export function GroupRowActions({
           ) : (
             <>
               <DropdownMenuItem asChild>
-                <Link href={`/app/groups/${groupId}`}>{tCommon('open')}</Link>
+                <Link href={`/app/groups/${groupId}`}>
+                  <ExternalLinkIcon data-icon />
+                  {tCommon('open')}
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setEditOpen(true)}>
+                <PencilIcon data-icon />
                 {tCommon('edit')}
               </DropdownMenuItem>
               <DropdownMenuItem variant="destructive" onSelect={() => setConfirmOpen(true)}>
+                <Trash2Icon data-icon />
                 {tCommon('delete')}
               </DropdownMenuItem>
             </>

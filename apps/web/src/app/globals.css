@@ -4,9 +4,25 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@theme {
+  --shadow-md: #919eab4d 0px 0px 2px 0px, #919eab1f 0px 12px 24px -4px;
+  --shadow-lg: 0 1rem 3rem #0000002d;
+  --shadow-dark-md: #919eab4d 0px 0px 2px 0px, #919eab05 0px 12px 24px -4px;
+  --shadow-sm: 0 0.125rem 0.25rem #00000013;
+  --shadow-btn-shadow: #0000000d 0 9px 17.5px;
+
+  --text-40: 40px;
+  --text-56: 56px;
+  --text-fs_21: 21px;
+  --text-fs_13: 13px;
+  --text-fs_28: 28px;
+  --leading-21: 21px;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-dark: var(--dark);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
   /* Indirection through --font-display: `@theme inline` substitutes values at
@@ -30,8 +46,11 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
   --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -40,6 +59,13 @@
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
+  --color-lightprimary: var(--lightprimary);
+  --color-light-primary: var(--lightprimary);
+  --color-light-success: var(--light-success);
+  --color-light-destructive: var(--light-destructive);
+  --color-light-warning: var(--light-warning);
+  --color-light-secondary: var(--light-secondary);
+  --color-light-info: var(--light-info);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -51,6 +77,44 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* Tailwind expands its built-in shadow scale at build time. Keep the utility
+   classes tied to our runtime tokens so the inspector and the final rendering
+   both use the same shadow vocabulary as the reference. */
+.shadow-sm {
+  --tw-shadow: var(--shadow-sm);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+}
+
+.shadow-md {
+  --tw-shadow: var(--shadow-md);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+}
+
+.shadow-lg {
+  --tw-shadow: var(--shadow-lg);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+}
+
+.shadow-dark-md {
+  --tw-shadow: var(--shadow-dark-md);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+}
+
+.shadow-btn-shadow {
+  --tw-shadow: var(--shadow-btn-shadow);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
 }
 
 /* ---------------------------------------------------------------------------
@@ -104,6 +168,18 @@
 
   /* Soft, low, TailAdmin-style card elevation. */
   --shadow-card: 0px 1px 3px 0px rgba(16, 24, 40, 0.1), 0px 1px 2px 0px rgba(16, 24, 40, 0.06);
+  --shadow-md: #919eab4d 0px 0px 2px 0px, #919eab1f 0px 12px 24px -4px;
+  --shadow-lg: 0 1rem 3rem #0000002d;
+  --shadow-dark-md: #919eab4d 0px 0px 2px 0px, #919eab05 0px 12px 24px -4px;
+  --shadow-sm: 0 0.125rem 0.25rem #00000013;
+  --shadow-btn-shadow: #0000000d 0 9px 17.5px;
+
+  --text-40: 40px;
+  --text-56: 56px;
+  --text-fs_21: 21px;
+  --text-fs_13: 13px;
+  --text-fs_28: 28px;
+  --leading-21: 21px;
 
   --background: var(--gray-50);
   --foreground: var(--gray-800);
@@ -113,6 +189,14 @@
   --popover-foreground: var(--gray-800);
   --primary: var(--brand-500);
   --primary-foreground: #ffffff;
+  /* The brand wash: a primary-tinted surface for quiet buttons and chips.
+     Derived from --primary, so a rebrand only changes one value. */
+  --lightprimary: color-mix(in oklab, var(--primary) 12%, transparent);
+  --light-success: color-mix(in oklab, var(--success) 12%, transparent);
+  --light-destructive: color-mix(in oklab, var(--destructive) 12%, transparent);
+  --light-warning: color-mix(in oklab, var(--warning) 12%, transparent);
+  --light-secondary: color-mix(in oklab, var(--workspace-secondary) 12%, transparent);
+  --light-info: color-mix(in oklab, var(--info) 12%, transparent);
   --secondary: var(--gray-100);
   --secondary-foreground: var(--gray-700);
   --muted: var(--gray-100);
@@ -122,6 +206,10 @@
   --destructive: var(--error-500);
   --warning: var(--warning-600);
   --success: var(--success-600);
+  /* Text laid directly on a saturated status fill. */
+  --destructive-foreground: #ffffff;
+  --warning-foreground: #ffffff;
+  --success-foreground: #ffffff;
   --border: var(--gray-200);
   --input: var(--gray-300);
   --ring: var(--brand-500);
@@ -148,10 +236,98 @@
   --sidebar-accent-foreground: var(--brand-500);
   --sidebar-border: var(--gray-200);
   --sidebar-ring: var(--brand-500);
+
+  /* School palette. The workspace variables are replaced after sign-in. */
+  --color-primary: #5d87ff;
+  --color-secondary: #49beff;
+  --color-success: #1daa70;
+  --color-warning: #f6b51e;
+  --color-error: #ef4444;
+  --color-white: #fff;
+  --color-link: #2a3547;
+  --color-lightprimary: color-mix(in oklab, var(--color-primary) 12%, transparent);
+  --color-input: #dfe5ef;
+  --color-dark: #1c2536;
+  --color-darkborder: #333f55;
+  --dark-muted-foreground: #7c8fac;
+  --workspace-primary: var(--color-primary);
+  --workspace-secondary: var(--color-secondary);
+  --color-sidebar: var(--color-dark);
+  --color-sidebar-foreground: var(--dark-muted-foreground);
+  --color-sidebar-primary: var(--workspace-primary);
+  --color-sidebar-primary-foreground: var(--color-white);
+  --color-sidebar-accent: color-mix(in oklab, var(--workspace-primary) 12%, transparent);
+  --color-sidebar-accent-foreground: var(--workspace-primary);
+  --color-sidebar-border: var(--color-darkborder);
+  --color-sidebar-ring: var(--workspace-primary);
+
+  --info: #8754ec;
+  --success: #1daa70;
+  --warning: #f6b51e;
+  --error: #ef4444;
+  --white: #fff;
+  --dark: #1c2536;
+  --darkinfo: #223662;
+  --lightgray: #f6f9fc;
+  --bgmuted: #eff4fa;
+  --darkgray: #465670;
+  --bodytext: #5a6a85;
+  --lightmuted: #5d7287;
+  --link: #2a3547;
+  --light-emphasis: #dfe5ef;
+
+  --brand-50: color-mix(in oklab, var(--workspace-primary) 12%, var(--color-white));
+  --brand-400: color-mix(in oklab, var(--workspace-primary) 75%, var(--color-white));
+  --brand-500: var(--workspace-primary);
+  --brand-600: color-mix(in oklab, var(--workspace-primary) 82%, var(--dark));
+
+  --background: #fff;
+  --foreground: var(--color-link);
+  --card: var(--color-white);
+  --card-foreground: var(--color-link);
+  --popover: var(--color-white);
+  --popover-foreground: var(--color-link);
+  --primary: var(--workspace-primary);
+  --primary-foreground: var(--color-white);
+  /* `secondary` and `muted` are neutral component surfaces. Workspace
+     branding has its own explicit variables below, so ordinary controls,
+     table states and icon backgrounds never inherit a saturated school hue. */
+  --secondary: var(--lightgray);
+  --secondary-foreground: var(--color-link);
+  --muted: var(--bgmuted);
+  --muted-foreground: var(--bodytext);
+  --accent: var(--lightprimary);
+  --accent-foreground: var(--primary);
+  --destructive: var(--color-error);
+  --destructive-foreground: var(--color-white);
+  --border: #e5e5e5;
+  --input: var(--color-input);
+  --ring: var(--workspace-primary);
+  --radius: 10px;
+  --lightprimary: color-mix(in oklab, var(--workspace-primary) 12%, transparent);
+  --light-success: color-mix(in oklab, var(--success) 12%, transparent);
+  --light-destructive: color-mix(in oklab, var(--destructive) 12%, transparent);
+  --light-warning: color-mix(in oklab, var(--warning) 12%, transparent);
+  --light-secondary: color-mix(in oklab, var(--workspace-secondary) 12%, transparent);
+  --light-info: color-mix(in oklab, var(--info) 12%, transparent);
+  --chart-1: var(--primary);
+  --chart-2: var(--workspace-secondary);
+  --chart-3: var(--success);
+  --chart-4: var(--warning);
+  --chart-5: var(--error);
+  --sidebar: var(--color-white);
+  --sidebar-foreground: var(--color-link);
+  --sidebar-primary: var(--workspace-primary);
+  --sidebar-primary-foreground: var(--color-white);
+  --sidebar-accent: var(--lightprimary);
+  --sidebar-accent-foreground: var(--primary);
+  --sidebar-border: #e5e5e5;
+  --sidebar-ring: #a1a1a1;
 }
 
 .dark {
-  --paper: var(--gray-900);
+  --link: #7c8fac;
+  --paper: var(--color-dark);
   --ink: #ffffff;
   --graphite: var(--gray-400);
   --rule: rgba(255, 255, 255, 0.1);
@@ -165,40 +341,52 @@
 
   --shadow-card: 0px 1px 3px 0px rgba(0, 0, 0, 0.35), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
 
-  --background: var(--gray-900);
-  --foreground: #ffffff;
-  --card: #1a2231;
-  --card-foreground: #ffffff;
-  --popover: #1a2231;
-  --popover-foreground: #ffffff;
-  --primary: var(--brand-500);
-  --primary-foreground: #ffffff;
-  --secondary: #1d2939;
-  --secondary-foreground: var(--gray-100);
-  --muted: #1d2939;
-  --muted-foreground: var(--gray-400);
-  --accent: rgba(255, 255, 255, 0.05);
-  --accent-foreground: #ffffff;
-  --destructive: var(--error-500);
-  --warning: #fdb022;
-  --success: #6ce9a6;
-  --border: rgba(255, 255, 255, 0.1);
-  --input: rgba(255, 255, 255, 0.12);
-  --ring: var(--brand-400);
+  --background: var(--color-dark);
+  --foreground: var(--color-white);
+  --card: var(--color-dark);
+  --card-foreground: var(--color-white);
+  --popover: var(--color-dark);
+  --popover-foreground: var(--color-white);
+  --primary: var(--workspace-primary);
+  --primary-foreground: var(--color-white);
+  --lightprimary: color-mix(in oklab, var(--primary) 12%, transparent);
+  --light-success: color-mix(in oklab, var(--success) 12%, transparent);
+  --light-destructive: color-mix(in oklab, var(--destructive) 12%, transparent);
+  --light-warning: color-mix(in oklab, var(--warning) 12%, transparent);
+  --light-secondary: color-mix(in oklab, var(--workspace-secondary) 12%, transparent);
+  --light-info: color-mix(in oklab, var(--info) 12%, transparent);
+  /* Brand secondary stays in --workspace-secondary. These are neutral
+     component surfaces, shared by controls, table states and icon tiles. */
+  --secondary: #2a3851;
+  --secondary-foreground: var(--color-white);
+  --muted: #2a3851;
+  --muted-foreground: var(--dark-muted-foreground);
+  --accent: var(--lightprimary);
+  --accent-foreground: var(--primary);
+  --destructive: var(--color-error);
+  --warning: var(--color-warning);
+  --success: var(--color-success);
+  /* The dark-theme status fills are light, so their text flips to ink. */
+  --destructive-foreground: var(--color-white);
+  --warning-foreground: var(--gray-900);
+  --success-foreground: var(--gray-900);
+  --border: var(--color-darkborder);
+  --input: var(--color-darkborder);
+  --ring: var(--workspace-primary);
 
   --cell-empty: rgba(255, 255, 255, 0.03);
   --cell-rule: rgba(255, 255, 255, 0.15);
   --cell-mark: var(--brand-500);
   --cell-low: var(--error-500);
 
-  --sidebar: var(--gray-900);
-  --sidebar-foreground: var(--gray-300);
-  --sidebar-primary: var(--brand-400);
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: rgba(70, 95, 255, 0.15);
-  --sidebar-accent-foreground: var(--brand-400);
-  --sidebar-border: rgba(255, 255, 255, 0.1);
-  --sidebar-ring: var(--brand-400);
+  --sidebar: var(--color-sidebar);
+  --sidebar-foreground: var(--color-sidebar-foreground);
+  --sidebar-primary: var(--color-sidebar-primary);
+  --sidebar-primary-foreground: var(--color-sidebar-primary-foreground);
+  --sidebar-accent: var(--color-sidebar-accent);
+  --sidebar-accent-foreground: var(--color-sidebar-accent-foreground);
+  --sidebar-border: var(--color-sidebar-border);
+  --sidebar-ring: var(--color-sidebar-ring);
 }
 
 /* TailAdmin card shape: every card lifts to 16px with the soft elevation. */

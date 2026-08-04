@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { LessonSeriesResponse } from '@tutorio/validation';
 import { ConfirmDialog } from '@/components/app/confirm-dialog';
-import { ListSkeleton, PageHeader, QueryErrorAlert } from '@/components/app/page-shell';
+import { PageHeader, QueryErrorAlert } from '@/components/app/page-shell';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -20,6 +20,7 @@ import {
 import { useDeleteSeriesMutation, useSeriesListQuery } from '@/lib/api/scheduling';
 import { useWeekdayLabels } from '@/lib/i18n/weekdays';
 import { SeriesFormDialog } from './series-form-dialog';
+import { LoadingPanel } from '@/components/shared';
 
 export function SeriesManager() {
   const t = useTranslations('scheduling.patterns');
@@ -69,7 +70,7 @@ export function SeriesManager() {
       />
 
       {series.isPending ? (
-        <ListSkeleton rows={4} />
+        <LoadingPanel size="lg" />
       ) : series.isError ? (
         <QueryErrorAlert
           error={series.error}

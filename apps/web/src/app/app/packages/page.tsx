@@ -7,7 +7,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t('title') };
 }
 
-export default function FinancePage() {
+export default function PackagesPage() {
   return (
     <main className="flex flex-1 flex-col gap-6 p-4 md:p-6">
       <PackagesList />

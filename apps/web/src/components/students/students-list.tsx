@@ -1,20 +1,26 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import type { ColumnDef } from '@tanstack/react-table';
-import { PlusIcon, SendIcon, UsersIcon } from 'lucide-react';
+import { PlusIcon, UsersIcon } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { STUDENT_SUBJECTS, type StudentListItem } from '@tutorio/validation';
+import type { StudentListItem } from '@tutorio/validation';
 import { StudentCard } from './student-card';
 import { StudentFormDialog } from './student-form-dialog';
 import { StudentRowActions } from './student-row-actions';
+import { StudentsListSkeleton } from './students-list-skeleton';
 import { StudentStatusBadge } from '@/components/app/status-badges';
-import { EntityAvatar } from '@/components/app/entity-avatar';
+import { STUDENT_STATUS_META } from '@/components/app/status-meta';
 import { DataTable } from '@/components/app/data-table';
-import { ListPagination, ListSearchInput, ListSelectFilter } from '@/components/app/list-controls';
-import { ListSkeleton, PageHeader, QueryErrorAlert } from '@/components/app/page-shell';
+import { PersonCell, PhoneCell, TelegramCell } from '@/components/app/table-cells';
+import {
+  ListPagination,
+  ListSearchInput,
+  ListSelectFilter,
+  useListSort,
+} from '@/components/app/list-controls';
+import { PageHeader, QueryErrorAlert } from '@/components/app/page-shell';
 import { Button } from '@/components/ui/button';
 import { CollectionEmptyState, CollectionToolbar } from '@/components/shared';
 import { parsePageParam } from '@/lib/api/filters';
@@ -27,7 +33,6 @@ const STUDENT_STATUSES = ['ACTIVE', 'ON_HOLD', 'ARCHIVED'] as const;
 
 export function StudentsList() {
   const t = useTranslations('students');
-  const tSubject = useTranslations('subject');
   const tStatus = useTranslations('studentStatus');
   const tFilters = useTranslations('students.filters');
   const tCommon = useTranslations('common');
@@ -38,14 +43,25 @@ export function StudentsList() {
   const page = parsePageParam(searchParams.get('page'));
   const search = searchParams.get('search')?.trim() || undefined;
   const status = searchParams.get('status') || undefined;
-  const subject = searchParams.get('subject') || undefined;
   const groupId = searchParams.get('groupId') || undefined;
 
-  const students = useStudentsQuery({ page, search, status, subject, groupId });
+  // `fullName` matches the API default, so an unsorted URL stays clean.
+  const sort = useListSort('fullName');
+  const students = useStudentsQuery({
+    page,
+    search,
+    status,
+    groupId,
+    sort: sort.field,
+    order: sort.order,
+  });
   const groups = useGroupsQuery({ page: 1, pageSize: 100 });
 
-  const statusOptions = STUDENT_STATUSES.map((value) => ({ value, label: tStatus(value) }));
-  const subjectOptions = STUDENT_SUBJECTS.map((value) => ({ value, label: tSubject(value) }));
+  const statusOptions = STUDENT_STATUSES.map((value) => ({
+    value,
+    label: tStatus(value),
+    ...STUDENT_STATUS_META[value],
+  }));
   const groupOptions = (groups.data?.items ?? []).map((group) => ({
     value: group.id,
     label: group.name,
@@ -56,32 +72,19 @@ export function StudentsList() {
       {
         accessorKey: 'fullName',
         header: () => t('columns.student'),
+        meta: { sortField: 'fullName' },
         cell: ({ row }) => (
-          <div className="flex min-w-0 items-center gap-3">
-            <EntityAvatar
-              avatarKey={row.original.avatarKey}
-              fullName={row.original.fullName}
-              size="md"
-            />
-            <div className="flex min-w-0 flex-col gap-1">
-              <Link
-                href={`/app/students/${row.original.id}`}
-                className="truncate font-medium underline-offset-4 transition-colors hover:text-primary hover:underline"
-              >
-                {row.original.fullName}
-              </Link>
-              {row.original.subject ? (
-                <span className="truncate text-xs text-muted-foreground">
-                  {tSubject(row.original.subject)}
-                </span>
-              ) : null}
-            </div>
-          </div>
+          <PersonCell
+            avatarKey={row.original.avatarKey}
+            fullName={row.original.fullName}
+            href={`/app/students/${row.original.id}`}
+          />
         ),
       },
       {
         id: 'status',
         header: () => t('columns.status'),
+        meta: { sortField: 'status' },
         cell: ({ row }) => <StudentStatusBadge status={row.original.status} />,
       },
       {
@@ -97,6 +100,7 @@ export function StudentsList() {
       {
         id: 'price',
         header: () => t('columns.price'),
+        meta: { sortField: 'hourlyRateMinor' },
         cell: ({ row }) =>
           row.original.hourlyRateMinor != null && row.original.currency ? (
             <span className="tabular font-medium whitespace-nowrap">
@@ -112,36 +116,14 @@ export function StudentsList() {
       {
         id: 'phone',
         header: () => t('columns.phone'),
-        cell: ({ row }) =>
-          row.original.phone ? (
-            <a
-              href={`tel:${row.original.phone}`}
-              className="tabular underline-offset-4 hover:underline"
-            >
-              {row.original.phone}
-            </a>
-          ) : (
-            <span className="text-muted-foreground">{tCommon('notProvided')}</span>
-          ),
+        meta: { sortField: 'phone' },
+        cell: ({ row }) => <PhoneCell phone={row.original.phone} />,
       },
       {
         id: 'telegram',
         header: () => t('columns.telegram'),
-        cell: ({ row }) => {
-          const handle = row.original.telegramUsername?.replace(/^@/, '');
-          return handle ? (
-            <a
-              href={`https://t.me/${handle}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-primary underline-offset-4 hover:underline"
-            >
-              <SendIcon className="size-3.5" aria-hidden="true" />@{handle}
-            </a>
-          ) : (
-            <span className="text-muted-foreground">{tCommon('notProvided')}</span>
-          );
-        },
+        meta: { sortField: 'telegramUsername' },
+        cell: ({ row }) => <TelegramCell username={row.original.telegramUsername} />,
       },
       {
         id: 'actions',
@@ -158,7 +140,7 @@ export function StudentsList() {
         ),
       },
     ],
-    [t, tSubject, tCommon, locale],
+    [t, tCommon, locale],
   );
 
   const items = students.data?.items ?? [];
@@ -186,12 +168,6 @@ export function StudentsList() {
           label={tFilters('statusAll')}
         />
         <ListSelectFilter
-          paramKey="subject"
-          value={subject}
-          options={subjectOptions}
-          label={tFilters('subjectAll')}
-        />
-        <ListSelectFilter
           paramKey="groupId"
           value={groupId}
           options={groupOptions}
@@ -199,7 +175,9 @@ export function StudentsList() {
         />
       </CollectionToolbar>
 
-      {students.isPending ? <ListSkeleton /> : null}
+      {students.isPending ? (
+        <StudentsListSkeleton caption={t('tableCaption')} loadingLabel={tCommon('loading')} />
+      ) : null}
 
       {students.isError ? (
         <QueryErrorAlert
@@ -223,7 +201,13 @@ export function StudentsList() {
             ))}
           </div>
           <div className="hidden md:block">
-            <DataTable columns={columns} data={items} caption={t('tableCaption')} />
+            <DataTable
+              columns={columns}
+              data={items}
+              caption={t('tableCaption')}
+              sort={sort}
+              loading={students.isFetching}
+            />
           </div>
           <ListPagination page={page} totalPages={students.data?.totalPages ?? 1} />
         </>

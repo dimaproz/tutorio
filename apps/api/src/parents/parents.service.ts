@@ -48,7 +48,6 @@ const studentRosterInclude = {
           id: true,
           fullName: true,
           avatarKey: true,
-          subject: true,
           status: true,
         },
       },
@@ -65,7 +64,6 @@ function toRoster(
     fullName: link.student.fullName,
     avatarKey: link.student
       .avatarKey as ParentDetail['students'][number]['avatarKey'],
-    subject: link.student.subject,
     status: link.student.status,
   }));
 }

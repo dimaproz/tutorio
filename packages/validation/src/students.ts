@@ -6,6 +6,7 @@ import {
   isoDateTimeSchema,
   phoneSchema,
   recordStateSchema,
+  sortOrderSchema,
   timezoneSchema,
   uuidSchema,
 } from './common';
@@ -29,56 +30,6 @@ export type StudentLanguageLevelDto = z.infer<typeof studentLanguageLevelSchema>
 export const STUDENT_KNOWLEDGE_LEVELS = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'] as const;
 export const studentKnowledgeLevelSchema = z.enum(STUDENT_KNOWLEDGE_LEVELS);
 export type StudentKnowledgeLevelDto = z.infer<typeof studentKnowledgeLevelSchema>;
-
-// Curated subject catalogue (school subjects + exam-prep tracks). A closed
-// dropdown, not free text — extend this list rather than accepting arbitrary
-// strings.
-export const STUDENT_SUBJECTS = [
-  'MATH',
-  'ENGLISH',
-  'GERMAN',
-  'FRENCH',
-  'POLISH',
-  'UKRAINIAN_LANGUAGE',
-  'UKRAINIAN_LITERATURE',
-  'WORLD_LITERATURE',
-  'PHYSICS',
-  'CHEMISTRY',
-  'BIOLOGY',
-  'GEOGRAPHY',
-  'HISTORY',
-  'WORLD_HISTORY',
-  'HISTORY_OF_UKRAINE',
-  'COMPUTER_SCIENCE',
-  'ECONOMICS',
-  'LAW',
-  'MUSIC',
-  'ART',
-  'PHYSICAL_EDUCATION',
-  'NMT_PREP',
-  'ZNO_PREP',
-  'IELTS_PREP',
-  'TOEFL_PREP',
-  'SAT_PREP',
-] as const;
-export const studentSubjectSchema = z.enum(STUDENT_SUBJECTS);
-export type StudentSubjectDto = z.infer<typeof studentSubjectSchema>;
-
-// Subjects graded on the CEFR scale (A1–C2). Only for these does a language
-// level make sense — a maths or physics student has no CEFR level. The form
-// uses this to show/hide the language-level control.
-export const STUDENT_LANGUAGE_SUBJECTS = [
-  'ENGLISH',
-  'GERMAN',
-  'FRENCH',
-  'POLISH',
-  'IELTS_PREP',
-  'TOEFL_PREP',
-] as const satisfies readonly StudentSubjectDto[];
-
-export function isLanguageSubject(subject: StudentSubjectDto | null | undefined): boolean {
-  return subject != null && (STUDENT_LANGUAGE_SUBJECTS as readonly string[]).includes(subject);
-}
 
 export const studentAgeSchema = z.number().int().min(0).max(120);
 
@@ -104,7 +55,6 @@ export const createStudentSchema = z
     phone: optionalField(phoneSchema),
     timezone: timezoneSchema,
     telegramUsername: optionalField(telegramUsernameSchema),
-    subject: optionalField(studentSubjectSchema),
     hourlyRateMinor: priceMinorSchema.optional(),
     currency: optionalField(currencyCodeSchema),
     status: studentStatusSchema.default('ACTIVE'),
@@ -130,7 +80,6 @@ export const updateStudentSchema = z
     phone: phoneSchema.nullable(),
     timezone: timezoneSchema,
     telegramUsername: telegramUsernameSchema.nullable(),
-    subject: studentSubjectSchema.nullable(),
     hourlyRateMinor: priceMinorSchema.nullable(),
     currency: currencyCodeSchema.nullable(),
     status: studentStatusSchema,
@@ -147,6 +96,20 @@ export const updateStudentSchema = z
 
 export type UpdateStudentDto = z.infer<typeof updateStudentSchema>;
 
+// Columns the list can be sorted by. Scalar student fields only: relation
+// aggregates (group names, enrollment counts) are computed per row and cannot
+// be ordered by the database without changing the query shape.
+export const STUDENT_SORT_FIELDS = [
+  'fullName',
+  'status',
+  'hourlyRateMinor',
+  'phone',
+  'telegramUsername',
+  'createdAt',
+] as const;
+export const studentSortFieldSchema = z.enum(STUDENT_SORT_FIELDS);
+export type StudentSortField = z.infer<typeof studentSortFieldSchema>;
+
 export const listStudentsQuerySchema = paginationQuerySchema
   .extend({
     search: z.string().trim().min(1).max(120).optional(),
@@ -154,8 +117,11 @@ export const listStudentsQuerySchema = paginationQuerySchema
     state: recordStateSchema.default('active'),
     // Optional facet filters, combined with AND.
     status: studentStatusSchema.optional(),
-    subject: studentSubjectSchema.optional(),
     groupId: uuidSchema.optional(),
+    // Sorting is server-side so it applies to the whole collection, not just
+    // the page the client happens to hold.
+    sort: studentSortFieldSchema.default('fullName'),
+    order: sortOrderSchema.default('asc'),
   })
   .strict();
 
@@ -182,7 +148,6 @@ export const studentResponseSchema = z.object({
   phone: z.string().nullable(),
   timezone: z.string(),
   telegramUsername: z.string().nullable(),
-  subject: studentSubjectSchema.nullable(),
   hourlyRateMinor: z.number().int().nonnegative().nullable(),
   currency: currencyCodeSchema.nullable(),
   status: studentStatusSchema,
@@ -208,7 +173,6 @@ export const studentListItemSchema = z.object({
   phone: z.string().nullable(),
   telegramUsername: z.string().nullable(),
   timezone: z.string(),
-  subject: studentSubjectSchema.nullable(),
   status: studentStatusSchema,
   hourlyRateMinor: z.number().int().nonnegative().nullable(),
   currency: currencyCodeSchema.nullable(),

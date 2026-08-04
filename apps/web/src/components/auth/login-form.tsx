@@ -82,7 +82,7 @@ export function LoginForm() {
             />
             <FieldError errors={[errors.password]} />
           </Field>
-          <Button type="submit" disabled={pending} className="w-full">
+          <Button type="submit" size="lg" disabled={pending} className="w-full">
             {pending ? <Spinner data-icon="inline-start" /> : null}
             {t('submit')}
           </Button>

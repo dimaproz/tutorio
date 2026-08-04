@@ -34,6 +34,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { DurationInput } from '@/components/app/duration-input';
 import {
   Command,
   CommandEmpty,
@@ -58,7 +59,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
@@ -66,6 +73,7 @@ import { Label } from '@/components/ui/label';
 import {
   Pagination,
   PaginationContent,
+  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
@@ -82,7 +90,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
@@ -95,9 +110,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsBadge, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { LabBlock, LabSection } from '@/components/design/lab-kit';
+import { buildPageSlots, PAGE_ELLIPSIS } from '@/lib/pagination';
 import { Sparkline } from '@/components/design/sparkline';
 import { StatusBadge } from '@/components/design/status-badge';
 import { formatMoney, LESSONS_PER_WEEK, STUDENTS } from '@/components/design/demo-data';
@@ -138,6 +155,7 @@ function ButtonsBlock() {
           <Button>Продати абонемент</Button>
           <Button variant="outline">Перенести</Button>
           <Button variant="secondary">Чернетка</Button>
+          <Button variant="neutral">Поле-тригер</Button>
           <Button variant="ghost">Скасувати</Button>
           <Button variant="link">Детальніше</Button>
           <Button variant="destructive">
@@ -180,6 +198,7 @@ function ButtonsBlock() {
 
 function FormsBlock() {
   const [value, setValue] = useState('');
+  const [duration, setDuration] = useState('60');
 
   return (
     <LabSection
@@ -202,7 +221,9 @@ function FormsBlock() {
               aria-invalid
               autoComplete="email"
             />
-            <FieldError errors={[{ message: 'Схоже, адреса неповна — додайте домен після «@».' }]} />
+            <FieldError
+              errors={[{ message: 'Схоже, адреса неповна — додайте домен після «@».' }]}
+            />
           </Field>
 
           <Field>
@@ -249,7 +270,11 @@ function FormsBlock() {
             <FieldLabel>Учень</FieldLabel>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
+                <Button
+                  variant="neutral"
+                  role="combobox"
+                  className="w-full justify-between font-normal"
+                >
                   Оберіть учня
                   <ChevronDownIcon data-icon className="opacity-50" />
                 </Button>
@@ -272,6 +297,11 @@ function FormsBlock() {
             </Popover>
           </Field>
 
+          <Field>
+            <FieldLabel htmlFor="demo-duration">Тривалість (хв)</FieldLabel>
+            <DurationInput id="demo-duration" value={duration} onValueChange={setDuration} />
+            <FieldDescription>Виберіть популярну тривалість або введіть свою.</FieldDescription>
+          </Field>
         </div>
       </div>
     </LabSection>
@@ -290,10 +320,7 @@ function DateTimeBlock() {
   const [slotField, setSlotField] = useState('');
 
   return (
-    <LabSection
-      title="Дата й час"
-      description="Пікери дати, періоду, часу та бронювання уроку."
-    >
+    <LabSection title="Дата й час" description="Пікери дати, періоду, часу та бронювання уроку.">
       <div className="grid gap-6 lg:grid-cols-2">
         <LabBlock label="Дата" hint='значення — "YYYY-MM-DD"'>
           <Field>
@@ -324,12 +351,7 @@ function DateTimeBlock() {
         <LabBlock label="Дата й час" hint="календар + час поруч">
           <Field>
             <FieldLabel htmlFor="lab-datetime">Початок уроку</FieldLabel>
-            <DateTimePicker
-              id="lab-datetime"
-              value={dateTime}
-              onChange={setDateTime}
-              clearable
-            />
+            <DateTimePicker id="lab-datetime" value={dateTime} onChange={setDateTime} clearable />
             <FieldDescription className="tabular">{dateTime || '—'}</FieldDescription>
           </Field>
         </LabBlock>
@@ -362,9 +384,7 @@ function DateTimeBlock() {
             isSlotUnavailable={(_, slot) => slot === '12:00' || slot === '12:30'}
             fromDate={new Date('2026-07-01')}
           />
-          <p className="text-muted-foreground tabular mt-3 text-xs">
-            {appointment || '—'}
-          </p>
+          <p className="text-muted-foreground tabular mt-3 text-xs">{appointment || '—'}</p>
         </LabBlock>
       </div>
     </LabSection>
@@ -557,7 +577,10 @@ function TableBlock() {
           </TableHeader>
           <TableBody>
             {STUDENTS.map((student) => (
-              <TableRow key={student.id} data-state={selected.includes(student.id) ? 'selected' : undefined}>
+              <TableRow
+                key={student.id}
+                data-state={selected.includes(student.id) ? 'selected' : undefined}
+              >
                 <TableCell>
                   <Checkbox
                     checked={selected.includes(student.id)}
@@ -594,18 +617,29 @@ function TableBlock() {
         </Table>
       </div>
 
+      {/* The table pager: edge buttons, numbered pages, at most seven slots. */}
       <Pagination>
-        <PaginationContent>
+        <PaginationContent className="w-full justify-between gap-2">
           <PaginationItem>
-            <PaginationPrevious href="#">Назад</PaginationPrevious>
+            <PaginationPrevious href="#" text="Назад" />
           </PaginationItem>
           <PaginationItem>
-            <PaginationLink href="#" aria-current="page">
-              Сторінка 1 з 3
-            </PaginationLink>
+            <ul className="flex items-center gap-1">
+              {buildPageSlots(1, 10).map((slot, index) => (
+                <li key={slot === PAGE_ELLIPSIS ? `gap-${index}` : slot}>
+                  {slot === PAGE_ELLIPSIS ? (
+                    <PaginationEllipsis />
+                  ) : (
+                    <PaginationLink href="#" isActive={slot === 1}>
+                      {slot}
+                    </PaginationLink>
+                  )}
+                </li>
+              ))}
+            </ul>
           </PaginationItem>
           <PaginationItem>
-            <PaginationNext href="#">Далі</PaginationNext>
+            <PaginationNext href="#" text="Далі" />
           </PaginationItem>
         </PaginationContent>
       </Pagination>
@@ -633,8 +667,8 @@ function SurfacesBlock() {
           <AccordionItem value="a1">
             <AccordionTrigger>Правила скасування</AccordionTrigger>
             <AccordionContent className="text-muted-foreground text-sm">
-              Учень може скасувати заняття без списання за 24 години. Пізніше заняття
-              списується з абонемента.
+              Учень може скасувати заняття без списання за 24 години. Пізніше заняття списується з
+              абонемента.
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="a2">
@@ -645,6 +679,65 @@ function SurfacesBlock() {
           </AccordionItem>
         </Accordion>
       </div>
+
+      <LabBlock label="Вкладки" hint="фільтр-бар із лічильниками, сегментований, підкреслений">
+        <div className="flex flex-col gap-5">
+          <Tabs defaultValue="all">
+            <TabsList>
+              <TabsTrigger value="all">
+                Усі учні
+                <TabsBadge>7</TabsBadge>
+              </TabsTrigger>
+              <TabsTrigger value="active">
+                Активні
+                <TabsBadge tone="success">5</TabsBadge>
+              </TabsTrigger>
+              <TabsTrigger value="hold">
+                На канікулах
+                <TabsBadge tone="warning">1</TabsBadge>
+              </TabsTrigger>
+              <TabsTrigger value="archived">
+                Архів
+                <TabsBadge tone="neutral">1</TabsBadge>
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          <Tabs defaultValue="week">
+            <TabsList variant="segmented">
+              <TabsTrigger value="week">Тиждень</TabsTrigger>
+              <TabsTrigger value="month">Місяць</TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          <Tabs defaultValue="general">
+            <TabsList variant="line">
+              <TabsTrigger value="general">Загальні</TabsTrigger>
+              <TabsTrigger value="audit">Журнал</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+      </LabBlock>
+
+      <LabBlock label="Розміри вкладок" hint="той самий масштаб, що й у кнопок">
+        <div className="flex flex-col items-start gap-3">
+          {(['xs', 'sm', 'default', 'lg'] as const).map((size) => (
+            <Tabs key={size} defaultValue="paid">
+              <TabsList size={size}>
+                <TabsTrigger value="paid">
+                  Оплачено
+                  <TabsBadge>2</TabsBadge>
+                </TabsTrigger>
+                <TabsTrigger value="due">
+                  Борг
+                  <TabsBadge tone="destructive">3</TabsBadge>
+                </TabsTrigger>
+                <TabsTrigger value="draft">{size}</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          ))}
+        </div>
+      </LabBlock>
 
       <div className="flex flex-wrap gap-2">
         <Dialog>
@@ -697,8 +790,7 @@ function SurfacesBlock() {
             <AlertDialogHeader>
               <AlertDialogTitle>Перемістити учня в кошик?</AlertDialogTitle>
               <AlertDialogDescription>
-                Нічого не зникає назавжди — запис можна відновити. Історія платежів
-                зберігається.
+                Нічого не зникає назавжди — запис можна відновити. Історія платежів зберігається.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

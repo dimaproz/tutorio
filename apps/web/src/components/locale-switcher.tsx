@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Flag, type FlagCode } from '@/components/app/flag';
 import { setLocale } from '@/i18n/actions';
 import { LOCALES, type Locale } from '@/i18n/locale';
+import { cn } from '@/lib/utils';
 
 // Which flag represents each supported UI language.
 const LOCALE_FLAG: Record<string, FlagCode> = {
@@ -16,7 +17,7 @@ const LOCALE_FLAG: Record<string, FlagCode> = {
 
 // Single button that flips between the two supported locales. With only uk/en a
 // toggle is clearer than a dropdown; the visible code shows the CURRENT locale.
-export function LocaleSwitcher() {
+export function LocaleSwitcher({ className }: { className?: string }) {
   const t = useTranslations('app.localeSwitcher');
   const locale = useLocale();
   const router = useRouter();
@@ -41,6 +42,7 @@ export function LocaleSwitcher() {
       onClick={toggle}
       aria-label={`${t('label')}: ${t(next)}`}
       title={t(next)}
+      className={cn(className)}
     >
       {LOCALE_FLAG[locale] ? (
         <Flag code={LOCALE_FLAG[locale]} className="size-5" />

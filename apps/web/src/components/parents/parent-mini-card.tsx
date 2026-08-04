@@ -14,13 +14,11 @@ export interface ParentMiniCardData {
 }
 
 function contactLine(parent: ParentMiniCardData): string | null {
-  if (parent.phone) {
-    return parent.phone;
-  }
-  if (parent.telegramUsername) {
-    return `@${parent.telegramUsername.replace(/^@/, '')}`;
-  }
-  return null;
+  const contacts = [
+    parent.phone,
+    parent.telegramUsername ? `@${parent.telegramUsername.replace(/^@/, '')}` : null,
+  ].filter(Boolean);
+  return contacts.length > 0 ? contacts.join(' · ') : null;
 }
 
 // Parent flavour of PersonMiniCard: the subtitle is the best available contact.

@@ -7,7 +7,7 @@ import { useFormatter, useTranslations } from 'next-intl';
 import type { AuditActionDto, AuditLogResponse } from '@tutorio/validation';
 import { DataTable } from '@/components/app/data-table';
 import { ListPagination } from '@/components/app/list-controls';
-import { ListSkeleton, QueryErrorAlert } from '@/components/app/page-shell';
+import { QueryErrorAlert } from '@/components/app/page-shell';
 import { Badge } from '@/components/ui/badge';
 import {
   Empty,
@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useAuditLogsQuery } from '@/lib/api/audit';
+import { LoadingPanel } from '@/components/shared';
 
 const ACTIONS = ['CREATE', 'UPDATE', 'DELETE', 'RESTORE'] as const;
 const ENTITIES = ['STUDENT', 'GROUP', 'ENROLLMENT', 'WORKSPACE'] as const;
@@ -167,7 +168,7 @@ export function AuditLogTable() {
         </div>
       </div>
 
-      {logs.isPending ? <ListSkeleton rows={6} /> : null}
+      {logs.isPending ? <LoadingPanel size="lg" /> : null}
 
       {logs.isError ? (
         <QueryErrorAlert
@@ -192,7 +193,12 @@ export function AuditLogTable() {
       {items.length > 0 ? (
         <>
           <div className="overflow-x-auto">
-            <DataTable columns={columns} data={items} caption={t('tableCaption')} />
+            <DataTable
+              columns={columns}
+              data={items}
+              caption={t('tableCaption')}
+              loading={logs.isFetching}
+            />
           </div>
           <ListPagination
             page={page}

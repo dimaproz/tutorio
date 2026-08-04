@@ -75,6 +75,7 @@ export function toLessonResponse(row: LessonRow): LessonResponse {
     cancelledReason: row.cancelledReason,
     cancelledAt: row.cancelledAt?.toISOString() ?? null,
     completedAt: row.completedAt?.toISOString() ?? null,
+    paidAt: row.paidAt?.toISOString() ?? null,
     notes: row.notes,
     cancellationDeadlineHours: effectiveDeadlineHours(
       row.enrollment?.cancellationDeadlineHours,
@@ -108,6 +109,7 @@ export function toSeriesResponse(row: SeriesRow): LessonSeriesResponse {
     priceMinor: row.priceMinor,
     currency: row.currency as LessonSeriesResponse['currency'],
     startDate: row.startDate.toISOString(),
+    endsAt: row.endsAt?.toISOString() ?? null,
     horizonMaterializedUntil: row.horizonMaterializedUntil.toISOString(),
     student: row.enrollment?.student ?? null,
     group: row.group,

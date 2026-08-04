@@ -38,7 +38,7 @@ export class WorkspacesController {
   @Patch('current/settings')
   @Roles('OWNER')
   @ApiOperation({
-    summary: 'Update workspace default currency and cancellation deadline',
+    summary: 'Update workspace defaults and theme colours',
     description:
       'Owner only. Existing enrollments keep their configured currency and ' +
       'price; enrollments without a custom deadline inherit the new default. ' +

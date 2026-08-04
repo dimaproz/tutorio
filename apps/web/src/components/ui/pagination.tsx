@@ -2,7 +2,7 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { ChevronLeftIcon, ChevronRightIcon, MoreHorizontalIcon } from "lucide-react"
+import { ArrowLeftIcon, ArrowRightIcon, MoreHorizontalIcon } from "lucide-react"
 
 function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
   return (
@@ -35,21 +35,27 @@ function PaginationItem({ ...props }: React.ComponentProps<"li">) {
 
 type PaginationLinkProps = {
   isActive?: boolean
-} & Pick<React.ComponentProps<typeof Button>, "size"> &
+} & Pick<React.ComponentProps<typeof Button>, "size" | "variant"> &
   React.ComponentProps<"a">
 
+// The active page is a filled brand chip, inactive pages are plain numbers —
+// the numbers themselves carry the emphasis, not a border per page.
 function PaginationLink({
   className,
   isActive,
   size = "icon",
+  variant,
   ...props
 }: PaginationLinkProps) {
   return (
     <Button
       asChild
-      variant={isActive ? "outline" : "ghost"}
+      variant={variant ?? "ghost"}
       size={size}
-      className={cn(className)}
+      className={cn(
+        isActive && "bg-primary/10 font-semibold text-primary hover:bg-primary/15",
+        className
+      )}
     >
       <a
         aria-current={isActive ? "page" : undefined}
@@ -70,10 +76,11 @@ function PaginationPrevious({
     <PaginationLink
       aria-label="Go to previous page"
       size="default"
-      className={cn("pl-1.5!", className)}
+      variant="outline"
+      className={className}
       {...props}
     >
-      <ChevronLeftIcon data-icon="inline-start" />
+      <ArrowLeftIcon data-icon="inline-start" />
       <span className="hidden sm:block">{text}</span>
     </PaginationLink>
   )
@@ -88,11 +95,12 @@ function PaginationNext({
     <PaginationLink
       aria-label="Go to next page"
       size="default"
-      className={cn("pr-1.5!", className)}
+      variant="outline"
+      className={className}
       {...props}
     >
       <span className="hidden sm:block">{text}</span>
-      <ChevronRightIcon data-icon="inline-end" />
+      <ArrowRightIcon data-icon="inline-end" />
     </PaginationLink>
   )
 }
@@ -106,7 +114,7 @@ function PaginationEllipsis({
       aria-hidden
       data-slot="pagination-ellipsis"
       className={cn(
-        "flex size-8 items-center justify-center [&_svg:not([class*='size-'])]:size-4",
+        "flex size-9 items-center justify-center text-muted-foreground [&_svg:not([class*='size-'])]:size-4",
         className
       )}
       {...props}

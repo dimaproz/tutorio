@@ -117,6 +117,8 @@ model Workspace {
   mode                      WorkspaceMode @default(SOLO)
   defaultCurrency           String        @default("EUR")
   cancellationDeadlineHours Int           @default(24)
+  primaryColor              String        @default("#5D87FF")
+  secondaryColor            String        @default("#49BEFF")
   // Default IANA timezone for new lesson series; Stage 8 adds the settings UI.
   timezone                  String        @default("Europe/Kyiv")
   createdAt                 DateTime      @default(now())
@@ -134,10 +136,10 @@ model Workspace {
   lessons      Lesson[]
   lessonSeries LessonSeries[]
 
-  packages            LessonPackage[]
-  creditEntries       LessonCreditEntry[]
-  participantShares   PackageParticipantShare[]
-  payments            Payment[]
+  packages          LessonPackage[]
+  creditEntries     LessonCreditEntry[]
+  participantShares PackageParticipantShare[]
+  payments          Payment[]
 
   @@map("workspaces")
 }
@@ -281,7 +283,7 @@ model Group {
   updatedAt      DateTime  @updatedAt
   deletedAt      DateTime?
 
-  workspace    Workspace      @relation(fields: [workspaceId], references: [id])
+  workspace    Workspace       @relation(fields: [workspaceId], references: [id])
   enrollments  Enrollment[]
   lessons      Lesson[]
   lessonSeries LessonSeries[]
@@ -416,6 +418,8 @@ model LessonSeries {
   priceMinor               Int
   currency                 String
   startDate                DateTime
+  // Exclusive upper boundary for materialization. Null means an open series.
+  endsAt                   DateTime?
   horizonMaterializedUntil DateTime
   createdAt                DateTime  @default(now())
   updatedAt                DateTime  @updatedAt
@@ -439,33 +443,37 @@ model LessonSeries {
 // rescheduled/cancelled individually and must not be regenerated. No financial
 // data beyond the status machine — the credit ledger is Stage 4.
 model Lesson {
-  id              String       @id @default(uuid())
-  workspaceId     String
-  enrollmentId    String?
-  groupId         String?
-  seriesId        String?
-  packageId       String?
-  teacherId       String
-  startsAtUtc     DateTime
-  durationMin     Int
-  priceMinor      Int
-  currency        String
-  status          LessonStatus @default(SCHEDULED)
-  isDetached      Boolean      @default(false)
+  id               String       @id @default(uuid())
+  workspaceId      String
+  enrollmentId     String?
+  groupId          String?
+  seriesId         String?
+  packageId        String?
+  teacherId        String
+  startsAtUtc      DateTime
+  durationMin      Int
+  priceMinor       Int
+  currency         String
+  status           LessonStatus @default(SCHEDULED)
+  isDetached       Boolean      @default(false)
   // Reschedule history, kept as counters because no LessonStatus expresses
   // "moved": a rescheduled lesson stays SCHEDULED, and isDetached is also set
   // when a single lesson leaves its series for any other reason. Stage 5
   // analytics buckets lessons by these instead of parsing AuditLog.diff.
-  rescheduledCount Int         @default(0)
+  rescheduledCount Int          @default(0)
   rescheduledAt    DateTime?
-  cancelledBy     CancelledBy?
-  cancelledReason String?
-  cancelledAt     DateTime?
-  completedAt     DateTime?
-  notes           String?
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-  deletedAt       DateTime?
+  cancelledBy      CancelledBy?
+  cancelledReason  String?
+  cancelledAt      DateTime?
+  completedAt      DateTime?
+  // When the money for this lesson arrived. Only meaningful for lessons billed
+  // one by one — package lessons are paid through the package's own Payment
+  // rows. Null on a completed lesson reads as "paid on the day".
+  paidAt           DateTime?
+  notes            String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  deletedAt        DateTime?
 
   workspace  Workspace     @relation(fields: [workspaceId], references: [id])
   enrollment Enrollment?   @relation(fields: [enrollmentId], references: [id])
@@ -571,12 +579,12 @@ model LessonPackage {
   updatedAt                   DateTime             @updatedAt
   deletedAt                   DateTime?
 
-  workspace    Workspace                  @relation(fields: [workspaceId], references: [id])
-  student      Student?                   @relation(fields: [studentId], references: [id])
-  group        Group?                     @relation(fields: [groupId], references: [id])
+  workspace     Workspace                 @relation(fields: [workspaceId], references: [id])
+  student       Student?                  @relation(fields: [studentId], references: [id])
+  group         Group?                    @relation(fields: [groupId], references: [id])
   creditEntries LessonCreditEntry[]
-  shares       PackageParticipantShare[]
-  payments     Payment[]
+  shares        PackageParticipantShare[]
+  payments      Payment[]
 
   @@index([workspaceId, deletedAt])
   // Revenue by period scans packages by purchase date (Stage 5 analytics).
@@ -639,28 +647,28 @@ model PackageParticipantShare {
 // The money ledger: an actual payment received, in currency minor units.
 // Recording a payment never touches lesson credits directly.
 model Payment {
-  id           String        @id @default(uuid())
-  workspaceId  String
-  enrollmentId String
-  packageId    String?
-  amountMinor  Int
-  currency     String
-  method       PaymentMethod @default(CASH)
-  status       PaymentStatus @default(PAID)
+  id             String        @id @default(uuid())
+  workspaceId    String
+  enrollmentId   String
+  packageId      String?
+  amountMinor    Int
+  currency       String
+  method         PaymentMethod @default(CASH)
+  status         PaymentStatus @default(PAID)
   // Which PaymentProvider settled this. "manual" is the tutor writing down
   // money already received; an acquirer sets its own key here.
-  provider     String        @default("manual")
+  provider       String        @default("manual")
   // The provider's own reference (order id / transaction id).
-  externalId   String?
+  externalId     String?
   // Guards against a replayed provider webhook recording the same money twice.
   // Null for manual entries, which are created by a human, one click at a time.
-  idempotencyKey String?     @unique
-  paidAt       DateTime      @default(now())
-  note         String?
-  createdById  String?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  deletedAt    DateTime?
+  idempotencyKey String?       @unique
+  paidAt         DateTime      @default(now())
+  note           String?
+  createdById    String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  deletedAt      DateTime?
 
   workspace  Workspace      @relation(fields: [workspaceId], references: [id])
   enrollment Enrollment     @relation(fields: [enrollmentId], references: [id])

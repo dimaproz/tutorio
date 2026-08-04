@@ -8,11 +8,7 @@ import {
 } from './common';
 import { priceMinorSchema } from './enrollments';
 import { paginatedResponseSchema, paginationQuerySchema } from './pagination';
-import {
-  durationMinSchema,
-  localTimeSchema,
-  weekdaysSchema,
-} from './scheduling';
+import { durationMinSchema, localTimeSchema, weekdaySchema } from './scheduling';
 
 // ---------------------------------------------------------------------------
 // Shared package primitives
@@ -36,12 +32,7 @@ export const creditEntryTypeSchema = z.enum([
 export type CreditEntryTypeDto = z.infer<typeof creditEntryTypeSchema>;
 
 // CARD is reserved for online acquiring; the MVP records the first three.
-export const paymentMethodSchema = z.enum([
-  'CASH',
-  'BANK_TRANSFER',
-  'OTHER',
-  'CARD',
-]);
+export const paymentMethodSchema = z.enum(['CASH', 'BANK_TRANSFER', 'OTHER', 'CARD']);
 export type PaymentMethodDto = z.infer<typeof paymentMethodSchema>;
 
 /**
@@ -56,12 +47,7 @@ export const PAYMENT_METHODS_MANUAL = [
 
 // A manually recorded payment is PAID immediately; an online one starts
 // PENDING until the provider confirms it.
-export const paymentStatusSchema = z.enum([
-  'PENDING',
-  'PAID',
-  'FAILED',
-  'REFUNDED',
-]);
+export const paymentStatusSchema = z.enum(['PENDING', 'PAID', 'FAILED', 'REFUNDED']);
 export type PaymentStatusDto = z.infer<typeof paymentStatusSchema>;
 
 // A package holds at least one lesson; the ceiling keeps a typo from
@@ -76,8 +62,30 @@ export const lessonsTotalSchema = z.number().int().min(1).max(500);
 // actually creates the LessonSeries (and therefore the lessons) behind it.
 export const packageScheduleSchema = z
   .object({
-    weekdays: weekdaysSchema,
-    localTime: localTimeSchema,
+    slots: z
+      .array(
+        z
+          .object({
+            weekday: weekdaySchema,
+            localTime: localTimeSchema,
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(7)
+      .superRefine((slots, ctx) => {
+        const weekdays = new Set<number>();
+        slots.forEach((slot, index) => {
+          if (weekdays.has(slot.weekday)) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: 'Each weekday can only have one package slot',
+              path: [index, 'weekday'],
+            });
+          }
+          weekdays.add(slot.weekday);
+        });
+      }),
     timezone: z.string().min(1),
     durationMin: durationMinSchema,
     startDate: isoDateTimeSchema,
@@ -85,6 +93,26 @@ export const packageScheduleSchema = z
   .strict();
 
 export type PackageScheduleDto = z.infer<typeof packageScheduleSchema>;
+
+export const initialPackagePaymentSchema = z
+  .object({
+    amountMinor: priceMinorSchema.refine((value) => value > 0, {
+      message: 'An initial payment must be greater than zero',
+    }),
+    paidAt: isoDateTimeSchema,
+  })
+  .strict()
+  .superRefine((value, ctx) => {
+    if (new Date(value.paidAt).getTime() > Date.now()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Payment date cannot be in the future',
+        path: ['paidAt'],
+      });
+    }
+  });
+
+export type InitialPackagePaymentDto = z.infer<typeof initialPackagePaymentSchema>;
 
 /**
  * Buying a package. Exactly one target (student or group). FIXED_COUNT states
@@ -106,6 +134,7 @@ export const createPackageSchema = z
     notes: notesSchema.nullable().optional(),
     // Provisioning the schedule is what turns a package into real lessons.
     schedule: packageScheduleSchema.nullable().optional(),
+    initialPayment: initialPackagePaymentSchema.nullable().optional(),
   })
   .strict()
   .superRefine((value, ctx) => {
@@ -148,9 +177,14 @@ export type CreatePackageDto = z.infer<typeof createPackageSchema>;
 /** Tutor's own correction. Never edits history — appends a signed entry. */
 export const adjustBalanceSchema = z
   .object({
-    delta: z.number().int().min(-500).max(500).refine((value) => value !== 0, {
-      message: 'delta must not be zero',
-    }),
+    delta: z
+      .number()
+      .int()
+      .min(-500)
+      .max(500)
+      .refine((value) => value !== 0, {
+        message: 'delta must not be zero',
+      }),
     note: notesSchema,
   })
   .strict();
@@ -260,9 +294,7 @@ export const packageResponseSchema = z.object({
 
 export type PackageResponse = z.infer<typeof packageResponseSchema>;
 
-export const packageListResponseSchema = paginatedResponseSchema(
-  packageResponseSchema,
-);
+export const packageListResponseSchema = paginatedResponseSchema(packageResponseSchema);
 export type PackageListResponse = z.infer<typeof packageListResponseSchema>;
 
 export const creditLedgerResponseSchema = z.object({
@@ -292,7 +324,5 @@ export const paymentResponseSchema = z.object({
 
 export type PaymentResponse = z.infer<typeof paymentResponseSchema>;
 
-export const paymentListResponseSchema = paginatedResponseSchema(
-  paymentResponseSchema,
-);
+export const paymentListResponseSchema = paginatedResponseSchema(paymentResponseSchema);
 export type PaymentListResponse = z.infer<typeof paymentListResponseSchema>;
