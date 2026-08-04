@@ -113,12 +113,15 @@ export const lessonSeriesNotFound = () =>
 
 // 409 with the conflicting lesson ids in `details` — the web app offers a
 // "book anyway" retry with ?force=true.
-export const scheduleConflict = (conflictIds: string[]) =>
+export const scheduleConflict = (
+  conflictIds: string[],
+  conflicts?: readonly unknown[],
+) =>
   new BusinessApiException(
     'SCHEDULE_CONFLICT',
     'The teacher already has a lesson overlapping this time',
     HttpStatus.CONFLICT,
-    { conflictIds },
+    { conflictIds, ...(conflicts ? { conflicts } : {}) },
   );
 
 export const invalidLessonTransition = () =>

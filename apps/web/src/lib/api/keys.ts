@@ -6,8 +6,10 @@ export interface StudentListFilters {
   search?: string;
   state?: 'active' | 'deleted' | 'all';
   status?: string;
-  subject?: string;
   groupId?: string;
+  /** Server-side column sorting; both fall back to the API defaults. */
+  sort?: string;
+  order?: 'asc' | 'desc';
   /** Pickers need a longer page than the 20-row list default. */
   pageSize?: number;
 }
@@ -16,6 +18,10 @@ export interface GroupListFilters {
   page: number;
   search?: string;
   state?: 'active' | 'deleted' | 'all';
+  status?: string;
+  studentId?: string;
+  sort?: string;
+  order?: 'asc' | 'desc';
   pageSize?: number;
 }
 

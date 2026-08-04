@@ -9,14 +9,7 @@ import { toast } from 'sonner';
 import type { ParentDetail } from '@tutorio/validation';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-  FieldSeparator,
-} from '@/components/ui/field';
+import { Field, FieldError, FieldGroup, FieldLabel, FieldSeparator } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
@@ -52,7 +45,6 @@ export function ParentForm({
   const tValidation = useTranslations('validation');
   const tCommon = useTranslations('common');
   const tFilters = useTranslations('parents.filters');
-  const tSubject = useTranslations('subject');
 
   const isEdit = Boolean(parent);
   const createParent = useCreateParentMutation();
@@ -86,7 +78,6 @@ export function ParentForm({
     value: student.id,
     label: student.fullName,
     avatarKey: student.avatarKey,
-    description: student.subject ? tSubject(student.subject) : undefined,
     badges: [<StudentStatusBadge key="status" status={student.status} />],
   }));
 
@@ -226,9 +217,14 @@ export function ParentForm({
 
         <FieldSeparator />
 
-        <FormSection icon={UsersRoundIcon} tone="warning" title={tParents('detail.studentsTitle')}>
+        <FormSection
+          icon={UsersRoundIcon}
+          tone="warning"
+          title={tParents('detail.studentsTitle')}
+          description={tParents('detail.noStudentsDescription')}
+        >
           <Field>
-            <FieldLabel>{tParents('detail.studentsTitle')}</FieldLabel>
+            <FieldLabel className="sr-only">{tParents('detail.studentsTitle')}</FieldLabel>
             <EntityMultiSelect
               options={studentOptions}
               selectedIds={values.studentIds}
@@ -242,7 +238,6 @@ export function ParentForm({
               disabled={students.isPending}
               isLoading={students.isPending}
             />
-            <FieldDescription>{tParents('detail.noStudentsDescription')}</FieldDescription>
           </Field>
         </FormSection>
 

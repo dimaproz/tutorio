@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { AuditLogTable } from './audit-log-table';
+import { WorkspaceThemeForm } from './workspace-theme-form';
 import { WorkspaceSettingsForm } from './workspace-settings-form';
 import { PageHeader } from '@/components/app/page-shell';
 import { useSession } from '@/components/app/session-provider';
@@ -30,10 +31,14 @@ export function SettingsView() {
       <Tabs defaultValue="general">
         <TabsList>
           <TabsTrigger value="general">{t('tabs.general')}</TabsTrigger>
+          <TabsTrigger value="theme">{t('tabs.theme')}</TabsTrigger>
           <TabsTrigger value="audit">{t('tabs.audit')}</TabsTrigger>
         </TabsList>
         <TabsContent value="general" className="pt-4">
           <WorkspaceSettingsForm />
+        </TabsContent>
+        <TabsContent value="theme" className="pt-4">
+          <WorkspaceThemeForm />
         </TabsContent>
         <TabsContent value="audit" className="pt-4">
           <AuditLogTable />

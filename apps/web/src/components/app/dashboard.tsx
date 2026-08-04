@@ -17,9 +17,9 @@ import {
 import { useTranslations } from 'next-intl';
 import type { LessonResponse } from '@tutorio/validation';
 import { LessonActionsDialog } from '@/components/scheduling/lesson-actions-dialog';
-import { ListSkeleton, QueryErrorAlert } from '@/components/app/page-shell';
+import { QueryErrorAlert } from '@/components/app/page-shell';
 import { LessonStatusBadge } from '@/components/app/status-badges';
-import { StatTile } from '@/components/shared';
+import { LoadingPanel, StatTile } from '@/components/shared';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -108,7 +108,7 @@ export function DashboardToday() {
   const dateLabel = format.weekdayLongDate(new Date());
 
   if (lessons.isPending) {
-    return <ListSkeleton rows={4} />;
+    return <LoadingPanel size="lg" />;
   }
   if (lessons.isError) {
     return (

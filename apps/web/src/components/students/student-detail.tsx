@@ -21,7 +21,7 @@ import {
 import { useLocale, useTranslations } from 'next-intl';
 import type { EnrollmentResponse, StudentEnrollmentSummary } from '@tutorio/validation';
 import { BackButton } from '@/components/app/back-button';
-import { ListSkeleton, QueryErrorAlert } from '@/components/app/page-shell';
+import { QueryErrorAlert } from '@/components/app/page-shell';
 import { useIsSoloWorkspace } from '@/components/app/session-provider';
 import {
   BillingTypeBadge,
@@ -43,15 +43,16 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { Item, ItemActions, ItemContent, ItemMedia, ItemTitle } from '@/components/ui/item';
 import { useEnrollmentsQuery } from '@/lib/api/enrollments';
 import { useStudentQuery } from '@/lib/api/students';
 import { formatMoneyDisplay } from '@/lib/money';
 import { useDateFormatters } from '@/lib/i18n/format';
+import { LoadingPanel } from '@/components/shared';
 
 export function StudentDetailView({ studentId }: { studentId: string }) {
   const t = useTranslations('students');
   const tCommon = useTranslations('common');
-  const tSubject = useTranslations('subject');
   const tLanguageLevel = useTranslations('languageLevel');
   const tKnowledgeLevel = useTranslations('knowledgeLevel');
   const locale = useLocale();
@@ -68,7 +69,7 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
   const enrollments = useEnrollmentsQuery({ page: 1, studentId }, !isSolo);
 
   if (student.isPending) {
-    return <ListSkeleton rows={5} />;
+    return <LoadingPanel size="lg" />;
   }
 
   if (student.isError) {
@@ -112,7 +113,7 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
       <div className="flex items-center justify-between gap-3">
         <BackButton href="/app/students" />
         <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="outline" onClick={() => setEditOpen(true)}>
+          <Button type="button" variant="default" onClick={() => setEditOpen(true)}>
             <PencilIcon data-icon="inline-start" />
             {tCommon('edit')}
           </Button>
@@ -131,9 +132,6 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
         subtitle={addedOn}
         tags={
           <>
-            {data.subject ? (
-              <ProfileTag icon={BookOpenIcon}>{tSubject(data.subject)}</ProfileTag>
-            ) : null}
             {data.knowledgeLevel ? (
               <ProfileTag icon={GaugeIcon}>{tKnowledgeLevel(data.knowledgeLevel)}</ProfileTag>
             ) : null}
@@ -348,18 +346,19 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
                 <ul className="flex flex-col gap-2">
                   {groups.map((group) => (
                     <li key={group.id}>
-                      <Link
-                        href={`/app/groups/${group.id}`}
-                        className="flex items-center gap-3 rounded-xl border p-3 transition-colors hover:bg-muted/50"
-                      >
-                        <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
-                          <GraduationCapIcon className="size-4" />
-                        </span>
-                        <span className="min-w-0 flex-1 truncate text-sm font-medium">
-                          {group.name}
-                        </span>
-                        <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" />
-                      </Link>
+                      <Item asChild variant="outline">
+                        <Link href={`/app/groups/${group.id}`}>
+                          <ItemMedia variant="icon">
+                            <GraduationCapIcon aria-hidden="true" />
+                          </ItemMedia>
+                          <ItemContent>
+                            <ItemTitle>{group.name}</ItemTitle>
+                          </ItemContent>
+                          <ItemActions>
+                            <ChevronRightIcon className="size-4 text-muted-foreground" />
+                          </ItemActions>
+                        </Link>
+                      </Item>
                     </li>
                   ))}
                 </ul>
@@ -389,7 +388,6 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
           id: data.id,
           fullName: data.fullName,
           avatarKey: data.avatarKey,
-          subject: data.subject,
         }}
       />
 

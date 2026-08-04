@@ -98,7 +98,7 @@ function CalendarPopover({
           <Button
             id={id}
             type="button"
-            variant="outline"
+            variant="neutral"
             disabled={disabled}
             aria-invalid={invalid || undefined}
             className={cn(

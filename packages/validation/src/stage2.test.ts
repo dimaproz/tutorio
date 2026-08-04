@@ -7,7 +7,7 @@ import {
   timezoneSchema,
 } from './common';
 import { createEnrollmentSchema, updateEnrollmentSchema } from './enrollments';
-import { createGroupSchema, updateGroupSchema } from './groups';
+import { createGroupSchema, listGroupsQuerySchema, updateGroupSchema } from './groups';
 import { paginatedResponseSchema, paginationQuerySchema } from './pagination';
 import { createParentSchema, updateParentSchema } from './parents';
 import { z } from 'zod';
@@ -16,6 +16,7 @@ import { updateWorkspaceSettingsSchema } from './workspace-settings';
 
 const UUID = '2f9f3a52-8a56-4f7e-9a34-1b4f0c9d2e11';
 const UUID_2 = '7c1d61a4-5d0e-4b7a-8f43-90a4a3a1c222';
+const UUID_3 = '0b5a2c18-3f6d-4e91-92a7-5c8e1d7b4a33';
 
 describe('common primitives', () => {
   it('accepts valid IANA timezones and rejects garbage', () => {
@@ -98,7 +99,6 @@ describe('students', () => {
     const parsed = createStudentSchema.parse({
       fullName: 'Alice',
       timezone: 'UTC',
-      subject: 'ENGLISH',
       hourlyRateMinor: 5000,
       currency: 'EUR',
       status: 'ON_HOLD',
@@ -140,6 +140,35 @@ describe('groups', () => {
     expect(createGroupSchema.safeParse({ name: '' }).success).toBe(false);
     expect(updateGroupSchema.safeParse({ notes: null }).success).toBe(true);
     expect(updateGroupSchema.safeParse({ name: null }).success).toBe(false);
+  });
+
+  it('carries the whole roster so saving never costs a request per student', () => {
+    const students = { studentIds: [UUID, UUID_2], teacherId: UUID_3 };
+    expect(createGroupSchema.parse({ name: 'B1 English', students }).students).toEqual(students);
+    expect(updateGroupSchema.parse({ students }).students).toEqual(students);
+    // An empty roster is how the UI clears a group; a teacher is always needed.
+    expect(
+      updateGroupSchema.safeParse({ students: { studentIds: [], teacherId: UUID } }).success,
+    ).toBe(true);
+    expect(updateGroupSchema.safeParse({ students: { studentIds: [UUID] } }).success).toBe(false);
+    expect(updateGroupSchema.safeParse({ students: null }).success).toBe(false);
+  });
+
+  it('accepts group filters and list sort fields', () => {
+    const parsed = listGroupsQuerySchema.parse({
+      status: 'ACTIVE',
+      studentId: UUID,
+      sort: 'activeStudentCount',
+      order: 'desc',
+    });
+    expect(parsed).toMatchObject({
+      status: 'ACTIVE',
+      studentId: UUID,
+      sort: 'activeStudentCount',
+      order: 'desc',
+    });
+    expect(listGroupsQuerySchema.safeParse({ schedule: 'WITH_SCHEDULE' }).success).toBe(false);
+    expect(listGroupsQuerySchema.safeParse({ sort: 'students' }).success).toBe(false);
   });
 });
 
@@ -222,6 +251,10 @@ describe('workspace settings', () => {
   it('requires at least one field and validates values', () => {
     expect(updateWorkspaceSettingsSchema.safeParse({}).success).toBe(false);
     expect(updateWorkspaceSettingsSchema.safeParse({ defaultCurrency: 'UAH' }).success).toBe(true);
+    expect(updateWorkspaceSettingsSchema.safeParse({ primaryColor: '#5d87ff' }).success).toBe(true);
+    expect(updateWorkspaceSettingsSchema.safeParse({ secondaryColor: '#12345' }).success).toBe(
+      false,
+    );
     expect(updateWorkspaceSettingsSchema.safeParse({ cancellationDeadlineHours: 24 }).success).toBe(
       true,
     );

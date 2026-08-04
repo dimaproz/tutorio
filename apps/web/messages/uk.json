@@ -22,7 +22,9 @@
     "open": "Відкрити",
     "deleted": "Видалено",
     "restoreOwnerOnly": "Відновити може лише власник",
-    "remove": "Прибрати"
+    "remove": "Прибрати",
+    "durationMinutes": "{minutes} хв",
+    "durationChoiceHint": "Оберіть популярну тривалість або введіть свою вручну."
   },
   "auth": {
     "login": {
@@ -128,13 +130,15 @@
     "noteRequired": "Вкажіть причину",
     "studentRequired": "Оберіть учня",
     "groupRequired": "Оберіть групу",
-    "intRange": "Введіть число від {min} до {max}"
+    "intRange": "Введіть число від {min} до {max}",
+    "cancelledByRequired": "Вкажіть, хто скасував урок"
   },
   "pagination": {
     "label": "Сторінки",
     "previous": "Назад",
     "next": "Далі",
     "summary": "Сторінка {page} з {totalPages}",
+    "goToPage": "Перейти на сторінку {page}",
     "total": "{count, plural, =0 {Записів немає} one {# запис} few {# записи} many {# записів} other {# запису}}"
   },
   "filters": {
@@ -218,7 +222,7 @@
       "parents": "Батьки",
       "groups": "Групи",
       "calendar": "Календар",
-      "finance": "Фінанси",
+      "packages": "Пакети",
       "settings": "Налаштування",
       "comingSoon": "Незабаром",
       "patterns": "Розклад",
@@ -355,7 +359,7 @@
       "addParentPlaceholder": "Прив'язати наявного з батьків",
       "addParentSearch": "Пошук батьків…",
       "addParentEmpty": "Батьків не знайдено",
-      "newParent": "Новий з батьків",
+      "newParent": "Створити нового",
       "removeParent": "Прибрати {name}",
       "notes": "Нотатки",
       "notesPlaceholder": "Цілі, побажання, усе важливе",
@@ -405,19 +409,43 @@
   },
   "groups": {
     "title": "Групи",
-    "subtitle": "Заняття, які учні відвідують разом.",
+    "subtitle": "Групи учнів, які навчаються разом.",
     "add": "Додати групу",
     "searchLabel": "Пошук груп",
     "searchPlaceholder": "Назва групи…",
     "deletedBadge": "У кошику",
     "columns": {
       "group": "Група",
+      "schedule": "Уроки",
       "students": "Учні",
-      "statuses": "Записи",
+      "price": "Ціна",
+      "status": "Статус",
       "actions": "Дії"
     },
     "tableCaption": "Групи простору з кількістю записаних учнів",
     "studentCount": "{count, plural, =0 {Учнів немає} one {# учень} few {# учні} many {# учнів} other {# учня}}",
+    "scheduleMore": "+{count} ще",
+    "card": {
+      "defaultPrice": "Ціна за урок",
+      "priceNotSet": "Не вказано",
+      "status": "Статус групи",
+      "students": "Учні",
+      "schedule": "Розклад",
+      "noSchedule": "Регулярний розклад ще не налаштовано.",
+      "details": "Деталі"
+    },
+    "filters": {
+      "statusAll": "Усі статуси",
+      "scheduleAll": "Усі розклади",
+      "studentAll": "Усі учні",
+      "WITH_SCHEDULE": "З уроками",
+      "WITHOUT_SCHEDULE": "Без уроків"
+    },
+    "status": {
+      "ACTIVE": "Активна",
+      "EMPTY": "Без учнів",
+      "ARCHIVED": "У кошику"
+    },
     "empty": {
       "title": "Груп поки немає",
       "description": "Створіть групу, щоб об'єднати кількох учнів одним заняттям.",
@@ -436,30 +464,32 @@
     },
     "form": {
       "createTitle": "Нова група",
-      "createSubtitle": "Дайте групі назву, зрозумілу вашим учням.",
+      "createSubtitle": "Заповніть профіль групи, спільну ціну та список учнів.",
       "editTitle": "Редагування групи",
-      "editSubtitle": "Оновіть назву та нотатки.",
+      "editSubtitle": "Оновіть профіль групи, спільну ціну та список учнів.",
       "detailsSection": "Дані групи",
       "name": "Назва",
       "namePlaceholder": "Наприклад, B1 English вечірня",
-      "pricePerLesson": "Ціна за урок",
-      "pricePerLessonHint": "За замовчуванням для записів цієї групи, наприклад 500 або 500,50",
+      "pricingSection": "Ціна за урок за замовчуванням",
+      "pricingHint": "Це ціна за замовчуванням для кожного уроку в групі. Пізніше для учня можна вказати індивідуальну ціну.",
+      "pricePerLesson": "Ціна за урок за замовчуванням",
+      "pricePerLessonHint": "Наприклад, 500 або 500,50",
       "currency": "Валюта",
-      "notes": "Нотатки",
-      "notesPlaceholder": "Розклад, рівень, матеріали",
+      "descriptionSection": "Опис",
+      "description": "Опис",
+      "descriptionPlaceholder": "Розклад, рівень, матеріали або важливі деталі про групу",
       "submitCreate": "Створити групу",
       "submitEdit": "Зберегти зміни",
       "students": {
         "section": "Учні",
-        "hint": "Зарахуйте учнів до цієї групи.",
-        "add": "Додати учня",
-        "teacher": "Викладач",
-        "price": "Ціна",
+        "hint": "Оберіть наявних учнів або створіть нового просто тут.",
+        "newStudent": "Створити нового",
         "remove": "Прибрати",
         "none": "Ще немає учнів.",
         "student": "Учень",
         "pickStudent": "Оберіть учня",
-        "pickTeacher": "Оберіть викладача"
+        "studentSearch": "Пошук учнів...",
+        "studentEmpty": "Учня не знайдено"
       }
     },
     "detail": {
@@ -473,6 +503,70 @@
       "student": "Учень",
       "teacher": "Викладач",
       "price": "Ціна",
+      "createdOn": "Створено {date}",
+      "unavailable": "—",
+      "metrics": {
+        "price": "Ціна за урок",
+        "priceDescription": "Базова ціна групи",
+        "revenue": "Дохід",
+        "revenueDescription": "За обраний період",
+        "students": "Учнів у групі",
+        "studentsDescription": "В архіві: {archived}",
+        "attendance": "Середня відвідуваність",
+        "attendanceDescription": "Потребує обліку відвідувань"
+      },
+      "columns": {
+        "student": "Учень",
+        "status": "Статус",
+        "price": "Ціна",
+        "attendance": "Відвідуваність",
+        "actions": "Дії"
+      },
+      "membersTableCaption": "Учні групи зі статусом, ціною та відвідуваністю",
+      "attendanceUnavailable": "Немає даних",
+      "editStudent": "Редагувати запис {name}",
+      "attendanceTitle": "Відвідуваність",
+      "attendanceDescription": "Середній показник по групі",
+      "attendanceEmptyTitle": "Відвідуваність ще не ведеться",
+      "attendanceEmptyDescription": "Коли з'явиться облік присутності учнів, тут буде динаміка за період.",
+      "period": {
+        "sixWeeks": "6 тижнів",
+        "threeMonths": "3 місяці"
+      },
+      "scheduleTitle": "Розклад",
+      "scheduleDescription": "Регулярні заняття групи",
+      "loadingSchedule": "Завантажуємо розклад…",
+      "noSchedule": "Розклад ще не налаштовано",
+      "noScheduleDescription": "Створіть регулярний шаблон у розділі розкладу.",
+      "weekdays": {
+        "0": "Нд",
+        "1": "Пн",
+        "2": "Вт",
+        "3": "Ср",
+        "4": "Чт",
+        "5": "Пт",
+        "6": "Сб"
+      },
+      "durationMinutes": "{minutes} хв",
+      "packagesTitle": "Активні пакети",
+      "packagesDescription": "Пакети з невикористаними уроками",
+      "loadingPackages": "Завантажуємо пакети…",
+      "noPackages": "Активних пакетів немає",
+      "noPackagesDescription": "Пакети для цієї групи з'являться тут.",
+      "lessonsTitle": "Уроки",
+      "lessonsDescription": "Усього {count} уроків за обраний період",
+      "addLesson": "Додати урок",
+      "lessonStats": {
+        "completed": "Успішно завершено",
+        "scheduled": "Заплановано",
+        "cancelled": "Скасовано",
+        "rescheduled": "Перенесено"
+      },
+      "upcomingLessons": "Найближчі уроки",
+      "loadingLessons": "Завантажуємо уроки…",
+      "noUpcomingLessons": "Найближчих уроків немає",
+      "noUpcomingLessonsDescription": "Додайте урок або регулярний шаблон для групи.",
+      "lessonFallbackTitle": "Урок групи",
       "deletedTitle": "Ця група у кошику",
       "deletedDescription": "Відновіть групу, щоб знову її редагувати."
     },
@@ -503,9 +597,10 @@
     },
     "columns": {
       "parent": "Батьки",
-      "contacts": "Контакти",
       "students": "Учні",
-      "actions": "Дії"
+      "actions": "Дії",
+      "phone": "Телефон",
+      "telegram": "Telegram"
     },
     "tableCaption": "Батьки простору з пов'язаними учнями",
     "empty": {
@@ -617,6 +712,7 @@
     "subtitle": "Значення за замовчуванням і журнал змін.",
     "tabs": {
       "general": "Загальні",
+      "theme": "Тема",
       "audit": "Журнал змін"
     },
     "general": {
@@ -634,6 +730,16 @@
       "modeSchool": "Школа з кількома вчителями",
       "modeSoloHint": "Керування вчителями приховане, усі уроки — ваші. Перемкніть на режим школи, коли хтось приєднається.",
       "modeSchoolHint": "Уроки, навчання та календар запитують, якому вчителю вони належать."
+    },
+    "theme": {
+      "title": "Тема",
+      "description": "Кольори школи",
+      "primaryColor": "Основний колір",
+      "secondaryColor": "Додатковий колір",
+      "preview": "Попередній перегляд",
+      "reset": "Скинути",
+      "submit": "Зберегти тему",
+      "saved": "Тему збережено"
     },
     "audit": {
       "title": "Журнал змін",
@@ -700,6 +806,8 @@
       "currency": "Валюта",
       "cancellationDeadlineHours": "Дедлайн скасування",
       "defaultCurrency": "Валюта за замовчуванням",
+      "primaryColor": "Основний колір",
+      "secondaryColor": "Додатковий колір",
       "studentId": "Учень",
       "groupId": "Група",
       "teacherId": "Викладач",
@@ -748,6 +856,8 @@
     "currency": "Валюта",
     "cancellationDeadlineHours": "Дедлайн скасування",
     "defaultCurrency": "Валюта за замовчуванням",
+    "primaryColor": "Основний колір",
+    "secondaryColor": "Додатковий колір",
     "studentId": "Учень",
     "groupId": "Група",
     "teacherId": "Викладач",
@@ -812,7 +922,8 @@
       "deadlineStarted": "Урок уже розпочався — це пізнє скасування.",
       "toastRescheduled": "Урок перенесено.",
       "toastDeleted": "Урок видалено.",
-      "toastUpdated": "Урок оновлено."
+      "toastUpdated": "Урок оновлено.",
+      "details": "Деталі та нотатки"
     },
     "conflict": {
       "title": "Конфлікт часу",
@@ -832,22 +943,53 @@
       "teacherSearch": "Пошук викладачів…",
       "teacherEmpty": "Викладача не знайдено",
       "date": "Дата й час",
+      "schedule": "Розклад",
+      "lessonType": "Тип уроку",
+      "lessonTypeHint": "Оберіть, для кого створюємо урок.",
       "duration": "Тривалість (хв)",
       "price": "Ціна за урок",
-      "pricePlaceholder": "Зі ставки учня",
+      "pricePlaceholder": "Ціна за урок",
       "notes": "Нотатки до уроку",
       "notesPlaceholder": "Напр.: пройшли Past Simple, ДЗ стор. 42",
       "addDate": "Додати ще дату",
       "removeDate": "Прибрати",
-      "submit": "Створити"
+      "submit": "Створити",
+      "targetStudent": "Учень",
+      "targetGroup": "Група",
+      "targetHint": "Кого записуємо на урок.",
+      "group": "Група",
+      "groupPlaceholder": "Оберіть групу",
+      "groupSearch": "Пошук групи",
+      "groupEmpty": "Групи не знайдено",
+      "dateHint": "Оберіть день і вільний час — зайняті слоти вимкнено.",
+      "groupPriceHint": "Ціна підставиться зі ставки групи — її можна змінити.",
+      "currency": "Валюта",
+      "statusSection": "Статус уроку",
+      "statusHint": "Урок можна одразу записати як проведений або скасований.",
+      "status": "Статус",
+      "cancelledBy": "Хто скасував",
+      "cancelledByPlaceholder": "Оберіть, хто скасував",
+      "paidAt": "Дата оплати",
+      "paidAtHint": "Для проведеного уроку порожнє поле означає оплату в день заняття.",
+      "paidAtMultipleHint": "Дату оплати вказують для одного уроку — для кількох дат заповніть її пізніше в самому уроці."
     },
     "studentLessons": {
       "title": "Уроки",
       "addLesson": "Додати урок",
-      "upcoming": "Найближчі ({count})",
-      "past": "Минулі ({count})",
+      "upcoming": "Найближчі",
+      "past": "Минулі",
       "noUpcoming": "Запланованих уроків немає.",
-      "noPast": "Проведених уроків ще немає."
+      "noPast": "Проведених уроків ще немає.",
+      "tableCaption": "Уроки учня",
+      "durationMinutes": "{minutes} хв",
+      "columns": {
+        "datetime": "Дата і час",
+        "duration": "Тривалість",
+        "status": "Статус",
+        "kind": "Тип",
+        "price": "Ціна",
+        "actions": "Дії"
+      }
     },
     "cancelDialog": {
       "title": "Скасувати урок",
@@ -868,7 +1010,7 @@
       "empty": "Ще немає повторюваних шаблонів.",
       "weekdays": "Дні тижня",
       "time": "Час",
-      "duration": "Тривалість",
+      "duration": "Тривалість (хв)",
       "target": "Учень",
       "delete": "Видалити",
       "deleteConfirm": "Видалити цей шаблон і його майбутні уроки?",
@@ -899,6 +1041,10 @@
       "startDate": "Дата початку",
       "submit": "Зберегти",
       "cancel": "Скасувати"
+    },
+    "lessonKind": {
+      "INDIVIDUAL": "Індивідуальний",
+      "GROUP": "Груповий"
     }
   },
   "teachers": {
@@ -982,7 +1128,7 @@
     "you": "Це ви"
   },
   "packages": {
-    "title": "Фінанси",
+    "title": "Пакети",
     "subtitle": "Пакети уроків, баланси та оплати.",
     "add": "Новий пакет",
     "empty": "Пакетів ще немає.",
@@ -1040,7 +1186,10 @@
     },
     "form": {
       "createTitle": "Новий пакет",
-      "createSubtitle": "Пакет одразу нараховує уроки на баланс.",
+      "createSubtitle": "Створіть пакет занять, налаштуйте оплату та розклад.",
+      "targetDescription": "Оберіть учня або групу, для яких діятиме пакет.",
+      "settingsTitle": "Налаштування пакета",
+      "settingsDescription": "Вкажіть формат, вартість і термін дії пакета.",
       "targetKind": "Для кого",
       "targetStudent": "Учень",
       "targetGroup": "Група",
@@ -1056,16 +1205,46 @@
       "fixedCount": "Фіксована кількість",
       "byPeriod": "За періодом",
       "lessonsTotal": "Кількість уроків",
+      "lessonsPreset": "{count} уроків",
+      "lessonsHint": "Введіть власну кількість або оберіть популярний варіант.",
+      "validityDays": "Термін дії, днів",
+      "daysPreset": "{days} днів",
+      "validityHint": "Після завершення терміну нові уроки не створюватимуться.",
       "endDate": "Діє до",
       "pricePerLesson": "Ціна за урок",
       "currency": "Валюта",
       "notes": "Нотатки",
+      "totalPrice": "Загальна сума пакета",
       "scheduleEnabled": "Створити регулярний розклад",
       "scheduleHint": "Уроки згенеруються автоматично за цим розкладом.",
+      "scheduleDisabledHint": "Пакет буде створено без регулярного розкладу та майбутніх уроків.",
       "weekdays": "Дні тижня",
       "time": "Час",
       "timezone": "Часовий пояс",
-      "duration": "Тривалість (хв)",
+      "duration": "Тривалість",
+      "startTitle": "Коли почати створювати уроки?",
+      "startToday": "Починаючи з сьогодні",
+      "startManual": "Обрати дату вручну",
+      "firstLesson": "Перший урок: {date}",
+      "noLessonDate": "не визначено",
+      "endDateInclusive": "Пакет діє включно до",
+      "periodSummary": "Буде створено {count} уроків. Останній урок: {date}.",
+      "paymentTitle": "Оплата пакета",
+      "paymentDescription": "Зафіксуйте стан розрахунку під час створення пакета.",
+      "paymentPending": "Очікує оплати",
+      "paymentPartial": "Частково оплачено",
+      "paymentPaid": "Оплачено",
+      "groupPartialHint": "У групі кожен учень сплачує свою частину окремо. Часткові внески можна зафіксувати після створення пакета.",
+      "paidAmount": "Отримана сума",
+      "paidAt": "Дата оплати",
+      "fullPaymentHint": "Буде зафіксовано оплату повної вартості пакета.",
+      "conflictTitle": "Знайдено конфлікти в розкладі",
+      "conflictDescription": "Деякі уроки перетинаються з уже зайнятим часом викладача.",
+      "existingConflict": "Перетинається з уроком {target}: {time}.",
+      "newSlotConflict": "Два нові уроки цього пакета перетинаються між собою.",
+      "unknownTarget": "без назви",
+      "backToSchedule": "Повернутися до розкладу",
+      "forceCreate": "Створити попри конфлікти",
       "submit": "Створити пакет",
       "period": "Період дії"
     },

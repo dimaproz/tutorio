@@ -1,71 +1,91 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react';
+import {
+  BanknoteIcon,
+  CalendarDaysIcon,
+  CircleDollarSignIcon,
+  PackageIcon,
+  PencilIcon,
+  PlusIcon,
+  Trash2Icon,
+  UsersRoundIcon,
+} from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import type { EnrollmentResponse, GroupEnrollmentSummary } from '@tutorio/validation';
+import type { GroupEnrollmentSummary } from '@tutorio/validation';
+import { BackButton } from '@/components/app/back-button';
 import { ConfirmDialog } from '@/components/app/confirm-dialog';
-import { ListSkeleton, PageHeader, QueryErrorAlert } from '@/components/app/page-shell';
+import { MetricCard } from '@/components/app/metric-card';
+import { ProfileHeader, ProfileTag, SectionTitle } from '@/components/app/detail-view';
+import { QueryErrorAlert } from '@/components/app/page-shell';
 import { useSession } from '@/components/app/session-provider';
-import {
-  BillingTypeBadge,
-  DeletedBadge,
-  EnrollmentStatusBadge,
-} from '@/components/app/status-badges';
+import { GroupStatusBadge } from '@/components/app/status-badges';
 import { EnrollmentDialog } from '@/components/enrollments/enrollment-dialog';
-import { GroupFormDialog } from './group-form-dialog';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { PackageSummaryCard } from '@/components/packages/package-summary-card';
+import { ScheduleSlotCard } from '@/components/scheduling/schedule-slot-card';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from '@/components/ui/empty';
-import { useEnrollmentsQuery } from '@/lib/api/enrollments';
+import { Card, CardAction, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
 import { errorMessageKey } from '@/lib/api/error-message';
-import {
-  useDeleteGroupMutation,
-  useGroupQuery,
-  useRestoreGroupMutation,
-} from '@/lib/api/groups';
+import { useDeleteGroupMutation, useGroupQuery, useRestoreGroupMutation } from '@/lib/api/groups';
+import { usePackagesQuery } from '@/lib/api/packages';
+import { useLessonsQuery, useSeriesListQuery } from '@/lib/api/scheduling';
 import type { GatewayError } from '@/lib/auth/client';
+import { useDateFormatters } from '@/lib/i18n/format';
 import { formatMoneyDisplay } from '@/lib/money';
+import { LoadingPanel } from '@/components/shared';
+import { GroupAttendanceChart, type GroupAnalyticsPeriod } from './group-attendance-chart';
+import { GroupLessonsCard } from './group-lessons-card';
+import { GroupMembersTable } from './group-members-table';
+import { GroupFormDialog } from './group-form-dialog';
+
+function scheduleTimeRange(localTime: string, durationMin: number) {
+  const [hours, minutes] = localTime.split(':').map(Number);
+  const endMinutes = (hours * 60 + minutes + durationMin) % (24 * 60);
+  const endHours = Math.floor(endMinutes / 60);
+  const endMinute = endMinutes % 60;
+  return `${localTime} – ${String(endHours).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`;
+}
+
+function analyticsRange(period: GroupAnalyticsPeriod) {
+  const now = new Date();
+  const from = new Date(now);
+  from.setDate(from.getDate() - (period === 'sixWeeks' ? 42 : 91));
+  const to = new Date(now);
+  to.setDate(to.getDate() + 90);
+  return { from: from.toISOString(), to: to.toISOString() };
+}
 
 export function GroupDetailView({ groupId }: { groupId: string }) {
   const t = useTranslations('groups');
+  const tDetail = useTranslations('groups.detail');
   const tCommon = useTranslations('common');
   const tErrors = useTranslations('errors');
   const locale = useLocale();
+  const format = useDateFormatters();
   const router = useRouter();
+  const session = useSession();
+  const isOwner = session.role === 'OWNER';
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [editing, setEditing] = useState<EnrollmentResponse | undefined>();
+  const [editing, setEditing] = useState<GroupEnrollmentSummary | undefined>();
+  const [period, setPeriod] = useState<GroupAnalyticsPeriod>('sixWeeks');
 
   const group = useGroupQuery(groupId);
-  const session = useSession();
-  const isOwner = session.role === 'OWNER';
-  const enrollments = useEnrollmentsQuery({ page: 1, groupId });
+  const series = useSeriesListQuery({ page: 1, pageSize: 100, groupId });
+  const packages = usePackagesQuery({ page: 1, pageSize: 6, groupId });
+  const lessonRange = useMemo(() => analyticsRange(period), [period]);
+  const lessons = useLessonsQuery({ ...lessonRange, groupId });
   const deleteGroup = useDeleteGroupMutation();
   const restoreGroup = useRestoreGroupMutation();
 
   if (group.isPending) {
-    return <ListSkeleton rows={4} />;
+    return <LoadingPanel size="lg" />;
   }
-
   if (group.isError) {
     return (
       <QueryErrorAlert
@@ -78,6 +98,28 @@ export function GroupDetailView({ groupId }: { groupId: string }) {
 
   const data = group.data;
   const isDeleted = Boolean(data.deletedAt);
+  const activeEnrollments = data.enrollments.filter((item) => item.status === 'ACTIVE');
+  const archivedEnrollments = data.enrollments.filter((item) => item.status === 'ARCHIVED');
+  const status = activeEnrollments.length > 0 ? 'ACTIVE' : 'EMPTY';
+  const eligibleRevenue = (lessons.data?.items ?? []).filter(
+    (lesson) => lesson.status === 'COMPLETED' || lesson.status === 'CANCELLED_CHARGED',
+  );
+  const canShowRevenue =
+    eligibleRevenue.length > 0 &&
+    eligibleRevenue.every((lesson) => lesson.currency === data.currency);
+  const revenue = canShowRevenue
+    ? eligibleRevenue.reduce((total, lesson) => total + lesson.priceMinor, 0)
+    : null;
+  const schedules = (series.data?.items ?? []).flatMap((item) =>
+    item.weekdays.map((weekday) => ({
+      id: `${item.id}-${weekday}`,
+      weekday,
+      localTime: item.localTime,
+      durationMin: item.durationMin,
+      timezone: item.timezone,
+    })),
+  );
+  const activePackages = (packages.data?.items ?? []).filter((pkg) => pkg.remainingCredits > 0);
 
   function openCreate() {
     setEditing(undefined);
@@ -85,7 +127,7 @@ export function GroupDetailView({ groupId }: { groupId: string }) {
   }
 
   function openEdit(summary: GroupEnrollmentSummary) {
-    setEditing(enrollments.data?.items.find((item) => item.id === summary.id));
+    setEditing(summary);
     setSheetOpen(true);
   }
 
@@ -111,139 +153,200 @@ export function GroupDetailView({ groupId }: { groupId: string }) {
 
   return (
     <>
-      <PageHeader
-        title={data.name}
-        description={t('studentCount', {
-          count: data.enrollments.filter((item) => item.status === 'ACTIVE').length,
-        })}
-        action={
-          isDeleted ? (
-            isOwner ? (
-              <Button
-                type="button"
-                onClick={() => void onRestore()}
-                disabled={restoreGroup.isPending}
-              >
-                {tCommon('restore')}
-              </Button>
-            ) : null
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" variant="outline" onClick={() => setEditOpen(true)}>
-                <PencilIcon data-icon="inline-start" />
-                {tCommon('edit')}
-              </Button>
-              <Button type="button" variant="outline" onClick={() => setDeleteOpen(true)}>
-                <Trash2Icon data-icon="inline-start" />
-                {tCommon('delete')}
-              </Button>
-              <Button type="button" onClick={openCreate}>
-                <PlusIcon data-icon="inline-start" />
-                {t('detail.addStudent')}
-              </Button>
-            </div>
-          )
-        }
-      />
+      <div className="flex items-center justify-between gap-3">
+        <BackButton href="/app/groups" />
+        {isDeleted ? (
+          isOwner ? (
+            <Button
+              type="button"
+              onClick={() => void onRestore()}
+              disabled={restoreGroup.isPending}
+            >
+              {tCommon('restore')}
+            </Button>
+          ) : null
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" onClick={() => setEditOpen(true)}>
+              <PencilIcon data-icon="inline-start" />
+              {tCommon('edit')}
+            </Button>
+            <Button type="button" variant="destructive" onClick={() => setDeleteOpen(true)}>
+              <Trash2Icon data-icon="inline-start" />
+              {tCommon('delete')}
+            </Button>
+          </div>
+        )}
+      </div>
 
-      {isDeleted ? (
-        <Alert>
-          <AlertTitle className="flex items-center gap-2">
-            <DeletedBadge label={tCommon('deleted')} />
-            {t('detail.deletedTitle')}
-          </AlertTitle>
-          <AlertDescription>{t('detail.deletedDescription')}</AlertDescription>
-        </Alert>
-      ) : null}
+      <div className="flex flex-col gap-3">
+        <ProfileHeader
+          fullName={data.name}
+          badge={<GroupStatusBadge status={status} />}
+          subtitle={tDetail('createdOn', { date: format.longDate(data.createdAt) })}
+          tags={
+            <>
+              <ProfileTag icon={UsersRoundIcon}>
+                {t('studentCount', { count: activeEnrollments.length })}
+              </ProfileTag>
+              {data.currency ? <ProfileTag>{data.currency}</ProfileTag> : null}
+            </>
+          }
+        />
+        {data.notes ? (
+          <p className="max-w-3xl text-sm text-muted-foreground">{data.notes}</p>
+        ) : null}
+      </div>
 
-      {data.pricePerLesson != null && data.currency ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('detail.priceTitle')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="tabular text-sm">
-              {formatMoneyDisplay(data.pricePerLesson, data.currency, locale)}
-            </p>
-          </CardContent>
-        </Card>
-      ) : null}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          icon={BanknoteIcon}
+          tone="success"
+          label={tDetail('metrics.price')}
+          value={
+            data.pricePerLesson != null && data.currency
+              ? formatMoneyDisplay(data.pricePerLesson, data.currency, locale)
+              : tDetail('unavailable')
+          }
+          description={tDetail('metrics.priceDescription')}
+        />
+        <MetricCard
+          icon={CircleDollarSignIcon}
+          tone="primary"
+          label={tDetail('metrics.revenue')}
+          value={
+            revenue != null && data.currency
+              ? formatMoneyDisplay(revenue, data.currency, locale)
+              : tDetail('unavailable')
+          }
+          description={tDetail('metrics.revenueDescription')}
+        />
+        <MetricCard
+          icon={UsersRoundIcon}
+          tone="primary"
+          label={tDetail('metrics.students')}
+          value={activeEnrollments.length}
+          description={tDetail('metrics.studentsDescription', {
+            archived: archivedEnrollments.length,
+          })}
+        />
+        <MetricCard
+          icon={CalendarDaysIcon}
+          tone="warning"
+          label={tDetail('metrics.attendance')}
+          value={tDetail('unavailable')}
+          description={tDetail('metrics.attendanceDescription')}
+        />
+      </div>
 
-      {data.notes ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('detail.notesTitle')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm whitespace-pre-wrap">{data.notes}</p>
-          </CardContent>
-        </Card>
-      ) : null}
-
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('detail.membersTitle')}</CardTitle>
-          <CardDescription>{t('detail.membersDescription')}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {data.enrollments.length === 0 ? (
-            <Empty>
-              <EmptyHeader>
-                <EmptyTitle>{t('detail.noMembers')}</EmptyTitle>
-                <EmptyDescription>{t('detail.noMembersDescription')}</EmptyDescription>
-              </EmptyHeader>
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
+        <div className="flex min-w-0 flex-col gap-6">
+          <Card>
+            <CardHeader>
+              <SectionTitle icon={UsersRoundIcon} tone="primary">
+                {tDetail('membersTitle')}
+              </SectionTitle>
+              <CardDescription>{tDetail('membersDescription')}</CardDescription>
               {!isDeleted ? (
-                <EmptyContent>
-                  <Button type="button" onClick={openCreate}>
+                <CardAction>
+                  <Button type="button" size="sm" onClick={openCreate}>
                     <PlusIcon data-icon="inline-start" />
-                    {t('detail.addStudent')}
+                    {tDetail('addStudent')}
                   </Button>
-                </EmptyContent>
+                </CardAction>
               ) : null}
-            </Empty>
-          ) : (
-            <ul className="flex flex-col gap-3">
-              {data.enrollments.map((enrollment) => (
-                <li
-                  key={enrollment.id}
-                  className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div className="flex min-w-0 flex-col gap-2">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Link
-                        href={`/app/students/${enrollment.student.id}`}
-                        className="font-medium underline-offset-4 hover:underline"
-                      >
-                        {enrollment.student.fullName}
-                      </Link>
-                      <EnrollmentStatusBadge status={enrollment.status} />
-                      <BillingTypeBadge billingType={enrollment.billingType} />
-                    </div>
-                    <p className="tabular text-muted-foreground text-sm">
-                      {`${t('detail.teacher')}: ${enrollment.teacher.name} · ${t('detail.price')}: ${formatMoneyDisplay(
-                        enrollment.priceMinor,
-                        enrollment.currency,
-                        locale,
-                      )}`}
-                    </p>
-                  </div>
-                  {!isDeleted ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openEdit(enrollment)}
-                      disabled={enrollments.isPending}
-                    >
-                      {tCommon('edit')}
-                    </Button>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+            </CardHeader>
+            <CardContent>
+              {data.enrollments.length === 0 ? (
+                <Empty>
+                  <EmptyHeader>
+                    <EmptyTitle>{tDetail('noMembers')}</EmptyTitle>
+                    <EmptyDescription>{tDetail('noMembersDescription')}</EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              ) : (
+                <GroupMembersTable
+                  enrollments={data.enrollments}
+                  disabled={isDeleted}
+                  onEdit={openEdit}
+                />
+              )}
+            </CardContent>
+          </Card>
+
+          <GroupAttendanceChart period={period} onPeriodChange={setPeriod} />
+          <GroupLessonsCard
+            groupId={data.id}
+            lessons={lessons.data?.items ?? []}
+            pending={lessons.isPending}
+          />
+        </div>
+
+        <aside className="flex min-w-0 flex-col gap-6">
+          <Card>
+            <CardHeader>
+              <SectionTitle icon={CalendarDaysIcon} tone="warning">
+                {tDetail('scheduleTitle')}
+              </SectionTitle>
+              <CardDescription>{tDetail('scheduleDescription')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {series.isPending ? (
+                <p className="text-sm text-muted-foreground">{tDetail('loadingSchedule')}</p>
+              ) : schedules.length === 0 ? (
+                <Empty className="border border-dashed py-6">
+                  <EmptyHeader>
+                    <EmptyTitle>{tDetail('noSchedule')}</EmptyTitle>
+                    <EmptyDescription>{tDetail('noScheduleDescription')}</EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              ) : (
+                <ul className="flex flex-col gap-3">
+                  {schedules.map((schedule) => (
+                    <li key={schedule.id}>
+                      <ScheduleSlotCard
+                        weekday={tDetail(`weekdays.${schedule.weekday}`)}
+                        timeRange={scheduleTimeRange(schedule.localTime, schedule.durationMin)}
+                        duration={tDetail('durationMinutes', { minutes: schedule.durationMin })}
+                        timezone={schedule.timezone}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <SectionTitle icon={PackageIcon} tone="success">
+                {tDetail('packagesTitle')}
+              </SectionTitle>
+              <CardDescription>{tDetail('packagesDescription')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {packages.isPending ? (
+                <p className="text-sm text-muted-foreground">{tDetail('loadingPackages')}</p>
+              ) : activePackages.length === 0 ? (
+                <Empty className="border border-dashed py-6">
+                  <EmptyHeader>
+                    <EmptyTitle>{tDetail('noPackages')}</EmptyTitle>
+                    <EmptyDescription>{tDetail('noPackagesDescription')}</EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              ) : (
+                <ul className="flex flex-col gap-3">
+                  {activePackages.map((pkg) => (
+                    <li key={pkg.id}>
+                      <PackageSummaryCard package={pkg} />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+        </aside>
+      </div>
 
       <ConfirmDialog
         open={deleteOpen}

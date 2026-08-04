@@ -22,7 +22,9 @@
     "open": "Open",
     "deleted": "Deleted",
     "restoreOwnerOnly": "Only the owner can restore",
-    "remove": "Remove"
+    "remove": "Remove",
+    "durationMinutes": "{minutes} min",
+    "durationChoiceHint": "Choose a common duration or enter your own."
   },
   "auth": {
     "login": {
@@ -128,13 +130,15 @@
     "noteRequired": "Add a reason",
     "studentRequired": "Choose a student",
     "groupRequired": "Choose a group",
-    "intRange": "Enter a number between {min} and {max}"
+    "intRange": "Enter a number between {min} and {max}",
+    "cancelledByRequired": "Say who cancelled the lesson"
   },
   "pagination": {
     "label": "Pagination",
     "previous": "Previous",
     "next": "Next",
     "summary": "Page {page} of {totalPages}",
+    "goToPage": "Go to page {page}",
     "total": "{count, plural, =0 {No records} one {# record} other {# records}}"
   },
   "filters": {
@@ -218,7 +222,7 @@
       "parents": "Parents",
       "groups": "Groups",
       "calendar": "Calendar",
-      "finance": "Finance",
+      "packages": "Packages",
       "settings": "Settings",
       "comingSoon": "Coming soon",
       "patterns": "Schedule",
@@ -355,7 +359,7 @@
       "addParentPlaceholder": "Link an existing parent",
       "addParentSearch": "Search parents…",
       "addParentEmpty": "No parent found",
-      "newParent": "New parent",
+      "newParent": "Create new",
       "removeParent": "Remove {name}",
       "notes": "Notes",
       "notesPlaceholder": "Goals, preferences, anything worth remembering",
@@ -405,19 +409,43 @@
   },
   "groups": {
     "title": "Groups",
-    "subtitle": "Classes that several students attend together.",
+    "subtitle": "Student groups you teach together.",
     "add": "Add group",
     "searchLabel": "Search groups",
     "searchPlaceholder": "Group name…",
     "deletedBadge": "In trash",
     "columns": {
       "group": "Group",
+      "schedule": "Lessons",
       "students": "Students",
-      "statuses": "Enrollments",
+      "price": "Price",
+      "status": "Status",
       "actions": "Actions"
     },
     "tableCaption": "Workspace groups with the number of enrolled students",
     "studentCount": "{count, plural, =0 {No students} one {# student} other {# students}}",
+    "scheduleMore": "+{count} more",
+    "card": {
+      "defaultPrice": "Price per lesson",
+      "priceNotSet": "Not set",
+      "status": "Group status",
+      "students": "Students",
+      "schedule": "Schedule",
+      "noSchedule": "No regular schedule yet.",
+      "details": "Details"
+    },
+    "filters": {
+      "statusAll": "All statuses",
+      "scheduleAll": "All schedules",
+      "studentAll": "All students",
+      "WITH_SCHEDULE": "With lessons",
+      "WITHOUT_SCHEDULE": "No lessons"
+    },
+    "status": {
+      "ACTIVE": "Active",
+      "EMPTY": "No students",
+      "ARCHIVED": "In trash"
+    },
     "empty": {
       "title": "No groups yet",
       "description": "Create a group to bill several students under one class.",
@@ -436,30 +464,32 @@
     },
     "form": {
       "createTitle": "New group",
-      "createSubtitle": "Give the group a name your students will recognise.",
+      "createSubtitle": "Set up the group profile, shared price and student roster.",
       "editTitle": "Edit group",
-      "editSubtitle": "Update the group name and notes.",
+      "editSubtitle": "Update the group profile, shared price and student roster.",
       "detailsSection": "Group details",
       "name": "Name",
       "namePlaceholder": "For example, B1 English Evenings",
-      "pricePerLesson": "Price per lesson",
-      "pricePerLessonHint": "Default for this group's enrollments, e.g. 500 or 500.50",
+      "pricingSection": "Default lesson price",
+      "pricingHint": "This is the default price for each lesson in the group. You can set an individual price for a student later.",
+      "pricePerLesson": "Default price per lesson",
+      "pricePerLessonHint": "For example, 500 or 500.50",
       "currency": "Currency",
-      "notes": "Notes",
-      "notesPlaceholder": "Schedule, level, materials",
+      "descriptionSection": "Description",
+      "description": "Description",
+      "descriptionPlaceholder": "Schedule, level, materials or anything important about the group",
       "submitCreate": "Create group",
       "submitEdit": "Save changes",
       "students": {
         "section": "Students",
-        "hint": "Enroll students into this group.",
-        "add": "Add student",
-        "teacher": "Teacher",
-        "price": "Price",
+        "hint": "Choose existing students or create a new one right here.",
+        "newStudent": "Create new",
         "remove": "Remove",
         "none": "No students yet.",
         "student": "Student",
         "pickStudent": "Select a student",
-        "pickTeacher": "Select a teacher"
+        "studentSearch": "Search students...",
+        "studentEmpty": "No student found"
       }
     },
     "detail": {
@@ -473,6 +503,70 @@
       "student": "Student",
       "teacher": "Teacher",
       "price": "Price",
+      "createdOn": "Created {date}",
+      "unavailable": "—",
+      "metrics": {
+        "price": "Price per lesson",
+        "priceDescription": "The group default rate",
+        "revenue": "Revenue",
+        "revenueDescription": "For the selected period",
+        "students": "Students in group",
+        "studentsDescription": "Archived: {archived}",
+        "attendance": "Average attendance",
+        "attendanceDescription": "Requires attendance records"
+      },
+      "columns": {
+        "student": "Student",
+        "status": "Status",
+        "price": "Price",
+        "attendance": "Attendance",
+        "actions": "Actions"
+      },
+      "membersTableCaption": "Group students with status, price and attendance",
+      "attendanceUnavailable": "No data",
+      "editStudent": "Edit enrollment for {name}",
+      "attendanceTitle": "Attendance",
+      "attendanceDescription": "Average rate across the group",
+      "attendanceEmptyTitle": "Attendance is not tracked yet",
+      "attendanceEmptyDescription": "When student attendance is recorded, its trend will appear here.",
+      "period": {
+        "sixWeeks": "6 weeks",
+        "threeMonths": "3 months"
+      },
+      "scheduleTitle": "Schedule",
+      "scheduleDescription": "Recurring group lessons",
+      "loadingSchedule": "Loading schedule…",
+      "noSchedule": "No schedule yet",
+      "noScheduleDescription": "Create a recurring pattern in the schedule section.",
+      "weekdays": {
+        "0": "Sun",
+        "1": "Mon",
+        "2": "Tue",
+        "3": "Wed",
+        "4": "Thu",
+        "5": "Fri",
+        "6": "Sat"
+      },
+      "durationMinutes": "{minutes} min",
+      "packagesTitle": "Active packages",
+      "packagesDescription": "Packages with remaining lessons",
+      "loadingPackages": "Loading packages…",
+      "noPackages": "No active packages",
+      "noPackagesDescription": "Packages for this group will appear here.",
+      "lessonsTitle": "Lessons",
+      "lessonsDescription": "{count} lessons in the selected period",
+      "addLesson": "Add lesson",
+      "lessonStats": {
+        "completed": "Completed",
+        "scheduled": "Scheduled",
+        "cancelled": "Cancelled",
+        "rescheduled": "Rescheduled"
+      },
+      "upcomingLessons": "Upcoming lessons",
+      "loadingLessons": "Loading lessons…",
+      "noUpcomingLessons": "No upcoming lessons",
+      "noUpcomingLessonsDescription": "Add a lesson or recurring pattern for this group.",
+      "lessonFallbackTitle": "Group lesson",
       "deletedTitle": "This group is in the trash",
       "deletedDescription": "Restore the group to edit it again."
     },
@@ -503,9 +597,10 @@
     },
     "columns": {
       "parent": "Parent",
-      "contacts": "Contacts",
       "students": "Students",
-      "actions": "Actions"
+      "actions": "Actions",
+      "phone": "Phone",
+      "telegram": "Telegram"
     },
     "tableCaption": "Workspace parents with their linked students",
     "empty": {
@@ -617,6 +712,7 @@
     "subtitle": "Workspace defaults and the audit trail.",
     "tabs": {
       "general": "General",
+      "theme": "Theme",
       "audit": "Audit log"
     },
     "general": {
@@ -634,6 +730,16 @@
       "modeSchool": "School with several teachers",
       "modeSoloHint": "Teacher controls stay hidden and every lesson is yours. Switch to school mode when someone joins you.",
       "modeSchoolHint": "Lessons, enrollments and the calendar ask which teacher they belong to."
+    },
+    "theme": {
+      "title": "Theme",
+      "description": "School colours",
+      "primaryColor": "Primary colour",
+      "secondaryColor": "Secondary colour",
+      "preview": "Preview",
+      "reset": "Reset",
+      "submit": "Save theme",
+      "saved": "Theme saved"
     },
     "audit": {
       "title": "Audit log",
@@ -700,6 +806,8 @@
       "currency": "Currency",
       "cancellationDeadlineHours": "Cancellation deadline",
       "defaultCurrency": "Default currency",
+      "primaryColor": "Primary colour",
+      "secondaryColor": "Secondary colour",
       "studentId": "Student",
       "groupId": "Group",
       "teacherId": "Teacher",
@@ -748,6 +856,8 @@
     "currency": "Currency",
     "cancellationDeadlineHours": "Cancellation deadline",
     "defaultCurrency": "Default currency",
+    "primaryColor": "Primary colour",
+    "secondaryColor": "Secondary colour",
     "studentId": "Student",
     "groupId": "Group",
     "teacherId": "Teacher",
@@ -812,7 +922,8 @@
       "deadlineStarted": "The lesson has already started — this is a late cancellation.",
       "toastRescheduled": "Lesson rescheduled.",
       "toastDeleted": "Lesson deleted.",
-      "toastUpdated": "Lesson updated."
+      "toastUpdated": "Lesson updated.",
+      "details": "Details & notes"
     },
     "conflict": {
       "title": "Time conflict",
@@ -832,22 +943,53 @@
       "teacherSearch": "Search teachers…",
       "teacherEmpty": "No teacher found",
       "date": "Date and time",
+      "schedule": "Schedule",
+      "lessonType": "Lesson type",
+      "lessonTypeHint": "Choose who this lesson is for.",
       "duration": "Duration (min)",
       "price": "Price per lesson",
-      "pricePlaceholder": "From the student's rate",
+      "pricePlaceholder": "Price per lesson",
       "notes": "Lesson notes",
       "notesPlaceholder": "e.g. covered Past Simple, homework p. 42",
       "addDate": "Add another date",
       "removeDate": "Remove",
-      "submit": "Create"
+      "submit": "Create",
+      "targetStudent": "Student",
+      "targetGroup": "Group",
+      "targetHint": "Who the lesson is booked for.",
+      "group": "Group",
+      "groupPlaceholder": "Choose a group",
+      "groupSearch": "Search groups",
+      "groupEmpty": "No groups found",
+      "dateHint": "Pick a day and a free slot — busy times are disabled.",
+      "groupPriceHint": "The price comes from the group's rate — you can change it.",
+      "currency": "Currency",
+      "statusSection": "Lesson status",
+      "statusHint": "A lesson can be recorded as already completed or cancelled.",
+      "status": "Status",
+      "cancelledBy": "Cancelled by",
+      "cancelledByPlaceholder": "Choose who cancelled",
+      "paidAt": "Payment date",
+      "paidAtHint": "For a completed lesson, an empty field means it was paid on the day.",
+      "paidAtMultipleHint": "A payment date belongs to a single lesson — for several dates, set it later on the lesson itself."
     },
     "studentLessons": {
       "title": "Lessons",
       "addLesson": "Add lesson",
-      "upcoming": "Upcoming ({count})",
-      "past": "Past ({count})",
+      "upcoming": "Upcoming",
+      "past": "Past",
       "noUpcoming": "No lessons scheduled.",
-      "noPast": "No lessons yet."
+      "noPast": "No lessons yet.",
+      "tableCaption": "Student lessons",
+      "durationMinutes": "{minutes} min",
+      "columns": {
+        "datetime": "Date & time",
+        "duration": "Duration",
+        "status": "Status",
+        "kind": "Type",
+        "price": "Price",
+        "actions": "Actions"
+      }
     },
     "cancelDialog": {
       "title": "Cancel lesson",
@@ -868,7 +1010,7 @@
       "empty": "No recurring patterns yet.",
       "weekdays": "Weekdays",
       "time": "Time",
-      "duration": "Duration",
+      "duration": "Duration (min)",
       "target": "Student",
       "delete": "Delete",
       "deleteConfirm": "Delete this pattern and its future lessons?",
@@ -899,6 +1041,10 @@
       "startDate": "Start date",
       "submit": "Save",
       "cancel": "Cancel"
+    },
+    "lessonKind": {
+      "INDIVIDUAL": "One-to-one",
+      "GROUP": "Group"
     }
   },
   "teachers": {
@@ -982,7 +1128,7 @@
     "you": "You"
   },
   "packages": {
-    "title": "Finance",
+    "title": "Packages",
     "subtitle": "Lesson packages, balances and payments.",
     "add": "New package",
     "empty": "No packages yet.",
@@ -1040,7 +1186,10 @@
     },
     "form": {
       "createTitle": "New package",
-      "createSubtitle": "A package credits its lessons to the balance right away.",
+      "createSubtitle": "Create a lesson package and configure its payment and schedule.",
+      "targetDescription": "Choose the student or group this package belongs to.",
+      "settingsTitle": "Package settings",
+      "settingsDescription": "Set the format, price, and validity of the package.",
       "targetKind": "For whom",
       "targetStudent": "Student",
       "targetGroup": "Group",
@@ -1056,16 +1205,46 @@
       "fixedCount": "Fixed count",
       "byPeriod": "By period",
       "lessonsTotal": "Number of lessons",
+      "lessonsPreset": "{count} lessons",
+      "lessonsHint": "Enter any number or choose a popular option.",
+      "validityDays": "Validity, days",
+      "daysPreset": "{days} days",
+      "validityHint": "No new lessons will be created after this period ends.",
       "endDate": "Valid until",
       "pricePerLesson": "Price per lesson",
       "currency": "Currency",
       "notes": "Notes",
+      "totalPrice": "Package total",
       "scheduleEnabled": "Create a recurring schedule",
       "scheduleHint": "Lessons are generated automatically from this schedule.",
+      "scheduleDisabledHint": "The package will be created without a recurring schedule or future lessons.",
       "weekdays": "Weekdays",
       "time": "Time",
       "timezone": "Timezone",
-      "duration": "Duration (min)",
+      "duration": "Duration",
+      "startTitle": "When should lessons start?",
+      "startToday": "Starting today",
+      "startManual": "Choose a date",
+      "firstLesson": "First lesson: {date}",
+      "noLessonDate": "not determined",
+      "endDateInclusive": "Package active through",
+      "periodSummary": "{count} lessons will be created. Last lesson: {date}.",
+      "paymentTitle": "Package payment",
+      "paymentDescription": "Record the payment state while creating the package.",
+      "paymentPending": "Awaiting payment",
+      "paymentPartial": "Partially paid",
+      "paymentPaid": "Paid",
+      "groupPartialHint": "Each student pays their own share in a group. Partial payments can be recorded after the package is created.",
+      "paidAmount": "Amount received",
+      "paidAt": "Payment date",
+      "fullPaymentHint": "A payment for the full package total will be recorded.",
+      "conflictTitle": "Schedule conflicts found",
+      "conflictDescription": "Some lessons overlap time already occupied by this teacher.",
+      "existingConflict": "Overlaps {target}'s lesson at {time}.",
+      "newSlotConflict": "Two new lessons in this package overlap each other.",
+      "unknownTarget": "unnamed target",
+      "backToSchedule": "Back to schedule",
+      "forceCreate": "Create despite conflicts",
       "submit": "Create package",
       "period": "Active period"
     },

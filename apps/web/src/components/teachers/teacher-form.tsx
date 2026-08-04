@@ -3,20 +3,12 @@
 import { type ChangeEvent } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useWatch } from 'react-hook-form';
-import {
-  GraduationCapIcon,
-  ImageIcon,
-  PhoneIcon,
-  StickyNoteIcon,
-  UserIcon,
-  XIcon,
-} from 'lucide-react';
+import { GraduationCapIcon, ImageIcon, PhoneIcon, StickyNoteIcon, UserIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { SUPPORTED_CURRENCIES } from '@tutorio/domain';
-import { STUDENT_SUBJECTS, type TeacherResponse } from '@tutorio/validation';
+import type { TeacherResponse } from '@tutorio/validation';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldGroup, FieldLabel, FieldSeparator } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -57,7 +49,6 @@ export function TeacherForm({
   const t = useTranslations('teachers.form');
   const tTeachers = useTranslations('teachers');
   const tStatus = useTranslations('teachers.status');
-  const tSubject = useTranslations('subject');
   const tErrors = useTranslations('errors');
   const tValidation = useTranslations('validation');
   const tCommon = useTranslations('common');
@@ -79,7 +70,6 @@ export function TeacherForm({
           email: teacher.email ?? '',
           phone: teacher.phone ?? '',
           telegramUsername: (teacher.telegramUsername ?? '').replace(/^@/, ''),
-          subjects: teacher.subjects,
           defaultRate:
             teacher.defaultRateMinor != null ? formatPriceInput(teacher.defaultRateMinor) : '',
           currency: (teacher.currency as TeacherFormValues['currency']) ?? 'EUR',
@@ -114,10 +104,6 @@ export function TeacherForm({
     },
   };
 
-  const availableSubjects = STUDENT_SUBJECTS.filter(
-    (subject) => !values.subjects.includes(subject),
-  );
-
   const onSubmit = form.handleSubmit(async (formValues) => {
     const optional = (value: string) => (value.trim() === '' ? undefined : value);
     const rateMinor =
@@ -130,7 +116,6 @@ export function TeacherForm({
           email: cleared(formValues.email),
           phone: cleared(formValues.phone),
           telegramUsername: cleared(formValues.telegramUsername),
-          subjects: formValues.subjects,
           bio: cleared(formValues.bio),
           defaultRateMinor: rateMinor,
           currency: rateMinor != null ? formValues.currency : null,
@@ -148,7 +133,6 @@ export function TeacherForm({
         email: optional(formValues.email),
         phone: optional(formValues.phone),
         telegramUsername: optional(formValues.telegramUsername),
-        subjects: formValues.subjects,
         bio: optional(formValues.bio),
         defaultRateMinor: rateMinor ?? undefined,
         currency: rateMinor != null ? formValues.currency : undefined,
@@ -256,57 +240,11 @@ export function TeacherForm({
 
         <FieldSeparator />
 
-        <FormSection icon={GraduationCapIcon} tone="success" title={t('subjects')}>
-          <Field>
-            <FieldLabel>{t('subjects')}</FieldLabel>
-            {values.subjects.length > 0 ? (
-              <div className="flex flex-wrap gap-1.5">
-                {values.subjects.map((subject) => (
-                  <Badge key={subject} variant="secondary" className="gap-1">
-                    {tSubject(subject)}
-                    <button
-                      type="button"
-                      className="-mr-1 rounded-sm hover:text-foreground"
-                      onClick={() =>
-                        form.setValue(
-                          'subjects',
-                          values.subjects.filter((item) => item !== subject),
-                        )
-                      }
-                      aria-label={tCommon('remove')}
-                    >
-                      <XIcon className="size-3" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-            ) : null}
-            {availableSubjects.length > 0 ? (
-              <Select
-                value=""
-                onValueChange={(subject) =>
-                  form.setValue('subjects', [
-                    ...values.subjects,
-                    subject as TeacherFormValues['subjects'][number],
-                  ])
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={t('subjectsPlaceholder')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {availableSubjects.map((subject) => (
-                      <SelectItem key={subject} value={subject}>
-                        {tSubject(subject)}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            ) : null}
-          </Field>
-
+        <FormSection
+          icon={GraduationCapIcon}
+          tone="success"
+          title={tTeachers('detail.teachingTitle')}
+        >
           <div className="grid gap-4 sm:grid-cols-[1fr_auto_auto]">
             <Field data-invalid={errors.defaultRate ? true : undefined}>
               <FieldLabel htmlFor="teacher-rate">{t('defaultRate')}</FieldLabel>

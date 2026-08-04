@@ -1,16 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { MoreHorizontalIcon, PauseIcon, PencilIcon, PlayIcon, Trash2Icon } from 'lucide-react';
+import { PauseIcon, PencilIcon, PlayIcon, Trash2Icon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { StudentStatusDto } from '@tutorio/validation';
-import { Button } from '@/components/ui/button';
+import { RowActionsTrigger } from '@/components/shared';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { errorMessageKey } from '@/lib/api/error-message';
 import { useUpdateStudentMutation } from '@/lib/api/students';
@@ -55,16 +54,7 @@ export function StudentRowActions({
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-11 md:size-8"
-            aria-label={tCommon('openMenu')}
-          >
-            <MoreHorizontalIcon data-icon />
-          </Button>
-        </DropdownMenuTrigger>
+        <RowActionsTrigger busy={updateStudent.isPending} />
         <DropdownMenuContent align="end">
           <DropdownMenuItem onSelect={() => setEditOpen(true)}>
             <PencilIcon data-icon />

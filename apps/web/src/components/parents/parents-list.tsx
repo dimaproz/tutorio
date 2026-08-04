@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import type { ColumnDef } from '@tanstack/react-table';
 import { ContactIcon, PlusIcon } from 'lucide-react';
@@ -11,27 +10,21 @@ import { ParentCard } from './parent-card';
 import { ParentFormDialog } from './parent-form-dialog';
 import { ParentRowActions } from './parent-row-actions';
 import { DataTable } from '@/components/app/data-table';
+import { PeopleCell, PersonCell, PhoneCell, TelegramCell } from '@/components/app/table-cells';
 import {
   ListPagination,
   ListSearchInput,
   useUpdateSearchParams,
 } from '@/components/app/list-controls';
 import { StudentFilterCombobox } from './student-filter-combobox';
-import {
-  ListSkeleton,
-  PageHeader,
-  QueryErrorAlert,
-  QueryRefreshIndicator,
-} from '@/components/app/page-shell';
-import { EntityAvatar } from '@/components/app/entity-avatar';
+import { PageHeader, QueryErrorAlert } from '@/components/app/page-shell';
 import { Button } from '@/components/ui/button';
-import { CollectionEmptyState, CollectionToolbar } from '@/components/shared';
+import { CollectionEmptyState, CollectionToolbar, LoadingPanel } from '@/components/shared';
 import { parsePageParam } from '@/lib/api/filters';
 import { useParentsQuery } from '@/lib/api/parents';
 
 export function ParentsList() {
   const t = useTranslations('parents');
-  const tCommon = useTranslations('common');
   const searchParams = useSearchParams();
   const updateParams = useUpdateSearchParams();
   const [createOpen, setCreateOpen] = useState(false);
@@ -48,49 +41,36 @@ export function ParentsList() {
         accessorKey: 'fullName',
         header: () => t('columns.parent'),
         cell: ({ row }) => (
-          <div className="flex min-w-0 items-center gap-3">
-            <EntityAvatar
-              avatarKey={row.original.avatarKey}
-              fullName={row.original.fullName}
-              size="md"
-            />
-            <div className="flex min-w-0 flex-col gap-1">
-              <Link
-                href={`/app/parents/${row.original.id}`}
-                className="truncate font-medium underline-offset-4 transition-colors hover:text-primary hover:underline"
-              >
-                {row.original.fullName}
-              </Link>
-            </div>
-          </div>
+          <PersonCell
+            avatarKey={row.original.avatarKey}
+            fullName={row.original.fullName}
+            href={`/app/parents/${row.original.id}`}
+          />
         ),
       },
       {
-        id: 'contacts',
-        header: () => t('columns.contacts'),
-        cell: ({ row }) => (
-          <div className="flex flex-col text-sm">
-            {row.original.phone ? <span>{row.original.phone}</span> : null}
-            {row.original.telegramUsername ? (
-              <span className="text-muted-foreground">
-                @{row.original.telegramUsername.replace(/^@/, '')}
-              </span>
-            ) : null}
-            {!row.original.phone && !row.original.telegramUsername ? (
-              <span className="text-muted-foreground">{tCommon('notProvided')}</span>
-            ) : null}
-          </div>
-        ),
+        id: 'phone',
+        header: () => t('columns.phone'),
+        cell: ({ row }) => <PhoneCell phone={row.original.phone} />,
+      },
+      {
+        id: 'telegram',
+        header: () => t('columns.telegram'),
+        cell: ({ row }) => <TelegramCell username={row.original.telegramUsername} />,
       },
       {
         id: 'students',
         header: () => t('columns.students'),
-        cell: ({ row }) =>
-          row.original.students.length > 0 ? (
-            <span>{row.original.students.map((student) => student.fullName).join(', ')}</span>
-          ) : (
-            <span className="text-muted-foreground">{tCommon('notProvided')}</span>
-          ),
+        cell: ({ row }) => (
+          <PeopleCell
+            people={row.original.students.map((student) => ({
+              id: student.id,
+              fullName: student.fullName,
+              avatarKey: student.avatarKey,
+            }))}
+            hrefFor={(id) => `/app/students/${id}`}
+          />
+        ),
       },
       {
         id: 'actions',
@@ -106,7 +86,7 @@ export function ParentsList() {
         ),
       },
     ],
-    [t, tCommon],
+    [t],
   );
 
   const items = parents.data?.items ?? [];
@@ -133,9 +113,7 @@ export function ParentsList() {
         />
       </CollectionToolbar>
 
-      <QueryRefreshIndicator isFetching={parents.isFetching && !parents.isPending} />
-
-      {parents.isPending ? <ListSkeleton /> : null}
+      {parents.isPending ? <LoadingPanel size="lg" /> : null}
 
       {parents.isError ? (
         <QueryErrorAlert
@@ -157,7 +135,12 @@ export function ParentsList() {
             ))}
           </div>
           <div className="hidden md:block">
-            <DataTable columns={columns} data={items} caption={t('tableCaption')} />
+            <DataTable
+              columns={columns}
+              data={items}
+              caption={t('tableCaption')}
+              loading={parents.isFetching}
+            />
           </div>
           <ListPagination page={page} totalPages={parents.data?.totalPages ?? 1} />
         </>

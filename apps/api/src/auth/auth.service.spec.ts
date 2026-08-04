@@ -59,6 +59,8 @@ const workspaceRow = {
   plan: 'FREE' as const,
   defaultCurrency: 'EUR',
   cancellationDeadlineHours: 24,
+  primaryColor: '#5D87FF',
+  secondaryColor: '#49BEFF',
   createdAt: new Date(NOW),
   updatedAt: new Date(NOW),
   deletedAt: null,

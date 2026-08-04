@@ -1,11 +1,6 @@
 'use client';
 
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-  type QueryClient,
-} from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import type {
   AdjustBalanceDto,
   CreatePackageDto,
@@ -18,11 +13,7 @@ import type {
 } from '@tutorio/validation';
 import { gatewayFetch, type GatewayError } from '@/lib/auth/client';
 import { buildQueryString } from './filters';
-import {
-  queryKeys,
-  type PackageListFilters,
-  type PaymentListFilters,
-} from './keys';
+import { queryKeys, type PackageListFilters, type PaymentListFilters } from './keys';
 
 // Money moves as a graph: a payment changes a package, a package change moves a
 // balance, and both leave an audit trail — so any mutation refreshes all three.
@@ -61,8 +52,7 @@ export function usePackageQuery(packageId: string, enabled = true) {
   return useQuery<PackageResponse, GatewayError>({
     queryKey: queryKeys.packages.detail(packageId),
     enabled: enabled && Boolean(packageId),
-    queryFn: () =>
-      gatewayFetch<PackageResponse>(`/api/backend/packages/${packageId}`),
+    queryFn: () => gatewayFetch<PackageResponse>(`/api/backend/packages/${packageId}`),
   });
 }
 
@@ -71,18 +61,15 @@ export function usePackageLedgerQuery(packageId: string, enabled = true) {
   return useQuery<CreditLedgerResponse, GatewayError>({
     queryKey: queryKeys.packages.ledger(packageId),
     enabled: enabled && Boolean(packageId),
-    queryFn: () =>
-      gatewayFetch<CreditLedgerResponse>(
-        `/api/backend/packages/${packageId}/ledger`,
-      ),
+    queryFn: () => gatewayFetch<CreditLedgerResponse>(`/api/backend/packages/${packageId}/ledger`),
   });
 }
 
 export function useCreatePackageMutation() {
   const queryClient = useQueryClient();
-  return useMutation<PackageResponse, GatewayError, CreatePackageDto>({
-    mutationFn: (dto) =>
-      gatewayFetch<PackageResponse>('/api/backend/packages', {
+  return useMutation<PackageResponse, GatewayError, { dto: CreatePackageDto; force?: boolean }>({
+    mutationFn: ({ dto, force = false }) =>
+      gatewayFetch<PackageResponse>(`/api/backend/packages?force=${force}`, {
         method: 'POST',
         body: JSON.stringify(dto),
       }),
@@ -92,11 +79,7 @@ export function useCreatePackageMutation() {
 
 export function useAdjustBalanceMutation() {
   const queryClient = useQueryClient();
-  return useMutation<
-    PackageResponse,
-    GatewayError,
-    { packageId: string; dto: AdjustBalanceDto }
-  >({
+  return useMutation<PackageResponse, GatewayError, { packageId: string; dto: AdjustBalanceDto }>({
     mutationFn: ({ packageId, dto }) =>
       gatewayFetch<PackageResponse>(`/api/backend/packages/${packageId}/adjust`, {
         method: 'POST',

@@ -279,6 +279,86 @@ describe('Stage 3: scheduling — series, lessons, reschedule, cancel (e2e)', ()
     expect(noted.body.notes).toBe('Covered Past Simple; homework p.42');
   });
 
+  it('records a lesson that already happened, with its payment date', async () => {
+    const student = await server()
+      .post('/api/students')
+      .set('Authorization', auth(owner))
+      .send({
+        fullName: 'Retroactive Student',
+        timezone: 'Europe/Kyiv',
+        hourlyRateMinor: 30000,
+        currency: 'UAH',
+      })
+      .expect(201);
+
+    // Yesterday: tutors write lessons down after teaching them.
+    const start = new Date(Date.now() - DAY_MS);
+    start.setUTCHours(6, 0, 0, 0);
+    const paidAt = new Date(start.getTime() + 3 * 60 * 60_000);
+
+    const created = await server()
+      .post('/api/lessons')
+      .set('Authorization', auth(owner))
+      .send({
+        studentId: student.body.id,
+        startsAt: [start.toISOString()],
+        durationMin: 60,
+        status: 'COMPLETED',
+        paidAt: paidAt.toISOString(),
+      })
+      .expect(201);
+
+    const lesson = created.body.items[0];
+    expect(lesson.status).toBe('COMPLETED');
+    expect(lesson.completedAt).not.toBeNull();
+    expect(lesson.paidAt).toBe(paidAt.toISOString());
+
+    // The payment date is editable afterwards, and clearable.
+    const cleared = await server()
+      .patch(`/api/lessons/${lesson.id}`)
+      .set('Authorization', auth(owner))
+      .send({ paidAt: null })
+      .expect(200);
+    expect(cleared.body.paidAt).toBeNull();
+  });
+
+  it('rejects a cancelled booking that does not say who cancelled', async () => {
+    const student = await server()
+      .post('/api/students')
+      .set('Authorization', auth(owner))
+      .send({ fullName: 'No-show Student', timezone: 'Europe/Kyiv' })
+      .expect(201);
+
+    const start = new Date(Date.now() - 2 * DAY_MS);
+    start.setUTCHours(7, 0, 0, 0);
+
+    await server()
+      .post('/api/lessons')
+      .set('Authorization', auth(owner))
+      .send({
+        studentId: student.body.id,
+        startsAt: [start.toISOString()],
+        durationMin: 60,
+        status: 'CANCELLED_CHARGED',
+      })
+      .expect(400);
+
+    const created = await server()
+      .post('/api/lessons')
+      .set('Authorization', auth(owner))
+      .send({
+        studentId: student.body.id,
+        startsAt: [start.toISOString()],
+        durationMin: 60,
+        status: 'CANCELLED_CHARGED',
+        cancelledBy: 'STUDENT',
+      })
+      .expect(201);
+    expect(created.body.items[0].status).toBe('CANCELLED_CHARGED');
+    expect(created.body.items[0].cancelledBy).toBe('STUDENT');
+    expect(created.body.items[0].cancelledAt).not.toBeNull();
+  });
+
   it('corrects a booked lesson and deletes it', async () => {
     const student = await server()
       .post('/api/students')

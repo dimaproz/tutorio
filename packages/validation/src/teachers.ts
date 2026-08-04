@@ -10,7 +10,6 @@ import {
 } from './common';
 import { priceMinorSchema } from './enrollments';
 import { paginatedResponseSchema, paginationQuerySchema } from './pagination';
-import { studentSubjectSchema } from './students';
 
 export const teacherStatusSchema = z.enum(['ACTIVE', 'ARCHIVED']);
 export type TeacherStatusDto = z.infer<typeof teacherStatusSchema>;
@@ -24,16 +23,12 @@ export const teacherColorSchema = z
   .string()
   .regex(/^#[0-9a-fA-F]{6}$/, 'Expected a hex color like #465FFF');
 
-// Subjects reuse the shared student-subject catalogue.
-export const teacherSubjectsSchema = z.array(studentSubjectSchema).max(30);
-
 export const createTeacherSchema = z
   .object({
     fullName: teacherFullNameSchema,
     email: z.string().trim().email().optional(),
     phone: phoneSchema.optional(),
     telegramUsername: teacherTelegramSchema.optional(),
-    subjects: teacherSubjectsSchema.optional(),
     bio: teacherBioSchema.optional(),
     // Default per-lesson rate (minor units) prefilled onto new enrollments.
     defaultRateMinor: priceMinorSchema.optional(),
@@ -56,7 +51,6 @@ export const updateTeacherSchema = z
     email: z.string().trim().email().nullable(),
     phone: phoneSchema.nullable(),
     telegramUsername: teacherTelegramSchema.nullable(),
-    subjects: teacherSubjectsSchema,
     bio: teacherBioSchema.nullable(),
     defaultRateMinor: priceMinorSchema.nullable(),
     currency: currencyCodeSchema.nullable(),
@@ -98,7 +92,6 @@ export const teacherResponseSchema = z.object({
   email: z.string().nullable(),
   phone: z.string().nullable(),
   telegramUsername: z.string().nullable(),
-  subjects: z.array(studentSubjectSchema),
   bio: z.string().nullable(),
   defaultRateMinor: z.number().int().nonnegative().nullable(),
   currency: currencyCodeSchema.nullable(),

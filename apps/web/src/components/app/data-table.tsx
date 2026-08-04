@@ -1,6 +1,15 @@
 'use client';
 
-import { flexRender, getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table';
+import {
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+  type ColumnDef,
+  type RowData,
+} from '@tanstack/react-table';
+import { ArrowDownIcon, ArrowUpIcon, ChevronsUpDownIcon } from 'lucide-react';
+import type { ListSort } from '@/components/app/list-controls';
+import { LoadingRegion } from '@/components/shared';
 import {
   Table,
   TableBody,
@@ -10,12 +19,27 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { cn } from '@/lib/utils';
+
+declare module '@tanstack/react-table' {
+  // The generics are part of the library's interface signature and have to be
+  // repeated verbatim for the augmentation to apply.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface ColumnMeta<TData extends RowData, TValue> {
+    /** Query field this column sorts by. Omit to make the column static. */
+    sortField?: string;
+  }
+}
 
 interface DataTableProps<TData> {
   columns: ColumnDef<TData, unknown>[];
   data: TData[];
   /** Screen-reader caption describing the table contents. */
   caption: string;
+  /** Supply to activate sorting on columns that declare a `sortField`. */
+  sort?: ListSort;
+  /** Blurs the current rows under a spinner while the next page loads. */
+  loading?: boolean;
 }
 
 /**
@@ -24,7 +48,13 @@ interface DataTableProps<TData> {
  * stays disabled — otherwise the library would re-paginate an already
  * paginated page.
  */
-export function DataTable<TData>({ columns, data, caption }: DataTableProps<TData>) {
+export function DataTable<TData>({
+  columns,
+  data,
+  caption,
+  sort,
+  loading = false,
+}: DataTableProps<TData>) {
   // TanStack Table intentionally returns imperative table methods. React
   // Compiler safely skips this boundary; memoizing it would risk stale rows.
   // eslint-disable-next-line react-hooks/incompatible-library
@@ -38,19 +68,45 @@ export function DataTable<TData>({ columns, data, caption }: DataTableProps<TDat
   });
 
   return (
-    <div className="overflow-x-auto rounded-lg border">
+    <LoadingRegion loading={loading} size="lg" className="overflow-x-auto rounded-lg">
       <Table>
         <TableCaption className="sr-only">{caption}</TableCaption>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <TableHead key={header.id}>
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(header.column.columnDef.header, header.getContext())}
-                </TableHead>
-              ))}
+              {headerGroup.headers.map((header) => {
+                const sortField = header.column.columnDef.meta?.sortField;
+                const sortable = Boolean(sort && sortField);
+                const active = sortable && sort?.field === sortField;
+                const content = header.isPlaceholder
+                  ? null
+                  : flexRender(header.column.columnDef.header, header.getContext());
+
+                return (
+                  <TableHead
+                    key={header.id}
+                    aria-sort={
+                      active ? (sort?.order === 'asc' ? 'ascending' : 'descending') : undefined
+                    }
+                  >
+                    {sortable ? (
+                      <button
+                        type="button"
+                        onClick={() => sort?.onSort(sortField as string)}
+                        className={cn(
+                          '-mx-1.5 inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 transition-colors outline-none hover:text-primary focus-visible:ring-3 focus-visible:ring-ring/50',
+                          active && 'text-primary',
+                        )}
+                      >
+                        {content}
+                        <SortIndicator active={active} order={sort?.order} />
+                      </button>
+                    ) : (
+                      content
+                    )}
+                  </TableHead>
+                );
+              })}
             </TableRow>
           ))}
         </TableHeader>
@@ -66,6 +122,17 @@ export function DataTable<TData>({ columns, data, caption }: DataTableProps<TDat
           ))}
         </TableBody>
       </Table>
-    </div>
+    </LoadingRegion>
+  );
+}
+
+function SortIndicator({ active, order }: { active: boolean; order?: ListSort['order'] }) {
+  if (!active) {
+    return <ChevronsUpDownIcon className="size-3.5 text-muted-foreground" aria-hidden="true" />;
+  }
+  return order === 'asc' ? (
+    <ArrowUpIcon className="size-3.5" aria-hidden="true" />
+  ) : (
+    <ArrowDownIcon className="size-3.5" aria-hidden="true" />
   );
 }

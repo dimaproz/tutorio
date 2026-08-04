@@ -8,7 +8,6 @@ import {
   studentLanguageLevelSchema,
   studentNotesSchema,
   studentStatusSchema,
-  studentSubjectSchema,
   telegramUsernameSchema,
   timezoneSchema,
 } from '@tutorio/validation';
@@ -23,7 +22,6 @@ export const studentFormSchema = z
     phone: optionalText(phoneSchema),
     timezone: timezoneSchema,
     telegramUsername: optionalText(telegramUsernameSchema),
-    subject: optionalText(studentSubjectSchema),
     hourlyRate: z.string(),
     currency: currencyCodeSchema,
     status: studentStatusSchema,
@@ -54,7 +52,6 @@ export const EMPTY_STUDENT_FORM: StudentFormValues = {
   phone: '',
   timezone: '',
   telegramUsername: '',
-  subject: '',
   hourlyRate: '',
   currency: 'EUR',
   status: 'ACTIVE',

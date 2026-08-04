@@ -88,7 +88,10 @@ export class GroupsController {
     summary: 'Update a group',
     description:
       'PATCH semantics: omitted fields stay unchanged, null clears an ' +
-      'optional field. A no-op update creates no audit entry.',
+      'optional field. A no-op update creates no audit entry. `students` ' +
+      'carries the complete roster and is reconciled into enrollments in the ' +
+      'same transaction — added students are enrolled, dropped ones are ' +
+      'archived — so a roster edit never costs one request per student.',
   })
   @ApiOkResponse({ type: GroupDto })
   @ApiNotFoundResponse({ type: ApiErrorDto })

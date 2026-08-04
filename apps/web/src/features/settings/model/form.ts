@@ -1,4 +1,4 @@
-import { currencyCodeSchema, workspaceModeSchema } from '@tutorio/validation';
+import { currencyCodeSchema, themeColorSchema, workspaceModeSchema } from '@tutorio/validation';
 import { z } from 'zod';
 
 export const workspaceSettingsFormSchema = z.object({
@@ -7,3 +7,9 @@ export const workspaceSettingsFormSchema = z.object({
   mode: workspaceModeSchema,
 });
 export type WorkspaceSettingsFormValues = z.infer<typeof workspaceSettingsFormSchema>;
+
+export const workspaceThemeFormSchema = z.object({
+  primaryColor: themeColorSchema,
+  secondaryColor: themeColorSchema,
+});
+export type WorkspaceThemeFormValues = z.infer<typeof workspaceThemeFormSchema>;

@@ -3,7 +3,7 @@
 import type { ComponentType, ReactNode } from 'react';
 import { sectionToneClass, type SectionTone } from '@/components/app/section-tone';
 import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 
 type IconType = ComponentType<{ className?: string }>;
@@ -44,7 +44,7 @@ export function StatTile({
         <div className="flex min-w-0 flex-col gap-1">
           <span className="text-muted-foreground text-sm font-medium">{label}</span>
           {isLoading ? (
-            <Skeleton className="h-8 w-16" />
+            <Spinner className="my-1 size-6 text-primary" />
           ) : (
             <span className="tabular text-2xl font-semibold tracking-tight">{value}</span>
           )}

@@ -13,26 +13,18 @@ import { TeacherRowActions } from './teacher-row-actions';
 import { TeacherStatusBadge } from './teacher-status-badge';
 import { DataTable } from '@/components/app/data-table';
 import { ListPagination, ListSearchInput } from '@/components/app/list-controls';
-import {
-  ListSkeleton,
-  PageHeader,
-  QueryErrorAlert,
-  QueryRefreshIndicator,
-} from '@/components/app/page-shell';
+import { PageHeader, QueryErrorAlert, QueryRefreshIndicator } from '@/components/app/page-shell';
 import { EntityAvatar } from '@/components/app/entity-avatar';
 import { useIsSoloWorkspace } from '@/components/app/session-provider';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CollectionEmptyState, CollectionToolbar } from '@/components/shared';
+import { CollectionEmptyState, CollectionToolbar, LoadingPanel } from '@/components/shared';
 import { parsePageParam } from '@/lib/api/filters';
 import { useTeachersQuery } from '@/lib/api/teachers';
-
-const SUBJECT_LIMIT = 3;
 
 export function TeachersList() {
   const t = useTranslations('teachers');
   const tCommon = useTranslations('common');
-  const tSubject = useTranslations('subject');
   const searchParams = useSearchParams();
   const isSolo = useIsSoloWorkspace();
   const [createOpen, setCreateOpen] = useState(false);
@@ -93,25 +85,6 @@ export function TeachersList() {
         ),
       },
       {
-        id: 'subjects',
-        header: () => t('columns.subjects'),
-        cell: ({ row }) =>
-          row.original.subjects.length > 0 ? (
-            <div className="flex flex-wrap gap-1.5">
-              {row.original.subjects.slice(0, SUBJECT_LIMIT).map((subject) => (
-                <Badge key={subject} variant="secondary">
-                  {tSubject(subject)}
-                </Badge>
-              ))}
-              {row.original.subjects.length > SUBJECT_LIMIT ? (
-                <Badge variant="outline">+{row.original.subjects.length - SUBJECT_LIMIT}</Badge>
-              ) : null}
-            </div>
-          ) : (
-            <span className="text-muted-foreground">{tCommon('notProvided')}</span>
-          ),
-      },
-      {
         id: 'enrollments',
         header: () => t('columns.enrollments'),
         cell: ({ row }) => (
@@ -132,7 +105,7 @@ export function TeachersList() {
         ),
       },
     ],
-    [t, tCommon, tSubject],
+    [t, tCommon],
   );
 
   const items = teachers.data?.items ?? [];
@@ -160,7 +133,7 @@ export function TeachersList() {
 
       <QueryRefreshIndicator isFetching={teachers.isFetching && !teachers.isPending} />
 
-      {teachers.isPending ? <ListSkeleton /> : null}
+      {teachers.isPending ? <LoadingPanel size="lg" /> : null}
 
       {teachers.isError ? (
         <QueryErrorAlert
@@ -182,7 +155,12 @@ export function TeachersList() {
             ))}
           </div>
           <div className="hidden md:block">
-            <DataTable columns={columns} data={items} caption={t('tableCaption')} />
+            <DataTable
+              columns={columns}
+              data={items}
+              caption={t('tableCaption')}
+              loading={teachers.isFetching}
+            />
           </div>
           <ListPagination page={page} totalPages={teachers.data?.totalPages ?? 1} />
         </>

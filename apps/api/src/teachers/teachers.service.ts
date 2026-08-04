@@ -40,7 +40,6 @@ function toResponse(row: TeacherRow, viewerUserId: string): TeacherResponse {
     email: row.email,
     phone: row.phone,
     telegramUsername: row.telegramUsername,
-    subjects: row.subjects as TeacherResponse['subjects'],
     bio: row.bio,
     defaultRateMinor: row.defaultRateMinor,
     currency: row.currency as TeacherResponse['currency'],
@@ -186,7 +185,7 @@ export class TeachersService {
         }
       }
       const created = await tx.teacher.create({
-        data: { workspaceId: auth.workspaceId, ...dto },
+        data: { workspaceId: auth.workspaceId, subjects: [], ...dto },
         include: withMemberUser,
       });
       await this.audit.record(tx, {
@@ -233,7 +232,7 @@ export class TeachersService {
       }
       const updated = await tx.teacher.update({
         where: { id: before.id },
-        data: dto,
+        data: { ...dto, subjects: [] },
         include: withMemberUser,
       });
       await this.audit.record(tx, {

@@ -18,12 +18,11 @@ import {
 import { toast } from 'sonner';
 import { SUPPORTED_CURRENCIES } from '@tutorio/domain';
 import {
-  isLanguageSubject,
   STUDENT_KNOWLEDGE_LEVELS,
   STUDENT_LANGUAGE_LEVELS,
-  STUDENT_SUBJECTS,
   type StudentDetail,
   type StudentParentRef,
+  type StudentResponse,
 } from '@tutorio/validation';
 import { ParentFormDialog } from '@/components/parents/parent-form-dialog';
 import { ParentMiniCard } from '@/components/parents/parent-mini-card';
@@ -86,12 +85,11 @@ export function StudentForm({
   onCancel,
 }: {
   student?: StudentDetail;
-  onSuccess?: () => void;
+  onSuccess?: (student: StudentResponse) => void;
   onCancel?: () => void;
 }) {
   const t = useTranslations('students.form');
   const tStudents = useTranslations('students');
-  const tSubject = useTranslations('subject');
   const tLanguageLevel = useTranslations('languageLevel');
   const tKnowledgeLevel = useTranslations('knowledgeLevel');
   const tErrors = useTranslations('errors');
@@ -124,7 +122,6 @@ export function StudentForm({
           phone: student.phone ?? '',
           timezone: student.timezone,
           telegramUsername: (student.telegramUsername ?? '').replace(/^@/, ''),
-          subject: student.subject ?? '',
           hourlyRate:
             student.hourlyRateMinor != null ? formatPriceInput(student.hourlyRateMinor) : '',
           currency:
@@ -149,7 +146,6 @@ export function StudentForm({
     control: form.control,
     defaultValue: form.getValues(),
   }) as StudentFormValues;
-  const showLanguageLevel = isLanguageSubject(values.subject === '' ? null : values.subject);
 
   // New students default to the browser timezone (Europe/Kyiv as fallback).
   useEffect(() => {
@@ -166,14 +162,6 @@ export function StudentForm({
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps -- sync only on list change
   }, [assignedParents]);
-
-  // A CEFR level is meaningless for a non-language subject — drop any leftover
-  // value when the subject moves away from a language so we never submit one.
-  useEffect(() => {
-    if (!showLanguageLevel && form.getValues('languageLevel') !== '') {
-      form.setValue('languageLevel', '');
-    }
-  }, [showLanguageLevel, form]);
 
   const parentsById = useMemo(
     () => new Map((parentsQuery.data?.items ?? []).map((parent) => [parent.id, parent])),
@@ -219,13 +207,12 @@ export function StudentForm({
       if (student) {
         // PATCH: an emptied field becomes null so the API clears it.
         const cleared = (value: string) => (value.trim() === '' ? null : value);
-        await updateStudent.mutateAsync({
+        const updated = await updateStudent.mutateAsync({
           fullName: formValues.fullName,
           email: cleared(formValues.email),
           phone: cleared(formValues.phone),
           timezone: formValues.timezone,
           telegramUsername: cleared(formValues.telegramUsername),
-          subject: formValues.subject === '' ? null : formValues.subject,
           hourlyRateMinor,
           currency: hourlyRateMinor === null ? null : formValues.currency,
           status: formValues.status,
@@ -238,17 +225,16 @@ export function StudentForm({
           notes: cleared(formValues.notes),
         });
         toast.success(tStudents('toasts.updated'));
-        onSuccess?.();
+        onSuccess?.(updated);
         return;
       }
 
-      await createStudent.mutateAsync({
+      const created = await createStudent.mutateAsync({
         fullName: formValues.fullName,
         email: optional(formValues.email),
         phone: optional(formValues.phone),
         timezone: formValues.timezone,
         telegramUsername: optional(formValues.telegramUsername),
-        subject: formValues.subject === '' ? undefined : formValues.subject,
         hourlyRateMinor: hourlyRateMinor ?? undefined,
         currency: hourlyRateMinor === null ? undefined : formValues.currency,
         status: formValues.status,
@@ -261,7 +247,7 @@ export function StudentForm({
         notes: optional(formValues.notes),
       });
       toast.success(tStudents('toasts.created'));
-      onSuccess?.();
+      onSuccess?.(created);
     } catch {
       // Surfaced by the alert below.
     }
@@ -270,7 +256,13 @@ export function StudentForm({
   const pending = isSubmitting || mutation.isPending;
 
   return (
-    <form onSubmit={onSubmit} noValidate>
+    <form
+      onSubmit={(event) => {
+        event.stopPropagation();
+        void onSubmit(event);
+      }}
+      noValidate
+    >
       <FieldGroup>
         {mutation.error ? (
           <Alert variant="destructive" role="alert">
@@ -303,32 +295,6 @@ export function StudentForm({
           </Field>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field>
-              <FieldLabel htmlFor="student-subject">{t('subject')}</FieldLabel>
-              <Select
-                value={values.subject === '' ? NONE : values.subject}
-                onValueChange={(value) =>
-                  form.setValue(
-                    'subject',
-                    value === NONE ? '' : (value as StudentFormValues['subject']),
-                  )
-                }
-              >
-                <SelectTrigger id="student-subject" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value={NONE}>{tCommon('notProvided')}</SelectItem>
-                    {STUDENT_SUBJECTS.map((subject) => (
-                      <SelectItem key={subject} value={subject}>
-                        {tSubject(subject)}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </Field>
             <Field>
               <FieldLabel htmlFor="student-status">{t('status')}</FieldLabel>
               <StatusSelect
@@ -427,38 +393,34 @@ export function StudentForm({
         <FieldSeparator />
 
         <FormSection icon={GraduationCapIcon} tone="primary" title={t('academicSection')}>
-          {/* Levels row: language level appears only for language subjects; when
-              hidden, the knowledge level sits alone on its row. */}
           <div className="grid gap-4 sm:grid-cols-2">
-            {showLanguageLevel ? (
-              <Field>
-                <FieldLabel htmlFor="student-language-level">{t('languageLevel')}</FieldLabel>
-                <Select
-                  value={values.languageLevel === '' ? NONE : values.languageLevel}
-                  onValueChange={(value) =>
-                    form.setValue(
-                      'languageLevel',
-                      value === NONE ? '' : (value as StudentFormValues['languageLevel']),
-                    )
-                  }
-                >
-                  <SelectTrigger id="student-language-level" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value={NONE}>{tCommon('notProvided')}</SelectItem>
-                      {STUDENT_LANGUAGE_LEVELS.map((level) => (
-                        <SelectItem key={level} value={level}>
-                          {tLanguageLevel(level)}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-                <FieldDescription>{t('languageLevelHint')}</FieldDescription>
-              </Field>
-            ) : null}
+            <Field>
+              <FieldLabel htmlFor="student-language-level">{t('languageLevel')}</FieldLabel>
+              <Select
+                value={values.languageLevel === '' ? NONE : values.languageLevel}
+                onValueChange={(value) =>
+                  form.setValue(
+                    'languageLevel',
+                    value === NONE ? '' : (value as StudentFormValues['languageLevel']),
+                  )
+                }
+              >
+                <SelectTrigger id="student-language-level" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value={NONE}>{tCommon('notProvided')}</SelectItem>
+                    {STUDENT_LANGUAGE_LEVELS.map((level) => (
+                      <SelectItem key={level} value={level}>
+                        {tLanguageLevel(level)}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              <FieldDescription>{t('languageLevelHint')}</FieldDescription>
+            </Field>
             <Field>
               <FieldLabel htmlFor="student-knowledge-level">{t('knowledgeLevel')}</FieldLabel>
               <Select

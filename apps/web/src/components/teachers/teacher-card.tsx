@@ -9,14 +9,9 @@ import { EntityAvatar } from '@/components/app/entity-avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-const SUBJECT_LIMIT = 3;
-
 // The single teacher representation for the mobile list.
 export function TeacherCard({ teacher }: { teacher: TeacherListItem }) {
   const t = useTranslations('teachers');
-  const tSubject = useTranslations('subject');
-  const visible = teacher.subjects.slice(0, SUBJECT_LIMIT);
-  const overflow = teacher.subjects.length - visible.length;
 
   return (
     <Card>
@@ -43,16 +38,6 @@ export function TeacherCard({ teacher }: { teacher: TeacherListItem }) {
               it stops a duplicate "me" being added by hand. */}
           {teacher.isMe ? <Badge variant="primary">{t('you')}</Badge> : null}
         </div>
-        {visible.length > 0 ? (
-          <div className="flex flex-wrap gap-1.5">
-            {visible.map((subject) => (
-              <Badge key={subject} variant="secondary">
-                {tSubject(subject)}
-              </Badge>
-            ))}
-            {overflow > 0 ? <Badge variant="outline">+{overflow}</Badge> : null}
-          </div>
-        ) : null}
         <p className="text-muted-foreground">
           {t('enrollmentsCount', { count: teacher.activeEnrollmentCount })}
         </p>

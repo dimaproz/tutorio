@@ -19,9 +19,11 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 import { ZodSerializerDto } from 'nestjs-zod';
+import type { ForceQueryDto } from '@tutorio/validation';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -96,12 +98,14 @@ export class PackagesController {
   @ApiCreatedResponse({ type: PackageDto })
   @ApiBadRequestResponse({ type: ApiErrorDto })
   @ApiConflictResponse({ type: ApiErrorDto })
+  @ApiQuery({ name: 'force', required: false, type: Boolean })
   @ZodSerializerDto(PackageDto)
   create(
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: CreatePackageDto,
+    @Query() query: ForceQueryDto,
   ): Promise<PackageDto> {
-    return this.packages.create(user, dto);
+    return this.packages.create(user, dto, query.force);
   }
 
   @Post(':packageId/adjust')

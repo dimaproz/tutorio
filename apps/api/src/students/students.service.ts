@@ -68,7 +68,6 @@ function toResponse(student: StudentWithParentLinks): StudentResponse {
     phone: student.phone,
     timezone: student.timezone,
     telegramUsername: student.telegramUsername,
-    subject: student.subject as StudentResponse['subject'],
     hourlyRateMinor: student.hourlyRateMinor,
     currency: student.currency as StudentResponse['currency'],
     status: student.status,
@@ -83,6 +82,27 @@ function toResponse(student: StudentWithParentLinks): StudentResponse {
     updatedAt: student.updatedAt.toISOString(),
     deletedAt: student.deletedAt?.toISOString() ?? null,
   };
+}
+
+// Columns that are nullable in the schema: a tutor sorting by price or phone
+// wants the filled-in rows first in both directions, so blanks always sink.
+const NULLABLE_SORT_FIELDS = new Set<ListStudentsQueryDto['sort']>([
+  'hourlyRateMinor',
+  'phone',
+  'telegramUsername',
+]);
+
+/** `id` is the tiebreaker, so paging never repeats or drops a row. */
+function buildStudentOrderBy(
+  query: ListStudentsQueryDto,
+): Prisma.StudentOrderByWithRelationInput[] {
+  const { sort, order } = query;
+  return [
+    NULLABLE_SORT_FIELDS.has(sort)
+      ? { [sort]: { sort: order, nulls: 'last' } }
+      : { [sort]: order },
+    { id: 'asc' },
+  ];
 }
 
 /** Sorted, deduped copy — a stable shape for audit-diff comparison. */
@@ -123,7 +143,6 @@ export class StudentsService {
       ...deletedAtFilter(query.state),
       ...search,
       ...(query.status ? { status: query.status } : {}),
-      ...(query.subject ? { subject: query.subject } : {}),
       ...(query.groupId
         ? { enrollments: { some: { groupId: query.groupId, deletedAt: null } } }
         : {}),
@@ -132,7 +151,7 @@ export class StudentsService {
     const [rows, total] = await this.prisma.$transaction([
       this.prisma.student.findMany({
         where,
-        orderBy: [{ fullName: 'asc' }, { id: 'asc' }],
+        orderBy: buildStudentOrderBy(query),
         ...toSkipTake(query),
         include: {
           enrollments: {
@@ -155,7 +174,6 @@ export class StudentsService {
         phone: row.phone,
         telegramUsername: row.telegramUsername,
         timezone: row.timezone,
-        subject: row.subject as StudentListResponse['items'][number]['subject'],
         status: row.status,
         hourlyRateMinor: row.hourlyRateMinor,
         currency:

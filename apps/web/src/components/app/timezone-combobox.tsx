@@ -63,7 +63,7 @@ export function TimezoneCombobox({
         <Button
           id={id}
           type="button"
-          variant="outline"
+          variant="neutral"
           role="combobox"
           aria-expanded={open}
           aria-invalid={invalid}

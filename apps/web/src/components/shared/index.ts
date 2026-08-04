@@ -5,5 +5,7 @@ export * from './date-picker';
 export * from './entity-form-dialog';
 export * from './entity-picker';
 export * from './form-actions';
+export * from './loading';
+export * from './row-actions-trigger';
 export * from './stat-tile';
 export * from './weekday-picker';

@@ -17,7 +17,7 @@ import { ConfirmDialog } from '@/components/app/confirm-dialog';
 import { PersonMiniCard } from '@/components/app/person-mini-card';
 import { StudentStatusBadge } from '@/components/app/status-badges';
 import { InfoRow, ProfileHeader, SectionTitle } from '@/components/app/detail-view';
-import { ListSkeleton, QueryErrorAlert, QueryRefreshIndicator } from '@/components/app/page-shell';
+import { QueryErrorAlert, QueryRefreshIndicator } from '@/components/app/page-shell';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
@@ -26,12 +26,12 @@ import { useDeleteParentMutation, useParentQuery } from '@/lib/api/parents';
 import type { GatewayError } from '@/lib/auth/client';
 import { useDateFormatters } from '@/lib/i18n/format';
 import { ParentFormDialog } from './parent-form-dialog';
+import { LoadingPanel } from '@/components/shared';
 
 export function ParentDetailView({ parentId }: { parentId: string }) {
   const t = useTranslations('parents');
   const tCommon = useTranslations('common');
   const tErrors = useTranslations('errors');
-  const tSubject = useTranslations('subject');
   const format = useDateFormatters();
   const router = useRouter();
 
@@ -42,7 +42,7 @@ export function ParentDetailView({ parentId }: { parentId: string }) {
   const deleteParent = useDeleteParentMutation();
 
   if (parent.isPending) {
-    return <ListSkeleton rows={5} />;
+    return <LoadingPanel size="lg" />;
   }
 
   if (parent.isError) {
@@ -98,29 +98,11 @@ export function ParentDetailView({ parentId }: { parentId: string }) {
         <div className="flex flex-col gap-6 lg:col-span-2">
           <Card>
             <CardHeader>
-              <SectionTitle icon={BookOpenIcon} tone="destructive">
-                {t('detail.notesTitle')}
-              </SectionTitle>
-            </CardHeader>
-            <CardContent>
-              {data.notes ? (
-                <p className="text-sm whitespace-pre-wrap">{data.notes}</p>
-              ) : (
-                <p className="text-sm text-muted-foreground">{tCommon('notProvided')}</p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Right column. */}
-        <div className="flex flex-col gap-6">
-          <Card>
-            <CardHeader>
               <SectionTitle icon={PhoneIcon} tone="primary">
                 {t('detail.contactsTitle')}
               </SectionTitle>
             </CardHeader>
-            <CardContent className="flex flex-col gap-3">
+            <CardContent className="grid gap-3 sm:grid-cols-2">
               <InfoRow
                 icon={PhoneIcon}
                 label={t('form.phone')}
@@ -151,6 +133,24 @@ export function ParentDetailView({ parentId }: { parentId: string }) {
 
           <Card>
             <CardHeader>
+              <SectionTitle icon={BookOpenIcon} tone="destructive">
+                {t('detail.notesTitle')}
+              </SectionTitle>
+            </CardHeader>
+            <CardContent>
+              {data.notes ? (
+                <p className="text-sm whitespace-pre-wrap">{data.notes}</p>
+              ) : (
+                <p className="text-sm text-muted-foreground">{tCommon('notProvided')}</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right column. */}
+        <div className="flex flex-col gap-6">
+          <Card>
+            <CardHeader>
               <SectionTitle icon={UsersRoundIcon} tone="warning">
                 {t('detail.studentsTitle')}
               </SectionTitle>
@@ -170,7 +170,6 @@ export function ParentDetailView({ parentId }: { parentId: string }) {
                       <PersonMiniCard
                         avatarKey={student.avatarKey}
                         fullName={student.fullName}
-                        subtitle={student.subject ? tSubject(student.subject) : undefined}
                         badge={<StudentStatusBadge status={student.status} />}
                         href={`/app/students/${student.id}`}
                       />

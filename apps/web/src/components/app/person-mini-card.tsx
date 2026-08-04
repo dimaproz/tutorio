@@ -4,7 +4,14 @@ import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { ChevronRightIcon, XIcon } from 'lucide-react';
 import { EntityAvatar } from '@/components/app/entity-avatar';
-import { cn } from '@/lib/utils';
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemMedia,
+  ItemTitle,
+} from '@/components/ui/item';
 
 // The single person card — avatar + name + optional subtitle/badge — used for
 // parents, students and teachers alike. Three trailing modes:
@@ -32,43 +39,47 @@ export function PersonMiniCard({
 }) {
   const body = (
     <>
-      <EntityAvatar avatarKey={avatarKey} fullName={fullName} size="sm" />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <span className="flex items-center gap-2 truncate text-sm font-medium">
+      <ItemMedia>
+        <EntityAvatar avatarKey={avatarKey} fullName={fullName} size="sm" />
+      </ItemMedia>
+      <ItemContent>
+        <ItemTitle>
           <span className="truncate">{fullName}</span>
           {badge}
-        </span>
-        {subtitle ? (
-          <span className="truncate text-xs text-muted-foreground">{subtitle}</span>
-        ) : null}
-      </div>
+        </ItemTitle>
+        {subtitle ? <ItemDescription>{subtitle}</ItemDescription> : null}
+      </ItemContent>
     </>
   );
 
-  const shell = 'flex items-center gap-3 rounded-xl border p-3';
-
   if (href) {
     return (
-      <Link href={href} className={cn(shell, 'transition-colors hover:bg-muted/50', className)}>
-        {body}
-        <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" />
-      </Link>
+      <Item asChild variant="outline" className={className}>
+        <Link href={href}>
+          {body}
+          <ItemActions>
+            <ChevronRightIcon className="size-4 text-muted-foreground" />
+          </ItemActions>
+        </Link>
+      </Item>
     );
   }
 
   return (
-    <div className={cn(shell, className)}>
+    <Item variant="outline" className={className}>
       {body}
       {onRemove ? (
-        <button
-          type="button"
-          onClick={onRemove}
-          aria-label={removeLabel}
-          className="grid size-7 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
-        >
-          <XIcon className="size-4" />
-        </button>
+        <ItemActions>
+          <button
+            type="button"
+            onClick={onRemove}
+            aria-label={removeLabel}
+            className="grid size-7 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+          >
+            <XIcon className="size-4" />
+          </button>
+        </ItemActions>
       ) : null}
-    </div>
+    </Item>
   );
 }

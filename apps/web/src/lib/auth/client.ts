@@ -10,6 +10,7 @@ export class GatewayError extends Error {
   constructor(
     public readonly status: number,
     public readonly code: string,
+    public readonly details?: unknown,
   ) {
     super(`Gateway request failed (${status} ${code})`);
     this.name = 'GatewayError';
@@ -28,7 +29,9 @@ export async function gatewayFetch<T>(input: string, init?: RequestInit): Promis
   if (!response.ok) {
     const code =
       data && typeof data === 'object' && 'code' in data ? String(data.code) : 'UNEXPECTED';
-    throw new GatewayError(response.status, code);
+    const details =
+      data && typeof data === 'object' && 'details' in data ? data.details : undefined;
+    throw new GatewayError(response.status, code, details);
   }
   return data as T;
 }

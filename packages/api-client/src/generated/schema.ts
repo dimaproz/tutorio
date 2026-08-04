@@ -148,7 +148,7 @@ export interface paths {
         options?: never;
         head?: never;
         /**
-         * Update workspace default currency and cancellation deadline
+         * Update workspace defaults and theme colours
          * @description Owner only. Existing enrollments keep their configured currency and price; enrollments without a custom deadline inherit the new default. Creates a WORKSPACE UPDATE audit entry.
          */
         patch: operations["WorkspacesController_updateSettings"];
@@ -387,7 +387,7 @@ export interface paths {
         head?: never;
         /**
          * Update a group
-         * @description PATCH semantics: omitted fields stay unchanged, null clears an optional field. A no-op update creates no audit entry.
+         * @description PATCH semantics: omitted fields stay unchanged, null clears an optional field. A no-op update creates no audit entry. `students` carries the complete roster and is reconciled into enrollments in the same transaction — added students are enrolled, dropped ones are archived — so a roster edit never costs one request per student.
          */
         patch: operations["GroupsController_update"];
         trace?: never;
@@ -756,6 +756,8 @@ export interface components {
                 mode: "SOLO" | "SCHOOL";
                 defaultCurrency: string;
                 cancellationDeadlineHours: number;
+                primaryColor: string;
+                secondaryColor: string;
             };
             /** @enum {string} */
             role: "OWNER" | "TEACHER";
@@ -794,6 +796,8 @@ export interface components {
                 mode: "SOLO" | "SCHOOL";
                 defaultCurrency: string;
                 cancellationDeadlineHours: number;
+                primaryColor: string;
+                secondaryColor: string;
             };
             /** @enum {string} */
             role: "OWNER" | "TEACHER";
@@ -809,6 +813,8 @@ export interface components {
                 mode: "SOLO" | "SCHOOL";
                 defaultCurrency: string;
                 cancellationDeadlineHours: number;
+                primaryColor: string;
+                secondaryColor: string;
             };
             /** @enum {string} */
             role: "OWNER" | "TEACHER";
@@ -819,6 +825,8 @@ export interface components {
             cancellationDeadlineHours?: number;
             /** @enum {string} */
             mode?: "SOLO" | "SCHOOL";
+            primaryColor?: string;
+            secondaryColor?: string;
         };
         WorkspaceMemberListDto: {
             items: {
@@ -876,8 +884,6 @@ export interface components {
                 phone: string | null;
                 telegramUsername: string | null;
                 timezone: string;
-                /** @enum {string|null} */
-                subject: "MATH" | "ENGLISH" | "GERMAN" | "FRENCH" | "POLISH" | "UKRAINIAN_LANGUAGE" | "UKRAINIAN_LITERATURE" | "WORLD_LITERATURE" | "PHYSICS" | "CHEMISTRY" | "BIOLOGY" | "GEOGRAPHY" | "HISTORY" | "WORLD_HISTORY" | "HISTORY_OF_UKRAINE" | "COMPUTER_SCIENCE" | "ECONOMICS" | "LAW" | "MUSIC" | "ART" | "PHYSICAL_EDUCATION" | "NMT_PREP" | "ZNO_PREP" | "IELTS_PREP" | "TOEFL_PREP" | "SAT_PREP" | null;
                 /** @enum {string} */
                 status: "ACTIVE" | "ON_HOLD" | "ARCHIVED";
                 hourlyRateMinor: number | null;
@@ -902,8 +908,6 @@ export interface components {
             phone: string;
             timezone: string;
             telegramUsername: string;
-            /** @enum {string} */
-            subject: "MATH" | "ENGLISH" | "GERMAN" | "FRENCH" | "POLISH" | "UKRAINIAN_LANGUAGE" | "UKRAINIAN_LITERATURE" | "WORLD_LITERATURE" | "PHYSICS" | "CHEMISTRY" | "BIOLOGY" | "GEOGRAPHY" | "HISTORY" | "WORLD_HISTORY" | "HISTORY_OF_UKRAINE" | "COMPUTER_SCIENCE" | "ECONOMICS" | "LAW" | "MUSIC" | "ART" | "PHYSICAL_EDUCATION" | "NMT_PREP" | "ZNO_PREP" | "IELTS_PREP" | "TOEFL_PREP" | "SAT_PREP";
             hourlyRateMinor?: number;
             /** @enum {string} */
             currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
@@ -933,8 +937,6 @@ export interface components {
             phone: string | null;
             timezone: string;
             telegramUsername: string | null;
-            /** @enum {string|null} */
-            subject: "MATH" | "ENGLISH" | "GERMAN" | "FRENCH" | "POLISH" | "UKRAINIAN_LANGUAGE" | "UKRAINIAN_LITERATURE" | "WORLD_LITERATURE" | "PHYSICS" | "CHEMISTRY" | "BIOLOGY" | "GEOGRAPHY" | "HISTORY" | "WORLD_HISTORY" | "HISTORY_OF_UKRAINE" | "COMPUTER_SCIENCE" | "ECONOMICS" | "LAW" | "MUSIC" | "ART" | "PHYSICAL_EDUCATION" | "NMT_PREP" | "ZNO_PREP" | "IELTS_PREP" | "TOEFL_PREP" | "SAT_PREP" | null;
             hourlyRateMinor: number | null;
             /** @enum {string|null} */
             currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
@@ -975,8 +977,6 @@ export interface components {
             phone: string | null;
             timezone: string;
             telegramUsername: string | null;
-            /** @enum {string|null} */
-            subject: "MATH" | "ENGLISH" | "GERMAN" | "FRENCH" | "POLISH" | "UKRAINIAN_LANGUAGE" | "UKRAINIAN_LITERATURE" | "WORLD_LITERATURE" | "PHYSICS" | "CHEMISTRY" | "BIOLOGY" | "GEOGRAPHY" | "HISTORY" | "WORLD_HISTORY" | "HISTORY_OF_UKRAINE" | "COMPUTER_SCIENCE" | "ECONOMICS" | "LAW" | "MUSIC" | "ART" | "PHYSICAL_EDUCATION" | "NMT_PREP" | "ZNO_PREP" | "IELTS_PREP" | "TOEFL_PREP" | "SAT_PREP" | null;
             hourlyRateMinor: number | null;
             /** @enum {string|null} */
             currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
@@ -1037,8 +1037,6 @@ export interface components {
             phone?: string | null;
             timezone?: string;
             telegramUsername?: string | null;
-            /** @enum {string|null} */
-            subject?: "MATH" | "ENGLISH" | "GERMAN" | "FRENCH" | "POLISH" | "UKRAINIAN_LANGUAGE" | "UKRAINIAN_LITERATURE" | "WORLD_LITERATURE" | "PHYSICS" | "CHEMISTRY" | "BIOLOGY" | "GEOGRAPHY" | "HISTORY" | "WORLD_HISTORY" | "HISTORY_OF_UKRAINE" | "COMPUTER_SCIENCE" | "ECONOMICS" | "LAW" | "MUSIC" | "ART" | "PHYSICAL_EDUCATION" | "NMT_PREP" | "ZNO_PREP" | "IELTS_PREP" | "TOEFL_PREP" | "SAT_PREP" | null;
             hourlyRateMinor?: number | null;
             /** @enum {string|null} */
             currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
@@ -1072,7 +1070,6 @@ export interface components {
                     fullName: string;
                     /** @enum {string|null} */
                     avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
-                    subject: string | null;
                     /** @enum {string} */
                     status: "ACTIVE" | "ON_HOLD" | "ARCHIVED";
                 }[];
@@ -1132,7 +1129,6 @@ export interface components {
                 fullName: string;
                 /** @enum {string|null} */
                 avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
-                subject: string | null;
                 /** @enum {string} */
                 status: "ACTIVE" | "ON_HOLD" | "ARCHIVED";
             }[];
@@ -1156,7 +1152,6 @@ export interface components {
                 email: string | null;
                 phone: string | null;
                 telegramUsername: string | null;
-                subjects: ("MATH" | "ENGLISH" | "GERMAN" | "FRENCH" | "POLISH" | "UKRAINIAN_LANGUAGE" | "UKRAINIAN_LITERATURE" | "WORLD_LITERATURE" | "PHYSICS" | "CHEMISTRY" | "BIOLOGY" | "GEOGRAPHY" | "HISTORY" | "WORLD_HISTORY" | "HISTORY_OF_UKRAINE" | "COMPUTER_SCIENCE" | "ECONOMICS" | "LAW" | "MUSIC" | "ART" | "PHYSICAL_EDUCATION" | "NMT_PREP" | "ZNO_PREP" | "IELTS_PREP" | "TOEFL_PREP" | "SAT_PREP")[];
                 bio: string | null;
                 defaultRateMinor: number | null;
                 /** @enum {string|null} */
@@ -1189,7 +1184,6 @@ export interface components {
             email?: string;
             phone?: string;
             telegramUsername?: string;
-            subjects?: ("MATH" | "ENGLISH" | "GERMAN" | "FRENCH" | "POLISH" | "UKRAINIAN_LANGUAGE" | "UKRAINIAN_LITERATURE" | "WORLD_LITERATURE" | "PHYSICS" | "CHEMISTRY" | "BIOLOGY" | "GEOGRAPHY" | "HISTORY" | "WORLD_HISTORY" | "HISTORY_OF_UKRAINE" | "COMPUTER_SCIENCE" | "ECONOMICS" | "LAW" | "MUSIC" | "ART" | "PHYSICAL_EDUCATION" | "NMT_PREP" | "ZNO_PREP" | "IELTS_PREP" | "TOEFL_PREP" | "SAT_PREP")[];
             bio?: string;
             defaultRateMinor?: number;
             /** @enum {string} */
@@ -1215,7 +1209,6 @@ export interface components {
             email: string | null;
             phone: string | null;
             telegramUsername: string | null;
-            subjects: ("MATH" | "ENGLISH" | "GERMAN" | "FRENCH" | "POLISH" | "UKRAINIAN_LANGUAGE" | "UKRAINIAN_LITERATURE" | "WORLD_LITERATURE" | "PHYSICS" | "CHEMISTRY" | "BIOLOGY" | "GEOGRAPHY" | "HISTORY" | "WORLD_HISTORY" | "HISTORY_OF_UKRAINE" | "COMPUTER_SCIENCE" | "ECONOMICS" | "LAW" | "MUSIC" | "ART" | "PHYSICAL_EDUCATION" | "NMT_PREP" | "ZNO_PREP" | "IELTS_PREP" | "TOEFL_PREP" | "SAT_PREP")[];
             bio: string | null;
             defaultRateMinor: number | null;
             /** @enum {string|null} */
@@ -1242,7 +1235,6 @@ export interface components {
             email?: string | null;
             phone?: string | null;
             telegramUsername?: string | null;
-            subjects?: ("MATH" | "ENGLISH" | "GERMAN" | "FRENCH" | "POLISH" | "UKRAINIAN_LANGUAGE" | "UKRAINIAN_LITERATURE" | "WORLD_LITERATURE" | "PHYSICS" | "CHEMISTRY" | "BIOLOGY" | "GEOGRAPHY" | "HISTORY" | "WORLD_HISTORY" | "HISTORY_OF_UKRAINE" | "COMPUTER_SCIENCE" | "ECONOMICS" | "LAW" | "MUSIC" | "ART" | "PHYSICAL_EDUCATION" | "NMT_PREP" | "ZNO_PREP" | "IELTS_PREP" | "TOEFL_PREP" | "SAT_PREP")[];
             bio?: string | null;
             defaultRateMinor?: number | null;
             /** @enum {string|null} */
@@ -1267,11 +1259,21 @@ export interface components {
                 notes: string | null;
                 /** Format: date-time */
                 deletedAt: string | null;
+                /** @enum {string} */
+                status: "ACTIVE" | "EMPTY";
                 activeStudentCount: number;
                 students: {
                     /** Format: uuid */
                     id: string;
                     fullName: string;
+                    /** @enum {string|null} */
+                    avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
+                }[];
+                schedules: {
+                    weekdays: number[];
+                    localTime: string;
+                    durationMin: number;
+                    timezone: string;
                 }[];
             }[];
             page: number;
@@ -1285,6 +1287,11 @@ export interface components {
             /** @enum {string} */
             currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
             notes?: string;
+            students?: {
+                studentIds: string[];
+                /** Format: uuid */
+                teacherId: string;
+            };
         };
         GroupDto: {
             /** Format: uuid */
@@ -1322,16 +1329,26 @@ export interface components {
             enrollments: {
                 /** Format: uuid */
                 id: string;
+                /** Format: uuid */
+                studentId: string;
+                /** Format: uuid */
+                groupId: string;
+                /** Format: uuid */
+                teacherId: string;
                 /** @enum {string} */
                 status: "ACTIVE" | "PAUSED" | "ARCHIVED";
                 /** @enum {string} */
                 billingType: "PACKAGE" | "MONTHLY" | "PER_LESSON";
                 priceMinor: number;
-                currency: string;
+                /** @enum {string} */
+                currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+                cancellationDeadlineHours: number | null;
                 student: {
                     /** Format: uuid */
                     id: string;
                     fullName: string;
+                    /** @enum {string|null} */
+                    avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
                 };
                 teacher: {
                     /** Format: uuid */
@@ -1347,6 +1364,11 @@ export interface components {
             /** @enum {string|null} */
             currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
             notes?: string | null;
+            students?: {
+                studentIds: string[];
+                /** Format: uuid */
+                teacherId: string;
+            };
         };
         EnrollmentListDto: {
             items: {
@@ -1502,6 +1524,8 @@ export interface components {
                 cancelledAt: string | null;
                 /** Format: date-time */
                 completedAt: string | null;
+                /** Format: date-time */
+                paidAt: string | null;
                 notes: string | null;
                 cancellationDeadlineHours: number;
                 student: {
@@ -1542,6 +1566,16 @@ export interface components {
             priceMinor?: number;
             /** @enum {string} */
             currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+            /**
+             * @default SCHEDULED
+             * @enum {string}
+             */
+            status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED";
+            /** @enum {string} */
+            cancelledBy?: "TEACHER" | "STUDENT" | "GROUP";
+            cancelledReason?: string | null;
+            /** Format: date-time */
+            paidAt?: string | null;
             notes?: string | null;
         };
         UpdateLessonDto: {
@@ -1549,6 +1583,8 @@ export interface components {
             priceMinor?: number;
             /** @enum {string} */
             currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+            /** Format: date-time */
+            paidAt?: string | null;
         };
         LessonDto: {
             /** Format: uuid */
@@ -1584,6 +1620,8 @@ export interface components {
             cancelledAt: string | null;
             /** Format: date-time */
             completedAt: string | null;
+            /** Format: date-time */
+            paidAt: string | null;
             notes: string | null;
             cancellationDeadlineHours: number;
             student: {
@@ -1649,6 +1687,8 @@ export interface components {
                 currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
                 /** Format: date-time */
                 startDate: string;
+                /** Format: date-time */
+                endsAt: string | null;
                 /** Format: date-time */
                 horizonMaterializedUntil: string;
                 student: {
@@ -1720,6 +1760,8 @@ export interface components {
             currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
             /** Format: date-time */
             startDate: string;
+            /** Format: date-time */
+            endsAt: string | null;
             /** Format: date-time */
             horizonMaterializedUntil: string;
             student: {
@@ -1928,12 +1970,19 @@ export interface components {
             expiresAt?: string | null;
             notes?: string | null;
             schedule?: {
-                weekdays: number[];
-                localTime: string;
+                slots: {
+                    weekday: number;
+                    localTime: string;
+                }[];
                 timezone: string;
                 durationMin: number;
                 /** Format: date-time */
                 startDate: string;
+            } | null;
+            initialPayment?: {
+                amountMinor: number;
+                /** Format: date-time */
+                paidAt: string;
             } | null;
         };
         AdjustBalanceDto: {
@@ -2330,8 +2379,9 @@ export interface operations {
                 search?: string;
                 state?: "active" | "deleted" | "all";
                 status?: "ACTIVE" | "ON_HOLD" | "ARCHIVED";
-                subject?: "MATH" | "ENGLISH" | "GERMAN" | "FRENCH" | "POLISH" | "UKRAINIAN_LANGUAGE" | "UKRAINIAN_LITERATURE" | "WORLD_LITERATURE" | "PHYSICS" | "CHEMISTRY" | "BIOLOGY" | "GEOGRAPHY" | "HISTORY" | "WORLD_HISTORY" | "HISTORY_OF_UKRAINE" | "COMPUTER_SCIENCE" | "ECONOMICS" | "LAW" | "MUSIC" | "ART" | "PHYSICAL_EDUCATION" | "NMT_PREP" | "ZNO_PREP" | "IELTS_PREP" | "TOEFL_PREP" | "SAT_PREP";
                 groupId?: string;
+                sort?: "fullName" | "status" | "hourlyRateMinor" | "phone" | "telegramUsername" | "createdAt";
+                order?: "asc" | "desc";
             };
             header?: never;
             path?: never;
@@ -2795,6 +2845,10 @@ export interface operations {
                 pageSize?: number;
                 search?: string;
                 state?: "active" | "deleted" | "all";
+                status?: "ACTIVE" | "EMPTY";
+                studentId?: string;
+                sort?: "name" | "pricePerLesson" | "activeStudentCount" | "schedule";
+                order?: "asc" | "desc";
             };
             header?: never;
             path?: never;
@@ -3559,7 +3613,9 @@ export interface operations {
     };
     PackagesController_create: {
         parameters: {
-            query?: never;
+            query?: {
+                force?: boolean;
+            };
             header?: never;
             path?: never;
             cookie?: never;

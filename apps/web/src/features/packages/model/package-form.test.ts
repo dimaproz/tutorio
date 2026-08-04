@@ -3,6 +3,7 @@ import {
   buildCreatePackageDto,
   emptyPackageForm,
   packageFormSchema,
+  packageScheduleSummary,
   previewTotalMinor,
   type PackageFormValues,
 } from './package-form';
@@ -27,25 +28,16 @@ describe('packageFormSchema', () => {
   });
 
   it('rejects a lesson count outside the allowed range', () => {
-    expect(packageFormSchema.safeParse({ ...base, lessonsTotal: '0' }).success).toBe(
-      false,
-    );
-    expect(packageFormSchema.safeParse({ ...base, lessonsTotal: '900' }).success).toBe(
-      false,
-    );
+    expect(packageFormSchema.safeParse({ ...base, lessonsTotal: '0' }).success).toBe(false);
+    expect(packageFormSchema.safeParse({ ...base, lessonsTotal: '900' }).success).toBe(false);
   });
 
-  it('requires an end date and a schedule for a by-period package', () => {
+  it('requires an end date for a by-period package', () => {
     const period = { ...base, sizingMode: 'BY_PERIOD' as const };
     expect(packageFormSchema.safeParse(period).success).toBe(false);
 
     const withEnd = { ...period, endDate: '2026-09-30' };
-    // Still missing the schedule that sizes it.
-    expect(packageFormSchema.safeParse(withEnd).success).toBe(false);
-
-    expect(
-      packageFormSchema.safeParse({ ...withEnd, scheduleEnabled: true }).success,
-    ).toBe(true);
+    expect(packageFormSchema.safeParse(withEnd).success).toBe(true);
   });
 
   it('requires at least one weekday', () => {
@@ -65,7 +57,7 @@ describe('previewTotalMinor', () => {
 });
 
 describe('buildCreatePackageDto', () => {
-  it('targets a student and sends only the fixed-count field', () => {
+  it('targets a student and includes the default fixed-count schedule', () => {
     const dto = buildCreatePackageDto(base);
     expect(dto).toMatchObject({
       studentId: STUDENT_ID,
@@ -76,7 +68,11 @@ describe('buildCreatePackageDto', () => {
     });
     expect(dto).not.toHaveProperty('groupId');
     expect(dto).not.toHaveProperty('endDate');
-    expect(dto).not.toHaveProperty('schedule');
+    expect(dto.schedule).toMatchObject({
+      slots: [{ weekday: 1, localTime: '10:00' }],
+      durationMin: 60,
+    });
+    expect(dto).toHaveProperty('expiresAt');
   });
 
   it('targets a group instead of a student', () => {
@@ -97,17 +93,52 @@ describe('buildCreatePackageDto', () => {
       scheduleEnabled: true,
     });
     expect(dto).not.toHaveProperty('lessonsTotal');
-    expect(dto.endDate).toBe(new Date('2026-09-30').toISOString());
+    expect(dto.endDate).toBe('2026-09-30T20:59:59.999Z');
     expect(dto.schedule).toMatchObject({
-      weekdays: [1],
-      localTime: '10:00',
+      slots: [{ weekday: 1, localTime: '10:00' }],
       durationMin: 60,
     });
+  });
+
+  it('omits schedule when the fixed-count switch is off', () => {
+    const dto = buildCreatePackageDto({ ...base, scheduleEnabled: false });
+    expect(dto).not.toHaveProperty('schedule');
+  });
+
+  it('maps partial and full initial payments', () => {
+    const partial = buildCreatePackageDto({
+      ...base,
+      paymentStatus: 'PARTIAL',
+      paidAmount: '100',
+      paidAt: '2026-08-01',
+    });
+    expect(partial.initialPayment?.amountMinor).toBe(10000);
+
+    const paid = buildCreatePackageDto({
+      ...base,
+      paymentStatus: 'PAID',
+      paidAt: '2026-08-01',
+    });
+    expect(paid.initialPayment?.amountMinor).toBe(8 * 45000);
   });
 
   it('drops a blank name and blank notes', () => {
     const dto = buildCreatePackageDto({ ...base, name: '  ', notes: '  ' });
     expect(dto).not.toHaveProperty('name');
     expect(dto).not.toHaveProperty('notes');
+  });
+});
+
+describe('packageScheduleSummary', () => {
+  it('finds the next Saturday when generation starts on Sunday', () => {
+    const summary = packageScheduleSummary({
+      ...base,
+      startMode: 'MANUAL',
+      manualStartDate: '2026-08-02',
+      weekdays: [6],
+      slotTimes: { '6': '10:00' },
+    });
+
+    expect(summary.firstLesson?.toISOString().slice(0, 10)).toBe('2026-08-08');
   });
 });

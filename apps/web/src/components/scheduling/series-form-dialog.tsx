@@ -10,14 +10,11 @@ import type { LessonSeriesResponse } from '@tutorio/validation';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
+import { DurationInput } from '@/components/app/duration-input';
 import { Spinner } from '@/components/ui/spinner';
 import { FormSection } from '@/components/app/form-section';
 import { MoneyInput } from '@/components/app/money-input';
-import {
-  detectTimezone,
-  TimezoneCombobox,
-} from '@/components/app/timezone-combobox';
+import { detectTimezone, TimezoneCombobox } from '@/components/app/timezone-combobox';
 import {
   DatePicker,
   EntityFormDialog,
@@ -26,10 +23,7 @@ import {
   TimePicker,
   WeekdayPicker,
 } from '@/components/shared';
-import {
-  effectiveTeacherId,
-  prefillPriceMinor,
-} from '@/features/scheduling/model/lesson-form';
+import { effectiveTeacherId, prefillPriceMinor } from '@/features/scheduling/model/lesson-form';
 import {
   buildCreateSeriesDto,
   buildUpdateSeriesDto,
@@ -39,10 +33,7 @@ import {
   type SeriesFormValues,
 } from '@/features/scheduling/model/series-form';
 import { errorMessageKey } from '@/lib/api/error-message';
-import {
-  useCreateSeriesMutation,
-  useUpdateSeriesMutation,
-} from '@/lib/api/scheduling';
+import { useCreateSeriesMutation, useUpdateSeriesMutation } from '@/lib/api/scheduling';
 import { useStudentsQuery } from '@/lib/api/students';
 import { useTeachersQuery } from '@/lib/api/teachers';
 import { makeZodErrorMap } from '@/lib/forms/error-map';
@@ -239,9 +230,7 @@ export function SeriesFormDialog({
                   onChange={field.onChange}
                   invalid={Boolean(errors.weekdays)}
                 />
-                <FieldError
-                  errors={[errors.weekdays as { message?: string } | undefined]}
-                />
+                <FieldError errors={[errors.weekdays as { message?: string } | undefined]} />
               </Field>
             )}
           />
@@ -265,13 +254,18 @@ export function SeriesFormDialog({
             />
             <Field data-invalid={errors.durationMin ? true : undefined}>
               <FieldLabel htmlFor="series-duration">{t('duration')}</FieldLabel>
-              <Input
-                id="series-duration"
-                type="number"
-                min={5}
-                max={720}
-                aria-invalid={errors.durationMin ? true : undefined}
-                {...form.register('durationMin')}
+              <Controller
+                control={form.control}
+                name="durationMin"
+                render={({ field }) => (
+                  <DurationInput
+                    id="series-duration"
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    onBlur={field.onBlur}
+                    invalid={Boolean(errors.durationMin)}
+                  />
+                )}
               />
               <FieldError errors={[errors.durationMin]} />
             </Field>
@@ -297,11 +291,7 @@ export function SeriesFormDialog({
           />
         </FormSection>
 
-        <FormSection
-          icon={BanknoteIcon}
-          title={t('price')}
-          tone="success"
-        >
+        <FormSection icon={BanknoteIcon} title={t('price')} tone="success">
           <div className="grid gap-4 sm:grid-cols-2">
             <Field data-invalid={errors.price ? true : undefined}>
               <FieldLabel htmlFor="series-price">{t('price')}</FieldLabel>
