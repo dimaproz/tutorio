@@ -23,7 +23,6 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { ZodSerializerDto } from 'nestjs-zod';
-import type { ForceQueryDto } from '@tutorio/validation';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -36,6 +35,7 @@ import {
   PackageDto,
   PackageListDto,
 } from './dto/packages.dto';
+import { ForceQueryDto } from '../scheduling/dto/scheduling.dto';
 import { PackagesService } from './packages.service';
 
 @ApiTags('packages')

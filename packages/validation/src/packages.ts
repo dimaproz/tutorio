@@ -202,6 +202,9 @@ export const recordPaymentSchema = z
     method: paymentMethodSchema.default('CASH'),
     paidAt: isoDateTimeSchema.optional(),
     note: notesSchema.nullable().optional(),
+    // Replays of the same command return the original payment instead of
+    // recording money twice. A changed command under the same key is rejected.
+    idempotencyKey: z.string().trim().min(1).max(128).optional(),
   })
   .strict();
 

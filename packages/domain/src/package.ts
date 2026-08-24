@@ -144,6 +144,32 @@ export function splitShares<TId extends string>(
 
 export type PaymentStatus = 'PAID' | 'PENDING' | 'PARTIAL';
 
+export class OverpaymentError extends Error {
+  constructor(totalMinor: number, paidMinor: number, amountMinor: number) {
+    super(`Payment of ${amountMinor} exceeds outstanding balance of ${totalMinor - paidMinor}`);
+    this.name = 'OverpaymentError';
+  }
+}
+
+/** Rejects a payment that would settle more than the agreed amount. */
+export function assertPaymentWithinOutstanding(
+  totalMinor: number,
+  paidMinor: number,
+  amountMinor: number,
+): void {
+  if (
+    !Number.isSafeInteger(totalMinor) ||
+    !Number.isSafeInteger(paidMinor) ||
+    !Number.isSafeInteger(amountMinor) ||
+    totalMinor < 0 ||
+    paidMinor < 0 ||
+    amountMinor <= 0 ||
+    paidMinor + amountMinor > totalMinor
+  ) {
+    throw new OverpaymentError(totalMinor, paidMinor, amountMinor);
+  }
+}
+
 /** Payment status derived from what is owed versus what has been paid. */
 export function paymentStatusOf(oweMinor: number, paidMinor: number): PaymentStatus {
   if (paidMinor <= 0) {

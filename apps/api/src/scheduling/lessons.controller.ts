@@ -21,13 +21,13 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import type { ForceQueryDto } from '@tutorio/validation';
 import { ZodSerializerDto } from 'nestjs-zod';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { ApiErrorDto } from '../auth/dto/auth.dto';
 import {
   CreateLessonDto,
+  ForceQueryDto,
   LessonDto,
   LessonListDto,
   ListLessonsQueryDto,

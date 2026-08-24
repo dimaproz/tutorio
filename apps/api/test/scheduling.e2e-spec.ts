@@ -466,4 +466,37 @@ describe('Stage 3: scheduling — series, lessons, reschedule, cancel (e2e)', ()
       })
       .expect(201);
   });
+
+  it('treats force=false as false and only bypasses conflicts for force=true', async () => {
+    const start = new Date(Date.now() + 40 * DAY_MS);
+    start.setUTCHours(4, 0, 0, 0);
+    const body = {
+      enrollmentId,
+      teacherId: ownerTeacherId,
+      startsAt: [start.toISOString()],
+      durationMin: 60,
+      priceMinor: 50000,
+      currency: 'UAH',
+    };
+
+    await server()
+      .post('/api/lessons')
+      .set('Authorization', auth(owner))
+      .send(body)
+      .expect(201);
+
+    await server()
+      .post('/api/lessons')
+      .query({ force: 'false' })
+      .set('Authorization', auth(owner))
+      .send(body)
+      .expect(409);
+
+    await server()
+      .post('/api/lessons')
+      .query({ force: 'true' })
+      .set('Authorization', auth(owner))
+      .send(body)
+      .expect(201);
+  });
 });

@@ -1,6 +1,7 @@
 # Tutorio Current State
 
-Last verified: 2026-08-24 at commit `3d985d5` on `develop`.
+Last verified: 2026-08-24 in the uncommitted Work Packet 1 tree based on
+`3d985d5` on `develop`.
 
 This is the first project document to read before planning or implementing
 work. It reports the repository as it exists; [`mvp-plan.md`](./mvp-plan.md)
@@ -14,14 +15,14 @@ yet. The correct next move is not another design-wide refactor or a new product
 module. The next move is a bounded stabilization release that makes four core
 workflows correct, understandable, tested, and recoverable.
 
-- Branch: `develop`, clean and aligned with `origin/develop` at verification.
+- Branch: `develop`; Work Packet 1 changes are intentionally uncommitted.
 - The former `refactor/students-design` work was merged by PR #18.
-- Root `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build` passed during
-  the repository audit.
-- Observed unit totals: domain 88, validation 43, API 98, web 106.
-- The repository also contains 52 API end-to-end tests, but they were not run
-  locally because the configured development database is remote and no isolated
-  local PostgreSQL instance was available. CI has an isolated PostgreSQL job.
+- Root `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build` pass in the
+  Work Packet 1 tree.
+- Observed unit totals: domain 89, validation 45, API 101, web 106.
+- API E2E was run against an isolated PostgreSQL 17 container after applying all
+  migrations. Package and scheduling suites pass (18 tests); the full suite is
+  55/57 because two existing Stage 2 group-deletion assertions fail.
 - Unit coverage is uneven: core scheduling and package orchestration still have
   important untested branches. Passing totals are not a pilot-readiness signal.
 
@@ -55,6 +56,18 @@ not to add surface area. The required order is:
 5. Run the complete pilot acceptance matrix with realistic seed data and an
    isolated database.
 
+### Work Packet 1 evidence
+
+The package/payment integrity boundary is implemented and verified in the
+uncommitted tree: an explicit runtime DTO parses `force`, payments validate the
+package participant relationship and required currency, package payments reject
+overpayment, and idempotency keys replay the original payment without adding a
+second event. The OpenAPI schema and generated client were refreshed. Evidence:
+`packages/validation/src/packages.test.ts`,
+`packages/domain/src/package.test.ts`,
+`apps/api/src/packages/payments.service.spec.ts`, and
+`apps/api/test/{packages,scheduling}.e2e-spec.ts`.
+
 ## Release blockers
 
 ### P0 — data integrity and financial correctness
@@ -62,9 +75,6 @@ not to add surface area. The required order is:
 - Group soft deletion tombstones and disconnects related lessons, series,
   packages, payments, and enrollments, while restore restores only the group.
   The behavior is effectively destructive and contradicts API/test expectations.
-- Payment creation validates enrollment and package independently but does not
-  prove that the enrollment belongs to that package. A payment without a package
-  also lacks a reliable workspace-currency invariant.
 - A lesson without a persisted `packageId` can resolve a different package on a
   later status transition, so a compensating credit may affect the wrong package.
 - Deleting a charged lesson or a package can leave scheduling and financial
@@ -91,9 +101,6 @@ not to add surface area. The required order is:
 - Teacher accounts are workspace-wide in practice. Mutations are not consistently
   owner-gated and there is no complete “own teacher only” authorization model.
   The pilot therefore uses the owner-operated access decision in ADR 0004.
-- The `force` query contract uses boolean coercion while the runtime DTO boundary
-  is weak; the web currently sends `force=false`, which can be interpreted as a
-  truthy string in unsafe paths.
 
 ### P1 — UX and delivery confidence
 

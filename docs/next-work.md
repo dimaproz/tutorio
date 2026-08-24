@@ -7,7 +7,7 @@ work on next?” without requiring a developer to re-derive priorities from the
 full roadmap. Update it when a work packet merges; do not use it for long-term
 ideas.
 
-## Start here: Work Packet 1 — Package Integrity Boundary
+## Work Packet 1 — Package Integrity Boundary (implemented; global E2E blocked)
 
 Why first: it is a bounded vertical slice with direct financial risk, clear
 accepted semantics, and enough existing tests to extend. It creates the testing
@@ -46,7 +46,19 @@ pattern used by the larger lifecycle fixes.
 
 Suggested PR intent: `fix(api): enforce package payment integrity`.
 
-## Work Packet 2 — History-Preserving Lifecycle
+### Actual result — 2026-08-24
+
+- Implemented runtime parsing for `force`, package payment relationship and
+  currency validation, overpayment rejection, and payment-command idempotency.
+- Added validation, domain, service, package E2E, and scheduling E2E regressions;
+  refreshed `packages/api-client/openapi.json` and generated schema.
+- Root `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build` pass in the
+  uncommitted Work Packet 1 tree based on `3d985d5`.
+- Isolated PostgreSQL E2E passes for package and scheduling coverage (18 tests).
+  The full API E2E command remains 55/57 because the existing Stage 2
+  group-deletion assertions fail, matching the P0 lifecycle defect below.
+
+## Start here: Work Packet 2 — History-Preserving Lifecycle
 
 - Replace destructive group delete/partial restore with ADR 0002 behavior.
 - Define and implement student archive/restore; block routine hard deletion when

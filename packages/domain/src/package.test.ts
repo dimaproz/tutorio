@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  assertPaymentWithinOutstanding,
   effectiveTotalMinor,
   InvalidPackagePlanError,
+  OverpaymentError,
   paymentStatusOf,
   planPackage,
   remainingCredits,
@@ -161,6 +163,14 @@ describe('paymentStatusOf', () => {
   it('is paid once the full amount (or more) is settled', () => {
     expect(paymentStatusOf(500, 500)).toBe('PAID');
     expect(paymentStatusOf(500, 600)).toBe('PAID');
+  });
+});
+
+describe('assertPaymentWithinOutstanding', () => {
+  it('accepts partial and exact payments but rejects overpayment', () => {
+    expect(() => assertPaymentWithinOutstanding(1000, 0, 400)).not.toThrow();
+    expect(() => assertPaymentWithinOutstanding(1000, 400, 600)).not.toThrow();
+    expect(() => assertPaymentWithinOutstanding(1000, 400, 601)).toThrow(OverpaymentError);
   });
 });
 

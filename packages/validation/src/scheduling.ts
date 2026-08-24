@@ -306,7 +306,13 @@ export const listLessonsQuerySchema = z
 export type ListLessonsQueryDto = z.infer<typeof listLessonsQuerySchema>;
 
 // Override conflict rejection on create/reschedule (double-booking on purpose).
-export const forceQuerySchema = z.object({ force: z.coerce.boolean().default(false) }).strict();
+// Query values arrive as strings, so boolean coercion would turn "false" into
+// true through JavaScript truthiness. Only explicit boolean spellings are valid.
+const forceQueryValueSchema = z
+  .union([z.boolean(), z.literal('true'), z.literal('false')])
+  .transform((value) => value === true || value === 'true');
+
+export const forceQuerySchema = z.object({ force: forceQueryValueSchema.default(false) }).strict();
 
 export type ForceQueryDto = z.infer<typeof forceQuerySchema>;
 

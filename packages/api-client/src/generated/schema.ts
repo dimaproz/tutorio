@@ -2042,6 +2042,7 @@ export interface components {
             /** Format: date-time */
             paidAt?: string;
             note?: string | null;
+            idempotencyKey?: string;
         };
         PaymentDto: {
             /** Format: uuid */
@@ -3268,7 +3269,9 @@ export interface operations {
     };
     LessonsController_create: {
         parameters: {
-            query?: never;
+            query?: {
+                force?: boolean | "true" | "false";
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -3351,7 +3354,9 @@ export interface operations {
     };
     LessonsController_reschedule: {
         parameters: {
-            query?: never;
+            query?: {
+                force?: boolean | "true" | "false";
+            };
             header?: never;
             path: {
                 lessonId: string;
@@ -3614,7 +3619,7 @@ export interface operations {
     PackagesController_create: {
         parameters: {
             query?: {
-                force?: boolean;
+                force?: boolean | "true" | "false";
             };
             header?: never;
             path?: never;

@@ -2200,7 +2200,33 @@
       "post": {
         "description": "startsAt accepts several dates for bulk creation. Overlapping the teacher returns 409 SCHEDULE_CONFLICT unless force=true.",
         "operationId": "LessonsController_create",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "force",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": false,
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "false"
+                  ]
+                }
+              ]
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2340,6 +2366,31 @@
             "in": "path",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "force",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": false,
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "false"
+                  ]
+                }
+              ]
             }
           }
         ],
@@ -2856,7 +2907,24 @@
             "required": false,
             "in": "query",
             "schema": {
-              "type": "boolean"
+              "default": false,
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "false"
+                  ]
+                }
+              ]
             }
           }
         ],
@@ -8611,6 +8679,11 @@
             "type": "string",
             "maxLength": 2000,
             "nullable": true
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
           }
         },
         "required": [

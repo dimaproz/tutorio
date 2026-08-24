@@ -40,26 +40,26 @@ repeat commands do not change balance or create meaningless ledger rows.
 
 ## PackageParticipantShare
 
-| Concern       | Contract                                                                                                                                                          |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Purpose       | Creation-time debt allocation for each participant in a group package.                                                                                            |
-| Ownership     | Workspace/package-scoped through the package; unique `(packageId, enrollmentId)`.                                                                                 |
-| Create/update | Created from an explicit preview and allocation rule. Settled payments increment the matching share. No independent CRUD.                                         |
-| Lifecycle     | Historical snapshot; roster changes do not silently rewrite past debt. Corrections require an explicit reallocation/refund design.                                |
-| Current gaps  | No cap against amount owed, no refund/correction path, unrelated payments may bypass allocation, and zero-delta cancellation events can reduce shares repeatedly. |
+| Concern       | Contract                                                                                                                           |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Purpose       | Creation-time debt allocation for each participant in a group package.                                                             |
+| Ownership     | Workspace/package-scoped through the package; unique `(packageId, enrollmentId)`.                                                  |
+| Create/update | Created from an explicit preview and allocation rule. Settled payments increment the matching share. No independent CRUD.          |
+| Lifecycle     | Historical snapshot; roster changes do not silently rewrite past debt. Corrections require an explicit reallocation/refund design. |
+| Current gaps  | No refund/correction path, and zero-delta cancellation events can reduce shares repeatedly.                                        |
 
 Acceptance scenarios: deterministic rounding, membership snapshot, partial/full
 payment, overpayment rejection, cancellation, and preserved history on archive.
 
 ## Payment
 
-| Concern      | Contract                                                                                                                                                               |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Purpose      | Append-only record of money received or reversed, separate from lesson credits.                                                                                        |
-| Ownership    | Workspace and enrollment-scoped; package optional only for a documented non-package payment use case.                                                                  |
-| Create       | Validate amount, currency, date, idempotency, and that enrollment participates in the package target/share. Derive package payment status; do not ask users to set it. |
-| Lifecycle    | Insert-only event with explicit reversal/refund status or compensating event. Routine edit/delete is not allowed.                                                      |
-| Current gaps | Enrollment and package are checked independently; package-less currency is under-validated; future `paidAt` and overpayment are accepted; no refund/correction API.    |
+| Concern      | Contract                                                                                                                                                                                                                                                             |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Purpose      | Append-only record of money received or reversed, separate from lesson credits.                                                                                                                                                                                      |
+| Ownership    | Workspace and enrollment-scoped; package optional only for a documented non-package payment use case.                                                                                                                                                                |
+| Create       | Validate amount, currency, date, idempotency, and that enrollment participates in the package target/share. Derive package payment status; do not ask users to set it.                                                                                               |
+| Lifecycle    | Insert-only event with explicit reversal/refund status or compensating event. Routine edit/delete is not allowed.                                                                                                                                                    |
+| Current gaps | Future `paidAt` is accepted, and there is no refund/correction API. Package payments now validate the student target or immutable group share, enforce package currency, cap the outstanding amount, and replay a matching idempotency key without a second payment. |
 
 Acceptance scenarios: related/unrelated enrollment, currency mismatch, duplicate
 idempotency, partial/full/overpayment, group allocation, reversal, future date,

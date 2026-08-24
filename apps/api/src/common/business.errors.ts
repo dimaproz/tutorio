@@ -168,6 +168,27 @@ export const currencyMismatch = () =>
     HttpStatus.CONFLICT,
   );
 
+export const invalidPackagePaymentRelation = () =>
+  new BusinessApiException(
+    'INVALID_PACKAGE_PAYMENT_RELATION',
+    'The enrollment does not belong to the package target',
+    HttpStatus.CONFLICT,
+  );
+
+export const overpayment = () =>
+  new BusinessApiException(
+    'OVERPAYMENT',
+    'The payment exceeds the outstanding balance',
+    HttpStatus.CONFLICT,
+  );
+
+export const idempotencyConflict = () =>
+  new BusinessApiException(
+    'IDEMPOTENCY_CONFLICT',
+    'The idempotency key was already used for a different payment command',
+    HttpStatus.CONFLICT,
+  );
+
 export const unexpected = () =>
   new BusinessApiException(
     'UNEXPECTED',

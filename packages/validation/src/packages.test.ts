@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createPackageSchema } from './packages';
+import { createPackageSchema, recordPaymentSchema } from './packages';
+import { forceQuerySchema } from './scheduling';
 
 const STUDENT_ID = '11111111-1111-4111-8111-111111111111';
 const GROUP_ID = '22222222-2222-4222-8222-222222222222';
@@ -72,5 +73,27 @@ describe('createPackageSchema', () => {
         initialPayment: { amountMinor: 50000, paidAt: tomorrow },
       }).success,
     ).toBe(false);
+  });
+});
+
+describe('recordPaymentSchema', () => {
+  it('accepts a client idempotency key for a payment command', () => {
+    expect(
+      recordPaymentSchema.safeParse({
+        enrollmentId: STUDENT_ID,
+        amountMinor: 50000,
+        currency: 'UAH',
+        idempotencyKey: 'payment-2026-08-24-0001',
+      }).success,
+    ).toBe(true);
+  });
+});
+
+describe('forceQuerySchema', () => {
+  it('parses explicit query strings instead of JavaScript truthiness', () => {
+    expect(forceQuerySchema.parse({}).force).toBe(false);
+    expect(forceQuerySchema.parse({ force: 'false' }).force).toBe(false);
+    expect(forceQuerySchema.parse({ force: 'true' }).force).toBe(true);
+    expect(forceQuerySchema.safeParse({ force: '0' }).success).toBe(false);
   });
 });

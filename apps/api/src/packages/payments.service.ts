@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { paymentStatusOf } from '@tutorio/domain';
+import {
+  assertPaymentWithinOutstanding,
+  OverpaymentError,
+  paymentStatusOf,
+} from '@tutorio/domain';
 import { Prisma } from '@prisma/client';
 import type {
   ListPaymentsQueryDto,
@@ -12,6 +16,9 @@ import type { AuthenticatedUser } from '../auth/auth.types';
 import {
   currencyMismatch,
   enrollmentNotFound,
+  idempotencyConflict,
+  invalidPackagePaymentRelation,
+  overpayment,
   packageNotFound,
 } from '../common/business.errors';
 import { buildPaginatedResponse, toSkipTake } from '../common/pagination';
@@ -69,90 +76,223 @@ export class PaymentsService {
     auth: AuthenticatedUser,
     dto: RecordPaymentDto,
   ): Promise<PaymentResponse> {
-    const row = await this.prisma.$transaction(async (tx) => {
-      const enrollment = await tx.enrollment.findFirst({
-        where: {
-          id: dto.enrollmentId,
-          workspaceId: auth.workspaceId,
-          deletedAt: null,
-        },
-        select: { id: true, currency: true },
-      });
-      if (!enrollment) {
-        throw enrollmentNotFound();
-      }
+    try {
+      const row = await this.prisma.$transaction(
+        async (tx) => {
+          if (dto.idempotencyKey) {
+            const existing = await tx.payment.findFirst({
+              where: {
+                workspaceId: auth.workspaceId,
+                idempotencyKey: dto.idempotencyKey,
+              },
+              include: paymentInclude,
+            });
+            if (existing) {
+              if (!this.matchesPaymentCommand(existing, dto)) {
+                throw idempotencyConflict();
+              }
+              return existing;
+            }
+          }
 
-      if (dto.packageId) {
-        const pkg = await tx.lessonPackage.findFirst({
-          where: {
-            id: dto.packageId,
+          const enrollment = await tx.enrollment.findFirst({
+            where: {
+              id: dto.enrollmentId,
+              workspaceId: auth.workspaceId,
+              deletedAt: null,
+            },
+            select: {
+              id: true,
+              studentId: true,
+              groupId: true,
+              currency: true,
+            },
+          });
+          if (!enrollment) {
+            throw enrollmentNotFound();
+          }
+
+          if (dto.packageId) {
+            const pkg = await tx.lessonPackage.findFirst({
+              where: {
+                id: dto.packageId,
+                workspaceId: auth.workspaceId,
+                deletedAt: null,
+              },
+              select: {
+                id: true,
+                studentId: true,
+                groupId: true,
+                currency: true,
+                totalPriceMinorSnapshot: true,
+              },
+            });
+            if (!pkg) {
+              throw packageNotFound();
+            }
+            if (pkg.currency !== dto.currency) {
+              throw currencyMismatch();
+            }
+
+            let totalMinor = pkg.totalPriceMinorSnapshot;
+            let paidMinor: number;
+            if (pkg.studentId) {
+              if (
+                enrollment.studentId !== pkg.studentId ||
+                enrollment.groupId !== null
+              ) {
+                throw invalidPackagePaymentRelation();
+              }
+              const paid = await tx.payment.aggregate({
+                where: {
+                  packageId: pkg.id,
+                  deletedAt: null,
+                  status: 'PAID',
+                },
+                _sum: { amountMinor: true },
+              });
+              paidMinor = paid._sum.amountMinor ?? 0;
+            } else {
+              const share = await tx.packageParticipantShare.findUnique({
+                where: {
+                  packageId_enrollmentId: {
+                    packageId: pkg.id,
+                    enrollmentId: enrollment.id,
+                  },
+                },
+                select: { oweMinor: true },
+              });
+              if (!share) {
+                throw invalidPackagePaymentRelation();
+              }
+              totalMinor = share.oweMinor;
+              const paid = await tx.payment.aggregate({
+                where: {
+                  packageId: pkg.id,
+                  enrollmentId: enrollment.id,
+                  deletedAt: null,
+                  status: 'PAID',
+                },
+                _sum: { amountMinor: true },
+              });
+              paidMinor = paid._sum.amountMinor ?? 0;
+            }
+            try {
+              assertPaymentWithinOutstanding(
+                totalMinor,
+                paidMinor,
+                dto.amountMinor,
+              );
+            } catch (error) {
+              if (error instanceof OverpaymentError) {
+                throw overpayment();
+              }
+              throw error;
+            }
+          } else if (enrollment.currency !== dto.currency) {
+            throw currencyMismatch();
+          }
+
+          const settlement = await this.provider.settle({
             workspaceId: auth.workspaceId,
-            deletedAt: null,
-          },
-          select: { id: true, currency: true },
-        });
-        if (!pkg) {
-          throw packageNotFound();
-        }
-        if (pkg.currency !== dto.currency) {
-          throw currencyMismatch();
-        }
-      }
-
-      const settlement = await this.provider.settle({
-        workspaceId: auth.workspaceId,
-        enrollmentId: enrollment.id,
-        amountMinor: dto.amountMinor,
-        currency: dto.currency,
-      });
-
-      const created = await tx.payment.create({
-        data: {
-          workspaceId: auth.workspaceId,
-          enrollmentId: enrollment.id,
-          packageId: dto.packageId ?? null,
-          amountMinor: dto.amountMinor,
-          currency: dto.currency,
-          method: dto.method,
-          // A manual entry is money already in hand; an acquirer would leave
-          // this PENDING until its webhook confirms.
-          status: settlement.settled ? 'PAID' : 'PENDING',
-          provider: this.provider.kind,
-          externalId: settlement.externalId ?? null,
-          paidAt: dto.paidAt ? new Date(dto.paidAt) : new Date(),
-          note: dto.note ?? null,
-          createdById: auth.userId,
-        },
-        include: paymentInclude,
-      });
-
-      // Only settled money moves a balance — the single point both the manual
-      // and the future online path go through.
-      if (settlement.settled) {
-        await this.applyPaidPayment(tx, created);
-      }
-
-      await this.audit.record(tx, {
-        workspaceId: auth.workspaceId,
-        actorId: auth.userId,
-        action: 'CREATE',
-        entity: 'PAYMENT',
-        entityId: created.id,
-        changes: this.audit.buildChanges(
-          {},
-          {
             enrollmentId: enrollment.id,
-            packageId: dto.packageId ?? null,
             amountMinor: dto.amountMinor,
             currency: dto.currency,
+          });
+
+          const created = await tx.payment.create({
+            data: {
+              workspaceId: auth.workspaceId,
+              enrollmentId: enrollment.id,
+              packageId: dto.packageId ?? null,
+              amountMinor: dto.amountMinor,
+              currency: dto.currency,
+              method: dto.method,
+              // A manual entry is money already in hand; an acquirer would leave
+              // this PENDING until its webhook confirms.
+              status: settlement.settled ? 'PAID' : 'PENDING',
+              provider: this.provider.kind,
+              externalId: settlement.externalId ?? null,
+              idempotencyKey: dto.idempotencyKey ?? null,
+              paidAt: dto.paidAt ? new Date(dto.paidAt) : new Date(),
+              note: dto.note ?? null,
+              createdById: auth.userId,
+            },
+            include: paymentInclude,
+          });
+
+          // Only settled money moves a balance — the single point both the manual
+          // and the future online path go through.
+          if (settlement.settled) {
+            await this.applyPaidPayment(tx, created);
+          }
+
+          await this.audit.record(tx, {
+            workspaceId: auth.workspaceId,
+            actorId: auth.userId,
+            action: 'CREATE',
+            entity: 'PAYMENT',
+            entityId: created.id,
+            changes: this.audit.buildChanges(
+              {},
+              {
+                enrollmentId: enrollment.id,
+                packageId: dto.packageId ?? null,
+                amountMinor: dto.amountMinor,
+                currency: dto.currency,
+              },
+            ),
+          });
+
+          return created;
+        },
+        { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+      );
+
+      return toPaymentResponse(row);
+    } catch (error) {
+      // The unique database key closes the race between two simultaneous
+      // retries. Return the original event once its winning transaction commits.
+      if (
+        dto.idempotencyKey &&
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        const existing = await this.prisma.payment.findFirst({
+          where: {
+            workspaceId: auth.workspaceId,
+            idempotencyKey: dto.idempotencyKey,
           },
-        ),
-      });
+          include: paymentInclude,
+        });
+        if (existing) {
+          if (!this.matchesPaymentCommand(existing, dto)) {
+            throw idempotencyConflict();
+          }
+          return toPaymentResponse(existing);
+        }
+      }
+      throw error;
+    }
+  }
 
-      return created;
-    });
-
-    return toPaymentResponse(row);
+  private matchesPaymentCommand(
+    payment: {
+      enrollmentId: string;
+      packageId: string | null;
+      amountMinor: number;
+      currency: string;
+      method: string;
+    },
+    dto: RecordPaymentDto,
+  ): boolean {
+    return (
+      payment.enrollmentId === dto.enrollmentId &&
+      payment.packageId === (dto.packageId ?? null) &&
+      payment.amountMinor === dto.amountMinor &&
+      payment.currency === dto.currency &&
+      payment.method === dto.method
+    );
   }
 
   /**

@@ -93,6 +93,9 @@
     "NO_ACTIVE_PACKAGE": "No active package covers this lesson.",
     "INVALID_PACKAGE_PLAN": "The package settings are not valid.",
     "CURRENCY_MISMATCH": "The currency does not match the record.",
+    "INVALID_PACKAGE_PAYMENT_RELATION": "The selected enrollment is not covered by this package.",
+    "OVERPAYMENT": "The payment exceeds the outstanding balance.",
+    "IDEMPOTENCY_CONFLICT": "This payment key was already used for a different payment.",
     "SOLO_MODE_SINGLE_TEACHER": "A solo workspace keeps a single teacher. Switch to school mode in settings to add more."
   },
   "validation": {

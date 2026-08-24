@@ -1,6 +1,7 @@
 import {
   createLessonSchema,
   createLessonSeriesSchema,
+  forceQuerySchema,
   lessonListResponseSchema,
   lessonResponseSchema,
   lessonSeriesListResponseSchema,
@@ -26,6 +27,7 @@ export class CreateLessonSeriesDto extends createZodDto(
 export class UpdateLessonSeriesDto extends createZodDto(
   updateLessonSeriesSchema,
 ) {}
+export class ForceQueryDto extends createZodDto(forceQuerySchema) {}
 export class ListLessonSeriesQueryDto extends createZodDto(
   listLessonSeriesQuerySchema,
 ) {}
