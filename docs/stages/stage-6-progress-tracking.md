@@ -9,7 +9,7 @@
 
 ## 1. Goal & non-goals
 
-**Goals** (schema loosened per the production audit — decisions #11–14)
+**Goals**
 - `ProgressEntry` — `date`, `topic?`, `homework: n_a|done|not_done`,
   `engagement? (1–10)`, `notes`. **Not** required to link to a `Lesson`.
 - `TestResult` — `date`, `type: quiz|independent_work|test|…`, optional

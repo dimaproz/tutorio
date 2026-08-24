@@ -7,8 +7,9 @@ environment.
 
 ## How to read this folder
 
-- Stages **0–3.6 are done** (see [../mvp-plan.md](../mvp-plan.md)); they are not
-  re-documented here.
+- Stages **0–4 are implemented** (see [../mvp-plan.md](../mvp-plan.md)). Stage
+  4.1 is the active acceptance gate for the broad core-product refactor before
+  new feature modules start.
 - Numbering continues the repo convention (`feature/stage-N-*` branches).
 - **Progressive elaboration:** near-term stages (3.7, 4) are specified in full
   implementation detail. Later stages are specified at "ready to start" depth —
@@ -23,12 +24,13 @@ environment.
 |-------|------|--------|--------|
 | [3.7](./stage-3.7-ux-hardening.md) | UX hardening — "usable today" | Scheduling | ✅ Done |
 | [4](./stage-4-packages-ledger-payments.md) | Packages, credit ledger, payments | Money | ✅ Done |
-| [4.5](./stage-4.5-leads-crm.md) | Leads / CRM funnel | Growth | Planned |
-| [5](./stage-5-dashboard-analytics-telegram.md) | Dashboard, analytics, Telegram | Growth | Planned |
+| [4.1](./stage-4.1-stabilization.md) | Core acceptance and UX stabilization | Foundation | Active |
+| [5](./stage-5-dashboard-analytics-telegram.md) | 5A action centre + Telegram; 5B analytics | Operations | Planned |
 | [6](./stage-6-progress-tracking.md) | Learning progress tracking | Student | Planned |
 | [7](./stage-7-public-student-page.md) | Public student page (token) | Student | Planned |
 | [8](./stage-8-receipts-branding-settings.md) | Receipts, branding, workspace settings | Money | Planned |
 | [9](./stage-9-import-pilot.md) | CSV import, SpeakWise pilot, GDPR | Ops | Planned |
+| [9.5](./stage-4.5-leads-crm.md) | Leads / CRM funnel (historical filename) | Growth | Planned post-pilot |
 | [10](./stage-10-student-portal.md) | Student portal (accounts, grades, progress) | Student | Vision |
 
 ## Engineering conventions (apply to every stage)

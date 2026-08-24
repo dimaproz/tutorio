@@ -1,12 +1,12 @@
-# Stage 4.5 — Leads / CRM Funnel
+# Stage 9.5 — Leads / CRM Funnel
 
 > **Outcome:** the top of the funnel lives in Tutorio — leads move through a
 > pipeline, trial lessons are tracked, and a won lead becomes a student in one
 > click. Acquisition stops living in a spreadsheet.
 >
-> **Pillar:** Growth · **Status:** Planned · **Depends on:** Stage 3 (trial
-> lessons are `Lesson`s). Otherwise independent — **can run in parallel with
-> Stage 4** if capacity allows.
+> **Pillar:** Growth · **Status:** Planned post-pilot · **Depends on:** Stage 3
+> (trial lessons are `Lesson`s). The historical filename is retained to avoid
+> breaking old links; the roadmap moved this work after the Stage 9 pilot.
 
 ## 1. Goal & non-goals
 

@@ -1,8 +1,8 @@
-# Stage 5 — Dashboard, Analytics, and Telegram
+# Stage 5 — Action Centre, Telegram, and Analytics
 
-> **Outcome:** the product starts saving hours and retaining. A real dashboard,
-> an analytics module, and Telegram reminders/digests mean the tutor stops doing
-> manual reconciliation and manual reminding.
+> **Outcome:** the product starts saving hours and retaining. The work is
+> delivered through two gates so operational value is not blocked by reporting:
+> 5A action centre + Telegram, then 5B analytics and exports.
 >
 > **Pillar:** Growth · **Status:** Planned · **Depends on:** Stage 4 (money to
 > analyse and to alert on), Stage 3 (lessons to remind about). The Stage 3.7
@@ -11,14 +11,15 @@
 ## 1. Goal & non-goals
 
 **Goals**
-- **Dashboard** widgets replacing the Stage 3.7 minimal version: today's lessons,
-  low-balance / debtor alerts, monthly income per currency.
+- **5A Action centre** replacing the Stage 3.7 minimal version: today's lessons,
+  unmarked lessons, schedule conflicts, low-balance / debtor alerts, unsent
+  homework, and monthly income per currency. Every item links to a resolving
+  action.
 - **`analytics` module:** period presets + custom range; revenue / lessons /
   new-students KPI cards with period-over-period change; revenue-by-source chart
   (lessons vs packages); lesson-status breakdown; top earners; day-by-day table;
   payment report with Excel export.
-- **Telegram** (corrected from "out of MVP" per the production audit — it is
-  load-bearing): student reminders (timezone-aware, include the workspace
+- **Telegram** is load-bearing: student reminders (timezone-aware, include the workspace
   meeting link, sent **24h and 1h** before); homework delivery (Stage 6 consumer,
   built here as the send channel); teacher's own daily digest; bot linking.
 
@@ -80,9 +81,14 @@ these on shadcn + our charting.
   (if not yet from Stage 8).
 
 ## 7. Sequencing
-Workspace `timezone` (if missing) → Telegram bot linking + webhook → reminder
-domain fn + cron + send log → teacher digest → analytics endpoints → dashboard
-widgets → analytics page + Excel export.
+
+**Gate 5A — operational value:** workspace `timezone` (if missing) → action
+centre queries and resolving deep links → Telegram bot linking + webhook →
+reminder domain fn + cron + send log → teacher digest.
+
+**Gate 5B — reporting:** analytics endpoints → period-aware KPI/charts →
+day-by-day and payment report → Excel export. Gate 5B starts only after 5A is
+accepted; it does not block reminders or the action centre.
 
 ## 8. Testing
 - Domain: `dueReminders` DST-correctness + idempotency.
@@ -92,8 +98,10 @@ widgets → analytics page + Excel export.
   switch; export downloads.
 
 ## 9. Definition of Done
-Global DoD + : a real reminder fires 24h and 1h before a dev lesson to a linked
-chat; analytics numbers reconcile with ledger/payments; Excel export opens.
+Global DoD + : Gate 5A is complete when a real reminder fires 24h and 1h before
+a dev lesson and every action-centre item resolves into a concrete workflow.
+Gate 5B is complete when analytics reconciles with ledger/payments and the Excel
+export opens.
 
 ## 10. Risks & decisions
 - **Double-send on cron re-run / deploy** — unique send-log key `(lessonId,
