@@ -4,9 +4,9 @@
 > delivered through two gates so operational value is not blocked by reporting:
 > 5A action centre + Telegram, then 5B analytics and exports.
 >
-> **Pillar:** Growth · **Status:** Planned · **Depends on:** Stage 4 (money to
-> analyse and to alert on), Stage 3 (lessons to remind about). The Stage 3.7
-> "today" widget is upgraded here into the full dashboard.
+> **Pillar:** Growth · **Status:** Deferred pending pilot evidence · **Depends
+> on:** Stage 4 (money to analyse and to alert on), Stage 3 (lessons to remind
+> about). The Stage 3.7 "today" widget is upgraded here into the full dashboard.
 
 ## 1. Goal & non-goals
 

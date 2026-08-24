@@ -124,7 +124,7 @@ Follows the existing module shape (dto/, controller, service, module, spec),
   then materializes it via the Stage 3 `MaterializerService`. **All in one
   transaction** + audit.
 - `GET /packages?studentId|groupId` , `GET /packages/:id` (with derived fields +
-  ledger history for the "Історія"-style view).
+  ledger history for the activity-history view).
 - `POST /packages/:id/adjust` — manual `manual_adjustment` entry (owner-gated).
 - `GET /packages/:id/ledger` — append-only entries, newest first.
 - `DELETE /packages/:id` — soft delete (does not delete ledger history).
@@ -157,7 +157,7 @@ timeline/activity list.
 
 - `features/packages` — package create dialog (sizing-mode toggle, optional
   recurring schedule sub-form that feeds the series), package detail (snapshot
-  vs effective total, remaining credits ring, group "Оплати учасників" block
+  vs effective total, remaining credits ring, group participant-payments block
   with per-share paid/pending badges + "record payment"), ledger history tab.
 - `features/payments` — record-payment dialog, payment list.
 - Student & group detail pages gain a **Balance** card + link into the finance

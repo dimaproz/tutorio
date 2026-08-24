@@ -1,85 +1,139 @@
 # Tutorio Current State
 
-Last verified: 2026-08-04.
+Last verified: 2026-08-24 at commit `3d985d5` on `develop`.
 
-This is the first document to read before planning or implementing work. It is
-the operational checkpoint; `mvp-plan.md` remains the product and architecture
-source of truth.
+This is the first project document to read before planning or implementing
+work. It reports the repository as it exists; [`mvp-plan.md`](./mvp-plan.md)
+defines the pilot boundary and [`roadmap.md`](./roadmap.md) defines execution
+order.
 
-## Repository checkpoint
+## Executive status
 
-- Active branch: `refactor/students-design`.
-- At the start of this audit the branch was clean and pushed to
-  `origin/refactor/students-design`; the current uncommitted changes are the
-  documentation updates produced by this audit.
-- It is three commits ahead of `develop`; `develop` has no commits that are not
-  already in the active branch.
-- The branch is a broad refactor: 182 files differ from `develop`, with changes
-  across web, API, validation, domain logic, migrations, and generated API
-  types. Treat it as a release candidate that needs acceptance, not as a place
-  to begin another feature stage.
-- Verification on 2026-08-04: root `lint`, `typecheck`, `test`, and `build` all
-  pass. Unit totals observed: domain 88, validation 43, API 98, web 106.
+Tutorio has a broad, credible Students-to-Money core, but it is not pilot-safe
+yet. The correct next move is not another design-wide refactor or a new product
+module. The next move is a bounded stabilization release that makes four core
+workflows correct, understandable, tested, and recoverable.
+
+- Branch: `develop`, clean and aligned with `origin/develop` at verification.
+- The former `refactor/students-design` work was merged by PR #18.
+- Root `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build` passed during
+  the repository audit.
+- Observed unit totals: domain 88, validation 43, API 98, web 106.
+- The repository also contains 52 API end-to-end tests, but they were not run
+  locally because the configured development database is remote and no isolated
+  local PostgreSQL instance was available. CI has an isolated PostgreSQL job.
+- Unit coverage is uneven: core scheduling and package orchestration still have
+  important untested branches. Passing totals are not a pilot-readiness signal.
 
 ## Implemented product surface
 
-- Authentication, workspaces, solo/school mode, roles, and i18n.
-- Students, parents, groups, teachers, and enrollments.
-- Lesson scheduling, recurring patterns, conflict checks, rescheduling, and the
-  lesson status state machine.
-- Calendar and pattern management.
-- Individual and group packages, participant shares, payments, credit ledger,
-  package history, and package-driven recurring scheduling.
-- Base workspace settings, audit log, design lab, and shared UI patterns.
+- Authentication, workspaces, roles, sessions, and Ukrainian/English UI.
+- Students, parents, teachers, groups, and enrollments.
+- Calendar, individual lessons, recurring lesson series, rescheduling, and
+  lesson status transitions.
+- Individual and group lesson packages, credit ledger, participant shares,
+  payments, and package history.
+- A basic Today dashboard, workspace settings, audit events, shared UI
+  primitives, and the `/design` component lab.
 
-This corresponds to Stages 0-4 in the product plan. The active branch also
-contains a large visual and interaction refactor of these surfaces.
+These capabilities are substantial enough for a pilot after stabilization. No
+stack rewrite is justified: the pnpm/Turborepo, NestJS, Prisma/PostgreSQL,
+Next.js, shared validation, and pure domain package boundaries are sound.
 
-## Not implemented yet
+## Active milestone: Pilot Core Stabilization
 
-- Operational action centre, full dashboard, and analytics.
-- Telegram reminders, teacher digest, and homework delivery.
-- Progress entries, tests, lesson journal, attachments, and attendance.
-- Public student page and student/parent portal.
-- Branded receipts and the complete settings surface.
-- CSV import, SpeakWise pilot tooling, GDPR export/deletion.
-- Leads CRM.
+Stage 4.1 is active. Its goal is to make existing workflows safe and obvious,
+not to add surface area. The required order is:
 
-## Current product risks
+1. Lock lifecycle and accounting decisions in ADRs and tests.
+2. Fix P0 data-integrity defects in group deletion/restoration, payment
+   ownership, ledger compensation, and package/lesson deletion.
+3. Fix scheduling lifecycle defects: conflict validation, pause behavior,
+   effective status, and honest replacement-lesson behavior.
+4. Replace the all-in-one student and package dialogs with progressive,
+   task-based flows documented in `product/`.
+5. Run the complete pilot acceptance matrix with realistic seed data and an
+   isolated database.
 
-1. **The active branch is too broad for more feature work.** It needs visual
-   acceptance and a merge decision first.
-2. **Visual QA is incomplete.** `design-qa.md` records a blocked group-detail
-   comparison because no implementation screenshot was captured.
-3. **Roadmap labels drifted.** Leads are described as both Stage 4.5 and Stage
-   9.5 in different files. The stage index now treats the file as a historical
-   identifier and the work as post-pilot.
-## Active milestone: Stage 4.1 acceptance and stabilization
+## Release blockers
 
-No new product module starts until this checkpoint is complete.
+### P0 — data integrity and financial correctness
 
-- Capture current desktop and mobile renders for students, groups, calendar,
-  lesson creation, packages, package detail, and settings.
-- Run the four core acceptance scenarios against realistic seed data:
-  student/group setup; recurring schedule; package/payment; lesson
-  completion/cancellation and ledger effect.
-- Resolve P0/P1 visual and workflow findings.
-- Confirm domain rules in `mvp-plan.md` still match the implementation.
-- Merge the branch into `develop` through a reviewed PR.
-- Update this file with the merged commit and the next active stage.
+- Group soft deletion tombstones and disconnects related lessons, series,
+  packages, payments, and enrollments, while restore restores only the group.
+  The behavior is effectively destructive and contradicts API/test expectations.
+- Payment creation validates enrollment and package independently but does not
+  prove that the enrollment belongs to that package. A payment without a package
+  also lacks a reliable workspace-currency invariant.
+- A lesson without a persisted `packageId` can resolve a different package on a
+  later status transition, so a compensating credit may affect the wrong package.
+- Deleting a charged lesson or a package can leave scheduling and financial
+  history inconsistent. Package deletion does not reliably stop owned series.
+- Student hard deletion can fail on financial foreign keys or leave related
+  history in a state that contradicts the UI promise.
 
-## Product direction
+### P1 — scheduling correctness and product truthfulness
 
-Tutorio is an operations cockpit for private tutors and small schools. Its
-distinctive promise is not merely storing students and lessons; it connects the
-full chain:
+- Cancel-unpaid, restore, and repeat can create multiple zero-delta credit
+  events; group share calculations can count them as repeated discounts.
+- The current “automatic replacement” action usually re-runs materialization
+  without creating a real replacement lesson.
+- Pausing or archiving an enrollment does not consistently remove or suspend
+  future generated lessons; group series may continue when all participants are
+  paused.
+- Series create/update paths do not consistently apply conflict detection, and
+  “this and following” edits have weekday edge cases.
+- Stored lesson status and effective time-derived status can drift, affecting
+  filtering and user expectations.
 
-`schedule -> lesson outcome -> credit/money effect -> progress -> communication`
+### P1 — authorization and API contract
 
-The three differentiating surfaces to protect in future work are:
+- Teacher accounts are workspace-wide in practice. Mutations are not consistently
+  owner-gated and there is no complete “own teacher only” authorization model.
+  The pilot therefore uses the owner-operated access decision in ADR 0004.
+- The `force` query contract uses boolean coercion while the runtime DTO boundary
+  is weak; the web currently sends `force=false`, which can be interpreted as a
+  truthy string in unsafe paths.
 
-1. An action centre that tells the tutor what needs attention today.
-2. Explainable finances where every balance can be traced to a human-readable
-   event history.
-3. A unified student story combining schedule, money, progress, and
-   communication without making the user jump between disconnected modules.
+### P1 — UX and delivery confidence
+
+- Student creation combines identity, avatar, contacts, timezone, learning
+  profile, price, parent creation/linking, and notes in one long modal.
+- Package creation combines customer assignment, billing model, price, expiry,
+  recurrence, timezone, first-lesson calculation, and payment state in one
+  modal. A tutor must understand several internal concepts before completing a
+  basic sale.
+- Large form components exceed the web architecture target and lack interaction
+  tests. The visual layer is ahead of workflow confidence.
+- The package list fetches a fixed first page without a complete pagination
+  experience. Some non-auth session errors can leave the UI in a permanent
+  loading state.
+- The generated API client is documented as mandatory but is not yet the actual
+  web integration boundary.
+
+## Operational gaps
+
+- Seed data is rich for people and scheduling but too thin for payments, package
+  history, participant shares, and ledger edge cases.
+- Root `pnpm test` does not include API end-to-end tests, although prior docs
+  described the root pipeline as identical to CI.
+- Health checking is liveness-only; database readiness, backup restore evidence,
+  error monitoring, and production deployment remain unverified.
+- API and web package READMEs still contain starter-level guidance rather than
+  service-specific runbooks.
+
+## Deliberately deferred until the pilot proves demand
+
+- Analytics beyond the Today action surface.
+- Progress tracking, tests, journal, and attachments.
+- Student/parent portal and public student page.
+- Telegram automation, branded receipts, leads CRM, and SaaS billing.
+- Broad visual redesign or a second component system.
+
+## Next checkpoint
+
+The next checkpoint is reached when Phase 0 and Phase 1 in
+[`roadmap.md`](./roadmap.md) are complete: the domain decisions are executable
+tests, P0 defects are fixed, and the four critical workflows pass in an isolated
+environment. Only then should the team implement the simplified student and
+package UX.

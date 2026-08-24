@@ -4,9 +4,10 @@
 > the workspace-level settings still missing locally (timezone, meeting link,
 > receipt branding) are in place. Lower urgency than the CRM core.
 >
-> **Pillar:** Money · **Status:** Planned · **Depends on:** Stage 4 (the payment
-> a receipt is issued for). Note: `timezone` may already have landed in Stage 5
-> for reminders — this stage completes the settings surface around it.
+> **Pillar:** Money · **Status:** Deferred pending pilot evidence · **Depends
+> on:** Stage 4 (the payment a receipt is issued for). Note: `timezone` may
+> already have landed in Stage 5 for reminders — this stage completes the
+> settings surface around it.
 
 ## 1. Goal & non-goals
 

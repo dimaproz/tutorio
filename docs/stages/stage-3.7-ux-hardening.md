@@ -5,7 +5,7 @@
 > of the Stage 3 scheduling core so the product is usable before the money loop
 > lands.
 >
-> **Pillar:** Scheduling · **Status:** Next · **Depends on:** Stage 3, 3.6.
+> **Pillar:** Scheduling · **Status:** Done · **Depends on:** Stage 3, 3.6.
 > **New (beyond mvp-plan):** yes — this stage is a product-review addition.
 
 ## 1. Goal & non-goals

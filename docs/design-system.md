@@ -1,5 +1,7 @@
 # Tutorio Design System Contract
 
+Last verified: 2026-08-24.
+
 ## Purpose
 
 Tutorio's interface must be inexpensive to restyle, theme, and extend. Product
@@ -8,6 +10,15 @@ live in semantic tokens and shared variants, never in individual screens.
 
 This document is the human-readable source of truth. The executable reference
 is the `/design` route, and agent enforcement lives in `apps/web/AGENTS.md`.
+
+## Pilot design rule
+
+The visual direction is established. Until pilot graduation, design work is
+limited to comprehension, accessibility, responsive correctness, and states
+required by the workflows in `docs/product/`. Do not expand the component lab,
+invent custom primitives, or restyle deferred modules solely to increase visual
+polish. Correct domain behavior and complete task flows take priority under
+[ADR 0001](./decisions/0001-pilot-first-delivery.md).
 
 ## Source-of-truth order
 

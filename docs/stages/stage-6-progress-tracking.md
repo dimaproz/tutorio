@@ -4,8 +4,9 @@
 > homework, test results, attendance — and (via Telegram) deliver homework. This
 > is the content that later powers the student portal (Stage 10).
 >
-> **Pillar:** Student · **Status:** Planned · **Depends on:** Stage 3 (`Lesson`
-> for optional links), benefits from Stage 5 (Telegram send channel).
+> **Pillar:** Student · **Status:** Deferred pending pilot evidence · **Depends
+> on:** Stage 3 (`Lesson` for optional links), benefits from Stage 5 (Telegram
+> send channel).
 
 ## 1. Goal & non-goals
 

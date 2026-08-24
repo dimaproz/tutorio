@@ -28,6 +28,16 @@ that public entry point rather than its internal files.
 Read `../../docs/design-system.md` before visual work. It is the component and
 theme contract for the web application.
 
+For a pilot-critical workflow, also read its product contract before changing
+the form or action sequence:
+
+- students: `../../docs/product/students.md`;
+- packages and payments: `../../docs/product/packages.md`.
+
+The workflow document owns required fields, progressive disclosure, next
+actions, lifecycle copy, and acceptance states. The design system owns visual
+composition.
+
 For every new UI requirement, inspect in this exact order:
 
 1. `components/ui` for an installed shadcn primitive or variant.

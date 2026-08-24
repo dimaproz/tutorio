@@ -5,9 +5,9 @@
 > where they can confirm or cancel a lesson within the deadline. Removes the
 > tutor's phone-tag.
 >
-> **Pillar:** Student · **Status:** Planned · **Depends on:** Stage 3
-> (lessons), Stage 4 (balance/payments to show). First maturity level of the
-> student portal (Stage 10 turns this into real accounts).
+> **Pillar:** Student · **Status:** Deferred pending pilot evidence · **Depends
+> on:** Stage 3 (lessons), Stage 4 (balance/payments to show). First maturity
+> level of the student portal (Stage 10 turns this into real accounts).
 
 ## 1. Goal & non-goals
 
@@ -22,8 +22,9 @@
 - No write access beyond confirm/cancel of the student's own lessons.
 
 ## 2. Domain / model
-- `Student.publicToken` (already in schema — 32-byte unguessable, read-only
-  link).
+- Add `Student.publicToken` as a nullable, unique, 32-byte unguessable token. It
+  is not present in the current schema. Lookup is read-only and the owner can
+  rotate or revoke the link.
 - Confirm/cancel are signed action tokens (short-lived, single-purpose), rate
   limited — not the same as the page token.
 - Cancellation respects `Enrollment.effectiveCancellationDeadlineHours` and

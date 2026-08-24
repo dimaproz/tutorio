@@ -1,59 +1,99 @@
-# Stage 4.1 — Core Acceptance and UX Stabilization
+# Stage 4.1 — Pilot Core Stabilization
 
-> **Outcome:** the current Students-to-Money product core is visually verified,
-> understandable, and safe to pilot before another module is added.
+Last verified: 2026-08-24.
+
+> **Outcome:** the existing Students-to-Money core is correct, understandable,
+> tested, and operationally safe enough for a controlled owner-operated pilot.
 >
-> **Pillar:** Foundation · **Status:** Active · **Depends on:** Stages 0-4.
+> **Pillar:** Foundation · **Status:** Active · **Depends on:** Stages 0–4.
 
-## Goals
+## Why this stage exists
 
-- Complete acceptance of `refactor/students-design` and merge it to `develop`.
-- Verify desktop and mobile renders for every core route against the local
-  design contract.
-- Reduce high-frequency workflow friction without expanding feature scope.
-- Seed realistic solo-tutor and small-school workspaces.
-- Run the core business scenarios end to end and confirm their ledger effects.
-- Freeze current domain decisions and update the operational checkpoint.
+The broad visual refactor has already merged into `develop`. Acceptance is no
+longer a merge task. The remaining risk is that polished workflows conceal
+unsafe lifecycle, financial, scheduling, and authorization behavior. This stage
+therefore follows the order: decisions, failing tests, correctness fixes, then
+targeted UX simplification.
 
 ## Non-goals
 
-- No leads, analytics, Telegram, progress, portal, or new integration work.
-- No new abstraction unless it removes repeated code from at least two current
-  callers.
+- No analytics, Telegram, progress, portal, receipts, leads, or SaaS modules.
+- No design-system rewrite or speculative custom component library.
+- No period/monthly or group-package expansion until their pilot contract passes.
+- No teacher login with real pilot data.
 
-## Acceptance flows
+## Slice A — executable contracts
 
-1. Create a student, link a parent, and enrol the student individually or in a
-   group.
-2. Create a recurring pattern and verify timezone-safe materialisation.
-3. Create an individual and a group package, record partial/full payments, and
-   inspect participant shares.
-4. Complete, reschedule, cancel charged, and cancel uncharged lessons; verify
-   the human-readable credit and money history.
+- Adopt ADRs 0001–0004 and convert them into domain/API tests.
+- Add finance-rich and lifecycle-rich seed scenarios.
+- Make an isolated PostgreSQL end-to-end run reproducible locally and in CI.
+- Produce failing regression tests for every confirmed P0 defect.
 
-## UX acceptance
+**Exit:** no P0 behavior depends on undocumented interpretation.
 
-- The component and theme contract in `docs/design-system.md` is accepted.
-- Product screens compose installed shadcn primitives and approved Tutorio
-  components; duplicated primitives and one-off visual patterns are removed.
-- Semantic theme tokens are consolidated so a colour, radius, typography,
-  shadow, or dark-mode change does not require editing feature screens.
-- `/design` documents approved product components, their usage, and meaningful
-  states. One list, one detail view, and one form dialog are reference
-  compositions for all remaining domains.
-- Expanded navigation exposes labels; active location is obvious.
-- Lists have one clear primary action and place secondary row actions in a menu.
-- Long forms use sections, progressive disclosure, sensible defaults, and a
-  visible summary of financial/scheduling consequences.
-- Loading, empty, error, success, and destructive states are represented.
-- Desktop/mobile, light/dark, and Ukrainian/English are checked.
-- Drag-based interactions have a non-drag alternative.
+## Slice B — integrity stabilization
 
-## Verification
+- Group archive/restore preserves relationships and history.
+- Student/archive/privacy behavior matches ADR 0002.
+- Payment enrollment belongs to package target/share and currency/date/
+  idempotency rules are enforced.
+- A lesson persists the charged package; compensation returns to the same one.
+- Package and charged-lesson archive cannot leave active recurrence or broken
+  ledger history.
+- Cancellation/restore and participant shares match ADR 0003.
+- Pause/archive stops new materialization; recurrence edits conflict-check and
+  apply correct scope.
+- `force=false` is false at runtime; misleading automatic replacement is removed
+  or implemented as a real conflict-checked scheduling command.
+- Pilot business mutations are owner-only.
 
-- Root `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build` pass.
-- Browser screenshots are captured for the accepted routes and stored with the
-  design QA report.
-- The four acceptance flows pass with realistic seed data.
-- A reviewed PR merges the branch into `develop`.
-- `docs/current-state.md` records the merged commit and next active stage.
+**Exit:** mandatory integrity rows in the pilot acceptance matrix pass.
+
+## Slice C — pilot workflow simplification
+
+- Student quick create contains only required/common fields and navigates to
+  useful next actions on the saved profile.
+- Parent creation/linking happens after student persistence unless supported by
+  one atomic backend command.
+- Fixed lesson-pack creation is separate from scheduling and payment.
+- Package detail explains lessons remaining, plan total, received, outstanding,
+  and chronological history.
+- Archive confirmations enumerate operational and historical consequences.
+- Oversized form components are split while replacing the affected flow, with
+  interaction tests for loading, error, success, dirty close, and destructive
+  states.
+
+**Exit:** a first-time tutor completes student creation and a lesson-pack sale in
+an observed session without developer explanation.
+
+## Slice D — pilot operations
+
+- Minimal CSV student import with preview and row-level errors.
+- Database readiness, monitoring, backup/restore, workspace export, and privacy
+  runbooks have executed evidence.
+- One realistic staging workspace completes the four critical journeys and a
+  full operational week without direct database edits.
+
+**Exit:** every mandatory row in
+[`../quality/pilot-acceptance.md`](../quality/pilot-acceptance.md) is `Pass`.
+
+## Verification commands
+
+Run separately and record exact results:
+
+```bash
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build
+pnpm --filter @tutorio/api test:e2e
+```
+
+The end-to-end command requires an isolated disposable PostgreSQL database. Do
+not point destructive test setup at development or pilot data.
+
+## Handoff
+
+When complete, update `docs/current-state.md` with the verified commit and pilot
+evidence. Select the next module from pilot observations, not automatically from
+the next historical stage number.
