@@ -1,13 +1,13 @@
 # Active Work Queue
 
-Last verified: 2026-08-24.
+Last verified: 2026-08-25.
 
 This is the short-lived execution queue for Stage 4.1. It answers “what should I
 work on next?” without requiring a developer to re-derive priorities from the
 full roadmap. Update it when a work packet merges; do not use it for long-term
 ideas.
 
-## Work Packet 1 — Package Integrity Boundary (implemented; global E2E blocked)
+## Work Packet 1 — Package Integrity Boundary (implemented)
 
 Why first: it is a bounded vertical slice with direct financial risk, clear
 accepted semantics, and enough existing tests to extend. It creates the testing
@@ -52,19 +52,27 @@ Suggested PR intent: `fix(api): enforce package payment integrity`.
   currency validation, overpayment rejection, and payment-command idempotency.
 - Added validation, domain, service, package E2E, and scheduling E2E regressions;
   refreshed `packages/api-client/openapi.json` and generated schema.
-- Root `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build` pass in the
-  uncommitted Work Packet 1 tree based on `3d985d5`.
-- Isolated PostgreSQL E2E passes for package and scheduling coverage (18 tests).
-  The full API E2E command remains 55/57 because the existing Stage 2
-  group-deletion assertions fail, matching the P0 lifecycle defect below.
+- Root static/unit checks passed for Work Packet 1 and were repeated for Work
+  Packet 2. The full isolated PostgreSQL E2E command now passes 60/60 after
+  the lifecycle assertions replaced the unsafe deletion expectation.
 
-## Start here: Work Packet 2 — History-Preserving Lifecycle
+## Work Packet 2 — History-Preserving Lifecycle (implemented)
 
-- Replace destructive group delete/partial restore with ADR 0002 behavior.
-- Define and implement student archive/restore; block routine hard deletion when
-  history exists.
-- Stop or resolve future series/lessons without clearing historical relations.
-- Add consequence summaries and lifecycle E2E coverage.
+### Actual result — 2026-08-25
+
+- Group archive is owner-only, keeps every historical relationship, and
+  suspends only group series and future scheduled lessons. Restore rechecks
+  conflicts before restoring only the work suspended by that archive.
+- Student archive/restore is owner-only; archive hides the student by business
+  status, stops future individual work, and preserves history. Explicit hard
+  delete is owner-only and rejects any enrollment, lesson, package, payment,
+  share, or credit history with `STUDENT_HAS_BUSINESS_HISTORY` details.
+- Contracts, Swagger/generated client, and localized lifecycle copy were
+  refreshed. Service and isolated PostgreSQL E2E coverage prove financial
+  preservation, active/paused roster retention, repeated commands,
+  cross-workspace/non-owner denial, conflict rollback, and audit rows (60/60).
+
+## Start here: Work Packet 3 — Exact Credit Compensation
 
 ## Work Packet 3 — Exact Credit Compensation
 

@@ -105,12 +105,13 @@ export class GroupsController {
   }
 
   @Delete(':groupId')
+  @Roles('OWNER')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
-    summary: 'Soft-delete a group (move to trash)',
+    summary: 'Archive a group',
     description:
-      'Idempotent. Fails with ACTIVE_ENROLLMENTS_EXIST while the group ' +
-      'has active or paused enrollments.',
+      'Owner-only and idempotent. Preserves the roster and financial history, ' +
+      'then suspends related series and future scheduled lessons.',
   })
   @ApiNoContentResponse()
   @ApiNotFoundResponse({ type: ApiErrorDto })
@@ -123,6 +124,7 @@ export class GroupsController {
   }
 
   @Post(':groupId/restore')
+  @HttpCode(HttpStatus.OK)
   @Roles('OWNER')
   @ApiOperation({ summary: 'Restore a soft-deleted group (owner only)' })
   @ApiOkResponse({ type: GroupDto })

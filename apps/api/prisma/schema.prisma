@@ -215,6 +215,9 @@ model Student {
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
   deletedAt        DateTime?
+  // A business archive is represented by status. This timestamp correlates
+  // only the future series/lessons suspended by that archive for safe restore.
+  archivedAt       DateTime?
 
   workspace   Workspace       @relation(fields: [workspaceId], references: [id])
   enrollments Enrollment[]

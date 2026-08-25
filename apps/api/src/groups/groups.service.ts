@@ -14,6 +14,7 @@ import { forbidden } from '../auth/auth.errors';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import {
   groupNotFound,
+  scheduleConflict,
   studentNotFound,
   teacherNotFound,
 } from '../common/business.errors';
@@ -23,6 +24,7 @@ import {
   toSkipTake,
 } from '../common/pagination';
 import { PrismaService } from '../prisma/prisma.service';
+import { findLessonConflicts } from '../scheduling/scheduling.shared';
 
 function toResponse(row: Group): GroupResponse {
   return {
@@ -233,6 +235,7 @@ export class GroupsService {
         id: { in: wantedIds },
         workspaceId: auth.workspaceId,
         deletedAt: null,
+        status: { not: 'ARCHIVED' },
       },
       select: { id: true, hourlyRateMinor: true, currency: true },
     });
@@ -445,48 +448,34 @@ export class GroupsService {
         return;
       }
 
-      const deletedAt = new Date();
-      const groupWhere = {
-        workspaceId: auth.workspaceId,
-        groupId: group.id,
-        deletedAt: null,
-      };
+      const archivedAt = new Date();
 
-      // Payments must be hidden before enrollment.groupId is cleared below.
-      // Ledger entries and audit history are append-only evidence, while the
-      // package/enrollment tombstones make them unreachable in the product UI.
-      await tx.payment.updateMany({
+      // A group archive is operational, not destructive: retain every roster,
+      // lesson, package, payment, share, credit, and audit relationship. The
+      // timestamp marks exactly the series and upcoming occurrences suspended
+      // by this archive, so restore can revive only those records later.
+      const archivedSeries = await tx.lessonSeries.updateMany({
         where: {
           workspaceId: auth.workspaceId,
+          groupId: group.id,
           deletedAt: null,
-          OR: [
-            { package: { is: { groupId: group.id } } },
-            { enrollment: { is: { groupId: group.id } } },
-          ],
         },
-        data: { deletedAt },
+        data: { deletedAt: archivedAt },
       });
-
-      await tx.lesson.updateMany({ where: groupWhere, data: { deletedAt } });
-      await tx.lessonSeries.updateMany({
-        where: groupWhere,
-        data: { deletedAt },
-      });
-      await tx.lessonPackage.updateMany({
-        where: groupWhere,
-        data: { deletedAt },
-      });
-
-      // An enrollment is the student-to-group link. Keeping the student while
-      // tombstoning this record and clearing groupId leaves no live membership.
-      await tx.enrollment.updateMany({
-        where: groupWhere,
-        data: { deletedAt, groupId: null },
+      const archivedLessons = await tx.lesson.updateMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          groupId: group.id,
+          status: 'SCHEDULED',
+          deletedAt: null,
+          startsAtUtc: { gte: archivedAt },
+        },
+        data: { deletedAt: archivedAt },
       });
 
       await tx.group.update({
         where: { id: group.id },
-        data: { deletedAt },
+        data: { deletedAt: archivedAt },
       });
       await this.audit.record(tx, {
         workspaceId: auth.workspaceId,
@@ -494,6 +483,13 @@ export class GroupsService {
         action: 'DELETE',
         entity: 'GROUP',
         entityId: group.id,
+        changes: this.audit.buildChanges(
+          {},
+          {
+            archivedSeries: archivedSeries.count,
+            archivedFutureScheduledLessons: archivedLessons.count,
+          },
+        ),
       });
     });
   }
@@ -514,8 +510,59 @@ export class GroupsService {
         return existing;
       }
 
+      const archivedAt = existing.deletedAt;
+      const suspendedLessons = await tx.lesson.findMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          groupId: existing.id,
+          status: 'SCHEDULED',
+          deletedAt: archivedAt,
+          startsAtUtc: { gte: new Date() },
+        },
+        select: {
+          id: true,
+          teacherId: true,
+          startsAtUtc: true,
+          durationMin: true,
+        },
+      });
+
+      // Do this before changing any state. A group can be restored only when
+      // its explicitly suspended upcoming lessons still fit the calendar.
+      const conflictIds = new Set<string>();
+      for (const lesson of suspendedLessons) {
+        const conflicts = await findLessonConflicts(tx, {
+          workspaceId: auth.workspaceId,
+          teacherId: lesson.teacherId,
+          start: lesson.startsAtUtc,
+          durationMin: lesson.durationMin,
+        });
+        conflicts.forEach((id) => conflictIds.add(id));
+      }
+      if (conflictIds.size > 0) {
+        throw scheduleConflict([...conflictIds]);
+      }
+
       const restored = await tx.group.update({
         where: { id: existing.id },
+        data: { deletedAt: null },
+      });
+      await tx.lessonSeries.updateMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          groupId: existing.id,
+          deletedAt: archivedAt,
+        },
+        data: { deletedAt: null },
+      });
+      await tx.lesson.updateMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          groupId: existing.id,
+          status: 'SCHEDULED',
+          deletedAt: archivedAt,
+          startsAtUtc: { gte: new Date() },
+        },
         data: { deletedAt: null },
       });
       await this.audit.record(tx, {
@@ -524,6 +571,10 @@ export class GroupsService {
         action: 'RESTORE',
         entity: 'GROUP',
         entityId: existing.id,
+        changes: this.audit.buildChanges(
+          {},
+          { restoredFutureScheduledLessons: suspendedLessons.length },
+        ),
       });
       return restored;
     });

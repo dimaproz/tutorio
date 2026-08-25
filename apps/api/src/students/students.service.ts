@@ -13,6 +13,8 @@ import { forbidden } from '../auth/auth.errors';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import {
   invalidWorkspaceRelation,
+  scheduleConflict,
+  studentHasBusinessHistory,
   studentNotFound,
 } from '../common/business.errors';
 import {
@@ -21,6 +23,7 @@ import {
   toSkipTake,
 } from '../common/pagination';
 import { PrismaService } from '../prisma/prisma.service';
+import { findLessonConflicts } from '../scheduling/scheduling.shared';
 
 // Live (non-deleted) linked parents, in a stable order — used both to build
 // the response and to compute the "before" side of the parentIds audit diff.
@@ -142,7 +145,11 @@ export class StudentsService {
       workspaceId: auth.workspaceId,
       ...deletedAtFilter(query.state),
       ...search,
-      ...(query.status ? { status: query.status } : {}),
+      ...(query.status
+        ? { status: query.status }
+        : query.state === 'active'
+          ? { status: { not: 'ARCHIVED' } }
+          : {}),
       ...(query.groupId
         ? { enrollments: { some: { groupId: query.groupId, deletedAt: null } } }
         : {}),
@@ -374,24 +381,201 @@ export class StudentsService {
     return toResponse(student);
   }
 
-  /**
-   * Permanently delete a student and every link to it: parent links and
-   * enrollments go first (no FK cascade in the schema), then the record. There
-   * is no trash — the removal is irreversible.
-   */
+  /** Archive a student and pause only their explicitly-owned future work. */
+  async archive(auth: AuthenticatedUser, studentId: string): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      const student = await tx.student.findFirst({
+        where: {
+          id: studentId,
+          workspaceId: auth.workspaceId,
+          deletedAt: null,
+        },
+      });
+      if (!student) {
+        throw studentNotFound();
+      }
+      if (student.status === 'ARCHIVED') {
+        return;
+      }
+
+      const archivedAt = new Date();
+      const archivedSeries = await tx.lessonSeries.updateMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          groupId: null,
+          deletedAt: null,
+          enrollment: { studentId: student.id },
+        },
+        data: { deletedAt: archivedAt },
+      });
+      const archivedLessons = await tx.lesson.updateMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          groupId: null,
+          status: 'SCHEDULED',
+          deletedAt: null,
+          startsAtUtc: { gte: archivedAt },
+          enrollment: { studentId: student.id },
+        },
+        data: { deletedAt: archivedAt },
+      });
+
+      await tx.student.update({
+        where: { id: student.id },
+        data: { status: 'ARCHIVED', archivedAt },
+      });
+      await this.audit.record(tx, {
+        workspaceId: auth.workspaceId,
+        actorId: auth.userId,
+        action: 'DELETE',
+        entity: 'STUDENT',
+        entityId: student.id,
+        changes: this.audit.buildChanges(
+          {},
+          {
+            archivedSeries: archivedSeries.count,
+            archivedFutureScheduledLessons: archivedLessons.count,
+          },
+        ),
+      });
+    });
+  }
+
+  async restore(
+    auth: AuthenticatedUser,
+    studentId: string,
+  ): Promise<StudentResponse> {
+    const student = await this.prisma.$transaction(async (tx) => {
+      const existing = await tx.student.findFirst({
+        where: {
+          id: studentId,
+          workspaceId: auth.workspaceId,
+          deletedAt: null,
+        },
+        include: parentLinksInclude,
+      });
+      if (!existing) {
+        throw studentNotFound();
+      }
+      if (existing.status !== 'ARCHIVED' || !existing.archivedAt) {
+        return existing;
+      }
+
+      const suspendedLessons = await tx.lesson.findMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          groupId: null,
+          status: 'SCHEDULED',
+          deletedAt: existing.archivedAt,
+          startsAtUtc: { gte: new Date() },
+          enrollment: { studentId: existing.id },
+        },
+        select: { teacherId: true, startsAtUtc: true, durationMin: true },
+      });
+      const conflictIds = new Set<string>();
+      for (const lesson of suspendedLessons) {
+        const conflicts = await findLessonConflicts(tx, {
+          workspaceId: auth.workspaceId,
+          teacherId: lesson.teacherId,
+          start: lesson.startsAtUtc,
+          durationMin: lesson.durationMin,
+        });
+        conflicts.forEach((id) => conflictIds.add(id));
+      }
+      if (conflictIds.size > 0) {
+        throw scheduleConflict([...conflictIds]);
+      }
+
+      await tx.lessonSeries.updateMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          groupId: null,
+          deletedAt: existing.archivedAt,
+          enrollment: { studentId: existing.id },
+        },
+        data: { deletedAt: null },
+      });
+      await tx.lesson.updateMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          groupId: null,
+          status: 'SCHEDULED',
+          deletedAt: existing.archivedAt,
+          startsAtUtc: { gte: new Date() },
+          enrollment: { studentId: existing.id },
+        },
+        data: { deletedAt: null },
+      });
+      const restored = await tx.student.update({
+        where: { id: existing.id },
+        data: { status: 'ACTIVE', archivedAt: null },
+        include: parentLinksInclude,
+      });
+      await this.audit.record(tx, {
+        workspaceId: auth.workspaceId,
+        actorId: auth.userId,
+        action: 'RESTORE',
+        entity: 'STUDENT',
+        entityId: existing.id,
+        changes: this.audit.buildChanges(
+          {},
+          { restoredFutureScheduledLessons: suspendedLessons.length },
+        ),
+      });
+      return restored;
+    });
+    return toResponse(student);
+  }
+
+  /** Hard deletion is limited to an unused draft and never cascades history. */
   async remove(auth: AuthenticatedUser, studentId: string): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
       const student = await tx.student.findFirst({
         where: { id: studentId, workspaceId: auth.workspaceId },
+        select: { id: true },
       });
       if (!student) {
         throw studentNotFound();
       }
 
+      const [enrollments, lessons, packages, payments, shares, credits] =
+        await Promise.all([
+          tx.enrollment.count({ where: { studentId: student.id } }),
+          tx.lesson.count({ where: { enrollment: { studentId: student.id } } }),
+          tx.lessonPackage.count({ where: { studentId: student.id } }),
+          tx.payment.count({
+            where: {
+              OR: [
+                { enrollment: { studentId: student.id } },
+                { package: { is: { studentId: student.id } } },
+              ],
+            },
+          }),
+          tx.packageParticipantShare.count({
+            where: { enrollment: { studentId: student.id } },
+          }),
+          tx.lessonCreditEntry.count({
+            where: {
+              OR: [
+                { enrollment: { studentId: student.id } },
+                { package: { is: { studentId: student.id } } },
+              ],
+            },
+          }),
+        ]);
+      const dependencies = {
+        enrollments,
+        lessons,
+        packages,
+        payments,
+        shares,
+        credits,
+      };
+      if (Object.values(dependencies).some((count) => count > 0)) {
+        throw studentHasBusinessHistory(dependencies);
+      }
+
       await tx.studentParent.deleteMany({ where: { studentId: student.id } });
-      await tx.enrollment.deleteMany({
-        where: { studentId: student.id, workspaceId: auth.workspaceId },
-      });
       await tx.student.delete({ where: { id: student.id } });
       await this.audit.record(tx, {
         workspaceId: auth.workspaceId,

@@ -53,10 +53,8 @@ function buildPrismaMock() {
       update: jest.fn(),
       updateMany: jest.fn(),
     },
-    lesson: { updateMany: jest.fn() },
-    lessonSeries: { updateMany: jest.fn() },
-    lessonPackage: { updateMany: jest.fn() },
-    payment: { updateMany: jest.fn() },
+    lesson: { updateMany: jest.fn().mockResolvedValue({ count: 0 }) },
+    lessonSeries: { updateMany: jest.fn().mockResolvedValue({ count: 0 }) },
     workspace: {
       findUniqueOrThrow: jest.fn().mockResolvedValue({
         defaultCurrency: 'EUR',
@@ -216,14 +214,18 @@ describe('GroupsService roster reconciliation', () => {
     expect(prisma.enrollment.create).not.toHaveBeenCalled();
   });
 
-  it('removes the group graph and detaches enrolled students', async () => {
+  it('archives only future operational work and preserves the group graph', async () => {
     const { prisma, service } = buildService();
 
     await service.softDelete(owner, GROUP_ID);
 
     expect(prisma.lesson.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ groupId: GROUP_ID, deletedAt: null }),
+        where: expect.objectContaining({
+          groupId: GROUP_ID,
+          status: 'SCHEDULED',
+          deletedAt: null,
+        }),
       }),
     );
     expect(prisma.lessonSeries.updateMany).toHaveBeenCalledWith(
@@ -231,26 +233,7 @@ describe('GroupsService roster reconciliation', () => {
         where: expect.objectContaining({ groupId: GROUP_ID, deletedAt: null }),
       }),
     );
-    expect(prisma.lessonPackage.updateMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({ groupId: GROUP_ID, deletedAt: null }),
-      }),
-    );
-    expect(prisma.payment.updateMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          OR: [
-            { package: { is: { groupId: GROUP_ID } } },
-            { enrollment: { is: { groupId: GROUP_ID } } },
-          ],
-        }),
-      }),
-    );
-    expect(prisma.enrollment.updateMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({ groupId: null }),
-      }),
-    );
+    expect(prisma.enrollment.updateMany).not.toHaveBeenCalled();
     expect(prisma.group.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ deletedAt: expect.any(Date) }),

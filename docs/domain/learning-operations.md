@@ -1,23 +1,23 @@
 # Learning Operations Aggregate
 
-Last verified: 2026-08-24.
+Last verified: 2026-08-25.
 
 This aggregate connects the roster to the calendar. Lifecycle actions must not
 silently erase historical finance or scheduling relationships.
 
 ## Group
 
-| Concern              | Contract                                                                                                                                                                                                                          |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Purpose              | Teaching cohort with optional default price and roster.                                                                                                                                                                           |
-| Ownership            | Workspace-scoped.                                                                                                                                                                                                                 |
-| Relationships        | Enrollments, lessons, series, and group packages.                                                                                                                                                                                 |
-| Create/update        | Roster reconciliation creates or archives enrollments; price fallback is group, then student, then free. Writes are audited.                                                                                                      |
-| Target archive       | Stop or explicitly resolve future series/lessons; keep `groupId` on historical records; retain packages, payments, shares, and audit history.                                                                                     |
-| Target restore       | Revalidate roster/series conflicts and restore only explicitly suspended operational work.                                                                                                                                        |
-| Current critical gap | Delete tombstones related payments, lessons, series, packages, and enrollments and clears enrollment `groupId`; restore revives only the group. Controller/tests instead promise a conflict when active/paused enrollments exist. |
+| Concern              | Contract                                                                                                                                                                                                |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Purpose              | Teaching cohort with optional default price and roster.                                                                                                                                                 |
+| Ownership            | Workspace-scoped.                                                                                                                                                                                       |
+| Relationships        | Enrollments, lessons, series, and group packages.                                                                                                                                                       |
+| Create/update        | Roster reconciliation creates or archives enrollments; price fallback is group, then student, then free. Writes are audited.                                                                            |
+| Archive              | Owner-only and idempotent. It preserves roster, all finance, audit history, completed/non-scheduled lessons, and every foreign key. It archives group series and only future `SCHEDULED` group lessons. |
+| Restore              | Owner-only and idempotent. It restores only series/lessons marked by the matching group archive timestamp, after checking every restored lesson against live teacher conflicts.                         |
+| Active/paused roster | Active and paused enrollments remain linked and retain their status; neither blocks archive.                                                                                                            |
 
-Acceptance scenarios: archive empty group; block or preview active group archive;
+Acceptance scenarios: archive empty group; archive active/paused group;
 preserve completed lessons and finance; restore roster; repeated archive/restore;
 cross-workspace and non-owner denial.
 

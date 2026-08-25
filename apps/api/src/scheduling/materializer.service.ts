@@ -135,7 +135,15 @@ export class MaterializerService {
     const seriesList = await this.prisma.lessonSeries.findMany({
       where: {
         deletedAt: null,
-        OR: [{ enrollmentId: null }, { enrollment: { status: 'ACTIVE' } }],
+        OR: [
+          { group: { is: { deletedAt: null } }, enrollmentId: null },
+          {
+            enrollment: {
+              status: 'ACTIVE',
+              student: { deletedAt: null, status: { not: 'ARCHIVED' } },
+            },
+          },
+        ],
       },
     });
 

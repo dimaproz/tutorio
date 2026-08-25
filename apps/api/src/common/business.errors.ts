@@ -76,6 +76,16 @@ export const activeEnrollmentsExist = () =>
     HttpStatus.CONFLICT,
   );
 
+export const studentHasBusinessHistory = (
+  dependencies: Record<string, number>,
+) =>
+  new BusinessApiException(
+    'STUDENT_HAS_BUSINESS_HISTORY',
+    'Student cannot be permanently deleted because business history exists',
+    HttpStatus.CONFLICT,
+    { dependencies },
+  );
+
 export const duplicateEnrollment = () =>
   new BusinessApiException(
     'DUPLICATE_ENROLLMENT',

@@ -227,8 +227,8 @@ export interface paths {
         put?: never;
         post?: never;
         /**
-         * Permanently delete a student
-         * @description Irreversible. Removes the student together with its parent links and enrollments. There is no trash and no restore.
+         * Archive a student
+         * @description Owner-only and reversible. Keeps business history and suspends only the student's future individual schedule.
          */
         delete: operations["StudentsController_remove"];
         options?: never;
@@ -238,6 +238,43 @@ export interface paths {
          * @description PATCH semantics: omitted fields stay unchanged, null clears an optional field. A no-op update creates no audit entry.
          */
         patch: operations["StudentsController_update"];
+        trace?: never;
+    };
+    "/api/students/{studentId}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore an archived student (owner only) */
+        post: operations["StudentsController_restore"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/students/{studentId}/permanently": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Permanently delete an unused student (owner only)
+         * @description Irreversible. Returns STUDENT_HAS_BUSINESS_HISTORY when lessons, enrollments, packages, payments, shares, or credits exist.
+         */
+        delete: operations["StudentsController_removePermanently"];
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/parents": {
@@ -379,8 +416,8 @@ export interface paths {
         put?: never;
         post?: never;
         /**
-         * Soft-delete a group (move to trash)
-         * @description Idempotent. Fails with ACTIVE_ENROLLMENTS_EXIST while the group has active or paused enrollments.
+         * Archive a group
+         * @description Owner-only and idempotent. Preserves the roster and financial history, then suspends related series and future scheduled lessons.
          */
         delete: operations["GroupsController_softDelete"];
         options?: never;
@@ -1041,7 +1078,7 @@ export interface components {
             /** @enum {string|null} */
             currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
             /** @enum {string} */
-            status?: "ACTIVE" | "ON_HOLD" | "ARCHIVED";
+            status?: "ACTIVE" | "ON_HOLD";
             /** @enum {string|null} */
             languageLevel?: "A1" | "A2" | "B1" | "B2" | "C1" | "C2" | null;
             /** @enum {string|null} */
@@ -2509,6 +2546,70 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["StudentDto"];
                 };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    StudentsController_restore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                studentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    StudentsController_removePermanently: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                studentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             404: {
                 headers: {

@@ -1,7 +1,7 @@
 # Tutorio Current State
 
-Last verified: 2026-08-24 in the uncommitted Work Packet 1 tree based on
-`3d985d5` on `develop`.
+Last verified: 2026-08-25 on `develop` at `ec5e650`, with the uncommitted Work
+Packet 2 implementation verified locally.
 
 This is the first project document to read before planning or implementing
 work. It reports the repository as it exists; [`mvp-plan.md`](./mvp-plan.md)
@@ -15,14 +15,13 @@ yet. The correct next move is not another design-wide refactor or a new product
 module. The next move is a bounded stabilization release that makes four core
 workflows correct, understandable, tested, and recoverable.
 
-- Branch: `develop`; Work Packet 1 changes are intentionally uncommitted.
+- Branch: `develop`; Work Packet 1 is committed as `ec5e650`.
 - The former `refactor/students-design` work was merged by PR #18.
-- Root `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build` pass in the
-  Work Packet 1 tree.
-- Observed unit totals: domain 89, validation 45, API 101, web 106.
-- API E2E was run against an isolated PostgreSQL 17 container after applying all
-  migrations. Package and scheduling suites pass (18 tests); the full suite is
-  55/57 because two existing Stage 2 group-deletion assertions fail.
+- `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build` pass for Work
+  Packet 2 on 2026-08-25. Observed unit totals: domain 89, validation 45, API
+  106, and web 106.
+- API E2E passes 60 tests in 5 suites against an isolated PostgreSQL 17
+  container after all 17 migrations, including the student lifecycle migration.
 - Unit coverage is uneven: core scheduling and package orchestration still have
   important untested branches. Passing totals are not a pilot-readiness signal.
 
@@ -68,19 +67,27 @@ second event. The OpenAPI schema and generated client were refreshed. Evidence:
 `apps/api/src/packages/payments.service.spec.ts`, and
 `apps/api/test/{packages,scheduling}.e2e-spec.ts`.
 
+### Work Packet 2 evidence
+
+Group and student lifecycle is now history-preserving. Group archive keeps
+roster, completed lessons, packages, payments, shares, credits, and audit rows;
+it suspends group series and only future `SCHEDULED` lessons. Restore revives
+only rows marked by that archive and refuses calendar conflicts before writing.
+Student archive uses `Student.status = ARCHIVED`, suspends only future
+individual series/lessons, and keeps all relationships. The explicit hard-delete
+endpoint rejects history with `STUDENT_HAS_BUSINESS_HISTORY` and dependency
+counts. Lifecycle routes are owner-only. Evidence:
+`apps/api/src/{groups,students}/*.service.spec.ts` and
+`apps/api/test/stage2.e2e-spec.ts` (isolated PostgreSQL: 60/60 tests).
+
 ## Release blockers
 
 ### P0 — data integrity and financial correctness
 
-- Group soft deletion tombstones and disconnects related lessons, series,
-  packages, payments, and enrollments, while restore restores only the group.
-  The behavior is effectively destructive and contradicts API/test expectations.
 - A lesson without a persisted `packageId` can resolve a different package on a
   later status transition, so a compensating credit may affect the wrong package.
 - Deleting a charged lesson or a package can leave scheduling and financial
   history inconsistent. Package deletion does not reliably stop owned series.
-- Student hard deletion can fail on financial foreign keys or leave related
-  history in a state that contradicts the UI promise.
 
 ### P1 — scheduling correctness and product truthfulness
 
@@ -98,9 +105,8 @@ second event. The OpenAPI schema and generated client were refreshed. Evidence:
 
 ### P1 — authorization and API contract
 
-- Teacher accounts are workspace-wide in practice. Mutations are not consistently
-  owner-gated and there is no complete “own teacher only” authorization model.
-  The pilot therefore uses the owner-operated access decision in ADR 0004.
+- Lifecycle commands for groups and students are owner-only. Broader business
+  mutation authorization remains a Work Packet 5 pilot blocker.
 
 ### P1 — UX and delivery confidence
 

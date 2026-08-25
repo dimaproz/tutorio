@@ -19,6 +19,10 @@ describe('Stage 2 authorization metadata', () => {
 
   it.each([
     ['groups restore', GroupsController.prototype, 'restore'],
+    ['groups archive', GroupsController.prototype, 'softDelete'],
+    ['students archive', StudentsController.prototype, 'remove'],
+    ['students restore', StudentsController.prototype, 'restore'],
+    ['students hard delete', StudentsController.prototype, 'removePermanently'],
     ['enrollments restore', EnrollmentsController.prototype, 'restore'],
     ['workspace settings', WorkspacesController.prototype, 'updateSettings'],
   ] as const)('%s is OWNER-only', (_label, proto, method) => {
@@ -29,12 +33,12 @@ describe('Stage 2 authorization metadata', () => {
     [
       'students CRUD',
       StudentsController.prototype,
-      ['list', 'create', 'getDetail', 'update', 'remove'],
+      ['list', 'create', 'getDetail', 'update'],
     ],
     [
       'groups CRUD',
       GroupsController.prototype,
-      ['list', 'create', 'getDetail', 'update', 'softDelete'],
+      ['list', 'create', 'getDetail', 'update'],
     ],
     [
       'enrollments CRUD',

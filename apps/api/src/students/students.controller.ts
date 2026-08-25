@@ -24,6 +24,7 @@ import {
 import { ZodSerializerDto } from 'nestjs-zod';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { ApiErrorDto } from '../auth/dto/auth.dto';
 import {
   CreateStudentDto,
@@ -103,16 +104,50 @@ export class StudentsController {
   }
 
   @Delete(':studentId')
+  @Roles('OWNER')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
-    summary: 'Permanently delete a student',
+    summary: 'Archive a student',
     description:
-      'Irreversible. Removes the student together with its parent links and ' +
-      'enrollments. There is no trash and no restore.',
+      'Owner-only and reversible. Keeps business history and suspends only ' +
+      "the student's future individual schedule.",
   })
   @ApiNoContentResponse()
   @ApiNotFoundResponse({ type: ApiErrorDto })
   remove(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('studentId', ParseUUIDPipe) studentId: string,
+  ): Promise<void> {
+    return this.students.archive(user, studentId);
+  }
+
+  @Post(':studentId/restore')
+  @HttpCode(HttpStatus.OK)
+  @Roles('OWNER')
+  @ApiOperation({ summary: 'Restore an archived student (owner only)' })
+  @ApiOkResponse({ type: StudentDto })
+  @ApiForbiddenResponse({ type: ApiErrorDto })
+  @ApiNotFoundResponse({ type: ApiErrorDto })
+  @ZodSerializerDto(StudentDto)
+  restore(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('studentId', ParseUUIDPipe) studentId: string,
+  ): Promise<StudentDto> {
+    return this.students.restore(user, studentId);
+  }
+
+  @Delete(':studentId/permanently')
+  @Roles('OWNER')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Permanently delete an unused student (owner only)',
+    description:
+      'Irreversible. Returns STUDENT_HAS_BUSINESS_HISTORY when lessons, ' +
+      'enrollments, packages, payments, shares, or credits exist.',
+  })
+  @ApiNoContentResponse()
+  @ApiNotFoundResponse({ type: ApiErrorDto })
+  removePermanently(
     @CurrentUser() user: AuthenticatedUser,
     @Param('studentId', ParseUUIDPipe) studentId: string,
   ): Promise<void> {

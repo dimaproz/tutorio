@@ -140,7 +140,13 @@ export async function assertTargetAndTeacher(
 ): Promise<void> {
   if (target.enrollmentId) {
     const enrollment = await tx.enrollment.findFirst({
-      where: { id: target.enrollmentId, workspaceId, deletedAt: null },
+      where: {
+        id: target.enrollmentId,
+        workspaceId,
+        deletedAt: null,
+        status: 'ACTIVE',
+        student: { deletedAt: null, status: { not: 'ARCHIVED' } },
+      },
       select: { id: true },
     });
     if (!enrollment) {
@@ -199,7 +205,12 @@ export async function resolveStudentTarget(
   },
 ): Promise<ResolvedStudentTarget> {
   const student = await tx.student.findFirst({
-    where: { id: input.studentId, workspaceId },
+    where: {
+      id: input.studentId,
+      workspaceId,
+      deletedAt: null,
+      status: { not: 'ARCHIVED' },
+    },
     select: { id: true, hourlyRateMinor: true, currency: true },
   });
   if (!student) {

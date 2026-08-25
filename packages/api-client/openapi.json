@@ -720,7 +720,7 @@
         ]
       },
       "delete": {
-        "description": "Irreversible. Removes the student together with its parent links and enrollments. There is no trash and no restore.",
+        "description": "Owner-only and reversible. Keeps business history and suspends only the student's future individual schedule.",
         "operationId": "StudentsController_remove",
         "parameters": [
           {
@@ -752,7 +752,103 @@
             "bearer": []
           }
         ],
-        "summary": "Permanently delete a student",
+        "summary": "Archive a student",
+        "tags": [
+          "students"
+        ]
+      }
+    },
+    "/api/students/{studentId}/restore": {
+      "post": {
+        "operationId": "StudentsController_restore",
+        "parameters": [
+          {
+            "name": "studentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudentDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Restore an archived student (owner only)",
+        "tags": [
+          "students"
+        ]
+      }
+    },
+    "/api/students/{studentId}/permanently": {
+      "delete": {
+        "description": "Irreversible. Returns STUDENT_HAS_BUSINESS_HISTORY when lessons, enrollments, packages, payments, shares, or credits exist.",
+        "operationId": "StudentsController_removePermanently",
+        "parameters": [
+          {
+            "name": "studentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Permanently delete an unused student (owner only)",
         "tags": [
           "students"
         ]
@@ -1618,7 +1714,7 @@
         ]
       },
       "delete": {
-        "description": "Idempotent. Fails with ACTIVE_ENROLLMENTS_EXIST while the group has active or paused enrollments.",
+        "description": "Owner-only and idempotent. Preserves the roster and financial history, then suspends related series and future scheduled lessons.",
         "operationId": "GroupsController_softDelete",
         "parameters": [
           {
@@ -1660,7 +1756,7 @@
             "bearer": []
           }
         ],
-        "summary": "Soft-delete a group (move to trash)",
+        "summary": "Archive a group",
         "tags": [
           "groups"
         ]
@@ -4689,8 +4785,7 @@
             "type": "string",
             "enum": [
               "ACTIVE",
-              "ON_HOLD",
-              "ARCHIVED"
+              "ON_HOLD"
             ]
           },
           "languageLevel": {

@@ -22,6 +22,7 @@ export const studentNotesSchema = z.string().trim().max(4000);
 
 export const studentStatusSchema = z.enum(['ACTIVE', 'ON_HOLD', 'ARCHIVED']);
 export type StudentStatusDto = z.infer<typeof studentStatusSchema>;
+const studentOperationalStatusSchema = z.enum(['ACTIVE', 'ON_HOLD']);
 
 export const STUDENT_LANGUAGE_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const;
 export const studentLanguageLevelSchema = z.enum(STUDENT_LANGUAGE_LEVELS);
@@ -82,7 +83,9 @@ export const updateStudentSchema = z
     telegramUsername: telegramUsernameSchema.nullable(),
     hourlyRateMinor: priceMinorSchema.nullable(),
     currency: currencyCodeSchema.nullable(),
-    status: studentStatusSchema,
+    // Archive has additional scheduling side effects, so it has a dedicated
+    // lifecycle command rather than being a generic profile PATCH.
+    status: studentOperationalStatusSchema,
     languageLevel: studentLanguageLevelSchema.nullable(),
     knowledgeLevel: studentKnowledgeLevelSchema.nullable(),
     age: studentAgeSchema.nullable(),

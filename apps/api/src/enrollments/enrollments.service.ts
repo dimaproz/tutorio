@@ -171,6 +171,7 @@ export class EnrollmentsService {
             id: dto.studentId,
             workspaceId: auth.workspaceId,
             deletedAt: null,
+            status: { not: 'ARCHIVED' },
           },
           select: { id: true },
         });

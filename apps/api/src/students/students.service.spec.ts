@@ -51,6 +51,7 @@ const studentRow = {
   createdAt: NOW,
   updatedAt: NOW,
   deletedAt: null,
+  archivedAt: null,
   parents: [] as {
     parent: { id: string; fullName: string; avatarKey: string | null };
   }[],
@@ -71,6 +72,11 @@ function buildPrismaMock() {
       count: jest.fn().mockResolvedValue(0),
       deleteMany: jest.fn(),
     },
+    lesson: { count: jest.fn().mockResolvedValue(0) },
+    lessonPackage: { count: jest.fn().mockResolvedValue(0) },
+    payment: { count: jest.fn().mockResolvedValue(0) },
+    packageParticipantShare: { count: jest.fn().mockResolvedValue(0) },
+    lessonCreditEntry: { count: jest.fn().mockResolvedValue(0) },
     auditLog: { create: jest.fn() },
     $transaction: jest.fn(),
   };
@@ -326,7 +332,7 @@ describe('StudentsService.update', () => {
 });
 
 describe('StudentsService.remove', () => {
-  it('permanently deletes the student with its links and enrollments, audits DELETE', async () => {
+  it('hard-deletes an unused student but never cascades enrollments', async () => {
     const { prisma, service } = buildService();
     prisma.student.findFirst.mockResolvedValue(studentRow);
 
@@ -335,14 +341,26 @@ describe('StudentsService.remove', () => {
     expect(prisma.studentParent.deleteMany.mock.calls[0][0].where).toEqual({
       studentId: STUDENT_ID,
     });
-    expect(prisma.enrollment.deleteMany.mock.calls[0][0].where).toMatchObject({
-      studentId: STUDENT_ID,
-      workspaceId: WORKSPACE_ID,
-    });
+    expect(prisma.enrollment.deleteMany).not.toHaveBeenCalled();
     expect(prisma.student.delete.mock.calls[0][0].where).toEqual({
       id: STUDENT_ID,
     });
     expect(prisma.auditLog.create.mock.calls[0][0].data.action).toBe('DELETE');
+  });
+
+  it('returns a typed dependency summary when business history exists', async () => {
+    const { prisma, service } = buildService();
+    prisma.student.findFirst.mockResolvedValue(studentRow);
+    prisma.enrollment.count.mockResolvedValue(1);
+    prisma.lesson.count.mockResolvedValue(2);
+
+    await expectBusinessError(
+      service.remove(owner, STUDENT_ID),
+      'STUDENT_HAS_BUSINESS_HISTORY',
+      409,
+    );
+    expect(prisma.student.delete).not.toHaveBeenCalled();
+    expect(prisma.auditLog.create).not.toHaveBeenCalled();
   });
 
   it('throws STUDENT_NOT_FOUND for a missing student', async () => {

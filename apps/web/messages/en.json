@@ -96,6 +96,7 @@
     "INVALID_PACKAGE_PAYMENT_RELATION": "The selected enrollment is not covered by this package.",
     "OVERPAYMENT": "The payment exceeds the outstanding balance.",
     "IDEMPOTENCY_CONFLICT": "This payment key was already used for a different payment.",
+    "STUDENT_HAS_BUSINESS_HISTORY": "This student has lessons or financial history and cannot be permanently deleted.",
     "SOLO_MODE_SINGLE_TEACHER": "A solo workspace keeps a single teacher. Switch to school mode in settings to add more."
   },
   "validation": {
@@ -274,7 +275,7 @@
     "add": "Add student",
     "searchLabel": "Search students",
     "searchPlaceholder": "Name, email, phone or Telegram…",
-    "deletedBadge": "In trash",
+    "deletedBadge": "Archived",
     "putOnHold": "Put on hold",
     "reactivate": "Reactivate",
     "count": "{count, plural, =0 {No students} one {# student} other {# students}}",
@@ -403,11 +404,11 @@
       "reactivated": "Student reactivated"
     },
     "deleteDialog": {
-      "title": "Delete this student?",
-      "warning": "This is permanent — the student and all their links (enrollments, parent links) will be erased with no way to restore them.",
-      "archiveHint": "Don't want to lose the data? Archive instead — the student disappears from lists but stays in the database.",
+      "title": "Archive this student?",
+      "warning": "The student will leave operational lists. Lessons, enrollments, packages, payments, and history stay intact.",
+      "archiveHint": "Future individual lessons and recurring schedules will be suspended and can be restored after conflict checks.",
       "archiveAction": "Archive",
-      "confirm": "Delete permanently"
+      "confirm": "Archive"
     }
   },
   "groups": {
@@ -580,8 +581,8 @@
       "restored": "Group restored"
     },
     "deleteDialog": {
-      "title": "Move this group to trash?",
-      "description": "{name} will be hidden from lists but nothing is erased permanently. An owner can restore it at any time.",
+      "title": "Archive this group?",
+      "description": "{name} will leave operational lists. Its roster, completed lessons, packages, payments, shares, and credits stay intact; future scheduled lessons and recurring schedules are suspended.",
       "confirm": "Move to trash"
     }
   },

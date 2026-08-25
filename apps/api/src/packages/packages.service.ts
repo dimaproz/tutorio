@@ -609,7 +609,12 @@ export class PackagesService {
   ): Promise<{ id: string; teacherId: string; currency: string }[]> {
     if (target.studentId) {
       const student = await tx.student.findFirst({
-        where: { id: target.studentId, workspaceId },
+        where: {
+          id: target.studentId,
+          workspaceId,
+          deletedAt: null,
+          status: { not: 'ARCHIVED' },
+        },
         select: { id: true },
       });
       if (!student) {
@@ -662,6 +667,7 @@ export class PackagesService {
         groupId: target.groupId,
         status: 'ACTIVE',
         deletedAt: null,
+        student: { deletedAt: null, status: { not: 'ARCHIVED' } },
       },
       orderBy: { createdAt: 'asc' },
       select: { id: true, teacherId: true, currency: true },

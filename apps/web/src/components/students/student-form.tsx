@@ -95,7 +95,7 @@ export function StudentForm({
   const tErrors = useTranslations('errors');
   const tValidation = useTranslations('validation');
   const tCommon = useTranslations('common');
-  const statusOptions = useStudentStatusOptions();
+  const statusOptions = useStudentStatusOptions().filter((option) => option.value !== 'ARCHIVED');
   const session = useSession();
 
   const isEdit = Boolean(student);
@@ -215,7 +215,7 @@ export function StudentForm({
           telegramUsername: cleared(formValues.telegramUsername),
           hourlyRateMinor,
           currency: hourlyRateMinor === null ? null : formValues.currency,
-          status: formValues.status,
+          status: formValues.status === 'ARCHIVED' ? 'ACTIVE' : formValues.status,
           languageLevel: formValues.languageLevel === '' ? null : formValues.languageLevel,
           knowledgeLevel: formValues.knowledgeLevel === '' ? null : formValues.knowledgeLevel,
           age: formValues.age.trim() === '' ? null : Number(formValues.age),
