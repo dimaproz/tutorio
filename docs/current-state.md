@@ -1,7 +1,7 @@
 # Tutorio Current State
 
-Last verified: 2026-08-25 on `develop` at `ec5e650`, with the uncommitted Work
-Packet 2 implementation verified locally.
+Last verified: 2026-08-26 on `develop` at `a553f05`, with the uncommitted Work
+Packet 2.1 lifecycle-closure implementation verified locally.
 
 This is the first project document to read before planning or implementing
 work. It reports the repository as it exists; [`mvp-plan.md`](./mvp-plan.md)
@@ -15,13 +15,13 @@ yet. The correct next move is not another design-wide refactor or a new product
 module. The next move is a bounded stabilization release that makes four core
 workflows correct, understandable, tested, and recoverable.
 
-- Branch: `develop`; Work Packet 1 is committed as `ec5e650`.
+- Branch: `develop`; baseline lifecycle implementation is committed as `a553f05`.
 - The former `refactor/students-design` work was merged by PR #18.
 - `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build` pass for Work
-  Packet 2 on 2026-08-25. Observed unit totals: domain 89, validation 45, API
-  106, and web 106.
-- API E2E passes 60 tests in 5 suites against an isolated PostgreSQL 17
-  container after all 17 migrations, including the student lifecycle migration.
+  Packet 2.1 on 2026-08-26. Observed unit totals: domain 89, validation 46,
+  API 109, and web 109.
+- API E2E passes 61 tests in 5 suites against an isolated PostgreSQL 17
+  container after all 18 migrations, including the lifecycle-closure migration.
 - Unit coverage is uneven: core scheduling and package orchestration still have
   important untested branches. Passing totals are not a pilot-readiness signal.
 
@@ -67,18 +67,25 @@ second event. The OpenAPI schema and generated client were refreshed. Evidence:
 `apps/api/src/packages/payments.service.spec.ts`, and
 `apps/api/test/{packages,scheduling}.e2e-spec.ts`.
 
-### Work Packet 2 evidence
+### Work Packets 2 and 2.1 evidence
 
 Group and student lifecycle is now history-preserving. Group archive keeps
 roster, completed lessons, packages, payments, shares, credits, and audit rows;
 it suspends group series and only future `SCHEDULED` lessons. Restore revives
 only rows marked by that archive and refuses calendar conflicts before writing.
 Student archive uses `Student.status = ARCHIVED`, suspends only future
-individual series/lessons, and keeps all relationships. The explicit hard-delete
-endpoint rejects history with `STUDENT_HAS_BUSINESS_HISTORY` and dependency
-counts. Lifecycle routes are owner-only. Evidence:
-`apps/api/src/{groups,students}/*.service.spec.ts` and
-`apps/api/test/stage2.e2e-spec.ts` (isolated PostgreSQL: 60/60 tests).
+individual series/lessons, and keeps all relationships. It also removes the
+student from operational group rosters while preserving `groupId` and restoring
+the exact prior `ACTIVE`/`PAUSED` enrollment state. Archived students cannot
+use ordinary PATCH; `STUDENT_ARCHIVED_REQUIRES_RESTORE` requires the dedicated
+restore command. The explicit hard-delete endpoint rejects history with
+`STUDENT_HAS_BUSINESS_HISTORY` and dependency counts. Legacy deleted/archived
+student records are normalized by a forward migration; legacy destructive
+group deletes return a typed manual-repair refusal. Evidence:
+`apps/api/src/{groups,students}/*.service.spec.ts`,
+`apps/api/test/stage2.e2e-spec.ts` (isolated PostgreSQL: 61/61 tests), and
+`apps/api/scripts/verify-lifecycle-migration-upgrade.ts` (pre-migration legacy
+data → migration → restore verification).
 
 ## Release blockers
 
@@ -145,8 +152,6 @@ counts. Lifecycle routes are owner-only. Evidence:
 
 ## Next checkpoint
 
-The next checkpoint is reached when Phase 0 and Phase 1 in
-[`roadmap.md`](./roadmap.md) are complete: the domain decisions are executable
-tests, P0 defects are fixed, and the four critical workflows pass in an isolated
-environment. Only then should the team implement the simplified student and
-package UX.
+The next implementation packet is Work Packet 3 — Exact Credit Compensation.
+The lifecycle closure is complete, but Phase 1 remains open until its financial
+and scheduling integrity blockers are resolved.

@@ -1,6 +1,6 @@
 # Tutorio Pilot-First Roadmap
 
-Last verified: 2026-08-24.
+Last verified: 2026-08-26.
 
 This roadmap replaces feature-by-feature expansion as the active delivery
 strategy. Complete phases in order. A later phase may be designed, but it must
@@ -35,6 +35,12 @@ Outcome: existing data cannot be silently mischarged, orphaned, or destroyed.
   materialization, recurrence conflict checks, and effective status filtering.
 - Remove or correctly implement the misleading automatic-replacement action.
 - Fix boolean query parsing at the runtime API boundary.
+
+Lifecycle closure is complete before Exact Credit Compensation: archive/restore
+now has a migration-safe student timestamp, no archived-PATCH bypass, and a
+history-preserving group roster boundary. Legacy destructive group deletes are
+detected and refused for manual repair rather than misrepresented as safe
+archive records. The next packet is Work Packet 3 — Exact Credit Compensation.
 
 **Gate:** all P0/P1 core integrity scenarios pass at domain, service, and
 end-to-end levels; migrations are reversible or have an approved rollback plan.

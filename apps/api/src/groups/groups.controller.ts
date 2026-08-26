@@ -128,6 +128,11 @@ export class GroupsController {
   @Roles('OWNER')
   @ApiOperation({ summary: 'Restore a soft-deleted group (owner only)' })
   @ApiOkResponse({ type: GroupDto })
+  @ApiConflictResponse({
+    type: ApiErrorDto,
+    description:
+      'Legacy destructive group deletes require manual repair before restore.',
+  })
   @ApiForbiddenResponse({ type: ApiErrorDto })
   @ApiNotFoundResponse({ type: ApiErrorDto })
   @ZodSerializerDto(GroupDto)

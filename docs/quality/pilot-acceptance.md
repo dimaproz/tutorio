@@ -1,6 +1,6 @@
 # Pilot Acceptance Matrix
 
-Last verified: 2026-08-25.
+Last verified: 2026-08-26.
 
 Status values: `Not run`, `Fail`, `Pass`, or `Not applicable`. A row may be
 marked `Pass` only with a linked automated test, screenshot/report, or run log.
@@ -10,12 +10,12 @@ marked `Pass` only with a linked automated test, screenshot/report, or run log.
 | Journey                                                                     | Required evidence                                                   | Status                                                                                                                                    |
 | --------------------------------------------------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | Add a student, optionally link a parent, and start individual study         | API/service tests, browser interaction test, audit row              | Not run                                                                                                                                   |
-| Create a group, enroll students, archive, and restore it                    | E2E test proving schedules and financial history are preserved      | Pass — `apps/api/test/stage2.e2e-spec.ts`; isolated PostgreSQL 17, 2026-08-25 (60/60 full API E2E)                                        |
+| Create a group, enroll students, archive, and restore it                    | E2E test proving schedules and financial history are preserved      | Pass — `apps/api/test/stage2.e2e-spec.ts`; isolated PostgreSQL 17, 2026-08-25 (61/61 full API E2E)                                        |
 | Create one-off and recurring lessons across time zones                      | Conflict, DST, edit-scope, pause/resume, and materialization tests  | Not run                                                                                                                                   |
 | Sell an individual fixed package and record partial/full payment            | Relationship, currency, idempotency, ledger, and audit assertions   | Pass — Work Packet 1 at `ec5e650`; isolated PostgreSQL evidence in `apps/api/test/packages.e2e-spec.ts`                                |
 | Sell a group package and calculate participant shares                       | Deterministic share tests including cancellation/restore repetition | Fail — zero-delta events can distort shares                                                                                               |
 | Complete, cancel charged, cancel uncharged, restore, and reschedule lessons | Human-readable history and exact compensating-entry assertions      | Fail — compensation and replacement behavior are unsafe                                                                                   |
-| Archive a student with financial history and restore access                 | E2E proof that history remains queryable and no FK failure occurs   | Pass — `apps/api/test/stage2.e2e-spec.ts`; archive/restore, hard-delete conflict, cross-workspace and role denial verified 2026-08-25     |
+| Archive a student with financial history and restore access                 | E2E proof that history remains queryable and no FK failure occurs   | Pass — `apps/api/test/stage2.e2e-spec.ts`; isolated PostgreSQL 17, archive/restore, blocked archived PATCH, active/paused group-roster restoration, package target exclusion, history preservation, hard-delete conflict, cross-workspace and role denial verified 2026-08-25 (61/61 full API E2E) |
 
 ## UX acceptance
 
@@ -32,8 +32,9 @@ marked `Pass` only with a linked automated test, screenshot/report, or run log.
 
 | Gate               | Required evidence                                                                      | Status                                                                                                |
 | ------------------ | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Static pipeline    | Root lint, typecheck, unit tests, and build                                            | Pass — Work Packet 2: `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build` on 2026-08-25      |
-| API end-to-end     | Isolated PostgreSQL run using the same command and migrations as CI                    | Pass — PostgreSQL 17 isolated container, all 17 migrations, 5 suites / 60 tests on 2026-08-25         |
+| Static pipeline    | Root lint, typecheck, unit tests, and build                                            | Pass — Work Packet 2.1: `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build` on 2026-08-26      |
+| API end-to-end     | Isolated PostgreSQL run using the same command and migrations as CI                    | Pass — PostgreSQL 17 isolated container, all 18 migrations, 5 suites / 61 tests on 2026-08-25         |
+| Migration upgrade  | Legacy pre-migration records, forward migration, normalized rows, and restore          | Pass — `apps/api/scripts/verify-lifecycle-migration-upgrade.ts`; isolated PostgreSQL 17 database, 2026-08-25 |
 | Generated contract | OpenAPI generation is reproducible and web usage policy is resolved                    | Fail — `pnpm --filter @tutorio/api-client generate` passes; web integration policy remains unresolved |
 | Database readiness | Health check fails when PostgreSQL is unavailable                                      | Not run                                                                                               |
 | Backup recovery    | Restore representative workspace into a clean database and reconcile counts            | Not run                                                                                               |

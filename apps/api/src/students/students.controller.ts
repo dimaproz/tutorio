@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiConflictResponse,
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiNoContentResponse,
@@ -93,6 +94,11 @@ export class StudentsController {
       'optional field. A no-op update creates no audit entry.',
   })
   @ApiOkResponse({ type: StudentDto })
+  @ApiConflictResponse({
+    type: ApiErrorDto,
+    description:
+      'Archived students must be restored through POST /students/:studentId/restore before PATCH.',
+  })
   @ApiNotFoundResponse({ type: ApiErrorDto })
   @ZodSerializerDto(StudentDto)
   update(

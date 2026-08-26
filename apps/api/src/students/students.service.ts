@@ -14,6 +14,7 @@ import type { AuthenticatedUser } from '../auth/auth.types';
 import {
   invalidWorkspaceRelation,
   scheduleConflict,
+  studentArchivedRequiresRestore,
   studentHasBusinessHistory,
   studentNotFound,
 } from '../common/business.errors';
@@ -322,6 +323,9 @@ export class StudentsService {
       if (!before) {
         throw studentNotFound();
       }
+      if (before.status === 'ARCHIVED') {
+        throw studentArchivedRequiresRestore();
+      }
       const beforeParentIds = toParentRefs(before).map((parent) => parent.id);
 
       const changes = this.audit.buildChanges(
@@ -419,6 +423,36 @@ export class StudentsService {
         },
         data: { deletedAt: archivedAt },
       });
+      const archivedActiveGroupEnrollments = await tx.enrollment.updateMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          studentId: student.id,
+          groupId: { not: null },
+          deletedAt: null,
+          status: 'ACTIVE',
+          studentArchivedAt: null,
+        },
+        data: {
+          status: 'ARCHIVED',
+          studentArchivedAt: archivedAt,
+          statusBeforeStudentArchive: 'ACTIVE',
+        },
+      });
+      const archivedPausedGroupEnrollments = await tx.enrollment.updateMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          studentId: student.id,
+          groupId: { not: null },
+          deletedAt: null,
+          status: 'PAUSED',
+          studentArchivedAt: null,
+        },
+        data: {
+          status: 'ARCHIVED',
+          studentArchivedAt: archivedAt,
+          statusBeforeStudentArchive: 'PAUSED',
+        },
+      });
 
       await tx.student.update({
         where: { id: student.id },
@@ -435,6 +469,9 @@ export class StudentsService {
           {
             archivedSeries: archivedSeries.count,
             archivedFutureScheduledLessons: archivedLessons.count,
+            archivedGroupEnrollments:
+              archivedActiveGroupEnrollments.count +
+              archivedPausedGroupEnrollments.count,
           },
         ),
       });
@@ -486,6 +523,19 @@ export class StudentsService {
         throw scheduleConflict([...conflictIds]);
       }
 
+      const suspendedGroupEnrollments = await tx.enrollment.findMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          studentId: existing.id,
+          groupId: { not: null },
+          deletedAt: null,
+          status: 'ARCHIVED',
+          studentArchivedAt: existing.archivedAt,
+          statusBeforeStudentArchive: { in: ['ACTIVE', 'PAUSED'] },
+        },
+        select: { id: true, statusBeforeStudentArchive: true },
+      });
+
       await tx.lessonSeries.updateMany({
         where: {
           workspaceId: auth.workspaceId,
@@ -506,6 +556,16 @@ export class StudentsService {
         },
         data: { deletedAt: null },
       });
+      for (const enrollment of suspendedGroupEnrollments) {
+        await tx.enrollment.update({
+          where: { id: enrollment.id },
+          data: {
+            status: enrollment.statusBeforeStudentArchive!,
+            studentArchivedAt: null,
+            statusBeforeStudentArchive: null,
+          },
+        });
+      }
       const restored = await tx.student.update({
         where: { id: existing.id },
         data: { status: 'ACTIVE', archivedAt: null },
@@ -519,7 +579,10 @@ export class StudentsService {
         entityId: existing.id,
         changes: this.audit.buildChanges(
           {},
-          { restoredFutureScheduledLessons: suspendedLessons.length },
+          {
+            restoredFutureScheduledLessons: suspendedLessons.length,
+            restoredGroupEnrollments: suspendedGroupEnrollments.length,
+          },
         ),
       });
       return restored;

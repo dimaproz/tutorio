@@ -71,8 +71,16 @@ function buildPrismaMock() {
     enrollment: {
       count: jest.fn().mockResolvedValue(0),
       deleteMany: jest.fn(),
+      findMany: jest.fn().mockResolvedValue([]),
+      update: jest.fn(),
+      updateMany: jest.fn().mockResolvedValue({ count: 0 }),
     },
-    lesson: { count: jest.fn().mockResolvedValue(0) },
+    lesson: {
+      count: jest.fn().mockResolvedValue(0),
+      findMany: jest.fn().mockResolvedValue([]),
+      updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+    },
+    lessonSeries: { updateMany: jest.fn().mockResolvedValue({ count: 0 }) },
     lessonPackage: { count: jest.fn().mockResolvedValue(0) },
     payment: { count: jest.fn().mockResolvedValue(0) },
     packageParticipantShare: { count: jest.fn().mockResolvedValue(0) },
@@ -328,6 +336,23 @@ describe('StudentsService.update', () => {
       404,
     );
     expect(prisma.student.update).not.toHaveBeenCalled();
+  });
+
+  it('rejects PATCH for an archived student until the dedicated restore runs', async () => {
+    const { prisma, service } = buildService();
+    prisma.student.findFirst.mockResolvedValue({
+      ...studentRow,
+      status: 'ARCHIVED',
+      archivedAt: NOW,
+    });
+
+    await expectBusinessError(
+      service.update(owner, STUDENT_ID, { fullName: 'Cannot update archived' }),
+      'STUDENT_ARCHIVED_REQUIRES_RESTORE',
+      409,
+    );
+    expect(prisma.student.update).not.toHaveBeenCalled();
+    expect(prisma.auditLog.create).not.toHaveBeenCalled();
   });
 });
 

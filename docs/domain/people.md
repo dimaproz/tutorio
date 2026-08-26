@@ -1,6 +1,6 @@
 # People Aggregate
 
-Last verified: 2026-08-25.
+Last verified: 2026-08-26.
 
 Normal removal must follow
 [ADR 0002](../decisions/0002-record-lifecycle-and-deletion.md). Current student
@@ -13,16 +13,17 @@ and parent hard-delete behavior is not the accepted target.
 | Purpose            | Learner identity, contacts, timezone, optional learning profile, default lesson price, and operational status.                                                                                          |
 | Ownership          | Workspace-scoped.                                                                                                                                                                                       |
 | Relationships      | Parents through `StudentParent`; enrollments; individual packages; indirect lessons, series, payments, shares, and credit history.                                                                      |
-| Create/update      | Name and timezone are the only essential create fields. Updates may replace the complete parent-link set and are audited transactionally.                                                               |
+| Create/update      | Name and timezone are the only essential create fields. Updates may replace the complete parent-link set and are audited transactionally; PATCH returns `409 STUDENT_ARCHIVED_REQUIRES_RESTORE` for an archived student. |
 | Business lifecycle | `ACTIVE -> ON_HOLD -> ARCHIVED`; status controls operational visibility, not historical deletion.                                                                                                       |
 | Removal            | `DELETE /students/:id` archives (status `ARCHIVED`); `POST /restore` reactivates after calendar conflict checks. `DELETE /permanently` is an explicit owner-only hard-delete command.                   |
 | Hard-delete guard  | Any enrollment, lesson, package, payment, participant share, or credit entry returns `409 STUDENT_HAS_BUSINESS_HISTORY` with dependency counts. An unused record may be deleted with parent links only. |
-| Side effects       | Archive records `archivedAt`, suspends future individual series and `SCHEDULED` lessons, and preserves group work and all history. Restore revives only the rows tagged by that archive.                |
+| Side effects       | Archive records `archivedAt`, suspends future individual series and `SCHEDULED` lessons, and preserves history. It also marks live group enrollments with that timestamp and their prior `ACTIVE`/`PAUSED` status; restore revives only rows marked by that archive. |
 | Permissions        | Archive, restore, and hard delete are owner-only under ADR 0004.                                                                                                                                        |
 
-Archived students are excluded from new individual enrollment, package, and
-scheduling targets; all lifecycle writes and their audit record use one Prisma
-transaction.
+Archived students are excluded from new individual enrollment, group roster,
+package, payment, and scheduling targets; historical group links and financial
+records remain readable. All lifecycle writes and their audit record use one
+Prisma transaction.
 
 Acceptance scenarios: quick create; parent link reconciliation; archive with
 future lessons; archive with package/payment history; restore; hard-delete conflict;

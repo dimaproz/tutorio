@@ -973,6 +973,32 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
           select: { status: true, archivedAt: true },
         }),
       ).toMatchObject({ status: 'ARCHIVED', archivedAt: expect.any(Date) });
+      const archivedEnrollment = await prisma.enrollment.findUniqueOrThrow({
+        where: { id: groupEnrollmentId },
+        select: {
+          groupId: true,
+          status: true,
+          studentArchivedAt: true,
+          statusBeforeStudentArchive: true,
+        },
+      });
+      expect(archivedEnrollment).toMatchObject({
+        groupId: historyGroupId,
+        status: 'ARCHIVED',
+        studentArchivedAt: expect.any(Date),
+        statusBeforeStudentArchive: 'ACTIVE',
+      });
+      const archivedRoster = await server()
+        .get(`/api/groups/${historyGroupId}`)
+        .set('Authorization', auth(ownerA))
+        .expect(200);
+      expect(archivedRoster.body.enrollments).toEqual([]);
+      const directPatch = await server()
+        .patch(`/api/students/${historyStudentId}`)
+        .set('Authorization', auth(ownerA))
+        .send({ fullName: 'Unsafe archive bypass' })
+        .expect(409);
+      expect(directPatch.body.code).toBe('STUDENT_ARCHIVED_REQUIRES_RESTORE');
       expect(
         (
           await prisma.lesson.findUniqueOrThrow({
@@ -1035,6 +1061,22 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
         .set('Authorization', auth(ownerA))
         .expect(200);
       expect(
+        await prisma.enrollment.findUniqueOrThrow({
+          where: { id: groupEnrollmentId },
+          select: {
+            groupId: true,
+            status: true,
+            studentArchivedAt: true,
+            statusBeforeStudentArchive: true,
+          },
+        }),
+      ).toEqual({
+        groupId: historyGroupId,
+        status: 'ACTIVE',
+        studentArchivedAt: null,
+        statusBeforeStudentArchive: null,
+      });
+      expect(
         (
           await prisma.lesson.findUniqueOrThrow({
             where: { id: scheduled.id },
@@ -1043,6 +1085,72 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
         ).deletedAt,
       ).toBeNull();
       expect(await auditCount('STUDENT', historyStudentId, 'RESTORE')).toBe(1);
+    });
+
+    it('restores a paused group enrollment to PAUSED without removing its group link', async () => {
+      const student = await server()
+        .post('/api/students')
+        .set('Authorization', auth(ownerA))
+        .send({ fullName: 'Paused lifecycle learner', timezone: 'UTC' })
+        .expect(201);
+      const group = await server()
+        .post('/api/groups')
+        .set('Authorization', auth(ownerA))
+        .send({ name: `Paused lifecycle group ${runId}` })
+        .expect(201);
+      const enrollment = await server()
+        .post('/api/enrollments')
+        .set('Authorization', auth(ownerA))
+        .send({
+          studentId: student.body.id,
+          groupId: group.body.id,
+          teacherId: ownerTeacherId,
+          priceMinor: 2500,
+          currency: 'EUR',
+        })
+        .expect(201);
+      await prisma.enrollment.update({
+        where: { id: enrollment.body.id },
+        data: { status: 'PAUSED' },
+      });
+
+      await server()
+        .delete(`/api/students/${student.body.id}`)
+        .set('Authorization', auth(ownerA))
+        .expect(204);
+      expect(
+        await prisma.enrollment.findUniqueOrThrow({
+          where: { id: enrollment.body.id },
+          select: {
+            groupId: true,
+            status: true,
+            statusBeforeStudentArchive: true,
+          },
+        }),
+      ).toEqual({
+        groupId: group.body.id,
+        status: 'ARCHIVED',
+        statusBeforeStudentArchive: 'PAUSED',
+      });
+
+      await server()
+        .post(`/api/students/${student.body.id}/restore`)
+        .set('Authorization', auth(ownerA))
+        .expect(200);
+      expect(
+        await prisma.enrollment.findUniqueOrThrow({
+          where: { id: enrollment.body.id },
+          select: {
+            groupId: true,
+            status: true,
+            statusBeforeStudentArchive: true,
+          },
+        }),
+      ).toEqual({
+        groupId: group.body.id,
+        status: 'PAUSED',
+        statusBeforeStudentArchive: null,
+      });
     });
   });
 

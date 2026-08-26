@@ -1,7 +1,7 @@
 # Student Workflow
 
-Last verified: 2026-08-24 through source inspection and a local authenticated
-visual audit of `/app/students` and the create dialog at a desktop viewport.
+Last verified: 2026-08-26 through source inspection. A local authenticated
+visual audit of `/app/students` and the create dialog remains acceptance work.
 
 ## User job
 
@@ -123,10 +123,11 @@ explicit load failure/retry, and sections that can be collapsed.
 
 ## Domain/API requirements before redesign
 
-- Implement archive-first student lifecycle and remove the unsafe routine hard
-  delete contract.
+- Archive/restore is implemented: an archived student exposes Restore only and
+  the API rejects ordinary profile PATCH until that command succeeds.
 - Make owner-only mutation policy explicit.
-- Decide how archive affects future lessons and active enrollments.
+- Archive suspends future individual work and temporarily removes the student
+  from the operational group roster while retaining historical relationships.
 - Provide an atomic API only if product evidence later requires “create student
   and parent together”; otherwise keep those jobs separate.
 - Add package summary and a prefilled “Add lesson package” entry point to student

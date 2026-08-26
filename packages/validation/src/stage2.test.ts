@@ -125,6 +125,14 @@ describe('students', () => {
     expect(createStudentSchema.safeParse({ fullName: 'Alice' }).success).toBe(false);
   });
 
+  it('rejects ARCHIVED during creation and update', () => {
+    expect(
+      createStudentSchema.safeParse({ fullName: 'Alice', timezone: 'UTC', status: 'ARCHIVED' })
+        .success,
+    ).toBe(false);
+    expect(updateStudentSchema.safeParse({ status: 'ARCHIVED' }).success).toBe(false);
+  });
+
   it('allows clearing optional fields with null on update only', () => {
     expect(updateStudentSchema.safeParse({ email: null, notes: null }).success).toBe(true);
     expect(updateStudentSchema.safeParse({ fullName: null }).success).toBe(false);

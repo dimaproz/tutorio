@@ -22,6 +22,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
+    "verify:migration-upgrade": "ts-node -r tsconfig-paths/register scripts/verify-lifecycle-migration-upgrade.ts",
     "openapi:emit": "ts-node -r tsconfig-paths/register scripts/generate-openapi.ts"
   },
   "dependencies": {

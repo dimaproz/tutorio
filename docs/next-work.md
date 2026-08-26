@@ -1,6 +1,6 @@
 # Active Work Queue
 
-Last verified: 2026-08-25.
+Last verified: 2026-08-26.
 
 This is the short-lived execution queue for Stage 4.1. It answers “what should I
 work on next?” without requiring a developer to re-derive priorities from the
@@ -53,7 +53,7 @@ Suggested PR intent: `fix(api): enforce package payment integrity`.
 - Added validation, domain, service, package E2E, and scheduling E2E regressions;
   refreshed `packages/api-client/openapi.json` and generated schema.
 - Root static/unit checks passed for Work Packet 1 and were repeated for Work
-  Packet 2. The full isolated PostgreSQL E2E command now passes 60/60 after
+  Packet 2. The full isolated PostgreSQL E2E command now passes 61/61 after
   the lifecycle assertions replaced the unsafe deletion expectation.
 
 ## Work Packet 2 — History-Preserving Lifecycle (implemented)
@@ -70,9 +70,27 @@ Suggested PR intent: `fix(api): enforce package payment integrity`.
 - Contracts, Swagger/generated client, and localized lifecycle copy were
   refreshed. Service and isolated PostgreSQL E2E coverage prove financial
   preservation, active/paused roster retention, repeated commands,
-  cross-workspace/non-owner denial, conflict rollback, and audit rows (60/60).
+  cross-workspace/non-owner denial, conflict rollback, and audit rows (61/61).
 
-## Start here: Work Packet 3 — Exact Credit Compensation
+## Work Packet 2.1 — Lifecycle Closure and Migration Safety (implemented)
+
+### Actual result — 2026-08-25
+
+- Archived students accept only the dedicated restore operation: normal PATCH
+  returns `STUDENT_ARCHIVED_REQUIRES_RESTORE`, and the row menu exposes Restore
+  without edit, status, or archive actions.
+- Student archive uses its archive timestamp to suspend linked group
+  enrollments, retain `groupId`, and restore only the marked enrollment to its
+  exact preceding `ACTIVE` or `PAUSED` state. Archived students are excluded
+  from operational group rosters and package/payment/scheduling targets while
+  historical group records remain intact.
+- Forward migration `20260825120000_lifecycle_closure_and_legacy_repair`
+  normalizes legacy archived/deleted students and their future individual work.
+  `verify:migration-upgrade` applies pre-migration schema/data, then the new
+  migration, and verifies a real restore on a dedicated PostgreSQL database.
+- Groups deleted by the previous destructive implementation return
+  `GROUP_LEGACY_REPAIR_REQUIRED`; the deploy runbook supplies the audit query
+  and prohibits inferred relationship reconstruction.
 
 ## Work Packet 3 — Exact Credit Compensation
 

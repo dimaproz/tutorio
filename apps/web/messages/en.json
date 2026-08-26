@@ -97,6 +97,8 @@
     "OVERPAYMENT": "The payment exceeds the outstanding balance.",
     "IDEMPOTENCY_CONFLICT": "This payment key was already used for a different payment.",
     "STUDENT_HAS_BUSINESS_HISTORY": "This student has lessons or financial history and cannot be permanently deleted.",
+    "STUDENT_ARCHIVED_REQUIRES_RESTORE": "Restore this student before editing their profile.",
+    "GROUP_LEGACY_REPAIR_REQUIRED": "This group needs manual data repair before it can be restored.",
     "SOLO_MODE_SINGLE_TEACHER": "A solo workspace keeps a single teacher. Switch to school mode in settings to add more."
   },
   "validation": {
@@ -400,6 +402,7 @@
       "updated": "Changes saved",
       "deleted": "Student permanently deleted",
       "archived": "Student archived",
+      "restored": "Student restored",
       "onHold": "Student put on hold",
       "reactivated": "Student reactivated"
     },

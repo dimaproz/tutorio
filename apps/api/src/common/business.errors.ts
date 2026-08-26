@@ -86,6 +86,20 @@ export const studentHasBusinessHistory = (
     { dependencies },
   );
 
+export const studentArchivedRequiresRestore = () =>
+  new BusinessApiException(
+    'STUDENT_ARCHIVED_REQUIRES_RESTORE',
+    'Restore the archived student before updating it',
+    HttpStatus.CONFLICT,
+  );
+
+export const groupLegacyRepairRequired = () =>
+  new BusinessApiException(
+    'GROUP_LEGACY_REPAIR_REQUIRED',
+    'This group was deleted by the legacy destructive lifecycle and requires manual repair before it can be restored',
+    HttpStatus.CONFLICT,
+  );
+
 export const duplicateEnrollment = () =>
   new BusinessApiException(
     'DUPLICATE_ENROLLMENT',

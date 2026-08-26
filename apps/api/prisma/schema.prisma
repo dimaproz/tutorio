@@ -319,6 +319,10 @@ model Enrollment {
   createdAt                 DateTime         @default(now())
   updatedAt                 DateTime         @updatedAt
   deletedAt                 DateTime?
+  // Set only while a student's archive operation temporarily suspends a group
+  // membership. These markers make restore precise without clearing groupId.
+  studentArchivedAt         DateTime?
+  statusBeforeStudentArchive EnrollmentStatus?
 
   workspace    Workspace      @relation(fields: [workspaceId], references: [id])
   student      Student        @relation(fields: [studentId], references: [id])

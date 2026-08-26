@@ -1,7 +1,8 @@
 # ADR 0002: Record Lifecycle and Deletion
 
-- Status: Accepted target; implementation pending
+- Status: Accepted; implemented for Student and Group archive/restore in Work Packets 2 and 2.1
 - Date: 2026-08-24
+- Last verified: 2026-08-26
 
 ## Context
 
@@ -53,6 +54,13 @@ truthful promise until one lifecycle policy applies across aggregates.
   existing ledger and payment history remains readable.
 - Archiving a student does not destroy enrollments, packages, lessons, payments,
   parent links, or audit history.
+- An archived student cannot be edited through a normal PATCH and must be
+  restored through its dedicated command first. Student archive temporarily
+  marks linked group enrollments with the same archive timestamp and records
+  their prior `ACTIVE` or `PAUSED` state; restore changes only those markers.
+- A group deleted by the pre-archive destructive implementation is not treated
+  as safely restorable. The API returns a typed manual-repair refusal because
+  cleared enrollment links are not deterministically recoverable.
 
 ## Consequences
 
@@ -61,3 +69,6 @@ truthful promise until one lifecycle policy applies across aggregates.
   restore, and privacy deletion.
 - Destructive confirmation dialogs must show affected future work and retained
   history, not generic warnings.
+- Work Packet 4 owns the remaining group recurrence policy when no active
+  participants remain; this lifecycle implementation does not suspend a group
+  series merely because one student is archived.

@@ -2555,6 +2555,15 @@ export interface operations {
                     "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
+            /** @description Archived students must be restored through POST /students/:studentId/restore before PATCH. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
         };
     };
     StudentsController_restore: {
@@ -3124,6 +3133,15 @@ export interface operations {
                 };
             };
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Legacy destructive group deletes require manual repair before restore. */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

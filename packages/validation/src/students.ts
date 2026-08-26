@@ -58,7 +58,9 @@ export const createStudentSchema = z
     telegramUsername: optionalField(telegramUsernameSchema),
     hourlyRateMinor: priceMinorSchema.optional(),
     currency: optionalField(currencyCodeSchema),
-    status: studentStatusSchema.default('ACTIVE'),
+    // A new student has no archive operation to restore. ARCHIVED is reached
+    // only through the dedicated archive command.
+    status: studentOperationalStatusSchema.default('ACTIVE'),
     languageLevel: optionalField(studentLanguageLevelSchema),
     knowledgeLevel: optionalField(studentKnowledgeLevelSchema),
     age: studentAgeSchema.optional(),

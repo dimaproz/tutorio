@@ -77,6 +77,27 @@ git diff --exit-code -- openapi.json packages/api-client
    migration.
 7. Verify environment variables without printing their values.
 8. Confirm the pilot acceptance matrix has no newly introduced failed row.
+9. Run the legacy destructive-group audit before deploying the lifecycle
+   migration. Any returned group requires manual repair before restore:
+
+```sql
+SELECT g."id", g."workspaceId", g."name", g."deletedAt"
+FROM "groups" AS g
+WHERE g."deletedAt" IS NOT NULL
+  AND EXISTS (
+    SELECT 1
+    FROM "audit_logs" AS a
+    WHERE a."workspaceId" = g."workspaceId"
+      AND a."entity" = 'GROUP'
+      AND a."entityId" = g."id"
+      AND a."action" = 'DELETE'
+      AND a."diff" IS NULL
+  );
+```
+
+Do not clear tombstones or reconstruct `groupId` by guesswork. Preserve the
+query output and repair each group from verified backups or a reviewed manual
+mapping.
 
 ## Deployment order
 

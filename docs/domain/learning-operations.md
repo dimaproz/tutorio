@@ -1,6 +1,6 @@
 # Learning Operations Aggregate
 
-Last verified: 2026-08-25.
+Last verified: 2026-08-26.
 
 This aggregate connects the roster to the calendar. Lifecycle actions must not
 silently erase historical finance or scheduling relationships.
@@ -15,11 +15,14 @@ silently erase historical finance or scheduling relationships.
 | Create/update        | Roster reconciliation creates or archives enrollments; price fallback is group, then student, then free. Writes are audited.                                                                            |
 | Archive              | Owner-only and idempotent. It preserves roster, all finance, audit history, completed/non-scheduled lessons, and every foreign key. It archives group series and only future `SCHEDULED` group lessons. |
 | Restore              | Owner-only and idempotent. It restores only series/lessons marked by the matching group archive timestamp, after checking every restored lesson against live teacher conflicts.                         |
-| Active/paused roster | Active and paused enrollments remain linked and retain their status; neither blocks archive.                                                                                                            |
+| Active/paused roster | The default operational roster/counts include only `ACTIVE`/`PAUSED` enrollments whose student is not archived. Student archive preserves `groupId`, temporarily archives its enrollment, and restore returns its exact preceding `ACTIVE`/`PAUSED` state. |
 
 Acceptance scenarios: archive empty group; archive active/paused group;
 preserve completed lessons and finance; restore roster; repeated archive/restore;
 cross-workspace and non-owner denial.
+
+The policy for a group recurring series when every participant is paused or
+archived remains deliberately deferred to Work Packet 4.
 
 ## Enrollment
 

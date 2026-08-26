@@ -13,6 +13,7 @@ import { AuditService } from '../audit/audit.service';
 import { forbidden } from '../auth/auth.errors';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import {
+  groupLegacyRepairRequired,
   groupNotFound,
   scheduleConflict,
   studentNotFound,
@@ -116,6 +117,7 @@ export class GroupsService {
     const liveEnrollment: Prisma.EnrollmentWhereInput = {
       deletedAt: null,
       status: { in: ['ACTIVE', 'PAUSED'] },
+      student: { deletedAt: null, status: { not: 'ARCHIVED' } },
     };
 
     const where: Prisma.GroupWhereInput = {
@@ -351,7 +353,11 @@ export class GroupsService {
       where: { id: groupId, workspaceId: auth.workspaceId, deletedAt: null },
       include: {
         enrollments: {
-          where: { deletedAt: null },
+          where: {
+            deletedAt: null,
+            status: { in: ['ACTIVE', 'PAUSED'] },
+            student: { deletedAt: null, status: { not: 'ARCHIVED' } },
+          },
           orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
           include: {
             student: { select: { id: true, fullName: true, avatarKey: true } },
@@ -508,6 +514,23 @@ export class GroupsService {
       if (!existing.deletedAt) {
         // Idempotent: restoring a live group is a no-op.
         return existing;
+      }
+
+      // Before the archive-first implementation, group deletion tombstoned
+      // dependent rows and cleared enrollment.groupId. The cleared links are
+      // not always recoverable from the remaining data, so do not present this
+      // as a safe restore. Operators must use the documented repair runbook.
+      const deletionAudits = await tx.auditLog.findMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          entity: 'GROUP',
+          entityId: existing.id,
+          action: 'DELETE',
+        },
+        select: { diff: true },
+      });
+      if (deletionAudits.some((audit) => audit.diff === null)) {
+        throw groupLegacyRepairRequired();
       }
 
       const archivedAt = existing.deletedAt;

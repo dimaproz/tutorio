@@ -35,6 +35,7 @@ function buildPrismaMock() {
   const prisma = {
     group: {
       findFirst: jest.fn().mockResolvedValue(groupRow),
+      findMany: jest.fn().mockResolvedValue([]),
       create: jest.fn().mockResolvedValue(groupRow),
       update: jest.fn().mockResolvedValue(groupRow),
     },
@@ -60,7 +61,7 @@ function buildPrismaMock() {
         defaultCurrency: 'EUR',
       }),
     },
-    auditLog: { create: jest.fn() },
+    auditLog: { create: jest.fn(), findMany: jest.fn().mockResolvedValue([]) },
     $transaction: jest.fn(),
   };
   prisma.$transaction.mockImplementation(
@@ -239,5 +240,39 @@ describe('GroupsService roster reconciliation', () => {
         data: expect.objectContaining({ deletedAt: expect.any(Date) }),
       }),
     );
+  });
+
+  it('does not count archived students in the live operational roster', async () => {
+    const { prisma, service } = buildService();
+    await service.list(owner, {
+      page: 1,
+      pageSize: 20,
+      state: 'active',
+      sort: 'name',
+      order: 'asc',
+    });
+
+    const liveEnrollment =
+      prisma.group.findMany.mock.calls[0][0].include.enrollments.where;
+    expect(liveEnrollment).toMatchObject({
+      status: { in: ['ACTIVE', 'PAUSED'] },
+      student: { deletedAt: null, status: { not: 'ARCHIVED' } },
+    });
+  });
+
+  it('refuses a legacy destructive group restore for manual repair', async () => {
+    const { prisma, service } = buildService();
+    prisma.group.findFirst.mockResolvedValue({
+      ...groupRow,
+      deletedAt: new Date('2026-08-24T10:00:00.000Z'),
+    });
+    prisma.auditLog.findMany.mockResolvedValue([{ diff: null }]);
+
+    await expectBusinessError(
+      service.restore(owner, GROUP_ID),
+      'GROUP_LEGACY_REPAIR_REQUIRED',
+      409,
+    );
+    expect(prisma.group.update).not.toHaveBeenCalled();
   });
 });
