@@ -1194,9 +1194,7 @@ describe('Stage 4: packages, credit ledger, payments (e2e)', () => {
         teacherId,
         priceMinor: 50000,
         currency: 'UAH',
-        startsAt: [
-          new Date(Date.now() - 10 * DAY_MS).toISOString(),
-        ],
+        startsAt: [new Date(Date.now() - 10 * DAY_MS).toISOString()],
         durationMin: 60,
       })
       .expect(201);
