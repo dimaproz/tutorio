@@ -5,19 +5,13 @@
  * actual `LessonCreditEntry` rows.
  */
 
-export type LessonStatus =
-  | 'SCHEDULED'
-  | 'COMPLETED'
-  | 'CANCELLED_CHARGED'
-  | 'CANCELLED_UNCHARGED';
+export type LessonStatus = 'SCHEDULED' | 'COMPLETED' | 'CANCELLED_CHARGED' | 'CANCELLED_UNCHARGED';
 
 export type CreditEntryType =
-  | 'lesson_completed'
-  | 'late_cancellation'
-  | 'teacher_cancellation_refund';
+  'lesson_completed' | 'late_cancellation' | 'teacher_cancellation_refund';
 
 export interface CreditEffectDescriptor {
-  /** Change to the lesson-credit balance, in lesson units (e.g. -1, 0, +1). */
+  /** Change to the lesson-credit balance, in lesson units (e.g. -1 or +1). */
   delta: number;
   /** The ledger entry type Stage 4 will record for this transition. */
   type: CreditEntryType;
@@ -41,15 +35,13 @@ const ALLOWED: Record<LessonStatus, readonly LessonStatus[]> = {
 };
 
 // The effect of entering a terminal status from SCHEDULED. Reverting negates it.
-const FORWARD_EFFECT: Record<
-  Exclude<LessonStatus, 'SCHEDULED'>,
-  CreditEffectDescriptor
-> = {
+const FORWARD_EFFECT: Record<Exclude<LessonStatus, 'SCHEDULED'>, CreditEffectDescriptor> = {
   // Lesson happened — one credit consumed.
   COMPLETED: { delta: -1, type: 'lesson_completed' },
   // Cancelled but charged (late/held) — the credit is still consumed.
   CANCELLED_CHARGED: { delta: -1, type: 'late_cancellation' },
-  // Cancelled without charge — paid slot kept open, no credit consumed.
+  // Kept only for legacy row decoding. New uncharged cancellations do not
+  // create a credit-ledger row; their history lives on Lesson and AuditLog.
   CANCELLED_UNCHARGED: { delta: 0, type: 'teacher_cancellation_refund' },
 };
 
@@ -65,14 +57,17 @@ export function canTransition(from: LessonStatus, to: LessonStatus): boolean {
 export function transitionEffect(
   from: LessonStatus,
   to: LessonStatus,
-): CreditEffectDescriptor {
+): CreditEffectDescriptor | null {
   if (!canTransition(from, to)) {
     throw new InvalidTransitionError(from, to);
   }
   if (to === 'SCHEDULED') {
     const undone = FORWARD_EFFECT[from as Exclude<LessonStatus, 'SCHEDULED'>];
-    // `|| 0` collapses the `-0` that negating a 0 delta would otherwise yield.
-    return { delta: -undone.delta || 0, type: undone.type };
+    if (undone.delta === 0) {
+      return null;
+    }
+    return { delta: -undone.delta, type: undone.type };
   }
-  return FORWARD_EFFECT[to as Exclude<LessonStatus, 'SCHEDULED'>];
+  const effect = FORWARD_EFFECT[to as Exclude<LessonStatus, 'SCHEDULED'>];
+  return effect.delta === 0 ? null : effect;
 }

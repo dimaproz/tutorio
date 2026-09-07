@@ -128,8 +128,9 @@ export class PackagesController {
   @Delete(':packageId')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
-    summary: 'Soft-delete a package',
-    description: 'Idempotent. The credit ledger history is retained.',
+    summary: 'Archive a package',
+    description:
+      'Idempotent. Stops owned series and future scheduled lessons; financial history is retained.',
   })
   @ApiNoContentResponse()
   remove(

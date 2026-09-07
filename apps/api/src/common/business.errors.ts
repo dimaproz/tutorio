@@ -155,6 +155,35 @@ export const invalidLessonTransition = () =>
     HttpStatus.CONFLICT,
   );
 
+export const lessonCreditMustBeReversed = (netCreditDelta: number) =>
+  new BusinessApiException(
+    'LESSON_CREDIT_MUST_BE_REVERSED',
+    'Restore this charged lesson to SCHEDULED before archiving it',
+    HttpStatus.CONFLICT,
+    { netCreditDelta },
+  );
+
+export const lessonFinancialHistoryImmutable = () =>
+  new BusinessApiException(
+    'LESSON_FINANCIAL_HISTORY_IMMUTABLE',
+    'A lesson with credit history cannot change its price or currency; update notes or use a compensating workflow instead',
+    HttpStatus.CONFLICT,
+  );
+
+export const lessonCompensationSourceMissing = () =>
+  new BusinessApiException(
+    'LESSON_COMPENSATION_SOURCE_MISSING',
+    'This lesson has no unmatched debit to compensate',
+    HttpStatus.CONFLICT,
+  );
+
+export const lessonTransitionReplayConflict = () =>
+  new BusinessApiException(
+    'LESSON_TRANSITION_REPLAY_CONFLICT',
+    'This transition was already recorded with different cancellation details',
+    HttpStatus.CONFLICT,
+  );
+
 export const packageNotFound = () =>
   new BusinessApiException(
     'PACKAGE_NOT_FOUND',
@@ -174,6 +203,13 @@ export const noActivePackage = () =>
   new BusinessApiException(
     'NO_ACTIVE_PACKAGE',
     'No active package covers this lesson',
+    HttpStatus.CONFLICT,
+  );
+
+export const packageNotEligibleForCredit = () =>
+  new BusinessApiException(
+    'PACKAGE_NOT_ELIGIBLE_FOR_CREDIT',
+    'Only an active fixed-count package that covers the lesson occurrence can fund a lesson; choose a compatible fixed-count package or record a manual correction',
     HttpStatus.CONFLICT,
   );
 

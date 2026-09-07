@@ -187,6 +187,9 @@ export const createLessonSchema = z
     enrollmentId: uuidSchema.nullable().optional(),
     studentId: uuidSchema.nullable().optional(),
     groupId: uuidSchema.nullable().optional(),
+    // Explicit selection is optional. When omitted, the first non-zero debit
+    // may select a compatible active package once and persist that choice.
+    packageId: uuidSchema.optional(),
     teacherId: uuidSchema.optional(),
     startsAt: z.array(isoDateTimeSchema).min(1).max(50),
     durationMin: durationMinSchema,

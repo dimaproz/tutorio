@@ -1,20 +1,20 @@
 # Learning Operations Aggregate
 
-Last verified: 2026-08-26.
+Last verified: 2026-08-27.
 
 This aggregate connects the roster to the calendar. Lifecycle actions must not
 silently erase historical finance or scheduling relationships.
 
 ## Group
 
-| Concern              | Contract                                                                                                                                                                                                |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Purpose              | Teaching cohort with optional default price and roster.                                                                                                                                                 |
-| Ownership            | Workspace-scoped.                                                                                                                                                                                       |
-| Relationships        | Enrollments, lessons, series, and group packages.                                                                                                                                                       |
-| Create/update        | Roster reconciliation creates or archives enrollments; price fallback is group, then student, then free. Writes are audited.                                                                            |
-| Archive              | Owner-only and idempotent. It preserves roster, all finance, audit history, completed/non-scheduled lessons, and every foreign key. It archives group series and only future `SCHEDULED` group lessons. |
-| Restore              | Owner-only and idempotent. It restores only series/lessons marked by the matching group archive timestamp, after checking every restored lesson against live teacher conflicts.                         |
+| Concern              | Contract                                                                                                                                                                                                                                                   |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Purpose              | Teaching cohort with optional default price and roster.                                                                                                                                                                                                    |
+| Ownership            | Workspace-scoped.                                                                                                                                                                                                                                          |
+| Relationships        | Enrollments, lessons, series, and group packages.                                                                                                                                                                                                          |
+| Create/update        | Roster reconciliation creates or archives enrollments; price fallback is group, then student, then free. Writes are audited.                                                                                                                               |
+| Archive              | Owner-only and idempotent. It preserves roster, all finance, audit history, completed/non-scheduled lessons, and every foreign key. It archives group series and only future `SCHEDULED` group lessons.                                                    |
+| Restore              | Owner-only and idempotent. It restores only series/lessons marked by the matching group archive timestamp, after checking every restored lesson against live teacher conflicts.                                                                            |
 | Active/paused roster | The default operational roster/counts include only `ACTIVE`/`PAUSED` enrollments whose student is not archived. Student archive preserves `groupId`, temporarily archives its enrollment, and restore returns its exact preceding `ACTIVE`/`PAUSED` state. |
 
 Acceptance scenarios: archive empty group; archive active/paused group;
@@ -55,17 +55,17 @@ detached occurrence preservation, pause/archive propagation, delete idempotency.
 
 ## Lesson
 
-| Concern       | Contract                                                                                                                                                                                         |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Purpose       | One scheduled occurrence with UTC time, teacher, target, price/currency snapshot, status, and optional charged package.                                                                          |
-| Ownership     | Workspace-scoped.                                                                                                                                                                                |
-| Relationships | Enrollment/group, teacher, optional series, exact package, and credit entries.                                                                                                                   |
-| Create/update | One-off create conflict-checks unless explicitly forced. Note/price updates, reschedule, and status transitions are separate audited commands.                                                   |
-| Status        | Commands and list filters use one effective-status definition. Time-derived display status must not contradict stored command state.                                                             |
-| Package rule  | When a lesson consumes credit, persist the exact `packageId`; compensation always returns credit to it.                                                                                          |
-| Delete        | Archive/detach only after resolving any charged credit. Completed/financial history is not removed.                                                                                              |
-| Current gaps  | Charged delete has no compensation; package fallback can change between transitions; automatic replacement usually creates nothing; effective/stored status and recurrence edit scope can drift. |
+| Concern       | Contract                                                                                                                                                                                                                                          |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Purpose       | One scheduled occurrence with UTC time, teacher, target, price/currency snapshot, status, and optional charged package.                                                                                                                           |
+| Ownership     | Workspace-scoped.                                                                                                                                                                                                                                 |
+| Relationships | Enrollment/group, teacher, optional series, exact package, and credit entries.                                                                                                                                                                    |
+| Create/update | One-off create conflict-checks unless explicitly forced. Note/price updates, reschedule, and status transitions are separate audited commands. Price/currency become immutable after a non-zero credit entry; notes and `paidAt` remain editable. |
+| Status        | Commands and list filters use one effective-status definition. Time-derived display status must not contradict stored command state.                                                                                                              |
+| Package rule  | The first non-zero debit persists the exact compatible fixed-count `packageId`; eligibility is evaluated at the occurrence time. Compensation uses that id even after the package is archived.                                                    |
+| Delete        | A lesson with non-zero net credit cannot be archived until it returns to `SCHEDULED` and appends compensation. A compensated or never-charged lesson archives/detaches idempotently.                                                              |
+| Current gaps  | Effective/stored status alignment and recurrence edit scope remain Work Packet 4.                                                                                                                                                                 |
 
 Acceptance scenarios: conflict/force parsing, every state transition, repeated
-command idempotency, charged and uncharged cancellation, restore, replacement,
-delete with credit, filters, DST, and series edit scope.
+command idempotency, charged and uncharged cancellation, restore, archive with
+credit, filters, DST, and series edit scope.

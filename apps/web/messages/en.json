@@ -99,6 +99,11 @@
     "STUDENT_HAS_BUSINESS_HISTORY": "This student has lessons or financial history and cannot be permanently deleted.",
     "STUDENT_ARCHIVED_REQUIRES_RESTORE": "Restore this student before editing their profile.",
     "GROUP_LEGACY_REPAIR_REQUIRED": "This group needs manual data repair before it can be restored.",
+    "LESSON_CREDIT_MUST_BE_REVERSED": "Restore this charged lesson before archiving it.",
+    "LESSON_FINANCIAL_HISTORY_IMMUTABLE": "A lesson with credit history cannot change its price or currency.",
+    "PACKAGE_NOT_ELIGIBLE_FOR_CREDIT": "Choose an active fixed-count package that covers this lesson.",
+    "LESSON_COMPENSATION_SOURCE_MISSING": "This lesson has no unmatched debit to compensate.",
+    "LESSON_TRANSITION_REPLAY_CONFLICT": "This transition was already recorded with different cancellation details.",
     "SOLO_MODE_SINGLE_TEACHER": "A solo workspace keeps a single teacher. Switch to school mode in settings to add more."
   },
   "validation": {
@@ -923,7 +928,7 @@
       "scopeFollowing": "This and following",
       "delete": "Delete lesson",
       "deleteTitle": "Delete this lesson?",
-      "deleteDescription": "The lesson leaves the calendar. If it came from a pattern, it will not be regenerated.",
+      "deleteDescription": "The lesson leaves the calendar. A charged lesson must be restored first so its credit is compensated. Pattern lessons will not be regenerated.",
       "deadlineLate": "{hours} h until the lesson, deadline {deadline} h — this is a late cancellation.",
       "deadlineOnTime": "{hours} h until the lesson, deadline {deadline} h — cancelling on time.",
       "deadlineStarted": "The lesson has already started — this is a late cancellation.",
@@ -1006,7 +1011,7 @@
       "uncharged": "Do not charge (free)",
       "by": "Cancelled by",
       "reason": "Reason (optional)",
-      "billingPending": "The billing choice is recorded now, but balances and refunds start working once the Finance section ships.",
+      "billingPending": "A charged cancellation consumes one lesson. An uncharged cancellation consumes none, does not change the plan price, and does not create a replacement lesson.",
       "submit": "Confirm cancellation",
       "cancel": "Back"
     },
@@ -1176,7 +1181,7 @@
     "card": {
       "remaining": "Lessons left",
       "of": "of {total}",
-      "effectiveTotal": "Adjusted for missed lessons",
+      "planTotal": "Plan total",
       "paid": "Paid",
       "purchasedAt": "Purchased {date}"
     },

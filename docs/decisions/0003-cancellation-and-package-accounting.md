@@ -1,6 +1,6 @@
 # ADR 0003: Cancellation and Package Accounting
 
-- Status: Accepted target; implementation pending
+- Status: Accepted; implemented and verified in Work Packet 3
 - Date: 2026-08-24
 
 ## Context
@@ -34,6 +34,9 @@ does not implicitly change the agreed package price.
   explicit money adjustments; lesson-credit events do not change it.
 - A lesson that consumes a package persists that `packageId`. Compensation uses
   the same package.
+- Fixed-count credit semantics apply only to `FIXED_COUNT` packages. A package
+  must be active and unexpired at the lesson occurrence for a new debit; an
+  archived or expired exact package remains eligible only for its compensation.
 - Replacement lessons are real scheduling commands. The UI must not promise an
   automatic replacement unless a new occurrence is actually created and
   conflict-checked.
@@ -52,3 +55,13 @@ matrix is implemented. Fixed-count semantics must not be reused accidentally.
 - Tests must reconcile credit balance, agreed total, received amount,
   outstanding amount, participant shares, and human-readable history after every
   transition.
+
+## Implementation note
+
+Work Packet 3 implements the non-zero transition matrix with a persisted lesson
+transition version, exact package pinning on first debit, and append-only
+compensation. A lesson with non-zero credit history locks its price/currency
+snapshot, so compensation never depends on a later PATCH. Legacy zero-delta
+entries remain readable but have no financial effect. The packet is not marked
+fully implemented until its isolated database E2E and migration-upgrade
+verification complete.

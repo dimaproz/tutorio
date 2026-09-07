@@ -47,7 +47,7 @@ export function PackageSummaryCard({ package: pkg }: { package: PackageResponse 
         <div className="flex items-end justify-between gap-3 text-xs text-muted-foreground">
           <span>{pkg.expiresAt ? format.dayMonth(pkg.expiresAt) : '—'}</span>
           <span className="tabular font-semibold text-foreground">
-            {formatMoneyDisplay(pkg.effectiveTotalMinor, pkg.currency, locale)}
+            {formatMoneyDisplay(pkg.totalPriceMinorSnapshot, pkg.currency, locale)}
           </span>
         </div>
       </CardContent>

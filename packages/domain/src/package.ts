@@ -94,17 +94,19 @@ export function expandPackageSchedule(
 }
 
 /**
- * What the package is *actually* worth today. Lessons cancelled without charge
- * never consume a credit, so the tutor sees the purchase-time snapshot struck
- * through next to this adjusted figure. The stored snapshot is never rewritten.
+ * Compatibility field for API consumers. A package's agreed total is its
+ * immutable purchase-time snapshot; lesson-credit entries never change money.
  */
 export function effectiveTotalMinor(
   totalPriceMinorSnapshot: number,
-  pricePerLessonMinorSnapshot: number,
-  unchargedCancellations: number,
+  pricePerLessonMinorSnapshot?: number,
+  unchargedCancellations?: number,
 ): number {
-  const adjusted = totalPriceMinorSnapshot - unchargedCancellations * pricePerLessonMinorSnapshot;
-  return Math.max(0, adjusted);
+  // Keep the deprecated call shape source-compatible without deriving money
+  // from credit events.
+  void pricePerLessonMinorSnapshot;
+  void unchargedCancellations;
+  return totalPriceMinorSnapshot;
 }
 
 /** Credits still available on a package. */

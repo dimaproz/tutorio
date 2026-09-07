@@ -170,6 +170,16 @@ export const createPackageSchema = z
         });
       }
     }
+    if (
+      value.expiresAt != null &&
+      new Date(value.expiresAt).getTime() <= new Date(value.purchasedAt ?? new Date()).getTime()
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'expiresAt must be after purchasedAt',
+        path: ['expiresAt'],
+      });
+    }
   });
 
 export type CreatePackageDto = z.infer<typeof createPackageSchema>;

@@ -598,7 +598,7 @@ export interface paths {
         head?: never;
         /**
          * Change a lesson status
-         * @description Enforces the lesson state machine. Cancelling requires cancelledBy. No ledger effect in Stage 3.
+         * @description Enforces the lesson state machine. Cancelling requires cancelledBy. Charged terminal states consume one package credit and restoration appends an exact compensation.
          */
         patch: operations["LessonsController_transition"];
         trace?: never;
@@ -685,8 +685,8 @@ export interface paths {
         put?: never;
         post?: never;
         /**
-         * Soft-delete a package
-         * @description Idempotent. The credit ledger history is retained.
+         * Archive a package
+         * @description Idempotent. Stops owned series and future scheduled lessons; financial history is retained.
          */
         delete: operations["PackagesController_remove"];
         options?: never;
@@ -952,7 +952,7 @@ export interface components {
              * @default ACTIVE
              * @enum {string}
              */
-            status: "ACTIVE" | "ON_HOLD" | "ARCHIVED";
+            status: "ACTIVE" | "ON_HOLD";
             /** @enum {string} */
             languageLevel: "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
             /** @enum {string} */
@@ -1596,6 +1596,8 @@ export interface components {
             studentId?: string | null;
             /** Format: uuid */
             groupId?: string | null;
+            /** Format: uuid */
+            packageId?: string;
             /** Format: uuid */
             teacherId?: string;
             startsAt: string[];

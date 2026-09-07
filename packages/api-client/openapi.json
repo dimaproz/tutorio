@@ -2565,7 +2565,7 @@
     },
     "/api/lessons/{lessonId}/status": {
       "patch": {
-        "description": "Enforces the lesson state machine. Cancelling requires cancelledBy. No ledger effect in Stage 3.",
+        "description": "Enforces the lesson state machine. Cancelling requires cancelledBy. Charged terminal states consume one package credit and restoration appends an exact compensation.",
         "operationId": "LessonsController_transition",
         "parameters": [
           {
@@ -3144,7 +3144,7 @@
         ]
       },
       "delete": {
-        "description": "Idempotent. The credit ledger history is retained.",
+        "description": "Idempotent. Stops owned series and future scheduled lessons; financial history is retained.",
         "operationId": "PackagesController_remove",
         "parameters": [
           {
@@ -3166,7 +3166,7 @@
             "bearer": []
           }
         ],
-        "summary": "Soft-delete a package",
+        "summary": "Archive a package",
         "tags": [
           "packages"
         ]
@@ -4193,8 +4193,7 @@
             "type": "string",
             "enum": [
               "ACTIVE",
-              "ON_HOLD",
-              "ARCHIVED"
+              "ON_HOLD"
             ],
             "default": "ACTIVE"
           },
@@ -6984,6 +6983,10 @@
             "type": "string",
             "format": "uuid",
             "nullable": true
+          },
+          "packageId": {
+            "type": "string",
+            "format": "uuid"
           },
           "teacherId": {
             "type": "string",

@@ -58,6 +58,46 @@ Use a local disposable database for E2E:
 pnpm --filter @tutorio/api test:e2e
 ```
 
+Before deploying the Exact Credit Compensation migration, run its legacy-data
+upgrade proof against a second empty disposable database (never the deployment
+database):
+
+```bash
+FINANCE_MIGRATION_UPGRADE_DATABASE_URL=postgresql://... pnpm --filter @tutorio/api verify:finance-migration-upgrade
+```
+
+Run this finance-history preflight on the deployment database before that
+migration. Any returned row is a manual-repair gate: preserve the append-only
+ledger, review the source evidence, and do not deploy until every conflict has
+an approved mapping. The migration only backfills a NULL lesson package when
+exactly one ledger package exists; it never guesses from a newer package.
+
+```sql
+WITH lesson_packages AS (
+  SELECT l.id AS "lessonId", l."workspaceId", l."packageId" AS "lessonPackageId",
+         ARRAY_AGG(DISTINCT e."packageId") FILTER (WHERE e."packageId" IS NOT NULL) AS "ledgerPackageIds",
+         COUNT(DISTINCT e."packageId") FILTER (WHERE e."packageId" IS NOT NULL) AS "ledgerPackageCount"
+  FROM "lessons" l
+  LEFT JOIN "lesson_credit_entries" e ON e."lessonId" = l.id
+  GROUP BY l.id, l."workspaceId", l."packageId"
+)
+SELECT *, CASE
+  WHEN "ledgerPackageCount" > 1 THEN 'MULTIPLE_LEDGER_PACKAGES'
+  WHEN "lessonPackageId" IS NOT NULL AND "ledgerPackageCount" > 0
+       AND NOT ("lessonPackageId" = ANY("ledgerPackageIds")) THEN 'LESSON_LEDGER_MISMATCH'
+  WHEN "lessonPackageId" IS NULL AND "ledgerPackageCount" <> 1
+       AND EXISTS (SELECT 1 FROM "lessons" l WHERE l.id = "lessonId"
+                   AND l.status IN ('COMPLETED', 'CANCELLED_CHARGED')) THEN 'TERMINAL_LESSON_UNRESOLVED'
+END AS conflict
+FROM lesson_packages
+WHERE "ledgerPackageCount" > 1
+   OR ("lessonPackageId" IS NOT NULL AND "ledgerPackageCount" > 0
+       AND NOT ("lessonPackageId" = ANY("ledgerPackageIds")))
+   OR ("lessonPackageId" IS NULL AND "ledgerPackageCount" <> 1
+       AND EXISTS (SELECT 1 FROM "lessons" l WHERE l.id = "lessonId"
+                   AND l.status IN ('COMPLETED', 'CANCELLED_CHARGED')));
+```
+
 Generate the contract after API changes:
 
 ```bash

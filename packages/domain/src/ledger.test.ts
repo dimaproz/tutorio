@@ -11,29 +11,55 @@ import { InvalidTransitionError } from './lesson-state';
 const LESSON = 'lesson-1';
 
 describe('planTransition', () => {
+  it('implements the ADR 0003 fixed-package transition matrix', () => {
+    expect(planTransition('SCHEDULED', 'COMPLETED', LESSON, 1).entry).toMatchObject({
+      delta: -1,
+      type: 'lesson_completed',
+    });
+    expect(planTransition('SCHEDULED', 'CANCELLED_CHARGED', LESSON, 1).entry).toMatchObject({
+      delta: -1,
+      type: 'late_cancellation',
+    });
+    expect(planTransition('SCHEDULED', 'CANCELLED_UNCHARGED', LESSON, 1).entry).toBeNull();
+    expect(planTransition('COMPLETED', 'SCHEDULED', LESSON, 2).entry).toMatchObject({
+      delta: 1,
+      type: 'lesson_completed',
+    });
+    expect(planTransition('CANCELLED_CHARGED', 'SCHEDULED', LESSON, 2).entry).toMatchObject({
+      delta: 1,
+      type: 'late_cancellation',
+    });
+    expect(planTransition('CANCELLED_UNCHARGED', 'SCHEDULED', LESSON, 2).entry).toBeNull();
+  });
+
+  it('creates distinct effects for a cancel, restore, cancel cycle', () => {
+    const entries = [
+      planTransition('SCHEDULED', 'CANCELLED_CHARGED', LESSON, 1).entry!,
+      planTransition('CANCELLED_CHARGED', 'SCHEDULED', LESSON, 2).entry!,
+      planTransition('SCHEDULED', 'CANCELLED_CHARGED', LESSON, 3).entry!,
+    ];
+    expect(entries.map((entry) => entry.delta)).toEqual([-1, 1, -1]);
+    expect(new Set(entries.map((entry) => entry.idempotencyKey)).size).toBe(3);
+  });
   it('consumes one credit when a lesson is completed', () => {
     const plan = planTransition('SCHEDULED', 'COMPLETED', LESSON);
     expect(plan.entry).toEqual({
       delta: -1,
       type: 'lesson_completed',
-      idempotencyKey: 'lesson:lesson-1:lesson_completed',
+      idempotencyKey: 'lesson:lesson-1:transition:1',
       lessonId: LESSON,
     });
-    expect(plan.rebookReplacement).toBe(false);
   });
 
   it('still consumes the credit on a charged (late) cancellation', () => {
     const plan = planTransition('SCHEDULED', 'CANCELLED_CHARGED', LESSON);
     expect(plan.entry?.delta).toBe(-1);
     expect(plan.entry?.type).toBe('late_cancellation');
-    expect(plan.rebookReplacement).toBe(false);
   });
 
-  it('keeps the paid slot and owes a replacement on an uncharged cancellation', () => {
+  it('does not create a credit effect for an uncharged cancellation', () => {
     const plan = planTransition('SCHEDULED', 'CANCELLED_UNCHARGED', LESSON);
-    expect(plan.entry?.delta).toBe(0);
-    expect(plan.entry?.type).toBe('teacher_cancellation_refund');
-    expect(plan.rebookReplacement).toBe(true);
+    expect(plan.entry).toBeNull();
   });
 
   it('writes a compensating entry when a completion is reverted', () => {
@@ -50,23 +76,23 @@ describe('planTransition', () => {
   });
 
   it('reuses the same idempotency key for a repeated transition', () => {
-    const a = planTransition('SCHEDULED', 'COMPLETED', LESSON);
-    const b = planTransition('SCHEDULED', 'COMPLETED', LESSON);
+    const a = planTransition('SCHEDULED', 'COMPLETED', LESSON, 1);
+    const b = planTransition('SCHEDULED', 'COMPLETED', LESSON, 1);
     // A double click cannot charge twice — the unique key collides on insert.
     expect(a.entry?.idempotencyKey).toBe(b.entry?.idempotencyKey);
   });
 
   it('separates a re-entry after a revert from the original entry', () => {
-    const first = planTransition('SCHEDULED', 'COMPLETED', LESSON, 0);
-    const again = planTransition('SCHEDULED', 'COMPLETED', LESSON, 2);
+    const first = planTransition('SCHEDULED', 'COMPLETED', LESSON, 1);
+    const again = planTransition('SCHEDULED', 'COMPLETED', LESSON, 3);
     expect(first.entry?.idempotencyKey).not.toBe(again.entry?.idempotencyKey);
   });
 });
 
 describe('lessonEntryKey', () => {
   it('is stable and namespaced per lesson and type', () => {
-    expect(lessonEntryKey('l1', 'lesson_completed')).toBe('lesson:l1:lesson_completed');
-    expect(lessonEntryKey('l1', 'late_cancellation')).toBe('lesson:l1:late_cancellation');
+    expect(lessonEntryKey('l1', 1)).toBe('lesson:l1:transition:1');
+    expect(lessonEntryKey('l1', 3)).toBe('lesson:l1:transition:3');
   });
 });
 
@@ -80,6 +106,26 @@ describe('creditBalance', () => {
     ];
     expect(creditBalance(entries)).toBe(6);
     expect(consumedCredits(entries)).toBe(2);
+  });
+
+  it('reports net current usage rather than gross debit history', () => {
+    expect(consumedCredits([{ delta: -1, type: 'lesson_completed' }])).toBe(1);
+    expect(
+      consumedCredits([
+        { delta: -1, type: 'lesson_completed' },
+        { delta: 1, type: 'lesson_completed' },
+      ]),
+    ).toBe(0);
+    expect(
+      consumedCredits([
+        { delta: -1, type: 'late_cancellation' },
+        { delta: 1, type: 'late_cancellation' },
+        { delta: -1, type: 'lesson_completed' },
+        { delta: 0, type: 'teacher_cancellation_refund' },
+        { delta: 8, type: 'purchase' },
+        { delta: -2, type: 'manual_adjustment' },
+      ]),
+    ).toBe(1);
   });
 
   it('treats an empty ledger as a zero balance', () => {
@@ -103,9 +149,8 @@ describe('canonical scenarios', () => {
     expect(creditBalance(entries)).toBe(-1);
   });
 
-  it('a teacher cancellation costs the student nothing and books a replacement', () => {
+  it('a teacher cancellation costs the student nothing without a replacement side effect', () => {
     const plan = planTransition('SCHEDULED', 'CANCELLED_UNCHARGED', 'l9');
-    expect(plan.entry?.delta).toBe(0);
-    expect(plan.rebookReplacement).toBe(true);
+    expect(plan.entry).toBeNull();
   });
 });

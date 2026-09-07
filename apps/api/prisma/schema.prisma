@@ -407,8 +407,8 @@ model Teacher {
 
 // A recurring lesson pattern stored in local time (weekday + wall-clock time +
 // tz); concrete Lessons are materialized to UTC over a rolling horizon by the
-// cron job. Exactly one of enrollmentId / groupId is set. packageId is null and
-// unused until Stage 4 (packages own the series).
+// cron job. Exactly one of enrollmentId / groupId is set. packageId identifies
+// the purchase snapshot that owns the generated lessons.
 model LessonSeries {
   id                       String    @id @default(uuid())
   workspaceId              String
@@ -447,8 +447,8 @@ model LessonSeries {
 
 // A concrete lesson at a UTC instant. Generated from a LessonSeries or created
 // as a one-off (seriesId null). isDetached marks a series lesson that was
-// rescheduled/cancelled individually and must not be regenerated. No financial
-// data beyond the status machine — the credit ledger is Stage 4.
+// rescheduled/cancelled individually and must not be regenerated. packageId is
+// immutable once a credit effect pins the lesson to a purchase snapshot.
 model Lesson {
   id               String       @id @default(uuid())
   workspaceId      String
@@ -462,6 +462,9 @@ model Lesson {
   priceMinor       Int
   currency         String
   status           LessonStatus @default(SCHEDULED)
+  // Incremented by each status transition. Combined with a conditional update,
+  // this is the durable identity of a financial transition.
+  statusVersion    Int          @default(0)
   isDetached       Boolean      @default(false)
   // Reschedule history, kept as counters because no LessonStatus expresses
   // "moved": a rescheduled lesson stays SCHEDULED, and isDetached is also set
@@ -561,9 +564,8 @@ enum PaymentStatus {
 }
 
 // A block of prepaid lessons for one student or one whole group (exactly one
-// target). `totalPriceMinorSnapshot` is the immutable purchase-time value; the
-// *effective* total (adjusted for uncharged cancellations) is derived at read
-// time from the credit ledger and is deliberately not stored.
+// target). `totalPriceMinorSnapshot` is the immutable purchase-time value. It
+// is never changed by lesson-credit history.
 model LessonPackage {
   id                          String               @id @default(uuid())
   workspaceId                 String

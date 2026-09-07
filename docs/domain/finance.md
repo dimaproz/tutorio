@@ -1,6 +1,6 @@
 # Finance Aggregate
 
-Last verified: 2026-08-24.
+Last verified: 2026-08-27 (root static/unit/build checks, isolated PostgreSQL 17 E2E, and finance migration-upgrade verification).
 
 The finance aggregate uses two separate histories:
 
@@ -12,31 +12,45 @@ Cancellation semantics are defined by
 
 ## LessonPackage
 
-| Concern       | Contract                                                                                                                                                                                            |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Purpose       | Immutable purchase snapshot for exactly one student or group.                                                                                                                                       |
-| Ownership     | Workspace-scoped; target XOR is enforced by validation and database constraints.                                                                                                                    |
-| Relationships | Target, optional enrollment context, credit entries, payments, participant shares, package-owned series and lessons.                                                                                |
-| Create        | Grant opening entitlement atomically. Scheduling and payment are separate user jobs in the target UX, even if orchestration remains transactional internally.                                       |
-| Edit/version  | No arbitrary mutation of agreed commercial history. A material plan change creates an explicit adjustment or replacement plan.                                                                      |
-| Archive       | Prevent new charges and stop/resolve package-owned recurrence while preserving history. Restore is not currently supported.                                                                         |
-| Current gaps  | Delete only sets `deletedAt` and leaves series/future lessons; individual target selection can silently choose one of multiple enrollments; group teacher/currency assumptions are under-validated. |
+| Concern       | Contract                                                                                                                                                                    |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Purpose       | Immutable purchase snapshot for exactly one student or group.                                                                                                               |
+| Ownership     | Workspace-scoped; target XOR is enforced by validation and database constraints.                                                                                            |
+| Relationships | Target, optional enrollment context, credit entries, payments, participant shares, package-owned series and lessons.                                                        |
+| Create        | Grant opening entitlement atomically. Scheduling and payment are separate user jobs in the target UX, even if orchestration remains transactional internally.               |
+| Edit/version  | No arbitrary mutation of agreed commercial history. A material plan change creates an explicit adjustment or replacement plan.                                              |
+| Archive       | Prevents new debits, archives owned series and future scheduled package lessons, and preserves credits, payments, shares, and historical lessons. Restore is not supported. |
+| Current gaps  | Period-plan entitlement and cancellation semantics remain out of scope for the first pilot; period packages cannot fund fixed-count lesson credits.                         |
 
 Acceptance scenarios: individual/group XOR, entitlement grant, target ownership,
 currency consistency, archive with series, expired/depleted states, idempotency.
 
 ## LessonCreditEntry
 
-| Concern      | Contract                                                                                                                                                                      |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Purpose      | Append-only explanation of lesson entitlement changes.                                                                                                                        |
-| Ownership    | Workspace and package-scoped; optional lesson, enrollment, and actor references.                                                                                              |
-| Lifecycle    | Insert only. Corrections are compensating rows with unique idempotency keys; never update/delete.                                                                             |
-| Invariants   | Units are integers; one semantic transition produces at most one effective delta; a compensation references the same package and lesson context.                              |
-| Current gaps | Package can be resolved as the newest eligible package on each transition; repeated zero-delta cancellations create multiple entries and distort monetary/share calculations. |
+| Concern      | Contract                                                                                                                                                                                                                                                                                      |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Purpose      | Append-only explanation of lesson entitlement changes.                                                                                                                                                                                                                                        |
+| Ownership    | Workspace and package-scoped; optional lesson, enrollment, and actor references.                                                                                                                                                                                                              |
+| Lifecycle    | Insert only. Corrections are compensating rows with unique idempotency keys; never update/delete.                                                                                                                                                                                             |
+| Invariants   | Units are integers; one semantic transition produces at most one non-zero delta; a compensation references the same persisted package and lesson context. Current consumption is the net of lesson debits and compensations; purchases/manual adjustments do not represent completed lessons. |
+| Current gaps | Legacy lessons with conflicting package history require manual repair; automatic package inference is deliberately forbidden for compensation.                                                                                                                                                |
 
 Acceptance: reconcile balance from history after every transition and prove
 repeat commands do not change balance or create meaningless ledger rows.
+
+## Eligibility and legacy repair
+
+Only active `FIXED_COUNT` packages may fund a new lesson debit. Explicit and
+automatic selection validates the package target, currency, archive state, and
+`expiresAt` against the occurrence's `startsAtUtc`, not request time. An archived
+package is allowed only for an exact compensation of its own recorded debit.
+Once a lesson has a non-zero credit entry, its price/currency snapshot is
+immutable; notes and the established per-lesson `paidAt` field remain editable.
+
+The finance migration backfills a NULL `Lesson.packageId` only when one distinct
+ledger package exists. Multiple ledger packages, an existing mismatch, or a
+terminal charged lesson without exactly one ledger package require reviewed
+manual repair; the mandatory deploy query is in `deploy.md`.
 
 ## PackageParticipantShare
 
@@ -46,7 +60,7 @@ repeat commands do not change balance or create meaningless ledger rows.
 | Ownership     | Workspace/package-scoped through the package; unique `(packageId, enrollmentId)`.                                                  |
 | Create/update | Created from an explicit preview and allocation rule. Settled payments increment the matching share. No independent CRUD.          |
 | Lifecycle     | Historical snapshot; roster changes do not silently rewrite past debt. Corrections require an explicit reallocation/refund design. |
-| Current gaps  | No refund/correction path, and zero-delta cancellation events can reduce shares repeatedly.                                        |
+| Current gaps  | No refund/correction path. Zero-delta credit entries are ignored because shares are immutable purchase-time snapshots.             |
 
 Acceptance scenarios: deterministic rounding, membership snapshot, partial/full
 payment, overpayment rejection, cancellation, and preserved history on archive.

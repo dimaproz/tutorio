@@ -14,6 +14,9 @@ import { AuditService } from '../audit/audit.service';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import {
   invalidLessonTransition,
+  lessonFinancialHistoryImmutable,
+  lessonTransitionReplayConflict,
+  lessonCreditMustBeReversed,
   lessonNotFound,
   scheduleConflict,
 } from '../common/business.errors';
@@ -37,6 +40,27 @@ export class LessonsService {
     private readonly materializer: MaterializerService,
     private readonly ledger: LedgerService,
   ) {}
+
+  private assertCompatibleTransitionReplay(
+    lesson: {
+      status: string;
+      cancelledBy: string | null;
+      cancelledReason: string | null;
+    },
+    dto: TransitionLessonDto,
+  ): void {
+    const isCancellation =
+      dto.targetStatus === 'CANCELLED_CHARGED' ||
+      dto.targetStatus === 'CANCELLED_UNCHARGED';
+    const normalizedReason = dto.cancelledReason?.trim() || null;
+    if (
+      isCancellation &&
+      (lesson.cancelledBy !== dto.cancelledBy ||
+        lesson.cancelledReason !== normalizedReason)
+    ) {
+      throw lessonTransitionReplayConflict();
+    }
+  }
 
   /** Calendar feed: every non-deleted lesson inside the requested time window. */
   async list(
@@ -150,6 +174,20 @@ export class LessonsService {
 
       const created: string[] = [];
       for (const startsAtUtc of starts) {
+        if (dto.packageId) {
+          await this.ledger.assertCompatiblePackage(
+            tx,
+            auth.workspaceId,
+            {
+              packageId: dto.packageId,
+              enrollmentId,
+              groupId,
+              currency,
+              occursAt: startsAtUtc,
+            },
+            false,
+          );
+        }
         const lesson = await tx.lesson.create({
           data: {
             workspaceId: auth.workspaceId,
@@ -160,11 +198,8 @@ export class LessonsService {
             durationMin: dto.durationMin,
             priceMinor,
             currency,
-            status: dto.status,
-            completedAt: dto.status === 'COMPLETED' ? now : null,
-            cancelledBy: isCancel ? (dto.cancelledBy ?? null) : null,
-            cancelledReason: isCancel ? (dto.cancelledReason ?? null) : null,
-            cancelledAt: isCancel ? now : null,
+            packageId: dto.packageId ?? null,
+            status: 'SCHEDULED',
             paidAt: dto.paidAt ? new Date(dto.paidAt) : null,
             notes: dto.notes ?? null,
           },
@@ -180,11 +215,25 @@ export class LessonsService {
               packageId: lesson.packageId,
               enrollmentId,
               groupId,
+              currency,
+              startsAtUtc,
               // The ledger diffs against where the lesson came from, and every
               // lesson is born SCHEDULED.
               status: 'SCHEDULED',
             },
             targetStatus: dto.status,
+            transitionVersion: 1,
+          });
+          await tx.lesson.update({
+            where: { id: lesson.id },
+            data: {
+              status: dto.status,
+              statusVersion: 1,
+              completedAt: dto.status === 'COMPLETED' ? now : null,
+              cancelledBy: isCancel ? (dto.cancelledBy ?? null) : null,
+              cancelledReason: isCancel ? (dto.cancelledReason ?? null) : null,
+              cancelledAt: isCancel ? now : null,
+            },
           });
         }
         await this.audit.record(tx, {
@@ -236,6 +285,31 @@ export class LessonsService {
         throw lessonNotFound();
       }
       // PATCH semantics: an omitted field is unchanged; `notes: null` clears it.
+      const changesFinancialSnapshot =
+        dto.priceMinor != null &&
+        dto.currency != null &&
+        (dto.priceMinor !== lesson.priceMinor ||
+          dto.currency !== lesson.currency);
+      if (changesFinancialSnapshot) {
+        const creditHistory = await tx.lessonCreditEntry.count({
+          where: { lessonId: lesson.id, delta: { not: 0 } },
+        });
+        if (creditHistory > 0) throw lessonFinancialHistoryImmutable();
+        if (lesson.packageId) {
+          await this.ledger.assertCompatiblePackage(
+            tx,
+            auth.workspaceId,
+            {
+              packageId: lesson.packageId,
+              enrollmentId: lesson.enrollmentId,
+              groupId: lesson.groupId,
+              currency: dto.currency!,
+              occursAt: lesson.startsAtUtc,
+            },
+            false,
+          );
+        }
+      }
       const data: Prisma.LessonUpdateInput = {
         ...('notes' in dto ? { notes: dto.notes ?? null } : {}),
         ...(dto.priceMinor != null && dto.currency != null
@@ -276,10 +350,21 @@ export class LessonsService {
     await this.prisma.$transaction(async (tx) => {
       const lesson = await tx.lesson.findFirst({
         where: { id: lessonId, workspaceId: auth.workspaceId, deletedAt: null },
-        select: { id: true, seriesId: true },
+        select: {
+          id: true,
+          seriesId: true,
+          creditEntries: { select: { delta: true } },
+        },
       });
       if (!lesson) {
         return; // Idempotent: deleting an already-deleted lesson is a no-op.
+      }
+      const netCreditDelta = lesson.creditEntries.reduce(
+        (sum, entry) => sum + entry.delta,
+        0,
+      );
+      if (netCreditDelta !== 0) {
+        throw lessonCreditMustBeReversed(netCreditDelta);
       }
       await tx.lesson.update({
         where: { id: lesson.id },
@@ -402,10 +487,7 @@ export class LessonsService {
     return toLessonResponse(row);
   }
 
-  /**
-   * Applies a lesson status transition. Stage 3 enforces the state machine and
-   * records cancellation metadata only — the credit ledger is Stage 4.
-   */
+  /** Applies an atomic, versioned status transition and its credit effect. */
   async transition(
     auth: AuthenticatedUser,
     lessonId: string,
@@ -419,6 +501,10 @@ export class LessonsService {
       if (!lesson) {
         throw lessonNotFound();
       }
+      if (lesson.status === dto.targetStatus) {
+        this.assertCompatibleTransitionReplay(lesson, dto);
+        return lesson;
+      }
       if (!canTransition(lesson.status, dto.targetStatus)) {
         throw invalidLessonTransition();
       }
@@ -429,22 +515,41 @@ export class LessonsService {
         dto.targetStatus === 'CANCELLED_UNCHARGED';
       const data: Prisma.LessonUpdateInput = {
         status: dto.targetStatus,
+        statusVersion: { increment: 1 },
         cancelledBy: isCancel ? dto.cancelledBy : null,
         cancelledReason: isCancel ? (dto.cancelledReason ?? null) : null,
         cancelledAt: isCancel ? now : null,
         completedAt: dto.targetStatus === 'COMPLETED' ? now : null,
       };
 
-      const updated = await tx.lesson.update({
-        where: { id: lesson.id },
+      const updated = await tx.lesson.updateMany({
+        where: {
+          id: lesson.id,
+          status: lesson.status,
+          statusVersion: lesson.statusVersion,
+        },
         data,
-        include: lessonInclude,
       });
+      if (updated.count !== 1) {
+        const current = await tx.lesson.findFirst({
+          where: {
+            id: lesson.id,
+            workspaceId: auth.workspaceId,
+            deletedAt: null,
+          },
+          include: lessonInclude,
+        });
+        if (current?.status === dto.targetStatus) {
+          this.assertCompatibleTransitionReplay(current, dto);
+          return current;
+        }
+        throw invalidLessonTransition();
+      }
 
       // Stage 4: the transition now moves the credit balance. Idempotent, so a
       // repeated click cannot charge twice; a lesson with no package behind it
       // simply has no ledger effect.
-      const effect = await this.ledger.applyTransition(tx, {
+      await this.ledger.applyTransition(tx, {
         workspaceId: auth.workspaceId,
         actorId: auth.userId,
         lesson: {
@@ -452,26 +557,13 @@ export class LessonsService {
           packageId: lesson.packageId,
           enrollmentId: lesson.enrollmentId,
           groupId: lesson.groupId,
+          currency: lesson.currency,
+          startsAtUtc: lesson.startsAtUtc,
           status: lesson.status,
         },
         targetStatus: dto.targetStatus,
+        transitionVersion: lesson.statusVersion + 1,
       });
-
-      // Cancelling without charge keeps the paid slot alive: the student is
-      // owed a replacement lesson from the same pattern.
-      if (effect.rebookReplacement && lesson.seriesId) {
-        const series = await tx.lessonSeries.findUnique({
-          where: { id: lesson.seriesId },
-        });
-        if (series) {
-          await this.materializer.materializeSeries(
-            tx,
-            series,
-            this.materializer.horizonUntil(),
-            new Date(),
-          );
-        }
-      }
 
       await this.audit.record(tx, {
         workspaceId: auth.workspaceId,
@@ -492,7 +584,10 @@ export class LessonsService {
           },
         ),
       });
-      return updated;
+      return tx.lesson.findUniqueOrThrow({
+        where: { id: lesson.id },
+        include: lessonInclude,
+      });
     });
 
     return toLessonResponse(row);

@@ -135,7 +135,8 @@ export class LessonsController {
     summary: 'Change a lesson status',
     description:
       'Enforces the lesson state machine. Cancelling requires cancelledBy. ' +
-      'No ledger effect in Stage 3.',
+      'Charged terminal states consume one package credit and restoration ' +
+      'appends an exact compensation.',
   })
   @ApiOkResponse({ type: LessonDto })
   @ApiNotFoundResponse({ type: ApiErrorDto })

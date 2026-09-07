@@ -63,7 +63,7 @@ function PackageCard({ item }: { item: PackageResponse }) {
 
           <div className="flex items-baseline justify-between gap-2 text-sm">
             <span className="tabular font-medium">
-              {formatMoneyDisplay(item.effectiveTotalMinor, item.currency, locale)}
+              {formatMoneyDisplay(item.totalPriceMinorSnapshot, item.currency, locale)}
             </span>
             <span className="text-muted-foreground tabular">
               {t('paid')}: {formatMoneyDisplay(item.paidMinor, item.currency, locale)}

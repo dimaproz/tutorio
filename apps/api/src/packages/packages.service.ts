@@ -101,7 +101,7 @@ export class PackagesService {
     packageId: string,
   ): Promise<PackageResponse> {
     const row = await this.prisma.lessonPackage.findFirst({
-      where: { id: packageId, workspaceId: auth.workspaceId, deletedAt: null },
+      where: { id: packageId, workspaceId: auth.workspaceId },
       include: packageInclude,
     });
     if (!row) {
@@ -565,7 +565,11 @@ export class PackagesService {
     return toPackageResponse(row);
   }
 
-  /** Soft delete. The ledger history is never removed. */
+  /**
+   * Archives a package without touching financial history. Operational work
+   * owned by it stops, while a later compensation can still target its pinned
+   * historical package id.
+   */
   async remove(auth: AuthenticatedUser, packageId: string): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
       const pkg = await tx.lessonPackage.findFirst({
@@ -579,9 +583,28 @@ export class PackagesService {
       if (!pkg) {
         return; // Idempotent: deleting an already-deleted package is a no-op.
       }
+      const archivedAt = new Date();
+      const archivedSeries = await tx.lessonSeries.updateMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          packageId: pkg.id,
+          deletedAt: null,
+        },
+        data: { deletedAt: archivedAt },
+      });
+      const archivedLessons = await tx.lesson.updateMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          packageId: pkg.id,
+          deletedAt: null,
+          status: 'SCHEDULED',
+          startsAtUtc: { gte: archivedAt },
+        },
+        data: { deletedAt: archivedAt, isDetached: true },
+      });
       await tx.lessonPackage.update({
         where: { id: pkg.id },
-        data: { deletedAt: new Date() },
+        data: { deletedAt: archivedAt },
       });
       await this.audit.record(tx, {
         workspaceId: auth.workspaceId,
@@ -589,6 +612,14 @@ export class PackagesService {
         action: 'DELETE',
         entity: 'LESSON_PACKAGE',
         entityId: pkg.id,
+        changes: this.audit.buildChanges(
+          {},
+          {
+            archivedSeries: archivedSeries.count,
+            archivedFutureScheduledLessons: archivedLessons.count,
+            retained: ['credits', 'payments', 'participantShares', 'history'],
+          },
+        ),
       });
     });
   }

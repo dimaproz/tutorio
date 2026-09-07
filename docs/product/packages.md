@@ -132,13 +132,15 @@ plans needing attention.
 
 ## Lifecycle and cancellation contract
 
-- Archive prevents new charges and resolves package-owned recurring work; it
-  preserves credit, payment, share, lesson, and audit history.
+- Archive prevents new charges, stops package-owned series, and archives only
+  future scheduled package lessons; it preserves credit, payment, share, lesson,
+  and audit history.
 - A charged lesson always references the exact package it consumed.
 - Cancellation follows ADR 0003: free/teacher cancellation retains credit but
   does not reduce plan total; a monetary discount is explicit.
-- Replacement is an explicit scheduling action and succeeds only after conflict
-  validation.
+- Cancellation never creates a replacement lesson automatically. A tutor may
+  explicitly schedule or reschedule a real replacement through the normal,
+  conflict-checked scheduling flow.
 - Corrections and refunds are append-only, reasoned events; plan/payment history
   is not edited away.
 
