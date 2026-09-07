@@ -1,7 +1,7 @@
 # Tutorio Current State
 
-Last verified: 2026-08-26 on `develop` at `a553f05`, with the uncommitted Work
-Packet 2.1 lifecycle-closure implementation verified locally.
+Last verified: 2026-09-07 against Work Packet 3 implementation commit
+`61fbfbd`.
 
 This is the first project document to read before planning or implementing
 work. It reports the repository as it exists; [`mvp-plan.md`](./mvp-plan.md)
@@ -15,13 +15,15 @@ yet. The correct next move is not another design-wide refactor or a new product
 module. The next move is a bounded stabilization release that makes four core
 workflows correct, understandable, tested, and recoverable.
 
-- Branch: `develop`; baseline lifecycle implementation is committed as `a553f05`.
+- Branch: `develop`; Work Packet 3 implementation is committed as `61fbfbd`.
 - The former `refactor/students-design` work was merged by PR #18.
-- `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build` pass for Work
-  Packet 2.1 on 2026-08-26. Observed unit totals: domain 89, validation 46,
-  API 109, and web 109.
-- API E2E passes 61 tests in 5 suites against an isolated PostgreSQL 17
-  container after all 18 migrations, including the lifecycle-closure migration.
+- `pnpm generate`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build`
+  pass on 2026-09-07. Observed unit totals: domain 92, validation 46, API 109, and
+  web 109.
+- API E2E passes 70 tests in 5 suites against an isolated PostgreSQL 17
+  database after all 19 migrations, including group compensation cycles and
+  package archival. The finance migration verifier passes against a separate
+  clean PostgreSQL 17 database.
 - Unit coverage is uneven: core scheduling and package orchestration still have
   important untested branches. Passing totals are not a pilot-readiness signal.
 
@@ -42,8 +44,9 @@ Next.js, shared validation, and pure domain package boundaries are sound.
 
 ## Active milestone: Pilot Core Stabilization
 
-Stage 4.1 is active. Its goal is to make existing workflows safe and obvious,
-not to add surface area. The required order is:
+Stage 4.1 is active, with Work Packet 4 — Recurrence and Pause Correctness as
+the current implementation packet. Its goal is to make existing workflows safe
+and obvious, not to add surface area. The required order is:
 
 1. Lock lifecycle and accounting decisions in ADRs and tests.
 2. Fix P0 data-integrity defects in group deletion/restoration, payment
@@ -57,11 +60,11 @@ not to add surface area. The required order is:
 
 ### Work Packet 1 evidence
 
-The package/payment integrity boundary is implemented and verified in the
-uncommitted tree: an explicit runtime DTO parses `force`, payments validate the
-package participant relationship and required currency, package payments reject
-overpayment, and idempotency keys replay the original payment without adding a
-second event. The OpenAPI schema and generated client were refreshed. Evidence:
+The package/payment integrity boundary is implemented at `ec5e650`: an explicit
+runtime DTO parses `force`, payments validate the package participant
+relationship and required currency, package payments reject overpayment, and
+idempotency keys replay the original payment without adding a second event. The
+OpenAPI schema and generated client were refreshed. Evidence:
 `packages/validation/src/packages.test.ts`,
 `packages/domain/src/package.test.ts`,
 `apps/api/src/packages/payments.service.spec.ts`, and
@@ -87,21 +90,29 @@ group deletes return a typed manual-repair refusal. Evidence:
 `apps/api/scripts/verify-lifecycle-migration-upgrade.ts` (pre-migration legacy
 data → migration → restore verification).
 
+### Work Packet 3 evidence
+
+Exact credit compensation is implemented at `61fbfbd`. Every non-zero lesson
+effect has a versioned transition identity and is pinned to its exact package;
+restoration requires an unmatched debit with the same lesson, package, and
+entry type. First-debit eligibility is limited to active fixed-count packages
+covering the lesson occurrence, while exact legacy `BY_PERIOD` compensation is
+allowed without enabling new period-package debits. Charged lesson snapshots
+are immutable, package archive stops owned series and future scheduled work,
+and financial/share history remains append-only and queryable.
+
+Evidence: `packages/domain/src/{lesson-state,ledger,package}.test.ts`,
+`apps/api/test/packages.e2e-spec.ts` (70/70 full API E2E), and
+`apps/api/scripts/verify-finance-migration-upgrade.ts` against a separate
+PostgreSQL 17 database. The verifier covers migrated fixed and `BY_PERIOD`
+history, conflicts, missing/mismatched/already-balanced sources, idempotency,
+audit metadata, and transaction rollback.
+
 ## Release blockers
-
-### P0 — data integrity and financial correctness
-
-- A lesson without a persisted `packageId` can resolve a different package on a
-  later status transition, so a compensating credit may affect the wrong package.
-- Deleting a charged lesson or a package can leave scheduling and financial
-  history inconsistent. Package deletion does not reliably stop owned series.
 
 ### P1 — scheduling correctness and product truthfulness
 
-- Cancel-unpaid, restore, and repeat can create multiple zero-delta credit
-  events; group share calculations can count them as repeated discounts.
-- The current “automatic replacement” action usually re-runs materialization
-  without creating a real replacement lesson.
+- Automatic replacement materialization has been removed from cancellation.
 - Pausing or archiving an enrollment does not consistently remove or suspend
   future generated lessons; group series may continue when all participants are
   paused.
@@ -152,6 +163,5 @@ data → migration → restore verification).
 
 ## Next checkpoint
 
-The next implementation packet is Work Packet 3 — Exact Credit Compensation.
-The lifecycle closure is complete, but Phase 1 remains open until its financial
-and scheduling integrity blockers are resolved.
+Work Packet 4 — Recurrence and Pause Correctness is the next implementation
+packet.

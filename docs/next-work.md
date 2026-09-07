@@ -1,6 +1,6 @@
 # Active Work Queue
 
-Last verified: 2026-08-26.
+Last verified: 2026-09-07.
 
 This is the short-lived execution queue for Stage 4.1. It answers “what should I
 work on next?” without requiring a developer to re-derive priorities from the
@@ -92,7 +92,7 @@ Suggested PR intent: `fix(api): enforce package payment integrity`.
   `GROUP_LEGACY_REPAIR_REQUIRED`; the deploy runbook supplies the audit query
   and prohibits inferred relationship reconstruction.
 
-## Work Packet 3 — Exact Credit Compensation
+## Work Packet 3 — Exact Credit Compensation (implemented)
 
 - Persist the package charged by every package-funded lesson.
 - Implement ADR 0003 cancellation/restore deltas and idempotency.
@@ -100,7 +100,25 @@ Suggested PR intent: `fix(api): enforce package payment integrity`.
 - Make charged lesson/package archive block or compensate safely.
 - Replace misleading auto-rebook with an explicit scheduling command or remove it.
 
-## Work Packet 4 — Recurrence and Pause Correctness
+### Actual result — 2026-09-07
+
+- Implemented the ADR 0003 non-zero transition matrix, versioned transition
+  identity, exact first-debit package pinning, compensation to archived original
+  packages, archive safety, legacy backfill migration, contract generation, and
+  localized user messages.
+- The corrective closure adds financial-snapshot immutability, fixed-count-only
+  occurrence-time package eligibility, net current consumption, and a mandatory
+  legacy-conflict preflight.
+- Application-level migration verification proves fixed-count and legacy
+  `BY_PERIOD` exact compensation, rejects missing, mismatched, wrong-type, and
+  already-balanced sources without partial mutation, and verifies audit and
+  replay behavior.
+- Isolated PostgreSQL 17 evidence passes: 70/70 API E2E across 5 suites after
+  all 19 migrations, plus the finance upgrade verifier on a separate database.
+  Group cancel/restore/cancel and package archive scenarios preserve immutable
+  shares, money, ledger, and historical lessons. Implementation: `61fbfbd`.
+
+## Work Packet 4 — Recurrence and Pause Correctness (active)
 
 - Stop materialization for paused/archived/deleted enrollment targets.
 - Handle group series with no active participants.
