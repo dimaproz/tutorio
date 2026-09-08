@@ -43,7 +43,11 @@ detected and refused for manual repair rather than misrepresented as safe
 archive records. Work Packet 3 is complete at `61fbfbd`, including immutable
 financial snapshots, fixed-count occurrence-time eligibility, exact legacy
 compensation, net consumption, package archive safety, and legacy-conflict
-detection. Work Packet 4 — Recurrence and Pause Correctness is active.
+detection. Work Packet 4 — Recurrence and Pause Correctness is complete:
+token-correlated suspension/restoration, active group-roster eligibility,
+serialized conflict-safe materialization, future-rule edit boundaries, and
+stored-status filtering are verified at implementation `76463d9`. Work Packet 5
+— Pilot Authorization is active.
 
 **Gate:** all P0/P1 core integrity scenarios pass at domain, service, and
 end-to-end levels; migrations are reversible or have an approved rollback plan.

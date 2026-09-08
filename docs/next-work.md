@@ -118,7 +118,7 @@ Suggested PR intent: `fix(api): enforce package payment integrity`.
   Group cancel/restore/cancel and package archive scenarios preserve immutable
   shares, money, ledger, and historical lessons. Implementation: `61fbfbd`.
 
-## Work Packet 4 — Recurrence and Pause Correctness (active)
+## Work Packet 4 — Recurrence and Pause Correctness (implemented)
 
 - Stop materialization for paused/archived/deleted enrollment targets.
 - Handle group series with no active participants.
@@ -126,7 +126,18 @@ Suggested PR intent: `fix(api): enforce package payment integrity`.
 - Correct one/this-and-following/whole-series weekday and DST behavior.
 - Align stored/effective status filters and labels.
 
-## Work Packet 5 — Pilot Authorization
+### Actual result — 2026-09-08
+
+- Added dedicated suspension tokens for precise pause/archive/delete and
+  roster-empty restoration, without reusing `deletedAt`.
+- Enforced active-target eligibility, advisory-lock serialization, conflict
+  validation, canonical post-lock reads, idempotent materialization,
+  future-rule boundaries, DST-safe local scheduling, and stored-status
+  filtering. Reversible suspension and permanent archive precedence are covered.
+- Added isolated PostgreSQL 17 E2E and migration-upgrade evidence.
+  Implementation: `76463d9`.
+
+## Work Packet 5 — Pilot Authorization (active)
 
 - Enforce owner-only business mutations for the pilot.
 - Deny or disable unsupported teacher-member access.

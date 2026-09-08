@@ -1,8 +1,8 @@
 # ADR 0002: Record Lifecycle and Deletion
 
-- Status: Accepted; implemented for Student and Group archive/restore in Work Packets 2 and 2.1
+- Status: Accepted; implemented for Student, Group, and Enrollment lifecycle in Work Packets 2–4
 - Date: 2026-08-24
-- Last verified: 2026-08-26
+- Last verified: 2026-09-08
 
 ## Context
 
@@ -69,6 +69,6 @@ truthful promise until one lifecycle policy applies across aggregates.
   restore, and privacy deletion.
 - Destructive confirmation dialogs must show affected future work and retained
   history, not generic warnings.
-- Work Packet 4 owns the remaining group recurrence policy when no active
-  participants remain; this lifecycle implementation does not suspend a group
-  series merely because one student is archived.
+- A group series with no active, non-archived participants token-suspends only
+  future scheduled work. The first active participant restores only rows marked
+  by that roster-empty transition after conflict validation.

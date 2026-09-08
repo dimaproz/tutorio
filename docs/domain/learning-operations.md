@@ -21,8 +21,10 @@ Acceptance scenarios: archive empty group; archive active/paused group;
 preserve completed lessons and finance; restore roster; repeated archive/restore;
 cross-workspace and non-owner denial.
 
-The policy for a group recurring series when every participant is paused or
-archived remains deliberately deferred to Work Packet 4.
+A group recurring series materializes only while it has at least one active,
+non-archived participant. The roster-empty transition token-suspends future
+scheduled work; the first active participant restores only that marked work
+after checking teacher conflicts.
 
 ## Enrollment
 
@@ -33,22 +35,22 @@ archived remains deliberately deferred to Work Packet 4.
 | Relationships         | Student, teacher, optional group; lessons, series, payments, package shares, and credit entries.                                                               |
 | Create/update         | Relationship identity is immutable after create; status, billing, price, and deadline are editable. Partial unique indexes prevent equivalent live duplicates. |
 | Lifecycle             | `ACTIVE`, `PAUSED`, `ARCHIVED`; technical soft delete/restore is separate and restore rechecks uniqueness.                                                     |
-| Required side effects | Pause/archive/delete prevents new materialization and requires an explicit policy for already-generated future lessons. Resume must not create duplicates.     |
-| Current gap           | Future lessons remain; soft-deleted active enrollments can still be considered by materialization; group series continue when all members are paused.          |
+| Required side effects | Pause/archive/delete token-suspends only future `SCHEDULED` individual work. Resume/restore rechecks conflicts and restores only rows marked by that action.   |
+| Current gap           | No known Work Packet 4 lifecycle gap.                                                                                                                          |
 
 Acceptance scenarios: individual/group uniqueness, pause/resume, future-lesson
 treatment, duplicate-safe restore, and package/payment history preservation.
 
 ## LessonSeries
 
-| Concern        | Contract                                                                                                                                                                                |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Purpose        | Recurring local-time rule that materializes UTC lesson occurrences.                                                                                                                     |
-| Ownership      | Workspace-scoped.                                                                                                                                                                       |
-| Relationships  | Exactly one target: enrollment or group; teacher; optional package; generated lessons.                                                                                                  |
-| Create/update  | Resolve target and timezone; conflict-check; materialize idempotently. Updates declare one occurrence, this-and-following, or whole-series scope.                                       |
-| Delete/restore | Archive stops future generation and handles future scheduled occurrences; historical/detached lessons remain. Restore is not implemented.                                               |
-| Current gaps   | Create/update conflict checks are inconsistent; target lifecycle is not propagated; this-and-following cannot correctly move weekday; group series may run with no active participants. |
+| Concern        | Contract                                                                                                                                          |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Purpose        | Recurring local-time rule that materializes UTC lesson occurrences.                                                                               |
+| Ownership      | Workspace-scoped.                                                                                                                                 |
+| Relationships  | Exactly one target: enrollment or group; teacher; optional package; generated lessons.                                                            |
+| Create/update  | Resolve target and timezone; conflict-check; materialize idempotently. Updates declare one occurrence, this-and-following, or whole-series scope. |
+| Delete/restore | Archive stops future generation and handles future scheduled occurrences; historical/detached lessons remain. Restore is not implemented.         |
+| Current gaps   | No known Work Packet 4 recurrence gap. Series updates validate generated candidates, and following edits create a new future rule boundary.       |
 
 Acceptance scenarios: DST boundaries, overlapping series, weekday shift,
 detached occurrence preservation, pause/archive propagation, delete idempotency.
@@ -64,7 +66,7 @@ detached occurrence preservation, pause/archive propagation, delete idempotency.
 | Status        | Commands and list filters use one effective-status definition. Time-derived display status must not contradict stored command state.                                                                                                              |
 | Package rule  | The first non-zero debit persists the exact compatible fixed-count `packageId`; eligibility is evaluated at the occurrence time. Compensation uses that id even after the package is archived.                                                    |
 | Delete        | A lesson with non-zero net credit cannot be archived until it returns to `SCHEDULED` and appends compensation. A compensated or never-charged lesson archives/detaches idempotently.                                                              |
-| Current gaps  | Effective/stored status alignment and recurrence edit scope remain Work Packet 4.                                                                                                                                                                 |
+| Current gaps  | No known Work Packet 4 status/filter gap. Stored status is authoritative; temporal buckets are derived separately.                                                                                                                                |
 
 Acceptance scenarios: conflict/force parsing, every state transition, repeated
 command idempotency, charged and uncharged cancellation, restore, archive with

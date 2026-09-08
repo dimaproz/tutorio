@@ -1,7 +1,7 @@
 # Tutorio Current State
 
-Last verified: 2026-09-07 against Work Packet 3 implementation commit
-`61fbfbd`.
+Last verified: 2026-09-08 against Work Packet 4 implementation commit
+`76463d9`.
 
 This is the first project document to read before planning or implementing
 work. It reports the repository as it exists; [`mvp-plan.md`](./mvp-plan.md)
@@ -44,9 +44,10 @@ Next.js, shared validation, and pure domain package boundaries are sound.
 
 ## Active milestone: Pilot Core Stabilization
 
-Stage 4.1 is active, with Work Packet 4 — Recurrence and Pause Correctness as
-the current implementation packet. Its goal is to make existing workflows safe
-and obvious, not to add surface area. The required order is:
+Stage 4.1 is active, with Work Packet 5 — Pilot Authorization as the current
+implementation packet. Work Packet 4 — Recurrence and Pause Correctness is
+complete. Its goal was to make existing workflows safe and obvious, not to add
+surface area. The required order is:
 
 1. Lock lifecycle and accounting decisions in ADRs and tests.
 2. Fix P0 data-integrity defects in group deletion/restoration, payment
@@ -108,18 +109,34 @@ PostgreSQL 17 database. The verifier covers migrated fixed and `BY_PERIOD`
 history, conflicts, missing/mismatched/already-balanced sources, idempotency,
 audit metadata, and transaction rollback.
 
+### Work Packet 4 evidence
+
+Recurrence suspension has dedicated opaque tokens rather than overloaded
+timestamps. Individual enrollment pause/archive/delete suspends only future
+`SCHEDULED` work and restores only matching rows after a conflict check. Group
+series require an active, non-archived participant; last-active roster changes
+suspend shared work and first-active transitions restore only roster-empty work.
+Materialization, archive, and restore decisions use ordered PostgreSQL
+transaction advisory locks and canonical post-lock reads. Reversible lifecycle
+operations preserve their suspension token, while explicit series/package
+archive cannot later be resurrected by a resume command.
+
+Series creation/update validates every generated candidate unless the explicit
+`force=true` contract is used. `this_and_following` ends the old rule and creates
+a new future rule boundary, preserving the earlier local-time/weekday history.
+Stored lesson status remains the command and API-filter authority; past/upcoming
+is a separate UI bucket. Evidence: `apps/api/test/scheduling.e2e-spec.ts` (13
+scheduling tests), full isolated PostgreSQL 17 API E2E (75 tests / 5 suites),
+and `apps/api/scripts/verify-recurrence-migration-upgrade.ts` after all 20
+migrations.
+
 ## Release blockers
 
 ### P1 — scheduling correctness and product truthfulness
 
 - Automatic replacement materialization has been removed from cancellation.
-- Pausing or archiving an enrollment does not consistently remove or suspend
-  future generated lessons; group series may continue when all participants are
-  paused.
-- Series create/update paths do not consistently apply conflict detection, and
-  “this and following” edits have weekday edge cases.
-- Stored lesson status and effective time-derived status can drift, affecting
-  filtering and user expectations.
+- Work Packet 4 closed the recurrence/pause correctness defects; scheduling
+  remains subject to the authorization hardening in Work Packet 5.
 
 ### P1 — authorization and API contract
 
@@ -163,5 +180,4 @@ audit metadata, and transaction rollback.
 
 ## Next checkpoint
 
-Work Packet 4 — Recurrence and Pause Correctness is the next implementation
-packet.
+Work Packet 5 — Pilot Authorization is the next implementation packet.
