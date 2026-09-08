@@ -24,6 +24,7 @@ import {
 import { ZodSerializerDto } from 'nestjs-zod';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { ApiErrorDto } from '../auth/dto/auth.dto';
 import {
   CreateTeacherDto,
@@ -36,11 +37,13 @@ import { TeachersService } from './teachers.service';
 
 @ApiTags('teachers')
 @ApiBearerAuth()
+@ApiForbiddenResponse({ type: ApiErrorDto, description: 'OWNER role required' })
 @Controller('teachers')
 export class TeachersController {
   constructor(private readonly teachers: TeachersService) {}
 
   @Get()
+  @Roles('OWNER')
   @ApiOperation({
     summary: 'List workspace teachers',
     description:
@@ -57,6 +60,7 @@ export class TeachersController {
   }
 
   @Post()
+  @Roles('OWNER')
   @ApiOperation({ summary: 'Create a teacher profile' })
   @ApiCreatedResponse({ type: TeacherDto })
   @ZodSerializerDto(TeacherDto)
@@ -68,6 +72,7 @@ export class TeachersController {
   }
 
   @Get(':teacherId')
+  @Roles('OWNER')
   @ApiOperation({ summary: 'Get a teacher profile' })
   @ApiOkResponse({ type: TeacherDto })
   @ApiNotFoundResponse({ type: ApiErrorDto })
@@ -80,6 +85,7 @@ export class TeachersController {
   }
 
   @Patch(':teacherId')
+  @Roles('OWNER')
   @ApiOperation({ summary: 'Update a teacher' })
   @ApiOkResponse({ type: TeacherDto })
   @ApiNotFoundResponse({ type: ApiErrorDto })
@@ -93,6 +99,7 @@ export class TeachersController {
   }
 
   @Delete(':teacherId')
+  @Roles('OWNER')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Soft-delete a teacher',
@@ -109,6 +116,7 @@ export class TeachersController {
   }
 
   @Post(':teacherId/restore')
+  @Roles('OWNER')
   @ApiOperation({ summary: 'Restore a soft-deleted teacher' })
   @ApiOkResponse({ type: TeacherDto })
   @ApiNotFoundResponse({ type: ApiErrorDto })

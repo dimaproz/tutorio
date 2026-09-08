@@ -2373,6 +2373,14 @@ export interface operations {
                     "application/json": components["schemas"]["WorkspaceMemberListDto"];
                 };
             };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
         };
     };
     AuditController_list: {
@@ -2468,6 +2476,15 @@ export interface operations {
                     "application/json": components["schemas"]["StudentDto"];
                 };
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
         };
     };
     StudentsController_getDetail: {
@@ -2487,6 +2504,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StudentDetailDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
             404: {
@@ -2515,6 +2541,15 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
             };
             404: {
                 headers: {
@@ -2547,6 +2582,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StudentDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
             404: {
@@ -2622,6 +2666,15 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -2686,6 +2739,15 @@ export interface operations {
                     "application/json": components["schemas"]["ParentDto"];
                 };
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
         };
     };
     ParentsController_getDetail: {
@@ -2705,6 +2767,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ParentDetailDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
             404: {
@@ -2733,6 +2804,15 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
             };
             404: {
                 headers: {
@@ -2765,6 +2845,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ParentDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
             404: {
@@ -2831,6 +2920,15 @@ export interface operations {
                     "application/json": components["schemas"]["TeacherDto"];
                 };
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
         };
     };
     TeachersController_getDetail: {
@@ -2850,6 +2948,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TeacherDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
             404: {
@@ -2878,6 +2985,15 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
             };
             404: {
                 headers: {
@@ -2912,6 +3028,15 @@ export interface operations {
                     "application/json": components["schemas"]["TeacherDto"];
                 };
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -2939,6 +3064,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TeacherDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
             404: {
@@ -3008,6 +3142,15 @@ export interface operations {
                     "application/json": components["schemas"]["GroupDto"];
                 };
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
         };
     };
     GroupsController_getDetail: {
@@ -3027,6 +3170,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GroupDetailDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
             404: {
@@ -3055,6 +3207,15 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
             };
             404: {
                 headers: {
@@ -3095,6 +3256,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GroupDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
             404: {
@@ -3209,6 +3379,15 @@ export interface operations {
                     "application/json": components["schemas"]["EnrollmentDto"];
                 };
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -3246,6 +3425,15 @@ export interface operations {
                     "application/json": components["schemas"]["EnrollmentDto"];
                 };
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -3272,6 +3460,15 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
             };
             404: {
                 headers: {
@@ -3304,6 +3501,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EnrollmentDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
             404: {
@@ -3386,6 +3592,15 @@ export interface operations {
                     "application/json": components["schemas"]["LessonListDto"];
                 };
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
         };
     };
     LessonsController_create: {
@@ -3409,6 +3624,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LessonListDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
             409: {
@@ -3438,6 +3662,15 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
         };
     };
     LessonsController_update: {
@@ -3461,6 +3694,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LessonDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
             404: {
@@ -3496,6 +3738,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LessonDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
             404: {
@@ -3537,6 +3788,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LessonDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
             404: {
@@ -3614,6 +3874,15 @@ export interface operations {
                     "application/json": components["schemas"]["LessonSeriesDto"];
                 };
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -3643,6 +3912,15 @@ export interface operations {
                     "application/json": components["schemas"]["LessonSeriesDto"];
                 };
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -3669,6 +3947,15 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
             };
             404: {
                 headers: {
@@ -3705,6 +3992,15 @@ export interface operations {
                     "application/json": components["schemas"]["LessonSeriesDto"];
                 };
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -3739,6 +4035,15 @@ export interface operations {
                     "application/json": components["schemas"]["PackageListDto"];
                 };
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
         };
     };
     PackagesController_create: {
@@ -3765,6 +4070,15 @@ export interface operations {
                 };
             };
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3801,6 +4115,15 @@ export interface operations {
                     "application/json": components["schemas"]["PackageDto"];
                 };
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -3828,6 +4151,15 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
         };
     };
     PackagesController_getLedger: {
@@ -3847,6 +4179,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CreditLedgerDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
             404: {
@@ -3882,6 +4223,15 @@ export interface operations {
                     "application/json": components["schemas"]["PackageDto"];
                 };
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -3915,6 +4265,15 @@ export interface operations {
                     "application/json": components["schemas"]["PaymentListDto"];
                 };
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
         };
     };
     PaymentsController_record: {
@@ -3936,6 +4295,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PaymentDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
             404: {

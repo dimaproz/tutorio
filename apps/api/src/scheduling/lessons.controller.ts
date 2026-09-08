@@ -15,6 +15,7 @@ import {
   ApiBearerAuth,
   ApiConflictResponse,
   ApiCreatedResponse,
+  ApiForbiddenResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
@@ -24,6 +25,7 @@ import {
 import { ZodSerializerDto } from 'nestjs-zod';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { ApiErrorDto } from '../auth/dto/auth.dto';
 import {
   CreateLessonDto,
@@ -39,11 +41,13 @@ import { LessonsService } from './lessons.service';
 
 @ApiTags('scheduling')
 @ApiBearerAuth()
+@ApiForbiddenResponse({ type: ApiErrorDto, description: 'OWNER role required' })
 @Controller('lessons')
 export class LessonsController {
   constructor(private readonly lessons: LessonsService) {}
 
   @Get()
+  @Roles('OWNER')
   @ApiOperation({
     summary: 'List lessons in a time window (calendar feed)',
     description:
@@ -59,6 +63,7 @@ export class LessonsController {
   }
 
   @Post()
+  @Roles('OWNER')
   @ApiOperation({
     summary: 'Create one or many one-off lessons',
     description:
@@ -77,6 +82,7 @@ export class LessonsController {
   }
 
   @Patch(':lessonId')
+  @Roles('OWNER')
   @ApiOperation({
     summary: 'Correct a booked lesson',
     description:
@@ -95,6 +101,7 @@ export class LessonsController {
   }
 
   @Delete(':lessonId')
+  @Roles('OWNER')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Soft-delete a lesson',
@@ -110,6 +117,7 @@ export class LessonsController {
   }
 
   @Patch(':lessonId/reschedule')
+  @Roles('OWNER')
   @ApiOperation({
     summary: 'Reschedule a lesson',
     description:
@@ -131,6 +139,7 @@ export class LessonsController {
   }
 
   @Patch(':lessonId/status')
+  @Roles('OWNER')
   @ApiOperation({
     summary: 'Change a lesson status',
     description:

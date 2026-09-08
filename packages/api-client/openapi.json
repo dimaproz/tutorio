@@ -299,6 +299,16 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -606,6 +616,16 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -639,6 +659,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/StudentDetailDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
                 }
               }
             }
@@ -698,6 +728,16 @@
               }
             }
           },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
           "404": {
             "description": "",
             "content": {
@@ -745,6 +785,16 @@
         "responses": {
           "204": {
             "description": ""
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           },
           "404": {
             "description": "",
@@ -841,6 +891,16 @@
         "responses": {
           "204": {
             "description": ""
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           },
           "404": {
             "description": "",
@@ -982,6 +1042,16 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1015,6 +1085,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ParentDetailDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
                 }
               }
             }
@@ -1074,6 +1154,16 @@
               }
             }
           },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
           "404": {
             "description": "",
             "content": {
@@ -1111,6 +1201,16 @@
         "responses": {
           "204": {
             "description": ""
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           },
           "404": {
             "description": "",
@@ -1255,6 +1355,16 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1288,6 +1398,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/TeacherDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
                 }
               }
             }
@@ -1346,6 +1466,16 @@
               }
             }
           },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
           "404": {
             "description": "",
             "content": {
@@ -1383,6 +1513,16 @@
         "responses": {
           "204": {
             "description": ""
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           },
           "404": {
             "description": "",
@@ -1426,6 +1566,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/TeacherDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
                 }
               }
             }
@@ -1610,6 +1760,16 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1643,6 +1803,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/GroupDetailDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
                 }
               }
             }
@@ -1702,6 +1872,16 @@
               }
             }
           },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
           "404": {
             "description": "",
             "content": {
@@ -1739,6 +1919,16 @@
         "responses": {
           "204": {
             "description": ""
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           },
           "404": {
             "description": "",
@@ -1979,6 +2169,16 @@
               }
             }
           },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
           "404": {
             "description": "",
             "content": {
@@ -2031,6 +2231,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnrollmentDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
                 }
               }
             }
@@ -2090,6 +2300,16 @@
               }
             }
           },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
           "404": {
             "description": "",
             "content": {
@@ -2127,6 +2347,16 @@
         "responses": {
           "204": {
             "description": ""
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           },
           "404": {
             "description": "",
@@ -2301,6 +2531,16 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2364,6 +2604,16 @@
               }
             }
           },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
           "409": {
             "description": "",
             "content": {
@@ -2421,6 +2671,16 @@
               }
             }
           },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
           "404": {
             "description": "",
             "content": {
@@ -2458,6 +2718,16 @@
         "responses": {
           "204": {
             "description": ""
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2531,6 +2801,16 @@
               }
             }
           },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
           "404": {
             "description": "",
             "content": {
@@ -2594,6 +2874,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/LessonDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
                 }
               }
             }
@@ -2783,6 +3073,16 @@
               }
             }
           },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
           "404": {
             "description": "",
             "content": {
@@ -2825,6 +3125,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/LessonSeriesDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
                 }
               }
             }
@@ -2909,6 +3219,16 @@
               }
             }
           },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
           "404": {
             "description": "",
             "content": {
@@ -2946,6 +3266,16 @@
         "responses": {
           "204": {
             "description": ""
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           },
           "404": {
             "description": "",
@@ -3053,6 +3383,16 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3126,6 +3466,16 @@
               }
             }
           },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
           "409": {
             "description": "",
             "content": {
@@ -3173,6 +3523,16 @@
               }
             }
           },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
           "404": {
             "description": "",
             "content": {
@@ -3210,6 +3570,16 @@
         "responses": {
           "204": {
             "description": ""
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3244,6 +3614,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CreditLedgerDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
                 }
               }
             }
@@ -3301,6 +3681,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PackageDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
                 }
               }
             }
@@ -3393,6 +3783,16 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3426,6 +3826,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PaymentDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
                 }
               }
             }

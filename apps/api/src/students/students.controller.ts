@@ -39,11 +39,13 @@ import { StudentsService } from './students.service';
 
 @ApiTags('students')
 @ApiBearerAuth()
+@ApiForbiddenResponse({ type: ApiErrorDto, description: 'OWNER role required' })
 @Controller('students')
 export class StudentsController {
   constructor(private readonly students: StudentsService) {}
 
   @Get()
+  @Roles('OWNER')
   @ApiOperation({
     summary: 'List workspace students',
     description:
@@ -62,6 +64,7 @@ export class StudentsController {
   }
 
   @Post()
+  @Roles('OWNER')
   @ApiOperation({ summary: 'Create a student' })
   @ApiCreatedResponse({ type: StudentDto })
   @ZodSerializerDto(StudentDto)
@@ -73,6 +76,7 @@ export class StudentsController {
   }
 
   @Get(':studentId')
+  @Roles('OWNER')
   @ApiOperation({
     summary: 'Get a student profile with enrollment summaries',
   })
@@ -87,6 +91,7 @@ export class StudentsController {
   }
 
   @Patch(':studentId')
+  @Roles('OWNER')
   @ApiOperation({
     summary: 'Update a student',
     description:

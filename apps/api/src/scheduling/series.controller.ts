@@ -24,6 +24,7 @@ import {
 import { ZodSerializerDto } from 'nestjs-zod';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { ApiErrorDto } from '../auth/dto/auth.dto';
 import {
   CreateLessonSeriesDto,
@@ -37,11 +38,13 @@ import { SeriesService } from './series.service';
 
 @ApiTags('scheduling')
 @ApiBearerAuth()
+@ApiForbiddenResponse({ type: ApiErrorDto, description: 'OWNER role required' })
 @Controller('lesson-series')
 export class SeriesController {
   constructor(private readonly series: SeriesService) {}
 
   @Get()
+  @Roles('OWNER')
   @ApiOperation({
     summary: 'List recurring lesson patterns',
     description: 'Paginated; state=deleted|all is owner-only.',
@@ -57,6 +60,7 @@ export class SeriesController {
   }
 
   @Post()
+  @Roles('OWNER')
   @ApiOperation({
     summary: 'Create a recurring pattern and materialize its lessons',
   })
@@ -72,6 +76,7 @@ export class SeriesController {
   }
 
   @Get(':seriesId')
+  @Roles('OWNER')
   @ApiOperation({ summary: 'Get a recurring pattern' })
   @ApiOkResponse({ type: LessonSeriesDto })
   @ApiNotFoundResponse({ type: ApiErrorDto })
@@ -84,6 +89,7 @@ export class SeriesController {
   }
 
   @Patch(':seriesId')
+  @Roles('OWNER')
   @ApiOperation({
     summary: 'Update a recurring pattern',
     description:
@@ -103,6 +109,7 @@ export class SeriesController {
   }
 
   @Delete(':seriesId')
+  @Roles('OWNER')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Delete a recurring pattern',

@@ -15,6 +15,7 @@ import {
   ApiBearerAuth,
   ApiConflictResponse,
   ApiCreatedResponse,
+  ApiForbiddenResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
@@ -40,11 +41,13 @@ import { PackagesService } from './packages.service';
 
 @ApiTags('packages')
 @ApiBearerAuth()
+@ApiForbiddenResponse({ type: ApiErrorDto, description: 'OWNER role required' })
 @Controller('packages')
 export class PackagesController {
   constructor(private readonly packages: PackagesService) {}
 
   @Get()
+  @Roles('OWNER')
   @ApiOperation({ summary: 'List lesson packages' })
   @ApiOkResponse({ type: PackageListDto })
   @ZodSerializerDto(PackageListDto)
@@ -56,6 +59,7 @@ export class PackagesController {
   }
 
   @Get(':packageId')
+  @Roles('OWNER')
   @ApiOperation({
     summary: 'Get a package',
     description:
@@ -73,6 +77,7 @@ export class PackagesController {
   }
 
   @Get(':packageId/ledger')
+  @Roles('OWNER')
   @ApiOperation({
     summary: 'Credit ledger history',
     description:
@@ -89,6 +94,7 @@ export class PackagesController {
   }
 
   @Post()
+  @Roles('OWNER')
   @ApiOperation({
     summary: 'Buy a lesson package',
     description:
@@ -126,6 +132,7 @@ export class PackagesController {
   }
 
   @Delete(':packageId')
+  @Roles('OWNER')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Archive a package',

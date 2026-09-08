@@ -39,11 +39,13 @@ import { GroupsService } from './groups.service';
 
 @ApiTags('groups')
 @ApiBearerAuth()
+@ApiForbiddenResponse({ type: ApiErrorDto, description: 'OWNER role required' })
 @Controller('groups')
 export class GroupsController {
   constructor(private readonly groups: GroupsService) {}
 
   @Get()
+  @Roles('OWNER')
   @ApiOperation({
     summary: 'List workspace groups',
     description:
@@ -61,6 +63,7 @@ export class GroupsController {
   }
 
   @Post()
+  @Roles('OWNER')
   @ApiOperation({ summary: 'Create a group' })
   @ApiCreatedResponse({ type: GroupDto })
   @ZodSerializerDto(GroupDto)
@@ -72,6 +75,7 @@ export class GroupsController {
   }
 
   @Get(':groupId')
+  @Roles('OWNER')
   @ApiOperation({ summary: 'Get a group with enrollment summaries' })
   @ApiOkResponse({ type: GroupDetailDto })
   @ApiNotFoundResponse({ type: ApiErrorDto })
@@ -84,6 +88,7 @@ export class GroupsController {
   }
 
   @Patch(':groupId')
+  @Roles('OWNER')
   @ApiOperation({
     summary: 'Update a group',
     description:

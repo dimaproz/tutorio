@@ -270,10 +270,10 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
       expect(list.body.items[0].fullName).toBe('Alice Learner');
     });
 
-    it('updates with PATCH semantics and audits the diff; no-op adds nothing', async () => {
+    it('owner updates with PATCH semantics and audits the diff; no-op adds nothing', async () => {
       await server()
         .patch(`/api/students/${studentId}`)
-        .set('Authorization', auth(teacherA))
+        .set('Authorization', auth(ownerA))
         .send({ notes: 'Moved to mornings', phone: null })
         .expect(200);
       expect(await auditCount('STUDENT', studentId, 'UPDATE')).toBe(1);
@@ -281,7 +281,7 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
       // Identical payload → no new audit row.
       await server()
         .patch(`/api/students/${studentId}`)
-        .set('Authorization', auth(teacherA))
+        .set('Authorization', auth(ownerA))
         .send({ notes: 'Moved to mornings' })
         .expect(200);
       expect(await auditCount('STUDENT', studentId, 'UPDATE')).toBe(1);
