@@ -1,6 +1,6 @@
 # Active Work Queue
 
-Last verified: 2026-09-07.
+Last verified: 2026-09-08.
 
 This is the short-lived execution queue for Stage 4.1. It answers “what should I
 work on next?” without requiring a developer to re-derive priorities from the
@@ -137,11 +137,26 @@ Suggested PR intent: `fix(api): enforce package payment integrity`.
 - Added isolated PostgreSQL 17 E2E and migration-upgrade evidence.
   Implementation: `76463d9`.
 
-## Work Packet 5 — Pilot Authorization (active)
+## Work Packet 5 — Pilot Authorization (implemented)
 
 - Enforce owner-only business mutations for the pilot.
 - Deny or disable unsupported teacher-member access.
 - Add endpoint permission matrix and negative E2E tests.
+
+### Actual result — 2026-09-08
+
+- Applied `@Roles('OWNER')` to all 52 business API handlers. The five public
+  authentication/health routes are unchanged; `GET /auth/me` and
+  `GET /workspaces/current` are the only authenticated legacy-TEACHER routes.
+- Added `docs/api-permission-matrix.md` and an executable controller metadata
+  manifest that classifies all 59 routes and fails when a new handler is not
+  assigned public, self/session, or owner-only access.
+- Added isolated PostgreSQL 17 E2E coverage proving legacy `TEACHER` receives
+  typed `403 FORBIDDEN` responses without business or audit mutation across
+  people, scheduling, packages, payments, settings, roster, and audit; owner
+  setup and reads remain functional. Full API E2E: 78/78 in 6 suites.
+- Regenerated OpenAPI/client artifacts with typed owner-only `403` responses.
+  Implementation: `e362675`.
 
 ## Work Packet 6 — Student Quick Create
 
@@ -162,7 +177,7 @@ actions, lifecycle/detail states, and interaction tests.
 
 ## Work-in-progress rules
 
-- One integrity packet at a time until Work Packet 5 is complete.
+- Keep one active work packet at a time.
 - Keep each PR deployable and green; do not merge intentionally failing tests.
 - Every PR links the ADR/domain rule it implements and updates acceptance evidence.
 - No deferred module or broad visual refactor may enter the active queue without

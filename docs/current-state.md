@@ -1,7 +1,7 @@
 # Tutorio Current State
 
-Last verified: 2026-09-08 against Work Packet 4 implementation commit
-`76463d9`.
+Last verified: 2026-09-08 against Work Packet 5 implementation commit
+`e362675`.
 
 This is the first project document to read before planning or implementing
 work. It reports the repository as it exists; [`mvp-plan.md`](./mvp-plan.md)
@@ -15,15 +15,15 @@ yet. The correct next move is not another design-wide refactor or a new product
 module. The next move is a bounded stabilization release that makes four core
 workflows correct, understandable, tested, and recoverable.
 
-- Branch: `develop`; Work Packet 3 implementation is committed as `61fbfbd`.
+- Branch: `develop`; Work Packet 5 implementation is committed as `e362675`.
 - The former `refactor/students-design` work was merged by PR #18.
 - `pnpm generate`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build`
-  pass on 2026-09-07. Observed unit totals: domain 92, validation 46, API 109, and
-  web 109.
-- API E2E passes 70 tests in 5 suites against an isolated PostgreSQL 17
-  database after all 19 migrations, including group compensation cycles and
-  package archival. The finance migration verifier passes against a separate
-  clean PostgreSQL 17 database.
+  pass on 2026-09-08. Observed unit totals: domain 92, validation 46, API 158,
+  and web 109.
+- API E2E passes 78 tests in 6 suites against an isolated PostgreSQL 17
+  database after all 20 migrations, including legacy-TEACHER denials, group
+  compensation cycles, and package archival. The finance migration verifier
+  passes against a separate clean PostgreSQL 17 database.
 - Unit coverage is uneven: core scheduling and package orchestration still have
   important untested branches. Passing totals are not a pilot-readiness signal.
 
@@ -44,10 +44,10 @@ Next.js, shared validation, and pure domain package boundaries are sound.
 
 ## Active milestone: Pilot Core Stabilization
 
-Stage 4.1 is active, with Work Packet 5 — Pilot Authorization as the current
-implementation packet. Work Packet 4 — Recurrence and Pause Correctness is
-complete. Its goal was to make existing workflows safe and obvious, not to add
-surface area. The required order is:
+Stage 4.1 remains active. Work Packet 5 — Pilot Authorization is complete;
+Work Packet 6 — Student Quick Create is next. Work Packet 4 — Recurrence and
+Pause Correctness made existing workflows safe and obvious, not broader. The
+required order is:
 
 1. Lock lifecycle and accounting decisions in ADRs and tests.
 2. Fix P0 data-integrity defects in group deletion/restoration, payment
@@ -130,18 +130,28 @@ scheduling tests), full isolated PostgreSQL 17 API E2E (75 tests / 5 suites),
 and `apps/api/scripts/verify-recurrence-migration-upgrade.ts` after all 20
 migrations.
 
+### Work Packet 5 evidence
+
+The owner-operated boundary is enforced by `@Roles('OWNER')` metadata on all
+52 business controller handlers. The five public auth/health endpoints are
+unchanged; only `GET /auth/me` and `GET /workspaces/current` remain available
+to authenticated legacy `TEACHER` memberships. The metadata manifest in
+`apps/api/src/common/roles-metadata.spec.ts` enumerates all 59 routed handlers
+and fails for an omitted or unclassified route. `apps/api/test/authorization.e2e-spec.ts`
+proves typed `403 FORBIDDEN` responses and no business/audit side effects across
+people, scheduling, packages, payments, settings, roster, and audit surfaces;
+the full isolated PostgreSQL 17 suite passed 78/78 in 6 suites after all 20
+migrations. Existing cross-workspace owner coverage remains in
+`apps/api/test/stage2.e2e-spec.ts` and package E2E coverage. OpenAPI and the
+generated client expose the typed `403` contract for owner-only handlers.
+
 ## Release blockers
 
 ### P1 — scheduling correctness and product truthfulness
 
 - Automatic replacement materialization has been removed from cancellation.
-- Work Packet 4 closed the recurrence/pause correctness defects; scheduling
-  remains subject to the authorization hardening in Work Packet 5.
-
-### P1 — authorization and API contract
-
-- Lifecycle commands for groups and students are owner-only. Broader business
-  mutation authorization remains a Work Packet 5 pilot blocker.
+- Work Packet 4 closed the recurrence/pause correctness defects, and Work
+  Packet 5 now protects scheduling under the owner-only pilot policy.
 
 ### P1 — UX and delivery confidence
 
@@ -180,4 +190,4 @@ migrations.
 
 ## Next checkpoint
 
-Work Packet 5 — Pilot Authorization is the next implementation packet.
+Work Packet 6 — Student Quick Create is the next implementation packet.

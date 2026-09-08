@@ -1,6 +1,6 @@
 # Tutorio Pilot-First Roadmap
 
-Last verified: 2026-09-07.
+Last verified: 2026-09-08.
 
 This roadmap replaces feature-by-feature expansion as the active delivery
 strategy. Complete phases in order. A later phase may be designed, but it must
@@ -47,7 +47,10 @@ detection. Work Packet 4 — Recurrence and Pause Correctness is complete:
 token-correlated suspension/restoration, active group-roster eligibility,
 serialized conflict-safe materialization, future-rule edit boundaries, and
 stored-status filtering are verified at implementation `76463d9`. Work Packet 5
-— Pilot Authorization is active.
+— Pilot Authorization is complete at implementation `e362675`: the explicit
+59-route permission matrix leaves only five public and two authenticated
+self/session handlers; all 52 business routes require `OWNER`. Legacy `TEACHER`
+E2E denial and zero-side-effect coverage passes against isolated PostgreSQL 17.
 
 **Gate:** all P0/P1 core integrity scenarios pass at domain, service, and
 end-to-end levels; migrations are reversible or have an approved rollback plan.

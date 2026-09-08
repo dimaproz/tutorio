@@ -1,10 +1,10 @@
 # Access and Tenancy Aggregate
 
-Last verified: 2026-08-24.
+Last verified: 2026-09-08.
 
-Target access policy for the pilot is defined by
-[ADR 0004](../decisions/0004-owner-operated-pilot.md). Current code is broader
-than that policy and must not be assumed compliant.
+The enforced pilot access policy is defined by
+[ADR 0004](../decisions/0004-owner-operated-pilot.md) and enumerated in the
+[API permission matrix](../api-permission-matrix.md).
 
 ## User
 
@@ -23,33 +23,34 @@ workspace financial history; privacy handling follows ADR 0002.
 
 ## Workspace
 
-| Concern        | Contract                                                                                                     |
-| -------------- | ------------------------------------------------------------------------------------------------------------ |
-| Purpose        | Tenant root for every business entity and default operating settings.                                        |
-| Ownership      | Owned through an `OWNER` membership; a user may eventually belong to multiple workspaces.                    |
-| Relationships  | Members and all people, scheduling, finance, and audit records.                                              |
-| Create/update  | Created at registration. Settings update is owner-only and audited.                                          |
-| Delete/restore | No implemented workspace export/deletion or restore workflow.                                                |
-| Invariants     | Every business query is scoped by `workspaceId`; `SOLO` cannot have more than one active teacher profile.    |
-| Known gaps     | `plan` limits are not enforced; timezone is not consistently exposed; readiness/export/deletion are missing. |
+| Concern        | Contract                                                                                                                             |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Purpose        | Tenant root for every business entity and default operating settings.                                                                |
+| Ownership      | Owned through an `OWNER` membership; a user may eventually belong to multiple workspaces.                                            |
+| Relationships  | Members and all people, scheduling, finance, and audit records.                                                                      |
+| Create/update  | Created at registration. Settings update is owner-only and audited; only active-workspace context is readable by a non-owner member. |
+| Delete/restore | No implemented workspace export/deletion or restore workflow.                                                                        |
+| Invariants     | Every business query is scoped by `workspaceId`; `SOLO` cannot have more than one active teacher profile.                            |
+| Known gaps     | `plan` limits are not enforced; timezone is not consistently exposed; readiness/export/deletion are missing.                         |
 
 Acceptance: a cross-workspace identifier always returns a safe not-found or
 forbidden result, never another tenant’s record.
 
 ## WorkspaceMember
 
-| Concern           | Contract                                                                                                     |
-| ----------------- | ------------------------------------------------------------------------------------------------------------ |
-| Purpose           | Authorization link between `User` and `Workspace` with `OWNER` or `TEACHER` role.                            |
-| Ownership         | Workspace-scoped; unique `(workspaceId, userId)`.                                                            |
-| Relationships     | Optional one-to-one `Teacher` profile.                                                                       |
-| Create/update     | Only the owner membership is created during registration. Roster is currently read-only.                     |
-| Delete/restore    | No invitation, role-change, removal, or restore workflow exists.                                             |
-| Pilot permissions | Owner-only operation. Teacher memberships are not enabled for real pilot data.                               |
-| Known gaps        | Login selects the oldest membership; most endpoints treat a teacher as workspace-wide; no own-teacher scope. |
+| Concern           | Contract                                                                                                                                                    |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Purpose           | Authorization link between `User` and `Workspace` with `OWNER` or `TEACHER` role.                                                                           |
+| Ownership         | Workspace-scoped; unique `(workspaceId, userId)`.                                                                                                           |
+| Relationships     | Optional one-to-one `Teacher` profile.                                                                                                                      |
+| Create/update     | Only the owner membership is created during registration. Roster is currently read-only.                                                                    |
+| Delete/restore    | No invitation, role-change, removal, or restore workflow exists.                                                                                            |
+| Pilot permissions | Owner-only operation. A legacy `TEACHER` can use only `GET /auth/me` and `GET /workspaces/current`; all business data and mutations return `403 FORBIDDEN`. |
+| Known gaps        | Login selects the oldest membership; no invitation, multi-workspace selection, or own-teacher scope exists.                                                 |
 
-Acceptance before staff login: every endpoint has an explicit role/read-scope
-test, including negative cross-teacher cases.
+Acceptance before staff login: replace the owner-only policy with a complete
+staff permission design, including every endpoint's role/read-scope tests and
+negative cross-teacher cases.
 
 ## AuthSession
 

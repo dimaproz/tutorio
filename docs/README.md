@@ -1,6 +1,6 @@
 # Tutorio Documentation Map
 
-Last verified: 2026-08-24.
+Last verified: 2026-09-08.
 
 This directory is the operating manual for product and engineering work. Read
 documents in the order below; a document lower in the list must not silently
@@ -20,6 +20,8 @@ override one above it.
    [`glossary.md`](./glossary.md) defines shared product language.
 6. [`roadmap.md`](./roadmap.md) defines execution order and release gates.
    [`next-work.md`](./next-work.md) is the short-lived active implementation queue.
+   [`api-permission-matrix.md`](./api-permission-matrix.md) is the complete
+   pilot API access policy.
 7. [`domain/`](./domain/README.md) documents entities, relationships, lifecycle,
    deletion, permissions, and known implementation gaps.
 8. [`product/`](./product/README.md) documents user journeys and target UX.
