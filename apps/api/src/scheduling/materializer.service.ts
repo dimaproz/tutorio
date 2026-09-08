@@ -1,8 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { planMaterialization } from '@tutorio/domain';
+import {
+  findConflicts,
+  planMaterialization,
+  toInterval,
+} from '@tutorio/domain';
 import { Prisma } from '@prisma/client';
+import { scheduleConflict } from '../common/business.errors';
 import { PrismaService } from '../prisma/prisma.service';
+import {
+  lockGroupSchedule,
+  lockTeacherSchedules,
+} from './lifecycle-suspension';
 
 // How far ahead recurring lessons are kept materialized.
 const HORIZON_WEEKS = 12;
@@ -49,51 +58,74 @@ export class MaterializerService {
     series: SeriesForMaterialize,
     horizonUntil: Date,
     from: Date = series.startDate,
+    force = false,
   ): Promise<Date[]> {
+    if (series.groupId) {
+      await lockGroupSchedule(tx, series.workspaceId, series.groupId);
+    }
+    await lockTeacherSchedules(tx, series.workspaceId, [series.teacherId]);
+    // The caller may have read this series before a concurrent rule update.
+    // Read the canonical row only after taking its schedule locks, then use it
+    // for both eligibility and occurrence generation.
+    const currentSeries = await tx.lessonSeries.findFirst({
+      where: {
+        id: series.id,
+        workspaceId: series.workspaceId,
+        deletedAt: null,
+      },
+    });
+    if (!currentSeries || !(await this.isEligible(tx, currentSeries)))
+      return [];
     const effectiveUntil =
-      series.endsAt && series.endsAt < horizonUntil
-        ? series.endsAt
+      currentSeries.endsAt && currentSeries.endsAt < horizonUntil
+        ? currentSeries.endsAt
         : horizonUntil;
     if (effectiveUntil <= from) {
       return [];
     }
     const existing = await tx.lesson.findMany({
-      where: { seriesId: series.id },
+      where: { seriesId: currentSeries.id },
       select: { startsAtUtc: true },
     });
 
     const { toCreate } = planMaterialization({
       rule: {
-        weekdays: series.weekdays,
-        localTime: series.localTime,
-        timezone: series.timezone,
-        startDate: series.startDate,
+        weekdays: currentSeries.weekdays,
+        localTime: currentSeries.localTime,
+        timezone: currentSeries.timezone,
+        startDate: currentSeries.startDate,
       },
       from,
       horizonUntil: effectiveUntil,
       existingSlots: existing.map((row) => row.startsAtUtc),
     });
 
+    if (!force && toCreate.length > 0) {
+      await this.assertCandidatesAreFree(tx, currentSeries, toCreate);
+    }
+
     if (toCreate.length > 0) {
       await tx.lesson.createMany({
         data: toCreate.map((startsAtUtc) => ({
-          workspaceId: series.workspaceId,
-          enrollmentId: series.enrollmentId,
-          groupId: series.groupId,
-          seriesId: series.id,
-          packageId: series.packageId,
-          teacherId: series.teacherId,
+          workspaceId: currentSeries.workspaceId,
+          enrollmentId: currentSeries.enrollmentId,
+          groupId: currentSeries.groupId,
+          seriesId: currentSeries.id,
+          packageId: currentSeries.packageId,
+          teacherId: currentSeries.teacherId,
           startsAtUtc,
-          durationMin: series.durationMin,
-          priceMinor: series.priceMinor,
-          currency: series.currency,
+          durationMin: currentSeries.durationMin,
+          priceMinor: currentSeries.priceMinor,
+          currency: currentSeries.currency,
         })),
+        // A concurrent cron/manual run may have won the unique slot race.
+        skipDuplicates: true,
       });
     }
 
-    if (effectiveUntil > series.horizonMaterializedUntil) {
+    if (effectiveUntil > currentSeries.horizonMaterializedUntil) {
       await tx.lessonSeries.update({
-        where: { id: series.id },
+        where: { id: currentSeries.id },
         data: { horizonMaterializedUntil: effectiveUntil },
       });
     }
@@ -111,6 +143,7 @@ export class MaterializerService {
     tx: Prisma.TransactionClient,
     series: SeriesForMaterialize,
     pivot: Date,
+    force = false,
   ): Promise<void> {
     await tx.lesson.deleteMany({
       where: {
@@ -121,7 +154,109 @@ export class MaterializerService {
         startsAtUtc: { gte: pivot },
       },
     });
-    await this.materializeSeries(tx, series, this.horizonUntil(), pivot);
+    await this.materializeSeries(tx, series, this.horizonUntil(), pivot, force);
+  }
+
+  private async isEligible(
+    tx: Prisma.TransactionClient,
+    series: SeriesForMaterialize,
+  ): Promise<boolean> {
+    if (
+      !(await tx.lessonSeries.findFirst({
+        where: {
+          id: series.id,
+          workspaceId: series.workspaceId,
+          deletedAt: null,
+        },
+        select: { id: true },
+      }))
+    ) {
+      return false;
+    }
+    if (
+      series.packageId &&
+      !(await tx.lessonPackage.findFirst({
+        where: {
+          id: series.packageId,
+          workspaceId: series.workspaceId,
+          deletedAt: null,
+        },
+        select: { id: true },
+      }))
+    ) {
+      return false;
+    }
+    if (series.enrollmentId) {
+      return Boolean(
+        await tx.enrollment.findFirst({
+          where: {
+            id: series.enrollmentId,
+            workspaceId: series.workspaceId,
+            deletedAt: null,
+            status: 'ACTIVE',
+            student: { deletedAt: null, status: { not: 'ARCHIVED' } },
+          },
+          select: { id: true },
+        }),
+      );
+    }
+    if (!series.groupId) return false;
+    return Boolean(
+      await tx.group.findFirst({
+        where: {
+          id: series.groupId,
+          workspaceId: series.workspaceId,
+          deletedAt: null,
+          enrollments: {
+            some: {
+              deletedAt: null,
+              status: 'ACTIVE',
+              student: { deletedAt: null, status: { not: 'ARCHIVED' } },
+            },
+          },
+        },
+        select: { id: true },
+      }),
+    );
+  }
+
+  private async assertCandidatesAreFree(
+    tx: Prisma.TransactionClient,
+    series: SeriesForMaterialize,
+    candidates: Date[],
+  ): Promise<void> {
+    const conflicts = new Set<string>();
+    const accepted: { id: string; start: Date; end: Date }[] = [];
+    for (const startsAtUtc of candidates) {
+      const interval = toInterval(startsAtUtc, series.durationMin);
+      const rows = await tx.lesson.findMany({
+        where: {
+          workspaceId: series.workspaceId,
+          teacherId: series.teacherId,
+          deletedAt: null,
+          status: { in: ['SCHEDULED', 'COMPLETED'] },
+          startsAtUtc: {
+            gte: new Date(startsAtUtc.getTime() - 720 * 60_000),
+            lt: interval.end,
+          },
+        },
+        select: { id: true, startsAtUtc: true, durationMin: true },
+      });
+      for (const row of rows) {
+        if (
+          findConflicts(interval, [
+            { ...toInterval(row.startsAtUtc, row.durationMin), id: row.id },
+          ]).length
+        ) {
+          conflicts.add(row.id);
+        }
+      }
+      for (const conflict of findConflicts(interval, accepted)) {
+        conflicts.add(conflict.id);
+      }
+      accepted.push({ ...interval, id: startsAtUtc.toISOString() });
+    }
+    if (conflicts.size) throw scheduleConflict([...conflicts]);
   }
 
   /**
@@ -135,7 +270,29 @@ export class MaterializerService {
     const seriesList = await this.prisma.lessonSeries.findMany({
       where: {
         deletedAt: null,
-        OR: [{ enrollmentId: null }, { enrollment: { status: 'ACTIVE' } }],
+        OR: [
+          {
+            group: {
+              is: {
+                deletedAt: null,
+                enrollments: {
+                  some: {
+                    deletedAt: null,
+                    status: 'ACTIVE',
+                    student: { deletedAt: null, status: { not: 'ARCHIVED' } },
+                  },
+                },
+              },
+            },
+            enrollmentId: null,
+          },
+          {
+            enrollment: {
+              status: 'ACTIVE',
+              student: { deletedAt: null, status: { not: 'ARCHIVED' } },
+            },
+          },
+        ],
       },
     });
 

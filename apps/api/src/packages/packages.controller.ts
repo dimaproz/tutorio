@@ -15,6 +15,7 @@ import {
   ApiBearerAuth,
   ApiConflictResponse,
   ApiCreatedResponse,
+  ApiForbiddenResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
@@ -23,7 +24,6 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { ZodSerializerDto } from 'nestjs-zod';
-import type { ForceQueryDto } from '@tutorio/validation';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -36,15 +36,18 @@ import {
   PackageDto,
   PackageListDto,
 } from './dto/packages.dto';
+import { ForceQueryDto } from '../scheduling/dto/scheduling.dto';
 import { PackagesService } from './packages.service';
 
 @ApiTags('packages')
 @ApiBearerAuth()
+@ApiForbiddenResponse({ type: ApiErrorDto, description: 'OWNER role required' })
 @Controller('packages')
 export class PackagesController {
   constructor(private readonly packages: PackagesService) {}
 
   @Get()
+  @Roles('OWNER')
   @ApiOperation({ summary: 'List lesson packages' })
   @ApiOkResponse({ type: PackageListDto })
   @ZodSerializerDto(PackageListDto)
@@ -56,6 +59,7 @@ export class PackagesController {
   }
 
   @Get(':packageId')
+  @Roles('OWNER')
   @ApiOperation({
     summary: 'Get a package',
     description:
@@ -73,6 +77,7 @@ export class PackagesController {
   }
 
   @Get(':packageId/ledger')
+  @Roles('OWNER')
   @ApiOperation({
     summary: 'Credit ledger history',
     description:
@@ -89,6 +94,7 @@ export class PackagesController {
   }
 
   @Post()
+  @Roles('OWNER')
   @ApiOperation({
     summary: 'Buy a lesson package',
     description:
@@ -126,10 +132,12 @@ export class PackagesController {
   }
 
   @Delete(':packageId')
+  @Roles('OWNER')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
-    summary: 'Soft-delete a package',
-    description: 'Idempotent. The credit ledger history is retained.',
+    summary: 'Archive a package',
+    description:
+      'Idempotent. Stops owned series and future scheduled lessons; financial history is retained.',
   })
   @ApiNoContentResponse()
   remove(

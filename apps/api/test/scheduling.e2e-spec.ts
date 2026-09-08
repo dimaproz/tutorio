@@ -5,6 +5,7 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { MaterializerService } from '../src/scheduling/materializer.service';
 
 const runId = randomUUID().slice(0, 8);
 const emailFor = (label: string) => `e2e-${runId}-${label}@example.com`;
@@ -21,6 +22,7 @@ describe('Stage 3: scheduling — series, lessons, reschedule, cancel (e2e)', ()
   let workspaceId: string;
   let ownerTeacherId: string;
   let enrollmentId: string;
+  let materializer: MaterializerService;
 
   const server = () => request(app.getHttpServer());
   const auth = (token: string) => `Bearer ${token}`;
@@ -34,6 +36,7 @@ describe('Stage 3: scheduling — series, lessons, reschedule, cancel (e2e)', ()
     app.setGlobalPrefix('api');
     await app.init();
     prisma = app.get(PrismaService);
+    materializer = app.get(MaterializerService);
 
     const register = await server()
       .post('/api/auth/register')
@@ -78,6 +81,7 @@ describe('Stage 3: scheduling — series, lessons, reschedule, cancel (e2e)', ()
     await prisma.enrollment.deleteMany({ where: { workspaceId } });
     await prisma.teacher.deleteMany({ where: { workspaceId } });
     await prisma.student.deleteMany({ where: { workspaceId } });
+    await prisma.group.deleteMany({ where: { workspaceId } });
     await prisma.auditLog.deleteMany({ where: { workspaceId } });
     const users = await prisma.user.findMany({
       where: { email: { startsWith: `e2e-${runId}-` } },
@@ -218,7 +222,20 @@ describe('Stage 3: scheduling — series, lessons, reschedule, cancel (e2e)', ()
       .get(`/api/lesson-series/${series.body.id}`)
       .set('Authorization', auth(owner))
       .expect(200);
-    expect(reloaded.body.localTime).toBe('17:00');
+    expect(reloaded.body.localTime).toBe('16:00');
+    expect(reloaded.body.endsAt).toBe(lesson.startsAtUtc);
+    const following = await server()
+      .get('/api/lesson-series')
+      .query({ enrollmentId })
+      .set('Authorization', auth(owner))
+      .expect(200);
+    expect(
+      following.body.items.some(
+        (item: { localTime: string; weekdays: number[] }) =>
+          item.localTime === '17:00' &&
+          item.weekdays.includes(newStart.getUTCDay()),
+      ),
+    ).toBe(true);
   });
 
   it('books by studentId alone, creating the enrollment behind the scenes', async () => {
@@ -465,5 +482,377 @@ describe('Stage 3: scheduling — series, lessons, reschedule, cancel (e2e)', ()
         currency: 'UAH',
       })
       .expect(201);
+  });
+
+  it('treats force=false as false and only bypasses conflicts for force=true', async () => {
+    const start = new Date(Date.now() + 40 * DAY_MS);
+    start.setUTCHours(4, 0, 0, 0);
+    const body = {
+      enrollmentId,
+      teacherId: ownerTeacherId,
+      startsAt: [start.toISOString()],
+      durationMin: 60,
+      priceMinor: 50000,
+      currency: 'UAH',
+    };
+
+    await server()
+      .post('/api/lessons')
+      .set('Authorization', auth(owner))
+      .send(body)
+      .expect(201);
+
+    await server()
+      .post('/api/lessons')
+      .query({ force: 'false' })
+      .set('Authorization', auth(owner))
+      .send(body)
+      .expect(409);
+
+    await server()
+      .post('/api/lessons')
+      .query({ force: 'true' })
+      .set('Authorization', auth(owner))
+      .send(body)
+      .expect(201);
+  });
+
+  it('validates every series candidate and rolls back a conflicting create unless forced', async () => {
+    const start = new Date(Date.now() + 50 * DAY_MS);
+    start.setUTCHours(22, 0, 0, 0);
+    await server()
+      .post('/api/lessons')
+      .set('Authorization', auth(owner))
+      .send({
+        enrollmentId,
+        teacherId: ownerTeacherId,
+        startsAt: [start.toISOString()],
+        durationMin: 60,
+        priceMinor: 50000,
+        currency: 'UAH',
+      })
+      .expect(201);
+
+    const body = {
+      enrollmentId,
+      teacherId: ownerTeacherId,
+      weekdays: [start.getUTCDay()],
+      localTime: '22:00',
+      timezone: 'UTC',
+      durationMin: 60,
+      priceMinor: 50000,
+      currency: 'UAH',
+      startDate: start.toISOString(),
+    };
+    const rejected = await server()
+      .post('/api/lesson-series')
+      .set('Authorization', auth(owner))
+      .send(body)
+      .expect(409);
+    expect(rejected.body.code).toBe('SCHEDULE_CONFLICT');
+    expect(
+      await prisma.lessonSeries.count({
+        where: { workspaceId, localTime: '22:00', timezone: 'UTC' },
+      }),
+    ).toBe(0);
+
+    await server()
+      .post('/api/lesson-series')
+      .query({ force: 'true' })
+      .set('Authorization', auth(owner))
+      .send(body)
+      .expect(201);
+  });
+
+  it('keeps a past scheduled lesson scheduled and filters by the stored status', async () => {
+    const start = new Date(Date.now() - 3 * DAY_MS);
+    start.setUTCHours(23, 0, 0, 0);
+    const created = await server()
+      .post('/api/lessons')
+      .set('Authorization', auth(owner))
+      .send({
+        enrollmentId,
+        teacherId: ownerTeacherId,
+        startsAt: [start.toISOString()],
+        durationMin: 30,
+        priceMinor: 50000,
+        currency: 'UAH',
+      })
+      .expect(201);
+    const listed = await server()
+      .get('/api/lessons')
+      .query({
+        from: new Date(start.getTime() - DAY_MS).toISOString(),
+        to: new Date(start.getTime() + DAY_MS).toISOString(),
+        status: 'SCHEDULED',
+      })
+      .set('Authorization', auth(owner))
+      .expect(200);
+    expect(listed.body.items).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: created.body.items[0].id,
+          status: 'SCHEDULED',
+        }),
+      ]),
+    );
+  });
+
+  it('suspends only future individual work, restores it conflict-safely, and remains idempotent', async () => {
+    const student = await server()
+      .post('/api/students')
+      .set('Authorization', auth(owner))
+      .send({ fullName: 'Pause lifecycle student', timezone: 'UTC' })
+      .expect(201);
+    const enrollment = await server()
+      .post('/api/enrollments')
+      .set('Authorization', auth(owner))
+      .send({
+        studentId: student.body.id,
+        teacherId: ownerTeacherId,
+        priceMinor: 50000,
+        currency: 'UAH',
+      })
+      .expect(201);
+    const start = new Date(Date.now() + 55 * DAY_MS);
+    start.setUTCHours(23, 0, 0, 0);
+    const series = await server()
+      .post('/api/lesson-series')
+      .set('Authorization', auth(owner))
+      .send({
+        enrollmentId: enrollment.body.id,
+        teacherId: ownerTeacherId,
+        weekdays: [start.getUTCDay()],
+        localTime: '23:00',
+        timezone: 'UTC',
+        durationMin: 60,
+        priceMinor: 50000,
+        currency: 'UAH',
+        startDate: start.toISOString(),
+      })
+      .expect(201);
+    const suspended = await prisma.lesson.findFirstOrThrow({
+      where: { seriesId: series.body.id, startsAtUtc: { gte: start } },
+    });
+    await Promise.all([
+      server()
+        .patch(`/api/enrollments/${enrollment.body.id}`)
+        .set('Authorization', auth(owner))
+        .send({ status: 'PAUSED' })
+        .expect(200),
+      server()
+        .patch(`/api/enrollments/${enrollment.body.id}`)
+        .set('Authorization', auth(owner))
+        .send({ status: 'PAUSED' })
+        .expect(200),
+    ]);
+    const paused = await prisma.lesson.findUniqueOrThrow({
+      where: { id: suspended.id },
+      select: { deletedAt: true, scheduleSuspensionToken: true },
+    });
+    expect(paused.deletedAt).not.toBeNull();
+    expect(paused.scheduleSuspensionToken).toEqual(expect.any(String));
+    await server()
+      .delete(`/api/enrollments/${enrollment.body.id}`)
+      .set('Authorization', auth(owner))
+      .expect(204);
+    await server()
+      .post(`/api/enrollments/${enrollment.body.id}/restore`)
+      .set('Authorization', auth(owner))
+      .expect(201);
+    expect(
+      await prisma.enrollment.findUniqueOrThrow({
+        where: { id: enrollment.body.id },
+        select: { status: true, scheduleSuspensionToken: true },
+      }),
+    ).toEqual({
+      status: 'PAUSED',
+      scheduleSuspensionToken: paused.scheduleSuspensionToken,
+    });
+    await materializer.materializeAll();
+    expect(
+      await prisma.lesson.count({
+        where: { seriesId: series.body.id, deletedAt: null },
+      }),
+    ).toBe(0);
+
+    const blocker = await prisma.lesson.create({
+      data: {
+        workspaceId,
+        enrollmentId,
+        teacherId: ownerTeacherId,
+        startsAtUtc: suspended.startsAtUtc,
+        durationMin: suspended.durationMin,
+        priceMinor: 50000,
+        currency: 'UAH',
+      },
+    });
+    await server()
+      .patch(`/api/enrollments/${enrollment.body.id}`)
+      .set('Authorization', auth(owner))
+      .send({ status: 'ACTIVE' })
+      .expect(409);
+    expect(
+      await prisma.enrollment.findUniqueOrThrow({
+        where: { id: enrollment.body.id },
+        select: { status: true },
+      }),
+    ).toEqual({ status: 'PAUSED' });
+    await prisma.lesson.delete({ where: { id: blocker.id } });
+    await server()
+      .patch(`/api/enrollments/${enrollment.body.id}`)
+      .set('Authorization', auth(owner))
+      .send({ status: 'ACTIVE' })
+      .expect(200);
+    await server()
+      .patch(`/api/enrollments/${enrollment.body.id}`)
+      .set('Authorization', auth(owner))
+      .send({ status: 'ACTIVE' })
+      .expect(200);
+    expect(
+      await prisma.lesson.findUniqueOrThrow({
+        where: { id: suspended.id },
+        select: { deletedAt: true, scheduleSuspensionToken: true },
+      }),
+    ).toEqual({ deletedAt: null, scheduleSuspensionToken: null });
+  });
+
+  it('keeps a group running with one active member and suspends/restores only on roster-empty', async () => {
+    const [first, second] = await Promise.all(
+      ['First group member', 'Second group member'].map((fullName) =>
+        server()
+          .post('/api/students')
+          .set('Authorization', auth(owner))
+          .send({ fullName, timezone: 'UTC' })
+          .expect(201),
+      ),
+    );
+    const group = await server()
+      .post('/api/groups')
+      .set('Authorization', auth(owner))
+      .send({ name: `Pause roster ${runId}` })
+      .expect(201);
+    const enrollments = await Promise.all(
+      [first, second].map((student) =>
+        server()
+          .post('/api/enrollments')
+          .set('Authorization', auth(owner))
+          .send({
+            studentId: student.body.id,
+            groupId: group.body.id,
+            teacherId: ownerTeacherId,
+            priceMinor: 50000,
+            currency: 'UAH',
+          })
+          .expect(201),
+      ),
+    );
+    const start = new Date(Date.now() + 58 * DAY_MS);
+    start.setUTCHours(0, 30, 0, 0);
+    const series = await server()
+      .post('/api/lesson-series')
+      .set('Authorization', auth(owner))
+      .send({
+        groupId: group.body.id,
+        teacherId: ownerTeacherId,
+        weekdays: [start.getUTCDay()],
+        localTime: '00:30',
+        timezone: 'UTC',
+        durationMin: 60,
+        priceMinor: 50000,
+        currency: 'UAH',
+        startDate: start.toISOString(),
+      })
+      .expect(201);
+    const lesson = await prisma.lesson.findFirstOrThrow({
+      where: { seriesId: series.body.id, startsAtUtc: { gte: start } },
+    });
+    await server()
+      .patch(`/api/enrollments/${enrollments[0].body.id}`)
+      .set('Authorization', auth(owner))
+      .send({ status: 'PAUSED' })
+      .expect(200);
+    expect(
+      await prisma.lesson.findUniqueOrThrow({
+        where: { id: lesson.id },
+        select: { deletedAt: true },
+      }),
+    ).toEqual({ deletedAt: null });
+    await server()
+      .patch(`/api/enrollments/${enrollments[1].body.id}`)
+      .set('Authorization', auth(owner))
+      .send({ status: 'PAUSED' })
+      .expect(200);
+    expect(
+      (
+        await prisma.lesson.findUniqueOrThrow({
+          where: { id: lesson.id },
+          select: { deletedAt: true, scheduleSuspensionToken: true },
+        })
+      ).scheduleSuspensionToken,
+    ).toEqual(expect.any(String));
+    await server()
+      .patch(`/api/enrollments/${enrollments[0].body.id}`)
+      .set('Authorization', auth(owner))
+      .send({ status: 'ACTIVE' })
+      .expect(200);
+    expect(
+      await prisma.lesson.findUniqueOrThrow({
+        where: { id: lesson.id },
+        select: { deletedAt: true, scheduleSuspensionToken: true },
+      }),
+    ).toEqual({ deletedAt: null, scheduleSuspensionToken: null });
+  });
+
+  it('serializes concurrent materialization for one series without duplicate occurrences', async () => {
+    const student = await server()
+      .post('/api/students')
+      .set('Authorization', auth(owner))
+      .send({ fullName: 'Concurrent materialization student', timezone: 'UTC' })
+      .expect(201);
+    const enrollment = await server()
+      .post('/api/enrollments')
+      .set('Authorization', auth(owner))
+      .send({
+        studentId: student.body.id,
+        teacherId: ownerTeacherId,
+        priceMinor: 50000,
+        currency: 'UAH',
+      })
+      .expect(201);
+    const start = new Date(Date.now() + 65 * DAY_MS);
+    start.setUTCHours(20, 0, 0, 0);
+    const series = await prisma.lessonSeries.create({
+      data: {
+        workspaceId,
+        enrollmentId: enrollment.body.id,
+        teacherId: ownerTeacherId,
+        weekdays: [start.getUTCDay()],
+        localTime: '20:00',
+        timezone: 'UTC',
+        durationMin: 60,
+        priceMinor: 50000,
+        currency: 'UAH',
+        startDate: start,
+        horizonMaterializedUntil: start,
+      },
+    });
+    const until = new Date(start.getTime() + 15 * DAY_MS);
+    await Promise.all([
+      prisma.$transaction((tx) =>
+        materializer.materializeSeries(tx, series, until, start),
+      ),
+      prisma.$transaction((tx) =>
+        materializer.materializeSeries(tx, series, until, start),
+      ),
+    ]);
+    const occurrences = await prisma.lesson.findMany({
+      where: { seriesId: series.id },
+      select: { startsAtUtc: true },
+    });
+    expect(occurrences).toHaveLength(3);
+    expect(
+      new Set(occurrences.map((row) => row.startsAtUtc.getTime())).size,
+    ).toBe(3);
   });
 });

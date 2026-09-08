@@ -70,8 +70,6 @@ export function PackageDetailView({ packageId }: { packageId: string }) {
     data.lessonsTotal > 0
       ? Math.min(100, Math.max(0, (data.remainingCredits / data.lessonsTotal) * 100))
       : 0;
-  // A snapshot that no longer matches reality is shown struck through.
-  const adjustedDown = data.effectiveTotalMinor < data.totalPriceMinorSnapshot;
 
   const openPaymentFor = (enrollmentId: string, fullName: string, oweMinor?: number) => {
     setPaymentTarget({ enrollmentId, fullName, oweMinor });
@@ -131,7 +129,7 @@ export function PackageDetailView({ packageId }: { packageId: string }) {
                         // enrollment behind its purchase entry.
                         ledger.data?.items.find((entry) => entry.enrollmentId)?.enrollmentId ?? '',
                         owner,
-                        Math.max(0, data.effectiveTotalMinor - data.paidMinor),
+                        Math.max(0, data.totalPriceMinorSnapshot - data.paidMinor),
                       )
                     }
                   >
@@ -154,15 +152,10 @@ export function PackageDetailView({ packageId }: { packageId: string }) {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="flex flex-col gap-1">
                   <span className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-                    {tCard('effectiveTotal')}
+                    {tCard('planTotal')}
                   </span>
                   <span className="tabular flex items-baseline gap-2 text-sm font-semibold">
-                    {formatMoneyDisplay(data.effectiveTotalMinor, data.currency, locale)}
-                    {adjustedDown ? (
-                      <s className="text-muted-foreground font-normal">
-                        {formatMoneyDisplay(data.totalPriceMinorSnapshot, data.currency, locale)}
-                      </s>
-                    ) : null}
+                    {formatMoneyDisplay(data.totalPriceMinorSnapshot, data.currency, locale)}
                   </span>
                 </div>
                 <div className="flex flex-col gap-1">

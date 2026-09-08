@@ -35,17 +35,21 @@ function buildPrismaMock() {
   const prisma = {
     group: {
       findFirst: jest.fn().mockResolvedValue(groupRow),
+      findMany: jest.fn().mockResolvedValue([]),
       create: jest.fn().mockResolvedValue(groupRow),
       update: jest.fn().mockResolvedValue(groupRow),
+      updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     },
     student: {
       findMany: jest.fn().mockResolvedValue([]),
+      count: jest.fn().mockResolvedValue(1),
     },
     teacher: {
       findFirst: jest.fn().mockResolvedValue({ id: TEACHER_ID }),
     },
     enrollment: {
       findMany: jest.fn().mockResolvedValue([]),
+      count: jest.fn().mockResolvedValue(1),
       create: jest.fn().mockImplementation(({ data }: { data: unknown }) => ({
         id: `enrollment-${(data as { studentId: string }).studentId}`,
         ...(data as object),
@@ -53,16 +57,17 @@ function buildPrismaMock() {
       update: jest.fn(),
       updateMany: jest.fn(),
     },
-    lesson: { updateMany: jest.fn() },
-    lessonSeries: { updateMany: jest.fn() },
-    lessonPackage: { updateMany: jest.fn() },
-    payment: { updateMany: jest.fn() },
+    lesson: { updateMany: jest.fn().mockResolvedValue({ count: 0 }) },
+    lessonSeries: {
+      findMany: jest.fn().mockResolvedValue([]),
+      updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+    },
     workspace: {
       findUniqueOrThrow: jest.fn().mockResolvedValue({
         defaultCurrency: 'EUR',
       }),
     },
-    auditLog: { create: jest.fn() },
+    auditLog: { create: jest.fn(), findMany: jest.fn().mockResolvedValue([]) },
     $transaction: jest.fn(),
   };
   prisma.$transaction.mockImplementation(
@@ -216,14 +221,18 @@ describe('GroupsService roster reconciliation', () => {
     expect(prisma.enrollment.create).not.toHaveBeenCalled();
   });
 
-  it('removes the group graph and detaches enrolled students', async () => {
+  it('archives only future operational work and preserves the group graph', async () => {
     const { prisma, service } = buildService();
 
     await service.softDelete(owner, GROUP_ID);
 
     expect(prisma.lesson.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ groupId: GROUP_ID, deletedAt: null }),
+        where: expect.objectContaining({
+          groupId: GROUP_ID,
+          status: 'SCHEDULED',
+          deletedAt: null,
+        }),
       }),
     );
     expect(prisma.lessonSeries.updateMany).toHaveBeenCalledWith(
@@ -231,30 +240,45 @@ describe('GroupsService roster reconciliation', () => {
         where: expect.objectContaining({ groupId: GROUP_ID, deletedAt: null }),
       }),
     );
-    expect(prisma.lessonPackage.updateMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({ groupId: GROUP_ID, deletedAt: null }),
-      }),
-    );
-    expect(prisma.payment.updateMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          OR: [
-            { package: { is: { groupId: GROUP_ID } } },
-            { enrollment: { is: { groupId: GROUP_ID } } },
-          ],
-        }),
-      }),
-    );
-    expect(prisma.enrollment.updateMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({ groupId: null }),
-      }),
-    );
+    expect(prisma.enrollment.updateMany).not.toHaveBeenCalled();
     expect(prisma.group.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ deletedAt: expect.any(Date) }),
       }),
     );
+  });
+
+  it('does not count archived students in the live operational roster', async () => {
+    const { prisma, service } = buildService();
+    await service.list(owner, {
+      page: 1,
+      pageSize: 20,
+      state: 'active',
+      sort: 'name',
+      order: 'asc',
+    });
+
+    const liveEnrollment =
+      prisma.group.findMany.mock.calls[0][0].include.enrollments.where;
+    expect(liveEnrollment).toMatchObject({
+      status: { in: ['ACTIVE', 'PAUSED'] },
+      student: { deletedAt: null, status: { not: 'ARCHIVED' } },
+    });
+  });
+
+  it('refuses a legacy destructive group restore for manual repair', async () => {
+    const { prisma, service } = buildService();
+    prisma.group.findFirst.mockResolvedValue({
+      ...groupRow,
+      deletedAt: new Date('2026-08-24T10:00:00.000Z'),
+    });
+    prisma.auditLog.findMany.mockResolvedValue([{ diff: null }]);
+
+    await expectBusinessError(
+      service.restore(owner, GROUP_ID),
+      'GROUP_LEGACY_REPAIR_REQUIRED',
+      409,
+    );
+    expect(prisma.group.update).not.toHaveBeenCalled();
   });
 });

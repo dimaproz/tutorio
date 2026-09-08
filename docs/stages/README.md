@@ -1,21 +1,22 @@
 # Tutorio — Stage Development Plans
 
 Per-stage engineering plans that translate the product roadmap
-([../product vision](../mvp-plan.md) and the strategy artifact) into concrete,
+([../MVP contract](../mvp-plan.md) and [../execution roadmap](../roadmap.md)) into concrete,
 buildable slices. Each file is one vertical slice that ends deployed to the dev
 environment.
 
 ## How to read this folder
 
-- Stages **0–3.6 are done** (see [../mvp-plan.md](../mvp-plan.md)); they are not
-  re-documented here.
+- Stages **0–4 are implemented** but not yet pilot-safe. Stage 4.1 is the active
+  correctness, workflow, and operational gate before new feature modules start.
 - Numbering continues the repo convention (`feature/stage-N-*` branches).
-- **Progressive elaboration:** near-term stages (3.7, 4) are specified in full
-  implementation detail. Later stages are specified at "ready to start" depth —
-  goal, model deltas, module surface, endpoints, risks — and are deepened as we
-  approach them, because their detail will shift once the stages before them
-  land. Do not treat a later stage's lighter section as "less important" — treat
-  it as "not yet frozen".
+- Completed stage files are historical implementation briefs. When their
+  assumptions differ from an ADR, domain guide, or current-state checkpoint,
+  the newer source of truth wins and the discrepancy should be corrected.
+- **Progressive elaboration:** active Stage 4.1 is specified at execution depth.
+  Deferred stages preserve product hypotheses and architecture notes, but they
+  are not ready-to-start commitments and must be reframed from pilot evidence
+  before implementation.
 
 ## Stage index
 
@@ -23,12 +24,13 @@ environment.
 |-------|------|--------|--------|
 | [3.7](./stage-3.7-ux-hardening.md) | UX hardening — "usable today" | Scheduling | ✅ Done |
 | [4](./stage-4-packages-ledger-payments.md) | Packages, credit ledger, payments | Money | ✅ Done |
-| [4.5](./stage-4.5-leads-crm.md) | Leads / CRM funnel | Growth | Planned |
-| [5](./stage-5-dashboard-analytics-telegram.md) | Dashboard, analytics, Telegram | Growth | Planned |
-| [6](./stage-6-progress-tracking.md) | Learning progress tracking | Student | Planned |
-| [7](./stage-7-public-student-page.md) | Public student page (token) | Student | Planned |
-| [8](./stage-8-receipts-branding-settings.md) | Receipts, branding, workspace settings | Money | Planned |
-| [9](./stage-9-import-pilot.md) | CSV import, SpeakWise pilot, GDPR | Ops | Planned |
+| [4.1](./stage-4.1-stabilization.md) | Pilot core stabilization | Foundation | Active |
+| [5](./stage-5-dashboard-analytics-telegram.md) | 5A action centre + Telegram; 5B analytics | Operations | Deferred; select from pilot evidence |
+| [6](./stage-6-progress-tracking.md) | Learning progress tracking | Student | Deferred; select from pilot evidence |
+| [7](./stage-7-public-student-page.md) | Public student page (token) | Student | Deferred; select from pilot evidence |
+| [8](./stage-8-receipts-branding-settings.md) | Receipts, branding, workspace settings | Money | Deferred; select from pilot evidence |
+| [9](./stage-9-import-pilot.md) | Pilot graduation and import expansion | Ops | Planned after core pilot |
+| [9.5](./stage-4.5-leads-crm.md) | Leads / CRM funnel (historical filename) | Growth | Deferred post-pilot |
 | [10](./stage-10-student-portal.md) | Student portal (accounts, grades, progress) | Student | Vision |
 
 ## Engineering conventions (apply to every stage)
@@ -60,8 +62,9 @@ each file.
 - **Money is integer minor units**; currency never summed across currencies.
 - **Ledger-style entities are append-only**: corrections are compensating
   entries, never edits/deletes. Idempotency keys guard against double-writes.
-- **Soft delete (`deletedAt`)** everywhere except `Student`/`Parent` (hard delete
-  — decision #7 in mvp-plan).
+- **Archive-first lifecycle:** follow [ADR 0002](../decisions/0002-record-lifecycle-and-deletion.md).
+  Hard deletion is owner-only and limited to unused records without business
+  history; financial/audit history is preserved.
 - **i18n:** all new copy goes through `next-intl` with uk + en key parity. No
   English/Ukrainian strings in components.
 
@@ -75,8 +78,9 @@ Then check the local `/design` lab and `components/` for an existing adaptation
 before writing new UI. This is part of the Definition of Done.
 
 ### Definition of Done (every stage)
-- `pnpm lint typecheck test build` green across all affected packages (warnings
-  are failures).
+- Root `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build` green across
+  all affected packages (warnings are failures). Run API E2E separately against
+  an isolated database.
 - Domain changes covered by vitest; API changes covered by service unit tests +
   a supertest smoke for the critical flow; dialogs/forms have interaction tests.
 - `api-client` regenerated from Swagger; web consumes the typed client.

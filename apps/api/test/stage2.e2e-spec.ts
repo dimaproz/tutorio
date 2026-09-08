@@ -130,6 +130,24 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
     await prisma.auditLog.deleteMany({
       where: { workspaceId: { in: workspaceIds } },
     });
+    await prisma.lessonCreditEntry.deleteMany({
+      where: { workspaceId: { in: workspaceIds } },
+    });
+    await prisma.payment.deleteMany({
+      where: { workspaceId: { in: workspaceIds } },
+    });
+    await prisma.packageParticipantShare.deleteMany({
+      where: { workspaceId: { in: workspaceIds } },
+    });
+    await prisma.lesson.deleteMany({
+      where: { workspaceId: { in: workspaceIds } },
+    });
+    await prisma.lessonSeries.deleteMany({
+      where: { workspaceId: { in: workspaceIds } },
+    });
+    await prisma.lessonPackage.deleteMany({
+      where: { workspaceId: { in: workspaceIds } },
+    });
     await prisma.enrollment.deleteMany({
       where: { workspaceId: { in: workspaceIds } },
     });
@@ -252,10 +270,10 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
       expect(list.body.items[0].fullName).toBe('Alice Learner');
     });
 
-    it('updates with PATCH semantics and audits the diff; no-op adds nothing', async () => {
+    it('owner updates with PATCH semantics and audits the diff; no-op adds nothing', async () => {
       await server()
         .patch(`/api/students/${studentId}`)
-        .set('Authorization', auth(teacherA))
+        .set('Authorization', auth(ownerA))
         .send({ notes: 'Moved to mornings', phone: null })
         .expect(200);
       expect(await auditCount('STUDENT', studentId, 'UPDATE')).toBe(1);
@@ -263,7 +281,7 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
       // Identical payload → no new audit row.
       await server()
         .patch(`/api/students/${studentId}`)
-        .set('Authorization', auth(teacherA))
+        .set('Authorization', auth(ownerA))
         .send({ notes: 'Moved to mornings' })
         .expect(200);
       expect(await auditCount('STUDENT', studentId, 'UPDATE')).toBe(1);
@@ -363,31 +381,45 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
       expect(listB.body.total).toBe(0);
     });
 
-    it('permanently deletes a student and drops it from lists (no trash, no restore)', async () => {
+    it('archives and restores a student; an unused student can be hard-deleted explicitly', async () => {
       await server()
         .delete(`/api/students/${studentId}`)
         .set('Authorization', auth(ownerA))
         .expect(204);
       expect(await auditCount('STUDENT', studentId, 'DELETE')).toBe(1);
 
-      // Gone from the default list and detail returns 404.
+      // Archive hides the student from operational lists but does not destroy
+      // its identity. The explicit restore command is idempotent.
       const defaultList = await server()
         .get('/api/students')
         .set('Authorization', auth(ownerA))
         .expect(200);
       expect(defaultList.body.total).toBe(0);
-      await server()
-        .get(`/api/students/${studentId}`)
+      const restored = await server()
+        .post(`/api/students/${studentId}/restore`)
         .set('Authorization', auth(ownerA))
-        .expect(404);
-
-      // Deleting an already-gone student is a plain not-found; no restore route.
-      await server()
-        .delete(`/api/students/${studentId}`)
-        .set('Authorization', auth(ownerA))
-        .expect(404);
+        .expect(200);
+      expect(restored.body).toMatchObject({
+        id: studentId,
+        status: 'ACTIVE',
+        deletedAt: null,
+      });
+      expect(await auditCount('STUDENT', studentId, 'RESTORE')).toBe(1);
       await server()
         .post(`/api/students/${studentId}/restore`)
+        .set('Authorization', auth(ownerA))
+        .expect(200);
+      expect(await auditCount('STUDENT', studentId, 'RESTORE')).toBe(1);
+
+      await server()
+        .delete(`/api/students/${studentId}/permanently`)
+        .set('Authorization', auth(ownerA))
+        .expect(204);
+
+      // A removed draft is genuinely gone; the regular lifecycle endpoint has
+      // no hidden restore behavior after a hard delete.
+      await server()
+        .delete(`/api/students/${studentId}/permanently`)
         .set('Authorization', auth(ownerA))
         .expect(404);
     });
@@ -396,7 +428,6 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
   describe('groups and enrollments', () => {
     let studentId: string;
     let groupId: string;
-    let individualEnrollmentId: string;
     let groupEnrollmentId: string;
 
     beforeAll(async () => {
@@ -438,8 +469,6 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
           currency: 'UAH',
         })
         .expect(201);
-      individualEnrollmentId = created.body.id;
-
       expect(created.body.student.fullName).toBe('Bohdan Learner');
       expect(created.body.teacher.name).toBe('Teacher A');
       expect(created.body.group).toBeNull();
@@ -532,59 +561,596 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
       expect(crossTeacher.body.code).toBe('TEACHER_NOT_FOUND');
     });
 
-    it('blocks group deletion while ACTIVE or PAUSED enrollments exist', async () => {
-      // A group with an active enrollment cannot be soft-deleted.
-      const blockedGroup = await server()
-        .delete(`/api/groups/${groupId}`)
-        .set('Authorization', auth(ownerA))
-        .expect(409);
-      expect(blockedGroup.body.code).toBe('ACTIVE_ENROLLMENTS_EXIST');
-
-      // PAUSED still blocks.
+    it('archives an active or paused group without disconnecting its roster', async () => {
+      // A PAUSED enrollment is still historical membership and must stay linked
+      // through archive and restore.
       await server()
         .patch(`/api/enrollments/${groupEnrollmentId}`)
         .set('Authorization', auth(ownerA))
         .send({ status: 'PAUSED' })
         .expect(200);
-      await server()
-        .delete(`/api/groups/${groupId}`)
-        .set('Authorization', auth(ownerA))
-        .expect(409);
-    });
 
-    it('archiving enrollments unblocks deletion; archive ≠ trash', async () => {
-      await server()
-        .patch(`/api/enrollments/${groupEnrollmentId}`)
-        .set('Authorization', auth(ownerA))
-        .send({ status: 'ARCHIVED' })
-        .expect(200);
-
-      // Archived enrollments remain visible in history…
-      const archived = await server()
-        .get('/api/enrollments')
-        .query({ status: 'ARCHIVED' })
-        .set('Authorization', auth(ownerA))
-        .expect(200);
-      expect(archived.body.items.map((e: { id: string }) => e.id)).toContain(
-        groupEnrollmentId,
-      );
-
-      // …and no longer block deleting the group.
       await server()
         .delete(`/api/groups/${groupId}`)
         .set('Authorization', auth(ownerA))
         .expect(204);
       expect(await auditCount('GROUP', groupId, 'DELETE')).toBe(1);
 
-      await server()
-        .patch(`/api/enrollments/${individualEnrollmentId}`)
+      const archivedEnrollment = await prisma.enrollment.findUniqueOrThrow({
+        where: { id: groupEnrollmentId },
+        select: { groupId: true, status: true, deletedAt: true },
+      });
+      expect(archivedEnrollment).toEqual({
+        groupId,
+        status: 'PAUSED',
+        deletedAt: null,
+      });
+
+      const restored = await server()
+        .post(`/api/groups/${groupId}/restore`)
         .set('Authorization', auth(ownerA))
-        .send({ status: 'ARCHIVED' })
         .expect(200);
+      expect(restored.body.deletedAt).toBeNull();
+      expect(await auditCount('GROUP', groupId, 'RESTORE')).toBe(1);
       await server()
-        .delete(`/api/students/${studentId}`)
+        .post(`/api/groups/${groupId}/restore`)
+        .set('Authorization', auth(ownerA))
+        .expect(200);
+      expect(await auditCount('GROUP', groupId, 'RESTORE')).toBe(1);
+
+      // Repeated archive/restore calls are safe no-ops after the first change.
+      await server()
+        .delete(`/api/groups/${groupId}`)
         .set('Authorization', auth(ownerA))
         .expect(204);
+      expect(await auditCount('GROUP', groupId, 'DELETE')).toBe(2);
+      await server()
+        .delete(`/api/groups/${groupId}`)
+        .set('Authorization', auth(ownerA))
+        .expect(204);
+      expect(await auditCount('GROUP', groupId, 'DELETE')).toBe(2);
+    });
+  });
+
+  describe('history-preserving lifecycles', () => {
+    let historyStudentId: string;
+    let historyGroupId: string;
+    let groupEnrollmentId: string;
+    let groupPackageId: string;
+
+    it('archives and restores an empty group', async () => {
+      const group = await server()
+        .post('/api/groups')
+        .set('Authorization', auth(ownerA))
+        .send({ name: `Empty lifecycle group ${runId}` })
+        .expect(201);
+
+      await server()
+        .delete(`/api/groups/${group.body.id}`)
+        .set('Authorization', auth(ownerA))
+        .expect(204);
+      const restored = await server()
+        .post(`/api/groups/${group.body.id}/restore`)
+        .set('Authorization', auth(ownerA))
+        .expect(200);
+      expect(restored.body.deletedAt).toBeNull();
+      expect(await auditCount('GROUP', group.body.id, 'DELETE')).toBe(1);
+      expect(await auditCount('GROUP', group.body.id, 'RESTORE')).toBe(1);
+    });
+
+    it('archives and restores a group without clearing completed lessons or finance history', async () => {
+      const student = await server()
+        .post('/api/students')
+        .set('Authorization', auth(ownerA))
+        .send({ fullName: 'Lifecycle Learner', timezone: 'UTC' })
+        .expect(201);
+      historyStudentId = student.body.id;
+      const group = await server()
+        .post('/api/groups')
+        .set('Authorization', auth(ownerA))
+        .send({ name: `Lifecycle Group ${runId}` })
+        .expect(201);
+      historyGroupId = group.body.id;
+      const enrollment = await server()
+        .post('/api/enrollments')
+        .set('Authorization', auth(ownerA))
+        .send({
+          studentId: historyStudentId,
+          groupId: historyGroupId,
+          teacherId: ownerTeacherId,
+          priceMinor: 2500,
+          currency: 'EUR',
+        })
+        .expect(201);
+      groupEnrollmentId = enrollment.body.id;
+
+      const now = new Date();
+      const completedAt = new Date(now.getTime() - 2 * 86_400_000);
+      const futureAt = new Date(now.getTime() + 2 * 86_400_000);
+      const pkg = await prisma.lessonPackage.create({
+        data: {
+          workspaceId: workspaceAId,
+          groupId: historyGroupId,
+          sizingMode: 'FIXED_COUNT',
+          lessonsTotal: 2,
+          pricePerLessonMinorSnapshot: 2500,
+          totalPriceMinorSnapshot: 5000,
+          currency: 'EUR',
+        },
+      });
+      groupPackageId = pkg.id;
+      const series = await prisma.lessonSeries.create({
+        data: {
+          workspaceId: workspaceAId,
+          groupId: historyGroupId,
+          teacherId: ownerTeacherId,
+          weekdays: [futureAt.getUTCDay()],
+          localTime: '10:00',
+          timezone: 'UTC',
+          durationMin: 60,
+          priceMinor: 2500,
+          currency: 'EUR',
+          startDate: now,
+          horizonMaterializedUntil: futureAt,
+        },
+      });
+      const completed = await prisma.lesson.create({
+        data: {
+          workspaceId: workspaceAId,
+          groupId: historyGroupId,
+          seriesId: series.id,
+          packageId: pkg.id,
+          teacherId: ownerTeacherId,
+          startsAtUtc: completedAt,
+          durationMin: 60,
+          priceMinor: 2500,
+          currency: 'EUR',
+          status: 'COMPLETED',
+          completedAt,
+        },
+      });
+      const future = await prisma.lesson.create({
+        data: {
+          workspaceId: workspaceAId,
+          groupId: historyGroupId,
+          seriesId: series.id,
+          packageId: pkg.id,
+          teacherId: ownerTeacherId,
+          startsAtUtc: futureAt,
+          durationMin: 60,
+          priceMinor: 2500,
+          currency: 'EUR',
+        },
+      });
+      await prisma.lessonCreditEntry.create({
+        data: {
+          workspaceId: workspaceAId,
+          packageId: pkg.id,
+          enrollmentId: groupEnrollmentId,
+          lessonId: completed.id,
+          delta: -1,
+          type: 'lesson_completed',
+          idempotencyKey: `lifecycle-credit-${runId}`,
+        },
+      });
+      await prisma.packageParticipantShare.create({
+        data: {
+          workspaceId: workspaceAId,
+          packageId: pkg.id,
+          enrollmentId: groupEnrollmentId,
+          oweMinor: 5000,
+        },
+      });
+      await prisma.payment.create({
+        data: {
+          workspaceId: workspaceAId,
+          packageId: pkg.id,
+          enrollmentId: groupEnrollmentId,
+          amountMinor: 5000,
+          currency: 'EUR',
+          method: 'CASH',
+        },
+      });
+
+      await server()
+        .delete(`/api/groups/${historyGroupId}`)
+        .set('Authorization', auth(teacherA))
+        .expect(403);
+      await server()
+        .delete(`/api/groups/${historyGroupId}`)
+        .set('Authorization', auth(ownerB))
+        .expect(404);
+      await server()
+        .delete(`/api/groups/${historyGroupId}`)
+        .set('Authorization', auth(ownerA))
+        .expect(204);
+
+      expect(
+        await prisma.enrollment.findUniqueOrThrow({
+          where: { id: groupEnrollmentId },
+          select: { groupId: true, deletedAt: true },
+        }),
+      ).toEqual({ groupId: historyGroupId, deletedAt: null });
+      expect(
+        await prisma.lesson.findUniqueOrThrow({
+          where: { id: completed.id },
+          select: { groupId: true, status: true, deletedAt: true },
+        }),
+      ).toEqual({
+        groupId: historyGroupId,
+        status: 'COMPLETED',
+        deletedAt: null,
+      });
+      expect(
+        (
+          await prisma.lesson.findUniqueOrThrow({
+            where: { id: future.id },
+            select: { deletedAt: true },
+          })
+        ).deletedAt,
+      ).not.toBeNull();
+      expect(
+        (
+          await prisma.lessonSeries.findUniqueOrThrow({
+            where: { id: series.id },
+            select: { deletedAt: true },
+          })
+        ).deletedAt,
+      ).not.toBeNull();
+      expect(
+        await prisma.lessonPackage.findUniqueOrThrow({
+          where: { id: pkg.id },
+          select: { groupId: true, deletedAt: true },
+        }),
+      ).toEqual({ groupId: historyGroupId, deletedAt: null });
+      expect(
+        await prisma.payment.count({
+          where: { packageId: pkg.id, deletedAt: null },
+        }),
+      ).toBe(1);
+      expect(
+        await prisma.packageParticipantShare.count({
+          where: { packageId: pkg.id },
+        }),
+      ).toBe(1);
+      expect(
+        await prisma.lessonCreditEntry.count({ where: { packageId: pkg.id } }),
+      ).toBe(1);
+
+      await server()
+        .post(`/api/groups/${historyGroupId}/restore`)
+        .set('Authorization', auth(ownerA))
+        .expect(200);
+      expect(
+        (
+          await prisma.lesson.findUniqueOrThrow({
+            where: { id: future.id },
+            select: { deletedAt: true },
+          })
+        ).deletedAt,
+      ).toBeNull();
+      expect(
+        (
+          await prisma.lessonSeries.findUniqueOrThrow({
+            where: { id: series.id },
+            select: { deletedAt: true },
+          })
+        ).deletedAt,
+      ).toBeNull();
+      expect(await auditCount('GROUP', historyGroupId, 'DELETE')).toBe(1);
+      expect(await auditCount('GROUP', historyGroupId, 'RESTORE')).toBe(1);
+    });
+
+    it('rolls back a group restore when an external schedule conflict appeared', async () => {
+      const group = await server()
+        .post('/api/groups')
+        .set('Authorization', auth(ownerA))
+        .send({ name: `Conflicting lifecycle group ${runId}` })
+        .expect(201);
+      const startsAtUtc = new Date(Date.now() + 3 * 86_400_000);
+      const series = await prisma.lessonSeries.create({
+        data: {
+          workspaceId: workspaceAId,
+          groupId: group.body.id,
+          teacherId: ownerTeacherId,
+          weekdays: [startsAtUtc.getUTCDay()],
+          localTime: '11:00',
+          timezone: 'UTC',
+          durationMin: 60,
+          priceMinor: 0,
+          currency: 'EUR',
+          startDate: new Date(),
+          horizonMaterializedUntil: startsAtUtc,
+        },
+      });
+      const suspended = await prisma.lesson.create({
+        data: {
+          workspaceId: workspaceAId,
+          groupId: group.body.id,
+          seriesId: series.id,
+          teacherId: ownerTeacherId,
+          startsAtUtc,
+          durationMin: 60,
+          priceMinor: 0,
+          currency: 'EUR',
+        },
+      });
+      await server()
+        .delete(`/api/groups/${group.body.id}`)
+        .set('Authorization', auth(ownerA))
+        .expect(204);
+      await prisma.lesson.create({
+        data: {
+          workspaceId: workspaceAId,
+          teacherId: ownerTeacherId,
+          startsAtUtc,
+          durationMin: 60,
+          priceMinor: 0,
+          currency: 'EUR',
+        },
+      });
+
+      const rejected = await server()
+        .post(`/api/groups/${group.body.id}/restore`)
+        .set('Authorization', auth(ownerA))
+        .expect(409);
+      expect(rejected.body.code).toBe('SCHEDULE_CONFLICT');
+      expect(
+        (
+          await prisma.group.findUniqueOrThrow({
+            where: { id: group.body.id },
+            select: { deletedAt: true },
+          })
+        ).deletedAt,
+      ).not.toBeNull();
+      expect(
+        (
+          await prisma.lesson.findUniqueOrThrow({
+            where: { id: suspended.id },
+            select: { deletedAt: true },
+          })
+        ).deletedAt,
+      ).not.toBeNull();
+      expect(await auditCount('GROUP', group.body.id, 'RESTORE')).toBe(0);
+    });
+
+    it('archives a student with every kind of business history and blocks hard delete', async () => {
+      const individual = await server()
+        .post('/api/enrollments')
+        .set('Authorization', auth(ownerA))
+        .send({
+          studentId: historyStudentId,
+          teacherId: secondTeacherId,
+          priceMinor: 2500,
+          currency: 'EUR',
+        })
+        .expect(201);
+      const startsAtUtc = new Date(Date.now() + 4 * 86_400_000);
+      const series = await prisma.lessonSeries.create({
+        data: {
+          workspaceId: workspaceAId,
+          enrollmentId: individual.body.id,
+          teacherId: secondTeacherId,
+          weekdays: [startsAtUtc.getUTCDay()],
+          localTime: '12:00',
+          timezone: 'UTC',
+          durationMin: 60,
+          priceMinor: 2500,
+          currency: 'EUR',
+          startDate: new Date(),
+          horizonMaterializedUntil: startsAtUtc,
+        },
+      });
+      const scheduled = await prisma.lesson.create({
+        data: {
+          workspaceId: workspaceAId,
+          enrollmentId: individual.body.id,
+          seriesId: series.id,
+          teacherId: secondTeacherId,
+          startsAtUtc,
+          durationMin: 60,
+          priceMinor: 2500,
+          currency: 'EUR',
+        },
+      });
+
+      await server()
+        .delete(`/api/students/${historyStudentId}`)
+        .set('Authorization', auth(teacherA))
+        .expect(403);
+      await server()
+        .delete(`/api/students/${historyStudentId}`)
+        .set('Authorization', auth(ownerB))
+        .expect(404);
+      await server()
+        .delete(`/api/students/${historyStudentId}`)
+        .set('Authorization', auth(ownerA))
+        .expect(204);
+
+      expect(
+        await prisma.student.findUniqueOrThrow({
+          where: { id: historyStudentId },
+          select: { status: true, archivedAt: true },
+        }),
+      ).toMatchObject({ status: 'ARCHIVED', archivedAt: expect.any(Date) });
+      const archivedEnrollment = await prisma.enrollment.findUniqueOrThrow({
+        where: { id: groupEnrollmentId },
+        select: {
+          groupId: true,
+          status: true,
+          studentArchivedAt: true,
+          statusBeforeStudentArchive: true,
+        },
+      });
+      expect(archivedEnrollment).toMatchObject({
+        groupId: historyGroupId,
+        status: 'ARCHIVED',
+        studentArchivedAt: expect.any(Date),
+        statusBeforeStudentArchive: 'ACTIVE',
+      });
+      const archivedRoster = await server()
+        .get(`/api/groups/${historyGroupId}`)
+        .set('Authorization', auth(ownerA))
+        .expect(200);
+      expect(archivedRoster.body.enrollments).toEqual([]);
+      const directPatch = await server()
+        .patch(`/api/students/${historyStudentId}`)
+        .set('Authorization', auth(ownerA))
+        .send({ fullName: 'Unsafe archive bypass' })
+        .expect(409);
+      expect(directPatch.body.code).toBe('STUDENT_ARCHIVED_REQUIRES_RESTORE');
+      expect(
+        (
+          await prisma.lesson.findUniqueOrThrow({
+            where: { id: scheduled.id },
+            select: { deletedAt: true },
+          })
+        ).deletedAt,
+      ).not.toBeNull();
+      expect(
+        (
+          await prisma.lessonSeries.findUniqueOrThrow({
+            where: { id: series.id },
+            select: { deletedAt: true },
+          })
+        ).deletedAt,
+      ).not.toBeNull();
+      expect(
+        await prisma.payment.count({ where: { packageId: groupPackageId } }),
+      ).toBe(1);
+      expect(
+        await prisma.packageParticipantShare.count({
+          where: { packageId: groupPackageId },
+        }),
+      ).toBe(1);
+      expect(
+        await prisma.lessonCreditEntry.count({
+          where: { packageId: groupPackageId },
+        }),
+      ).toBe(1);
+
+      const blockedCharge = await server()
+        .post('/api/packages')
+        .set('Authorization', auth(ownerA))
+        .send({
+          groupId: historyGroupId,
+          sizingMode: 'FIXED_COUNT',
+          lessonsTotal: 1,
+          pricePerLessonMinor: 2500,
+          currency: 'EUR',
+        })
+        .expect(400);
+      expect(blockedCharge.body.code).toBe('INVALID_PACKAGE_PLAN');
+
+      const blocked = await server()
+        .delete(`/api/students/${historyStudentId}/permanently`)
+        .set('Authorization', auth(ownerA))
+        .expect(409);
+      expect(blocked.body.code).toBe('STUDENT_HAS_BUSINESS_HISTORY');
+      expect(blocked.body.details.dependencies).toMatchObject({
+        enrollments: expect.any(Number),
+        packages: expect.any(Number),
+        payments: expect.any(Number),
+        shares: expect.any(Number),
+        credits: expect.any(Number),
+      });
+      expect(await auditCount('STUDENT', historyStudentId, 'DELETE')).toBe(1);
+
+      await server()
+        .post(`/api/students/${historyStudentId}/restore`)
+        .set('Authorization', auth(ownerA))
+        .expect(200);
+      expect(
+        await prisma.enrollment.findUniqueOrThrow({
+          where: { id: groupEnrollmentId },
+          select: {
+            groupId: true,
+            status: true,
+            studentArchivedAt: true,
+            statusBeforeStudentArchive: true,
+          },
+        }),
+      ).toEqual({
+        groupId: historyGroupId,
+        status: 'ACTIVE',
+        studentArchivedAt: null,
+        statusBeforeStudentArchive: null,
+      });
+      expect(
+        (
+          await prisma.lesson.findUniqueOrThrow({
+            where: { id: scheduled.id },
+            select: { deletedAt: true },
+          })
+        ).deletedAt,
+      ).toBeNull();
+      expect(await auditCount('STUDENT', historyStudentId, 'RESTORE')).toBe(1);
+    });
+
+    it('restores a paused group enrollment to PAUSED without removing its group link', async () => {
+      const student = await server()
+        .post('/api/students')
+        .set('Authorization', auth(ownerA))
+        .send({ fullName: 'Paused lifecycle learner', timezone: 'UTC' })
+        .expect(201);
+      const group = await server()
+        .post('/api/groups')
+        .set('Authorization', auth(ownerA))
+        .send({ name: `Paused lifecycle group ${runId}` })
+        .expect(201);
+      const enrollment = await server()
+        .post('/api/enrollments')
+        .set('Authorization', auth(ownerA))
+        .send({
+          studentId: student.body.id,
+          groupId: group.body.id,
+          teacherId: ownerTeacherId,
+          priceMinor: 2500,
+          currency: 'EUR',
+        })
+        .expect(201);
+      await prisma.enrollment.update({
+        where: { id: enrollment.body.id },
+        data: { status: 'PAUSED' },
+      });
+
+      await server()
+        .delete(`/api/students/${student.body.id}`)
+        .set('Authorization', auth(ownerA))
+        .expect(204);
+      expect(
+        await prisma.enrollment.findUniqueOrThrow({
+          where: { id: enrollment.body.id },
+          select: {
+            groupId: true,
+            status: true,
+            statusBeforeStudentArchive: true,
+          },
+        }),
+      ).toEqual({
+        groupId: group.body.id,
+        status: 'ARCHIVED',
+        statusBeforeStudentArchive: 'PAUSED',
+      });
+
+      await server()
+        .post(`/api/students/${student.body.id}/restore`)
+        .set('Authorization', auth(ownerA))
+        .expect(200);
+      expect(
+        await prisma.enrollment.findUniqueOrThrow({
+          where: { id: enrollment.body.id },
+          select: {
+            groupId: true,
+            status: true,
+            statusBeforeStudentArchive: true,
+          },
+        }),
+      ).toEqual({
+        groupId: group.body.id,
+        status: 'PAUSED',
+        statusBeforeStudentArchive: null,
+      });
     });
   });
 

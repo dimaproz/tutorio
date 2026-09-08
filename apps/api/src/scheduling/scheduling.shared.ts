@@ -140,7 +140,13 @@ export async function assertTargetAndTeacher(
 ): Promise<void> {
   if (target.enrollmentId) {
     const enrollment = await tx.enrollment.findFirst({
-      where: { id: target.enrollmentId, workspaceId, deletedAt: null },
+      where: {
+        id: target.enrollmentId,
+        workspaceId,
+        deletedAt: null,
+        status: 'ACTIVE',
+        student: { deletedAt: null, status: { not: 'ARCHIVED' } },
+      },
       select: { id: true },
     });
     if (!enrollment) {
@@ -199,7 +205,12 @@ export async function resolveStudentTarget(
   },
 ): Promise<ResolvedStudentTarget> {
   const student = await tx.student.findFirst({
-    where: { id: input.studentId, workspaceId },
+    where: {
+      id: input.studentId,
+      workspaceId,
+      deletedAt: null,
+      status: { not: 'ARCHIVED' },
+    },
     select: { id: true, hourlyRateMinor: true, currency: true },
   });
   if (!student) {
@@ -358,4 +369,13 @@ export function localHourMinute(instant: Date, timezone: string): string {
   const hour = parts.find((part) => part.type === 'hour')?.value ?? '00';
   const minute = parts.find((part) => part.type === 'minute')?.value ?? '00';
   return `${hour}:${minute}`;
+}
+
+/** JS weekday (0 = Sunday) for the local calendar date of an instant. */
+export function localWeekday(instant: Date, timezone: string): number {
+  const weekday = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    weekday: 'short',
+  }).format(instant);
+  return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(weekday);
 }

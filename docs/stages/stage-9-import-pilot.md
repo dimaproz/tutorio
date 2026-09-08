@@ -1,27 +1,33 @@
-# Stage 9 — CSV Import, SpeakWise Pilot, GDPR minimum
+# Stage 9 — Pilot Graduation and Import Expansion
 
 > **Outcome:** real data migrates in, a real month runs through the system
 > without manual DB fixes, and the GDPR minimum is met. This is the graduation
 > stage — the product proves it can run a live school.
 >
-> **Pillar:** Ops · **Status:** Planned · **Depends on:** the operational
-> stages it migrates data into (Students/Groups, Scheduling, Packages/Payments).
+> **Pillar:** Ops · **Status:** Planned after core pilot · **Depends on:** the
+> operational stages it migrates data into (Students/Groups, Scheduling,
+> Packages/Payments).
 
 ## 1. Goal & non-goals
 
 **Goals**
-- **CSV import** of students, schedule, and balances — critical for migrating
-  SpeakWise and for onboarding any tutor (they all come from Google Sheets).
+- Expand the minimal student import delivered in Stage 4.1 into schedule,
+  package, payment, and balance migration for the confirmed pilot dataset.
 - **SpeakWise pilot:** migrate real data, run a full payment month, record every
   manual fix as a bug report, fix bugs.
 - **GDPR minimum:** privacy policy, workspace data export (JSON), full workspace
   deletion on request, parent-contact field for minors.
-- *(Optional, last)* the `/features` ("Можливості") in-app catalogue — pure
+- *(Optional, last)* the `/features` in-app capabilities catalogue — pure
   static content linking to real routes; cheapest to build once everything
   exists.
 
 **Non-goals**
 - No DPA / access-log (deferred until paying EU customers).
+
+The controlled pilot, backup/restore proof, basic export, and privacy runbook are
+now pulled forward into Stage 4.1 because they are release gates rather than
+late feature work. This stage graduates those capabilities for repeated
+onboarding after the core pilot succeeds.
 
 ## 2. Domain / model
 - No new core entities. Import is an ETL surface; GDPR export/delete operate over
@@ -64,5 +70,7 @@ workspace can export and delete its data.
 ## 8. Risks & decisions
 - **Bad imports corrupting money** — dry-run preview + transactional commit +
   ledger-based balances make every import reversible/auditable.
-- **Irreversible workspace delete** — hard delete is intentional and owner-gated
-  with explicit confirmation; export offered first.
+- **Controlled workspace privacy workflow** — export first, then delete or
+  anonymize according to [ADR 0002](../decisions/0002-record-lifecycle-and-deletion.md).
+  The operation is owner-gated, resumable, and preserves required finance/audit
+  evidence.

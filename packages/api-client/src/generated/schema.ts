@@ -227,8 +227,8 @@ export interface paths {
         put?: never;
         post?: never;
         /**
-         * Permanently delete a student
-         * @description Irreversible. Removes the student together with its parent links and enrollments. There is no trash and no restore.
+         * Archive a student
+         * @description Owner-only and reversible. Keeps business history and suspends only the student's future individual schedule.
          */
         delete: operations["StudentsController_remove"];
         options?: never;
@@ -238,6 +238,43 @@ export interface paths {
          * @description PATCH semantics: omitted fields stay unchanged, null clears an optional field. A no-op update creates no audit entry.
          */
         patch: operations["StudentsController_update"];
+        trace?: never;
+    };
+    "/api/students/{studentId}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore an archived student (owner only) */
+        post: operations["StudentsController_restore"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/students/{studentId}/permanently": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Permanently delete an unused student (owner only)
+         * @description Irreversible. Returns STUDENT_HAS_BUSINESS_HISTORY when lessons, enrollments, packages, payments, shares, or credits exist.
+         */
+        delete: operations["StudentsController_removePermanently"];
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/parents": {
@@ -379,8 +416,8 @@ export interface paths {
         put?: never;
         post?: never;
         /**
-         * Soft-delete a group (move to trash)
-         * @description Idempotent. Fails with ACTIVE_ENROLLMENTS_EXIST while the group has active or paused enrollments.
+         * Archive a group
+         * @description Owner-only and idempotent. Preserves the roster and financial history, then suspends related series and future scheduled lessons.
          */
         delete: operations["GroupsController_softDelete"];
         options?: never;
@@ -561,7 +598,7 @@ export interface paths {
         head?: never;
         /**
          * Change a lesson status
-         * @description Enforces the lesson state machine. Cancelling requires cancelledBy. No ledger effect in Stage 3.
+         * @description Enforces the lesson state machine. Cancelling requires cancelledBy. Charged terminal states consume one package credit and restoration appends an exact compensation.
          */
         patch: operations["LessonsController_transition"];
         trace?: never;
@@ -648,8 +685,8 @@ export interface paths {
         put?: never;
         post?: never;
         /**
-         * Soft-delete a package
-         * @description Idempotent. The credit ledger history is retained.
+         * Archive a package
+         * @description Idempotent. Stops owned series and future scheduled lessons; financial history is retained.
          */
         delete: operations["PackagesController_remove"];
         options?: never;
@@ -915,7 +952,7 @@ export interface components {
              * @default ACTIVE
              * @enum {string}
              */
-            status: "ACTIVE" | "ON_HOLD" | "ARCHIVED";
+            status: "ACTIVE" | "ON_HOLD";
             /** @enum {string} */
             languageLevel: "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
             /** @enum {string} */
@@ -1041,7 +1078,7 @@ export interface components {
             /** @enum {string|null} */
             currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
             /** @enum {string} */
-            status?: "ACTIVE" | "ON_HOLD" | "ARCHIVED";
+            status?: "ACTIVE" | "ON_HOLD";
             /** @enum {string|null} */
             languageLevel?: "A1" | "A2" | "B1" | "B2" | "C1" | "C2" | null;
             /** @enum {string|null} */
@@ -1560,6 +1597,8 @@ export interface components {
             /** Format: uuid */
             groupId?: string | null;
             /** Format: uuid */
+            packageId?: string;
+            /** Format: uuid */
             teacherId?: string;
             startsAt: string[];
             durationMin: number;
@@ -2042,6 +2081,7 @@ export interface components {
             /** Format: date-time */
             paidAt?: string;
             note?: string | null;
+            idempotencyKey?: string;
         };
         PaymentDto: {
             /** Format: uuid */
@@ -2333,6 +2373,14 @@ export interface operations {
                     "application/json": components["schemas"]["WorkspaceMemberListDto"];
                 };
             };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
         };
     };
     AuditController_list: {
@@ -2428,6 +2476,15 @@ export interface operations {
                     "application/json": components["schemas"]["StudentDto"];
                 };
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
         };
     };
     StudentsController_getDetail: {
@@ -2447,6 +2504,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StudentDetailDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
             404: {
@@ -2475,6 +2541,15 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
             };
             404: {
                 headers: {
@@ -2507,6 +2582,97 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StudentDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Archived students must be restored through POST /students/:studentId/restore before PATCH. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    StudentsController_restore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                studentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    StudentsController_removePermanently: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                studentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
             404: {
@@ -2573,6 +2739,15 @@ export interface operations {
                     "application/json": components["schemas"]["ParentDto"];
                 };
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
         };
     };
     ParentsController_getDetail: {
@@ -2592,6 +2767,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ParentDetailDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
             404: {
@@ -2620,6 +2804,15 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
             };
             404: {
                 headers: {
@@ -2652,6 +2845,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ParentDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
             404: {
@@ -2718,6 +2920,15 @@ export interface operations {
                     "application/json": components["schemas"]["TeacherDto"];
                 };
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
         };
     };
     TeachersController_getDetail: {
@@ -2737,6 +2948,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TeacherDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
             404: {
@@ -2765,6 +2985,15 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
             };
             404: {
                 headers: {
@@ -2799,6 +3028,15 @@ export interface operations {
                     "application/json": components["schemas"]["TeacherDto"];
                 };
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -2826,6 +3064,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TeacherDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
             404: {
@@ -2895,6 +3142,15 @@ export interface operations {
                     "application/json": components["schemas"]["GroupDto"];
                 };
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
         };
     };
     GroupsController_getDetail: {
@@ -2914,6 +3170,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GroupDetailDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
             404: {
@@ -2942,6 +3207,15 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
             };
             404: {
                 headers: {
@@ -2984,6 +3258,15 @@ export interface operations {
                     "application/json": components["schemas"]["GroupDto"];
                 };
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -3022,6 +3305,15 @@ export interface operations {
                 };
             };
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description Legacy destructive group deletes require manual repair before restore. */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3087,6 +3379,15 @@ export interface operations {
                     "application/json": components["schemas"]["EnrollmentDto"];
                 };
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -3124,6 +3425,15 @@ export interface operations {
                     "application/json": components["schemas"]["EnrollmentDto"];
                 };
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -3150,6 +3460,15 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
             };
             404: {
                 headers: {
@@ -3182,6 +3501,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EnrollmentDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
             404: {
@@ -3264,11 +3592,22 @@ export interface operations {
                     "application/json": components["schemas"]["LessonListDto"];
                 };
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
         };
     };
     LessonsController_create: {
         parameters: {
-            query?: never;
+            query?: {
+                force?: boolean | "true" | "false";
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -3285,6 +3624,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LessonListDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
             409: {
@@ -3314,6 +3662,15 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
         };
     };
     LessonsController_update: {
@@ -3339,6 +3696,15 @@ export interface operations {
                     "application/json": components["schemas"]["LessonDto"];
                 };
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -3351,7 +3717,9 @@ export interface operations {
     };
     LessonsController_reschedule: {
         parameters: {
-            query?: never;
+            query?: {
+                force?: boolean | "true" | "false";
+            };
             header?: never;
             path: {
                 lessonId: string;
@@ -3370,6 +3738,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LessonDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
             404: {
@@ -3411,6 +3788,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LessonDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
             404: {
@@ -3467,7 +3853,9 @@ export interface operations {
     };
     SeriesController_create: {
         parameters: {
-            query?: never;
+            query?: {
+                force?: boolean | "true" | "false";
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -3484,6 +3872,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LessonSeriesDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
             404: {
@@ -3515,6 +3912,15 @@ export interface operations {
                     "application/json": components["schemas"]["LessonSeriesDto"];
                 };
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -3542,6 +3948,15 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -3554,7 +3969,9 @@ export interface operations {
     };
     SeriesController_update: {
         parameters: {
-            query?: never;
+            query?: {
+                force?: boolean | "true" | "false";
+            };
             header?: never;
             path: {
                 seriesId: string;
@@ -3573,6 +3990,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LessonSeriesDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
             404: {
@@ -3609,12 +4035,21 @@ export interface operations {
                     "application/json": components["schemas"]["PackageListDto"];
                 };
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
         };
     };
     PackagesController_create: {
         parameters: {
             query?: {
-                force?: boolean;
+                force?: boolean | "true" | "false";
             };
             header?: never;
             path?: never;
@@ -3635,6 +4070,15 @@ export interface operations {
                 };
             };
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3671,6 +4115,15 @@ export interface operations {
                     "application/json": components["schemas"]["PackageDto"];
                 };
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -3698,6 +4151,15 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
         };
     };
     PackagesController_getLedger: {
@@ -3717,6 +4179,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CreditLedgerDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
             404: {
@@ -3752,6 +4223,15 @@ export interface operations {
                     "application/json": components["schemas"]["PackageDto"];
                 };
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -3785,6 +4265,15 @@ export interface operations {
                     "application/json": components["schemas"]["PaymentListDto"];
                 };
             };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
         };
     };
     PaymentsController_record: {
@@ -3806,6 +4295,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PaymentDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
             404: {

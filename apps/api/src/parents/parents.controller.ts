@@ -24,6 +24,7 @@ import {
 import { ZodSerializerDto } from 'nestjs-zod';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { ApiErrorDto } from '../auth/dto/auth.dto';
 import {
   CreateParentDto,
@@ -37,11 +38,13 @@ import { ParentsService } from './parents.service';
 
 @ApiTags('parents')
 @ApiBearerAuth()
+@ApiForbiddenResponse({ type: ApiErrorDto, description: 'OWNER role required' })
 @Controller('parents')
 export class ParentsController {
   constructor(private readonly parents: ParentsService) {}
 
   @Get()
+  @Roles('OWNER')
   @ApiOperation({
     summary: 'List workspace parents',
     description:
@@ -60,6 +63,7 @@ export class ParentsController {
   }
 
   @Post()
+  @Roles('OWNER')
   @ApiOperation({ summary: 'Create a parent' })
   @ApiCreatedResponse({ type: ParentDto })
   @ZodSerializerDto(ParentDto)
@@ -71,6 +75,7 @@ export class ParentsController {
   }
 
   @Get(':parentId')
+  @Roles('OWNER')
   @ApiOperation({ summary: 'Get a parent with their linked-student roster' })
   @ApiOkResponse({ type: ParentDetailDto })
   @ApiNotFoundResponse({ type: ApiErrorDto })
@@ -83,6 +88,7 @@ export class ParentsController {
   }
 
   @Patch(':parentId')
+  @Roles('OWNER')
   @ApiOperation({
     summary: 'Update a parent',
     description:
@@ -101,6 +107,7 @@ export class ParentsController {
   }
 
   @Delete(':parentId')
+  @Roles('OWNER')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Permanently delete a parent',

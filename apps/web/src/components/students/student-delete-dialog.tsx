@@ -1,6 +1,6 @@
 'use client';
 
-import { ArchiveIcon, Trash2Icon } from 'lucide-react';
+import { ArchiveIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { StudentStatusDto } from '@tutorio/validation';
@@ -16,12 +16,11 @@ import {
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { errorMessageKey } from '@/lib/api/error-message';
-import { useDeleteStudentMutation, useUpdateStudentMutation } from '@/lib/api/students';
+import { useDeleteStudentMutation } from '@/lib/api/students';
 import type { GatewayError } from '@/lib/auth/client';
 
-// Delete confirmation that shows WHO is being removed (a student card), spells
-// out that it is permanent, and offers archiving as the non-destructive way
-// out. Deleting hits the hard-delete endpoint; archiving just flips the status.
+// Archive confirmation that removes a student from daily operations without
+// destroying their lesson or finance history.
 export function StudentDeleteDialog({
   open,
   onOpenChange,
@@ -44,24 +43,12 @@ export function StudentDeleteDialog({
   const tErrors = useTranslations('errors');
 
   const deleteStudent = useDeleteStudentMutation();
-  const archive = useUpdateStudentMutation(student.id);
-  const pending = deleteStudent.isPending || archive.isPending;
-  const canArchive = student.status !== 'ARCHIVED';
+  const pending = deleteStudent.isPending;
 
   async function onArchive() {
     try {
-      await archive.mutateAsync({ status: 'ARCHIVED' });
-      toast.success(t('toasts.archived'));
-      onOpenChange(false);
-    } catch (error) {
-      toast.error(tErrors(errorMessageKey(error as GatewayError)));
-    }
-  }
-
-  async function onDelete() {
-    try {
       await deleteStudent.mutateAsync(student.id);
-      toast.success(t('toasts.deleted'));
+      toast.success(t('toasts.archived'));
       onOpenChange(false);
       onDeleted?.();
     } catch (error) {
@@ -79,9 +66,7 @@ export function StudentDeleteDialog({
 
         <PersonMiniCard avatarKey={student.avatarKey} fullName={student.fullName} />
 
-        {canArchive ? (
-          <p className="text-sm text-muted-foreground">{t('deleteDialog.archiveHint')}</p>
-        ) : null}
+        <p className="text-sm text-muted-foreground">{t('deleteDialog.archiveHint')}</p>
 
         <DialogFooter>
           <Button
@@ -92,33 +77,18 @@ export function StudentDeleteDialog({
           >
             {tCommon('cancel')}
           </Button>
-          {canArchive ? (
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => void onArchive()}
-              disabled={pending}
-            >
-              {archive.isPending ? (
-                <Spinner data-icon="inline-start" />
-              ) : (
-                <ArchiveIcon data-icon="inline-start" />
-              )}
-              {t('deleteDialog.archiveAction')}
-            </Button>
-          ) : null}
           <Button
             type="button"
-            variant="destructive"
-            onClick={() => void onDelete()}
+            variant="secondary"
+            onClick={() => void onArchive()}
             disabled={pending}
           >
             {deleteStudent.isPending ? (
               <Spinner data-icon="inline-start" />
             ) : (
-              <Trash2Icon data-icon="inline-start" />
+              <ArchiveIcon data-icon="inline-start" />
             )}
-            {t('deleteDialog.confirm')}
+            {t('deleteDialog.archiveAction')}
           </Button>
         </DialogFooter>
       </DialogContent>

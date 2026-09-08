@@ -95,7 +95,7 @@ export function StudentForm({
   const tErrors = useTranslations('errors');
   const tValidation = useTranslations('validation');
   const tCommon = useTranslations('common');
-  const statusOptions = useStudentStatusOptions();
+  const statusOptions = useStudentStatusOptions().filter((option) => option.value !== 'ARCHIVED');
   const session = useSession();
 
   const isEdit = Boolean(student);
@@ -215,7 +215,9 @@ export function StudentForm({
           telegramUsername: cleared(formValues.telegramUsername),
           hourlyRateMinor,
           currency: hourlyRateMinor === null ? null : formValues.currency,
-          status: formValues.status,
+          // ARCHIVED is not offered by the form. The API remains the lifecycle
+          // authority and rejects any forged archived PATCH before it writes.
+          status: formValues.status as 'ACTIVE' | 'ON_HOLD',
           languageLevel: formValues.languageLevel === '' ? null : formValues.languageLevel,
           knowledgeLevel: formValues.knowledgeLevel === '' ? null : formValues.knowledgeLevel,
           age: formValues.age.trim() === '' ? null : Number(formValues.age),
@@ -237,7 +239,9 @@ export function StudentForm({
         telegramUsername: optional(formValues.telegramUsername),
         hourlyRateMinor: hourlyRateMinor ?? undefined,
         currency: hourlyRateMinor === null ? undefined : formValues.currency,
-        status: formValues.status,
+        // ARCHIVED is not a valid creation state; only the archive command may
+        // enter it. The selector above exposes operational statuses only.
+        status: formValues.status as 'ACTIVE' | 'ON_HOLD',
         languageLevel: formValues.languageLevel === '' ? undefined : formValues.languageLevel,
         knowledgeLevel: formValues.knowledgeLevel === '' ? undefined : formValues.knowledgeLevel,
         age: formValues.age.trim() === '' ? undefined : Number(formValues.age),

@@ -93,6 +93,17 @@
     "NO_ACTIVE_PACKAGE": "No active package covers this lesson.",
     "INVALID_PACKAGE_PLAN": "The package settings are not valid.",
     "CURRENCY_MISMATCH": "The currency does not match the record.",
+    "INVALID_PACKAGE_PAYMENT_RELATION": "The selected enrollment is not covered by this package.",
+    "OVERPAYMENT": "The payment exceeds the outstanding balance.",
+    "IDEMPOTENCY_CONFLICT": "This payment key was already used for a different payment.",
+    "STUDENT_HAS_BUSINESS_HISTORY": "This student has lessons or financial history and cannot be permanently deleted.",
+    "STUDENT_ARCHIVED_REQUIRES_RESTORE": "Restore this student before editing their profile.",
+    "GROUP_LEGACY_REPAIR_REQUIRED": "This group needs manual data repair before it can be restored.",
+    "LESSON_CREDIT_MUST_BE_REVERSED": "Restore this charged lesson before archiving it.",
+    "LESSON_FINANCIAL_HISTORY_IMMUTABLE": "A lesson with credit history cannot change its price or currency.",
+    "PACKAGE_NOT_ELIGIBLE_FOR_CREDIT": "Choose an active fixed-count package that covers this lesson.",
+    "LESSON_COMPENSATION_SOURCE_MISSING": "This lesson has no unmatched debit to compensate.",
+    "LESSON_TRANSITION_REPLAY_CONFLICT": "This transition was already recorded with different cancellation details.",
     "SOLO_MODE_SINGLE_TEACHER": "A solo workspace keeps a single teacher. Switch to school mode in settings to add more."
   },
   "validation": {
@@ -271,7 +282,7 @@
     "add": "Add student",
     "searchLabel": "Search students",
     "searchPlaceholder": "Name, email, phone or Telegram…",
-    "deletedBadge": "In trash",
+    "deletedBadge": "Archived",
     "putOnHold": "Put on hold",
     "reactivate": "Reactivate",
     "count": "{count, plural, =0 {No students} one {# student} other {# students}}",
@@ -396,15 +407,16 @@
       "updated": "Changes saved",
       "deleted": "Student permanently deleted",
       "archived": "Student archived",
+      "restored": "Student restored",
       "onHold": "Student put on hold",
       "reactivated": "Student reactivated"
     },
     "deleteDialog": {
-      "title": "Delete this student?",
-      "warning": "This is permanent — the student and all their links (enrollments, parent links) will be erased with no way to restore them.",
-      "archiveHint": "Don't want to lose the data? Archive instead — the student disappears from lists but stays in the database.",
+      "title": "Archive this student?",
+      "warning": "The student will leave operational lists. Lessons, enrollments, packages, payments, and history stay intact.",
+      "archiveHint": "Future individual lessons and recurring schedules will be suspended and can be restored after conflict checks.",
       "archiveAction": "Archive",
-      "confirm": "Delete permanently"
+      "confirm": "Archive"
     }
   },
   "groups": {
@@ -577,8 +589,8 @@
       "restored": "Group restored"
     },
     "deleteDialog": {
-      "title": "Move this group to trash?",
-      "description": "{name} will be hidden from lists but nothing is erased permanently. An owner can restore it at any time.",
+      "title": "Archive this group?",
+      "description": "{name} will leave operational lists. Its roster, completed lessons, packages, payments, shares, and credits stay intact; future scheduled lessons and recurring schedules are suspended.",
       "confirm": "Move to trash"
     }
   },
@@ -916,7 +928,7 @@
       "scopeFollowing": "This and following",
       "delete": "Delete lesson",
       "deleteTitle": "Delete this lesson?",
-      "deleteDescription": "The lesson leaves the calendar. If it came from a pattern, it will not be regenerated.",
+      "deleteDescription": "The lesson leaves the calendar. A charged lesson must be restored first so its credit is compensated. Pattern lessons will not be regenerated.",
       "deadlineLate": "{hours} h until the lesson, deadline {deadline} h — this is a late cancellation.",
       "deadlineOnTime": "{hours} h until the lesson, deadline {deadline} h — cancelling on time.",
       "deadlineStarted": "The lesson has already started — this is a late cancellation.",
@@ -978,8 +990,8 @@
       "addLesson": "Add lesson",
       "upcoming": "Upcoming",
       "past": "Past",
-      "noUpcoming": "No lessons scheduled.",
-      "noPast": "No lessons yet.",
+      "noUpcoming": "No upcoming lessons.",
+      "noPast": "No past lessons.",
       "tableCaption": "Student lessons",
       "durationMinutes": "{minutes} min",
       "columns": {
@@ -999,7 +1011,7 @@
       "uncharged": "Do not charge (free)",
       "by": "Cancelled by",
       "reason": "Reason (optional)",
-      "billingPending": "The billing choice is recorded now, but balances and refunds start working once the Finance section ships.",
+      "billingPending": "A charged cancellation consumes one lesson. An uncharged cancellation consumes none, does not change the plan price, and does not create a replacement lesson.",
       "submit": "Confirm cancellation",
       "cancel": "Back"
     },
@@ -1169,7 +1181,7 @@
     "card": {
       "remaining": "Lessons left",
       "of": "of {total}",
-      "effectiveTotal": "Adjusted for missed lessons",
+      "planTotal": "Plan total",
       "paid": "Paid",
       "purchasedAt": "Purchased {date}"
     },

@@ -48,7 +48,8 @@ start:
 - Achievements/goals as derived + lightweight stored entities
   (`Achievement`, `Goal`) — most progress visualisation derives from Stage 6
   data, so keep new tables minimal.
-- Reuse `Student.publicToken` path for onboarding into a real account.
+- If Stage 7 has introduced `Student.publicToken`, use it only as a short-lived
+  onboarding bridge and rotate/revoke it when the real account is linked.
 
 ## 4. Architecture notes (senior)
 - **Authorization is the whole game.** A student sees *only* their own rows; a

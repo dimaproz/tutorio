@@ -76,6 +76,30 @@ export const activeEnrollmentsExist = () =>
     HttpStatus.CONFLICT,
   );
 
+export const studentHasBusinessHistory = (
+  dependencies: Record<string, number>,
+) =>
+  new BusinessApiException(
+    'STUDENT_HAS_BUSINESS_HISTORY',
+    'Student cannot be permanently deleted because business history exists',
+    HttpStatus.CONFLICT,
+    { dependencies },
+  );
+
+export const studentArchivedRequiresRestore = () =>
+  new BusinessApiException(
+    'STUDENT_ARCHIVED_REQUIRES_RESTORE',
+    'Restore the archived student before updating it',
+    HttpStatus.CONFLICT,
+  );
+
+export const groupLegacyRepairRequired = () =>
+  new BusinessApiException(
+    'GROUP_LEGACY_REPAIR_REQUIRED',
+    'This group was deleted by the legacy destructive lifecycle and requires manual repair before it can be restored',
+    HttpStatus.CONFLICT,
+  );
+
 export const duplicateEnrollment = () =>
   new BusinessApiException(
     'DUPLICATE_ENROLLMENT',
@@ -131,6 +155,35 @@ export const invalidLessonTransition = () =>
     HttpStatus.CONFLICT,
   );
 
+export const lessonCreditMustBeReversed = (netCreditDelta: number) =>
+  new BusinessApiException(
+    'LESSON_CREDIT_MUST_BE_REVERSED',
+    'Restore this charged lesson to SCHEDULED before archiving it',
+    HttpStatus.CONFLICT,
+    { netCreditDelta },
+  );
+
+export const lessonFinancialHistoryImmutable = () =>
+  new BusinessApiException(
+    'LESSON_FINANCIAL_HISTORY_IMMUTABLE',
+    'A lesson with credit history cannot change its price or currency; update notes or use a compensating workflow instead',
+    HttpStatus.CONFLICT,
+  );
+
+export const lessonCompensationSourceMissing = () =>
+  new BusinessApiException(
+    'LESSON_COMPENSATION_SOURCE_MISSING',
+    'This lesson has no unmatched debit to compensate',
+    HttpStatus.CONFLICT,
+  );
+
+export const lessonTransitionReplayConflict = () =>
+  new BusinessApiException(
+    'LESSON_TRANSITION_REPLAY_CONFLICT',
+    'This transition was already recorded with different cancellation details',
+    HttpStatus.CONFLICT,
+  );
+
 export const packageNotFound = () =>
   new BusinessApiException(
     'PACKAGE_NOT_FOUND',
@@ -153,6 +206,13 @@ export const noActivePackage = () =>
     HttpStatus.CONFLICT,
   );
 
+export const packageNotEligibleForCredit = () =>
+  new BusinessApiException(
+    'PACKAGE_NOT_ELIGIBLE_FOR_CREDIT',
+    'Only an active fixed-count package that covers the lesson occurrence can fund a lesson; choose a compatible fixed-count package or record a manual correction',
+    HttpStatus.CONFLICT,
+  );
+
 export const invalidPackagePlan = (message: string) =>
   new BusinessApiException(
     'INVALID_PACKAGE_PLAN',
@@ -165,6 +225,27 @@ export const currencyMismatch = () =>
   new BusinessApiException(
     'CURRENCY_MISMATCH',
     'The currency does not match the target record',
+    HttpStatus.CONFLICT,
+  );
+
+export const invalidPackagePaymentRelation = () =>
+  new BusinessApiException(
+    'INVALID_PACKAGE_PAYMENT_RELATION',
+    'The enrollment does not belong to the package target',
+    HttpStatus.CONFLICT,
+  );
+
+export const overpayment = () =>
+  new BusinessApiException(
+    'OVERPAYMENT',
+    'The payment exceeds the outstanding balance',
+    HttpStatus.CONFLICT,
+  );
+
+export const idempotencyConflict = () =>
+  new BusinessApiException(
+    'IDEMPOTENCY_CONFLICT',
+    'The idempotency key was already used for a different payment command',
     HttpStatus.CONFLICT,
   );
 

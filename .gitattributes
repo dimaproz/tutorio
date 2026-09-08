@@ -1,0 +1,7 @@
+# Keep source, documentation, and configuration files identical across platforms.
+* text=auto eol=lf
+
+# Windows command scripts retain their native line endings.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf

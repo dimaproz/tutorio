@@ -55,11 +55,13 @@ export class WorkspacesController {
   }
 
   @Get('current/members')
+  @Roles('OWNER')
   @ApiOperation({
     summary: 'List workspace members (teacher selector)',
     description: 'Read-only roster; member management is out of scope.',
   })
   @ApiOkResponse({ type: WorkspaceMemberListDto })
+  @ApiForbiddenResponse({ type: ApiErrorDto })
   @ZodSerializerDto(WorkspaceMemberListDto)
   listMembers(
     @CurrentUser() user: AuthenticatedUser,

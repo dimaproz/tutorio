@@ -1,7 +1,6 @@
 import {
   consumedCredits,
   creditBalance,
-  effectiveTotalMinor,
   paymentStatusOf,
 } from '@tutorio/domain';
 import { Prisma } from '@prisma/client';
@@ -72,9 +71,9 @@ export function toCreditEntryResponse(
 }
 
 /**
- * Builds the read model. Balances, the effective total and every payment
- * status are **derived from the ledger and the payments**, never read from a
- * stored counter — that is what lets the UI explain any number it shows.
+ * Builds the read model. Credit balances are derived from the credit ledger;
+ * money is derived from the immutable purchase snapshot and payments. The two
+ * ledgers never alter each other.
  */
 export function toPackageResponse(row: PackageRow): PackageResponse {
   const entries = row.creditEntries.map((entry) => ({
@@ -82,21 +81,12 @@ export function toPackageResponse(row: PackageRow): PackageResponse {
     type: entry.type,
   }));
 
-  const unchargedCancellations = row.creditEntries.filter(
-    (entry) =>
-      entry.type === 'teacher_cancellation_refund' && entry.delta === 0,
-  ).length;
-
   const paidMinor = row.payments.reduce(
     (sum, payment) => sum + payment.amountMinor,
     0,
   );
 
-  const effectiveTotal = effectiveTotalMinor(
-    row.totalPriceMinorSnapshot,
-    row.pricePerLessonMinorSnapshot,
-    unchargedCancellations,
-  );
+  const effectiveTotal = row.totalPriceMinorSnapshot;
 
   return {
     id: row.id,

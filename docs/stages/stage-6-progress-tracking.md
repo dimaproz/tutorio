@@ -4,12 +4,13 @@
 > homework, test results, attendance — and (via Telegram) deliver homework. This
 > is the content that later powers the student portal (Stage 10).
 >
-> **Pillar:** Student · **Status:** Planned · **Depends on:** Stage 3 (`Lesson`
-> for optional links), benefits from Stage 5 (Telegram send channel).
+> **Pillar:** Student · **Status:** Deferred pending pilot evidence · **Depends
+> on:** Stage 3 (`Lesson` for optional links), benefits from Stage 5 (Telegram
+> send channel).
 
 ## 1. Goal & non-goals
 
-**Goals** (schema loosened per the production audit — decisions #11–14)
+**Goals**
 - `ProgressEntry` — `date`, `topic?`, `homework: n_a|done|not_done`,
   `engagement? (1–10)`, `notes`. **Not** required to link to a `Lesson`.
 - `TestResult` — `date`, `type: quiz|independent_work|test|…`, optional

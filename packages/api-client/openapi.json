@@ -299,6 +299,16 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -606,6 +616,16 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -639,6 +659,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/StudentDetailDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
                 }
               }
             }
@@ -698,8 +728,28 @@
               }
             }
           },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
           "404": {
             "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Archived students must be restored through POST /students/:studentId/restore before PATCH.",
             "content": {
               "application/json": {
                 "schema": {
@@ -720,7 +770,7 @@
         ]
       },
       "delete": {
-        "description": "Irreversible. Removes the student together with its parent links and enrollments. There is no trash and no restore.",
+        "description": "Owner-only and reversible. Keeps business history and suspends only the student's future individual schedule.",
         "operationId": "StudentsController_remove",
         "parameters": [
           {
@@ -735,6 +785,16 @@
         "responses": {
           "204": {
             "description": ""
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           },
           "404": {
             "description": "",
@@ -752,7 +812,113 @@
             "bearer": []
           }
         ],
-        "summary": "Permanently delete a student",
+        "summary": "Archive a student",
+        "tags": [
+          "students"
+        ]
+      }
+    },
+    "/api/students/{studentId}/restore": {
+      "post": {
+        "operationId": "StudentsController_restore",
+        "parameters": [
+          {
+            "name": "studentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudentDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Restore an archived student (owner only)",
+        "tags": [
+          "students"
+        ]
+      }
+    },
+    "/api/students/{studentId}/permanently": {
+      "delete": {
+        "description": "Irreversible. Returns STUDENT_HAS_BUSINESS_HISTORY when lessons, enrollments, packages, payments, shares, or credits exist.",
+        "operationId": "StudentsController_removePermanently",
+        "parameters": [
+          {
+            "name": "studentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Permanently delete an unused student (owner only)",
         "tags": [
           "students"
         ]
@@ -876,6 +1042,16 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -909,6 +1085,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ParentDetailDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
                 }
               }
             }
@@ -968,6 +1154,16 @@
               }
             }
           },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
           "404": {
             "description": "",
             "content": {
@@ -1005,6 +1201,16 @@
         "responses": {
           "204": {
             "description": ""
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           },
           "404": {
             "description": "",
@@ -1149,6 +1355,16 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1182,6 +1398,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/TeacherDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
                 }
               }
             }
@@ -1240,6 +1466,16 @@
               }
             }
           },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
           "404": {
             "description": "",
             "content": {
@@ -1277,6 +1513,16 @@
         "responses": {
           "204": {
             "description": ""
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           },
           "404": {
             "description": "",
@@ -1320,6 +1566,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/TeacherDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
                 }
               }
             }
@@ -1504,6 +1760,16 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1537,6 +1803,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/GroupDetailDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
                 }
               }
             }
@@ -1596,6 +1872,16 @@
               }
             }
           },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
           "404": {
             "description": "",
             "content": {
@@ -1618,7 +1904,7 @@
         ]
       },
       "delete": {
-        "description": "Idempotent. Fails with ACTIVE_ENROLLMENTS_EXIST while the group has active or paused enrollments.",
+        "description": "Owner-only and idempotent. Preserves the roster and financial history, then suspends related series and future scheduled lessons.",
         "operationId": "GroupsController_softDelete",
         "parameters": [
           {
@@ -1633,6 +1919,16 @@
         "responses": {
           "204": {
             "description": ""
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           },
           "404": {
             "description": "",
@@ -1660,7 +1956,7 @@
             "bearer": []
           }
         ],
-        "summary": "Soft-delete a group (move to trash)",
+        "summary": "Archive a group",
         "tags": [
           "groups"
         ]
@@ -1702,6 +1998,16 @@
           },
           "404": {
             "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Legacy destructive group deletes require manual repair before restore.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1863,6 +2169,16 @@
               }
             }
           },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
           "404": {
             "description": "",
             "content": {
@@ -1915,6 +2231,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnrollmentDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
                 }
               }
             }
@@ -1974,6 +2300,16 @@
               }
             }
           },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
           "404": {
             "description": "",
             "content": {
@@ -2011,6 +2347,16 @@
         "responses": {
           "204": {
             "description": ""
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           },
           "404": {
             "description": "",
@@ -2185,6 +2531,16 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2200,7 +2556,33 @@
       "post": {
         "description": "startsAt accepts several dates for bulk creation. Overlapping the teacher returns 409 SCHEDULE_CONFLICT unless force=true.",
         "operationId": "LessonsController_create",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "force",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": false,
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "false"
+                  ]
+                }
+              ]
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2218,6 +2600,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/LessonListDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
                 }
               }
             }
@@ -2279,6 +2671,16 @@
               }
             }
           },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
           "404": {
             "description": "",
             "content": {
@@ -2316,6 +2718,16 @@
         "responses": {
           "204": {
             "description": ""
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2341,6 +2753,31 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "force",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": false,
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "false"
+                  ]
+                }
+              ]
+            }
           }
         ],
         "requestBody": {
@@ -2360,6 +2797,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/LessonDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
                 }
               }
             }
@@ -2398,7 +2845,7 @@
     },
     "/api/lessons/{lessonId}/status": {
       "patch": {
-        "description": "Enforces the lesson state machine. Cancelling requires cancelledBy. No ledger effect in Stage 3.",
+        "description": "Enforces the lesson state machine. Cancelling requires cancelledBy. Charged terminal states consume one package credit and restoration appends an exact compensation.",
         "operationId": "LessonsController_transition",
         "parameters": [
           {
@@ -2427,6 +2874,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/LessonDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
                 }
               }
             }
@@ -2568,7 +3025,33 @@
       },
       "post": {
         "operationId": "SeriesController_create",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "force",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": false,
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "false"
+                  ]
+                }
+              ]
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2586,6 +3069,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/LessonSeriesDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
                 }
               }
             }
@@ -2636,6 +3129,16 @@
               }
             }
           },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
           "404": {
             "description": "",
             "content": {
@@ -2668,6 +3171,31 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "force",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": false,
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "false"
+                  ]
+                }
+              ]
+            }
           }
         ],
         "requestBody": {
@@ -2687,6 +3215,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/LessonSeriesDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
                 }
               }
             }
@@ -2728,6 +3266,16 @@
         "responses": {
           "204": {
             "description": ""
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           },
           "404": {
             "description": "",
@@ -2835,6 +3383,16 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2856,7 +3414,24 @@
             "required": false,
             "in": "query",
             "schema": {
-              "type": "boolean"
+              "default": false,
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "false"
+                  ]
+                }
+              ]
             }
           }
         ],
@@ -2883,6 +3458,16 @@
           },
           "400": {
             "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
             "content": {
               "application/json": {
                 "schema": {
@@ -2938,6 +3523,16 @@
               }
             }
           },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
           "404": {
             "description": "",
             "content": {
@@ -2960,7 +3555,7 @@
         ]
       },
       "delete": {
-        "description": "Idempotent. The credit ledger history is retained.",
+        "description": "Idempotent. Stops owned series and future scheduled lessons; financial history is retained.",
         "operationId": "PackagesController_remove",
         "parameters": [
           {
@@ -2975,6 +3570,16 @@
         "responses": {
           "204": {
             "description": ""
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2982,7 +3587,7 @@
             "bearer": []
           }
         ],
-        "summary": "Soft-delete a package",
+        "summary": "Archive a package",
         "tags": [
           "packages"
         ]
@@ -3009,6 +3614,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CreditLedgerDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
                 }
               }
             }
@@ -3066,6 +3681,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PackageDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
                 }
               }
             }
@@ -3158,6 +3783,16 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3191,6 +3826,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PaymentDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
                 }
               }
             }
@@ -4009,8 +4654,7 @@
             "type": "string",
             "enum": [
               "ACTIVE",
-              "ON_HOLD",
-              "ARCHIVED"
+              "ON_HOLD"
             ],
             "default": "ACTIVE"
           },
@@ -4621,8 +5265,7 @@
             "type": "string",
             "enum": [
               "ACTIVE",
-              "ON_HOLD",
-              "ARCHIVED"
+              "ON_HOLD"
             ]
           },
           "languageLevel": {
@@ -6802,6 +7445,10 @@
             "format": "uuid",
             "nullable": true
           },
+          "packageId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "teacherId": {
             "type": "string",
             "format": "uuid"
@@ -8611,6 +9258,11 @@
             "type": "string",
             "maxLength": 2000,
             "nullable": true
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
           }
         },
         "required": [

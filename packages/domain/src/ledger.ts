@@ -11,11 +11,7 @@
  * write intent that the API persists.
  */
 
-import {
-  transitionEffect,
-  type CreditEntryType,
-  type LessonStatus,
-} from './lesson-state';
+import { transitionEffect, type CreditEntryType, type LessonStatus } from './lesson-state';
 
 export type LedgerEntryType = CreditEntryType | 'purchase' | 'manual_adjustment';
 
@@ -35,56 +31,38 @@ export interface CreditEntryIntent {
 export interface TransitionLedgerPlan {
   /** The entry to append, or `null` when the transition has no ledger effect. */
   entry: CreditEntryIntent | null;
-  /**
-   * Cancelling without charge keeps the paid slot alive: the tutor owes the
-   * student a replacement lesson from the same pattern.
-   */
-  rebookReplacement: boolean;
 }
 
-/** Stable idempotency key for a lesson-driven entry. */
-export function lessonEntryKey(
-  lessonId: string,
-  type: LedgerEntryType,
-  attempt = 0,
-): string {
-  // `attempt` distinguishes a compensating entry from the original when a
-  // lesson legitimately re-enters the same status after a revert.
-  return attempt === 0
-    ? `lesson:${lessonId}:${type}`
-    : `lesson:${lessonId}:${type}:${attempt}`;
+/** Stable idempotency key for one persisted lesson state transition. */
+export function lessonEntryKey(lessonId: string, transitionVersion = 1): string {
+  return `lesson:${lessonId}:transition:${transitionVersion}`;
 }
 
 /**
  * What to write when a lesson moves between statuses. Throws
  * `InvalidTransitionError` (from the state machine) for an illegal move.
  *
- * `priorEntryCount` is how many entries this lesson already produced for the
- * resulting entry type; it keeps the idempotency key unique across a
- * cancel → revert → cancel cycle while still blocking a genuine duplicate.
+ * `transitionVersion` is incremented atomically with lesson status. It makes
+ * a retry of the same semantic transition stable while allowing a genuine
+ * cancel → restore → cancel cycle to append separate entries.
  */
 export function planTransition(
   from: LessonStatus,
   to: LessonStatus,
   lessonId: string,
-  priorEntryCount = 0,
+  transitionVersion = 1,
 ): TransitionLedgerPlan {
   const effect = transitionEffect(from, to);
-
-  // An uncharged cancellation consumes no credit but owes a replacement slot.
-  const rebookReplacement =
-    to === 'CANCELLED_UNCHARGED' && effect.type === 'teacher_cancellation_refund';
-
-  // A zero-delta effect still records *why* nothing moved — the tutor needs the
-  // audit line, and Stage 7's student page shows it.
+  if (!effect) {
+    return { entry: null };
+  }
   return {
     entry: {
       delta: effect.delta,
       type: effect.type,
-      idempotencyKey: lessonEntryKey(lessonId, effect.type, priorEntryCount),
+      idempotencyKey: lessonEntryKey(lessonId, transitionVersion),
       lessonId,
     },
-    rebookReplacement,
   };
 }
 
@@ -98,9 +76,14 @@ export function creditBalance(entries: readonly LedgerEntryLike[]): number {
   return entries.reduce((sum, entry) => sum + entry.delta, 0);
 }
 
-/** Credits already consumed (completed lessons and charged cancellations). */
+/**
+ * Current lesson consumption, not the historical count of debit events.
+ * Only lesson-driven entries participate: a compensating +1 reverses its
+ * earlier debit, while purchases and manual corrections remain balance-only.
+ */
 export function consumedCredits(entries: readonly LedgerEntryLike[]): number {
-  return entries
-    .filter((entry) => entry.delta < 0)
-    .reduce((sum, entry) => sum - entry.delta, 0);
+  const lessonDelta = entries
+    .filter((entry) => entry.type === 'lesson_completed' || entry.type === 'late_cancellation')
+    .reduce((sum, entry) => sum + entry.delta, 0);
+  return Math.max(0, -lessonDelta);
 }

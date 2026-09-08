@@ -3,6 +3,7 @@ import {
   ApiBearerAuth,
   ApiConflictResponse,
   ApiCreatedResponse,
+  ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -11,6 +12,7 @@ import {
 import { ZodSerializerDto } from 'nestjs-zod';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { ApiErrorDto } from '../auth/dto/auth.dto';
 import {
   ListPaymentsQueryDto,
@@ -22,11 +24,13 @@ import { PaymentsService } from './payments.service';
 
 @ApiTags('payments')
 @ApiBearerAuth()
+@ApiForbiddenResponse({ type: ApiErrorDto, description: 'OWNER role required' })
 @Controller('payments')
 export class PaymentsController {
   constructor(private readonly payments: PaymentsService) {}
 
   @Get()
+  @Roles('OWNER')
   @ApiOperation({ summary: 'List recorded payments' })
   @ApiOkResponse({ type: PaymentListDto })
   @ZodSerializerDto(PaymentListDto)
@@ -38,6 +42,7 @@ export class PaymentsController {
   }
 
   @Post()
+  @Roles('OWNER')
   @ApiOperation({
     summary: 'Record a payment received',
     description:

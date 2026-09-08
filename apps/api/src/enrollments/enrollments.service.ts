@@ -23,6 +23,14 @@ import {
   toSkipTake,
 } from '../common/pagination';
 import { PrismaService } from '../prisma/prisma.service';
+import {
+  reconcileGroupSchedule,
+  restoreEnrollmentSchedule,
+  suspendEnrollmentSchedule,
+  lockGroupSchedule,
+  lockStudentLifecycles,
+  lockTeacherSchedules,
+} from '../scheduling/lifecycle-suspension';
 
 // Row shape shared by every enrollment query in this service.
 const enrollmentInclude = {
@@ -164,6 +172,10 @@ export class EnrollmentsService {
 
     const { row, defaultDeadline } = await this.prisma
       .$transaction(async (tx) => {
+        await lockStudentLifecycles(tx, auth.workspaceId, [dto.studentId]);
+        if (groupId) {
+          await lockGroupSchedule(tx, auth.workspaceId, groupId);
+        }
         // Related records must be live and belong to the authenticated
         // workspace; cross-workspace IDs get the same 404 as missing ones.
         const student = await tx.student.findFirst({
@@ -171,6 +183,7 @@ export class EnrollmentsService {
             id: dto.studentId,
             workspaceId: auth.workspaceId,
             deletedAt: null,
+            status: { not: 'ARCHIVED' },
           },
           select: { id: true },
         });
@@ -225,6 +238,14 @@ export class EnrollmentsService {
           },
           include: enrollmentInclude,
         });
+        if (groupId) {
+          await reconcileGroupSchedule(
+            tx,
+            auth.workspaceId,
+            groupId,
+            new Date(),
+          );
+        }
 
         await this.audit.record(tx, {
           workspaceId: auth.workspaceId,
@@ -296,7 +317,7 @@ export class EnrollmentsService {
   ): Promise<EnrollmentResponse> {
     const { row, defaultDeadline } = await this.prisma.$transaction(
       async (tx) => {
-        const before = await tx.enrollment.findFirst({
+        let before = await tx.enrollment.findFirst({
           where: {
             id: enrollmentId,
             workspaceId: auth.workspaceId,
@@ -313,17 +334,69 @@ export class EnrollmentsService {
           auth.workspaceId,
         );
 
+        const now = new Date();
+        if (before.groupId) {
+          await lockGroupSchedule(tx, auth.workspaceId, before.groupId);
+        } else {
+          await lockTeacherSchedules(tx, auth.workspaceId, [before.teacherId]);
+        }
+        before = await tx.enrollment.findFirst({
+          where: {
+            id: enrollmentId,
+            workspaceId: auth.workspaceId,
+            deletedAt: null,
+          },
+          include: enrollmentInclude,
+        });
+        if (!before) {
+          throw enrollmentNotFound();
+        }
         const changes = this.audit.buildChanges(before, { ...dto });
         if (!changes) {
           // No-op PATCH: nothing to persist, no audit row.
           return { row: before, defaultDeadline };
         }
+        const becomesInactive =
+          before.groupId === null &&
+          before.status === 'ACTIVE' &&
+          dto.status !== undefined &&
+          dto.status !== 'ACTIVE';
+        const becomesActive =
+          before.groupId === null &&
+          before.status !== 'ACTIVE' &&
+          dto.status === 'ACTIVE';
+        const suspensionToken = becomesInactive
+          ? await suspendEnrollmentSchedule(tx, before.id, now)
+          : before.scheduleSuspensionToken;
+        if (becomesActive && suspensionToken) {
+          await restoreEnrollmentSchedule(
+            tx,
+            auth.workspaceId,
+            before.id,
+            suspensionToken,
+            now,
+          );
+        }
 
         const updated = await tx.enrollment.update({
           where: { id: before.id },
-          data: dto,
+          data: {
+            ...dto,
+            ...(becomesInactive
+              ? { scheduleSuspensionToken: suspensionToken }
+              : {}),
+            ...(becomesActive ? { scheduleSuspensionToken: null } : {}),
+          },
           include: enrollmentInclude,
         });
+        if (before.groupId) {
+          await reconcileGroupSchedule(
+            tx,
+            auth.workspaceId,
+            before.groupId,
+            now,
+          );
+        }
         await this.audit.record(tx, {
           workspaceId: auth.workspaceId,
           actorId: auth.userId,
@@ -343,21 +416,46 @@ export class EnrollmentsService {
     enrollmentId: string,
   ): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
-      const enrollment = await tx.enrollment.findFirst({
+      let enrollment = await tx.enrollment.findFirst({
+        where: { id: enrollmentId, workspaceId: auth.workspaceId },
+      });
+      if (!enrollment) {
+        throw enrollmentNotFound();
+      }
+      const now = new Date();
+      if (enrollment.groupId) {
+        await lockGroupSchedule(tx, auth.workspaceId, enrollment.groupId);
+      } else {
+        await lockTeacherSchedules(tx, auth.workspaceId, [
+          enrollment.teacherId,
+        ]);
+      }
+      enrollment = await tx.enrollment.findFirst({
         where: { id: enrollmentId, workspaceId: auth.workspaceId },
       });
       if (!enrollment) {
         throw enrollmentNotFound();
       }
       if (enrollment.deletedAt) {
-        // Idempotent: deleting an already deleted enrollment is a no-op.
+        // Recheck after the lock: a concurrent delete is an idempotent no-op.
         return;
       }
-
+      const suspensionToken = enrollment.groupId
+        ? null
+        : (enrollment.scheduleSuspensionToken ??
+          (await suspendEnrollmentSchedule(tx, enrollment.id, now)));
       await tx.enrollment.update({
         where: { id: enrollment.id },
-        data: { deletedAt: new Date() },
+        data: { deletedAt: now, scheduleSuspensionToken: suspensionToken },
       });
+      if (enrollment.groupId) {
+        await reconcileGroupSchedule(
+          tx,
+          auth.workspaceId,
+          enrollment.groupId,
+          now,
+        );
+      }
       await this.audit.record(tx, {
         workspaceId: auth.workspaceId,
         actorId: auth.userId,
@@ -374,7 +472,7 @@ export class EnrollmentsService {
   ): Promise<EnrollmentResponse> {
     const { row, defaultDeadline } = await this.prisma
       .$transaction(async (tx) => {
-        const existing = await tx.enrollment.findFirst({
+        let existing = await tx.enrollment.findFirst({
           where: { id: enrollmentId, workspaceId: auth.workspaceId },
           include: enrollmentInclude,
         });
@@ -387,8 +485,22 @@ export class EnrollmentsService {
           auth.workspaceId,
         );
 
+        if (existing.groupId) {
+          await lockGroupSchedule(tx, auth.workspaceId, existing.groupId);
+        } else {
+          await lockTeacherSchedules(tx, auth.workspaceId, [
+            existing.teacherId,
+          ]);
+        }
+        existing = await tx.enrollment.findFirst({
+          where: { id: enrollmentId, workspaceId: auth.workspaceId },
+          include: enrollmentInclude,
+        });
+        if (!existing) {
+          throw enrollmentNotFound();
+        }
         if (!existing.deletedAt) {
-          // Idempotent: restoring a live enrollment is a no-op.
+          // Recheck after the lock: a concurrent restore is a no-op.
           return { row: existing, defaultDeadline };
         }
 
@@ -402,11 +514,38 @@ export class EnrollmentsService {
           existing.id,
         );
 
+        const now = new Date();
+        if (
+          existing.groupId === null &&
+          existing.status === 'ACTIVE' &&
+          existing.scheduleSuspensionToken
+        ) {
+          await restoreEnrollmentSchedule(
+            tx,
+            auth.workspaceId,
+            existing.id,
+            existing.scheduleSuspensionToken,
+            now,
+          );
+        }
         const restored = await tx.enrollment.update({
           where: { id: existing.id },
-          data: { deletedAt: null },
+          data: {
+            deletedAt: null,
+            ...(existing.groupId === null && existing.status === 'ACTIVE'
+              ? { scheduleSuspensionToken: null }
+              : {}),
+          },
           include: enrollmentInclude,
         });
+        if (existing.groupId) {
+          await reconcileGroupSchedule(
+            tx,
+            auth.workspaceId,
+            existing.groupId,
+            now,
+          );
+        }
         await this.audit.record(tx, {
           workspaceId: auth.workspaceId,
           actorId: auth.userId,

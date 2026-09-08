@@ -53,10 +53,7 @@ describe('transitionEffect', () => {
   });
 
   it('consumes nothing on an uncharged cancellation', () => {
-    expect(transitionEffect('SCHEDULED', 'CANCELLED_UNCHARGED')).toEqual({
-      delta: 0,
-      type: 'teacher_cancellation_refund',
-    });
+    expect(transitionEffect('SCHEDULED', 'CANCELLED_UNCHARGED')).toBeNull();
   });
 
   it('emits the compensating (negated) effect on revert', () => {
@@ -68,10 +65,7 @@ describe('transitionEffect', () => {
       delta: 1,
       type: 'late_cancellation',
     });
-    expect(transitionEffect('CANCELLED_UNCHARGED', 'SCHEDULED')).toEqual({
-      delta: 0,
-      type: 'teacher_cancellation_refund',
-    });
+    expect(transitionEffect('CANCELLED_UNCHARGED', 'SCHEDULED')).toBeNull();
   });
 
   it('throws on an illegal transition', () => {

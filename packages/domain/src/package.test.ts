@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  assertPaymentWithinOutstanding,
   effectiveTotalMinor,
   InvalidPackagePlanError,
+  OverpaymentError,
   paymentStatusOf,
   planPackage,
   remainingCredits,
@@ -112,17 +114,16 @@ describe('planPackage - multiple slots', () => {
 });
 
 describe('effectiveTotalMinor', () => {
-  it('discounts the lessons cancelled without charge', () => {
-    // 10 000 purchased, one uncharged cancellation at 500 → 9 500.
-    expect(effectiveTotalMinor(1000000, 50000, 1)).toBe(950000);
+  it('keeps the purchase-time total despite legacy zero-delta entries', () => {
+    expect(effectiveTotalMinor(1000000, 50000, 1)).toBe(1000000);
   });
 
   it('leaves the total untouched when nothing was cancelled free', () => {
     expect(effectiveTotalMinor(1000000, 50000, 0)).toBe(1000000);
   });
 
-  it('never goes below zero', () => {
-    expect(effectiveTotalMinor(100000, 50000, 5)).toBe(0);
+  it('never derives money from cancellation counts', () => {
+    expect(effectiveTotalMinor(100000, 50000, 5)).toBe(100000);
   });
 });
 
@@ -161,6 +162,14 @@ describe('paymentStatusOf', () => {
   it('is paid once the full amount (or more) is settled', () => {
     expect(paymentStatusOf(500, 500)).toBe('PAID');
     expect(paymentStatusOf(500, 600)).toBe('PAID');
+  });
+});
+
+describe('assertPaymentWithinOutstanding', () => {
+  it('accepts partial and exact payments but rejects overpayment', () => {
+    expect(() => assertPaymentWithinOutstanding(1000, 0, 400)).not.toThrow();
+    expect(() => assertPaymentWithinOutstanding(1000, 400, 600)).not.toThrow();
+    expect(() => assertPaymentWithinOutstanding(1000, 400, 601)).toThrow(OverpaymentError);
   });
 });
 

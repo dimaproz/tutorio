@@ -252,11 +252,16 @@ async function main() {
     'Liudmyla',
   ];
   for (let i = 0; i < SAMPLE_NAMES.length; i++) {
+    const status = SAMPLE_STATUSES[i % SAMPLE_STATUSES.length];
     await ensureStudent({
       fullName: `${SAMPLE_NAMES[i]} Sample`,
       timezone: SAMPLE_TIMEZONES[i % SAMPLE_TIMEZONES.length],
       subject: SAMPLE_SUBJECTS[i % SAMPLE_SUBJECTS.length],
-      status: SAMPLE_STATUSES[i % SAMPLE_STATUSES.length],
+      status,
+      archivedAt:
+        status === 'ARCHIVED'
+          ? new Date('2026-08-01T00:00:00.000Z')
+          : undefined,
       hourlyRateMinor: 30000 + i * 1500,
       currency: SAMPLE_CURRENCIES[i % SAMPLE_CURRENCIES.length],
       age: 8 + (i % 10),

@@ -2,7 +2,10 @@
 
 Financial calendar for private tutors and small schools: lesson packages, lesson credit balance, operations ledger, scheduling.
 
-MVP plan: [docs/mvp-plan.md](docs/mvp-plan.md) · Deploy: [docs/deploy.md](docs/deploy.md)
+Start here: [documentation map](docs/README.md) ·
+[current state](docs/current-state.md) · [architecture](docs/architecture.md) ·
+[pilot roadmap](docs/roadmap.md) · [active queue](docs/next-work.md) ·
+[deploy](docs/deploy.md)
 
 ## Structure
 
@@ -29,8 +32,9 @@ pnpm dev                                      # api :4000, web :3000
 
 ## Commands
 
-| Command | What it does |
-|---|---|
-| `pnpm dev` | dev servers for api + web |
-| `pnpm lint` / `pnpm typecheck` / `pnpm test` / `pnpm build` | pipeline (same as CI) |
-| `pnpm generate` | OpenAPI → `packages/api-client` |
+| Command                                                     | What it does                                      |
+| ----------------------------------------------------------- | ------------------------------------------------- |
+| `pnpm dev`                                                  | dev servers for api + web                         |
+| `pnpm lint` / `pnpm typecheck` / `pnpm test` / `pnpm build` | static and unit pipeline                          |
+| `pnpm --filter @tutorio/api test:e2e`                       | API E2E; requires an isolated PostgreSQL database |
+| `pnpm generate`                                             | OpenAPI → `packages/api-client`                   |

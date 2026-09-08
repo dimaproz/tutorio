@@ -35,6 +35,10 @@ import {
 } from '../common/pagination';
 import { PrismaService } from '../prisma/prisma.service';
 import { MaterializerService } from '../scheduling/materializer.service';
+import {
+  lockGroupSchedule,
+  lockTeacherSchedules,
+} from '../scheduling/lifecycle-suspension';
 import { resolveStudentTarget } from '../scheduling/scheduling.shared';
 import { LedgerService } from './ledger.service';
 import { packageInclude, toPackageResponse } from './packages.shared';
@@ -101,7 +105,7 @@ export class PackagesService {
     packageId: string,
   ): Promise<PackageResponse> {
     const row = await this.prisma.lessonPackage.findFirst({
-      where: { id: packageId, workspaceId: auth.workspaceId, deletedAt: null },
+      where: { id: packageId, workspaceId: auth.workspaceId },
       include: packageInclude,
     });
     if (!row) {
@@ -565,10 +569,14 @@ export class PackagesService {
     return toPackageResponse(row);
   }
 
-  /** Soft delete. The ledger history is never removed. */
+  /**
+   * Archives a package without touching financial history. Operational work
+   * owned by it stops, while a later compensation can still target its pinned
+   * historical package id.
+   */
   async remove(auth: AuthenticatedUser, packageId: string): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
-      const pkg = await tx.lessonPackage.findFirst({
+      let pkg = await tx.lessonPackage.findFirst({
         where: {
           id: packageId,
           workspaceId: auth.workspaceId,
@@ -579,9 +587,62 @@ export class PackagesService {
       if (!pkg) {
         return; // Idempotent: deleting an already-deleted package is a no-op.
       }
+      const ownedSeries = await tx.lessonSeries.findMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          packageId: pkg.id,
+        },
+        select: { groupId: true, teacherId: true },
+      });
+      for (const groupId of [
+        ...new Set(
+          ownedSeries.flatMap((series) =>
+            series.groupId ? [series.groupId] : [],
+          ),
+        ),
+      ].sort()) {
+        await lockGroupSchedule(tx, auth.workspaceId, groupId);
+      }
+      await lockTeacherSchedules(
+        tx,
+        auth.workspaceId,
+        ownedSeries.map((series) => series.teacherId),
+      );
+      pkg = await tx.lessonPackage.findFirst({
+        where: {
+          id: packageId,
+          workspaceId: auth.workspaceId,
+          deletedAt: null,
+        },
+        select: { id: true },
+      });
+      if (!pkg) {
+        return;
+      }
+      const archivedAt = new Date();
+      const archivedSeries = await tx.lessonSeries.updateMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          packageId: pkg.id,
+        },
+        data: { deletedAt: archivedAt, scheduleSuspensionToken: null },
+      });
+      const archivedLessons = await tx.lesson.updateMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          packageId: pkg.id,
+          status: 'SCHEDULED',
+          startsAtUtc: { gte: archivedAt },
+        },
+        data: {
+          deletedAt: archivedAt,
+          isDetached: true,
+          scheduleSuspensionToken: null,
+        },
+      });
       await tx.lessonPackage.update({
         where: { id: pkg.id },
-        data: { deletedAt: new Date() },
+        data: { deletedAt: archivedAt },
       });
       await this.audit.record(tx, {
         workspaceId: auth.workspaceId,
@@ -589,6 +650,14 @@ export class PackagesService {
         action: 'DELETE',
         entity: 'LESSON_PACKAGE',
         entityId: pkg.id,
+        changes: this.audit.buildChanges(
+          {},
+          {
+            archivedSeries: archivedSeries.count,
+            archivedFutureScheduledLessons: archivedLessons.count,
+            retained: ['credits', 'payments', 'participantShares', 'history'],
+          },
+        ),
       });
     });
   }
@@ -609,7 +678,12 @@ export class PackagesService {
   ): Promise<{ id: string; teacherId: string; currency: string }[]> {
     if (target.studentId) {
       const student = await tx.student.findFirst({
-        where: { id: target.studentId, workspaceId },
+        where: {
+          id: target.studentId,
+          workspaceId,
+          deletedAt: null,
+          status: { not: 'ARCHIVED' },
+        },
         select: { id: true },
       });
       if (!student) {
@@ -662,6 +736,7 @@ export class PackagesService {
         groupId: target.groupId,
         status: 'ACTIVE',
         deletedAt: null,
+        student: { deletedAt: null, status: { not: 'ARCHIVED' } },
       },
       orderBy: { createdAt: 'asc' },
       select: { id: true, teacherId: true, currency: true },

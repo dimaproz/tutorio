@@ -13,7 +13,9 @@ import { AuditService } from '../audit/audit.service';
 import { forbidden } from '../auth/auth.errors';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import {
+  groupLegacyRepairRequired,
   groupNotFound,
+  scheduleConflict,
   studentNotFound,
   teacherNotFound,
 } from '../common/business.errors';
@@ -23,6 +25,13 @@ import {
   toSkipTake,
 } from '../common/pagination';
 import { PrismaService } from '../prisma/prisma.service';
+import { findLessonConflicts } from '../scheduling/scheduling.shared';
+import {
+  lockGroupSchedule,
+  lockStudentLifecycles,
+  lockTeacherSchedules,
+  reconcileGroupSchedule,
+} from '../scheduling/lifecycle-suspension';
 
 function toResponse(row: Group): GroupResponse {
   return {
@@ -114,6 +123,7 @@ export class GroupsService {
     const liveEnrollment: Prisma.EnrollmentWhereInput = {
       deletedAt: null,
       status: { in: ['ACTIVE', 'PAUSED'] },
+      student: { deletedAt: null, status: { not: 'ARCHIVED' } },
     };
 
     const where: Prisma.GroupWhereInput = {
@@ -215,6 +225,10 @@ export class GroupsService {
     group: Pick<Group, 'id' | 'pricePerLesson' | 'currency'>,
     dto: GroupStudentsDto,
   ): Promise<void> {
+    const wantedIds = [...new Set(dto.studentIds)];
+    await lockStudentLifecycles(tx, auth.workspaceId, wantedIds);
+    await lockGroupSchedule(tx, auth.workspaceId, group.id);
+
     const teacher = await tx.teacher.findFirst({
       where: {
         id: dto.teacherId,
@@ -227,12 +241,12 @@ export class GroupsService {
       throw teacherNotFound();
     }
 
-    const wantedIds = [...new Set(dto.studentIds)];
     const students = await tx.student.findMany({
       where: {
         id: { in: wantedIds },
         workspaceId: auth.workspaceId,
         deletedAt: null,
+        status: { not: 'ARCHIVED' },
       },
       select: { id: true, hourlyRateMinor: true, currency: true },
     });
@@ -273,46 +287,45 @@ export class GroupsService {
     const newcomers = students.filter(
       (student) => !alreadyEnrolled.has(student.id),
     );
-    if (newcomers.length === 0) {
-      return;
-    }
-
-    const workspace = await tx.workspace.findUniqueOrThrow({
-      where: { id: auth.workspaceId },
-      select: { defaultCurrency: true },
-    });
-
-    for (const student of newcomers) {
-      // The group price wins; a group without one falls back to the student's
-      // own rate, and only then to "free". Currency follows whichever price
-      // was used, never the other record's.
-      const usesGroupPrice = group.pricePerLesson !== null;
-      const priceMinor = usesGroupPrice
-        ? group.pricePerLesson
-        : (student.hourlyRateMinor ?? 0);
-      const currency =
-        (usesGroupPrice ? group.currency : student.currency) ??
-        workspace.defaultCurrency;
-
-      const data = {
-        workspaceId: auth.workspaceId,
-        studentId: student.id,
-        groupId: group.id,
-        teacherId: dto.teacherId,
-        billingType: 'PACKAGE' as const,
-        priceMinor: priceMinor ?? 0,
-        currency,
-      };
-      const created = await tx.enrollment.create({ data });
-      await this.audit.record(tx, {
-        workspaceId: auth.workspaceId,
-        actorId: auth.userId,
-        action: 'CREATE',
-        entity: 'ENROLLMENT',
-        entityId: created.id,
-        changes: this.audit.buildChanges({}, { ...data }),
+    if (newcomers.length > 0) {
+      const workspace = await tx.workspace.findUniqueOrThrow({
+        where: { id: auth.workspaceId },
+        select: { defaultCurrency: true },
       });
+
+      for (const student of newcomers) {
+        // The group price wins; a group without one falls back to the student's
+        // own rate, and only then to "free". Currency follows whichever price
+        // was used, never the other record's.
+        const usesGroupPrice = group.pricePerLesson !== null;
+        const priceMinor = usesGroupPrice
+          ? group.pricePerLesson
+          : (student.hourlyRateMinor ?? 0);
+        const currency =
+          (usesGroupPrice ? group.currency : student.currency) ??
+          workspace.defaultCurrency;
+
+        const data = {
+          workspaceId: auth.workspaceId,
+          studentId: student.id,
+          groupId: group.id,
+          teacherId: dto.teacherId,
+          billingType: 'PACKAGE' as const,
+          priceMinor: priceMinor ?? 0,
+          currency,
+        };
+        const created = await tx.enrollment.create({ data });
+        await this.audit.record(tx, {
+          workspaceId: auth.workspaceId,
+          actorId: auth.userId,
+          action: 'CREATE',
+          entity: 'ENROLLMENT',
+          entityId: created.id,
+          changes: this.audit.buildChanges({}, { ...data }),
+        });
+      }
     }
+    await reconcileGroupSchedule(tx, auth.workspaceId, group.id, new Date());
   }
 
   async create(
@@ -348,7 +361,11 @@ export class GroupsService {
       where: { id: groupId, workspaceId: auth.workspaceId, deletedAt: null },
       include: {
         enrollments: {
-          where: { deletedAt: null },
+          where: {
+            deletedAt: null,
+            status: { in: ['ACTIVE', 'PAUSED'] },
+            student: { deletedAt: null, status: { not: 'ARCHIVED' } },
+          },
           orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
           include: {
             student: { select: { id: true, fullName: true, avatarKey: true } },
@@ -396,6 +413,10 @@ export class GroupsService {
   ): Promise<GroupResponse> {
     const { students, ...scalarDto } = dto;
     const group = await this.prisma.$transaction(async (tx) => {
+      if (students) {
+        await lockStudentLifecycles(tx, auth.workspaceId, students.studentIds);
+      }
+      await lockGroupSchedule(tx, auth.workspaceId, groupId);
       const before = await tx.group.findFirst({
         where: { id: groupId, workspaceId: auth.workspaceId, deletedAt: null },
       });
@@ -434,6 +455,7 @@ export class GroupsService {
 
   async softDelete(auth: AuthenticatedUser, groupId: string): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
+      await lockGroupSchedule(tx, auth.workspaceId, groupId);
       const group = await tx.group.findFirst({
         where: { id: groupId, workspaceId: auth.workspaceId },
       });
@@ -445,48 +467,48 @@ export class GroupsService {
         return;
       }
 
-      const deletedAt = new Date();
-      const groupWhere = {
-        workspaceId: auth.workspaceId,
-        groupId: group.id,
-        deletedAt: null,
-      };
-
-      // Payments must be hidden before enrollment.groupId is cleared below.
-      // Ledger entries and audit history are append-only evidence, while the
-      // package/enrollment tombstones make them unreachable in the product UI.
-      await tx.payment.updateMany({
+      const scheduleTeachers = await tx.lessonSeries.findMany({
         where: {
           workspaceId: auth.workspaceId,
+          groupId: group.id,
           deletedAt: null,
-          OR: [
-            { package: { is: { groupId: group.id } } },
-            { enrollment: { is: { groupId: group.id } } },
-          ],
         },
-        data: { deletedAt },
+        select: { teacherId: true },
       });
+      await lockTeacherSchedules(
+        tx,
+        auth.workspaceId,
+        scheduleTeachers.map((series) => series.teacherId),
+      );
 
-      await tx.lesson.updateMany({ where: groupWhere, data: { deletedAt } });
-      await tx.lessonSeries.updateMany({
-        where: groupWhere,
-        data: { deletedAt },
-      });
-      await tx.lessonPackage.updateMany({
-        where: groupWhere,
-        data: { deletedAt },
-      });
+      const archivedAt = new Date();
 
-      // An enrollment is the student-to-group link. Keeping the student while
-      // tombstoning this record and clearing groupId leaves no live membership.
-      await tx.enrollment.updateMany({
-        where: groupWhere,
-        data: { deletedAt, groupId: null },
+      // A group archive is operational, not destructive: retain every roster,
+      // lesson, package, payment, share, credit, and audit relationship. The
+      // timestamp marks exactly the series and upcoming occurrences suspended
+      // by this archive, so restore can revive only those records later.
+      const archivedSeries = await tx.lessonSeries.updateMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          groupId: group.id,
+          deletedAt: null,
+        },
+        data: { deletedAt: archivedAt, scheduleSuspensionToken: null },
+      });
+      const archivedLessons = await tx.lesson.updateMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          groupId: group.id,
+          status: 'SCHEDULED',
+          deletedAt: null,
+          startsAtUtc: { gte: archivedAt },
+        },
+        data: { deletedAt: archivedAt, scheduleSuspensionToken: null },
       });
 
       await tx.group.update({
         where: { id: group.id },
-        data: { deletedAt },
+        data: { deletedAt: archivedAt },
       });
       await this.audit.record(tx, {
         workspaceId: auth.workspaceId,
@@ -494,6 +516,13 @@ export class GroupsService {
         action: 'DELETE',
         entity: 'GROUP',
         entityId: group.id,
+        changes: this.audit.buildChanges(
+          {},
+          {
+            archivedSeries: archivedSeries.count,
+            archivedFutureScheduledLessons: archivedLessons.count,
+          },
+        ),
       });
     });
   }
@@ -503,6 +532,7 @@ export class GroupsService {
     groupId: string,
   ): Promise<GroupResponse> {
     const group = await this.prisma.$transaction(async (tx) => {
+      await lockGroupSchedule(tx, auth.workspaceId, groupId);
       const existing = await tx.group.findFirst({
         where: { id: groupId, workspaceId: auth.workspaceId },
       });
@@ -514,16 +544,99 @@ export class GroupsService {
         return existing;
       }
 
+      // Before the archive-first implementation, group deletion tombstoned
+      // dependent rows and cleared enrollment.groupId. The cleared links are
+      // not always recoverable from the remaining data, so do not present this
+      // as a safe restore. Operators must use the documented repair runbook.
+      const deletionAudits = await tx.auditLog.findMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          entity: 'GROUP',
+          entityId: existing.id,
+          action: 'DELETE',
+        },
+        select: { diff: true },
+      });
+      if (deletionAudits.some((audit) => audit.diff === null)) {
+        throw groupLegacyRepairRequired();
+      }
+
+      const archivedAt = existing.deletedAt;
+      const suspendedLessons = await tx.lesson.findMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          groupId: existing.id,
+          status: 'SCHEDULED',
+          deletedAt: archivedAt,
+          startsAtUtc: { gte: new Date() },
+        },
+        select: {
+          id: true,
+          teacherId: true,
+          startsAtUtc: true,
+          durationMin: true,
+        },
+      });
+      await lockTeacherSchedules(
+        tx,
+        auth.workspaceId,
+        suspendedLessons.map((lesson) => lesson.teacherId),
+      );
+
+      // Do this before changing any state. A group can be restored only when
+      // its explicitly suspended upcoming lessons still fit the calendar.
+      const conflictIds = new Set<string>();
+      for (const lesson of suspendedLessons) {
+        const conflicts = await findLessonConflicts(tx, {
+          workspaceId: auth.workspaceId,
+          teacherId: lesson.teacherId,
+          start: lesson.startsAtUtc,
+          durationMin: lesson.durationMin,
+        });
+        conflicts.forEach((id) => conflictIds.add(id));
+      }
+      if (conflictIds.size > 0) {
+        throw scheduleConflict([...conflictIds]);
+      }
+
       const restored = await tx.group.update({
         where: { id: existing.id },
         data: { deletedAt: null },
       });
+      await tx.lessonSeries.updateMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          groupId: existing.id,
+          deletedAt: archivedAt,
+        },
+        data: { deletedAt: null },
+      });
+      await tx.lesson.updateMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          groupId: existing.id,
+          status: 'SCHEDULED',
+          deletedAt: archivedAt,
+          startsAtUtc: { gte: new Date() },
+        },
+        data: { deletedAt: null },
+      });
+      await reconcileGroupSchedule(
+        tx,
+        auth.workspaceId,
+        existing.id,
+        new Date(),
+      );
       await this.audit.record(tx, {
         workspaceId: auth.workspaceId,
         actorId: auth.userId,
         action: 'RESTORE',
         entity: 'GROUP',
         entityId: existing.id,
+        changes: this.audit.buildChanges(
+          {},
+          { restoredFutureScheduledLessons: suspendedLessons.length },
+        ),
       });
       return restored;
     });

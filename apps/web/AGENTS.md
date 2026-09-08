@@ -1,6 +1,6 @@
 # Web Application Contract
 
-Read this file before changing `apps/web`. The root `CLAUDE.md` contains
+Read this file before changing `apps/web`. The root `AGENTS.md` contains
 monorepo-wide rules; this document owns the web application architecture.
 
 ## Architecture
@@ -25,12 +25,25 @@ that public entry point rather than its internal files.
 
 ## Before Writing UI
 
+Read `../../docs/design-system.md` before visual work. It is the component and
+theme contract for the web application.
+
+For a pilot-critical workflow, also read its product contract before changing
+the form or action sequence:
+
+- students: `../../docs/product/students.md`;
+- packages and payments: `../../docs/product/packages.md`.
+
+The workflow document owns required fields, progressive disclosure, next
+actions, lifecycle copy, and acceptance states. The design system owns visual
+composition.
+
 For every new UI requirement, inspect in this exact order:
 
 1. `components/ui` for an installed shadcn primitive or variant.
-2. `components/shared` for an approved product pattern.
+2. `components/shared` and `components/app` for an approved product pattern.
 3. The current feature for a local pattern.
-4. `/design` for the visual contract.
+4. `/design` for the visual contract and supported states.
 
 Use TailAdmin only when the local design catalog has no approved pattern.
 Compose existing components; do not recreate cards, alerts, empty states,
@@ -41,6 +54,10 @@ Create a shared component only after two real callers have the same semantic
 purpose and stable props. Otherwise keep it in the feature. Shared components
 must be controlled where their state needs coordination: their closest common
 parent owns the state and receives change callbacks.
+
+Before writing JSX, state which existing primitives and product components will
+be composed. If a new shared pattern is unavoidable, add it to `/design` and to
+the approved component registry in `docs/design-system.md` in the same change.
 
 `EntityPicker` / `EntityMultiSelect` are the standard controls for choosing a
 person-like entity (student, parent, teacher) in a form or a filter. Supply an
@@ -54,6 +71,9 @@ when its entity collection outgrows the picker page.
   `text-muted-foreground`, `border-border`). Do not use raw Tailwind colour
   families, hex colours, or ad-hoc `dark:` overrides outside token definitions,
   design demos, or user-provided data colours.
+- A theme change must be implementable through `globals.css`, primitive
+  variants, and `/design`. Feature screens must not own colours, radii, shadows,
+  typography, or dark-mode overrides.
 - Lifecycle labels must use semantic `Badge` variants (`primary`, `secondary`,
   `success`, `warning`, `destructive`) from `components/ui/badge`. Map domain
   states to those roles; do not create a parallel status palette, status

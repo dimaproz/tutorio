@@ -17,6 +17,11 @@ import {
   toSkipTake,
 } from '../common/pagination';
 import { PrismaService } from '../prisma/prisma.service';
+import {
+  lockGroupSchedule,
+  lockStudentLifecycles,
+  lockTeacherSchedules,
+} from './lifecycle-suspension';
 import { MaterializerService } from './materializer.service';
 import {
   assertTargetAndTeacher,
@@ -88,6 +93,7 @@ export class SeriesService {
   async create(
     auth: AuthenticatedUser,
     dto: CreateLessonSeriesDto,
+    force: boolean,
   ): Promise<LessonSeriesResponse> {
     const startDate = new Date(dto.startDate);
     const groupId = dto.groupId ?? null;
@@ -101,6 +107,7 @@ export class SeriesService {
       let currency = dto.currency ?? '';
 
       if (dto.studentId) {
+        await lockStudentLifecycles(tx, auth.workspaceId, [dto.studentId]);
         const workspace = await tx.workspace.findUniqueOrThrow({
           where: { id: auth.workspaceId },
           select: { cancellationDeadlineHours: true },
@@ -131,6 +138,10 @@ export class SeriesService {
         }
       }
 
+      if (groupId) {
+        await lockGroupSchedule(tx, auth.workspaceId, groupId);
+      }
+      await lockTeacherSchedules(tx, auth.workspaceId, [teacherId]);
       await assertTargetAndTeacher(tx, auth.workspaceId, {
         enrollmentId,
         groupId,
@@ -160,6 +171,7 @@ export class SeriesService {
         created,
         this.materializer.horizonUntil(),
         startDate,
+        force,
       );
 
       await this.audit.record(tx, {
@@ -198,9 +210,25 @@ export class SeriesService {
     auth: AuthenticatedUser,
     seriesId: string,
     dto: UpdateLessonSeriesDto,
+    force: boolean,
   ): Promise<LessonSeriesResponse> {
     const series = await this.prisma.$transaction(async (tx) => {
-      const before = await tx.lessonSeries.findFirst({
+      let before = await tx.lessonSeries.findFirst({
+        where: { id: seriesId, workspaceId: auth.workspaceId, deletedAt: null },
+        include: seriesInclude,
+      });
+      if (!before) {
+        throw lessonSeriesNotFound();
+      }
+
+      // Serialize the rule write and its future-occurrence replacement with
+      // every materializer for this target. The lock must precede the delete in
+      // regenerateFuture so no old-rule occurrence can arrive afterward.
+      if (before.groupId) {
+        await lockGroupSchedule(tx, auth.workspaceId, before.groupId);
+      }
+      await lockTeacherSchedules(tx, auth.workspaceId, [before.teacherId]);
+      before = await tx.lessonSeries.findFirst({
         where: { id: seriesId, workspaceId: auth.workspaceId, deletedAt: null },
         include: seriesInclude,
       });
@@ -229,7 +257,12 @@ export class SeriesService {
         (field) => field in changes.fields,
       );
       if (scheduleChanged) {
-        await this.materializer.regenerateFuture(tx, updated, new Date());
+        await this.materializer.regenerateFuture(
+          tx,
+          updated,
+          new Date(),
+          force,
+        );
       }
 
       await this.audit.record(tx, {
@@ -256,29 +289,40 @@ export class SeriesService {
    */
   async softDelete(auth: AuthenticatedUser, seriesId: string): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
-      const series = await tx.lessonSeries.findFirst({
+      let series = await tx.lessonSeries.findFirst({
         where: { id: seriesId, workspaceId: auth.workspaceId },
       });
       if (!series) {
         throw lessonSeriesNotFound();
       }
-      if (series.deletedAt) {
+      // Share the materializer's lock order so a candidate that has passed its
+      // eligibility read cannot be inserted after this archive commits.
+      if (series.groupId) {
+        await lockGroupSchedule(tx, auth.workspaceId, series.groupId);
+      }
+      await lockTeacherSchedules(tx, auth.workspaceId, [series.teacherId]);
+      series = await tx.lessonSeries.findFirst({
+        where: { id: seriesId, workspaceId: auth.workspaceId },
+      });
+      if (!series) {
+        throw lessonSeriesNotFound();
+      }
+      if (series.deletedAt && !series.scheduleSuspensionToken) {
         return;
       }
 
       const now = new Date();
       await tx.lessonSeries.update({
         where: { id: series.id },
-        data: { deletedAt: now },
+        data: { deletedAt: now, scheduleSuspensionToken: null },
       });
       await tx.lesson.updateMany({
         where: {
           seriesId: series.id,
           status: 'SCHEDULED',
-          deletedAt: null,
           startsAtUtc: { gte: now },
         },
-        data: { deletedAt: now },
+        data: { deletedAt: now, scheduleSuspensionToken: null },
       });
       await this.audit.record(tx, {
         workspaceId: auth.workspaceId,

@@ -187,6 +187,9 @@ export const createLessonSchema = z
     enrollmentId: uuidSchema.nullable().optional(),
     studentId: uuidSchema.nullable().optional(),
     groupId: uuidSchema.nullable().optional(),
+    // Explicit selection is optional. When omitted, the first non-zero debit
+    // may select a compatible active package once and persist that choice.
+    packageId: uuidSchema.optional(),
     teacherId: uuidSchema.optional(),
     startsAt: z.array(isoDateTimeSchema).min(1).max(50),
     durationMin: durationMinSchema,
@@ -306,7 +309,13 @@ export const listLessonsQuerySchema = z
 export type ListLessonsQueryDto = z.infer<typeof listLessonsQuerySchema>;
 
 // Override conflict rejection on create/reschedule (double-booking on purpose).
-export const forceQuerySchema = z.object({ force: z.coerce.boolean().default(false) }).strict();
+// Query values arrive as strings, so boolean coercion would turn "false" into
+// true through JavaScript truthiness. Only explicit boolean spellings are valid.
+const forceQueryValueSchema = z
+  .union([z.boolean(), z.literal('true'), z.literal('false')])
+  .transform((value) => value === true || value === 'true');
+
+export const forceQuerySchema = z.object({ force: forceQueryValueSchema.default(false) }).strict();
 
 export type ForceQueryDto = z.infer<typeof forceQuerySchema>;
 

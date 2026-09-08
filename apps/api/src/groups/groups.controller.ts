@@ -39,11 +39,13 @@ import { GroupsService } from './groups.service';
 
 @ApiTags('groups')
 @ApiBearerAuth()
+@ApiForbiddenResponse({ type: ApiErrorDto, description: 'OWNER role required' })
 @Controller('groups')
 export class GroupsController {
   constructor(private readonly groups: GroupsService) {}
 
   @Get()
+  @Roles('OWNER')
   @ApiOperation({
     summary: 'List workspace groups',
     description:
@@ -61,6 +63,7 @@ export class GroupsController {
   }
 
   @Post()
+  @Roles('OWNER')
   @ApiOperation({ summary: 'Create a group' })
   @ApiCreatedResponse({ type: GroupDto })
   @ZodSerializerDto(GroupDto)
@@ -72,6 +75,7 @@ export class GroupsController {
   }
 
   @Get(':groupId')
+  @Roles('OWNER')
   @ApiOperation({ summary: 'Get a group with enrollment summaries' })
   @ApiOkResponse({ type: GroupDetailDto })
   @ApiNotFoundResponse({ type: ApiErrorDto })
@@ -84,6 +88,7 @@ export class GroupsController {
   }
 
   @Patch(':groupId')
+  @Roles('OWNER')
   @ApiOperation({
     summary: 'Update a group',
     description:
@@ -105,12 +110,13 @@ export class GroupsController {
   }
 
   @Delete(':groupId')
+  @Roles('OWNER')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
-    summary: 'Soft-delete a group (move to trash)',
+    summary: 'Archive a group',
     description:
-      'Idempotent. Fails with ACTIVE_ENROLLMENTS_EXIST while the group ' +
-      'has active or paused enrollments.',
+      'Owner-only and idempotent. Preserves the roster and financial history, ' +
+      'then suspends related series and future scheduled lessons.',
   })
   @ApiNoContentResponse()
   @ApiNotFoundResponse({ type: ApiErrorDto })
@@ -123,9 +129,15 @@ export class GroupsController {
   }
 
   @Post(':groupId/restore')
+  @HttpCode(HttpStatus.OK)
   @Roles('OWNER')
   @ApiOperation({ summary: 'Restore a soft-deleted group (owner only)' })
   @ApiOkResponse({ type: GroupDto })
+  @ApiConflictResponse({
+    type: ApiErrorDto,
+    description:
+      'Legacy destructive group deletes require manual repair before restore.',
+  })
   @ApiForbiddenResponse({ type: ApiErrorDto })
   @ApiNotFoundResponse({ type: ApiErrorDto })
   @ZodSerializerDto(GroupDto)

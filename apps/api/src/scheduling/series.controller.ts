@@ -24,9 +24,11 @@ import {
 import { ZodSerializerDto } from 'nestjs-zod';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { ApiErrorDto } from '../auth/dto/auth.dto';
 import {
   CreateLessonSeriesDto,
+  ForceQueryDto,
   LessonSeriesDto,
   LessonSeriesListDto,
   ListLessonSeriesQueryDto,
@@ -36,11 +38,13 @@ import { SeriesService } from './series.service';
 
 @ApiTags('scheduling')
 @ApiBearerAuth()
+@ApiForbiddenResponse({ type: ApiErrorDto, description: 'OWNER role required' })
 @Controller('lesson-series')
 export class SeriesController {
   constructor(private readonly series: SeriesService) {}
 
   @Get()
+  @Roles('OWNER')
   @ApiOperation({
     summary: 'List recurring lesson patterns',
     description: 'Paginated; state=deleted|all is owner-only.',
@@ -56,6 +60,7 @@ export class SeriesController {
   }
 
   @Post()
+  @Roles('OWNER')
   @ApiOperation({
     summary: 'Create a recurring pattern and materialize its lessons',
   })
@@ -65,11 +70,13 @@ export class SeriesController {
   create(
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: CreateLessonSeriesDto,
+    @Query() query: ForceQueryDto,
   ): Promise<LessonSeriesDto> {
-    return this.series.create(user, dto);
+    return this.series.create(user, dto, query.force);
   }
 
   @Get(':seriesId')
+  @Roles('OWNER')
   @ApiOperation({ summary: 'Get a recurring pattern' })
   @ApiOkResponse({ type: LessonSeriesDto })
   @ApiNotFoundResponse({ type: ApiErrorDto })
@@ -82,6 +89,7 @@ export class SeriesController {
   }
 
   @Patch(':seriesId')
+  @Roles('OWNER')
   @ApiOperation({
     summary: 'Update a recurring pattern',
     description:
@@ -95,11 +103,13 @@ export class SeriesController {
     @CurrentUser() user: AuthenticatedUser,
     @Param('seriesId', ParseUUIDPipe) seriesId: string,
     @Body() dto: UpdateLessonSeriesDto,
+    @Query() query: ForceQueryDto,
   ): Promise<LessonSeriesDto> {
-    return this.series.update(user, seriesId, dto);
+    return this.series.update(user, seriesId, dto, query.force);
   }
 
   @Delete(':seriesId')
+  @Roles('OWNER')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Delete a recurring pattern',

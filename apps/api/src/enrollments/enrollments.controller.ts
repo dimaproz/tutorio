@@ -38,11 +38,13 @@ import { EnrollmentsService } from './enrollments.service';
 
 @ApiTags('enrollments')
 @ApiBearerAuth()
+@ApiForbiddenResponse({ type: ApiErrorDto, description: 'OWNER role required' })
 @Controller('enrollments')
 export class EnrollmentsController {
   constructor(private readonly enrollments: EnrollmentsService) {}
 
   @Get()
+  @Roles('OWNER')
   @ApiOperation({
     summary: 'List workspace enrollments',
     description:
@@ -61,6 +63,7 @@ export class EnrollmentsController {
   }
 
   @Post()
+  @Roles('OWNER')
   @ApiOperation({
     summary: 'Enroll a student with a group or an individual teacher',
     description:
@@ -81,6 +84,7 @@ export class EnrollmentsController {
   }
 
   @Get(':enrollmentId')
+  @Roles('OWNER')
   @ApiOperation({ summary: 'Get an enrollment' })
   @ApiOkResponse({ type: EnrollmentDto })
   @ApiNotFoundResponse({ type: ApiErrorDto })
@@ -93,6 +97,7 @@ export class EnrollmentsController {
   }
 
   @Patch(':enrollmentId')
+  @Roles('OWNER')
   @ApiOperation({
     summary: 'Update enrollment billing rules or lifecycle status',
     description:
@@ -112,6 +117,7 @@ export class EnrollmentsController {
   }
 
   @Delete(':enrollmentId')
+  @Roles('OWNER')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Soft-delete an enrollment (move to trash)',

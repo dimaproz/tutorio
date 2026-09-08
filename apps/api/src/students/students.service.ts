@@ -13,6 +13,9 @@ import { forbidden } from '../auth/auth.errors';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import {
   invalidWorkspaceRelation,
+  scheduleConflict,
+  studentArchivedRequiresRestore,
+  studentHasBusinessHistory,
   studentNotFound,
 } from '../common/business.errors';
 import {
@@ -21,6 +24,13 @@ import {
   toSkipTake,
 } from '../common/pagination';
 import { PrismaService } from '../prisma/prisma.service';
+import { findLessonConflicts } from '../scheduling/scheduling.shared';
+import {
+  lockGroupSchedule,
+  lockStudentLifecycles,
+  lockTeacherSchedules,
+  reconcileGroupSchedule,
+} from '../scheduling/lifecycle-suspension';
 
 // Live (non-deleted) linked parents, in a stable order — used both to build
 // the response and to compute the "before" side of the parentIds audit diff.
@@ -142,7 +152,11 @@ export class StudentsService {
       workspaceId: auth.workspaceId,
       ...deletedAtFilter(query.state),
       ...search,
-      ...(query.status ? { status: query.status } : {}),
+      ...(query.status
+        ? { status: query.status }
+        : query.state === 'active'
+          ? { status: { not: 'ARCHIVED' } }
+          : {}),
       ...(query.groupId
         ? { enrollments: { some: { groupId: query.groupId, deletedAt: null } } }
         : {}),
@@ -304,6 +318,7 @@ export class StudentsService {
     const parentIds =
       rawParentIds !== undefined ? [...new Set(rawParentIds)] : undefined;
     const student = await this.prisma.$transaction(async (tx) => {
+      await lockStudentLifecycles(tx, auth.workspaceId, [studentId]);
       const before = await tx.student.findFirst({
         where: {
           id: studentId,
@@ -314,6 +329,9 @@ export class StudentsService {
       });
       if (!before) {
         throw studentNotFound();
+      }
+      if (before.status === 'ARCHIVED') {
+        throw studentArchivedRequiresRestore();
       }
       const beforeParentIds = toParentRefs(before).map((parent) => parent.id);
 
@@ -374,24 +392,368 @@ export class StudentsService {
     return toResponse(student);
   }
 
-  /**
-   * Permanently delete a student and every link to it: parent links and
-   * enrollments go first (no FK cascade in the schema), then the record. There
-   * is no trash — the removal is irreversible.
-   */
+  /** Archive a student and pause only their explicitly-owned future work. */
+  async archive(auth: AuthenticatedUser, studentId: string): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      await lockStudentLifecycles(tx, auth.workspaceId, [studentId]);
+      const student = await tx.student.findFirst({
+        where: {
+          id: studentId,
+          workspaceId: auth.workspaceId,
+          deletedAt: null,
+        },
+      });
+      if (!student) {
+        throw studentNotFound();
+      }
+      if (student.status === 'ARCHIVED') {
+        return;
+      }
+
+      // A student archive can change both individual target eligibility and a
+      // group's active roster. Acquire the same group-then-teacher locks used
+      // by materialization before changing either condition.
+      const memberships = await tx.enrollment.findMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          studentId: student.id,
+          groupId: { not: null },
+          deletedAt: null,
+        },
+        select: { groupId: true },
+      });
+      const groupIds = [
+        ...new Set(
+          memberships.flatMap((membership) =>
+            membership.groupId ? [membership.groupId] : [],
+          ),
+        ),
+      ].sort();
+      for (const groupId of groupIds) {
+        await lockGroupSchedule(tx, auth.workspaceId, groupId);
+      }
+      const scheduledSeries = await tx.lessonSeries.findMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          deletedAt: null,
+          OR: [
+            { groupId: null, enrollment: { studentId: student.id } },
+            ...(groupIds.length ? [{ groupId: { in: groupIds } }] : []),
+          ],
+        },
+        select: { teacherId: true },
+      });
+      await lockTeacherSchedules(
+        tx,
+        auth.workspaceId,
+        scheduledSeries.map((series) => series.teacherId),
+      );
+
+      const archivedAt = new Date();
+      const archivedSeries = await tx.lessonSeries.updateMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          groupId: null,
+          deletedAt: null,
+          enrollment: { studentId: student.id },
+        },
+        data: { deletedAt: archivedAt, scheduleSuspensionToken: null },
+      });
+      const archivedLessons = await tx.lesson.updateMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          groupId: null,
+          status: 'SCHEDULED',
+          deletedAt: null,
+          startsAtUtc: { gte: archivedAt },
+          enrollment: { studentId: student.id },
+        },
+        data: { deletedAt: archivedAt, scheduleSuspensionToken: null },
+      });
+      const archivedActiveGroupEnrollments = await tx.enrollment.updateMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          studentId: student.id,
+          groupId: { not: null },
+          deletedAt: null,
+          status: 'ACTIVE',
+          studentArchivedAt: null,
+        },
+        data: {
+          status: 'ARCHIVED',
+          studentArchivedAt: archivedAt,
+          statusBeforeStudentArchive: 'ACTIVE',
+        },
+      });
+      const archivedPausedGroupEnrollments = await tx.enrollment.updateMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          studentId: student.id,
+          groupId: { not: null },
+          deletedAt: null,
+          status: 'PAUSED',
+          studentArchivedAt: null,
+        },
+        data: {
+          status: 'ARCHIVED',
+          studentArchivedAt: archivedAt,
+          statusBeforeStudentArchive: 'PAUSED',
+        },
+      });
+
+      await tx.student.update({
+        where: { id: student.id },
+        data: { status: 'ARCHIVED', archivedAt },
+      });
+      const affectedGroups = await tx.enrollment.findMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          studentId: student.id,
+          groupId: { not: null },
+          studentArchivedAt: archivedAt,
+        },
+        select: { groupId: true },
+      });
+      for (const groupId of new Set(
+        affectedGroups.flatMap((row) => (row.groupId ? [row.groupId] : [])),
+      )) {
+        await reconcileGroupSchedule(tx, auth.workspaceId, groupId, archivedAt);
+      }
+      await this.audit.record(tx, {
+        workspaceId: auth.workspaceId,
+        actorId: auth.userId,
+        action: 'DELETE',
+        entity: 'STUDENT',
+        entityId: student.id,
+        changes: this.audit.buildChanges(
+          {},
+          {
+            archivedSeries: archivedSeries.count,
+            archivedFutureScheduledLessons: archivedLessons.count,
+            archivedGroupEnrollments:
+              archivedActiveGroupEnrollments.count +
+              archivedPausedGroupEnrollments.count,
+          },
+        ),
+      });
+    });
+  }
+
+  async restore(
+    auth: AuthenticatedUser,
+    studentId: string,
+  ): Promise<StudentResponse> {
+    const student = await this.prisma.$transaction(async (tx) => {
+      await lockStudentLifecycles(tx, auth.workspaceId, [studentId]);
+      const existing = await tx.student.findFirst({
+        where: {
+          id: studentId,
+          workspaceId: auth.workspaceId,
+          deletedAt: null,
+        },
+        include: parentLinksInclude,
+      });
+      if (!existing) {
+        throw studentNotFound();
+      }
+      if (existing.status !== 'ARCHIVED' || !existing.archivedAt) {
+        return existing;
+      }
+
+      const suspendedGroupRows = await tx.enrollment.findMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          studentId: existing.id,
+          groupId: { not: null },
+          deletedAt: null,
+          status: 'ARCHIVED',
+          studentArchivedAt: existing.archivedAt,
+          statusBeforeStudentArchive: { in: ['ACTIVE', 'PAUSED'] },
+        },
+        select: { id: true, groupId: true, statusBeforeStudentArchive: true },
+      });
+      const groupIds = [
+        ...new Set(
+          suspendedGroupRows.flatMap((row) =>
+            row.groupId ? [row.groupId] : [],
+          ),
+        ),
+      ].sort();
+      for (const groupId of groupIds) {
+        await lockGroupSchedule(tx, auth.workspaceId, groupId);
+      }
+
+      const lessonTeachers = await tx.lesson.findMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          groupId: null,
+          status: 'SCHEDULED',
+          deletedAt: existing.archivedAt,
+          startsAtUtc: { gte: new Date() },
+          enrollment: { studentId: existing.id },
+        },
+        select: { teacherId: true },
+      });
+      await lockTeacherSchedules(
+        tx,
+        auth.workspaceId,
+        lessonTeachers.map((lesson) => lesson.teacherId),
+      );
+      const suspendedLessons = await tx.lesson.findMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          groupId: null,
+          status: 'SCHEDULED',
+          deletedAt: existing.archivedAt,
+          startsAtUtc: { gte: new Date() },
+          enrollment: { studentId: existing.id },
+        },
+        select: { teacherId: true, startsAtUtc: true, durationMin: true },
+      });
+      const conflictIds = new Set<string>();
+      for (const lesson of suspendedLessons) {
+        const conflicts = await findLessonConflicts(tx, {
+          workspaceId: auth.workspaceId,
+          teacherId: lesson.teacherId,
+          start: lesson.startsAtUtc,
+          durationMin: lesson.durationMin,
+        });
+        conflicts.forEach((id) => conflictIds.add(id));
+      }
+      if (conflictIds.size > 0) {
+        throw scheduleConflict([...conflictIds]);
+      }
+
+      const suspendedGroupEnrollments = await tx.enrollment.findMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          studentId: existing.id,
+          groupId: { not: null },
+          deletedAt: null,
+          status: 'ARCHIVED',
+          studentArchivedAt: existing.archivedAt,
+          statusBeforeStudentArchive: { in: ['ACTIVE', 'PAUSED'] },
+        },
+        select: { id: true, statusBeforeStudentArchive: true },
+      });
+
+      await tx.lessonSeries.updateMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          groupId: null,
+          deletedAt: existing.archivedAt,
+          enrollment: { studentId: existing.id },
+        },
+        data: { deletedAt: null },
+      });
+      await tx.lesson.updateMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          groupId: null,
+          status: 'SCHEDULED',
+          deletedAt: existing.archivedAt,
+          startsAtUtc: { gte: new Date() },
+          enrollment: { studentId: existing.id },
+        },
+        data: { deletedAt: null },
+      });
+      for (const enrollment of suspendedGroupEnrollments) {
+        await tx.enrollment.update({
+          where: { id: enrollment.id },
+          data: {
+            status: enrollment.statusBeforeStudentArchive!,
+            studentArchivedAt: null,
+            statusBeforeStudentArchive: null,
+          },
+        });
+      }
+      const restored = await tx.student.update({
+        where: { id: existing.id },
+        data: { status: 'ACTIVE', archivedAt: null },
+        include: parentLinksInclude,
+      });
+      const affectedGroups = await tx.enrollment.findMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          studentId: existing.id,
+          groupId: { not: null },
+          id: { in: suspendedGroupEnrollments.map((row) => row.id) },
+        },
+        select: { groupId: true },
+      });
+      for (const groupId of new Set(
+        affectedGroups.flatMap((row) => (row.groupId ? [row.groupId] : [])),
+      )) {
+        await reconcileGroupSchedule(tx, auth.workspaceId, groupId, new Date());
+      }
+      await this.audit.record(tx, {
+        workspaceId: auth.workspaceId,
+        actorId: auth.userId,
+        action: 'RESTORE',
+        entity: 'STUDENT',
+        entityId: existing.id,
+        changes: this.audit.buildChanges(
+          {},
+          {
+            restoredFutureScheduledLessons: suspendedLessons.length,
+            restoredGroupEnrollments: suspendedGroupEnrollments.length,
+          },
+        ),
+      });
+      return restored;
+    });
+    return toResponse(student);
+  }
+
+  /** Hard deletion is limited to an unused draft and never cascades history. */
   async remove(auth: AuthenticatedUser, studentId: string): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
       const student = await tx.student.findFirst({
         where: { id: studentId, workspaceId: auth.workspaceId },
+        select: { id: true },
       });
       if (!student) {
         throw studentNotFound();
       }
 
+      const [enrollments, lessons, packages, payments, shares, credits] =
+        await Promise.all([
+          tx.enrollment.count({ where: { studentId: student.id } }),
+          tx.lesson.count({ where: { enrollment: { studentId: student.id } } }),
+          tx.lessonPackage.count({ where: { studentId: student.id } }),
+          tx.payment.count({
+            where: {
+              OR: [
+                { enrollment: { studentId: student.id } },
+                { package: { is: { studentId: student.id } } },
+              ],
+            },
+          }),
+          tx.packageParticipantShare.count({
+            where: { enrollment: { studentId: student.id } },
+          }),
+          tx.lessonCreditEntry.count({
+            where: {
+              OR: [
+                { enrollment: { studentId: student.id } },
+                { package: { is: { studentId: student.id } } },
+              ],
+            },
+          }),
+        ]);
+      const dependencies = {
+        enrollments,
+        lessons,
+        packages,
+        payments,
+        shares,
+        credits,
+      };
+      if (Object.values(dependencies).some((count) => count > 0)) {
+        throw studentHasBusinessHistory(dependencies);
+      }
+
       await tx.studentParent.deleteMany({ where: { studentId: student.id } });
-      await tx.enrollment.deleteMany({
-        where: { studentId: student.id, workspaceId: auth.workspaceId },
-      });
       await tx.student.delete({ where: { id: student.id } });
       await this.audit.record(tx, {
         workspaceId: auth.workspaceId,
