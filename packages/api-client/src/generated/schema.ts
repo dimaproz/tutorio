@@ -3593,7 +3593,9 @@ export interface operations {
     };
     SeriesController_create: {
         parameters: {
-            query?: never;
+            query?: {
+                force?: boolean | "true" | "false";
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -3680,7 +3682,9 @@ export interface operations {
     };
     SeriesController_update: {
         parameters: {
-            query?: never;
+            query?: {
+                force?: boolean | "true" | "false";
+            };
             header?: never;
             path: {
                 seriesId: string;

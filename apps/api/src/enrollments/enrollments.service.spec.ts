@@ -50,7 +50,7 @@ function buildPrismaMock() {
     enrollment: {
       findMany: jest.fn().mockResolvedValue([]),
       findFirst: jest.fn(),
-      count: jest.fn().mockResolvedValue(0),
+      count: jest.fn().mockResolvedValue(1),
       create: jest.fn(),
       update: jest.fn(),
     },
@@ -254,6 +254,7 @@ describe('EnrollmentsService.restore', () => {
     const { prisma, service } = buildService();
     prisma.enrollment.findFirst
       .mockResolvedValueOnce({ ...enrollmentRow, deletedAt: NOW })
+      .mockResolvedValueOnce({ ...enrollmentRow, deletedAt: NOW })
       .mockResolvedValueOnce({ id: 'live-duplicate' });
 
     await expectBusinessError(
@@ -268,6 +269,7 @@ describe('EnrollmentsService.restore', () => {
     const { prisma, service } = buildService();
     prisma.enrollment.findFirst
       .mockResolvedValueOnce({ ...enrollmentRow, deletedAt: NOW })
+      .mockResolvedValueOnce({ ...enrollmentRow, deletedAt: NOW })
       .mockResolvedValueOnce(null);
     prisma.enrollment.update.mockResolvedValue(enrollmentRow);
 
@@ -275,6 +277,7 @@ describe('EnrollmentsService.restore', () => {
 
     expect(prisma.enrollment.update.mock.calls[0][0].data).toEqual({
       deletedAt: null,
+      scheduleSuspensionToken: null,
     });
     expect(prisma.auditLog.create.mock.calls[0][0].data.action).toBe('RESTORE');
     expect(result.deletedAt).toBeNull();

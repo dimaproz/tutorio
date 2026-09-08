@@ -35,6 +35,10 @@ import {
 } from '../common/pagination';
 import { PrismaService } from '../prisma/prisma.service';
 import { MaterializerService } from '../scheduling/materializer.service';
+import {
+  lockGroupSchedule,
+  lockTeacherSchedules,
+} from '../scheduling/lifecycle-suspension';
 import { resolveStudentTarget } from '../scheduling/scheduling.shared';
 import { LedgerService } from './ledger.service';
 import { packageInclude, toPackageResponse } from './packages.shared';
@@ -572,7 +576,7 @@ export class PackagesService {
    */
   async remove(auth: AuthenticatedUser, packageId: string): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
-      const pkg = await tx.lessonPackage.findFirst({
+      let pkg = await tx.lessonPackage.findFirst({
         where: {
           id: packageId,
           workspaceId: auth.workspaceId,
@@ -583,24 +587,58 @@ export class PackagesService {
       if (!pkg) {
         return; // Idempotent: deleting an already-deleted package is a no-op.
       }
+      const ownedSeries = await tx.lessonSeries.findMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          packageId: pkg.id,
+        },
+        select: { groupId: true, teacherId: true },
+      });
+      for (const groupId of [
+        ...new Set(
+          ownedSeries.flatMap((series) =>
+            series.groupId ? [series.groupId] : [],
+          ),
+        ),
+      ].sort()) {
+        await lockGroupSchedule(tx, auth.workspaceId, groupId);
+      }
+      await lockTeacherSchedules(
+        tx,
+        auth.workspaceId,
+        ownedSeries.map((series) => series.teacherId),
+      );
+      pkg = await tx.lessonPackage.findFirst({
+        where: {
+          id: packageId,
+          workspaceId: auth.workspaceId,
+          deletedAt: null,
+        },
+        select: { id: true },
+      });
+      if (!pkg) {
+        return;
+      }
       const archivedAt = new Date();
       const archivedSeries = await tx.lessonSeries.updateMany({
         where: {
           workspaceId: auth.workspaceId,
           packageId: pkg.id,
-          deletedAt: null,
         },
-        data: { deletedAt: archivedAt },
+        data: { deletedAt: archivedAt, scheduleSuspensionToken: null },
       });
       const archivedLessons = await tx.lesson.updateMany({
         where: {
           workspaceId: auth.workspaceId,
           packageId: pkg.id,
-          deletedAt: null,
           status: 'SCHEDULED',
           startsAtUtc: { gte: archivedAt },
         },
-        data: { deletedAt: archivedAt, isDetached: true },
+        data: {
+          deletedAt: archivedAt,
+          isDetached: true,
+          scheduleSuspensionToken: null,
+        },
       });
       await tx.lessonPackage.update({
         where: { id: pkg.id },

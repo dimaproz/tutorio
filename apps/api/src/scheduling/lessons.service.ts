@@ -24,10 +24,16 @@ import { LedgerService } from '../packages/ledger.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { MaterializerService } from './materializer.service';
 import {
+  lockGroupSchedule,
+  lockStudentLifecycles,
+  lockTeacherSchedules,
+} from './lifecycle-suspension';
+import {
   assertTargetAndTeacher,
   findLessonConflicts,
   lessonInclude,
   localHourMinute,
+  localWeekday,
   resolveStudentTarget,
   toLessonResponse,
 } from './scheduling.shared';
@@ -103,6 +109,7 @@ export class LessonsService {
       let currency = dto.currency ?? '';
 
       if (dto.studentId) {
+        await lockStudentLifecycles(tx, auth.workspaceId, [dto.studentId]);
         const workspace = await tx.workspace.findUniqueOrThrow({
           where: { id: auth.workspaceId },
           select: { cancellationDeadlineHours: true },
@@ -133,6 +140,12 @@ export class LessonsService {
         }
       }
 
+      if (groupId) {
+        await lockGroupSchedule(tx, auth.workspaceId, groupId);
+      }
+      await lockTeacherSchedules(tx, auth.workspaceId, [teacherId]);
+      // Lifecycle state may have changed while this request waited for the
+      // schedule lock, so validate the canonical target only after locking.
       await assertTargetAndTeacher(tx, auth.workspaceId, {
         enrollmentId,
         groupId,
@@ -400,8 +413,12 @@ export class LessonsService {
         throw lessonNotFound();
       }
       const durationMin = dto.durationMin ?? lesson.durationMin;
+      if (lesson.groupId) {
+        await lockGroupSchedule(tx, auth.workspaceId, lesson.groupId);
+      }
+      await lockTeacherSchedules(tx, auth.workspaceId, [lesson.teacherId]);
 
-      if (!force) {
+      if (!force && !(dto.scope === 'this_and_following' && lesson.seriesId)) {
         const conflicts = await findLessonConflicts(tx, {
           workspaceId: auth.workspaceId,
           teacherId: lesson.teacherId,
@@ -414,22 +431,48 @@ export class LessonsService {
         }
       }
 
-      // "This and following" on a series lesson shifts the pattern's time and
-      // regenerates future slots; the individual case (or a one-off lesson)
-      // just detaches and moves this single lesson.
+      // A following edit creates a new rule boundary. The original series
+      // remains an honest record of the rule that produced prior occurrences.
       if (dto.scope === 'this_and_following' && lesson.seriesId) {
         const series = await tx.lessonSeries.findUniqueOrThrow({
           where: { id: lesson.seriesId },
         });
         const localTime = localHourMinute(newStart, series.timezone);
-        const updatedSeries = await tx.lessonSeries.update({
+        const weekdays = [localWeekday(newStart, series.timezone)];
+        const endedSeries = await tx.lessonSeries.update({
           where: { id: series.id },
-          data: { localTime, durationMin },
+          data: { endsAt: lesson.startsAtUtc },
         });
         await this.materializer.regenerateFuture(
           tx,
-          updatedSeries,
+          endedSeries,
           lesson.startsAtUtc,
+          force,
+        );
+        const followingSeries = await tx.lessonSeries.create({
+          data: {
+            workspaceId: series.workspaceId,
+            enrollmentId: series.enrollmentId,
+            groupId: series.groupId,
+            packageId: series.packageId,
+            teacherId: series.teacherId,
+            weekdays,
+            localTime,
+            timezone: series.timezone,
+            durationMin,
+            priceMinor: series.priceMinor,
+            currency: series.currency,
+            startDate: newStart,
+            endsAt: series.endsAt,
+            horizonMaterializedUntil: newStart,
+          },
+        });
+        await this.materializer.materializeSeries(
+          tx,
+          followingSeries,
+          this.materializer.horizonUntil(),
+          newStart,
+          force,
         );
         await this.audit.record(tx, {
           workspaceId: auth.workspaceId,
@@ -437,12 +480,31 @@ export class LessonsService {
           action: 'UPDATE',
           entity: 'LESSON_SERIES',
           entityId: series.id,
-          changes: this.audit.buildChanges(series, { localTime, durationMin }),
+          changes: this.audit.buildChanges(series, {
+            endsAt: lesson.startsAtUtc,
+          }),
+        });
+        await this.audit.record(tx, {
+          workspaceId: auth.workspaceId,
+          actorId: auth.userId,
+          action: 'CREATE',
+          entity: 'LESSON_SERIES',
+          entityId: followingSeries.id,
+          changes: this.audit.buildChanges(
+            {},
+            {
+              previousSeriesId: series.id,
+              localTime,
+              weekdays,
+              durationMin,
+              startDate: newStart,
+            },
+          ),
         });
         // Return the regenerated lesson now occupying the new slot, carrying
         // this move in its reschedule history.
         const moved = await tx.lesson.findFirst({
-          where: { seriesId: series.id, startsAtUtc: newStart },
+          where: { seriesId: followingSeries.id, startsAtUtc: newStart },
           select: { id: true },
         });
         if (!moved) {

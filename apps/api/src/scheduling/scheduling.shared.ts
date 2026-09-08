@@ -370,3 +370,12 @@ export function localHourMinute(instant: Date, timezone: string): string {
   const minute = parts.find((part) => part.type === 'minute')?.value ?? '00';
   return `${hour}:${minute}`;
 }
+
+/** JS weekday (0 = Sunday) for the local calendar date of an instant. */
+export function localWeekday(instant: Date, timezone: string): number {
+  const weekday = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    weekday: 'short',
+  }).format(instant);
+  return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(weekday);
+}

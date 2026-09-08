@@ -27,6 +27,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { ApiErrorDto } from '../auth/dto/auth.dto';
 import {
   CreateLessonSeriesDto,
+  ForceQueryDto,
   LessonSeriesDto,
   LessonSeriesListDto,
   ListLessonSeriesQueryDto,
@@ -65,8 +66,9 @@ export class SeriesController {
   create(
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: CreateLessonSeriesDto,
+    @Query() query: ForceQueryDto,
   ): Promise<LessonSeriesDto> {
-    return this.series.create(user, dto);
+    return this.series.create(user, dto, query.force);
   }
 
   @Get(':seriesId')
@@ -95,8 +97,9 @@ export class SeriesController {
     @CurrentUser() user: AuthenticatedUser,
     @Param('seriesId', ParseUUIDPipe) seriesId: string,
     @Body() dto: UpdateLessonSeriesDto,
+    @Query() query: ForceQueryDto,
   ): Promise<LessonSeriesDto> {
-    return this.series.update(user, seriesId, dto);
+    return this.series.update(user, seriesId, dto, query.force);
   }
 
   @Delete(':seriesId')

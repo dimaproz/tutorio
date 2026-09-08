@@ -25,6 +25,12 @@ import {
 } from '../common/pagination';
 import { PrismaService } from '../prisma/prisma.service';
 import { findLessonConflicts } from '../scheduling/scheduling.shared';
+import {
+  lockGroupSchedule,
+  lockStudentLifecycles,
+  lockTeacherSchedules,
+  reconcileGroupSchedule,
+} from '../scheduling/lifecycle-suspension';
 
 // Live (non-deleted) linked parents, in a stable order — used both to build
 // the response and to compute the "before" side of the parentIds audit diff.
@@ -312,6 +318,7 @@ export class StudentsService {
     const parentIds =
       rawParentIds !== undefined ? [...new Set(rawParentIds)] : undefined;
     const student = await this.prisma.$transaction(async (tx) => {
+      await lockStudentLifecycles(tx, auth.workspaceId, [studentId]);
       const before = await tx.student.findFirst({
         where: {
           id: studentId,
@@ -388,6 +395,7 @@ export class StudentsService {
   /** Archive a student and pause only their explicitly-owned future work. */
   async archive(auth: AuthenticatedUser, studentId: string): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
+      await lockStudentLifecycles(tx, auth.workspaceId, [studentId]);
       const student = await tx.student.findFirst({
         where: {
           id: studentId,
@@ -402,6 +410,45 @@ export class StudentsService {
         return;
       }
 
+      // A student archive can change both individual target eligibility and a
+      // group's active roster. Acquire the same group-then-teacher locks used
+      // by materialization before changing either condition.
+      const memberships = await tx.enrollment.findMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          studentId: student.id,
+          groupId: { not: null },
+          deletedAt: null,
+        },
+        select: { groupId: true },
+      });
+      const groupIds = [
+        ...new Set(
+          memberships.flatMap((membership) =>
+            membership.groupId ? [membership.groupId] : [],
+          ),
+        ),
+      ].sort();
+      for (const groupId of groupIds) {
+        await lockGroupSchedule(tx, auth.workspaceId, groupId);
+      }
+      const scheduledSeries = await tx.lessonSeries.findMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          deletedAt: null,
+          OR: [
+            { groupId: null, enrollment: { studentId: student.id } },
+            ...(groupIds.length ? [{ groupId: { in: groupIds } }] : []),
+          ],
+        },
+        select: { teacherId: true },
+      });
+      await lockTeacherSchedules(
+        tx,
+        auth.workspaceId,
+        scheduledSeries.map((series) => series.teacherId),
+      );
+
       const archivedAt = new Date();
       const archivedSeries = await tx.lessonSeries.updateMany({
         where: {
@@ -410,7 +457,7 @@ export class StudentsService {
           deletedAt: null,
           enrollment: { studentId: student.id },
         },
-        data: { deletedAt: archivedAt },
+        data: { deletedAt: archivedAt, scheduleSuspensionToken: null },
       });
       const archivedLessons = await tx.lesson.updateMany({
         where: {
@@ -421,7 +468,7 @@ export class StudentsService {
           startsAtUtc: { gte: archivedAt },
           enrollment: { studentId: student.id },
         },
-        data: { deletedAt: archivedAt },
+        data: { deletedAt: archivedAt, scheduleSuspensionToken: null },
       });
       const archivedActiveGroupEnrollments = await tx.enrollment.updateMany({
         where: {
@@ -458,6 +505,20 @@ export class StudentsService {
         where: { id: student.id },
         data: { status: 'ARCHIVED', archivedAt },
       });
+      const affectedGroups = await tx.enrollment.findMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          studentId: student.id,
+          groupId: { not: null },
+          studentArchivedAt: archivedAt,
+        },
+        select: { groupId: true },
+      });
+      for (const groupId of new Set(
+        affectedGroups.flatMap((row) => (row.groupId ? [row.groupId] : [])),
+      )) {
+        await reconcileGroupSchedule(tx, auth.workspaceId, groupId, archivedAt);
+      }
       await this.audit.record(tx, {
         workspaceId: auth.workspaceId,
         actorId: auth.userId,
@@ -483,6 +544,7 @@ export class StudentsService {
     studentId: string,
   ): Promise<StudentResponse> {
     const student = await this.prisma.$transaction(async (tx) => {
+      await lockStudentLifecycles(tx, auth.workspaceId, [studentId]);
       const existing = await tx.student.findFirst({
         where: {
           id: studentId,
@@ -498,6 +560,45 @@ export class StudentsService {
         return existing;
       }
 
+      const suspendedGroupRows = await tx.enrollment.findMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          studentId: existing.id,
+          groupId: { not: null },
+          deletedAt: null,
+          status: 'ARCHIVED',
+          studentArchivedAt: existing.archivedAt,
+          statusBeforeStudentArchive: { in: ['ACTIVE', 'PAUSED'] },
+        },
+        select: { id: true, groupId: true, statusBeforeStudentArchive: true },
+      });
+      const groupIds = [
+        ...new Set(
+          suspendedGroupRows.flatMap((row) =>
+            row.groupId ? [row.groupId] : [],
+          ),
+        ),
+      ].sort();
+      for (const groupId of groupIds) {
+        await lockGroupSchedule(tx, auth.workspaceId, groupId);
+      }
+
+      const lessonTeachers = await tx.lesson.findMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          groupId: null,
+          status: 'SCHEDULED',
+          deletedAt: existing.archivedAt,
+          startsAtUtc: { gte: new Date() },
+          enrollment: { studentId: existing.id },
+        },
+        select: { teacherId: true },
+      });
+      await lockTeacherSchedules(
+        tx,
+        auth.workspaceId,
+        lessonTeachers.map((lesson) => lesson.teacherId),
+      );
       const suspendedLessons = await tx.lesson.findMany({
         where: {
           workspaceId: auth.workspaceId,
@@ -571,6 +672,20 @@ export class StudentsService {
         data: { status: 'ACTIVE', archivedAt: null },
         include: parentLinksInclude,
       });
+      const affectedGroups = await tx.enrollment.findMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          studentId: existing.id,
+          groupId: { not: null },
+          id: { in: suspendedGroupEnrollments.map((row) => row.id) },
+        },
+        select: { groupId: true },
+      });
+      for (const groupId of new Set(
+        affectedGroups.flatMap((row) => (row.groupId ? [row.groupId] : [])),
+      )) {
+        await reconcileGroupSchedule(tx, auth.workspaceId, groupId, new Date());
+      }
       await this.audit.record(tx, {
         workspaceId: auth.workspaceId,
         actorId: auth.userId,

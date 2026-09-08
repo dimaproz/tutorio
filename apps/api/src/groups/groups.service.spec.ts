@@ -38,15 +38,18 @@ function buildPrismaMock() {
       findMany: jest.fn().mockResolvedValue([]),
       create: jest.fn().mockResolvedValue(groupRow),
       update: jest.fn().mockResolvedValue(groupRow),
+      updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     },
     student: {
       findMany: jest.fn().mockResolvedValue([]),
+      count: jest.fn().mockResolvedValue(1),
     },
     teacher: {
       findFirst: jest.fn().mockResolvedValue({ id: TEACHER_ID }),
     },
     enrollment: {
       findMany: jest.fn().mockResolvedValue([]),
+      count: jest.fn().mockResolvedValue(1),
       create: jest.fn().mockImplementation(({ data }: { data: unknown }) => ({
         id: `enrollment-${(data as { studentId: string }).studentId}`,
         ...(data as object),
@@ -55,7 +58,10 @@ function buildPrismaMock() {
       updateMany: jest.fn(),
     },
     lesson: { updateMany: jest.fn().mockResolvedValue({ count: 0 }) },
-    lessonSeries: { updateMany: jest.fn().mockResolvedValue({ count: 0 }) },
+    lessonSeries: {
+      findMany: jest.fn().mockResolvedValue([]),
+      updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+    },
     workspace: {
       findUniqueOrThrow: jest.fn().mockResolvedValue({
         defaultCurrency: 'EUR',

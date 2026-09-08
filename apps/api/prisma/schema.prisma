@@ -285,6 +285,9 @@ model Group {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
   deletedAt      DateTime?
+  // Correlates only work suspended because this group temporarily had no
+  // eligible participants. It is deliberately separate from deletedAt.
+  rosterSuspensionToken String?
 
   workspace    Workspace       @relation(fields: [workspaceId], references: [id])
   enrollments  Enrollment[]
@@ -323,6 +326,9 @@ model Enrollment {
   // membership. These markers make restore precise without clearing groupId.
   studentArchivedAt         DateTime?
   statusBeforeStudentArchive EnrollmentStatus?
+  // Correlates operational schedule suspension with the lifecycle command
+  // (pause, archive, or soft deletion) that caused it.
+  scheduleSuspensionToken String?
 
   workspace    Workspace      @relation(fields: [workspaceId], references: [id])
   student      Student        @relation(fields: [studentId], references: [id])
@@ -431,6 +437,8 @@ model LessonSeries {
   createdAt                DateTime  @default(now())
   updatedAt                DateTime  @updatedAt
   deletedAt                DateTime?
+  // Set only when an enrollment or an empty group roster suspends this rule.
+  scheduleSuspensionToken String?
 
   workspace  Workspace   @relation(fields: [workspaceId], references: [id])
   enrollment Enrollment? @relation(fields: [enrollmentId], references: [id])
@@ -484,6 +492,9 @@ model Lesson {
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
   deletedAt        DateTime?
+  // Set only when an enrollment or an empty group roster suspends this
+  // otherwise-live scheduled occurrence. It makes restoration precise.
+  scheduleSuspensionToken String?
 
   workspace  Workspace     @relation(fields: [workspaceId], references: [id])
   enrollment Enrollment?   @relation(fields: [enrollmentId], references: [id])

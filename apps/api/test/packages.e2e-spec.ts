@@ -1309,6 +1309,26 @@ describe('Stage 4: packages, credit ledger, payments (e2e)', () => {
       },
     });
 
+    const groupEnrollments = await prisma.enrollment.findMany({
+      where: { groupId: group.body.id, deletedAt: null },
+      select: { id: true },
+    });
+    for (const enrollment of groupEnrollments) {
+      await server()
+        .patch(`/api/enrollments/${enrollment.id}`)
+        .set('Authorization', auth(owner))
+        .send({ status: 'PAUSED' })
+        .expect(200);
+    }
+    expect(
+      await prisma.lessonSeries.count({
+        where: {
+          packageId: pkg.body.id,
+          scheduleSuspensionToken: { not: null },
+        },
+      }),
+    ).toBeGreaterThan(0);
+
     await server()
       .delete(`/api/packages/${pkg.body.id}`)
       .set('Authorization', auth(owner))
@@ -1320,15 +1340,23 @@ describe('Stage 4: packages, credit ledger, payments (e2e)', () => {
 
     const archivedSeries = await prisma.lessonSeries.findMany({
       where: { packageId: pkg.body.id },
-      select: { deletedAt: true },
+      select: { deletedAt: true, scheduleSuspensionToken: true },
     });
     expect(archivedSeries.length).toBeGreaterThan(0);
     expect(archivedSeries.every((series) => series.deletedAt != null)).toBe(
       true,
     );
+    expect(
+      archivedSeries.every((series) => series.scheduleSuspensionToken === null),
+    ).toBe(true);
     const lessonsAfterArchive = await prisma.lesson.findMany({
       where: { packageId: pkg.body.id },
-      select: { id: true, status: true, deletedAt: true },
+      select: {
+        id: true,
+        status: true,
+        deletedAt: true,
+        scheduleSuspensionToken: true,
+      },
     });
     const lessonById = new Map(
       lessonsAfterArchive.map((lesson) => [lesson.id, lesson]),
@@ -1339,6 +1367,7 @@ describe('Stage 4: packages, credit ledger, payments (e2e)', () => {
       (candidate) => candidate.status === 'SCHEDULED',
     )) {
       expect(lesson.deletedAt).not.toBeNull();
+      expect(lesson.scheduleSuspensionToken).toBeNull();
     }
     expect(lessonById.get(detached.body.id)?.deletedAt).not.toBeNull();
     expect(lessonById.get(oneOffId)?.deletedAt).not.toBeNull();

@@ -990,8 +990,8 @@
       "addLesson": "Add lesson",
       "upcoming": "Upcoming",
       "past": "Past",
-      "noUpcoming": "No lessons scheduled.",
-      "noPast": "No lessons yet.",
+      "noUpcoming": "No upcoming lessons.",
+      "noPast": "No past lessons.",
       "tableCaption": "Student lessons",
       "durationMinutes": "{minutes} min",
       "columns": {

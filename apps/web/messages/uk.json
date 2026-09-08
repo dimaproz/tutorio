@@ -990,8 +990,8 @@
       "addLesson": "Додати урок",
       "upcoming": "Найближчі",
       "past": "Минулі",
-      "noUpcoming": "Запланованих уроків немає.",
-      "noPast": "Проведених уроків ще немає.",
+      "noUpcoming": "Найближчих уроків немає.",
+      "noPast": "Минулих уроків немає.",
       "tableCaption": "Уроки учня",
       "durationMinutes": "{minutes} хв",
       "columns": {
