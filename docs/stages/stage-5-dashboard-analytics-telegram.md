@@ -69,10 +69,10 @@ Response DTOs for KPI cards, series, and the payment export.
 
 ## 6. Web
 
-TailAdmin reference: **the entire analytics dashboard** at
-`demo.tailadmin.com/analytics` — KPI stat cards with delta chips, donut for
-status breakdown, bar/line for revenue, top-earners list, data table. Mirror
-these on shadcn + our charting.
+UI reference: an architect-approved analytics brief using official shadcn
+dashboard, Card, Chart, Badge, and Table compositions. KPI cards, status
+breakdown, revenue charts, top-earners, and tables must follow verified user
+jobs rather than a generic analytics demo.
 
 - `features/dashboard` — full widget set (today, alerts, income-per-currency).
 - `features/analytics` — `/app/analytics` route: period picker, KPI grid,

@@ -295,7 +295,7 @@ export function ListPagination({
   return (
     <Pagination aria-label={t('label')}>
       {/* Previous and Next sit on the edges with the page numbers centred —
-          the TailAdmin table pager. */}
+          the legacy table pager. */}
       <PaginationContent className="w-full justify-between gap-2">
         <PaginationItem>
           <PaginationPrevious

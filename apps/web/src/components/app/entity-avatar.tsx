@@ -4,7 +4,7 @@ import { cn, nameInitials } from '@/lib/utils';
 
 // The single avatar used for every person in the product (students, parents,
 // teachers). A picked illustration renders as an image; otherwise it falls back
-// to initials. `ring` adds the TailAdmin-style halo (a gap + soft outline) used
+// to initials. `ring` adds the legacy halo (a gap + soft outline) used
 // on profile headers.
 const SIZE_CLASS = {
   xs: 'size-7 text-xs',

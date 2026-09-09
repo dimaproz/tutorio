@@ -44,7 +44,7 @@ export function ProfileHeader({
   );
 }
 
-// A card header title with a tinted icon square — the TailAdmin section voice.
+// A legacy card header title with a tinted icon square.
 // `tone` colours the square; it defaults to neutral so existing callers keep
 // their grey square until they opt into a colour.
 export function SectionTitle({

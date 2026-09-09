@@ -74,8 +74,9 @@ and recoverable.
 - Student/parent authentication, public pages, and mobile apps.
 - Automated Telegram communication and branded receipts.
 - Leads pipeline, marketing CRM, subscriptions, and multi-tenant SaaS billing.
-- A comprehensive design rewrite. Visual work is limited to pilot-critical
-  workflow clarity, accessibility, and responsive correctness.
+- An unbounded custom visual redesign. The bounded official shadcn foundation
+  in ADR 0005 is allowed because it enables pilot-critical workflow clarity,
+  accessibility, responsive correctness, and inexpensive future theming.
 
 ## Product decisions
 
@@ -86,6 +87,7 @@ governed by these rules:
 - Archive-first lifecycle and finance preservation: ADR 0002.
 - Cancellation and package accounting semantics: ADR 0003.
 - Owner-operated access model: ADR 0004.
+- Official shadcn frontend foundation and screen-brief workflow: ADR 0005.
 
 ## Domain invariants
 
@@ -141,8 +143,10 @@ packages/api-client <- generated OpenAPI contract
   participants, and whether an action can be undone.
 - One obvious primary action per surface. Destructive actions are secondary,
   explicit, and recoverable when possible.
-- Reuse the existing TailAdmin-aligned shadcn system. Design work serves task
-  clarity; it does not create parallel primitives or page-specific styling.
+- Use the official shadcn `radix-nova` baseline and approved Tutorio
+  compositions. Current page layouts are not visual authority. Design work
+  serves task clarity and follows an architect-approved screen brief; it does
+  not create parallel primitives or page-specific styling.
 
 ## Pilot exit criteria
 

@@ -69,13 +69,12 @@ each file.
   English/Ukrainian strings in components.
 
 ### Design sourcing (mandatory, per feature)
-Before building any UI, find the closest pattern in **TailAdmin** and reproduce
-its look/behaviour on our shadcn/ui + Tailwind stack:
-- Components: https://react.tailwind-admin.com/
-- Dashboard/analytics patterns: https://demo.tailadmin.com/analytics
-
-Then check the local `/design` lab and `components/` for an existing adaptation
-before writing new UI. This is part of the Definition of Done.
+Before building any UI, read the architect-approved screen brief required by
+[ADR 0005](../decisions/0005-shadcn-frontend-foundation.md). Inspect installed
+shadcn primitives, approved Tutorio compositions, Storybook stories, and the
+explicitly named official shadcn block in that order. Current product pages are
+behavior references, not visual templates. This is part of the Definition of
+Done.
 
 ### Definition of Done (every stage)
 - Root `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build` green across
@@ -84,6 +83,6 @@ before writing new UI. This is part of the Definition of Done.
 - Domain changes covered by vitest; API changes covered by service unit tests +
   a supertest smoke for the critical flow; dialogs/forms have interaction tests.
 - `api-client` regenerated from Swagger; web consumes the typed client.
-- `/design` updated if a shared pattern changed; verified desktop + mobile,
-  light + dark, uk + en.
+- Storybook stories updated if an owned shared pattern changed; verified desktop
+  + mobile, light + dark, uk + en.
 - A working slice is deployed to the dev environment.

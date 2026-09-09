@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 type IconType = ComponentType<{ className?: string }>;
 
 /**
- * A single headline number with its label — the TailAdmin analytics stat card.
+ * A single headline number with its label used by the legacy analytics view.
  * Shared by the dashboard and the finance screens so KPI figures look the same
  * wherever they appear.
  */

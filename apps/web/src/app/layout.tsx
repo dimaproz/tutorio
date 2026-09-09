@@ -6,9 +6,8 @@ import { Providers } from '@/components/providers';
 import { Toaster } from '@/components/ui/sonner';
 import './globals.css';
 
-// TailAdmin's interface face is Outfit, a geometric grotesque with no Cyrillic
-// coverage. Onest is its near-twin and carries Cyrillic properly, so Ukrainian
-// copy keeps the same geometric texture as the English UI.
+// Legacy interface font. Frontend Packet F1 replaces this with the official
+// shadcn preset baseline after primitive and theme diffs are reviewed.
 const onest = Onest({
   variable: '--font-sans',
   subsets: ['latin', 'cyrillic'],

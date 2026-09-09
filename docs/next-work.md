@@ -1,6 +1,6 @@
 # Active Work Queue
 
-Last verified: 2026-09-08.
+Last verified: 2026-09-09.
 
 This is the short-lived execution queue for Stage 4.1. It answers “what should I
 work on next?” without requiring a developer to re-derive priorities from the
@@ -158,11 +158,39 @@ Suggested PR intent: `fix(api): enforce package payment integrity`.
 - Regenerated OpenAPI/client artifacts with typed owner-only `403` responses.
   Implementation: `e362675`.
 
-## Work Packet 6 — Student Quick Create
+## Frontend Foundation Track — active before Work Packet 6
+
+ADR 0005 introduces a bounded presentation-layer reset before workflow
+simplification. Full scope and gates live in
+[`frontend-plan.md`](./frontend-plan.md). Execute in this order:
+
+1. **F0 — Direction Reset (implemented):** remove `/design`, retire TailAdmin as
+   design authority, and establish shadcn blocks plus architect-owned screen
+   briefs.
+2. **F1 — Shadcn Baseline (next):** normalize the official `radix-nova`
+   primitives, neutral theme, Geist typography, dependencies, and automated
+   style-boundary checks without changing workflows.
+3. **F2 — Storybook Foundation:** add the Next.js/Vite Storybook catalog,
+   interaction tests, accessibility checks, and a static-build gate.
+4. **F3 — Authentication Shell:** adapt official shadcn `login-03` to existing
+   login/register behavior and locales.
+5. **F4 — Authenticated Application Shell:** adapt the shell structure from
+   official shadcn `dashboard-01`; preserve routing, permissions, workspace,
+   locale, theme, and mobile behavior without importing demo features.
+6. **F5 — Product Composition Boundary:** consolidate shared/app ownership,
+   document and test the approved list/detail/form compositions, and enforce
+   dependency direction.
+
+Each packet is independently reviewable and deployable. Do not collapse the
+track into a big-bang page rewrite. The current pages remain behavior evidence,
+not visual templates.
+
+## Work Packet 6 — Student Quick Create (queued after F5)
 
 Implement [`product/students.md`](./product/students.md) after lifecycle behavior
-is stable: compact create, saved-profile next actions, parent linking after save,
-explicit errors, and interaction tests.
+and the frontend foundation are stable: first write the architect-approved
+Students screen brief, then implement compact create, saved-profile next actions,
+parent linking after save, explicit errors, stories, and interaction tests.
 
 ## Work Packet 7 — Lesson Pack Sale
 

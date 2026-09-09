@@ -115,7 +115,7 @@ export function CalendarView() {
   const [view, setView] = useState<View>('month');
   const [date, setDate] = useState(new Date());
   // Filters live in the URL so a filtered calendar is shareable and survives a
-  // reload — the same convention the /design sections use.
+  // reload while preserving the current view.
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();

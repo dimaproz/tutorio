@@ -1,6 +1,7 @@
 /*
- * Restyles react-big-calendar to the TailAdmin calendar voice (rounded pill
- * toolbar, hairline grid, soft-tinted event chips) using our semantic tokens.
+ * Legacy react-big-calendar presentation pending its architect-approved screen
+ * brief. It uses a rounded pill toolbar, hairline grid, and soft-tinted event
+ * chips through semantic tokens.
  *
  * The library ships fixed colours and borders, so these rules deliberately
  * override its stylesheet by element/class selector. Everything is scoped under

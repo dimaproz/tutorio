@@ -1,6 +1,6 @@
 # Tutorio Documentation Map
 
-Last verified: 2026-09-08.
+Last verified: 2026-09-09.
 
 This directory is the operating manual for product and engineering work. Read
 documents in the order below; a document lower in the list must not silently
@@ -20,6 +20,8 @@ override one above it.
    [`glossary.md`](./glossary.md) defines shared product language.
 6. [`roadmap.md`](./roadmap.md) defines execution order and release gates.
    [`next-work.md`](./next-work.md) is the short-lived active implementation queue.
+   [`frontend-plan.md`](./frontend-plan.md) defines the bounded shadcn and
+   Storybook foundation that runs before Work Packet 6.
    [`api-permission-matrix.md`](./api-permission-matrix.md) is the complete
    pilot API access policy.
 7. [`domain/`](./domain/README.md) documents entities, relationships, lifecycle,
@@ -55,7 +57,7 @@ override one above it.
 | Entity, relation, status, or deletion rule | Relevant file in `domain/` and an ADR when the rule is durable     |
 | User journey or form change                | Relevant file in `product/` and its stage acceptance criteria      |
 | Scope or priority change                   | `mvp-plan.md`, `roadmap.md`, and `current-state.md`                |
-| Shared visual pattern                      | `design-system.md` and `/design`                                   |
+| Shared visual pattern                      | `design-system.md` and Storybook stories                           |
 | Deployment or environment change           | `deploy.md`                                                        |
 | Release-ready claim                        | `current-state.md` and `quality/pilot-acceptance.md` with evidence |
 

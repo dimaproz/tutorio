@@ -118,22 +118,20 @@
 }
 
 /* ---------------------------------------------------------------------------
-   TailAdmin theme (react.tailwind-admin.com): brand-blue #465FFF, boxed white
-   cards with soft shadows on a light-grey page, Untitled-UI grey scale,
-   Outfit-like geometric type (Onest here, for full Cyrillic — set as
-   --font-sans by the root layout's font loader). Colour values are
-   TailAdmin's own design tokens; no TailAdmin source is copied.
+   Legacy runtime theme retained only until Frontend Packet F1 reviews the
+   installed primitives and replaces these duplicated declarations with the
+   official shadcn neutral baseline. Do not add new references to these tokens.
 --------------------------------------------------------------------------- */
 :root {
   /* Headings and figures share the body face — no serif voice in this system. */
   --font-display: var(--font-sans);
 
-  /* TailAdmin brand ramp (50 → 950). 500 is the interface blue. */
+  /* Legacy brand ramp. */
   --brand-50: #ecf3ff;
   --brand-400: #7592ff;
   --brand-500: #465fff;
   --brand-600: #3641f5;
-  /* Untitled-UI grey ramp shared by TailAdmin. */
+  /* Legacy grey ramp. */
   --gray-50: #f9fafb;
   --gray-100: #f2f4f7;
   --gray-200: #e4e7ec;
@@ -166,7 +164,7 @@
   --settled: var(--success-600);
   --settled-wash: #ecfdf3;
 
-  /* Soft, low, TailAdmin-style card elevation. */
+  /* Legacy card elevation. */
   --shadow-card: 0px 1px 3px 0px rgba(16, 24, 40, 0.1), 0px 1px 2px 0px rgba(16, 24, 40, 0.06);
   --shadow-md: #919eab4d 0px 0px 2px 0px, #919eab1f 0px 12px 24px -4px;
   --shadow-lg: 0 1rem 3rem #0000002d;
@@ -389,7 +387,7 @@
   --sidebar-ring: var(--color-sidebar-ring);
 }
 
-/* TailAdmin card shape: every card lifts to 16px with the soft elevation. */
+/* Legacy global card override; remove during Frontend Packet F1. */
 [data-slot='card'] {
   border-radius: 1rem;
   border-color: var(--border);

@@ -1,39 +1,53 @@
 # Tutorio Design System Contract
 
-Last verified: 2026-08-24.
+Last verified: 2026-09-09.
 
 ## Purpose
 
-Tutorio's interface must be inexpensive to restyle, theme, and extend. Product
-screens are assembled from a small set of reusable components. Visual decisions
-live in semantic tokens and shared variants, never in individual screens.
+Tutorio uses a deliberately plain shadcn baseline for the pilot. The immediate
+goal is a coherent, accessible, fully working CRM whose future visual redesign
+can be implemented centrally. Product screens must not own theme decisions or
+recreate common controls.
 
-This document is the human-readable source of truth. The executable reference
-is the `/design` route, and agent enforcement lives in `apps/web/AGENTS.md`.
+The current production pages are evidence for behavior and data requirements,
+not visual references. Page composition may change when an approved work packet
+defines a clearer user journey.
 
-## Pilot design rule
+## Pilot baseline
 
-The visual direction is established. Until pilot graduation, design work is
-limited to comprehension, accessibility, responsive correctness, and states
-required by the workflows in `docs/product/`. Do not expand the component lab,
-invent custom primitives, or restyle deferred modules solely to increase visual
-polish. Correct domain behavior and complete task flows take priority under
-[ADR 0001](./decisions/0001-pilot-first-delivery.md).
+- Framework: Next.js App Router, React, Tailwind CSS v4.
+- Component distribution: official shadcn registry.
+- Installed preset: `radix-nova`, neutral theme, CSS variables enabled.
+- Headless base: Radix. Do not migrate to Base UI during pilot stabilization.
+- Icons: Lucide through the configured shadcn icon library.
+- Motion: the short state-driven transitions shipped with shadcn and
+  `tw-animate-css`; additional animation libraries require a demonstrated
+  product need and a separate decision.
+- Page patterns: explicitly selected official shadcn blocks, adapted to Tutorio
+  behavior and localization. A block is a starting composition, not permission
+  to overwrite existing primitives or copy demo domain logic.
+
+TailAdmin, Lovable, screenshots, and the current Tutorio page layouts are not
+design authorities. The retired `/design` route must not be recreated.
+Storybook becomes the executable component catalog after Frontend Packet F2.
 
 ## Source-of-truth order
 
 When sources disagree, use this order:
 
-1. Semantic tokens in `apps/web/src/app/globals.css`.
-2. Installed shadcn primitives in `apps/web/src/components/ui`.
-3. Approved Tutorio compositions in `apps/web/src/components/shared` and
-   `apps/web/src/components/app`.
-4. Feature-local compositions in `apps/web/src/components/<domain>`.
-5. Visual examples on `/design`.
-6. TailAdmin as an external reference only when no local pattern exists.
+1. The affected product workflow in `docs/product/`.
+2. The architect-approved screen brief in the active work packet.
+3. Semantic tokens in `apps/web/src/app/globals.css`.
+4. Installed shadcn primitives in `apps/web/src/components/ui`.
+5. Approved Tutorio compositions in `apps/web/src/components/shared` and
+   application-shell components in `apps/web/src/components/app`.
+6. Feature-local components in `apps/web/src/features/<domain>/ui` or the
+   corresponding legacy feature folder while migration is in progress.
+7. Storybook stories for supported component states.
+8. The explicitly named official shadcn block or component documentation.
 
-A production screen must not copy styling from a screenshot or TailAdmin
-directly when an approved local component already represents the same purpose.
+Existing screens may be inspected for API behavior, permissions, copy, and edge
+cases, but must not silently determine a replacement screen's layout.
 
 ## Component layers
 
@@ -41,148 +55,176 @@ directly when an approved local component already represents the same purpose.
 
 Location: `apps/web/src/components/ui`.
 
-These components own interaction, accessibility, base shape, and variants:
-`Button`, `Card`, `Badge`, `Table`, `Dialog`, `Sheet`, `Drawer`, `Tabs`,
-`Field`, `Input`, `Select`, `Command`, `Empty`, `Alert`, `Skeleton`, `Spinner`,
-`Tooltip`, and the other installed shadcn components.
+Target contract: this directory contains official shadcn source plus only
+explicitly documented and reviewed deviations. Frontend Packet F1 inventories
+the current drift before enforcing this boundary. Primitives own interaction,
+accessibility, theme consumption, base shape, motion, and variants.
 
 Rules:
 
-- Prefer built-in props and variants before adding classes.
-- Do not fork a second primitive with the same semantic purpose.
-- Update an installed primitive only when the change should affect every
-  product use of that primitive.
+- Search the installed primitives and official shadcn registry before writing UI.
+- Use built-in props and variants before adding another variant.
+- Product and feature code must not import `radix-ui` directly.
+- Do not create another Button, Card, Dialog, Select, Badge, Empty, Skeleton,
+  Table, Tabs, Tooltip, Sheet, Drawer, or equivalent primitive elsewhere.
+- Review upstream changes with `shadcn add --dry-run` and `--diff`; never blindly
+  overwrite locally verified fixes.
+- A primitive change is system-wide and requires Storybook coverage and review.
 
-### Layer 2: Tutorio product components
+### Layer 2: shared product components
 
-Locations: `apps/web/src/components/shared` and
-`apps/web/src/components/app`.
+Location: `apps/web/src/components/shared`.
 
-These components encode reusable Tutorio meaning while remaining independent
-of a domain API. They are the default building blocks for screens.
+These are reusable Tutorio compositions without domain API calls or feature
+ownership. Examples include a standard entity form shell, collection toolbar,
+empty collection state, confirmation flow, and entity picker.
 
-| Need | Approved component |
+A new shared component is justified only when two real callers need the same
+semantic purpose with stable props. Similar appearance alone is not sufficient.
+Every shared component must compose Layer 1, use semantic tokens, expose a small
+controlled API, and document meaningful states in Storybook.
+
+### Approved product-component registry
+
+This is the current semantic registry. Frontend Packet F5 may move a component
+between `components/app` and `components/shared`, consolidate overlapping APIs,
+or rename it, but feature pages must reuse the registered capability instead of
+creating a parallel implementation.
+
+| Capability | Current component(s) |
 | --- | --- |
-| Page title and primary action | `PageHeader` |
-| Query refresh and retry feedback | `QueryRefreshIndicator`, `QueryErrorAlert` |
-| Server-side table | `DataTable` |
-| List filters, search, sorting, pagination | `ListControls`, `CollectionToolbar` |
-| Empty collection | `CollectionEmptyState` |
-| Loading region or panel | `LoadingRegion`, `LoadingPanel` |
-| Standard form dialog | `EntityFormDialog` |
-| Form grouping and footer actions | `FormSection`, `FormActions` |
-| Destructive confirmation | `ConfirmDialog` |
-| Row action menu | `RowActionsTrigger` |
-| Person selection | `EntityPicker`, `EntityMultiSelect` |
-| Person identity | `EntityAvatar`, `PersonMiniCard`, `ProfileHeader` |
-| Profile metadata | `InfoRow`, `ProfileTag`, `SectionTitle` |
-| Domain status display and selection | `StatusBadge`, `StatusSelect`, status metadata maps |
-| Money entry and display | `MoneyInput`, shared currency metadata, `MetricCard` |
-| Date and appointment entry | `DatePicker`, `AppointmentPicker` |
-| Repeated weekday entry | `WeekdayPicker` |
-| Small statistics | `StatTile`, `MetricCard` |
+| Page structure and navigation | `PageShell`, `BackButton`, `DetailView` |
+| Collection controls and data display | `CollectionToolbar`, `ListControls`, `DataTable` |
+| Loading and empty states | `LoadingRegion`, `LoadingPanel`, `CollectionEmptyState` |
+| Form composition | `EntityFormDialog`, `FormSection`, `FormActions` |
+| Confirmation and row actions | `ConfirmDialog`, `RowActionsTrigger` |
+| Entity selection | `EntityPicker`, `EntityMultiSelect` |
+| People and identity | `EntityAvatar`, `PersonMiniCard` |
+| Status presentation | `StatusBadge`, `StatusSelect` |
+| Money and metrics | `MoneyInput`, `MetricCard`, `StatTile` |
+| Date and schedule input | `DatePicker`, `AppointmentPicker`, `WeekdayPicker` |
 
-Before creating a new product component, search both approved locations and the
-current feature. A new shared component is justified only after two real screens
-need the same semantic purpose with stable props.
+Registration records reuse intent; it does not certify the component's current
+visual implementation. F1-F5 bring registered components into the new contract.
 
-### Layer 3: feature components
+### Layer 3: application shell
 
-Locations: `apps/web/src/components/students`, `parents`, `groups`, `teachers`,
-`packages`, `scheduling`, and `settings` while the feature migration is active.
+Location: `apps/web/src/components/app`.
 
-Feature components may compose Layers 1 and 2 and may know domain types. They
-must not introduce a new visual language. A repeated feature pattern moves to
-Layer 2 after its second real caller appears.
+This layer owns authenticated navigation, header, user menu, workspace context,
+and page shell. It may compose Layers 1 and 2 but must not contain entity API
+logic. Frontend Packet F4 will rebuild it from the official `dashboard-01`
+structure and shadcn Sidebar primitives.
+
+### Layer 4: feature components
+
+Target location: `apps/web/src/features/<domain>/ui`.
+
+Feature components may know domain types and compose lower layers. Components
+such as `GroupCard` and `StudentCard` live once in their owning feature and are
+reused by all relevant screens. A second visual clone is forbidden; meaningful
+display differences use explicit variants on the owning component.
+
+Do not create a universal entity abstraction until at least two feature
+components demonstrate the same stable behavior, not merely a similar shape.
+
+### Layer 5: routes and screens
+
+`src/app` contains routing and Next.js composition only. A screen assembles
+approved feature and shared components. It does not define reusable visual
+primitives, fetch transformations, or page-specific theme values.
+
+## Screen brief requirement
+
+Before an agent changes a page, the active work packet must record:
+
+1. Primary user job and one obvious primary action.
+2. Required information hierarchy and progressive disclosure.
+3. Explicit official shadcn block reference, if one is used.
+4. Installed primitives and existing product/feature components to compose.
+5. Desktop and mobile structure.
+6. Loading, empty, error, disabled, success, destructive, and permission states.
+7. Ukrainian and English copy requirements.
+8. API/domain constraints that the UI must not reinterpret.
+9. Interaction, accessibility, and visual acceptance evidence.
+
+The agent may propose a different composition when the work packet permits it.
+It must explain the user-flow improvement and still reuse approved components.
 
 ## Theme contract
 
-### Semantic tokens only
+Feature and screen code uses semantic utilities such as `bg-background`,
+`text-foreground`, `text-muted-foreground`, `bg-card`, `border-border`,
+`bg-primary`, and `text-destructive`.
 
-Product components use semantic utilities:
+Raw hex values, Tailwind color families, one-off shadows, page-owned radii, and
+manual dark-mode colors are forbidden outside:
 
-- surfaces: `background`, `card`, `popover`, `muted`, `accent`;
-- text: `foreground`, `muted-foreground`;
-- borders and focus: `border`, `input`, `ring`;
-- actions: `primary`, `secondary`, `destructive`;
-- statuses: `success`, `warning`, `destructive`, and neutral;
-- charts: `chart-1` through `chart-5`;
-- workspace brand: `workspace-primary`, `workspace-secondary`.
+- semantic definitions in `globals.css`;
+- documented user-provided colors, such as a teacher color;
+- temporary Storybook token demonstrations.
 
-Raw hex values, Tailwind colour families, and inline colour styles are forbidden
-in product screens. Exceptions are limited to:
+The pilot baseline keeps official shadcn theme values. Tutorio may retain only
+domain semantics missing from the default theme, such as `success` and
+`warning`. Workspace branding must remain isolated from core component tokens
+until a later theming decision explicitly defines its behavior.
 
-- token definitions in `globals.css`;
-- user-provided colours, such as a teacher colour;
-- `/design` swatches that document an actual token;
-- isolated theme-preview code that does not style production UI.
-
-### Theme changes
-
-A visual theme change should normally touch only:
+A future redesign should normally touch only:
 
 1. semantic values in `globals.css`;
-2. primitive variants in `components/ui` when shape or interaction changes;
-3. `/design` examples and visual regression evidence.
+2. intentional variants in `components/ui`;
+3. shared product compositions;
+4. Storybook baselines.
 
-Feature screens should not require editing for a colour, radius, typography,
-shadow, or dark-mode change. If they do, the style has leaked past the design
-system boundary and should be moved into a token or shared component.
+Feature pages should not require color, radius, shadow, typography, or motion
+edits during a theme change.
 
-## Composition rules
+## Storybook contract
 
-- Build pages from approved components, not styled generic `div` elements.
-- Use `Card` composition for card content and `Empty`, `Alert`, `Skeleton`, and
-  `Badge` for their respective purposes.
-- Use `FieldGroup`, `Field`, and related shadcn form components for forms.
-- Use semantic component variants. `className` is for layout and responsive
-  composition, not for replacing component colour or typography.
-- Use `gap-*`, not `space-x-*` or `space-y-*`; use `size-*` for squares.
-- Use Lucide icons through the installed icon library. Icon-only actions need an
-  accessible name and a tooltip when their meaning is not universally obvious.
-- Every dialog, sheet, and drawer has an accessible title.
-- New user-facing copy goes through `next-intl`.
+Storybook replaces the former `/design` component lab. It is a development and
+test dependency, not a production route.
+
+Stories are required for:
+
+- any locally changed shadcn primitive;
+- every approved shared product component;
+- application-shell components with meaningful responsive states;
+- reusable feature components such as entity cards;
+- hard-to-reach loading, empty, error, permission, destructive, and long-copy
+  states.
+
+Do not duplicate every official shadcn documentation example. Document the
+components and states that Tutorio owns or relies on as a product contract.
 
 ## Required agent workflow
 
 Before writing JSX, an agent must:
 
-1. Name the screen pattern and the user's primary action.
-2. Search `components/ui`, then `components/shared`, then `components/app`, then
-   the current feature.
-3. Inspect the matching `/design` example.
-4. List the existing components it will compose.
-5. Create a new component only when no approved component fits.
+1. Read the affected product workflow and active screen brief.
+2. Name the screen pattern and primary action.
+3. Search `components/ui`, `components/shared`, `components/app`, and the owning
+   feature, in that order.
+4. Inspect relevant Storybook stories and the explicitly named official shadcn
+   block/component.
+5. List the existing components it will compose.
+6. State why any proposed new component is not a duplicate.
 
-When a new shared component is genuinely required, the same change must:
+When a new shared component is genuinely required, the same change must define
+its semantic purpose and stable API, add stories for meaningful states, add
+interaction tests where behavior exists, and register it in this document.
 
-1. define its semantic purpose and stable API;
-2. use only semantic tokens and shadcn primitives;
-3. add all meaningful states to `/design`;
-4. add tests where interaction or state mapping exists;
-5. add it to the approved component table in this document.
+## Definition of done for frontend work
 
-## Definition of done for visual work
+- The screen follows its approved brief; the previous layout was not copied by
+  default.
+- Approved shadcn, shared, and feature components are reused.
+- No duplicate primitive, raw product color, or page-specific theme was added.
+- Required runtime states are represented and tested.
+- Desktop/mobile, light/dark, and Ukrainian/English are verified.
+- Changed owned components have current Storybook stories.
+- Web lint, typecheck, unit/interaction tests, and application build pass without
+  warnings. Storybook stories and its static build are additionally mandatory
+  after Frontend Packet F2; before F2, missing Storybook is a tracked foundation
+  gap and must not be replaced with another production component-lab route.
 
-- The page uses approved primitives and product components.
-- No duplicated component or ad-hoc token was introduced.
-- Default, loading, empty, error, disabled, success, and destructive states are
-  represented where relevant.
-- Desktop and mobile, light and dark, Ukrainian and English are checked.
-- `/design` is updated for every changed shared pattern.
-- Web lint, typecheck, test, and build pass without warnings.
-
-## Stabilization tasks
-
-The current system already has the right foundation. Stage 4.1 must finish the
-following consolidation before feature expansion:
-
-1. Remove duplicated or superseded root token declarations from `globals.css`.
-2. Decide whether `components/app` remains the permanent product-component
-   layer or is migrated into `components/shared`; do not create a third layer.
-3. Add import examples, usage guidance, and state coverage to `/design` for the
-   approved product components above.
-4. Add an automated check for raw product colours and obvious duplicate
-   primitives outside the documented exceptions.
-5. Refactor one list screen, one detail screen, and one form dialog as reference
-   compositions, then use them as templates for the remaining domains.
+See [`frontend-plan.md`](./frontend-plan.md) for the migration sequence.

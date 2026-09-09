@@ -34,8 +34,8 @@
   PDF render from a template + branding. Streamed download.
 
 ## 4. Web
-TailAdmin reference: **settings tabs + form sections**, a **live-preview panel**
-beside the branding form, **color inputs**. Add receipt-settings + workspace
+UI reference: an architect-approved settings brief using official shadcn Tabs,
+Field, Card, and preview compositions. Add receipt-settings + workspace
 (timezone, meeting link) tabs to
 [settings](../../apps/web/src/components/settings/settings-view.tsx); "Download
 receipt" on package/payment detail.

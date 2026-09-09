@@ -60,9 +60,9 @@
 
 ## 6. Web — `features/leads`
 
-TailAdmin reference: **Kanban board** app pattern
-(`react.tailwind-admin.com/apps`), **stat cards** for funnel metrics
-(`demo.tailadmin.com/analytics`).
+UI reference: an architect-approved deferred CRM brief using official shadcn
+Card, Tabs, Table, Badge, and drag-and-drop patterns only if pilot evidence
+selects this module.
 
 - New nav item + `/app/leads` route: kanban with drag-between-columns (reuse the
   dnd approach already used in the calendar), stage columns, lead cards.

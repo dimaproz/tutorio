@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 export type FlagCode = 'ua' | 'eu' | 'pl' | 'us' | 'gb';
 
 // A small circular flag. The source SVGs are 3:2 (or wider); object-cover fills
-// the circle the way the TailAdmin language menu shows them. Decorative by
+// the circle used by the legacy language menu. Decorative by
 // default — pass a label only when the flag is the sole meaning of a control.
 export function Flag({
   code,

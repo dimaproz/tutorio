@@ -1,6 +1,6 @@
 # Tutorio Pilot-First Roadmap
 
-Last verified: 2026-09-08.
+Last verified: 2026-09-09.
 
 This roadmap replaces feature-by-feature expansion as the active delivery
 strategy. Complete phases in order. A later phase may be designed, but it must
@@ -59,6 +59,9 @@ end-to-end levels; migrations are reversible or have an approved rollback plan.
 
 Outcome: a tutor can complete core tasks without understanding the data model.
 
+- Complete the bounded frontend foundation in `frontend-plan.md`: official
+  shadcn baseline, Storybook, authentication shell, application shell, and
+  reusable product-component boundary.
 - Replace student creation with a quick-create flow: name first, contact and
   timezone only when needed, optional details later.
 - Split parent linking/creation from the mandatory student submission path.
@@ -118,5 +121,9 @@ Use an 80/20 allocation until pilot graduation:
 - 20% design work limited to pilot-critical comprehension, accessibility, and
   responsive quality.
 
-The current visual direction is sufficient. Broad redesign, custom component
-expansion, and visual polish of deferred modules are explicitly paused.
+ADR 0005 replaces the former visual direction with a bounded official shadcn
+foundation because the mixed TailAdmin layer made pilot-critical workflows
+harder to change safely. This is presentation standardization, not an open-ended
+redesign. Distinctive branding, custom motion, and visual polish of deferred
+modules remain paused. Existing page layouts are behavior references only; each
+migrated page receives an architect-approved screen brief before implementation.

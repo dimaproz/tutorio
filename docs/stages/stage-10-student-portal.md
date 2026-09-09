@@ -73,9 +73,9 @@ start:
 
 ## 6. Web
 A separate portal shell (not the tutor app shell), mobile-first, localised.
-TailAdmin references: **profile page**, **progress charts / stat cards**,
-**timeline** for the journal, **badges** for achievements. Keep it visually
-distinct from the tutor app but on the same design system.
+UI reference: an architect-approved portal brief using official shadcn profile,
+Card, Chart, Item, and Badge compositions. Keep it structurally distinct from
+the tutor app while sharing the same component system.
 
 ## 7. Sequencing (when frozen)
 Portal identity + scoped guard (security first, with tests) → read views over

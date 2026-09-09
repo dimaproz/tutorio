@@ -64,9 +64,9 @@ No owner-only gating here (teachers schedule).
 
 ## 6. Web (`apps/web`)
 
-TailAdmin references to mirror first: **dashboard "today" list** →
-`demo.tailadmin.com/analytics` (recent-activity / list card); **person picker**
-→ existing `EntityPicker` (already the standard).
+UI references: the architect-approved screen brief and official shadcn list,
+Card, Item, Table, and Empty compositions. The existing `EntityPicker` remains
+the standard person picker unless a later brief replaces it.
 
 ### 6.1 Dashboard "Today" — `features/dashboard`
 Replace `DashboardEmptyState` in

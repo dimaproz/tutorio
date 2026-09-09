@@ -45,8 +45,9 @@ with `cancelledBy=student`.
   deadline-aware.
 
 ## 5. Web
-Standalone mobile-first route outside the app shell. TailAdmin reference: a clean
-mobile card layout; keep it minimal. Localised (uk/en) by the student's locale.
+Standalone mobile-first route outside the app shell. Its architect-approved
+brief should compose official shadcn Cards and Items and remain minimal.
+Localised (uk/en) by the student's locale.
 
 ## 6. Sequencing
 Token guard + read endpoint → signed confirm/cancel actions + rate limit →

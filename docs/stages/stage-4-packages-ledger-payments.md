@@ -151,9 +151,9 @@ unique `idempotencyKey` is the backstop against races.
 Enable the **Finance** nav item (currently "coming soon" in
 [app-sidebar.tsx](../../apps/web/src/components/app/app-sidebar.tsx)).
 
-TailAdmin references first: **invoice/transaction table + status badges** and
-**stat cards** from `demo.tailadmin.com/analytics`; package "history" as a
-timeline/activity list.
+UI references: an architect-approved package screen brief plus official shadcn
+Table, Badge, Card, Item, Tabs, and Empty compositions. Package history remains
+an activity list unless pilot research changes that information hierarchy.
 
 - `features/packages` — package create dialog (sizing-mode toggle, optional
   recurring schedule sub-form that feeds the series), package detail (snapshot

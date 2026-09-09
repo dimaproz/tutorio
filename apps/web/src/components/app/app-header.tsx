@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 import { ThemeToggle } from './theme-toggle';
 import { UserMenu } from './user-menu';
 
-// TailAdmin's header keeps every utility in a 40px circular hit area. The
+// The legacy header keeps every utility in a 40px circular hit area. The
 // quiet primary wash is shared so all header actions read as one control group.
 const HEADER_ICON_BUTTON_CLASS =
   'size-10 rounded-full text-foreground hover:bg-lightprimary hover:text-primary focus-visible:bg-lightprimary focus-visible:text-primary dark:hover:bg-lightprimary';

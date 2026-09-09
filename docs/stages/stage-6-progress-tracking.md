@@ -48,8 +48,8 @@ guards. Most of this stage is CRUD, not rules.
 - Attachment upload: pre-signed URL endpoint (upload direct to storage).
 
 ## 6. Web — `features/progress`
-TailAdmin reference: **tabs + timeline/journal list**, **form-in-drawer** for
-add-entry, **rating stars** for engagement.
+UI reference: an architect-approved progress brief using official shadcn Tabs,
+Item, Drawer, Field, and rating-capable controls where the product requires them.
 - Student detail page: `Progress`, `Tests`, `Journal` tabs.
 - Standalone `/app/progress` route with student/group picker.
 - Group attendance grid (tri-state legend: present / absent-paid / absent-unpaid).

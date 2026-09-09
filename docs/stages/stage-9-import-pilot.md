@@ -46,8 +46,9 @@ onboarding after the core pilot succeeds.
   hard, confirmed).
 
 ## 4. Web
-TailAdmin reference: **multi-step wizard** for import (upload → map columns →
-preview/validate → commit), **file dropzone**, **validation result table**.
+UI reference: an architect-approved import brief using official shadcn Stepper
+or Tabs, Field, Item, Alert, and Table compositions for upload, mapping,
+preview/validation, and commit.
 Settings: privacy policy link, export button, delete-workspace flow with a
 strong confirmation.
 

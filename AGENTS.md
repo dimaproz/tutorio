@@ -15,20 +15,20 @@
 
 ## Design / UI
 
-- **TailAdmin is the design reference for the whole product.** Its React kit is
-  the single source of truth for how components look and behave:
-  - Component gallery: https://react.tailwind-admin.com — check here **first**
-    when building or restyling any component (buttons, forms, tables, badges,
-    modals, charts, etc.).
-  - Application examples: https://react.tailwind-admin.com/apps — look here for
-    larger patterns and full-screen solutions (dashboards, calendars, inboxes,
-    kanban, profiles, wizards) before inventing a new layout.
-- Reproduce TailAdmin's **visual style** (brand `#465FFF`, Untitled-UI grey
-  scale, `rounded-2xl` cards with soft shadows, Outfit-like type) on our own
-  **shadcn/ui + Tailwind** stack. Match the look and behaviour; do not copy
-  TailAdmin source code verbatim.
-- The `/design` route (`apps/web/src/app/design`) is the living component lab and
-  reference implementation of this style — keep new components consistent with it.
+- **The official shadcn registry is the pilot UI baseline.** Use the installed
+  `radix-nova` preset, semantic Tailwind tokens, and the project's Lucide icon
+  library. Do not introduce another primitive library or visual system.
+- Use https://ui.shadcn.com/docs/components for primitives and
+  https://ui.shadcn.com/blocks for page-level starting points. Authentication
+  and application-shell work must adapt an explicitly named official shadcn
+  block instead of recreating the pattern from scratch.
+- Existing Tutorio screens preserve product behavior and data requirements, but
+  their current layout and visual composition are not design authority. Every
+  screen migration starts with an architect-approved brief defining the user
+  job, information hierarchy, shadcn block/primitives, reusable product
+  components, responsive behavior, and required states.
+- Storybook will become the executable catalog for approved product components
+  during the frontend foundation track. The former `/design` route is retired.
 
 The mandatory component hierarchy, theme boundary, and agent workflow are
 defined in [docs/design-system.md](docs/design-system.md). Read it before any

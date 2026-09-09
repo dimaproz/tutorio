@@ -1,7 +1,7 @@
 # Tutorio Current State
 
-Last verified: 2026-09-08 against Work Packet 5 implementation commit
-`e362675`.
+Last verified: 2026-09-09 against Work Packet 5 implementation commit
+`e362675` and the Frontend Packet F0 direction reset.
 
 This is the first project document to read before planning or implementing
 work. It reports the repository as it exists; [`mvp-plan.md`](./mvp-plan.md)
@@ -35,8 +35,9 @@ workflows correct, understandable, tested, and recoverable.
   lesson status transitions.
 - Individual and group lesson packages, credit ledger, participant shares,
   payments, and package history.
-- A basic Today dashboard, workspace settings, audit events, shared UI
-  primitives, and the `/design` component lab.
+- A basic Today dashboard, workspace settings, audit events, and shared UI
+  primitives. The former `/design` component lab was removed in Frontend Packet
+  F0 and is no longer a product route or design authority.
 
 These capabilities are substantial enough for a pilot after stabilization. No
 stack rewrite is justified: the pnpm/Turborepo, NestJS, Prisma/PostgreSQL,
@@ -44,20 +45,32 @@ Next.js, shared validation, and pure domain package boundaries are sound.
 
 ## Active milestone: Pilot Core Stabilization
 
-Stage 4.1 remains active. Work Packet 5 — Pilot Authorization is complete;
-Work Packet 6 — Student Quick Create is next. Work Packet 4 — Recurrence and
-Pause Correctness made existing workflows safe and obvious, not broader. The
-required order is:
+Stage 4.1 remains active. Work Packet 5 — Pilot Authorization is complete. The
+bounded frontend foundation in [`frontend-plan.md`](./frontend-plan.md) now runs
+before Work Packet 6 — Student Quick Create. It standardizes the existing UI
+stack rather than introducing a broad custom redesign. The required order is:
 
 1. Lock lifecycle and accounting decisions in ADRs and tests.
 2. Fix P0 data-integrity defects in group deletion/restoration, payment
    ownership, ledger compensation, and package/lesson deletion.
 3. Fix scheduling lifecycle defects: conflict validation, pause behavior,
    effective status, and honest replacement-lesson behavior.
-4. Replace the all-in-one student and package dialogs with progressive,
+4. Complete Frontend Packets F1–F5: official shadcn baseline, Storybook,
+   authentication shell, application shell, and reusable composition boundary.
+5. Replace the all-in-one student and package dialogs with progressive,
    task-based flows documented in `product/`.
-5. Run the complete pilot acceptance matrix with realistic seed data and an
+6. Run the complete pilot acceptance matrix with realistic seed data and an
    isolated database.
+
+### Frontend Packet F0 evidence
+
+ADR 0005 replaces TailAdmin and the current page layouts as design authorities.
+The official shadcn `radix-nova` preset is the pilot baseline; page migrations
+require an architect-approved screen brief and an explicitly named shadcn block
+where applicable. The isolated `/design` route, demo components, and feature
+exports were removed. Active engineering rules now target Storybook as the
+development-only component catalog. Runtime theme and primitive normalization
+remain Frontend Packet F1 work and must not be reported as complete yet.
 
 ### Work Packet 1 evidence
 
@@ -162,7 +175,8 @@ generated client expose the typed `403` contract for owner-only handlers.
   modal. A tutor must understand several internal concepts before completing a
   basic sale.
 - Large form components exceed the web architecture target and lack interaction
-  tests. The visual layer is ahead of workflow confidence.
+  tests. The visual layer is ahead of workflow confidence and still contains
+  TailAdmin-era runtime theme and primitive overrides pending Frontend Packet F1.
 - The package list fetches a fixed first page without a complete pagination
   experience. Some non-auth session errors can leave the UI in a permanent
   loading state.
@@ -190,4 +204,6 @@ generated client expose the typed `403` contract for owner-only handlers.
 
 ## Next checkpoint
 
-Work Packet 6 — Student Quick Create is the next implementation packet.
+Frontend Packet F1 — Shadcn Baseline is the next implementation packet. Work
+Packet 6 — Student Quick Create begins only after Frontend Packets F1–F5 pass
+their gates.

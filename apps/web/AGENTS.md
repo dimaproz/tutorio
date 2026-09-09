@@ -38,14 +38,23 @@ The workflow document owns required fields, progressive disclosure, next
 actions, lifecycle copy, and acceptance states. The design system owns visual
 composition.
 
+Existing product screens are implementation references for behavior, API data,
+permissions, localization, and edge cases. Their current layout is not a visual
+contract. Before migrating a screen, the work packet must define its primary
+user job, information hierarchy, explicit official shadcn block reference,
+component composition, desktop/mobile behavior, and required states. An agent
+may propose a different page composition when the brief permits it, but may not
+silently invent a second component system.
+
 For every new UI requirement, inspect in this exact order:
 
 1. `components/ui` for an installed shadcn primitive or variant.
 2. `components/shared` and `components/app` for an approved product pattern.
 3. The current feature for a local pattern.
-4. `/design` for the visual contract and supported states.
+4. Storybook for documented states and supported variants once it is installed.
+5. The explicitly named block in the official shadcn registry when the task is
+   a new page or application-shell composition.
 
-Use TailAdmin only when the local design catalog has no approved pattern.
 Compose existing components; do not recreate cards, alerts, empty states,
 buttons, dialogs, tables, form fields, or loading placeholders with styled
 `div`s.
@@ -56,8 +65,10 @@ must be controlled where their state needs coordination: their closest common
 parent owns the state and receives change callbacks.
 
 Before writing JSX, state which existing primitives and product components will
-be composed. If a new shared pattern is unavoidable, add it to `/design` and to
-the approved component registry in `docs/design-system.md` in the same change.
+be composed. If a new shared pattern is unavoidable, add its Storybook stories
+and add it to the approved component registry in `docs/design-system.md` in the
+same change. Until Storybook is installed, document the missing story as an
+explicit frontend-foundation blocker instead of rebuilding `/design`.
 
 `EntityPicker` / `EntityMultiSelect` are the standard controls for choosing a
 person-like entity (student, parent, teacher) in a form or a filter. Supply an
@@ -72,8 +83,8 @@ when its entity collection outgrows the picker page.
   families, hex colours, or ad-hoc `dark:` overrides outside token definitions,
   design demos, or user-provided data colours.
 - A theme change must be implementable through `globals.css`, primitive
-  variants, and `/design`. Feature screens must not own colours, radii, shadows,
-  typography, or dark-mode overrides.
+  variants, and shared product components. Feature screens must not own colours,
+  radii, shadows, typography, or dark-mode overrides.
 - Lifecycle labels must use semantic `Badge` variants (`primary`, `secondary`,
   `success`, `warning`, `destructive`) from `components/ui/badge`. Map domain
   states to those roles; do not create a parallel status palette, status
@@ -105,5 +116,5 @@ when its entity collection outgrows the picker page.
   Warnings are failures; document the smallest possible lint exception only
   for a verified third-party limitation.
 - Add tests for feature model changes and interaction tests for dialogs/forms.
-- Update `/design` when adding or changing a shared pattern. Verify desktop,
-  mobile, light/dark theme, and both product locales for visual changes.
+- Add or update Storybook stories when changing a shared pattern. Verify
+  desktop, mobile, light/dark theme, and both product locales for visual changes.

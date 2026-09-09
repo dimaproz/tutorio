@@ -1,6 +1,6 @@
 # ADR 0001: Pilot-First Delivery
 
-- Status: Accepted
+- Status: Accepted; design-source clause superseded by ADR 0005
 - Date: 2026-08-24
 
 ## Context
@@ -18,7 +18,9 @@ performing another design-wide refactor.
 
 - Stabilize data integrity and financial rules first.
 - Simplify only the workflows required by the pilot.
-- Use the existing TailAdmin-aligned shadcn design system.
+- Use the existing design-system workflow. The former TailAdmin source clause
+  is superseded by [ADR 0005](./0005-shadcn-frontend-foundation.md), which
+  establishes the official shadcn baseline.
 - Allocate roughly 80% of near-term capacity to correctness, tests, operations,
   and pilot migration; allocate 20% to task comprehension, accessibility, and
   responsive UX.
