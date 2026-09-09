@@ -206,7 +206,7 @@
   border-radius: 0.5rem;
   padding: 0.2rem 0.45rem;
   font-size: 0.75rem;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.06);
+  box-shadow: 0 1px 2px color-mix(in oklab, var(--foreground) 6%, transparent);
 }
 
 .tutorio-calendar .rbc-event:focus-visible {

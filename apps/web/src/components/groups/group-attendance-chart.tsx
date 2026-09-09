@@ -36,7 +36,7 @@ export function GroupAttendanceChart({
         <CardDescription>{t('attendanceDescription')}</CardDescription>
         <CardAction>
           <Tabs value={period} onValueChange={changePeriod}>
-            <TabsList variant="segmented" size="sm">
+            <TabsList>
               <TabsTrigger value="sixWeeks">{t('period.sixWeeks')}</TabsTrigger>
               <TabsTrigger value="threeMonths">{t('period.threeMonths')}</TabsTrigger>
             </TabsList>

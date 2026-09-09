@@ -88,7 +88,7 @@ export function GroupCard({ group }: { group: GroupListItem }) {
       <CardContent className="flex flex-col gap-4">
         <div className="grid gap-3 sm:grid-cols-2">
           <Item size="sm" variant="outline">
-            <ItemMedia variant="icon" className="bg-light-success text-success">
+            <ItemMedia variant="icon" className="bg-success/10 text-success">
               <CircleDollarSignIcon />
             </ItemMedia>
             <ItemContent>
@@ -139,7 +139,7 @@ export function GroupCard({ group }: { group: GroupListItem }) {
         </div>
 
         <Item variant="outline">
-          <ItemMedia variant="icon" className="bg-light-primary text-primary">
+          <ItemMedia variant="icon" className="bg-muted text-foreground">
             <CalendarDaysIcon className="size-4" aria-hidden="true" />
           </ItemMedia>
           <ItemContent>

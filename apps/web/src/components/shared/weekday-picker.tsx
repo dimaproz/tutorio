@@ -59,7 +59,7 @@ export function WeekdayPicker({
         >
           {appearance === 'cards' ? (
             <>
-              <span className="font-heading text-sm font-semibold">{labels[day]}</span>
+              <span className="text-sm font-semibold">{labels[day]}</span>
               <span className="truncate text-[0.6875rem] opacity-70">{longLabels[day]}</span>
             </>
           ) : (

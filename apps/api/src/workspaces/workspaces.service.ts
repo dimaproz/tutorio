@@ -38,8 +38,6 @@ export class WorkspacesService {
         defaultCurrency: membership.workspace.defaultCurrency,
         cancellationDeadlineHours:
           membership.workspace.cancellationDeadlineHours,
-        primaryColor: membership.workspace.primaryColor,
-        secondaryColor: membership.workspace.secondaryColor,
       },
       role: membership.role,
     };

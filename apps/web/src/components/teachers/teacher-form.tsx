@@ -29,6 +29,7 @@ import { FormActions } from '@/components/shared';
 import { errorMessageKey } from '@/lib/api/error-message';
 import { useCreateTeacherMutation, useUpdateTeacherMutation } from '@/lib/api/teachers';
 import { makeZodErrorMap } from '@/lib/forms/error-map';
+import { DEFAULT_TEACHER_COLOR } from '@/lib/theme/user-colors';
 import {
   EMPTY_TEACHER_FORM,
   teacherFormSchema,
@@ -73,7 +74,7 @@ export function TeacherForm({
           defaultRate:
             teacher.defaultRateMinor != null ? formatPriceInput(teacher.defaultRateMinor) : '',
           currency: (teacher.currency as TeacherFormValues['currency']) ?? 'EUR',
-          color: teacher.color ?? '#465FFF',
+          color: teacher.color ?? DEFAULT_TEACHER_COLOR,
           status: teacher.status,
           bio: teacher.bio ?? '',
           avatarKey: teacher.avatarKey,

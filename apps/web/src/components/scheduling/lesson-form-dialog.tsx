@@ -231,7 +231,7 @@ export function LessonFormDialog({
           </FormSection>
 
           <FormActions>
-            <Button type="button" variant="neutral" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               {tCommon('cancel')}
             </Button>
             <Button type="submit" disabled={createLesson.isPending}>

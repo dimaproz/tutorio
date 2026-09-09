@@ -278,7 +278,7 @@
             "bearer": []
           }
         ],
-        "summary": "Update workspace defaults and theme colours",
+        "summary": "Update workspace defaults",
         "tags": [
           "workspaces"
         ]
@@ -3997,14 +3997,6 @@
               },
               "cancellationDeadlineHours": {
                 "type": "integer"
-              },
-              "primaryColor": {
-                "type": "string",
-                "pattern": "^#[0-9A-Fa-f]{6}$"
-              },
-              "secondaryColor": {
-                "type": "string",
-                "pattern": "^#[0-9A-Fa-f]{6}$"
               }
             },
             "required": [
@@ -4013,9 +4005,7 @@
               "plan",
               "mode",
               "defaultCurrency",
-              "cancellationDeadlineHours",
-              "primaryColor",
-              "secondaryColor"
+              "cancellationDeadlineHours"
             ]
           },
           "role": {
@@ -4148,14 +4138,6 @@
               },
               "cancellationDeadlineHours": {
                 "type": "integer"
-              },
-              "primaryColor": {
-                "type": "string",
-                "pattern": "^#[0-9A-Fa-f]{6}$"
-              },
-              "secondaryColor": {
-                "type": "string",
-                "pattern": "^#[0-9A-Fa-f]{6}$"
               }
             },
             "required": [
@@ -4164,9 +4146,7 @@
               "plan",
               "mode",
               "defaultCurrency",
-              "cancellationDeadlineHours",
-              "primaryColor",
-              "secondaryColor"
+              "cancellationDeadlineHours"
             ]
           },
           "role": {
@@ -4215,14 +4195,6 @@
               },
               "cancellationDeadlineHours": {
                 "type": "integer"
-              },
-              "primaryColor": {
-                "type": "string",
-                "pattern": "^#[0-9A-Fa-f]{6}$"
-              },
-              "secondaryColor": {
-                "type": "string",
-                "pattern": "^#[0-9A-Fa-f]{6}$"
               }
             },
             "required": [
@@ -4231,9 +4203,7 @@
               "plan",
               "mode",
               "defaultCurrency",
-              "cancellationDeadlineHours",
-              "primaryColor",
-              "secondaryColor"
+              "cancellationDeadlineHours"
             ]
           },
           "role": {
@@ -4275,14 +4245,6 @@
               "SOLO",
               "SCHOOL"
             ]
-          },
-          "primaryColor": {
-            "type": "string",
-            "pattern": "^#[0-9A-Fa-f]{6}$"
-          },
-          "secondaryColor": {
-            "type": "string",
-            "pattern": "^#[0-9A-Fa-f]{6}$"
           }
         }
       },

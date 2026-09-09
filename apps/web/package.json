@@ -7,15 +7,13 @@
     "dev:clean": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\" && next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint --max-warnings 0",
+    "lint": "eslint --max-warnings 0 && node scripts/check-ui-architecture.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@base-ui/react": "^1.6.0",
     "@hookform/resolvers": "^5.4.0",
     "@sentry/nextjs": "^10.66.0",
-    "@shadcn/react": "^0.2.1",
     "@tanstack/react-query": "^5.101.2",
     "@tanstack/react-table": "^8.21.3",
     "@tutorio/domain": "workspace:^",

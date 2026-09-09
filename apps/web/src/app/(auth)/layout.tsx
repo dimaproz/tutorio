@@ -9,7 +9,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
     <div className="grid min-h-svh bg-background lg:grid-cols-[1fr_minmax(26rem,30%)]">
       <aside className="flex flex-col bg-primary/5">
         <div className="flex items-center justify-between gap-4 p-4 md:p-6 lg:p-8">
-          <span className="font-heading text-xl font-semibold tracking-tight">{t('appName')}</span>
+          <span className="text-xl font-semibold tracking-tight">{t('appName')}</span>
           <div className="lg:hidden">
             <LocaleSwitcher />
           </div>

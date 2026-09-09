@@ -13,6 +13,7 @@ import {
 import { z } from 'zod';
 import { optionalText } from '@/lib/forms/helpers';
 import { parsePriceInput } from '@/lib/money';
+import { DEFAULT_TEACHER_COLOR } from '@/lib/theme/user-colors';
 
 export const teacherFormSchema = z
   .object({
@@ -47,7 +48,7 @@ export const EMPTY_TEACHER_FORM: TeacherFormValues = {
   telegramUsername: '',
   defaultRate: '',
   currency: 'EUR',
-  color: '#465FFF',
+  color: DEFAULT_TEACHER_COLOR,
   status: 'ACTIVE',
   bio: '',
   avatarKey: null,

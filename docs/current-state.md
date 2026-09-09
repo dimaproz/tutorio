@@ -69,8 +69,11 @@ The official shadcn `radix-nova` preset is the pilot baseline; page migrations
 require an architect-approved screen brief and an explicitly named shadcn block
 where applicable. The isolated `/design` route, demo components, and feature
 exports were removed. Active engineering rules now target Storybook as the
-development-only component catalog. Runtime theme and primitive normalization
-remain Frontend Packet F1 work and must not be reported as complete yet.
+development-only component catalog. Frontend Packet F1 is complete after an
+independent registry-drift review: the runtime now uses the neutral
+`radix-nova` baseline, Geist, documented primitive exceptions, and automated
+style-boundary checks. Workspace colour customization was removed from the UI,
+API contract, and database. F2 and later frontend packets have not started.
 
 ### Work Packet 1 evidence
 
@@ -204,6 +207,6 @@ generated client expose the typed `403` contract for owner-only handlers.
 
 ## Next checkpoint
 
-Frontend Packet F1 — Shadcn Baseline is the next implementation packet. Work
-Packet 6 — Student Quick Create begins only after Frontend Packets F1–F5 pass
-their gates.
+Frontend Packet F2 — Storybook Foundation is the next implementation packet.
+Work Packet 6 — Student Quick Create begins only after Frontend Packets F2–F5
+pass their gates.

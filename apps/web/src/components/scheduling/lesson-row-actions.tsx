@@ -52,11 +52,11 @@ export function LessonRowActions({
       <DropdownMenuContent align="end">
         {isScheduled ? (
           <>
-            <DropdownMenuItem onSelect={() => flipTo('COMPLETED')} variant="success">
+            <DropdownMenuItem onSelect={() => flipTo('COMPLETED')}>
               <CheckIcon />
               {t('complete')}
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => onOpenDialog(lesson, 'reschedule')} variant="warning">
+            <DropdownMenuItem onSelect={() => onOpenDialog(lesson, 'reschedule')}>
               <CalendarClockIcon />
               {t('reschedule')}
             </DropdownMenuItem>

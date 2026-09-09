@@ -117,8 +117,6 @@ model Workspace {
   mode                      WorkspaceMode @default(SOLO)
   defaultCurrency           String        @default("EUR")
   cancellationDeadlineHours Int           @default(24)
-  primaryColor              String        @default("#5D87FF")
-  secondaryColor            String        @default("#49BEFF")
   // Default IANA timezone for new lesson series; Stage 8 adds the settings UI.
   timezone                  String        @default("Europe/Kyiv")
   createdAt                 DateTime      @default(now())

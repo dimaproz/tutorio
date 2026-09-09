@@ -4,456 +4,136 @@
 
 @custom-variant dark (&:is(.dark *));
 
-@theme {
-  --shadow-md: #919eab4d 0px 0px 2px 0px, #919eab1f 0px 12px 24px -4px;
-  --shadow-lg: 0 1rem 3rem #0000002d;
-  --shadow-dark-md: #919eab4d 0px 0px 2px 0px, #919eab05 0px 12px 24px -4px;
-  --shadow-sm: 0 0.125rem 0.25rem #00000013;
-  --shadow-btn-shadow: #0000000d 0 9px 17.5px;
-
-  --text-40: 40px;
-  --text-56: 56px;
-  --text-fs_21: 21px;
-  --text-fs_13: 13px;
-  --text-fs_28: 28px;
-  --leading-21: 21px;
-}
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-dark: var(--dark);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  /* Indirection through --font-display: `@theme inline` substitutes values at
-     build time, so pointing straight at --font-sans would freeze the heading
-     face and ignore any per-theme override. */
-  --font-heading: var(--font-display);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
-  --color-warning: var(--warning);
-  --color-warning-foreground: var(--warning-foreground);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-lightprimary: var(--lightprimary);
-  --color-light-primary: var(--lightprimary);
-  --color-light-success: var(--light-success);
-  --color-light-destructive: var(--light-destructive);
-  --color-light-warning: var(--light-warning);
-  --color-light-secondary: var(--light-secondary);
-  --color-light-info: var(--light-info);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* Tailwind expands its built-in shadow scale at build time. Keep the utility
-   classes tied to our runtime tokens so the inspector and the final rendering
-   both use the same shadow vocabulary as the reference. */
-.shadow-sm {
-  --tw-shadow: var(--shadow-sm);
-  box-shadow:
-    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
-    var(--tw-ring-shadow), var(--tw-shadow);
-}
-
-.shadow-md {
-  --tw-shadow: var(--shadow-md);
-  box-shadow:
-    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
-    var(--tw-ring-shadow), var(--tw-shadow);
-}
-
-.shadow-lg {
-  --tw-shadow: var(--shadow-lg);
-  box-shadow:
-    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
-    var(--tw-ring-shadow), var(--tw-shadow);
-}
-
-.shadow-dark-md {
-  --tw-shadow: var(--shadow-dark-md);
-  box-shadow:
-    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
-    var(--tw-ring-shadow), var(--tw-shadow);
-}
-
-.shadow-btn-shadow {
-  --tw-shadow: var(--shadow-btn-shadow);
-  box-shadow:
-    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
-    var(--tw-ring-shadow), var(--tw-shadow);
-}
-
-/* ---------------------------------------------------------------------------
-   Legacy runtime theme retained only until Frontend Packet F1 reviews the
-   installed primitives and replaces these duplicated declarations with the
-   official shadcn neutral baseline. Do not add new references to these tokens.
---------------------------------------------------------------------------- */
 :root {
-  /* Headings and figures share the body face — no serif voice in this system. */
-  --font-display: var(--font-sans);
-
-  /* Legacy brand ramp. */
-  --brand-50: #ecf3ff;
-  --brand-400: #7592ff;
-  --brand-500: #465fff;
-  --brand-600: #3641f5;
-  /* Legacy grey ramp. */
-  --gray-50: #f9fafb;
-  --gray-100: #f2f4f7;
-  --gray-200: #e4e7ec;
-  --gray-300: #d0d5dd;
-  --gray-400: #98a2b3;
-  --gray-500: #667085;
-  --gray-600: #475467;
-  --gray-700: #344054;
-  --gray-800: #1d2939;
-  --gray-900: #101828;
-  --success-500: #12b76a;
-  --success-600: #039855;
-  --error-500: #f04438;
-  --error-600: #d92d20;
-  --warning-500: #f79009;
-  --warning-600: #dc6803;
-
-  /* Aliases kept so markup that references the old token names keeps
-     rendering: marker = act-on-this (brand), due = money owed (error),
-     settled = money in (success). */
-  --paper: var(--gray-50);
-  --ink: var(--gray-800);
-  --graphite: var(--gray-500);
-  --rule: var(--gray-200);
-  --marker: var(--brand-500);
-  --marker-ink: #ffffff;
-  --marker-wash: var(--brand-50);
-  --due: var(--error-600);
-  --due-wash: #fef3f2;
-  --settled: var(--success-600);
-  --settled-wash: #ecfdf3;
-
-  /* Legacy card elevation. */
-  --shadow-card: 0px 1px 3px 0px rgba(16, 24, 40, 0.1), 0px 1px 2px 0px rgba(16, 24, 40, 0.06);
-  --shadow-md: #919eab4d 0px 0px 2px 0px, #919eab1f 0px 12px 24px -4px;
-  --shadow-lg: 0 1rem 3rem #0000002d;
-  --shadow-dark-md: #919eab4d 0px 0px 2px 0px, #919eab05 0px 12px 24px -4px;
-  --shadow-sm: 0 0.125rem 0.25rem #00000013;
-  --shadow-btn-shadow: #0000000d 0 9px 17.5px;
-
-  --text-40: 40px;
-  --text-56: 56px;
-  --text-fs_21: 21px;
-  --text-fs_13: 13px;
-  --text-fs_28: 28px;
-  --leading-21: 21px;
-
-  --background: var(--gray-50);
-  --foreground: var(--gray-800);
-  --card: #ffffff;
-  --card-foreground: var(--gray-800);
-  --popover: #ffffff;
-  --popover-foreground: var(--gray-800);
-  --primary: var(--brand-500);
-  --primary-foreground: #ffffff;
-  /* The brand wash: a primary-tinted surface for quiet buttons and chips.
-     Derived from --primary, so a rebrand only changes one value. */
-  --lightprimary: color-mix(in oklab, var(--primary) 12%, transparent);
-  --light-success: color-mix(in oklab, var(--success) 12%, transparent);
-  --light-destructive: color-mix(in oklab, var(--destructive) 12%, transparent);
-  --light-warning: color-mix(in oklab, var(--warning) 12%, transparent);
-  --light-secondary: color-mix(in oklab, var(--workspace-secondary) 12%, transparent);
-  --light-info: color-mix(in oklab, var(--info) 12%, transparent);
-  --secondary: var(--gray-100);
-  --secondary-foreground: var(--gray-700);
-  --muted: var(--gray-100);
-  --muted-foreground: var(--gray-500);
-  --accent: var(--gray-100);
-  --accent-foreground: var(--gray-800);
-  --destructive: var(--error-500);
-  --warning: var(--warning-600);
-  --success: var(--success-600);
-  /* Text laid directly on a saturated status fill. */
-  --destructive-foreground: #ffffff;
-  --warning-foreground: #ffffff;
-  --success-foreground: #ffffff;
-  --border: var(--gray-200);
-  --input: var(--gray-300);
-  --ring: var(--brand-500);
-  /* Buttons/inputs land on ~8px (rounded-lg); cards are lifted to 16px below. */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --success: oklch(0.627 0.194 149.214);
+  --success-foreground: oklch(0.985 0 0);
+  --warning: oklch(0.769 0.188 70.08);
+  --warning-foreground: oklch(0.205 0 0);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
   --radius: 0.625rem;
-
-  --chart-1: var(--brand-500);
-  --chart-2: var(--brand-400);
-  --chart-3: var(--success-500);
-  --chart-4: var(--warning-500);
-  --chart-5: var(--gray-300);
-
-  /* Register cells (lesson package meter). */
-  --cell-empty: #ffffff;
-  --cell-rule: var(--gray-300);
-  --cell-mark: var(--brand-500);
-  --cell-low: var(--error-500);
-
-  --sidebar: #ffffff;
-  --sidebar-foreground: var(--gray-700);
-  --sidebar-primary: var(--brand-500);
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: var(--brand-50);
-  --sidebar-accent-foreground: var(--brand-500);
-  --sidebar-border: var(--gray-200);
-  --sidebar-ring: var(--brand-500);
-
-  /* School palette. The workspace variables are replaced after sign-in. */
-  --color-primary: #5d87ff;
-  --color-secondary: #49beff;
-  --color-success: #1daa70;
-  --color-warning: #f6b51e;
-  --color-error: #ef4444;
-  --color-white: #fff;
-  --color-link: #2a3547;
-  --color-lightprimary: color-mix(in oklab, var(--color-primary) 12%, transparent);
-  --color-input: #dfe5ef;
-  --color-dark: #1c2536;
-  --color-darkborder: #333f55;
-  --dark-muted-foreground: #7c8fac;
-  --workspace-primary: var(--color-primary);
-  --workspace-secondary: var(--color-secondary);
-  --color-sidebar: var(--color-dark);
-  --color-sidebar-foreground: var(--dark-muted-foreground);
-  --color-sidebar-primary: var(--workspace-primary);
-  --color-sidebar-primary-foreground: var(--color-white);
-  --color-sidebar-accent: color-mix(in oklab, var(--workspace-primary) 12%, transparent);
-  --color-sidebar-accent-foreground: var(--workspace-primary);
-  --color-sidebar-border: var(--color-darkborder);
-  --color-sidebar-ring: var(--workspace-primary);
-
-  --info: #8754ec;
-  --success: #1daa70;
-  --warning: #f6b51e;
-  --error: #ef4444;
-  --white: #fff;
-  --dark: #1c2536;
-  --darkinfo: #223662;
-  --lightgray: #f6f9fc;
-  --bgmuted: #eff4fa;
-  --darkgray: #465670;
-  --bodytext: #5a6a85;
-  --lightmuted: #5d7287;
-  --link: #2a3547;
-  --light-emphasis: #dfe5ef;
-
-  --brand-50: color-mix(in oklab, var(--workspace-primary) 12%, var(--color-white));
-  --brand-400: color-mix(in oklab, var(--workspace-primary) 75%, var(--color-white));
-  --brand-500: var(--workspace-primary);
-  --brand-600: color-mix(in oklab, var(--workspace-primary) 82%, var(--dark));
-
-  --background: #fff;
-  --foreground: var(--color-link);
-  --card: var(--color-white);
-  --card-foreground: var(--color-link);
-  --popover: var(--color-white);
-  --popover-foreground: var(--color-link);
-  --primary: var(--workspace-primary);
-  --primary-foreground: var(--color-white);
-  /* `secondary` and `muted` are neutral component surfaces. Workspace
-     branding has its own explicit variables below, so ordinary controls,
-     table states and icon backgrounds never inherit a saturated school hue. */
-  --secondary: var(--lightgray);
-  --secondary-foreground: var(--color-link);
-  --muted: var(--bgmuted);
-  --muted-foreground: var(--bodytext);
-  --accent: var(--lightprimary);
-  --accent-foreground: var(--primary);
-  --destructive: var(--color-error);
-  --destructive-foreground: var(--color-white);
-  --border: #e5e5e5;
-  --input: var(--color-input);
-  --ring: var(--workspace-primary);
-  --radius: 10px;
-  --lightprimary: color-mix(in oklab, var(--workspace-primary) 12%, transparent);
-  --light-success: color-mix(in oklab, var(--success) 12%, transparent);
-  --light-destructive: color-mix(in oklab, var(--destructive) 12%, transparent);
-  --light-warning: color-mix(in oklab, var(--warning) 12%, transparent);
-  --light-secondary: color-mix(in oklab, var(--workspace-secondary) 12%, transparent);
-  --light-info: color-mix(in oklab, var(--info) 12%, transparent);
-  --chart-1: var(--primary);
-  --chart-2: var(--workspace-secondary);
-  --chart-3: var(--success);
-  --chart-4: var(--warning);
-  --chart-5: var(--error);
-  --sidebar: var(--color-white);
-  --sidebar-foreground: var(--color-link);
-  --sidebar-primary: var(--workspace-primary);
-  --sidebar-primary-foreground: var(--color-white);
-  --sidebar-accent: var(--lightprimary);
-  --sidebar-accent-foreground: var(--primary);
-  --sidebar-border: #e5e5e5;
-  --sidebar-ring: #a1a1a1;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
 }
 
 .dark {
-  --link: #7c8fac;
-  --paper: var(--color-dark);
-  --ink: #ffffff;
-  --graphite: var(--gray-400);
-  --rule: rgba(255, 255, 255, 0.1);
-  --marker: var(--brand-400);
-  --marker-ink: #ffffff;
-  --marker-wash: rgba(70, 95, 255, 0.15);
-  --due: #fda29b;
-  --due-wash: rgba(240, 68, 56, 0.15);
-  --settled: #6ce9a6;
-  --settled-wash: rgba(18, 183, 106, 0.15);
-
-  --shadow-card: 0px 1px 3px 0px rgba(0, 0, 0, 0.35), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
-
-  --background: var(--color-dark);
-  --foreground: var(--color-white);
-  --card: var(--color-dark);
-  --card-foreground: var(--color-white);
-  --popover: var(--color-dark);
-  --popover-foreground: var(--color-white);
-  --primary: var(--workspace-primary);
-  --primary-foreground: var(--color-white);
-  --lightprimary: color-mix(in oklab, var(--primary) 12%, transparent);
-  --light-success: color-mix(in oklab, var(--success) 12%, transparent);
-  --light-destructive: color-mix(in oklab, var(--destructive) 12%, transparent);
-  --light-warning: color-mix(in oklab, var(--warning) 12%, transparent);
-  --light-secondary: color-mix(in oklab, var(--workspace-secondary) 12%, transparent);
-  --light-info: color-mix(in oklab, var(--info) 12%, transparent);
-  /* Brand secondary stays in --workspace-secondary. These are neutral
-     component surfaces, shared by controls, table states and icon tiles. */
-  --secondary: #2a3851;
-  --secondary-foreground: var(--color-white);
-  --muted: #2a3851;
-  --muted-foreground: var(--dark-muted-foreground);
-  --accent: var(--lightprimary);
-  --accent-foreground: var(--primary);
-  --destructive: var(--color-error);
-  --warning: var(--color-warning);
-  --success: var(--color-success);
-  /* The dark-theme status fills are light, so their text flips to ink. */
-  --destructive-foreground: var(--color-white);
-  --warning-foreground: var(--gray-900);
-  --success-foreground: var(--gray-900);
-  --border: var(--color-darkborder);
-  --input: var(--color-darkborder);
-  --ring: var(--workspace-primary);
-
-  --cell-empty: rgba(255, 255, 255, 0.03);
-  --cell-rule: rgba(255, 255, 255, 0.15);
-  --cell-mark: var(--brand-500);
-  --cell-low: var(--error-500);
-
-  --sidebar: var(--color-sidebar);
-  --sidebar-foreground: var(--color-sidebar-foreground);
-  --sidebar-primary: var(--color-sidebar-primary);
-  --sidebar-primary-foreground: var(--color-sidebar-primary-foreground);
-  --sidebar-accent: var(--color-sidebar-accent);
-  --sidebar-accent-foreground: var(--color-sidebar-accent-foreground);
-  --sidebar-border: var(--color-sidebar-border);
-  --sidebar-ring: var(--color-sidebar-ring);
-}
-
-/* Legacy global card override; remove during Frontend Packet F1. */
-[data-slot='card'] {
-  border-radius: 1rem;
-  border-color: var(--border);
-  box-shadow: var(--shadow-card);
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.145 0 0);
+  --success: oklch(0.792 0.209 151.711);
+  --success-foreground: oklch(0.145 0 0);
+  --warning: oklch(0.828 0.189 84.429);
+  --warning-foreground: oklch(0.145 0 0);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
 }
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-  html {
-    @apply font-sans;
-  }
-  /* Removes the tap delay and double-tap zoom on controls without disabling
-     pinch zoom for the page. */
-  button,
-  a,
-  input,
-  select,
-  textarea,
-  [role='button'],
-  [role='menuitem'],
-  [role='tab'] {
-    touch-action: manipulation;
-  }
-  /* Digits in list and detail columns stay vertically aligned. */
-  .tabular {
-    font-variant-numeric: tabular-nums;
-  }
-  /* Money and counts are set with tabular figures: ledgers and class
-     registers have always been set this way, and it separates a figure a
-     tutor acts on from ordinary bold UI text. */
-  .numeral {
-    font-family: var(--font-display);
-    font-variant-numeric: tabular-nums;
-    font-feature-settings: 'ss01';
-    letter-spacing: -0.01em;
-  }
-  /* The workbook's own voice: section headings and dates. */
-  .workbook {
-    font-family: var(--font-display);
-    letter-spacing: -0.011em;
-  }
-  /* Small ruled label above a block, like a column head in a register. */
-  .register-label {
-    font-size: 0.6875rem;
-    line-height: 1;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--muted-foreground);
-    font-weight: 500;
-  }
-
-  /* Reduced motion is honoured globally: the app only uses short functional
-     transitions, and they are all safe to drop. */
+  * { @apply border-border outline-ring/50; }
+  body { @apply bg-background text-foreground; }
+  button, a, input, select, textarea, [role='button'], [role='menuitem'], [role='tab'] { touch-action: manipulation; }
+  .tabular, .numeral { font-variant-numeric: tabular-nums; }
   @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-      scroll-behavior: auto !important;
-    }
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
   }
 }

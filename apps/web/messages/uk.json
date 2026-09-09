@@ -724,7 +724,6 @@
     "subtitle": "Значення за замовчуванням і журнал змін.",
     "tabs": {
       "general": "Загальні",
-      "theme": "Тема",
       "audit": "Журнал змін"
     },
     "general": {
@@ -742,16 +741,6 @@
       "modeSchool": "Школа з кількома вчителями",
       "modeSoloHint": "Керування вчителями приховане, усі уроки — ваші. Перемкніть на режим школи, коли хтось приєднається.",
       "modeSchoolHint": "Уроки, навчання та календар запитують, якому вчителю вони належать."
-    },
-    "theme": {
-      "title": "Тема",
-      "description": "Кольори школи",
-      "primaryColor": "Основний колір",
-      "secondaryColor": "Додатковий колір",
-      "preview": "Попередній перегляд",
-      "reset": "Скинути",
-      "submit": "Зберегти тему",
-      "saved": "Тему збережено"
     },
     "audit": {
       "title": "Журнал змін",
@@ -818,8 +807,6 @@
       "currency": "Валюта",
       "cancellationDeadlineHours": "Дедлайн скасування",
       "defaultCurrency": "Валюта за замовчуванням",
-      "primaryColor": "Основний колір",
-      "secondaryColor": "Додатковий колір",
       "studentId": "Учень",
       "groupId": "Група",
       "teacherId": "Викладач",
@@ -868,8 +855,6 @@
     "currency": "Валюта",
     "cancellationDeadlineHours": "Дедлайн скасування",
     "defaultCurrency": "Валюта за замовчуванням",
-    "primaryColor": "Основний колір",
-    "secondaryColor": "Додатковий колір",
     "studentId": "Учень",
     "groupId": "Група",
     "teacherId": "Викладач",

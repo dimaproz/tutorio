@@ -64,7 +64,7 @@ Gate:
 
 ## Frontend Packet F1 — Shadcn Baseline
 
-Status: next.
+Status: implemented and independently reviewed on 2026-09-09.
 
 Purpose: return the runtime visual foundation to a predictable official
 `radix-nova` baseline without changing product workflows.
@@ -79,7 +79,7 @@ Scope:
 3. Replace the duplicated TailAdmin/workspace theme declarations in
    `globals.css` with the official neutral shadcn tokens.
 4. Keep only required Tutorio semantic additions such as `success` and
-   `warning`; isolate user-provided workspace colors from core primitive tokens.
+   `warning`; do not allow workspace branding to alter core primitive tokens.
 5. Switch the root interface font from the TailAdmin-derived Onest choice to
    the preset's Geist baseline.
 6. Remove unused UI dependencies after import and build verification. Keep
@@ -100,6 +100,44 @@ Acceptance:
 - existing routes remain usable;
 - every intentional primitive deviation is listed in documentation;
 - web lint, typecheck, test, and build pass.
+
+### F1 implementation notes
+
+- Compared every installed radix-nova primitive with the official registry using
+  `shadcn add --dry-run --diff <component>.tsx`: accordion, alert-dialog,
+  alert, aspect-ratio, avatar, badge, breadcrumb, bubble, button, calendar,
+  card, chart, checkbox, collapsible, command, context-menu, dialog,
+  direction, drawer, dropdown-menu, empty, field, hover-card, input-group,
+  input-otp, input, item, kbd, label, marker, menubar, message, native-select,
+  navigation-menu, pagination, popover, progress, radio-group, resizable,
+  scroll-area, select, separator, sheet, sidebar, skeleton, slider, sonner,
+  spinner, switch, table, tabs, textarea, toggle-group, toggle, and tooltip.
+- The neutral radix-nova token baseline and Geist typography replace the legacy
+  TailAdmin foundation. Workspace-level theme customization was removed, so
+  application branding cannot alter primitive tokens.
+- Intentional primitive deviations are limited to: `Badge` `success` and
+  `warning` variants (the approved product lifecycle semantics); the dialog
+  portal-container handoff used by Dialog, AlertDialog, Select, and Popover so
+  nested controls remain in the active modal's accessible layer; and forwarding
+  the Tabs `orientation` prop so vertical tabs match their visual and keyboard
+  orientation. The global touch-action and reduced-motion rules are retained
+  accessibility safeguards.
+- Removed unused `@base-ui/react` and `@shadcn/react`; `radix-ui` remains the
+  configured and used primitive base. The only remaining user-editable color is
+  the teacher scheduling attribute in `src/lib/theme/user-colors.ts`.
+- `apps/web/scripts/check-ui-architecture.mjs`, run by web lint, rejects direct
+  Radix imports outside `components/ui`, raw product colors, and exact duplicate
+  primitive filenames. Its narrow raw-color allowlist is: `globals.css` for
+  semantic token definitions, `components/ui/chart.tsx` for upstream Recharts
+  SVG selectors, `lib/theme/user-colors.ts` for the teacher scheduling data
+  default, `app/layout.tsx` for browser theme-color metadata, and the existing
+  `lib/auth/gateway.test.ts` color fixture. The duplicate-primitive allowlist
+  contains only `lib/pagination.ts`, which is a data helper rather than UI.
+- Independent review corrected the initial registry and generated-utility
+  regressions. Generation, lint, typecheck, unit tests, API E2E, production
+  build, full migration deployment, and the affected finance and recurrence
+  upgrade verifiers pass. The lifecycle upgrade verifier was also made
+  calendar-independent after its fixed future date expired.
 
 ## Frontend Packet F2 — Storybook Foundation
 

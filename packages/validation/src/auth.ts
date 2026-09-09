@@ -77,8 +77,6 @@ export const authWorkspaceSchema = z.object({
   mode: workspaceModeSchema,
   defaultCurrency: z.string(),
   cancellationDeadlineHours: z.number().int(),
-  primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
-  secondaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
 });
 
 export type AuthWorkspace = z.infer<typeof authWorkspaceSchema>;

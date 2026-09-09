@@ -100,8 +100,8 @@ async function main() {
       VALUES (${userId}, 'finance-upgrade-owner@example.com', 'fixture', 'Finance upgrade owner', ${now}, ${now})
     `;
     await prisma.$executeRaw`
-      INSERT INTO "workspaces" (id, name, plan, mode, "defaultCurrency", "cancellationDeadlineHours", "primaryColor", "secondaryColor", timezone, "createdAt", "updatedAt")
-      VALUES (${workspaceId}, 'Finance migration upgrade', 'FREE', 'SOLO', 'EUR', 24, '#5D87FF', '#49BEFF', 'UTC', ${now}, ${now})
+      INSERT INTO "workspaces" (id, name, plan, mode, "defaultCurrency", "cancellationDeadlineHours", timezone, "createdAt", "updatedAt")
+      VALUES (${workspaceId}, 'Finance migration upgrade', 'FREE', 'SOLO', 'EUR', 24, 'UTC', ${now}, ${now})
     `;
     await prisma.$executeRaw`
       INSERT INTO "teachers" (id, "workspaceId", "fullName", subjects, status, "createdAt", "updatedAt")

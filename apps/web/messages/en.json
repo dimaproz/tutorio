@@ -724,7 +724,6 @@
     "subtitle": "Workspace defaults and the audit trail.",
     "tabs": {
       "general": "General",
-      "theme": "Theme",
       "audit": "Audit log"
     },
     "general": {
@@ -742,16 +741,6 @@
       "modeSchool": "School with several teachers",
       "modeSoloHint": "Teacher controls stay hidden and every lesson is yours. Switch to school mode when someone joins you.",
       "modeSchoolHint": "Lessons, enrollments and the calendar ask which teacher they belong to."
-    },
-    "theme": {
-      "title": "Theme",
-      "description": "School colours",
-      "primaryColor": "Primary colour",
-      "secondaryColor": "Secondary colour",
-      "preview": "Preview",
-      "reset": "Reset",
-      "submit": "Save theme",
-      "saved": "Theme saved"
     },
     "audit": {
       "title": "Audit log",
@@ -818,8 +807,6 @@
       "currency": "Currency",
       "cancellationDeadlineHours": "Cancellation deadline",
       "defaultCurrency": "Default currency",
-      "primaryColor": "Primary colour",
-      "secondaryColor": "Secondary colour",
       "studentId": "Student",
       "groupId": "Group",
       "teacherId": "Teacher",
@@ -868,8 +855,6 @@
     "currency": "Currency",
     "cancellationDeadlineHours": "Cancellation deadline",
     "defaultCurrency": "Default currency",
-    "primaryColor": "Primary colour",
-    "secondaryColor": "Secondary colour",
     "studentId": "Student",
     "groupId": "Group",
     "teacherId": "Teacher",

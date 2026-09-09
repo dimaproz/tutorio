@@ -153,7 +153,7 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
-        <div className="mx-6 my-4 flex items-center gap-3 overflow-hidden rounded-md bg-light-secondary px-4 py-4">
+        <div className="mx-6 my-4 flex items-center gap-3 overflow-hidden rounded-md border border-border bg-secondary px-4 py-4">
           <Avatar className="size-9">
             <AvatarFallback className="text-xs">{nameInitials(session.user.name)}</AvatarFallback>
           </Avatar>

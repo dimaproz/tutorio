@@ -1,15 +1,13 @@
 import type { Metadata } from 'next';
-import { Geist_Mono, Onest } from 'next/font/google';
+import { Geist, Geist_Mono } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Providers } from '@/components/providers';
 import { Toaster } from '@/components/ui/sonner';
 import './globals.css';
 
-// Legacy interface font. Frontend Packet F1 replaces this with the official
-// shadcn preset baseline after primitive and theme diffs are reviewed.
-const onest = Onest({
-  variable: '--font-sans',
+const geist = Geist({
+  variable: '--font-geist-sans',
   subsets: ['latin', 'cyrillic'],
 });
 
@@ -43,7 +41,7 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
-      className={`${onest.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geist.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col">

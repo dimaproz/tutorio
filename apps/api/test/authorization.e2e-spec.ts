@@ -164,8 +164,6 @@ describe('Pilot authorization: legacy TEACHER denial (e2e)', () => {
           cancellationDeadlineHours: true,
           defaultCurrency: true,
           mode: true,
-          primaryColor: true,
-          secondaryColor: true,
         },
       }),
     ]);

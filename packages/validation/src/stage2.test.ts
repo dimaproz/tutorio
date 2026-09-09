@@ -259,10 +259,7 @@ describe('workspace settings', () => {
   it('requires at least one field and validates values', () => {
     expect(updateWorkspaceSettingsSchema.safeParse({}).success).toBe(false);
     expect(updateWorkspaceSettingsSchema.safeParse({ defaultCurrency: 'UAH' }).success).toBe(true);
-    expect(updateWorkspaceSettingsSchema.safeParse({ primaryColor: '#5d87ff' }).success).toBe(true);
-    expect(updateWorkspaceSettingsSchema.safeParse({ secondaryColor: '#12345' }).success).toBe(
-      false,
-    );
+    expect(updateWorkspaceSettingsSchema.safeParse({ primaryColor: '#5d87ff' }).success).toBe(false);
     expect(updateWorkspaceSettingsSchema.safeParse({ cancellationDeadlineHours: 24 }).success).toBe(
       true,
     );

@@ -21,8 +21,6 @@ const SESSION_PAYLOAD = {
     mode: 'SOLO',
     defaultCurrency: 'EUR',
     cancellationDeadlineHours: 24,
-    primaryColor: '#5D87FF',
-    secondaryColor: '#49BEFF',
   },
   role: 'OWNER',
 };

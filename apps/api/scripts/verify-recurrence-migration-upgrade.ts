@@ -83,8 +83,8 @@ async function main() {
       INSERT INTO "users" (id, email, "passwordHash", name, "createdAt", "updatedAt")
       VALUES (${ids.user}, 'recurrence-upgrade@example.com', 'fixture', 'Upgrade owner', ${now}, ${now})`;
     await before.$executeRaw`
-      INSERT INTO "workspaces" (id, name, plan, mode, "defaultCurrency", "cancellationDeadlineHours", "primaryColor", "secondaryColor", timezone, "createdAt", "updatedAt")
-      VALUES (${ids.workspace}, 'Recurrence upgrade', 'FREE', 'SOLO', 'EUR', 24, '#465FFF', '#49BEFF', 'UTC', ${now}, ${now})`;
+      INSERT INTO "workspaces" (id, name, plan, mode, "defaultCurrency", "cancellationDeadlineHours", timezone, "createdAt", "updatedAt")
+      VALUES (${ids.workspace}, 'Recurrence upgrade', 'FREE', 'SOLO', 'EUR', 24, 'UTC', ${now}, ${now})`;
     await before.$executeRaw`
       INSERT INTO "teachers" (id, "workspaceId", "fullName", subjects, status, "createdAt", "updatedAt")
       VALUES (${ids.teacher}, ${ids.workspace}, 'Upgrade teacher', ARRAY[]::text[], 'ACTIVE', ${now}, ${now})`;

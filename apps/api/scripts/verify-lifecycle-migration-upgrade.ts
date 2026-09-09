@@ -88,7 +88,7 @@ async function main() {
     const suffix = randomUUID();
     const archivedAt = new Date('2026-08-20T10:00:00.000Z');
     const deletedAt = new Date('2026-08-21T10:00:00.000Z');
-    const futureAt = new Date('2026-09-01T10:00:00.000Z');
+    const futureAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
     const user = await preMigration.user.create({
       data: {
         email: `migration-upgrade-${suffix}@example.com`,

@@ -47,7 +47,7 @@ export function LoginForm() {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-1.5">
-        <h1 className="font-heading text-2xl font-semibold tracking-tight text-balance">
+        <h1 className="text-2xl font-semibold tracking-tight text-balance">
           {t('title')}
         </h1>
         <p className="text-sm text-muted-foreground">{t('subtitle')}</p>

@@ -60,7 +60,7 @@ export function EntityPicker({
         <Button
           id={id}
           type="button"
-          variant="neutral"
+          variant="outline"
           role="combobox"
           aria-expanded={open}
           aria-invalid={invalid || undefined}

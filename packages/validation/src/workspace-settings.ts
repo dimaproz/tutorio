@@ -3,16 +3,12 @@ import { workspaceModeSchema, workspaceRoleSchema } from './auth';
 import { cancellationDeadlineHoursSchema, currencyCodeSchema, uuidSchema } from './common';
 
 // Workspace-level defaults inherited by enrollments unless overridden.
-export const themeColorSchema = z.string().regex(/^#[0-9A-Fa-f]{6}$/);
-
 export const updateWorkspaceSettingsSchema = z
   .object({
     defaultCurrency: currencyCodeSchema,
     cancellationDeadlineHours: cancellationDeadlineHoursSchema,
     // Switching to SOLO is refused while a second active teacher exists.
     mode: workspaceModeSchema,
-    primaryColor: themeColorSchema,
-    secondaryColor: themeColorSchema,
   })
   .partial()
   .strict()
@@ -26,8 +22,6 @@ export const workspaceSettingsResponseSchema = z.object({
   defaultCurrency: currencyCodeSchema,
   cancellationDeadlineHours: cancellationDeadlineHoursSchema,
   mode: workspaceModeSchema,
-  primaryColor: themeColorSchema,
-  secondaryColor: themeColorSchema,
 });
 
 export type WorkspaceSettingsResponse = z.infer<typeof workspaceSettingsResponseSchema>;

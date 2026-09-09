@@ -167,10 +167,11 @@ simplification. Full scope and gates live in
 1. **F0 — Direction Reset (implemented):** remove `/design`, retire TailAdmin as
    design authority, and establish shadcn blocks plus architect-owned screen
    briefs.
-2. **F1 — Shadcn Baseline (next):** normalize the official `radix-nova`
-   primitives, neutral theme, Geist typography, dependencies, and automated
-   style-boundary checks without changing workflows.
-3. **F2 — Storybook Foundation:** add the Next.js/Vite Storybook catalog,
+2. **F1 — Shadcn Baseline (implemented and reviewed):** normalized all installed
+   official `radix-nova` primitives, neutral tokens, Geist typography,
+   dependencies, and automated style-boundary checks without changing
+   workflows. Workspace colour customization was removed from the product.
+3. **F2 — Storybook Foundation (next):** add the Next.js/Vite Storybook catalog,
    interaction tests, accessibility checks, and a static-build gate.
 4. **F3 — Authentication Shell:** adapt official shadcn `login-03` to existing
    login/register behavior and locales.

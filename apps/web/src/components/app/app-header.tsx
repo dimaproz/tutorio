@@ -13,7 +13,7 @@ import { UserMenu } from './user-menu';
 // The legacy header keeps every utility in a 40px circular hit area. The
 // quiet primary wash is shared so all header actions read as one control group.
 const HEADER_ICON_BUTTON_CLASS =
-  'size-10 rounded-full text-foreground hover:bg-lightprimary hover:text-primary focus-visible:bg-lightprimary focus-visible:text-primary dark:hover:bg-lightprimary';
+  'size-10 rounded-full text-foreground hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground';
 
 export function AppHeader() {
   const t = useTranslations('app.sidebar');

@@ -76,7 +76,7 @@ export function LessonScheduleSection({ teacherId }: { teacherId: string }) {
           ))}
           <Button
             type="button"
-            variant="neutral"
+            variant="outline"
             size="sm"
             className="self-start"
             onClick={() => dates.append({ value: '' })}

@@ -8,7 +8,8 @@ import { SectionTitle } from '@/components/app/detail-view';
 import { Button } from '@/components/ui/button';
 import { Card, CardAction, CardContent, CardHeader } from '@/components/ui/card';
 import { LoadingPanel } from '@/components/shared';
-import { Tabs, TabsBadge, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLessonsQuery } from '@/lib/api/scheduling';
 import { LessonActionsDialog, type LessonDialogMode } from './lesson-actions-dialog';
 import { LessonFormDialog } from './lesson-form-dialog';
@@ -81,14 +82,14 @@ export function StudentLessonsCard({ studentId }: { studentId: string }) {
           <LoadingPanel size="md" className="min-h-32 rounded-xl border-0 bg-transparent" />
         ) : (
           <Tabs defaultValue="upcoming">
-            <TabsList size="sm">
+            <TabsList>
               <TabsTrigger value="upcoming">
                 {t('upcoming')}
-                <TabsBadge>{upcoming.length}</TabsBadge>
+                <Badge>{upcoming.length}</Badge>
               </TabsTrigger>
               <TabsTrigger value="past">
                 {t('past')}
-                <TabsBadge>{past.length}</TabsBadge>
+                <Badge>{past.length}</Badge>
               </TabsTrigger>
             </TabsList>
             <TabsContent value="upcoming" className="pt-3">

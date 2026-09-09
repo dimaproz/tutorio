@@ -42,6 +42,9 @@ theme baseline.
   application shell, feature-owned components, then routes/screens.
 - Forbid direct primitive-library imports outside `components/ui`, duplicate
   primitives, raw product colors, and page-owned theme decisions.
+- Remove workspace-level colour customization from pilot settings, session/API
+  contracts, and persistence. Light/dark mode remains the only runtime theme
+  choice; teacher colours remain scheduling data rather than interface tokens.
 - Permit new shared components only for a stable semantic purpose demonstrated
   by at least two callers. Feature-owned components such as `GroupCard` remain
   single implementations with explicit variants where needed.
@@ -63,3 +66,5 @@ Work Packet 6. Do not combine the entire feature-page migration into one change.
   only when their work packet supplies a validated screen brief.
 - A new visual identity, animation library, or Base UI migration is deferred
   until pilot evidence justifies it.
+- Deploying the F1 migration discards the former workspace colour values. They
+  are non-operational presentation preferences and are not migrated elsewhere.

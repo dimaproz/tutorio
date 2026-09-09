@@ -281,7 +281,7 @@ export function PackageFormDialog({
                       }
                     }}
                   >
-                    <TabsList variant="segmented" className="w-full">
+                    <TabsList className="w-full">
                       <TabsTrigger value="student">{t('targetStudent')}</TabsTrigger>
                       <TabsTrigger value="group">{t('targetGroup')}</TabsTrigger>
                     </TabsList>
@@ -354,7 +354,7 @@ export function PackageFormDialog({
             name="sizingMode"
             render={({ field }) => (
               <Tabs value={field.value} onValueChange={field.onChange}>
-                <TabsList variant="segmented" className="w-full">
+                <TabsList className="w-full">
                   <TabsTrigger value="FIXED_COUNT">{t('fixedCount')}</TabsTrigger>
                   <TabsTrigger value="BY_PERIOD">{t('byPeriod')}</TabsTrigger>
                 </TabsList>
@@ -444,10 +444,10 @@ export function PackageFormDialog({
             />
           </div>
           {summary.totalMinor != null ? (
-            <Alert variant="secondary">
+            <Alert>
               <BanknoteIcon />
               <AlertTitle>{t('totalPrice')}</AlertTitle>
-              <AlertDescription className="font-heading text-base font-semibold text-foreground">
+              <AlertDescription className="text-base font-semibold text-foreground">
                 {formatMoneyDisplay(summary.totalMinor, values.currency, locale)}
               </AlertDescription>
             </Alert>
@@ -478,7 +478,7 @@ export function PackageFormDialog({
             {hasSchedule ? (
               <ScheduleFields form={form} values={values} errors={errors} summary={summary} />
             ) : (
-              <Alert variant="secondary">
+              <Alert>
                 <AlertDescription>{t('scheduleDisabledHint')}</AlertDescription>
               </Alert>
             )}
@@ -496,7 +496,7 @@ export function PackageFormDialog({
             name="paymentStatus"
             render={({ field }) => (
               <Tabs value={field.value} onValueChange={field.onChange}>
-                <TabsList variant="segmented" className="w-full">
+                <TabsList className="w-full">
                   <TabsTrigger value="PENDING">{t('paymentPending')}</TabsTrigger>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -522,7 +522,7 @@ export function PackageFormDialog({
                   <FieldError errors={[errors.paidAmount]} />
                 </Field>
               ) : (
-                <Alert variant="secondary" className="self-end">
+                <Alert className="self-end">
                   <AlertDescription>{t('fullPaymentHint')}</AlertDescription>
                 </Alert>
               )}
@@ -743,7 +743,7 @@ function ScheduleFields({
             name="startMode"
             render={({ field }) => (
               <Tabs value={field.value} onValueChange={field.onChange}>
-                <TabsList variant="segmented" className="w-full bg-background/70">
+                <TabsList className="w-full bg-background/70">
                   <TabsTrigger value="TODAY">{t('startToday')}</TabsTrigger>
                   <TabsTrigger value="MANUAL">{t('startManual')}</TabsTrigger>
                 </TabsList>
@@ -783,7 +783,7 @@ function ScheduleFields({
               </Field>
             )}
           />
-          <Alert variant="secondary">
+          <Alert>
             <AlertDescription>
               {t('periodSummary', {
                 count: summary.lessonsCount ?? 0,

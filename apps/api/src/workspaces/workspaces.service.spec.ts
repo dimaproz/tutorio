@@ -20,8 +20,6 @@ const workspaceRow = {
   mode: 'SOLO' as const,
   defaultCurrency: 'EUR',
   cancellationDeadlineHours: 24,
-  primaryColor: '#5D87FF',
-  secondaryColor: '#49BEFF',
   createdAt: NOW,
   updatedAt: NOW,
   deletedAt: null,
@@ -70,8 +68,6 @@ describe('WorkspacesService.updateSettings', () => {
     await service.updateSettings(owner, {
       defaultCurrency: 'UAH',
       cancellationDeadlineHours: 48,
-      primaryColor: '#112233',
-      secondaryColor: '#445566',
     });
 
     expect(prisma.workspace.findFirst.mock.calls[0][0].where).toMatchObject({
@@ -83,8 +79,6 @@ describe('WorkspacesService.updateSettings', () => {
       data: {
         defaultCurrency: 'UAH',
         cancellationDeadlineHours: 48,
-        primaryColor: '#112233',
-        secondaryColor: '#445566',
       },
     });
     expect(prisma.auditLog.create.mock.calls[0][0].data).toMatchObject({
@@ -95,8 +89,6 @@ describe('WorkspacesService.updateSettings', () => {
         fields: {
           defaultCurrency: { before: 'EUR', after: 'UAH' },
           cancellationDeadlineHours: { before: 24, after: 48 },
-          primaryColor: { before: '#5D87FF', after: '#112233' },
-          secondaryColor: { before: '#49BEFF', after: '#445566' },
         },
       },
     });

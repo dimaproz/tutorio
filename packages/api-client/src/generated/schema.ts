@@ -148,7 +148,7 @@ export interface paths {
         options?: never;
         head?: never;
         /**
-         * Update workspace defaults and theme colours
+         * Update workspace defaults
          * @description Owner only. Existing enrollments keep their configured currency and price; enrollments without a custom deadline inherit the new default. Creates a WORKSPACE UPDATE audit entry.
          */
         patch: operations["WorkspacesController_updateSettings"];
@@ -793,8 +793,6 @@ export interface components {
                 mode: "SOLO" | "SCHOOL";
                 defaultCurrency: string;
                 cancellationDeadlineHours: number;
-                primaryColor: string;
-                secondaryColor: string;
             };
             /** @enum {string} */
             role: "OWNER" | "TEACHER";
@@ -833,8 +831,6 @@ export interface components {
                 mode: "SOLO" | "SCHOOL";
                 defaultCurrency: string;
                 cancellationDeadlineHours: number;
-                primaryColor: string;
-                secondaryColor: string;
             };
             /** @enum {string} */
             role: "OWNER" | "TEACHER";
@@ -850,8 +846,6 @@ export interface components {
                 mode: "SOLO" | "SCHOOL";
                 defaultCurrency: string;
                 cancellationDeadlineHours: number;
-                primaryColor: string;
-                secondaryColor: string;
             };
             /** @enum {string} */
             role: "OWNER" | "TEACHER";
@@ -862,8 +856,6 @@ export interface components {
             cancellationDeadlineHours?: number;
             /** @enum {string} */
             mode?: "SOLO" | "SCHOOL";
-            primaryColor?: string;
-            secondaryColor?: string;
         };
         WorkspaceMemberListDto: {
             items: {

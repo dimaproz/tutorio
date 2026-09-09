@@ -72,7 +72,7 @@ export function LessonTargetSection({
                 onTargetChange(value as LessonTarget);
               }}
             >
-              <TabsList variant="segmented" size="default" className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="student" className="w-full">
                   {t('targetStudent')}
                 </TabsTrigger>

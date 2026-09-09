@@ -37,7 +37,7 @@ export function FormSection({
           <Icon className="size-[18px]" />
         </span>
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <h3 className="font-heading text-sm leading-snug font-medium">{title}</h3>
+          <h3 className="text-sm leading-snug font-medium">{title}</h3>
           {description ? (
             <p className="text-sm leading-normal text-muted-foreground">{description}</p>
           ) : null}

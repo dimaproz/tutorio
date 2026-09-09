@@ -166,8 +166,9 @@ manual dark-mode colors are forbidden outside:
 
 The pilot baseline keeps official shadcn theme values. Tutorio may retain only
 domain semantics missing from the default theme, such as `success` and
-`warning`. Workspace branding must remain isolated from core component tokens
-until a later theming decision explicitly defines its behavior.
+`warning`. Workspace colour customization is not a pilot capability. Adding it
+again requires a separate decision that defines its data contract and keeps it
+isolated from core component tokens.
 
 A future redesign should normally touch only:
 
