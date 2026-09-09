@@ -198,14 +198,17 @@ Purpose: replace the current auth presentation with a direct shadcn composition
 while preserving authentication behavior.
 
 Reference: official shadcn `login-03` block for the centered muted-background
-layout. Use its matching registration composition where applicable.
+layout and `signup-03` for its matching registration composition. The approved
+workflow and full screen brief are in
+[`product/authentication.md`](./product/authentication.md).
 
 Primary job: sign in or create an account without distraction.
 
 Composition:
 
 - `Card`, `CardHeader`, `CardContent`, and `CardFooter`;
-- `FieldGroup`, `Field`, `FieldLabel`, `Input`, and existing password control;
+- `FieldGroup`, `Field`, `FieldSet`, `FieldLegend`, `FieldLabel`, `Input`, and
+  the existing password control;
 - `Alert` for request failures;
 - `Button` plus `Spinner` for pending submission;
 - localized product identity and links.
@@ -213,13 +216,33 @@ Composition:
 Scope:
 
 - adapt the block to existing login/register routes and API contracts;
+- replace the illustration-led split layout with the approved centered muted
+  shell and remove the unused auth image asset;
+- keep registration on one page, with descriptive `SOLO`/`SCHOOL` selection and
+  a conditional workspace-name field;
+- introduce at most one feature-owned auth panel shared by login and register,
+  and keep visual forms testable without API, session, or query providers;
 - preserve redirect, refresh, error mapping, keyboard submission, and password
   visibility behavior;
-- add stories and interaction tests for default, invalid, pending, API error,
+- add auth-shell, login, and registration stories plus interaction tests for
+  default, invalid, pending, API error, password visibility, mode switching,
   mobile, dark, Ukrainian, and English states.
 
-No decorative image asset, social authentication, or new auth capability is
+No decorative image asset, social authentication, password recovery,
+remember-me control, legal placeholder, custom theme, or new auth capability is
 introduced by this packet.
+
+Acceptance:
+
+- login and registration match their approved single-column shadcn block
+  composition on desktop and at 320px;
+- registration is one page and reveals workspace name only for `SCHOOL`;
+- validation and request failures retain input, are announced, and focus the
+  first invalid field where applicable;
+- pending state prevents duplicate submission without layout shift;
+- all existing authentication and session tests remain green;
+- Storybook browser tests, accessibility checks, static build, and the complete
+  frontend verification gate pass.
 
 ## Frontend Packet F4 — Authenticated Application Shell
 
