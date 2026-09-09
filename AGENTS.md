@@ -27,8 +27,9 @@
   screen migration starts with an architect-approved brief defining the user
   job, information hierarchy, shadcn block/primitives, reusable product
   components, responsive behavior, and required states.
-- Storybook will become the executable catalog for approved product components
-  during the frontend foundation track. The former `/design` route is retired.
+- Storybook is the executable catalog for approved product components. Changed
+  owned components must update their stories in the same change. The former
+  `/design` route is retired.
 
 The mandatory component hierarchy, theme boundary, and agent workflow are
 defined in [docs/design-system.md](docs/design-system.md). Read it before any
