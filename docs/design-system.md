@@ -29,7 +29,7 @@ defines a clearer user journey.
 
 TailAdmin, Lovable, screenshots, and the current Tutorio page layouts are not
 design authorities. The retired `/design` route must not be recreated.
-Storybook becomes the executable component catalog after Frontend Packet F2.
+Storybook is the executable component catalog for approved UI contracts.
 
 ## Source-of-truth order
 
@@ -223,9 +223,8 @@ interaction tests where behavior exists, and register it in this document.
 - Required runtime states are represented and tested.
 - Desktop/mobile, light/dark, and Ukrainian/English are verified.
 - Changed owned components have current Storybook stories.
-- Web lint, typecheck, unit/interaction tests, and application build pass without
-  warnings. Storybook stories and its static build are additionally mandatory
-  after Frontend Packet F2; before F2, missing Storybook is a tracked foundation
-  gap and must not be replaced with another production component-lab route.
+- Web lint, typecheck, unit/interaction tests, application build, Storybook
+  browser tests, and the Storybook static build pass. Storybook coverage is
+  mandatory for every changed owned component.
 
 See [`frontend-plan.md`](./frontend-plan.md) for the migration sequence.

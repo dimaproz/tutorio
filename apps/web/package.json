@@ -7,9 +7,12 @@
     "dev:clean": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\" && next dev",
     "build": "next build",
     "start": "next start",
+    "storybook": "storybook dev --port 6006",
+    "build-storybook": "storybook build --output-dir storybook-static --disable-telemetry",
+    "test-storybook": "vitest run --project=storybook",
     "lint": "eslint --max-warnings 0 && node scripts/check-ui-architecture.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --project=unit --passWithNoTests"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
@@ -46,13 +49,20 @@
     "zod": "^3.25.67"
   },
   "devDependencies": {
+    "@storybook/addon-a11y": "10.6.0",
+    "@storybook/addon-docs": "10.6.0",
+    "@storybook/addon-vitest": "10.6.0",
+    "@storybook/nextjs-vite": "10.6.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-big-calendar": "^1.16.2",
     "@types/react-dom": "^19",
+    "@vitest/browser": "3.2.7",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
+    "playwright": "1.63.0",
+    "storybook": "10.6.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^3.2.0"

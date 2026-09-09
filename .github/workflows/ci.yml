@@ -55,5 +55,14 @@ jobs:
       - name: Lint, typecheck, test, build
         run: pnpm turbo run lint typecheck test build
 
+      - name: Install Playwright Chromium for Storybook
+        run: pnpm --filter @tutorio/web exec playwright install --with-deps chromium
+
+      - name: Storybook interaction and accessibility tests
+        run: pnpm test-storybook
+
+      - name: Storybook static build
+        run: pnpm build-storybook
+
       - name: API e2e tests
         run: pnpm --filter @tutorio/api test:e2e

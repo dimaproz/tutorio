@@ -141,6 +141,8 @@ Acceptance:
 
 ## Frontend Packet F2 — Storybook Foundation
 
+Status: implemented and independently reviewed on 2026-09-09.
+
 Purpose: make owned component behavior discoverable and testable without a
 production component-lab route.
 
@@ -168,6 +170,27 @@ Acceptance:
 - required providers and both locales render deterministically;
 - interaction and accessibility checks run in automation;
 - Storybook static build is green.
+
+### F2 implementation notes
+
+- Storybook 10 uses the official Next.js/Vite framework with generated docs,
+  browser-mode Vitest interaction tests, and automated accessibility checks.
+  The catalog has no API, session, or query provider dependency.
+- Its deterministic decorator loads Tailwind globals, uses a fixed
+  `next-intl` time and timezone, switches English and Ukrainian messages, and
+  applies the selected light or dark class and document language to portal
+  content as well as the story canvas.
+- Stories document the approved foundation and Tutorio component contracts,
+  including field composition, dialogs, sheets, collection controls, and
+  entity selection. Narrow stories use an explicit 320px container rather
+  than an unconfigured viewport preset.
+- Automated contrast and keyboard-scroll findings require documented primitive
+  deviations: solid destructive Button and Badge treatments, foreground text
+  on tinted semantic badges and Avatar fallbacks, and a focusable Table scroll
+  container. Each affected primitive has Storybook coverage.
+- Root scripts and CI include separate Storybook interaction/accessibility and
+  static-build gates. The implementation passed generation, lint, typecheck,
+  unit tests, production build, Storybook browser tests, and static build.
 
 ## Frontend Packet F3 — Authentication Shell
 
@@ -283,7 +306,8 @@ all feature pages.
 - `pnpm --filter @tutorio/web typecheck`
 - `pnpm --filter @tutorio/web test`
 - `pnpm --filter @tutorio/web build`
-- `pnpm --filter @tutorio/web build-storybook` after F2
+- `pnpm --filter @tutorio/web test-storybook` from F2 onward
+- `pnpm --filter @tutorio/web build-storybook` from F2 onward
 - desktop/mobile, light/dark, Ukrainian/English evidence for visual changes
 
 Root checks remain mandatory before commit. API E2E is required only when a

@@ -171,10 +171,11 @@ simplification. Full scope and gates live in
    official `radix-nova` primitives, neutral tokens, Geist typography,
    dependencies, and automated style-boundary checks without changing
    workflows. Workspace colour customization was removed from the product.
-3. **F2 — Storybook Foundation (next):** add the Next.js/Vite Storybook catalog,
-   interaction tests, accessibility checks, and a static-build gate.
-4. **F3 — Authentication Shell:** adapt official shadcn `login-03` to existing
-   login/register behavior and locales.
+3. **F2 — Storybook Foundation (implemented and reviewed):** added the
+   backend-independent Next.js/Vite catalog, deterministic locale/theme
+   providers, interaction and accessibility coverage, and CI static-build gate.
+4. **F3 — Authentication Shell (next):** adapt official shadcn `login-03` to
+   existing login/register behavior and locales.
 5. **F4 — Authenticated Application Shell:** adapt the shell structure from
    official shadcn `dashboard-01`; preserve routing, permissions, workspace,
    locale, theme, and mobile behavior without importing demo features.

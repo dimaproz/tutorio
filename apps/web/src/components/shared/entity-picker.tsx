@@ -28,6 +28,7 @@ export interface EntityPickerOption {
 /** Searchable, avatar-aware entity picker for forms and collection filters. */
 export function EntityPicker({
   id,
+  'aria-label': ariaLabel,
   value,
   options,
   onChange,
@@ -40,6 +41,7 @@ export function EntityPicker({
   isLoading = false,
 }: {
   id?: string;
+  'aria-label'?: string;
   value?: string;
   options: EntityPickerOption[];
   onChange: (value?: string) => void;
@@ -59,6 +61,7 @@ export function EntityPicker({
       <PopoverTrigger asChild>
         <Button
           id={id}
+          aria-label={ariaLabel}
           type="button"
           variant="outline"
           role="combobox"
@@ -82,7 +85,11 @@ export function EntityPicker({
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+      <PopoverContent
+        aria-label={ariaLabel ?? placeholder}
+        className="w-[--radix-popover-trigger-width] p-0"
+        align="start"
+      >
         <Command>
           <CommandInput placeholder={searchPlaceholder} />
           <CommandList>
@@ -137,6 +144,7 @@ export function EntityMultiSelect({
   searchPlaceholder,
   emptyLabel,
   removeLabel,
+  pickerAriaLabel,
   disabled = false,
   isLoading = false,
 }: {
@@ -147,6 +155,7 @@ export function EntityMultiSelect({
   searchPlaceholder: string;
   emptyLabel: string;
   removeLabel: (name: string) => string;
+  pickerAriaLabel?: string;
   disabled?: boolean;
   isLoading?: boolean;
 }) {
@@ -175,6 +184,7 @@ export function EntityMultiSelect({
         </div>
       ) : null}
       <EntityPicker
+        aria-label={pickerAriaLabel}
         options={available}
         onChange={(id) => id && onChange([...selectedIds, id])}
         placeholder={placeholder}

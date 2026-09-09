@@ -12,6 +12,9 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "generate": "turbo run generate",
+    "storybook": "pnpm --filter @tutorio/web storybook",
+    "build-storybook": "pnpm --filter @tutorio/web build-storybook",
+    "test-storybook": "pnpm --filter @tutorio/web test-storybook",
     "format": "prettier --write \"**/*.{ts,tsx,md,json,yml,yaml}\""
   },
   "devDependencies": {

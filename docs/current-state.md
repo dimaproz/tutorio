@@ -1,7 +1,7 @@
 # Tutorio Current State
 
 Last verified: 2026-09-09 against Work Packet 5 implementation commit
-`e362675` and the Frontend Packet F0 direction reset.
+`e362675` and Frontend Packet F2.
 
 This is the first project document to read before planning or implementing
 work. It reports the repository as it exists; [`mvp-plan.md`](./mvp-plan.md)
@@ -18,8 +18,9 @@ workflows correct, understandable, tested, and recoverable.
 - Branch: `develop`; Work Packet 5 implementation is committed as `e362675`.
 - The former `refactor/students-design` work was merged by PR #18.
 - `pnpm generate`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build`
-  pass on 2026-09-08. Observed unit totals: domain 92, validation 46, API 158,
-  and web 109.
+  pass on 2026-09-09. Observed unit totals: domain 92, validation 46, API 158,
+  and web 109. Storybook browser tests pass for 59 stories across 15 files,
+  including automated accessibility checks, and the static build passes.
 - API E2E passes 78 tests in 6 suites against an isolated PostgreSQL 17
   database after all 20 migrations, including legacy-TEACHER denials, group
   compensation cycles, and package archival. The finance migration verifier
@@ -73,7 +74,21 @@ development-only component catalog. Frontend Packet F1 is complete after an
 independent registry-drift review: the runtime now uses the neutral
 `radix-nova` baseline, Geist, documented primitive exceptions, and automated
 style-boundary checks. Workspace colour customization was removed from the UI,
-API contract, and database. F2 and later frontend packets have not started.
+API contract, and database.
+
+### Frontend Packet F2 evidence
+
+The backend-independent Storybook catalog is implemented with the official
+Next.js/Vite integration, generated docs, deterministic locale and theme
+controls, App Router navigation mocks, browser-mode Vitest interactions, and
+automated accessibility checks. It covers the approved foundation and Tutorio
+form, collection, and entity-picker contracts without an API, session, or
+query provider. CI now makes the Storybook browser suite and deterministic
+static build separate gates. Independent review corrected portal theme/locale
+inheritance, concrete narrow-width stories, and field-hierarchy examples. All
+required generation, lint, typecheck, unit test, production build, Storybook
+test, static build, and whitespace checks pass. F3 is next; F4 and F5 have not
+started.
 
 ### Work Packet 1 evidence
 
@@ -177,9 +192,9 @@ generated client expose the typed `403` contract for owner-only handlers.
   recurrence, timezone, first-lesson calculation, and payment state in one
   modal. A tutor must understand several internal concepts before completing a
   basic sale.
-- Large form components exceed the web architecture target and lack interaction
-  tests. The visual layer is ahead of workflow confidence and still contains
-  TailAdmin-era runtime theme and primitive overrides pending Frontend Packet F1.
+- Large form components exceed the web architecture target and lack workflow-
+  level interaction tests. The primitive baseline and Storybook foundation are
+  stable, but page composition and form simplification remain F3-F7 work.
 - The package list fetches a fixed first page without a complete pagination
   experience. Some non-auth session errors can leave the UI in a permanent
   loading state.
@@ -207,6 +222,6 @@ generated client expose the typed `403` contract for owner-only handlers.
 
 ## Next checkpoint
 
-Frontend Packet F2 — Storybook Foundation is the next implementation packet.
-Work Packet 6 — Student Quick Create begins only after Frontend Packets F2–F5
+Frontend Packet F3 — Authentication Shell is the next implementation packet.
+Work Packet 6 — Student Quick Create begins only after Frontend Packets F3–F5
 pass their gates.
