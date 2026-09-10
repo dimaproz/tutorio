@@ -3,6 +3,7 @@ import { useEffect, type ReactNode } from 'react';
 import { NextIntlClientProvider } from 'next-intl';
 import enMessages from '../messages/en.json';
 import ukMessages from '../messages/uk.json';
+import { fontVariableClasses } from '../src/lib/fonts';
 import '../src/app/globals.css';
 
 const messages = {
@@ -10,17 +11,28 @@ const messages = {
   uk: ukMessages,
 };
 
-function StoryEnvironment({ children, isDark, locale }: { children: ReactNode; isDark: boolean; locale: 'en' | 'uk' }) {
+function StoryEnvironment({
+  children,
+  isDark,
+  locale,
+}: {
+  children: ReactNode;
+  isDark: boolean;
+  locale: 'en' | 'uk';
+}) {
   useEffect(() => {
     const root = document.documentElement;
     const previousLanguage = root.lang;
     const previouslyDark = root.classList.contains('dark');
+    const fontClasses = fontVariableClasses.split(' ');
 
     root.lang = locale;
+    root.classList.add(...fontClasses);
     root.classList.toggle('dark', isDark);
 
     return () => {
       root.lang = previousLanguage;
+      root.classList.remove(...fontClasses);
       root.classList.toggle('dark', previouslyDark);
     };
   }, [isDark, locale]);
@@ -82,7 +94,7 @@ const preview: Preview = {
             now={new Date('2026-09-09T12:00:00.000Z')}
             timeZone="Europe/Kyiv"
           >
-            <div className="min-h-svh bg-background p-4 text-foreground">
+            <div className={`${fontVariableClasses} min-h-svh bg-background p-4 text-foreground`}>
               <Story />
             </div>
           </NextIntlClientProvider>
