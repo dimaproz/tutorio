@@ -1,7 +1,7 @@
 # Tutorio Current State
 
-Last verified: 2026-09-09 against Work Packet 5 implementation commit
-`e362675` and completed Frontend Packet F3.
+Last verified: 2026-09-10 against Work Packet 5 implementation commit
+`e362675`, completed Frontend Packet F3, and the `radix-luma` preset migration.
 
 This is the first project document to read before planning or implementing
 work. It reports the repository as it exists; [`mvp-plan.md`](./mvp-plan.md)
@@ -18,8 +18,8 @@ workflows correct, understandable, tested, and recoverable.
 - Branch: `develop`; Work Packet 5 implementation is committed as `e362675`.
 - The former `refactor/students-design` work was merged by PR #18.
 - `pnpm generate`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build`
-  pass on 2026-09-09. Observed unit totals: domain 92, validation 46, API 158,
-  and web 109. Storybook browser tests pass for 87 stories across 18 files,
+  pass on 2026-09-10. Observed unit totals: domain 92, validation 46, API 158,
+  and web 109. Storybook browser tests pass for 90 tests across 19 files,
   including automated accessibility checks, and the static build passes.
 - API E2E passes 78 tests in 6 suites against an isolated PostgreSQL 17
   database after all 20 migrations, including legacy-TEACHER denials, group
@@ -66,15 +66,15 @@ stack rather than introducing a broad custom redesign. The required order is:
 ### Frontend Packet F0 evidence
 
 ADR 0005 replaces TailAdmin and the current page layouts as design authorities.
-The official shadcn `radix-nova` preset is the pilot baseline; page migrations
+The official shadcn `radix-luma` preset is the pilot baseline; page migrations
 require an architect-approved screen brief and an explicitly named shadcn block
 where applicable. The isolated `/design` route, demo components, and feature
 exports were removed. Active engineering rules now target Storybook as the
 development-only component catalog. Frontend Packet F1 is complete after an
-independent registry-drift review: the runtime now uses the neutral
-`radix-nova` baseline, Geist, documented primitive exceptions, and automated
-style-boundary checks. Workspace colour customization was removed from the UI,
-API contract, and database.
+independent registry-drift review. The current runtime uses the Stone/Blue/Amber
+`radix-luma` baseline from preset `b1Gwk6B7o`, retained Geist typography,
+documented primitive exceptions, and automated style-boundary checks. Workspace
+colour customization was removed from the UI, API contract, and database.
 
 ### Frontend Packet F2 evidence
 

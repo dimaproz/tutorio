@@ -11,7 +11,7 @@ future page work consistent, testable, and inexpensive to restyle.
 
 Before Work Packet 6 starts:
 
-- the official shadcn `radix-nova` preset is the only primitive visual system;
+- the official shadcn `radix-luma` preset is the only primitive visual system;
 - TailAdmin-specific runtime styling and documentation are removed;
 - Storybook is the executable catalog for Tutorio-owned components;
 - login and authenticated application shell use explicitly selected official
@@ -66,8 +66,8 @@ Gate:
 
 Status: implemented and independently reviewed on 2026-09-09.
 
-Purpose: return the runtime visual foundation to a predictable official
-`radix-nova` baseline without changing product workflows.
+Purpose: return the runtime visual foundation to a predictable official shadcn
+baseline without changing product workflows.
 
 Scope:
 
@@ -81,7 +81,7 @@ Scope:
 4. Keep only required Tutorio semantic additions such as `success` and
    `warning`; do not allow workspace branding to alter core primitive tokens.
 5. Switch the root interface font from the TailAdmin-derived Onest choice to
-   the preset's Geist baseline.
+   Geist and keep it as the explicit typography exception during preset changes.
 6. Remove unused UI dependencies after import and build verification. Keep
    Radix as the configured primitive base.
 7. Add automated checks that reject raw product colors, direct `radix-ui`
@@ -103,7 +103,7 @@ Acceptance:
 
 ### F1 implementation notes
 
-- Compared every installed radix-nova primitive with the official registry using
+- Compared every installed primitive with the official registry using
   `shadcn add --dry-run --diff <component>.tsx`: accordion, alert-dialog,
   alert, aspect-ratio, avatar, badge, breadcrumb, bubble, button, calendar,
   card, chart, checkbox, collapsible, command, context-menu, dialog,
@@ -112,7 +112,7 @@ Acceptance:
   navigation-menu, pagination, popover, progress, radio-group, resizable,
   scroll-area, select, separator, sheet, sidebar, skeleton, slider, sonner,
   spinner, switch, table, tabs, textarea, toggle-group, toggle, and tooltip.
-- The neutral radix-nova token baseline and Geist typography replace the legacy
+- The official shadcn token baseline and Geist typography replace the legacy
   TailAdmin foundation. Workspace-level theme customization was removed, so
   application branding cannot alter primitive tokens.
 - Intentional primitive deviations are limited to: `Badge` `success` and
@@ -138,6 +138,13 @@ Acceptance:
   build, full migration deployment, and the affected finance and recurrence
   upgrade verifiers pass. The lifecycle upgrade verifier was also made
   calendar-independent after its fixed future date expired.
+- On 2026-09-10 the installed registry was migrated in place to the official
+  `radix-luma` preset `b1Gwk6B7o`: Stone base, Blue theme, Amber charts, default
+  radius, default/solid menu, and subtle menu accent. Geist and Geist Mono remain
+  the explicit typography exception. The migration retained the documented
+  modal-portal, semantic-status, contrast, reduced-motion, and Tabs safeguards;
+  Storybook regressions cover nested floating controls and vertical keyboard
+  navigation.
 
 ## Frontend Packet F2 — Storybook Foundation
 

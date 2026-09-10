@@ -22,8 +22,11 @@ so humans and agents can reuse the same states and compositions.
 
 ## Decision
 
-Adopt the official shadcn `radix-nova` preset as the sole pilot primitive and
-theme baseline.
+Adopt the official shadcn preset as the sole pilot primitive and theme baseline.
+The current baseline is `radix-luma`, generated from preset `b1Gwk6B7o`: Stone
+base, Blue theme, Amber chart palette, default radius, default/solid menu, and
+subtle menu accent. Retain the existing Geist and Geist Mono typography instead
+of the preset's Inter selection.
 
 - Keep Radix as the configured headless base during pilot stabilization.
 - Use official shadcn components and explicitly named official shadcn blocks as
@@ -68,3 +71,12 @@ Work Packet 6. Do not combine the entire feature-page migration into one change.
   until pilot evidence justifies it.
 - Deploying the F1 migration discards the former workspace colour values. They
   are non-operational presentation preferences and are not migrated elsewhere.
+
+## Amendment — 2026-09-10
+
+The initial F1 implementation used `radix-nova`. After F3 validation, the
+official baseline was migrated in place to `radix-luma` using preset
+`b1Gwk6B7o`. This changes central theme tokens and official primitive styling,
+not product workflows or component boundaries. Existing Geist typography and
+documented accessibility and modal-portal safeguards remain intentional local
+exceptions.

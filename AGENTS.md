@@ -16,7 +16,7 @@
 ## Design / UI
 
 - **The official shadcn registry is the pilot UI baseline.** Use the installed
-  `radix-nova` preset, semantic Tailwind tokens, and the project's Lucide icon
+  `radix-luma` preset, semantic Tailwind tokens, and the project's Lucide icon
   library. Do not introduce another primitive library or visual system.
 - Use https://ui.shadcn.com/docs/components for primitives and
   https://ui.shadcn.com/blocks for page-level starting points. Authentication

@@ -38,7 +38,7 @@ Use the official shadcn `login-03` and `signup-03` blocks as structural
 references. The auth shell uses a full-height `bg-muted` canvas, a compact
 centered column, `GraduationCapIcon` with the localized Tutorio name, and a
 standard `Card`. The locale control stays outside the card in the top right.
-Use only the installed `radix-nova` primitives and semantic tokens.
+Use only the installed `radix-luma` primitives and semantic tokens.
 
 Remove the decorative auth illustration and its two-column layout. Do not add a
 gradient, custom asset, custom shadow/radius, theme picker, or animation library.

@@ -1,6 +1,6 @@
 # Tutorio Design System Contract
 
-Last verified: 2026-09-09.
+Last verified: 2026-09-10.
 
 ## Purpose
 
@@ -17,7 +17,11 @@ defines a clearer user journey.
 
 - Framework: Next.js App Router, React, Tailwind CSS v4.
 - Component distribution: official shadcn registry.
-- Installed preset: `radix-nova`, neutral theme, CSS variables enabled.
+- Installed preset: `radix-luma` from preset `b1Gwk6B7o`, with the Stone base,
+  Blue theme, Amber chart palette, default radius, default/solid menu, subtle
+  menu accent, and CSS variables enabled.
+- Typography exception: Geist and Geist Mono remain the application fonts;
+  the preset's Inter font selection is intentionally not applied.
 - Headless base: Radix. Do not migrate to Base UI during pilot stabilization.
 - Icons: Lucide through the configured shadcn icon library.
 - Motion: the short state-driven transitions shipped with shadcn and
@@ -91,18 +95,18 @@ between `components/app` and `components/shared`, consolidate overlapping APIs,
 or rename it, but feature pages must reuse the registered capability instead of
 creating a parallel implementation.
 
-| Capability | Current component(s) |
-| --- | --- |
-| Page structure and navigation | `PageShell`, `BackButton`, `DetailView` |
-| Collection controls and data display | `CollectionToolbar`, `ListControls`, `DataTable` |
-| Loading and empty states | `LoadingRegion`, `LoadingPanel`, `CollectionEmptyState` |
-| Form composition | `EntityFormDialog`, `FormSection`, `FormActions` |
-| Confirmation and row actions | `ConfirmDialog`, `RowActionsTrigger` |
-| Entity selection | `EntityPicker`, `EntityMultiSelect` |
-| People and identity | `EntityAvatar`, `PersonMiniCard` |
-| Status presentation | `StatusBadge`, `StatusSelect` |
-| Money and metrics | `MoneyInput`, `MetricCard`, `StatTile` |
-| Date and schedule input | `DatePicker`, `AppointmentPicker`, `WeekdayPicker` |
+| Capability                           | Current component(s)                                    |
+| ------------------------------------ | ------------------------------------------------------- |
+| Page structure and navigation        | `PageShell`, `BackButton`, `DetailView`                 |
+| Collection controls and data display | `CollectionToolbar`, `ListControls`, `DataTable`        |
+| Loading and empty states             | `LoadingRegion`, `LoadingPanel`, `CollectionEmptyState` |
+| Form composition                     | `EntityFormDialog`, `FormSection`, `FormActions`        |
+| Confirmation and row actions         | `ConfirmDialog`, `RowActionsTrigger`                    |
+| Entity selection                     | `EntityPicker`, `EntityMultiSelect`                     |
+| People and identity                  | `EntityAvatar`, `PersonMiniCard`                        |
+| Status presentation                  | `StatusBadge`, `StatusSelect`                           |
+| Money and metrics                    | `MoneyInput`, `MetricCard`, `StatTile`                  |
+| Date and schedule input              | `DatePicker`, `AppointmentPicker`, `WeekdayPicker`      |
 
 Registration records reuse intent; it does not certify the component's current
 visual implementation. F1-F5 bring registered components into the new contract.
@@ -166,7 +170,10 @@ manual dark-mode colors are forbidden outside:
 
 The pilot baseline keeps official shadcn theme values. Tutorio may retain only
 domain semantics missing from the default theme, such as `success` and
-`warning`. Workspace colour customization is not a pilot capability. Adding it
+`warning`. Narrow token corrections are permitted when automated accessibility
+tests prove that an upstream preset value misses the required contrast; the
+current baseline corrects the light destructive and dark primary pairs for this
+reason. Workspace colour customization is not a pilot capability. Adding it
 again requires a separate decision that defines its data contract and keeps it
 isolated from core component tokens.
 

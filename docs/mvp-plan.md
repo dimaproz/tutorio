@@ -143,7 +143,7 @@ packages/api-client <- generated OpenAPI contract
   participants, and whether an action can be undone.
 - One obvious primary action per surface. Destructive actions are secondary,
   explicit, and recoverable when possible.
-- Use the official shadcn `radix-nova` baseline and approved Tutorio
+- Use the official shadcn `radix-luma` baseline and approved Tutorio
   compositions. Current page layouts are not visual authority. Design work
   serves task clarity and follows an architect-approved screen brief; it does
   not create parallel primitives or page-specific styling.

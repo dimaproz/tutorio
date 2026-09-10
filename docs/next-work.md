@@ -168,7 +168,7 @@ simplification. Full scope and gates live in
    design authority, and establish shadcn blocks plus architect-owned screen
    briefs.
 2. **F1 — Shadcn Baseline (implemented and reviewed):** normalized all installed
-   official `radix-nova` primitives, neutral tokens, Geist typography,
+   official `radix-luma` primitives, Stone/Blue/Amber tokens, retained Geist typography,
    dependencies, and automated style-boundary checks without changing
    workflows. Workspace colour customization was removed from the product.
 3. **F2 — Storybook Foundation (implemented and reviewed):** added the
