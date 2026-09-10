@@ -1,21 +1,21 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import {
-  CalendarIcon,
-  ContactIcon,
-  GraduationCapIcon,
-  LayoutDashboardIcon,
-  PresentationIcon,
-  PackageIcon,
-  RepeatIcon,
-  SettingsIcon,
-  UsersIcon,
-  WalletIcon,
-} from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { GraduationCapIcon, LogOutIcon, SettingsIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
+import type { AuthMe } from '@tutorio/validation';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Sidebar,
   SidebarContent,
@@ -25,144 +25,209 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarRail,
+  useSidebar,
 } from '@/components/ui/sidebar';
+import { useLogoutMutation } from '@/lib/auth/client';
 import { nameInitials } from '@/lib/utils';
+import {
+  closeMobileNavigation,
+  getNavigationGroups,
+  getSettingsNavigation,
+  isNavigationActive,
+  type NavigationItem,
+} from './app-navigation';
+import { performLogout } from './app-shell-actions';
 import { useIsSoloWorkspace, useSession } from './session-provider';
 
-// Primary product sections (Stage 2 / 2.5).
-type NavItem = {
-  key: string;
-  href: string;
-  icon: typeof LayoutDashboardIcon;
-  exact?: boolean;
-};
-
-const NAV_ITEMS: NavItem[] = [
-  { key: 'dashboard', href: '/app', icon: LayoutDashboardIcon, exact: true },
-  { key: 'students', href: '/app/students', icon: UsersIcon },
-  { key: 'parents', href: '/app/parents', icon: ContactIcon },
-  { key: 'groups', href: '/app/groups', icon: GraduationCapIcon },
-  { key: 'teachers', href: '/app/teachers', icon: PresentationIcon },
-  { key: 'calendar', href: '/app/calendar', icon: CalendarIcon },
-  { key: 'patterns', href: '/app/lessons/patterns', icon: RepeatIcon },
-  { key: 'packages', href: '/app/packages', icon: PackageIcon },
-];
-
-// Enabled in later stages — shown disabled with a "coming soon" badge.
-const UPCOMING_ITEMS: { key: string; icon: typeof WalletIcon }[] = [];
-
-// The shared shadcn sidebar owns row spacing and active/hover states.
-const ITEM_CLASS = '[&_svg]:size-5';
-
-export function AppSidebar() {
+function SidebarNavigationLink({ item, pathname }: { item: NavigationItem; pathname: string }) {
+  const { isMobile, setOpenMobile } = useSidebar();
   const t = useTranslations('app.nav');
-  const tCommon = useTranslations('common');
-  const tRoles = useTranslations('app.userMenu.roles');
-  const pathname = usePathname();
-  const session = useSession();
-  const isOwner = session.role === 'OWNER';
-  // A solo workspace has nothing to browse under "teachers": the only profile
-  // is the owner's own, managed from settings.
-  const isSolo = useIsSoloWorkspace();
-  const navItems = isSolo ? NAV_ITEMS.filter((item) => item.key !== 'teachers') : NAV_ITEMS;
-
-  const isActive = (href: string, exact?: boolean) =>
-    exact ? pathname === href : pathname.startsWith(href);
+  const Icon = item.icon;
+  const isActive = isNavigationActive(pathname, item);
 
   return (
-    <Sidebar collapsible="offcanvas">
-      <SidebarHeader>
-        <div className="flex h-20 items-center gap-2.5 overflow-hidden px-6">
-          <span className="bg-primary text-primary-foreground grid size-9 shrink-0 place-items-center rounded-lg">
-            <GraduationCapIcon className="size-5" aria-hidden="true" />
-          </span>
-          <div className="flex min-w-0 flex-col">
-            <span className="truncate text-sm font-semibold">{tCommon('appName')}</span>
-            <span className="text-muted-foreground truncate text-xs">{session.workspace.name}</span>
-          </div>
-        </div>
-      </SidebarHeader>
+    <SidebarMenuItem>
+      <SidebarMenuButton asChild isActive={isActive} tooltip={t(item.key)}>
+        <Link
+          href={item.href}
+          aria-current={isActive ? 'page' : undefined}
+          onClick={() => closeMobileNavigation(isMobile, setOpenMobile)}
+        >
+          <Icon />
+          <span>{t(item.key)}</span>
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
+}
 
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel className="uppercase">{t('menuLabel')}</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu aria-label={t('label')} className="gap-1">
-              {navItems.map(({ key, href, icon: Icon, exact }) => (
-                <SidebarMenuItem key={key}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive(href, exact)}
-                    className={ITEM_CLASS}
-                  >
-                    <Link href={href}>
-                      <Icon />
-                      <span>{t(key)}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+export function SidebarUserMenu({
+  session,
+  canAccessSettings,
+  isLogoutPending = false,
+  onLogout,
+}: {
+  session: AuthMe;
+  canAccessSettings: boolean;
+  isLogoutPending?: boolean;
+  onLogout: () => void;
+}) {
+  const { isMobile, setOpenMobile } = useSidebar();
+  const t = useTranslations('app.userMenu');
+  const tNav = useTranslations('app.nav');
 
-              {/* Settings is owner-only in the UI; the API enforces it too. */}
-              {isOwner ? (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive('/app/settings')}
-                    className={ITEM_CLASS}
-                  >
-                    <Link href="/app/settings">
-                      <SettingsIcon />
-                      <span>{t('settings')}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ) : null}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {UPCOMING_ITEMS.length > 0 ? (
-          <SidebarGroup>
-            <SidebarGroupLabel className="text-xs font-medium tracking-wider uppercase">
-              {t('comingSoon')}
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu className="gap-1">
-                {UPCOMING_ITEMS.map(({ key, icon: Icon }) => (
-                  <SidebarMenuItem key={key}>
-                    <SidebarMenuButton
-                      aria-disabled="true"
-                      className={`${ITEM_CLASS} pointer-events-none opacity-60`}
+  return (
+    <SidebarMenu>
+      <SidebarMenuItem>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <SidebarMenuButton size="lg" tooltip={t('label')} aria-label={t('label')}>
+              <Avatar>
+                <AvatarFallback>{nameInitials(session.user.name)}</AvatarFallback>
+              </Avatar>
+              <div className="grid min-w-0 flex-1 text-left leading-tight">
+                <span className="truncate">{session.user.name}</span>
+                <span className="truncate text-muted-foreground">{session.user.email}</span>
+              </div>
+            </SidebarMenuButton>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side={isMobile ? 'bottom' : 'right'} align="end" sideOffset={4}>
+            <DropdownMenuLabel>
+              <div className="flex min-w-0 items-center gap-2">
+                <Avatar size="lg">
+                  <AvatarFallback>{nameInitials(session.user.name)}</AvatarFallback>
+                </Avatar>
+                <div className="grid min-w-0 flex-1 gap-0.5">
+                  <span className="truncate text-foreground">{session.user.name}</span>
+                  <span className="truncate">{session.user.email}</span>
+                  <span>{t(`roles.${session.role}`)}</span>
+                </div>
+              </div>
+            </DropdownMenuLabel>
+            {canAccessSettings ? (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href="/app/settings"
+                      onClick={() => closeMobileNavigation(isMobile, setOpenMobile)}
                     >
-                      <Icon />
-                      <span>{t(key)}</span>
-                    </SidebarMenuButton>
-                    <SidebarMenuBadge className="top-3 text-xs text-muted-foreground">
-                      {t('comingSoon')}
-                    </SidebarMenuBadge>
-                  </SidebarMenuItem>
+                      <SettingsIcon />
+                      {tNav('settings')}
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              </>
+            ) : null}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem variant="destructive" disabled={isLogoutPending} onSelect={onLogout}>
+              <LogOutIcon />
+              {t('logout')}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </SidebarMenuItem>
+    </SidebarMenu>
+  );
+}
+
+export function AppSidebarContent({
+  pathname,
+  session,
+  isSolo,
+  isLogoutPending,
+  onLogout,
+}: {
+  pathname: string;
+  session: AuthMe;
+  isSolo: boolean;
+  isLogoutPending?: boolean;
+  onLogout: () => void;
+}) {
+  const t = useTranslations('app.nav');
+  const { isMobile, setOpenMobile } = useSidebar();
+  const access = { isOwner: session.role === 'OWNER', isSolo };
+  const groups = getNavigationGroups(access);
+  const settings = getSettingsNavigation(access);
+
+  return (
+    <Sidebar variant="inset" collapsible="icon">
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild size="lg" tooltip={t('dashboard')}>
+              <Link href="/app" onClick={() => closeMobileNavigation(isMobile, setOpenMobile)}>
+                <GraduationCapIcon />
+                <span className="truncate">Tutorio</span>
+                <span className="truncate text-muted-foreground">{session.workspace.name}</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
+      <SidebarContent>
+        {groups.map((group) => (
+          <SidebarGroup key={group.key}>
+            <SidebarGroupLabel>{t(group.labelKey)}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu aria-label={t(group.labelKey)}>
+                {group.items.map((item) => (
+                  <SidebarNavigationLink key={item.key} item={item} pathname={pathname} />
                 ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
+        {settings ? (
+          <SidebarGroup className="mt-auto">
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarNavigationLink item={settings} pathname={pathname} />
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         ) : null}
       </SidebarContent>
-
       <SidebarFooter>
-        <div className="mx-6 my-4 flex items-center gap-3 overflow-hidden rounded-md border border-border bg-secondary px-4 py-4">
-          <Avatar className="size-9">
-            <AvatarFallback className="text-xs">{nameInitials(session.user.name)}</AvatarFallback>
-          </Avatar>
-          <div className="flex min-w-0 flex-col leading-tight">
-            <span className="truncate text-sm font-medium">{session.user.name}</span>
-            <span className="truncate text-xs text-muted-foreground">{tRoles(session.role)}</span>
-          </div>
-        </div>
+        <SidebarUserMenu
+          session={session}
+          canAccessSettings={settings !== null}
+          isLogoutPending={isLogoutPending}
+          onLogout={onLogout}
+        />
       </SidebarFooter>
+      <SidebarRail />
     </Sidebar>
+  );
+}
+
+export function AppSidebar() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const session = useSession();
+  const isSolo = useIsSoloWorkspace();
+  const logout = useLogoutMutation();
+  const tErrors = useTranslations('auth.errors');
+
+  async function onLogout() {
+    await performLogout({
+      logout: () => logout.mutateAsync(),
+      redirectToLogin: () => router.replace('/login'),
+      reportError: () => toast.error(tErrors('generic')),
+    });
+  }
+
+  return (
+    <AppSidebarContent
+      pathname={pathname}
+      session={session}
+      isSolo={isSolo}
+      isLogoutPending={logout.isPending}
+      onLogout={() => void onLogout()}
+    />
   );
 }

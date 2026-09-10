@@ -1,6 +1,6 @@
 # Active Work Queue
 
-Last verified: 2026-09-09.
+Last verified: 2026-09-10.
 
 This is the short-lived execution queue for Stage 4.1. It answers “what should I
 work on next?” without requiring a developer to re-derive priorities from the
@@ -178,10 +178,12 @@ simplification. Full scope and gates live in
    shadcn `login-03` and `signup-03` to the existing login/register flows;
    registration remains one page and one submission, and all auth behavior is
    preserved.
-5. **F4 — Authenticated Application Shell (next):** adapt the shell structure from
-   official shadcn `dashboard-01`; preserve routing, permissions, workspace,
-   locale, theme, and mobile behavior without importing demo features.
-6. **F5 — Product Composition Boundary:** consolidate shared/app ownership,
+5. **F4 — Authenticated Application Shell (implemented and reviewed):** adapted
+   the `dashboard-01` structure without importing demo features; preserved
+   routing, permissions, session logout, workspace identity, locale, theme,
+   cookie-backed collapse, and mobile Sheet behavior. The typed navigation model
+   and Storybook shell contract are the reusable F4 boundary.
+6. **F5 — Product Composition Boundary (next):** consolidate shared/app ownership,
    document and test the approved list/detail/form compositions, and enforce
    dependency direction.
 

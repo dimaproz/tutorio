@@ -1,6 +1,6 @@
 # Frontend Foundation Plan
 
-Last verified: 2026-09-09.
+Last verified: 2026-09-10.
 
 This plan defines the bounded frontend track that runs before Work Packet 6.
 It replaces the former TailAdmin-led visual work with a maintainable official
@@ -274,6 +274,8 @@ Acceptance:
 
 ## Frontend Packet F4 — Authenticated Application Shell
 
+Status: implemented and verified on 2026-09-10.
+
 Purpose: give every signed-in route one standard responsive CRM frame.
 
 Reference: the shell structure from official shadcn `dashboard-01` using
@@ -306,6 +308,29 @@ Acceptance:
 - all authenticated routes render inside the same shell;
 - desktop collapsed/expanded and mobile navigation work with keyboard and touch;
 - no feature page owns sidebar or header styling.
+
+### Actual result — 2026-09-10
+
+- Adapted the official shadcn `dashboard-01` structure as `SidebarProvider` →
+  `AppSidebar` → `SidebarInset` → sticky `AppHeader` → route content, retaining
+  the installed radix-luma Sidebar cookie preference, Ctrl/Cmd+B shortcut,
+  icon-collapse tooltips, and mobile Sheet behavior.
+- `components/app/app-navigation.ts` is the typed source of truth for grouped
+  navigation, permissions, active-route matching, and neutral detail context.
+  `app-sidebar.tsx` owns the runtime session/logout wrapper and exposes
+  presentational `AppSidebarContent` and `SidebarUserMenu`; `app-header.tsx`
+  exposes `AppHeaderContent` for the route breadcrumb and header controls.
+- The legacy fixed scroll-reactive header, disabled search/notification controls,
+  duplicate header user menu, obsolete content-width cap, and nested route
+  `main` landmarks are removed. The shell now owns responsive content padding;
+  feature pages preserve their existing content only.
+- `app-shell.stories.tsx` covers expanded/collapsed, narrow mobile composition,
+  list/detail context, SOLO/SCHOOL, owner/non-owner visibility, long Ukrainian
+  dark-mode content, and pending logout. Unit and browser assertions cover
+  grouping, route matching, neutral details, mobile close behavior, controls,
+  permissions, toggling, menu opening, and accessibility.
+- Root lint, typecheck, test, and build, Storybook browser/accessibility tests
+  (98 tests across 20 files), the static build, and `git diff --check` pass.
 
 ## Frontend Packet F5 — Product Composition Boundary
 

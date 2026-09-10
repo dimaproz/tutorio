@@ -1,7 +1,7 @@
 # Tutorio Current State
 
 Last verified: 2026-09-10 against Work Packet 5 implementation commit
-`e362675`, completed Frontend Packet F3, and the `radix-luma` preset migration.
+`e362675`, completed Frontend Packet F4, and the `radix-luma` preset migration.
 
 This is the first project document to read before planning or implementing
 work. It reports the repository as it exists; [`mvp-plan.md`](./mvp-plan.md)
@@ -19,7 +19,7 @@ workflows correct, understandable, tested, and recoverable.
 - The former `refactor/students-design` work was merged by PR #18.
 - `pnpm generate`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build`
   pass on 2026-09-10. Observed unit totals: domain 92, validation 46, API 158,
-  and web 109. Storybook browser tests pass for 90 tests across 19 files,
+  and web 115. Storybook browser tests pass for 98 tests across 20 files,
   including automated accessibility checks, and the static build passes.
 - API E2E passes 78 tests in 6 suites against an isolated PostgreSQL 17
   database after all 20 migrations, including legacy-TEACHER denials, group
@@ -56,8 +56,7 @@ stack rather than introducing a broad custom redesign. The required order is:
    ownership, ledger compensation, and package/lesson deletion.
 3. Fix scheduling lifecycle defects: conflict validation, pause behavior,
    effective status, and honest replacement-lesson behavior.
-4. Complete Frontend Packets F1–F5: official shadcn baseline, Storybook,
-   authentication shell, application shell, and reusable composition boundary.
+4. Complete Frontend Packet F5: the reusable composition boundary.
 5. Replace the all-in-one student and package dialogs with progressive,
    task-based flows documented in `product/`.
 6. Run the complete pilot acceptance matrix with realistic seed data and an
@@ -106,7 +105,26 @@ password visibility, keyboard submission, focus, mode changes, retained input,
 links, and automated accessibility. Independent review found and corrected the
 missing constrained 320px story coverage. All required generation, lint,
 typecheck, unit test, production build, Storybook test, static build, and
-whitespace checks pass. F4 is next; F5 has not started.
+whitespace checks pass. F5 has not started.
+
+### Frontend Packet F4 evidence
+
+Authenticated routes now use the official shadcn `dashboard-01` composition:
+`SidebarProvider`, inset/icon-collapsible `AppSidebar`, `SidebarInset`, and a
+sticky `AppHeader`. A typed navigation model owns route context, icons, groups,
+permissions, and active matching; it hides Teachers in SOLO workspaces and
+Settings for non-owners. The Sidebar keeps cookie-backed state, Ctrl/Cmd+B,
+collapsed tooltips, and Sheet mobile navigation that closes after a destination
+is chosen. The consolidated sidebar account menu preserves sign-out mutation,
+pending/error toast behavior, redirect, Settings access, and account context.
+The header has only localized breadcrumb context, locale switching, and the
+existing light/dark toggle; it does not show raw identifiers, duplicate page
+headings, search, notifications, or another account control. Route wrappers
+now avoid a nested main landmark because SidebarInset owns the page landmark.
+Stories and browser interactions cover shell variants and a11y behavior; F5 is
+next and has not started. Root lint, typecheck, test, and build, the 98-test
+Storybook browser/accessibility suite, Storybook static build, and whitespace
+checks pass on 2026-09-10.
 
 ### Work Packet 1 evidence
 
@@ -240,6 +258,6 @@ generated client expose the typed `403` contract for owner-only handlers.
 
 ## Next checkpoint
 
-Frontend Packet F4 — Authenticated Application Shell is the next implementation packet.
+Frontend Packet F5 — Product Composition Boundary is the next implementation packet.
 Work Packet 6 — Student Quick Create begins only after Frontend Packets F3–F5
 pass their gates.

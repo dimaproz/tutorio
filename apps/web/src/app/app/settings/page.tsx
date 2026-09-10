@@ -9,8 +9,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default function SettingsPage() {
   return (
-    <main className="flex flex-1 flex-col gap-6 p-4 md:p-6">
+    <div className="flex flex-1 flex-col gap-6">
       <SettingsView />
-    </main>
+    </div>
   );
 }

@@ -14,8 +14,8 @@ export default async function ParentDetailPage({
 }) {
   const { parentId } = await params;
   return (
-    <main className="flex flex-1 flex-col gap-6 p-4 md:p-6">
+    <div className="flex flex-1 flex-col gap-6">
       <ParentDetailView parentId={parentId} />
-    </main>
+    </div>
   );
 }

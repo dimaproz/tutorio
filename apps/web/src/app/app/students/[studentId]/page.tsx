@@ -14,8 +14,8 @@ export default async function StudentDetailPage({
 }) {
   const { studentId } = await params;
   return (
-    <main className="flex flex-1 flex-col gap-6 p-4 md:p-6">
+    <div className="flex flex-1 flex-col gap-6">
       <StudentDetailView studentId={studentId} />
-    </main>
+    </div>
   );
 }

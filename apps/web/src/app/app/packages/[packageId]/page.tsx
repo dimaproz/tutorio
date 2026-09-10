@@ -14,8 +14,8 @@ export default async function PackageDetailPage({
 }) {
   const { packageId } = await params;
   return (
-    <main className="flex flex-1 flex-col gap-6 p-4 md:p-6">
+    <div className="flex flex-1 flex-col gap-6">
       <PackageDetailView packageId={packageId} />
-    </main>
+    </div>
   );
 }

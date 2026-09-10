@@ -135,7 +135,7 @@ export const NestedPortalControls: Story = {
     await userEvent.keyboard('{Escape}');
 
     await userEvent.click(page.getByRole('button', { name: 'Archive enrollment' }));
-    await expect(page.getByRole('alertdialog')).toBeVisible();
+    await waitFor(() => expect(page.getByRole('alertdialog')).toBeVisible());
     await userEvent.click(page.getByRole('button', { name: 'Cancel' }));
     await waitFor(() => expect(page.queryByRole('alertdialog')).not.toBeInTheDocument());
   },

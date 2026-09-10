@@ -236,8 +236,13 @@
       "packages": "Пакети",
       "settings": "Налаштування",
       "comingSoon": "Незабаром",
-      "patterns": "Розклад",
-      "teachers": "Викладачі"
+      "patterns": "Шаблони уроків",
+      "teachers": "Викладачі",
+      "detail": "Деталі",
+      "mainGroup": "Основне",
+      "peopleGroup": "Люди",
+      "managementGroup": "Керування",
+      "toggle": "Перемкнути бокову панель"
     },
     "sidebar": {
       "toggle": "Перемкнути бокову панель"

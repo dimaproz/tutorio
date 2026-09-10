@@ -236,8 +236,13 @@
       "packages": "Packages",
       "settings": "Settings",
       "comingSoon": "Coming soon",
-      "patterns": "Schedule",
-      "teachers": "Teachers"
+      "patterns": "Lesson Patterns",
+      "teachers": "Teachers",
+      "detail": "Details",
+      "mainGroup": "Main",
+      "peopleGroup": "People",
+      "managementGroup": "Management",
+      "toggle": "Toggle sidebar"
     },
     "sidebar": {
       "toggle": "Toggle sidebar"
