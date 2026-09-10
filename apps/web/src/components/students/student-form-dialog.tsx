@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import type { StudentResponse } from '@tutorio/validation';
-import { EntityFormDialog } from '@/components/shared';
+import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
 import { useStudentQuery } from '@/lib/api/students';
 import { StudentForm } from './student-form';
 

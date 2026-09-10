@@ -14,21 +14,19 @@ import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { SUPPORTED_CURRENCIES } from '@tutorio/domain';
 import type { CreatePackageDto } from '@tutorio/validation';
-import { CurrencyOption } from '@/components/app/currency-option';
-import { DurationInput } from '@/components/app/duration-input';
-import { FormSection } from '@/components/app/form-section';
-import { MoneyInput } from '@/components/app/money-input';
-import { PresetNumberInput } from '@/components/app/preset-number-input';
+import { CurrencyOption } from '@/components/shared/currency-option';
+import { DurationInput } from '@/components/shared/duration-input';
+import { FormSection } from '@/components/shared/form-section';
+import { MoneyInput } from '@/components/shared/money-input';
+import { PresetNumberInput } from '@/components/shared/preset-number-input';
 import { useSession } from '@/components/app/session-provider';
-import { detectTimezone, TimezoneCombobox } from '@/components/app/timezone-combobox';
-import {
-  DatePicker,
-  EntityFormDialog,
-  EntityPicker,
-  FormActions,
-  TimePicker,
-  WeekdayPicker,
-} from '@/components/shared';
+import { detectTimezone, TimezoneCombobox } from '@/components/shared/timezone-combobox';
+import { DatePicker } from '@/components/shared/date-picker';
+import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
+import { EntityPicker } from '@/components/shared/entity-picker';
+import { FormActions } from '@/components/shared/form-actions';
+import { TimePicker } from '@/components/shared/date-picker';
+import { WeekdayPicker } from '@/components/shared/weekday-picker';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   AlertDialog,
@@ -347,7 +345,6 @@ export function PackageFormDialog({
           icon={Settings2Icon}
           title={t('settingsTitle')}
           description={t('settingsDescription')}
-          tone="success"
         >
           <Controller
             control={form.control}
@@ -376,6 +373,7 @@ export function PackageFormDialog({
                       onValueChange={field.onChange}
                       onBlur={field.onBlur}
                       presets={LESSON_PRESETS}
+                      presetsLabel={t('lessonsHint')}
                       formatPreset={(count) => t('lessonsPreset', { count })}
                       hint={t('lessonsHint')}
                       min={1}
@@ -398,6 +396,7 @@ export function PackageFormDialog({
                       onValueChange={field.onChange}
                       onBlur={field.onBlur}
                       presets={VALIDITY_PRESETS}
+                      presetsLabel={t('validityHint')}
                       formatPreset={(days) => t('daysPreset', { days })}
                       hint={t('validityHint')}
                       min={1}
@@ -464,7 +463,7 @@ export function PackageFormDialog({
             icon={CalendarClockIcon}
             title={t('scheduleEnabled')}
             description={t('scheduleHint')}
-            tone="warning"
+
             action={
               <Controller
                 control={form.control}
@@ -489,7 +488,6 @@ export function PackageFormDialog({
           icon={BanknoteIcon}
           title={t('paymentTitle')}
           description={t('paymentDescription')}
-          tone="primary"
         >
           <Controller
             control={form.control}

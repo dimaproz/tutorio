@@ -6,11 +6,11 @@ import { PencilIcon } from 'lucide-react';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { GroupEnrollmentSummary } from '@tutorio/validation';
 import { useLocale, useTranslations } from 'next-intl';
-import { DataTable } from '@/components/app/data-table';
-import { EntityAvatar } from '@/components/app/entity-avatar';
-import { EnrollmentStatusBadge } from '@/components/app/status-badges';
+import { DataTable } from '@/components/shared/data-table';
+import { EntityAvatar } from '@/components/shared/entity-avatar';
+import { EnrollmentStatusBadge } from '@/components/enrollments/enrollment-status';
 import { Button } from '@/components/ui/button';
-import { useLocalSort } from '@/components/app/list-controls';
+import { useLocalSort } from '@/components/shared/list-controls';
 import { formatMoneyDisplay } from '@/lib/money';
 
 /** Group-specific roster columns, kept separate from the workspace student list. */

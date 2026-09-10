@@ -1,7 +1,6 @@
 # Tutorio Current State
 
-Last verified: 2026-09-10 against Work Packet 5 implementation commit
-`e362675`, completed Frontend Packet F4, and the `radix-luma` preset migration.
+Last verified: 2026-09-10 after completing Frontend Packet F5 on `develop`.
 
 This is the first project document to read before planning or implementing
 work. It reports the repository as it exists; [`mvp-plan.md`](./mvp-plan.md)
@@ -19,7 +18,7 @@ workflows correct, understandable, tested, and recoverable.
 - The former `refactor/students-design` work was merged by PR #18.
 - `pnpm generate`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build`
   pass on 2026-09-10. Observed unit totals: domain 92, validation 46, API 158,
-  and web 115. Storybook browser tests pass for 98 tests across 20 files,
+  and web 115. Storybook browser tests pass for 112 tests across 22 files,
   including automated accessibility checks, and the static build passes.
 - API E2E passes 78 tests in 6 suites against an isolated PostgreSQL 17
   database after all 20 migrations, including legacy-TEACHER denials, group
@@ -105,7 +104,7 @@ password visibility, keyboard submission, focus, mode changes, retained input,
 links, and automated accessibility. Independent review found and corrected the
 missing constrained 320px story coverage. All required generation, lint,
 typecheck, unit test, production build, Storybook test, static build, and
-whitespace checks pass. F5 has not started.
+whitespace checks pass.
 
 ### Frontend Packet F4 evidence
 
@@ -121,10 +120,25 @@ The header has only localized breadcrumb context, locale switching, and the
 existing light/dark toggle; it does not show raw identifiers, duplicate page
 headings, search, notifications, or another account control. Route wrappers
 now avoid a nested main landmark because SidebarInset owns the page landmark.
-Stories and browser interactions cover shell variants and a11y behavior; F5 is
-next and has not started. Root lint, typecheck, test, and build, the 98-test
-Storybook browser/accessibility suite, Storybook static build, and whitespace
-checks pass on 2026-09-10.
+Stories and browser interactions cover shell variants and a11y behavior. Root
+lint, typecheck, test, and build, the 98-test Storybook browser/accessibility
+suite, Storybook static build, and whitespace checks pass on 2026-09-10.
+
+### Frontend Packet F5 evidence
+
+The product composition boundary is implemented. `components/app` now owns only
+the authenticated shell; reusable product compositions live in
+`components/shared`, while the dashboard and its dashboard-only `StatTile` live
+in `features/dashboard`. Generic status
+presentation is shared, with lifecycle DTO and localization adapters retained
+by each domain. `CollectionFrame`, `DetailFrame`, and `EntityFormDialog` are
+the documented Storybook reference compositions; their states cover loading,
+error, empty, mobile, and persistent form actions. The architecture check now
+enforces the documented layer direction, including static and literal dynamic
+import paths plus the reviewed session-context/root-layout exceptions. Root
+lint, typecheck, test, build, Storybook browser tests (112 across 22 files),
+Storybook static build, and `git diff --check` pass. Work Packet 6 is the next
+planned work.
 
 ### Work Packet 1 evidence
 
@@ -258,6 +272,7 @@ generated client expose the typed `403` contract for owner-only handlers.
 
 ## Next checkpoint
 
-Frontend Packet F5 — Product Composition Boundary is the next implementation packet.
-Work Packet 6 — Student Quick Create begins only after Frontend Packets F3–F5
-pass their gates.
+Frontend Packet F5 — Product Composition Boundary is complete: shell ownership,
+shared collection/detail/form references, status adapters, Storybook contracts,
+and import-layer enforcement are in place. Work Packet 6 — Student Quick Create
+is the next implementation packet.

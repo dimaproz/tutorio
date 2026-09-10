@@ -183,15 +183,15 @@ simplification. Full scope and gates live in
    routing, permissions, session logout, workspace identity, locale, theme,
    cookie-backed collapse, and mobile Sheet behavior. The typed navigation model
    and Storybook shell contract are the reusable F4 boundary.
-6. **F5 — Product Composition Boundary (next):** consolidate shared/app ownership,
-   document and test the approved list/detail/form compositions, and enforce
-   dependency direction.
+6. **F5 — Product Composition Boundary (implemented):** shared/app ownership,
+   documented/tested collection/detail/form references, and dependency direction
+   enforcement are complete.
 
 Each packet is independently reviewable and deployable. Do not collapse the
 track into a big-bang page rewrite. The current pages remain behavior evidence,
 not visual templates.
 
-## Work Packet 6 — Student Quick Create (queued after F5)
+## Work Packet 6 — Student Quick Create (next)
 
 Implement [`product/students.md`](./product/students.md) after lifecycle behavior
 and the frontend foundation are stable: first write the architect-approved

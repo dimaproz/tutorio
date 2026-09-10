@@ -10,13 +10,6 @@ import type { EnrollmentResponse } from '@tutorio/validation';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
@@ -34,11 +27,14 @@ import { useGroupsQuery } from '@/lib/api/groups';
 import { useStudentsQuery } from '@/lib/api/students';
 import { useTeachersQuery } from '@/lib/api/teachers';
 import { useIsSoloWorkspace, useSession } from '@/components/app/session-provider';
-import { CurrencyOption } from '@/components/app/currency-option';
-import { MoneyInput } from '@/components/app/money-input';
-import { PersonMiniCard } from '@/components/app/person-mini-card';
-import { StatusSelect, useEnrollmentStatusOptions } from '@/components/app/status-select';
-import { EntityPicker } from '@/components/shared';
+import { CurrencyOption } from '@/components/shared/currency-option';
+import { MoneyInput } from '@/components/shared/money-input';
+import { PersonMiniCard } from '@/components/shared/person-mini-card';
+import { StatusSelect } from '@/components/shared/status-select';
+import { useEnrollmentStatusOptions } from '@/components/enrollments/enrollment-status';
+import { EntityPicker } from '@/components/shared/entity-picker';
+import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
+import { FormActions } from '@/components/shared/form-actions';
 import { makeZodErrorMap } from '@/lib/forms/error-map';
 import { enrollmentFormSchema, type EnrollmentFormValues } from '@/features/enrollments/model/form';
 import { formatPriceInput, parsePriceInput } from '@/lib/money';
@@ -249,223 +245,213 @@ export function EnrollmentDialog({
   });
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90vh] flex-col gap-0 p-0 sm:max-w-lg">
-        <DialogHeader className="shrink-0 border-b bg-popover px-6 py-4 pr-12">
-          <DialogTitle>{isEdit ? t('editor.editTitle') : t('editor.createTitle')}</DialogTitle>
-          <DialogDescription>
-            {isEdit ? t('editor.editDescription') : t('editor.createDescription')}
-          </DialogDescription>
-        </DialogHeader>
+    <EntityFormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={isEdit ? t('editor.editTitle') : t('editor.createTitle')}
+      description={isEdit ? t('editor.editDescription') : t('editor.createDescription')}
+      footer={
+        <FormActions>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            {tCommon('cancel')}
+          </Button>
+          <Button form="enrollment-form" type="submit" disabled={mutation.isPending}>
+            {mutation.isPending ? <Spinner data-icon="inline-start" /> : null}
+            {isEdit ? tCommon('save') : t('editor.submitCreate')}
+          </Button>
+        </FormActions>
+      }
+    >
+      <form id="enrollment-form" onSubmit={onSubmit} noValidate>
+        <FieldGroup>
+          {mutation.error ? (
+            <Alert variant="destructive" role="alert">
+              <AlertDescription>{tErrors(errorMessageKey(mutation.error))}</AlertDescription>
+            </Alert>
+          ) : null}
 
-        <form onSubmit={onSubmit} noValidate className="flex min-h-0 flex-1 flex-col">
-          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
-            <FieldGroup>
-              {mutation.error ? (
-                <Alert variant="destructive" role="alert">
-                  <AlertDescription>{tErrors(errorMessageKey(mutation.error))}</AlertDescription>
-                </Alert>
-              ) : null}
-
-              <Field data-invalid={errors.studentId ? true : undefined}>
-                <FieldLabel htmlFor="enrollment-student">{t('editor.student')}</FieldLabel>
-                {studentCard ? (
-                  <PersonMiniCard
-                    avatarKey={studentCard.avatarKey}
-                    fullName={studentCard.fullName}
-                  />
-                ) : (
-                  <EntityPicker
-                    id="enrollment-student"
-                    value={values.studentId}
-                    options={studentOptions}
-                    onChange={(value) => {
-                      if (value) {
-                        form.setValue('studentId', value, { shouldValidate: true });
-                      }
-                    }}
-                    placeholder={t('editor.studentPlaceholder')}
-                    searchPlaceholder={t('editor.studentSearch')}
-                    emptyLabel={t('editor.studentEmpty')}
-                    invalid={Boolean(errors.studentId)}
-                  />
-                )}
-                <FieldError errors={[errors.studentId]} />
-              </Field>
-
-              <Field>
-                <FieldLabel htmlFor="enrollment-group">{t('editor.group')}</FieldLabel>
-                <Select
-                  value={values.groupId}
-                  onValueChange={(value) => form.setValue('groupId', value)}
-                  disabled={isEdit || Boolean(lockedGroupId)}
-                >
-                  <SelectTrigger id="enrollment-group" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value={INDIVIDUAL}>{t('editor.groupNone')}</SelectItem>
-                      {(groups.data?.items ?? []).map((group) => (
-                        <SelectItem key={group.id} value={group.id}>
-                          {group.name}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-                <FieldDescription>{t('editor.groupHint')}</FieldDescription>
-              </Field>
-
-              {/* Solo workspace: the only teacher is implied, never asked for. */}
-              {isSolo ? null : (
-                <Field data-invalid={errors.teacherId ? true : undefined}>
-                  <FieldLabel htmlFor="enrollment-teacher">{t('editor.teacher')}</FieldLabel>
-                  {teacherCard ? (
-                    <PersonMiniCard fullName={teacherCard.name} />
-                  ) : (
-                    <EntityPicker
-                      id="enrollment-teacher"
-                      value={values.teacherId}
-                      options={teacherOptions}
-                      onChange={(value) => {
-                        if (value) {
-                          form.setValue('teacherId', value, { shouldValidate: true });
-                        }
-                      }}
-                      placeholder={t('editor.teacherPlaceholder')}
-                      searchPlaceholder={t('editor.teacherSearch')}
-                      emptyLabel={t('editor.teacherEmpty')}
-                      invalid={Boolean(errors.teacherId)}
-                    />
-                  )}
-                  <FieldError errors={[errors.teacherId]} />
-                </Field>
-              )}
-
-              <Field>
-                <FieldLabel htmlFor="enrollment-status">{t('editor.status')}</FieldLabel>
-                <StatusSelect
-                  id="enrollment-status"
-                  value={values.status}
-                  onValueChange={(value) =>
-                    form.setValue('status', value as EnrollmentFormValues['status'])
+          <Field data-invalid={errors.studentId ? true : undefined}>
+            <FieldLabel htmlFor="enrollment-student">{t('editor.student')}</FieldLabel>
+            {studentCard ? (
+              <PersonMiniCard avatarKey={studentCard.avatarKey} fullName={studentCard.fullName} />
+            ) : (
+              <EntityPicker
+                id="enrollment-student"
+                value={values.studentId}
+                options={studentOptions}
+                onChange={(value) => {
+                  if (value) {
+                    form.setValue('studentId', value, { shouldValidate: true });
                   }
-                  options={statusOptions}
+                }}
+                placeholder={t('editor.studentPlaceholder')}
+                searchPlaceholder={t('editor.studentSearch')}
+                emptyLabel={t('editor.studentEmpty')}
+                invalid={Boolean(errors.studentId)}
+              />
+            )}
+            <FieldError errors={[errors.studentId]} />
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="enrollment-group">{t('editor.group')}</FieldLabel>
+            <Select
+              value={values.groupId}
+              onValueChange={(value) => form.setValue('groupId', value)}
+              disabled={isEdit || Boolean(lockedGroupId)}
+            >
+              <SelectTrigger id="enrollment-group" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value={INDIVIDUAL}>{t('editor.groupNone')}</SelectItem>
+                  {(groups.data?.items ?? []).map((group) => (
+                    <SelectItem key={group.id} value={group.id}>
+                      {group.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            <FieldDescription>{t('editor.groupHint')}</FieldDescription>
+          </Field>
+
+          {/* Solo workspace: the only teacher is implied, never asked for. */}
+          {isSolo ? null : (
+            <Field data-invalid={errors.teacherId ? true : undefined}>
+              <FieldLabel htmlFor="enrollment-teacher">{t('editor.teacher')}</FieldLabel>
+              {teacherCard ? (
+                <PersonMiniCard fullName={teacherCard.name} />
+              ) : (
+                <EntityPicker
+                  id="enrollment-teacher"
+                  value={values.teacherId}
+                  options={teacherOptions}
+                  onChange={(value) => {
+                    if (value) {
+                      form.setValue('teacherId', value, { shouldValidate: true });
+                    }
+                  }}
+                  placeholder={t('editor.teacherPlaceholder')}
+                  searchPlaceholder={t('editor.teacherSearch')}
+                  emptyLabel={t('editor.teacherEmpty')}
+                  invalid={Boolean(errors.teacherId)}
                 />
-              </Field>
+              )}
+              <FieldError errors={[errors.teacherId]} />
+            </Field>
+          )}
 
-              <Field>
-                <FieldLabel htmlFor="enrollment-billing">{t('editor.billingType')}</FieldLabel>
-                <Select
-                  value={values.billingType}
-                  onValueChange={(value) =>
-                    form.setValue('billingType', value as EnrollmentFormValues['billingType'])
-                  }
-                >
-                  <SelectTrigger id="enrollment-billing" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      {BILLING_TYPES.map((billingType) => (
-                        <SelectItem key={billingType} value={billingType}>
-                          {tBilling(billingType)}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </Field>
+          <Field>
+            <FieldLabel htmlFor="enrollment-status">{t('editor.status')}</FieldLabel>
+            <StatusSelect
+              id="enrollment-status"
+              value={values.status}
+              onValueChange={(value) =>
+                form.setValue('status', value as EnrollmentFormValues['status'])
+              }
+              options={statusOptions}
+            />
+          </Field>
 
-              <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
-                <Field data-invalid={errors.price ? true : undefined}>
-                  <FieldLabel htmlFor="enrollment-price">{t('editor.price')}</FieldLabel>
-                  <MoneyInput
-                    id="enrollment-price"
-                    placeholder={t('editor.priceHint')}
-                    aria-invalid={errors.price ? true : undefined}
-                    {...form.register('price')}
-                  />
-                  <FieldError errors={[errors.price]} />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="enrollment-currency">{t('editor.currency')}</FieldLabel>
-                  <Select
-                    value={values.currency}
-                    onValueChange={(value) =>
-                      form.setValue('currency', value as EnrollmentFormValues['currency'])
-                    }
-                  >
-                    <SelectTrigger id="enrollment-currency" className="w-full sm:w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        {SUPPORTED_CURRENCIES.map((currency) => (
-                          <SelectItem key={currency} value={currency}>
-                            <CurrencyOption code={currency} />
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </Field>
-              </div>
+          <Field>
+            <FieldLabel htmlFor="enrollment-billing">{t('editor.billingType')}</FieldLabel>
+            <Select
+              value={values.billingType}
+              onValueChange={(value) =>
+                form.setValue('billingType', value as EnrollmentFormValues['billingType'])
+              }
+            >
+              <SelectTrigger id="enrollment-billing" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {BILLING_TYPES.map((billingType) => (
+                    <SelectItem key={billingType} value={billingType}>
+                      {tBilling(billingType)}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </Field>
 
-              {/* Cancellation deadline: how late a student may cancel a lesson
+          <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
+            <Field data-invalid={errors.price ? true : undefined}>
+              <FieldLabel htmlFor="enrollment-price">{t('editor.price')}</FieldLabel>
+              <MoneyInput
+                id="enrollment-price"
+                placeholder={t('editor.priceHint')}
+                aria-invalid={errors.price ? true : undefined}
+                {...form.register('price')}
+              />
+              <FieldError errors={[errors.price]} />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="enrollment-currency">{t('editor.currency')}</FieldLabel>
+              <Select
+                value={values.currency}
+                onValueChange={(value) =>
+                  form.setValue('currency', value as EnrollmentFormValues['currency'])
+                }
+              >
+                <SelectTrigger id="enrollment-currency" className="w-full sm:w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {SUPPORTED_CURRENCIES.map((currency) => (
+                      <SelectItem key={currency} value={currency}>
+                        <CurrencyOption code={currency} />
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </Field>
+          </div>
+
+          {/* Cancellation deadline: how late a student may cancel a lesson
                   without being charged. */}
-              <Field>
-                <FieldLabel htmlFor="enrollment-custom-deadline">
-                  {t('editor.deadlineTitle')}
-                </FieldLabel>
-                <FieldDescription>{t('editor.deadlineExplain')}</FieldDescription>
-                <label className="flex items-center gap-2 text-sm">
-                  <Checkbox
-                    id="enrollment-custom-deadline"
-                    checked={values.useCustomDeadline}
-                    onCheckedChange={(checked) =>
-                      form.setValue('useCustomDeadline', checked === true)
-                    }
-                  />
-                  {t('editor.policyCustom')}
-                </label>
+          <Field>
+            <FieldLabel htmlFor="enrollment-custom-deadline">
+              {t('editor.deadlineTitle')}
+            </FieldLabel>
+            <FieldDescription>{t('editor.deadlineExplain')}</FieldDescription>
+            <label className="flex items-center gap-2 text-sm">
+              <Checkbox
+                id="enrollment-custom-deadline"
+                checked={values.useCustomDeadline}
+                onCheckedChange={(checked) => form.setValue('useCustomDeadline', checked === true)}
+              />
+              {t('editor.policyCustom')}
+            </label>
 
-                {values.useCustomDeadline ? (
-                  <div data-invalid={errors.cancellationDeadlineHours ? true : undefined}>
-                    <Input
-                      id="enrollment-deadline"
-                      inputMode="numeric"
-                      placeholder={t('editor.customHoursHint')}
-                      aria-invalid={errors.cancellationDeadlineHours ? true : undefined}
-                      onInput={(event) => {
-                        event.currentTarget.value = event.currentTarget.value.replace(/\D/g, '');
-                      }}
-                      {...form.register('cancellationDeadlineHours')}
-                    />
-                    <FieldError errors={[errors.cancellationDeadlineHours]} />
-                  </div>
-                ) : null}
+            {values.useCustomDeadline ? (
+              <div data-invalid={errors.cancellationDeadlineHours ? true : undefined}>
+                <Input
+                  id="enrollment-deadline"
+                  inputMode="numeric"
+                  placeholder={t('editor.customHoursHint')}
+                  aria-invalid={errors.cancellationDeadlineHours ? true : undefined}
+                  onInput={(event) => {
+                    event.currentTarget.value = event.currentTarget.value.replace(/\D/g, '');
+                  }}
+                  {...form.register('cancellationDeadlineHours')}
+                />
+                <FieldError errors={[errors.cancellationDeadlineHours]} />
+              </div>
+            ) : null}
 
-                <FieldDescription aria-live="polite">
-                  {t('editor.effective', { hours: effectiveDeadline })}
-                  {values.useCustomDeadline ? '' : ` ${t('editor.policyDefault')}`}
-                </FieldDescription>
-              </Field>
-            </FieldGroup>
-          </div>
-
-          <div className="flex shrink-0 flex-col gap-2 border-t px-6 py-4 sm:flex-row sm:justify-end">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              {tCommon('cancel')}
-            </Button>
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? <Spinner data-icon="inline-start" /> : null}
-              {isEdit ? tCommon('save') : t('editor.submitCreate')}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+            <FieldDescription aria-live="polite">
+              {t('editor.effective', { hours: effectiveDeadline })}
+              {values.useCustomDeadline ? '' : ` ${t('editor.policyDefault')}`}
+            </FieldDescription>
+          </Field>
+        </FieldGroup>
+      </form>
+    </EntityFormDialog>
   );
 }

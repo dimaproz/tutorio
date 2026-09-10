@@ -4,10 +4,10 @@ import { useCallback, useMemo, useState } from 'react';
 import { CalendarIcon, PlusIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { LessonResponse } from '@tutorio/validation';
-import { SectionTitle } from '@/components/app/detail-view';
+import { SectionTitle } from '@/components/shared/detail-view';
 import { Button } from '@/components/ui/button';
 import { Card, CardAction, CardContent, CardHeader } from '@/components/ui/card';
-import { LoadingPanel } from '@/components/shared';
+import { LoadingPanel } from '@/components/shared/loading';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLessonsQuery } from '@/lib/api/scheduling';
@@ -51,9 +51,7 @@ export function StudentLessonsCard({ studentId }: { studentId: string }) {
     return {
       upcoming: items.filter((item) => new Date(item.startsAtUtc).getTime() >= now),
       // Most recent first — the tutor looks backwards from today.
-      past: items
-        .filter((item) => new Date(item.startsAtUtc).getTime() < now)
-        .reverse(),
+      past: items.filter((item) => new Date(item.startsAtUtc).getTime() < now).reverse(),
     };
   }, [lessons.data, now]);
 
@@ -67,9 +65,7 @@ export function StudentLessonsCard({ studentId }: { studentId: string }) {
   return (
     <Card>
       <CardHeader>
-        <SectionTitle icon={CalendarIcon} tone="primary">
-          {t('title')}
-        </SectionTitle>
+        <SectionTitle icon={CalendarIcon}>{t('title')}</SectionTitle>
         <CardAction>
           <Button type="button" size="sm" onClick={() => setFormOpen(true)}>
             <PlusIcon data-icon="inline-start" />
@@ -118,11 +114,7 @@ export function StudentLessonsCard({ studentId }: { studentId: string }) {
         lesson={selected}
         initialMode={actionsMode}
       />
-      <LessonFormDialog
-        open={formOpen}
-        onOpenChange={setFormOpen}
-        lockedStudentId={studentId}
-      />
+      <LessonFormDialog open={formOpen} onOpenChange={setFormOpen} lockedStudentId={studentId} />
     </Card>
   );
 }

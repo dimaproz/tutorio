@@ -356,6 +356,25 @@ Gate to Work Packet 6:
 - an agent can find the correct component without inspecting unrelated pages;
 - all existing routes remain green.
 
+### Actual result — 2026-09-10
+
+- `components/app` now contains authenticated-shell ownership only. Reusable
+  product compositions moved to `components/shared`; dashboard query behavior
+  and its dashboard-only metric moved to `features/dashboard`.
+- `CollectionFrame`, `DetailFrame`, and the upgraded `EntityFormDialog` are the
+  documented reference frames. The existing enrollment workflow now uses the
+  standard form overlay with a persistent action footer.
+- `StatusBadge` and `StatusSelect` are generic shared presentation contracts;
+  lifecycle DTO/localization mappings remain in student, enrollment, group,
+  lesson, package, and teacher domain modules. `MetricCard` remains shared while
+  `StatTile` is dashboard-only. Decorative section-tone icon squares are gone
+  and profile tags use shadcn `Badge`.
+- `check-ui-architecture.mjs` now rejects product files in `components/app`,
+  shared-to-shell/feature imports, UI-to-product imports, feature-to-shell
+  imports except the documented session context, and routes that compose shared
+  or UI layers directly. Storybook documents reference mobile, loading, error,
+  empty, and form-footer states.
+
 ## Work Packet 6 handoff — Student Quick Create
 
 Work Packet 6 is the first feature migration on the new foundation. Before code

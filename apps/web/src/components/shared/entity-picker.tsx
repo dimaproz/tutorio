@@ -2,8 +2,8 @@
 
 import { useState, type ReactNode } from 'react';
 import { CheckIcon, ChevronsUpDownIcon } from 'lucide-react';
-import { EntityAvatar } from '@/components/app/entity-avatar';
-import { PersonMiniCard } from '@/components/app/person-mini-card';
+import { EntityAvatar } from '@/components/shared/entity-avatar';
+import { PersonMiniCard } from '@/components/shared/person-mini-card';
 import { Button } from '@/components/ui/button';
 import {
   Command,

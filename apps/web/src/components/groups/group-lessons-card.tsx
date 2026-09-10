@@ -10,9 +10,9 @@ import {
 } from 'lucide-react';
 import type { LessonResponse } from '@tutorio/validation';
 import { useTranslations } from 'next-intl';
-import { MetricCard } from '@/components/app/metric-card';
-import { SectionTitle } from '@/components/app/detail-view';
-import { LessonStatusBadge } from '@/components/app/status-badges';
+import { MetricCard } from '@/components/shared/metric-card';
+import { SectionTitle } from '@/components/shared/detail-view';
+import { LessonStatusBadge } from '@/components/scheduling/lesson-status';
 import { LessonFormDialog } from '@/components/scheduling/lesson-form-dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardAction, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
@@ -62,9 +62,7 @@ export function GroupLessonsCard({
     <>
       <Card>
         <CardHeader>
-          <SectionTitle icon={CalendarCheck2Icon} tone="primary">
-            {t('lessonsTitle')}
-          </SectionTitle>
+          <SectionTitle icon={CalendarCheck2Icon}>{t('lessonsTitle')}</SectionTitle>
           <CardDescription>{t('lessonsDescription', { count: lessons.length })}</CardDescription>
           <CardAction>
             <Button type="button" size="sm" onClick={() => setFormOpen(true)}>
@@ -77,25 +75,25 @@ export function GroupLessonsCard({
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <MetricCard
               icon={CalendarCheck2Icon}
-              tone="success"
+
               label={t('lessonStats.completed')}
               value={summary.completed}
             />
             <MetricCard
               icon={CalendarClockIcon}
-              tone="primary"
+
               label={t('lessonStats.scheduled')}
               value={summary.scheduled}
             />
             <MetricCard
               icon={CalendarX2Icon}
-              tone="destructive"
+
               label={t('lessonStats.cancelled')}
               value={summary.cancelled}
             />
             <MetricCard
               icon={Repeat2Icon}
-              tone="warning"
+
               label={t('lessonStats.rescheduled')}
               value={summary.rescheduled}
             />

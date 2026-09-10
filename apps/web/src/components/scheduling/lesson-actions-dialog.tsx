@@ -11,14 +11,10 @@ import {
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import {
-  cancellationTiming,
-  hoursUntil,
-  suggestedCancellationStatus,
-} from '@tutorio/domain';
+import { cancellationTiming, hoursUntil, suggestedCancellationStatus } from '@tutorio/domain';
 import type { CancelledByDto, LessonResponse } from '@tutorio/validation';
-import { ConfirmDialog } from '@/components/app/confirm-dialog';
-import { LessonStatusBadge } from '@/components/app/status-badges';
+import { ConfirmDialog } from '@/components/shared/confirm-dialog';
+import { LessonStatusBadge } from '@/components/scheduling/lesson-status';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -41,7 +37,7 @@ import {
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
-import { DateTimePicker } from '@/components/shared';
+import { DateTimePicker } from '@/components/shared/date-picker';
 import { errorMessageKey } from '@/lib/api/error-message';
 import {
   useDeleteLessonMutation,
@@ -115,9 +111,7 @@ export function LessonActionsDialog({
     setScope('this');
     // Preselect what the deadline implies; the tutor can still override it.
     setCharged(
-      suggestedCancellationStatus(timing) === 'CANCELLED_CHARGED'
-        ? 'charged'
-        : 'uncharged',
+      suggestedCancellationStatus(timing) === 'CANCELLED_CHARGED' ? 'charged' : 'uncharged',
     );
   }
   if (!open && openedFor !== null) {
@@ -128,8 +122,7 @@ export function LessonActionsDialog({
     return null;
   }
 
-  const anyError =
-    transition.error ?? reschedule.error ?? deleteLesson.error ?? updateLesson.error;
+  const anyError = transition.error ?? reschedule.error ?? deleteLesson.error ?? updateLesson.error;
   const isScheduled = lesson.status === 'SCHEDULED';
   const notesDirty = notes !== (lesson.notes ?? '');
 
@@ -186,8 +179,7 @@ export function LessonActionsDialog({
   };
 
   const title = lesson.student?.fullName ?? lesson.group?.name ?? t('title');
-  const busy =
-    transition.isPending || reschedule.isPending || deleteLesson.isPending;
+  const busy = transition.isPending || reschedule.isPending || deleteLesson.isPending;
 
   return (
     <>
@@ -221,19 +213,11 @@ export function LessonActionsDialog({
                       <CheckIcon data-icon="inline-start" />
                       {t('complete')}
                     </Button>
-                    <Button
-                      variant="outline"
-                      disabled={busy}
-                      onClick={() => setMode('reschedule')}
-                    >
+                    <Button variant="outline" disabled={busy} onClick={() => setMode('reschedule')}>
                       <CalendarClockIcon data-icon="inline-start" />
                       {t('reschedule')}
                     </Button>
-                    <Button
-                      variant="destructive"
-                      disabled={busy}
-                      onClick={() => setMode('cancel')}
-                    >
+                    <Button variant="destructive" disabled={busy} onClick={() => setMode('cancel')}>
                       <XCircleIcon data-icon="inline-start" />
                       {t('cancel')}
                     </Button>
@@ -291,11 +275,7 @@ export function LessonActionsDialog({
             <div className="flex flex-col gap-4">
               <Field>
                 <FieldLabel htmlFor="lesson-new-start">{t('newTime')}</FieldLabel>
-                <DateTimePicker
-                  id="lesson-new-start"
-                  value={newStart}
-                  onChange={setNewStart}
-                />
+                <DateTimePicker id="lesson-new-start" value={newStart} onChange={setNewStart} />
               </Field>
 
               {/* Only a series lesson can move its followers. */}
@@ -304,9 +284,7 @@ export function LessonActionsDialog({
                   <FieldLabel htmlFor="lesson-scope">{t('scope')}</FieldLabel>
                   <Select
                     value={scope}
-                    onValueChange={(value) =>
-                      setScope(value as 'this' | 'this_and_following')
-                    }
+                    onValueChange={(value) => setScope(value as 'this' | 'this_and_following')}
                   >
                     <SelectTrigger id="lesson-scope" className="w-full">
                       <SelectValue />
@@ -314,9 +292,7 @@ export function LessonActionsDialog({
                     <SelectContent>
                       <SelectGroup>
                         <SelectItem value="this">{t('scopeThis')}</SelectItem>
-                        <SelectItem value="this_and_following">
-                          {t('scopeFollowing')}
-                        </SelectItem>
+                        <SelectItem value="this_and_following">{t('scopeFollowing')}</SelectItem>
                       </SelectGroup>
                     </SelectContent>
                   </Select>
@@ -342,17 +318,11 @@ export function LessonActionsDialog({
               <Field>
                 <FieldLabel>{tCancel('charge')}</FieldLabel>
                 <RadioGroup value={charged} onValueChange={setCharged}>
-                  <FieldLabel
-                    htmlFor="charge-yes"
-                    className="flex items-center gap-2 font-normal"
-                  >
+                  <FieldLabel htmlFor="charge-yes" className="flex items-center gap-2 font-normal">
                     <RadioGroupItem id="charge-yes" value="charged" />
                     {tCancel('charged')}
                   </FieldLabel>
-                  <FieldLabel
-                    htmlFor="charge-no"
-                    className="flex items-center gap-2 font-normal"
-                  >
+                  <FieldLabel htmlFor="charge-no" className="flex items-center gap-2 font-normal">
                     <RadioGroupItem id="charge-no" value="uncharged" />
                     {tCancel('uncharged')}
                   </FieldLabel>
@@ -416,9 +386,7 @@ export function LessonActionsDialog({
                     onClick={() =>
                       void runTransition({
                         targetStatus:
-                          charged === 'charged'
-                            ? 'CANCELLED_CHARGED'
-                            : 'CANCELLED_UNCHARGED',
+                          charged === 'charged' ? 'CANCELLED_CHARGED' : 'CANCELLED_UNCHARGED',
                         cancelledBy,
                         cancelledReason: reason || null,
                       })

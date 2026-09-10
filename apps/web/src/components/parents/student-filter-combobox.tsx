@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { EntityPicker } from '@/components/shared';
+import { EntityPicker } from '@/components/shared/entity-picker';
 import { useStudentsQuery } from '@/lib/api/students';
 
 /** Parent-list filter backed by the shared avatar-aware entity picker. */

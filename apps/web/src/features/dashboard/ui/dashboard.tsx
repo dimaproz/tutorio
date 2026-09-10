@@ -2,24 +2,15 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import {
-  endOfDay,
-  endOfWeek,
-  startOfDay,
-  startOfWeek,
-} from 'date-fns';
-import {
-  CalendarCheckIcon,
-  CalendarIcon,
-  ChevronRightIcon,
-  SparklesIcon,
-} from 'lucide-react';
+import { endOfDay, endOfWeek, startOfDay, startOfWeek } from 'date-fns';
+import { CalendarCheckIcon, CalendarIcon, ChevronRightIcon, SparklesIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { LessonResponse } from '@tutorio/validation';
 import { LessonActionsDialog } from '@/components/scheduling/lesson-actions-dialog';
-import { QueryErrorAlert } from '@/components/app/page-shell';
-import { LessonStatusBadge } from '@/components/app/status-badges';
-import { LoadingPanel, StatTile } from '@/components/shared';
+import { QueryErrorAlert } from '@/components/shared/page-shell';
+import { LessonStatusBadge } from '@/components/scheduling/lesson-status';
+import { LoadingPanel } from '@/components/shared/loading';
+import { StatTile } from './stat-tile';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -40,7 +31,7 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { useLessonsQuery } from '@/lib/api/scheduling';
 import { useDateFormatters } from '@/lib/i18n/format';
-import { useSession } from './session-provider';
+import { useSession } from '@/components/app/session-provider';
 
 export function DashboardWelcome() {
   const t = useTranslations('app.dashboard');
@@ -99,10 +90,7 @@ export function DashboardToday() {
         const at = new Date(lesson.startsAtUtc).getTime();
         return at >= from && at <= to;
       })
-      .sort(
-        (a, b) =>
-          new Date(a.startsAtUtc).getTime() - new Date(b.startsAtUtc).getTime(),
-      );
+      .sort((a, b) => new Date(a.startsAtUtc).getTime() - new Date(b.startsAtUtc).getTime());
   }, [items]);
 
   const dateLabel = format.weekdayLongDate(new Date());
@@ -120,22 +108,11 @@ export function DashboardToday() {
     );
   }
 
-
   return (
     <div className="flex flex-col gap-6">
       <div className="grid gap-4 sm:grid-cols-2">
-        <StatTile
-          label={t('lessonsToday')}
-          value={today.length}
-          icon={CalendarIcon}
-          tone="primary"
-        />
-        <StatTile
-          label={t('lessonsWeek')}
-          value={items.length}
-          icon={CalendarCheckIcon}
-          tone="success"
-        />
+        <StatTile label={t('lessonsToday')} value={today.length} icon={CalendarIcon} />
+        <StatTile label={t('lessonsWeek')} value={items.length} icon={CalendarCheckIcon} />
       </div>
 
       <Card>
@@ -147,9 +124,7 @@ export function DashboardToday() {
           <CardDescription className="capitalize">{dateLabel}</CardDescription>
           <CardAction className="flex items-center gap-2">
             {/* A background refresh should be visible but must not blank the list. */}
-            {lessons.isFetching ? (
-              <Spinner className="text-muted-foreground size-3.5" />
-            ) : null}
+            {lessons.isFetching ? <Spinner className="text-muted-foreground size-3.5" /> : null}
             <Button asChild variant="outline" size="sm">
               <Link href="/app/calendar">{t('openCalendar')}</Link>
             </Button>
@@ -164,9 +139,7 @@ export function DashboardToday() {
                 <EmptyMedia variant="icon">
                   <CalendarIcon />
                 </EmptyMedia>
-                <EmptyTitle>
-                  {items.length === 0 ? t('noneThisWeek') : t('noToday')}
-                </EmptyTitle>
+                <EmptyTitle>{items.length === 0 ? t('noneThisWeek') : t('noToday')}</EmptyTitle>
                 <EmptyDescription>{t('noneThisWeekHint')}</EmptyDescription>
               </EmptyHeader>
               <EmptyContent>

@@ -5,8 +5,8 @@ import { ClockIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { StudentListItem } from '@tutorio/validation';
 import { StudentRowActions } from './student-row-actions';
-import { StudentStatusBadge } from '@/components/app/status-badges';
-import { EntityAvatar } from '@/components/app/entity-avatar';
+import { StudentStatusBadge } from '@/components/students/student-status';
+import { EntityAvatar } from '@/components/shared/entity-avatar';
 import {
   Card,
   CardAction,

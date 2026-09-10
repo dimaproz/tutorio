@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { UserRoundIcon } from 'lucide-react';
-import { FormSection } from '@/components/app/form-section';
+import { FormSection } from '@/components/shared/form-section';
 import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
 import { FormActions } from '@/components/shared/form-actions';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,13 @@ import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { NarrowStoryContainer } from './story-helpers';
 
-function EntityFormDialogContract({ initiallyOpen = false, isLoading = false }: { initiallyOpen?: boolean; isLoading?: boolean }) {
+function EntityFormDialogContract({
+  initiallyOpen = false,
+  isLoading = false,
+}: {
+  initiallyOpen?: boolean;
+  isLoading?: boolean;
+}) {
   const [open, setOpen] = useState(initiallyOpen);
 
   return (
@@ -22,9 +28,23 @@ function EntityFormDialogContract({ initiallyOpen = false, isLoading = false }: 
         title="New student"
         description="Only the name and timezone are required."
         isLoading={isLoading}
+        footer={
+          <FormActions>
+            <Button variant="outline" type="button" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="button" disabled={isLoading}>
+              {isLoading ? 'Creating student' : 'Create student'}
+            </Button>
+          </FormActions>
+        }
       >
         <div className="flex flex-col gap-6">
-          <FormSection icon={UserRoundIcon} title="Basic information" description="Use the student's preferred full name.">
+          <FormSection
+            icon={UserRoundIcon}
+            title="Basic information"
+            description="Use the student's preferred full name."
+          >
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="student-full-name">Full name</FieldLabel>
@@ -32,10 +52,6 @@ function EntityFormDialogContract({ initiallyOpen = false, isLoading = false }: 
               </Field>
             </FieldGroup>
           </FormSection>
-          <FormActions>
-            <Button variant="outline" type="button" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button type="button">Create student</Button>
-          </FormActions>
         </div>
       </EntityFormDialog>
     </>

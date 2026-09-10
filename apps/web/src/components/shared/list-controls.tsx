@@ -23,9 +23,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { StatusRow } from '@/components/app/status-select';
+import { StatusRow } from '@/components/shared/status-select';
 import { buildPageSlots, PAGE_ELLIPSIS } from '@/lib/pagination';
-import type { StatusIcon, StatusTone } from '@/components/app/status-meta';
+import type { StatusIcon, StatusTone } from '@/components/shared/status-meta';
 
 // Search, state filter and pagination all write to the URL, so a list view is
 // shareable and the browser back button behaves as users expect.

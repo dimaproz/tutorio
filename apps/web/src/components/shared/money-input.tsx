@@ -23,20 +23,19 @@ export function sanitizeAmount(raw: string): string {
 // "no letters in price" rule lives in exactly one place. Works with
 // react-hook-form: spread `{...form.register('price')}` onto it; the register's
 // onChange is wrapped to sanitise before RHF sees the value.
-export const MoneyInput = React.forwardRef<
-  HTMLInputElement,
-  React.ComponentProps<typeof Input>
->(function MoneyInput({ onChange, ...props }, ref) {
-  return (
-    <Input
-      ref={ref}
-      inputMode="decimal"
-      autoComplete="off"
-      onChange={(event) => {
-        event.target.value = sanitizeAmount(event.target.value);
-        onChange?.(event);
-      }}
-      {...props}
-    />
-  );
-});
+export const MoneyInput = React.forwardRef<HTMLInputElement, React.ComponentProps<typeof Input>>(
+  function MoneyInput({ onChange, ...props }, ref) {
+    return (
+      <Input
+        ref={ref}
+        inputMode="decimal"
+        autoComplete="off"
+        onChange={(event) => {
+          event.target.value = sanitizeAmount(event.target.value);
+          onChange?.(event);
+        }}
+        {...props}
+      />
+    );
+  },
+);

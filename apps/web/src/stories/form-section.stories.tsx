@@ -1,32 +1,45 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { StickyNoteIcon } from 'lucide-react';
-import { FormSection } from '@/components/app/form-section';
+import { FormSection } from '@/components/shared/form-section';
 import { FormActions } from '@/components/shared/form-actions';
 import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { NarrowStoryContainer } from './story-helpers';
 
-function FormCompositionContract({ invalid = false, submitting = false }: { invalid?: boolean; submitting?: boolean }) {
+function FormCompositionContract({
+  invalid = false,
+  submitting = false,
+}: {
+  invalid?: boolean;
+  submitting?: boolean;
+}) {
   return (
     <form className="flex max-w-xl flex-col gap-6">
       <FormSection
         icon={StickyNoteIcon}
         title="Notes"
         description="Optional context for the next lesson."
-        tone={invalid ? 'destructive' : 'neutral'}
       >
         <FieldGroup>
           <Field data-invalid={invalid || undefined}>
             <FieldLabel htmlFor="lesson-note">Note</FieldLabel>
-            <Input id="lesson-note" aria-invalid={invalid || undefined} placeholder="Goals and preferences" />
+            <Input
+              id="lesson-note"
+              aria-invalid={invalid || undefined}
+              placeholder="Goals and preferences"
+            />
             {invalid ? <FieldError>Add a reason before saving.</FieldError> : null}
           </Field>
         </FieldGroup>
       </FormSection>
       <FormActions>
-        <Button type="button" variant="outline">Cancel</Button>
-        <Button type="submit" disabled={submitting}>{submitting ? 'Saving changes' : 'Save changes'}</Button>
+        <Button type="button" variant="outline">
+          Cancel
+        </Button>
+        <Button type="submit" disabled={submitting}>
+          {submitting ? 'Saving changes' : 'Save changes'}
+        </Button>
       </FormActions>
     </form>
   );
@@ -51,5 +64,9 @@ export const Loading: Story = {
 };
 
 export const NarrowMobile: Story = {
-  render: () => <NarrowStoryContainer><FormCompositionContract /></NarrowStoryContainer>,
+  render: () => (
+    <NarrowStoryContainer>
+      <FormCompositionContract />
+    </NarrowStoryContainer>
+  ),
 };

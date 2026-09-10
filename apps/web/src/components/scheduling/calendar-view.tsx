@@ -2,12 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import {
-  Calendar,
-  dateFnsLocalizer,
-  type View,
-  type Event as RbcEvent,
-} from 'react-big-calendar';
+import { Calendar, dateFnsLocalizer, type View, type Event as RbcEvent } from 'react-big-calendar';
 import withDragAndDrop, {
   type EventInteractionArgs,
 } from 'react-big-calendar/lib/addons/dragAndDrop';
@@ -36,14 +31,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { LoadingPanel } from '@/components/shared';
+import { LoadingPanel } from '@/components/shared/loading';
 import { Spinner } from '@/components/ui/spinner';
-import { PageHeader } from '@/components/app/page-shell';
+import { PageHeader } from '@/components/shared/page-shell';
 import { useIsSoloWorkspace } from '@/components/app/session-provider';
-import {
-  useLessonsQuery,
-  useRescheduleLessonMutation,
-} from '@/lib/api/scheduling';
+import { useLessonsQuery, useRescheduleLessonMutation } from '@/lib/api/scheduling';
 import { useTeachersQuery } from '@/lib/api/teachers';
 import { LessonActionsDialog } from './lesson-actions-dialog';
 import { LessonFormDialog } from './lesson-form-dialog';
@@ -179,8 +171,7 @@ export function CalendarView() {
         toast.error(tConflict('message'), {
           action: {
             label: tConflict('force'),
-            onClick: () =>
-              void reschedule.mutateAsync({ lessonId: lesson.id, dto, force: true }),
+            onClick: () => void reschedule.mutateAsync({ lessonId: lesson.id, dto, force: true }),
           },
         });
         return;
@@ -302,9 +293,7 @@ export function CalendarView() {
                   className: STATUS_CLASS[status as LessonResponse['status']],
                   // The status owns the fill; the teacher's own colour rides on
                   // the left rail so a shared calendar stays readable.
-                  ...(teacher.color
-                    ? { style: { borderLeftColor: teacher.color } }
-                    : {}),
+                  ...(teacher.color ? { style: { borderLeftColor: teacher.color } } : {}),
                 };
               }}
               dayPropGetter={(day) => ({
@@ -319,11 +308,7 @@ export function CalendarView() {
         )}
       </div>
 
-      <LessonActionsDialog
-        open={actionsOpen}
-        onOpenChange={setActionsOpen}
-        lesson={selected}
-      />
+      <LessonActionsDialog open={actionsOpen} onOpenChange={setActionsOpen} lesson={selected} />
       <LessonFormDialog open={formOpen} onOpenChange={setFormOpen} initialStart={formStart} />
     </div>
   );

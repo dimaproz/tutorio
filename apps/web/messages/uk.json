@@ -24,7 +24,8 @@
     "restoreOwnerOnly": "Відновити може лише власник",
     "remove": "Прибрати",
     "durationMinutes": "{minutes} хв",
-    "durationChoiceHint": "Оберіть популярну тривалість або введіть свою вручну."
+    "durationChoiceHint": "Оберіть популярну тривалість або введіть свою вручну.",
+    "avatarOption": "Аватар {number}"
   },
   "auth": {
     "login": {

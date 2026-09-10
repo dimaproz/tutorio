@@ -26,13 +26,15 @@ import {
 } from '@tutorio/validation';
 import { ParentFormDialog } from '@/components/parents/parent-form-dialog';
 import { ParentMiniCard } from '@/components/parents/parent-mini-card';
-import { EntityPicker, FormActions } from '@/components/shared';
-import { AvatarPicker } from '@/components/app/avatar-picker';
-import { CurrencyOption } from '@/components/app/currency-option';
-import { FormSection } from '@/components/app/form-section';
-import { MoneyInput } from '@/components/app/money-input';
-import { StatusSelect, useStudentStatusOptions } from '@/components/app/status-select';
-import { detectTimezone, TimezoneCombobox } from '@/components/app/timezone-combobox';
+import { EntityPicker } from '@/components/shared/entity-picker';
+import { FormActions } from '@/components/shared/form-actions';
+import { AvatarPicker } from '@/components/shared/avatar-picker';
+import { CurrencyOption } from '@/components/shared/currency-option';
+import { FormSection } from '@/components/shared/form-section';
+import { MoneyInput } from '@/components/shared/money-input';
+import { StatusSelect } from '@/components/shared/status-select';
+import { useStudentStatusOptions } from '@/components/students/student-status';
+import { detectTimezone, TimezoneCombobox } from '@/components/shared/timezone-combobox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -274,7 +276,7 @@ export function StudentForm({
           </Alert>
         ) : null}
 
-        <FormSection icon={ImageIcon} tone="neutral" title={t('avatarSection')}>
+        <FormSection icon={ImageIcon} title={t('avatarSection')}>
           <AvatarPicker
             value={values.avatarKey ?? null}
             onChange={(next) => form.setValue('avatarKey', next)}
@@ -285,7 +287,7 @@ export function StudentForm({
 
         <FieldSeparator />
 
-        <FormSection icon={UserIcon} tone="primary" title={t('basicSection')}>
+        <FormSection icon={UserIcon} title={t('basicSection')}>
           <Field data-invalid={errors.fullName ? true : undefined}>
             <FieldLabel htmlFor="student-full-name">{t('fullName')}</FieldLabel>
             <Input
@@ -317,7 +319,7 @@ export function StudentForm({
 
         <FormSection
           icon={PhoneIcon}
-          tone="primary"
+
           title={t('contactsSection')}
           description={t('contactsHint')}
         >
@@ -373,7 +375,7 @@ export function StudentForm({
 
         <FormSection
           icon={GlobeIcon}
-          tone="primary"
+
           title={t('timezoneSection')}
           description={t('timezoneHint')}
         >
@@ -396,7 +398,7 @@ export function StudentForm({
 
         <FieldSeparator />
 
-        <FormSection icon={GraduationCapIcon} tone="primary" title={t('academicSection')}>
+        <FormSection icon={GraduationCapIcon} title={t('academicSection')}>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field>
               <FieldLabel htmlFor="student-language-level">{t('languageLevel')}</FieldLabel>
@@ -496,7 +498,7 @@ export function StudentForm({
 
         <FormSection
           icon={BanknoteIcon}
-          tone="success"
+
           title={t('pricingSection')}
           description={t('pricingHint')}
         >
@@ -540,7 +542,7 @@ export function StudentForm({
 
         <FormSection
           icon={UsersRoundIcon}
-          tone="warning"
+
           title={t('parentSection')}
           description={t('parentHint')}
           action={
@@ -593,7 +595,7 @@ export function StudentForm({
 
         <FieldSeparator />
 
-        <FormSection icon={StickyNoteIcon} tone="destructive" title={t('notesSection')}>
+        <FormSection icon={StickyNoteIcon} title={t('notesSection')}>
           <Field data-invalid={errors.notes ? true : undefined}>
             <FieldLabel htmlFor="student-notes" className="sr-only">
               {t('notes')}

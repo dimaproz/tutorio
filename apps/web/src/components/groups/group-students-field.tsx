@@ -3,8 +3,8 @@
 import { useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import type { StudentResponse } from '@tutorio/validation';
-import { StudentStatusBadge } from '@/components/app/status-badges';
-import { EntityMultiSelect } from '@/components/shared';
+import { StudentStatusBadge } from '@/components/students/student-status';
+import { EntityMultiSelect } from '@/components/shared/entity-picker';
 import { useStudentsQuery } from '@/lib/api/students';
 
 export function GroupStudentsField({

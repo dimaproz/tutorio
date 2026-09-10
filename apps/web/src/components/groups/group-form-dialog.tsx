@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { EntityFormDialog } from '@/components/shared';
+import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
 import { useGroupQuery } from '@/lib/api/groups';
 import { GroupForm } from './group-form';
 

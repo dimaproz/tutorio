@@ -24,7 +24,8 @@
     "restoreOwnerOnly": "Only the owner can restore",
     "remove": "Remove",
     "durationMinutes": "{minutes} min",
-    "durationChoiceHint": "Choose a common duration or enter your own."
+    "durationChoiceHint": "Choose a common duration or enter your own.",
+    "avatarOption": "Avatar {number}"
   },
   "auth": {
     "login": {

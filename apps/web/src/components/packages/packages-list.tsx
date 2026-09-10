@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { PlusIcon, WalletIcon } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import type { PackageResponse } from '@tutorio/validation';
-import { PageHeader, QueryErrorAlert } from '@/components/app/page-shell';
-import { PackagePaymentStatusBadge } from '@/components/app/status-badges';
+import { PageHeader, QueryErrorAlert } from '@/components/shared/page-shell';
+import { PackagePaymentStatusBadge } from '@/components/packages/package-status';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -18,7 +18,7 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { Progress } from '@/components/ui/progress';
-import { LoadingPanel } from '@/components/shared';
+import { LoadingPanel } from '@/components/shared/loading';
 import { usePackagesQuery } from '@/lib/api/packages';
 import { formatMoneyDisplay } from '@/lib/money';
 import { PackageFormDialog } from './package-form-dialog';

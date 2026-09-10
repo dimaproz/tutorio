@@ -1,6 +1,6 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { dirname, join, relative, sep } from 'node:path';
+import { dirname, join, normalize, relative, sep } from 'node:path';
 
 const packageRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 const sourceRoot = join(packageRoot, 'src');
@@ -63,6 +63,30 @@ const primitiveNames = new Set([
   'tooltip',
 ]);
 const duplicatePrimitiveAllowlist = new Set(['lib/pagination.ts']);
+const appShellFiles = new Set([
+  'app-header.tsx',
+  'app-navigation.test.ts',
+  'app-navigation.ts',
+  'app-shell-actions.test.ts',
+  'app-shell-actions.ts',
+  'app-shell.stories.tsx',
+  'app-sidebar.tsx',
+  'session-provider.tsx',
+  'theme-toggle.tsx',
+]);
+const moduleImport = /(?:from\s+|import\()["']([^"']+)["']/g;
+
+function importedSourcePath(relativePath, specifier) {
+  if (specifier.startsWith('@/')) {
+    return specifier.slice(2);
+  }
+  if (specifier.startsWith('.')) {
+    return normalize(join(dirname(relativePath), specifier))
+      .split(sep)
+      .join('/');
+  }
+  return null;
+}
 
 // This narrow list is reviewed in docs/frontend-plan.md. Each entry is a data or upstream exception.
 const rawColorAllowlist = new Set([
@@ -119,6 +143,82 @@ for (const file of files) {
 
   if (removedUtilityPattern.test(content)) {
     violations.push(`${relativePath}: utility references a removed theme token`);
+  }
+
+  if (relativePath.startsWith('components/app/') && !appShellFiles.has(relativePath.slice(15))) {
+    violations.push(
+      `${relativePath}: components/app is reserved for authenticated shell ownership`,
+    );
+  }
+
+  const imports = [...content.matchAll(moduleImport)]
+    .map((match) => importedSourcePath(relativePath, match[1]))
+    .filter(Boolean);
+  if (imports.includes('components/shared')) {
+    violations.push(`${relativePath}: import shared components from their documented leaf modules`);
+  }
+  if (relativePath.startsWith('components/shared/')) {
+    if (/\bimport\s*\(\s*[^'"\s]/.test(content)) {
+      violations.push(`${relativePath}: shared components cannot use unresolved dynamic imports`);
+    }
+    for (const imported of imports) {
+      if (
+        imported.startsWith('components/app/') ||
+        imported.startsWith('features/') ||
+        imported.startsWith('lib/api/')
+      ) {
+        violations.push(
+          `${relativePath}: shared components cannot import shell or feature layers (${imported})`,
+        );
+      }
+    }
+  }
+
+  if (relativePath.startsWith('components/ui/')) {
+    for (const imported of imports) {
+      if (
+        imported.startsWith('components/app/') ||
+        imported.startsWith('components/shared/') ||
+        imported.startsWith('features/')
+      ) {
+        violations.push(
+          `${relativePath}: ui primitives cannot import product layers (${imported})`,
+        );
+      }
+    }
+  }
+
+  const isFeatureOrLegacyDomain =
+    relativePath.startsWith('features/') ||
+    (relativePath.startsWith('components/') &&
+      !relativePath.startsWith('components/app/') &&
+      !relativePath.startsWith('components/shared/') &&
+      !relativePath.startsWith('components/ui/'));
+  if (isFeatureOrLegacyDomain) {
+    for (const imported of imports) {
+      if (
+        imported.startsWith('components/app/') &&
+        imported !== 'components/app/session-provider'
+      ) {
+        violations.push(
+          `${relativePath}: feature/domain code cannot import application-shell components (${imported})`,
+        );
+      }
+    }
+  }
+
+  if (
+    relativePath.startsWith('app/') &&
+    relativePath !== 'app/app/layout.tsx' &&
+    relativePath !== 'app/layout.tsx'
+  ) {
+    for (const imported of imports) {
+      if (imported.startsWith('components/shared/') || imported.startsWith('components/ui/')) {
+        violations.push(
+          `${relativePath}: routes assemble feature components, not shared or ui layers (${imported})`,
+        );
+      }
+    }
   }
 }
 

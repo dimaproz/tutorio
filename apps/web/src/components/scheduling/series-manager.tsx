@@ -5,8 +5,8 @@ import { PencilIcon, PlusIcon, RepeatIcon, Trash2Icon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { LessonSeriesResponse } from '@tutorio/validation';
-import { ConfirmDialog } from '@/components/app/confirm-dialog';
-import { PageHeader, QueryErrorAlert } from '@/components/app/page-shell';
+import { ConfirmDialog } from '@/components/shared/confirm-dialog';
+import { PageHeader, QueryErrorAlert } from '@/components/shared/page-shell';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -20,7 +20,7 @@ import {
 import { useDeleteSeriesMutation, useSeriesListQuery } from '@/lib/api/scheduling';
 import { useWeekdayLabels } from '@/lib/i18n/weekdays';
 import { SeriesFormDialog } from './series-form-dialog';
-import { LoadingPanel } from '@/components/shared';
+import { LoadingPanel } from '@/components/shared/loading';
 
 export function SeriesManager() {
   const t = useTranslations('scheduling.patterns');

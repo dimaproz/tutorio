@@ -1,30 +1,24 @@
 'use client';
 
 import type { ComponentType, ReactNode } from 'react';
-import { sectionToneClass, type SectionTone } from '@/components/app/section-tone';
 import { Card, CardContent } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';
-import { cn } from '@/lib/utils';
 
 type IconType = ComponentType<{ className?: string }>;
 
 /**
- * A single headline number with its label used by the legacy analytics view.
- * Shared by the dashboard and the finance screens so KPI figures look the same
- * wherever they appear.
+ * A dashboard-only headline metric; entity metrics use shared MetricCard.
  */
 export function StatTile({
   label,
   value,
   icon: Icon,
-  tone = 'primary',
   hint,
   isLoading = false,
 }: {
   label: string;
   value: ReactNode;
   icon?: IconType;
-  tone?: SectionTone;
   hint?: ReactNode;
   isLoading?: boolean;
 }) {
@@ -32,14 +26,7 @@ export function StatTile({
     <Card>
       <CardContent className="flex items-center gap-4 py-5">
         {Icon ? (
-          <span
-            className={cn(
-              'grid size-11 shrink-0 place-items-center rounded-xl',
-              sectionToneClass[tone],
-            )}
-          >
-            <Icon className="size-5" />
-          </span>
+          <Icon className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
         ) : null}
         <div className="flex min-w-0 flex-col gap-1">
           <span className="text-muted-foreground text-sm font-medium">{label}</span>
@@ -48,9 +35,7 @@ export function StatTile({
           ) : (
             <span className="tabular text-2xl font-semibold tracking-tight">{value}</span>
           )}
-          {hint ? (
-            <span className="text-muted-foreground text-xs">{hint}</span>
-          ) : null}
+          {hint ? <span className="text-muted-foreground text-xs">{hint}</span> : null}
         </div>
       </CardContent>
     </Card>

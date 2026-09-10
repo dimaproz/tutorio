@@ -6,11 +6,17 @@ import { LayersIcon, PlusIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { GroupCard } from './group-card';
 import { GroupFormDialog } from './group-form-dialog';
-import { ListPagination, ListSearchInput, ListSelectFilter } from '@/components/app/list-controls';
-import { PageHeader, QueryErrorAlert } from '@/components/app/page-shell';
+import {
+  ListPagination,
+  ListSearchInput,
+  ListSelectFilter,
+} from '@/components/shared/list-controls';
+import { PageHeader, QueryErrorAlert } from '@/components/shared/page-shell';
 import { useSession } from '@/components/app/session-provider';
 import { Button } from '@/components/ui/button';
-import { CollectionEmptyState, CollectionToolbar, LoadingPanel } from '@/components/shared';
+import { CollectionEmptyState } from '@/components/shared/collection-empty-state';
+import { CollectionToolbar } from '@/components/shared/collection-toolbar';
+import { LoadingPanel } from '@/components/shared/loading';
 import { parsePageParam, parseStateParam } from '@/lib/api/filters';
 import { useGroupsQuery } from '@/lib/api/groups';
 import { useStudentsQuery } from '@/lib/api/students';

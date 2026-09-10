@@ -1,5 +1,4 @@
 import { type LucideIcon } from 'lucide-react';
-import { sectionToneClass, type SectionTone } from '@/components/app/section-tone';
 import {
   Card,
   CardAction,
@@ -13,14 +12,12 @@ import { cn } from '@/lib/utils';
 /** A compact KPI card shared by entity detail pages and dashboard sections. */
 export function MetricCard({
   icon: Icon,
-  tone = 'primary',
   label,
   value,
   description,
   className,
 }: {
   icon: LucideIcon;
-  tone?: SectionTone;
   label: string;
   value: React.ReactNode;
   description?: React.ReactNode;
@@ -31,9 +28,7 @@ export function MetricCard({
       <CardHeader>
         <CardTitle className="text-sm font-normal text-muted-foreground">{label}</CardTitle>
         <CardAction>
-          <span className={cn('grid size-9 place-items-center rounded-xl', sectionToneClass[tone])}>
-            <Icon aria-hidden="true" className="size-4" />
-          </span>
+          <Icon aria-hidden="true" className="size-4 text-muted-foreground" />
         </CardAction>
       </CardHeader>
       <CardContent className="flex flex-col gap-1">

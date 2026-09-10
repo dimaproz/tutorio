@@ -15,13 +15,13 @@ import {
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { GroupEnrollmentSummary } from '@tutorio/validation';
-import { BackButton } from '@/components/app/back-button';
-import { ConfirmDialog } from '@/components/app/confirm-dialog';
-import { MetricCard } from '@/components/app/metric-card';
-import { ProfileHeader, ProfileTag, SectionTitle } from '@/components/app/detail-view';
-import { QueryErrorAlert } from '@/components/app/page-shell';
+import { BackButton } from '@/components/shared/back-button';
+import { ConfirmDialog } from '@/components/shared/confirm-dialog';
+import { MetricCard } from '@/components/shared/metric-card';
+import { ProfileHeader, ProfileTag, SectionTitle } from '@/components/shared/detail-view';
+import { QueryErrorAlert } from '@/components/shared/page-shell';
 import { useSession } from '@/components/app/session-provider';
-import { GroupStatusBadge } from '@/components/app/status-badges';
+import { GroupStatusBadge } from '@/components/groups/group-status';
 import { EnrollmentDialog } from '@/components/enrollments/enrollment-dialog';
 import { PackageSummaryCard } from '@/components/packages/package-summary-card';
 import { ScheduleSlotCard } from '@/components/scheduling/schedule-slot-card';
@@ -35,7 +35,7 @@ import { useLessonsQuery, useSeriesListQuery } from '@/lib/api/scheduling';
 import type { GatewayError } from '@/lib/auth/client';
 import { useDateFormatters } from '@/lib/i18n/format';
 import { formatMoneyDisplay } from '@/lib/money';
-import { LoadingPanel } from '@/components/shared';
+import { LoadingPanel } from '@/components/shared/loading';
 import { GroupAttendanceChart, type GroupAnalyticsPeriod } from './group-attendance-chart';
 import { GroupLessonsCard } from './group-lessons-card';
 import { GroupMembersTable } from './group-members-table';
@@ -201,7 +201,7 @@ export function GroupDetailView({ groupId }: { groupId: string }) {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           icon={BanknoteIcon}
-          tone="success"
+
           label={tDetail('metrics.price')}
           value={
             data.pricePerLesson != null && data.currency
@@ -212,7 +212,7 @@ export function GroupDetailView({ groupId }: { groupId: string }) {
         />
         <MetricCard
           icon={CircleDollarSignIcon}
-          tone="primary"
+
           label={tDetail('metrics.revenue')}
           value={
             revenue != null && data.currency
@@ -223,7 +223,7 @@ export function GroupDetailView({ groupId }: { groupId: string }) {
         />
         <MetricCard
           icon={UsersRoundIcon}
-          tone="primary"
+
           label={tDetail('metrics.students')}
           value={activeEnrollments.length}
           description={tDetail('metrics.studentsDescription', {
@@ -232,7 +232,7 @@ export function GroupDetailView({ groupId }: { groupId: string }) {
         />
         <MetricCard
           icon={CalendarDaysIcon}
-          tone="warning"
+
           label={tDetail('metrics.attendance')}
           value={tDetail('unavailable')}
           description={tDetail('metrics.attendanceDescription')}
@@ -243,9 +243,7 @@ export function GroupDetailView({ groupId }: { groupId: string }) {
         <div className="flex min-w-0 flex-col gap-6">
           <Card>
             <CardHeader>
-              <SectionTitle icon={UsersRoundIcon} tone="primary">
-                {tDetail('membersTitle')}
-              </SectionTitle>
+              <SectionTitle icon={UsersRoundIcon}>{tDetail('membersTitle')}</SectionTitle>
               <CardDescription>{tDetail('membersDescription')}</CardDescription>
               {!isDeleted ? (
                 <CardAction>
@@ -285,9 +283,7 @@ export function GroupDetailView({ groupId }: { groupId: string }) {
         <aside className="flex min-w-0 flex-col gap-6">
           <Card>
             <CardHeader>
-              <SectionTitle icon={CalendarDaysIcon} tone="warning">
-                {tDetail('scheduleTitle')}
-              </SectionTitle>
+              <SectionTitle icon={CalendarDaysIcon}>{tDetail('scheduleTitle')}</SectionTitle>
               <CardDescription>{tDetail('scheduleDescription')}</CardDescription>
             </CardHeader>
             <CardContent>
@@ -319,9 +315,7 @@ export function GroupDetailView({ groupId }: { groupId: string }) {
 
           <Card>
             <CardHeader>
-              <SectionTitle icon={PackageIcon} tone="success">
-                {tDetail('packagesTitle')}
-              </SectionTitle>
+              <SectionTitle icon={PackageIcon}>{tDetail('packagesTitle')}</SectionTitle>
               <CardDescription>{tDetail('packagesDescription')}</CardDescription>
             </CardHeader>
             <CardContent>

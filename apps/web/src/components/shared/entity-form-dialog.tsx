@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { createContext, type ReactNode } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,9 @@ const widthClass: Record<DialogWidth, string> = {
   lg: 'sm:max-w-2xl',
 };
 
+/** Internal bridge that keeps legacy FormActions visible during migration. */
+export const EntityFormDialogContext = createContext(false);
+
 /**
  * The standard create/edit shell. Feature dialogs own fetching and form
  * behaviour; this component owns only the shared accessible dialog layout.
@@ -30,6 +33,7 @@ export function EntityFormDialog({
   description,
   width = 'sm',
   isLoading = false,
+  footer,
   children,
 }: {
   open: boolean;
@@ -38,13 +42,13 @@ export function EntityFormDialog({
   description: ReactNode;
   width?: DialogWidth;
   isLoading?: boolean;
+  /** Stable action area, kept visible while the feature-owned body scrolls. */
+  footer?: ReactNode;
   children: ReactNode;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className={cn('flex max-h-[90vh] flex-col gap-0 p-0', widthClass[width])}
-      >
+      <DialogContent className={cn('flex max-h-[90vh] flex-col gap-0 p-0', widthClass[width])}>
         <DialogHeader className="shrink-0 border-b bg-popover px-6 py-4 pr-12">
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
@@ -53,9 +57,10 @@ export function EntityFormDialog({
           {isLoading ? (
             <LoadingPanel className="min-h-48 rounded-xl border-0 bg-transparent" />
           ) : (
-            children
+            <EntityFormDialogContext.Provider value>{children}</EntityFormDialogContext.Provider>
           )}
         </div>
+        {footer ? <div className="shrink-0 border-t px-6 py-4">{footer}</div> : null}
       </DialogContent>
     </Dialog>
   );

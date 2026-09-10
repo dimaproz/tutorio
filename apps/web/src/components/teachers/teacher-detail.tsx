@@ -14,10 +14,10 @@ import {
 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import { BackButton } from '@/components/app/back-button';
-import { ConfirmDialog } from '@/components/app/confirm-dialog';
-import { InfoRow, ProfileHeader, SectionTitle } from '@/components/app/detail-view';
-import { QueryErrorAlert, QueryRefreshIndicator } from '@/components/app/page-shell';
+import { BackButton } from '@/components/shared/back-button';
+import { ConfirmDialog } from '@/components/shared/confirm-dialog';
+import { InfoRow, ProfileHeader, SectionTitle } from '@/components/shared/detail-view';
+import { QueryErrorAlert, QueryRefreshIndicator } from '@/components/shared/page-shell';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { errorMessageKey } from '@/lib/api/error-message';
@@ -27,7 +27,7 @@ import { formatMoneyDisplay } from '@/lib/money';
 import { useDateFormatters } from '@/lib/i18n/format';
 import { TeacherFormDialog } from './teacher-form-dialog';
 import { TeacherStatusBadge } from './teacher-status-badge';
-import { LoadingPanel } from '@/components/shared';
+import { LoadingPanel } from '@/components/shared/loading';
 
 export function TeacherDetail({ teacherId }: { teacherId: string }) {
   const t = useTranslations('teachers');
@@ -102,9 +102,7 @@ export function TeacherDetail({ teacherId }: { teacherId: string }) {
         <div className="flex flex-col gap-6 lg:col-span-2">
           <Card>
             <CardHeader>
-              <SectionTitle icon={BookOpenIcon} tone="destructive">
-                {tDetail('bioTitle')}
-              </SectionTitle>
+              <SectionTitle icon={BookOpenIcon}>{tDetail('bioTitle')}</SectionTitle>
             </CardHeader>
             <CardContent>
               {data.bio ? (
@@ -117,9 +115,7 @@ export function TeacherDetail({ teacherId }: { teacherId: string }) {
 
           <Card>
             <CardHeader>
-              <SectionTitle icon={NotebookPenIcon} tone="warning">
-                {tDetail('notesTitle')}
-              </SectionTitle>
+              <SectionTitle icon={NotebookPenIcon}>{tDetail('notesTitle')}</SectionTitle>
             </CardHeader>
             <CardContent>
               {data.notes ? (
@@ -134,9 +130,7 @@ export function TeacherDetail({ teacherId }: { teacherId: string }) {
         <div className="flex flex-col gap-6">
           <Card>
             <CardHeader>
-              <SectionTitle icon={PhoneIcon} tone="primary">
-                {tDetail('contactsTitle')}
-              </SectionTitle>
+              <SectionTitle icon={PhoneIcon}>{tDetail('contactsTitle')}</SectionTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
               <InfoRow
@@ -178,9 +172,7 @@ export function TeacherDetail({ teacherId }: { teacherId: string }) {
 
           <Card>
             <CardHeader>
-              <SectionTitle icon={BanknoteIcon} tone="success">
-                {tDetail('teachingTitle')}
-              </SectionTitle>
+              <SectionTitle icon={BanknoteIcon}>{tDetail('teachingTitle')}</SectionTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
               <InfoRow icon={BanknoteIcon} label={tDetail('rate')}>

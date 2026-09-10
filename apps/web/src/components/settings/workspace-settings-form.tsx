@@ -7,7 +7,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { SUPPORTED_CURRENCIES } from '@tutorio/domain';
 import { useSession } from '@/components/app/session-provider';
-import { CurrencyOption } from '@/components/app/currency-option';
+import { CurrencyOption } from '@/components/shared/currency-option';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

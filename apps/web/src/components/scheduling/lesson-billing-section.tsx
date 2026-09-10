@@ -13,11 +13,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { CurrencyOption } from '@/components/app/currency-option';
-import { FormSection } from '@/components/app/form-section';
-import { MoneyInput } from '@/components/app/money-input';
-import { StatusSelect, useLessonStatusOptions } from '@/components/app/status-select';
-import { DatePicker } from '@/components/shared';
+import { CurrencyOption } from '@/components/shared/currency-option';
+import { FormSection } from '@/components/shared/form-section';
+import { MoneyInput } from '@/components/shared/money-input';
+import { StatusSelect } from '@/components/shared/status-select';
+import { useLessonStatusOptions } from '@/components/scheduling/lesson-status';
+import { DatePicker } from '@/components/shared/date-picker';
 import {
   filledDates,
   isCancelledStatus,
@@ -37,7 +38,6 @@ export function LessonBillingSection() {
       icon={BanknoteIcon}
       title={t('price')}
       description={target === 'group' ? t('groupPriceHint') : t('studentHint')}
-      tone="success"
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
         <Field data-invalid={errors.price ? true : undefined} className="flex-1">
@@ -95,12 +95,7 @@ export function LessonStatusSection() {
   const isSingleBooking = filledDates({ startsAt: startsAt ?? [] }).length <= 1;
 
   return (
-    <FormSection
-      icon={CircleCheckIcon}
-      title={t('statusSection')}
-      description={t('statusHint')}
-      tone="primary"
-    >
+    <FormSection icon={CircleCheckIcon} title={t('statusSection')} description={t('statusHint')}>
       <Controller
         control={form.control}
         name="status"

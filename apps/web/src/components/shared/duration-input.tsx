@@ -37,6 +37,7 @@ export function DurationInput({
       onValueChange={onValueChange}
       onBlur={onBlur}
       presets={POPULAR_DURATIONS}
+      presetsLabel={t('durationChoiceHint')}
       formatPreset={(minutes) => t('durationMinutes', { minutes })}
       hint={t('durationChoiceHint')}
       invalid={invalid}

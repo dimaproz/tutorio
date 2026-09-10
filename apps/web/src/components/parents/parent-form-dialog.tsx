@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { EntityFormDialog } from '@/components/shared';
+import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
 import { useParentQuery } from '@/lib/api/parents';
 import { ParentForm } from './parent-form';
 

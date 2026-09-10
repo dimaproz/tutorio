@@ -5,9 +5,9 @@ import { CalendarClockIcon, PlusIcon, Trash2Icon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
-import { DurationInput } from '@/components/app/duration-input';
-import { FormSection } from '@/components/app/form-section';
-import { AppointmentField } from '@/components/shared';
+import { DurationInput } from '@/components/shared/duration-input';
+import { FormSection } from '@/components/shared/form-section';
+import { AppointmentField } from '@/components/shared/appointment-picker';
 import type { LessonFormValues } from '@/features/scheduling/model/lesson-form';
 import { splitDateTimeInput } from '@/lib/datetime';
 import { useBusySlots } from './use-busy-slots';
@@ -36,12 +36,7 @@ export function LessonScheduleSection({ teacherId }: { teacherId: string }) {
   });
 
   return (
-    <FormSection
-      icon={CalendarClockIcon}
-      title={t('schedule')}
-      description={t('dateHint')}
-      tone="warning"
-    >
+    <FormSection icon={CalendarClockIcon} title={t('schedule')} description={t('dateHint')}>
       <Field data-invalid={errors.startsAt ? true : undefined}>
         <FieldLabel>{t('date')}</FieldLabel>
         <div className="flex flex-col gap-2">

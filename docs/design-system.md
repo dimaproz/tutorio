@@ -90,26 +90,44 @@ controlled API, and document meaningful states in Storybook.
 
 ### Approved product-component registry
 
-This is the current semantic registry. Frontend Packet F5 may move a component
-between `components/app` and `components/shared`, consolidate overlapping APIs,
-or rename it, but feature pages must reuse the registered capability instead of
-creating a parallel implementation.
+Use leaf imports as the stable convention: `@/components/shared/<component>`.
+Feature barrels (`@/features/<domain>`) are the stable route boundary; legacy
+`components/<domain>` modules remain feature-owned until their individual page
+migration. Shared components may be consumed by features and the shell, never
+the reverse.
 
-| Capability                           | Current component(s)                                    |
-| ------------------------------------ | ------------------------------------------------------- |
-| Page structure and navigation        | `PageShell`, `BackButton`, `DetailView`                 |
-| Collection controls and data display | `CollectionToolbar`, `ListControls`, `DataTable`        |
-| Loading and empty states             | `LoadingRegion`, `LoadingPanel`, `CollectionEmptyState` |
-| Form composition                     | `EntityFormDialog`, `FormSection`, `FormActions`        |
-| Confirmation and row actions         | `ConfirmDialog`, `RowActionsTrigger`                    |
-| Entity selection                     | `EntityPicker`, `EntityMultiSelect`                     |
-| People and identity                  | `EntityAvatar`, `PersonMiniCard`                        |
-| Status presentation                  | `StatusBadge`, `StatusSelect`                           |
-| Money and metrics                    | `MoneyInput`, `MetricCard`, `StatTile`                  |
-| Date and schedule input              | `DatePicker`, `AppointmentPicker`, `WeekdayPicker`      |
+| Semantic purpose                         | Owner and import                                                                                                                                               | Stable props / slots                                                                           | Allowed consumers                   | Story                                                           |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------- | --------------------------------------------------------------- |
+| Collection layout and states             | `CollectionFrame` — `@/components/shared/collection-frame`                                                                                                     | `header`, `toolbar`, `refresh`, `loading`, `error`, `empty`, `desktop`, `mobile`, `pagination` | Feature list screens                | `Shared/Reference compositions`                                 |
+| Collection controls and empty state      | `CollectionToolbar`, `CollectionEmptyState` — `@/components/shared/collection-toolbar`, `collection-empty-state`                                               | child/action slots; no queries or entity types                                                 | Feature list screens                | `Shared/CollectionToolbar`, `Shared/Reference compositions`     |
+| Generic table and URL list controls      | `DataTable`, `ListSearchInput`, `ListPagination`, `ListSelectFilter` — `@/components/shared/data-table`, `list-controls`                                       | typed columns/data/sort; localized labels supplied by caller                                   | Feature list/detail tables          | `Shared/Reference compositions`                                 |
+| Detail layout                            | `DetailFrame` — `@/components/shared/detail-frame`                                                                                                             | `back`, `identity`, `main`, `aside`, `loading`, `error`                                        | Feature detail screens              | `Shared/Reference compositions`                                 |
+| Detail identity helpers                  | `BackButton`, `EntityAvatar`, `PersonMiniCard`, `ProfileHeader`, `InfoRow` — `@/components/shared/*`                                                           | localized labels and identity data supplied by caller                                          | Feature screens and pickers         | `Shared/Reference compositions` / `Shared/EntityPicker`         |
+| Form overlay                             | `EntityFormDialog` — `@/components/shared/entity-form-dialog`                                                                                                  | controlled `open`, title/description, `sm`/`md`/`lg`, scrollable body, persistent `footer`     | Feature-owned forms                 | `Shared/EntityFormDialog`                                       |
+| Form and confirmation actions            | `FormSection`, `FormActions`, `ConfirmDialog` — `@/components/shared/*`                                                                                        | field content/action slots; mutation state supplied by caller                                  | Feature forms and destructive flows | `Shared/FormSection and FormActions`, `Shared/EntityFormDialog` |
+| Status presentation                      | `StatusBadge`, `StatusSelect` — `@/components/shared/status-badges`, `status-select`                                                                           | `label`, semantic `tone`, optional icon / mapped options                                       | Feature/domain adapters only        | `Shared/Reference compositions`                                 |
+| Entity input and reusable value controls | `EntityPicker`, `AvatarPicker`, `MoneyInput`, `DurationInput`, `TimezoneCombobox`, `DatePicker`, `AppointmentField`, `WeekdayPicker` — `@/components/shared/*` | controlled values and localized labels; no API calls                                           | Feature forms                       | `Shared/EntityPicker`, `Shared/Value controls`                  |
+| Entity metrics                           | `MetricCard` — `@/components/shared/metric-card`                                                                                                               | label, value, optional description/icon                                                        | Feature detail sections             | `Shared/Reference compositions`                                 |
 
-Registration records reuse intent; it does not certify the component's current
-visual implementation. F1-F5 bring registered components into the new contract.
+The generic status contract deliberately has no validation DTO import. Each
+domain adapter maps its lifecycle DTO and localized copy locally. `MetricCard`
+is a reusable entity/detail metric; the dashboard-only `StatTile` remains in
+`features/dashboard` and is not a competing shared contract.
+
+#### Reference compositions
+
+- Collection: compose `PageHeader`, `CollectionToolbar`, refresh/error/loading
+  feedback, desktop table, feature-owned mobile cards, `CollectionEmptyState`,
+  and pagination through `CollectionFrame`. The frame never owns queries,
+  columns, card content, filters, or API types.
+- Detail: compose `BackButton`, a feature-owned identity area (Avatar, title,
+  status, metadata, primary and overflow actions), and main/aside slots through
+  `DetailFrame`. It collapses to one column below `lg`; loading/error remain
+  feature slots.
+- Form overlay: use `EntityFormDialog` with an accessible title/description,
+  `FieldGroup`/`Field` (and `FieldSet`/`FieldLegend` when grouping matters), a
+  scrollable body, and stable `FormActions` footer. Feature forms own
+  validation, mutation error, pending, disabled, and destructive semantics.
 
 ### Layer 3: application shell
 
@@ -119,6 +137,12 @@ This layer owns authenticated navigation, header, user menu, workspace context,
 and page shell. It may compose Layers 1 and 2 but must not contain entity API
 logic. Frontend Packet F4 will rebuild it from the official `dashboard-01`
 structure and shadcn Sidebar primitives.
+
+`components/app/session-provider` is the one documented dependency exception:
+feature code reads authenticated workspace context from this provider, but does
+not render shell UI. The architecture check permits that exact import only. The
+root `app/layout` is the other technical exception: it installs global UI
+providers such as the shadcn Sonner host before any route composition begins.
 
 ### Layer 4: feature components
 
@@ -135,7 +159,7 @@ components demonstrate the same stable behavior, not merely a similar shape.
 ### Layer 5: routes and screens
 
 `src/app` contains routing and Next.js composition only. A screen assembles
-approved feature and shared components. It does not define reusable visual
+feature barrels; features compose approved shared components. Routes do not define reusable visual
 primitives, fetch transformations, or page-specific theme values.
 
 ## Screen brief requirement

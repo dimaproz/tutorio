@@ -10,19 +10,17 @@ import type { LessonSeriesResponse } from '@tutorio/validation';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
-import { DurationInput } from '@/components/app/duration-input';
+import { DurationInput } from '@/components/shared/duration-input';
 import { Spinner } from '@/components/ui/spinner';
-import { FormSection } from '@/components/app/form-section';
-import { MoneyInput } from '@/components/app/money-input';
-import { detectTimezone, TimezoneCombobox } from '@/components/app/timezone-combobox';
-import {
-  DatePicker,
-  EntityFormDialog,
-  EntityPicker,
-  FormActions,
-  TimePicker,
-  WeekdayPicker,
-} from '@/components/shared';
+import { FormSection } from '@/components/shared/form-section';
+import { MoneyInput } from '@/components/shared/money-input';
+import { detectTimezone, TimezoneCombobox } from '@/components/shared/timezone-combobox';
+import { DatePicker } from '@/components/shared/date-picker';
+import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
+import { EntityPicker } from '@/components/shared/entity-picker';
+import { FormActions } from '@/components/shared/form-actions';
+import { TimePicker } from '@/components/shared/date-picker';
+import { WeekdayPicker } from '@/components/shared/weekday-picker';
 import { effectiveTeacherId, prefillPriceMinor } from '@/features/scheduling/model/lesson-form';
 import {
   buildCreateSeriesDto,
@@ -152,12 +150,7 @@ export function SeriesFormDialog({
         ) : null}
 
         {!isEdit ? (
-          <FormSection
-            icon={UserRoundIcon}
-            title={t('student')}
-            description={t('createSubtitle')}
-            tone="primary"
-          >
+          <FormSection icon={UserRoundIcon} title={t('student')} description={t('createSubtitle')}>
             <Controller
               control={form.control}
               name="studentId"
@@ -216,7 +209,6 @@ export function SeriesFormDialog({
           icon={RepeatIcon}
           title={t('weekdays')}
           description={isEdit ? t('editSubtitle') : undefined}
-          tone="warning"
         >
           <Controller
             control={form.control}
@@ -291,7 +283,7 @@ export function SeriesFormDialog({
           />
         </FormSection>
 
-        <FormSection icon={BanknoteIcon} title={t('price')} tone="success">
+        <FormSection icon={BanknoteIcon} title={t('price')}>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field data-invalid={errors.price ? true : undefined}>
               <FieldLabel htmlFor="series-price">{t('price')}</FieldLabel>

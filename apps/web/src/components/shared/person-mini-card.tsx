@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { ChevronRightIcon, XIcon } from 'lucide-react';
-import { EntityAvatar } from '@/components/app/entity-avatar';
+import { EntityAvatar } from '@/components/shared/entity-avatar';
 import {
   Item,
   ItemActions,

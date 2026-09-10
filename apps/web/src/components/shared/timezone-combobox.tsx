@@ -28,9 +28,8 @@ export function detectTimezone(): string {
 function listTimezones(): string[] {
   // supportedValuesOf is available in every browser we target; the fallback
   // keeps the field usable in older runtimes and in tests.
-  const supported = (
-    Intl as typeof Intl & { supportedValuesOf?: (key: string) => string[] }
-  ).supportedValuesOf;
+  const supported = (Intl as typeof Intl & { supportedValuesOf?: (key: string) => string[] })
+    .supportedValuesOf;
   if (typeof supported === 'function') {
     return supported('timeZone');
   }

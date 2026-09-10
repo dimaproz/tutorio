@@ -5,9 +5,10 @@ import { ArrowRightIcon, CalendarDaysIcon, CircleDollarSignIcon } from 'lucide-r
 import { useLocale, useTranslations } from 'next-intl';
 import type { GroupListItem } from '@tutorio/validation';
 import { GroupRowActions } from './group-row-actions';
-import { DeletedBadge, GroupStatusBadge } from '@/components/app/status-badges';
-import { CURRENCY_META } from '@/components/app/currency-option';
-import { EntityAvatar } from '@/components/app/entity-avatar';
+import { DeletedBadge } from '@/components/shared/status-badges';
+import { GroupStatusBadge } from './group-status';
+import { CURRENCY_META } from '@/components/shared/currency-option';
+import { EntityAvatar } from '@/components/shared/entity-avatar';
 import { AvatarGroup, AvatarGroupCount } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

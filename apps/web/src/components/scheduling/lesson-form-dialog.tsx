@@ -11,9 +11,10 @@ import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
-import { FormSection } from '@/components/app/form-section';
+import { FormSection } from '@/components/shared/form-section';
 import { useSession } from '@/components/app/session-provider';
-import { EntityFormDialog, FormActions } from '@/components/shared';
+import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
+import { FormActions } from '@/components/shared/form-actions';
 import {
   buildCreateLessonDto,
   effectiveTeacherId,
@@ -215,7 +216,7 @@ export function LessonFormDialog({
 
           <LessonStatusSection />
 
-          <FormSection icon={StickyNoteIcon} title={t('notes')} tone="destructive">
+          <FormSection icon={StickyNoteIcon} title={t('notes')}>
             <Field data-invalid={errors.notes ? true : undefined}>
               <FieldLabel htmlFor="lesson-notes" className="sr-only">
                 {t('notes')}

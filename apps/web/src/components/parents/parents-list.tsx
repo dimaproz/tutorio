@@ -9,17 +9,19 @@ import type { ParentListItem } from '@tutorio/validation';
 import { ParentCard } from './parent-card';
 import { ParentFormDialog } from './parent-form-dialog';
 import { ParentRowActions } from './parent-row-actions';
-import { DataTable } from '@/components/app/data-table';
-import { PeopleCell, PersonCell, PhoneCell, TelegramCell } from '@/components/app/table-cells';
+import { DataTable } from '@/components/shared/data-table';
+import { PeopleCell, PersonCell, PhoneCell, TelegramCell } from '@/components/shared/table-cells';
 import {
   ListPagination,
   ListSearchInput,
   useUpdateSearchParams,
-} from '@/components/app/list-controls';
+} from '@/components/shared/list-controls';
 import { StudentFilterCombobox } from './student-filter-combobox';
-import { PageHeader, QueryErrorAlert } from '@/components/app/page-shell';
+import { PageHeader, QueryErrorAlert } from '@/components/shared/page-shell';
 import { Button } from '@/components/ui/button';
-import { CollectionEmptyState, CollectionToolbar, LoadingPanel } from '@/components/shared';
+import { CollectionEmptyState } from '@/components/shared/collection-empty-state';
+import { CollectionToolbar } from '@/components/shared/collection-toolbar';
+import { LoadingPanel } from '@/components/shared/loading';
 import { parsePageParam } from '@/lib/api/filters';
 import { useParentsQuery } from '@/lib/api/parents';
 

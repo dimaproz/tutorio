@@ -1,4 +1,4 @@
-import { Flag, type FlagCode } from '@/components/app/flag';
+import { Flag, type FlagCode } from '@/components/shared/flag';
 
 // Flag + symbol metadata for the currencies the workspace supports. The flag is
 // the issuing country/union; the symbol is what people recognise at a glance.

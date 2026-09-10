@@ -5,7 +5,7 @@ import { PauseIcon, PencilIcon, PlayIcon, RotateCcwIcon, Trash2Icon } from 'luci
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { StudentStatusDto } from '@tutorio/validation';
-import { RowActionsTrigger } from '@/components/shared';
+import { RowActionsTrigger } from '@/components/shared/row-actions-trigger';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { errorMessageKey } from '@/lib/api/error-message';
 import { useRestoreStudentMutation, useUpdateStudentMutation } from '@/lib/api/students';

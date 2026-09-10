@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import type { TeacherListItem } from '@tutorio/validation';
 import { TeacherRowActions } from './teacher-row-actions';
 import { TeacherStatusBadge } from './teacher-status-badge';
-import { EntityAvatar } from '@/components/app/entity-avatar';
+import { EntityAvatar } from '@/components/shared/entity-avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 

@@ -5,8 +5,8 @@ import { UsersRoundIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FormSection } from '@/components/app/form-section';
-import { EntityPicker } from '@/components/shared';
+import { FormSection } from '@/components/shared/form-section';
+import { EntityPicker } from '@/components/shared/entity-picker';
 import type {
   LessonFormValues,
   LessonTarget,
@@ -53,12 +53,7 @@ export function LessonTargetSection({
   const target = useWatch({ control: form.control, name: 'target' });
 
   return (
-    <FormSection
-      icon={UsersRoundIcon}
-      title={t('lessonType')}
-      description={t('lessonTypeHint')}
-      tone="primary"
-    >
+    <FormSection icon={UsersRoundIcon} title={t('lessonType')} description={t('lessonTypeHint')}>
       {!lockedStudentId && !lockedGroupId ? (
         <Controller
           control={form.control}

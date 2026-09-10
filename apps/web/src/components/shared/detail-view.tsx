@@ -1,9 +1,8 @@
 import { CalendarDaysIcon } from 'lucide-react';
-import { EntityAvatar } from '@/components/app/entity-avatar';
-import { sectionToneClass, type SectionTone } from '@/components/app/section-tone';
+import { EntityAvatar } from '@/components/shared/entity-avatar';
+import { Badge } from '@/components/ui/badge';
 import { CardTitle } from '@/components/ui/card';
 import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle } from '@/components/ui/item';
-import { cn } from '@/lib/utils';
 
 type IconType = React.ComponentType<{ className?: string }>;
 
@@ -44,25 +43,16 @@ export function ProfileHeader({
   );
 }
 
-// A legacy card header title with a tinted icon square.
-// `tone` colours the square; it defaults to neutral so existing callers keep
-// their grey square until they opt into a colour.
 export function SectionTitle({
   icon: Icon,
-  tone = 'neutral',
   children,
 }: {
   icon: IconType;
-  tone?: SectionTone;
   children: React.ReactNode;
 }) {
   return (
     <CardTitle className="flex items-center gap-2.5 text-base">
-      <span
-        className={cn('grid size-8 shrink-0 place-items-center rounded-lg', sectionToneClass[tone])}
-      >
-        <Icon className="size-4" />
-      </span>
+      <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
       {children}
     </CardTitle>
   );
@@ -121,9 +111,9 @@ export function ProfileTag({
   children: React.ReactNode;
 }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
-      {Icon ? <Icon className="size-3.5" /> : null}
+    <Badge variant="secondary">
+      {Icon ? <Icon data-icon="inline-start" /> : null}
       {children}
-    </span>
+    </Badge>
   );
 }

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { PackageResponse } from '@tutorio/validation';
 import { useLocale, useTranslations } from 'next-intl';
-import { PackagePaymentStatusBadge } from '@/components/app/status-badges';
+import { PackagePaymentStatusBadge } from '@/components/packages/package-status';
 import {
   Card,
   CardAction,

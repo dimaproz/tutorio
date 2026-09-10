@@ -32,11 +32,11 @@ import { StudentFormDialog } from '@/components/students/student-form-dialog';
 import { errorMessageKey } from '@/lib/api/error-message';
 import { useCreateGroupMutation, useUpdateGroupMutation } from '@/lib/api/groups';
 import { GroupStudentsField } from './group-students-field';
-import { FormActions } from '@/components/shared';
-import { FormSection } from '@/components/app/form-section';
+import { FormActions } from '@/components/shared/form-actions';
+import { FormSection } from '@/components/shared/form-section';
 import { useSession } from '@/components/app/session-provider';
-import { CurrencyOption } from '@/components/app/currency-option';
-import { MoneyInput } from '@/components/app/money-input';
+import { CurrencyOption } from '@/components/shared/currency-option';
+import { MoneyInput } from '@/components/shared/money-input';
 import { useTeachersQuery } from '@/lib/api/teachers';
 import { makeZodErrorMap } from '@/lib/forms/error-map';
 import { groupFormSchema, type GroupFormValues } from '@/features/groups/model/form';
@@ -158,7 +158,7 @@ export function GroupForm({
           </Alert>
         ) : null}
 
-        <FormSection icon={GraduationCapIcon} tone="primary" title={t('detailsSection')}>
+        <FormSection icon={GraduationCapIcon} title={t('detailsSection')}>
           <Field data-invalid={errors.name ? true : undefined}>
             <FieldLabel htmlFor="group-name">{t('name')}</FieldLabel>
             <Input
@@ -175,7 +175,7 @@ export function GroupForm({
 
         <FormSection
           icon={BanknoteIcon}
-          tone="success"
+
           title={t('pricingSection')}
           description={t('pricingHint')}
         >
@@ -219,7 +219,7 @@ export function GroupForm({
 
         <FormSection
           icon={UsersRoundIcon}
-          tone="warning"
+
           title={t('students.section')}
           description={t('students.hint')}
           action={
@@ -244,7 +244,7 @@ export function GroupForm({
 
         <FieldSeparator />
 
-        <FormSection icon={StickyNoteIcon} tone="destructive" title={t('descriptionSection')}>
+        <FormSection icon={StickyNoteIcon} title={t('descriptionSection')}>
           <Field data-invalid={errors.notes ? true : undefined}>
             <FieldLabel htmlFor="group-notes" className="sr-only">
               {t('description')}

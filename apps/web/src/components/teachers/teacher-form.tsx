@@ -22,10 +22,10 @@ import {
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
-import { AvatarPicker } from '@/components/app/avatar-picker';
-import { CurrencyOption } from '@/components/app/currency-option';
-import { FormSection } from '@/components/app/form-section';
-import { FormActions } from '@/components/shared';
+import { AvatarPicker } from '@/components/shared/avatar-picker';
+import { CurrencyOption } from '@/components/shared/currency-option';
+import { FormSection } from '@/components/shared/form-section';
+import { FormActions } from '@/components/shared/form-actions';
 import { errorMessageKey } from '@/lib/api/error-message';
 import { useCreateTeacherMutation, useUpdateTeacherMutation } from '@/lib/api/teachers';
 import { makeZodErrorMap } from '@/lib/forms/error-map';
@@ -166,7 +166,7 @@ export function TeacherForm({
           </Alert>
         ) : null}
 
-        <FormSection icon={ImageIcon} tone="neutral" title={t('avatarSection')}>
+        <FormSection icon={ImageIcon} title={t('avatarSection')}>
           <AvatarPicker
             value={values.avatarKey ?? null}
             onChange={(next) => form.setValue('avatarKey', next)}
@@ -177,7 +177,7 @@ export function TeacherForm({
 
         <FieldSeparator />
 
-        <FormSection icon={UserIcon} tone="primary" title={t('fullName')}>
+        <FormSection icon={UserIcon} title={t('fullName')}>
           <Field data-invalid={errors.fullName ? true : undefined}>
             <FieldLabel htmlFor="teacher-full-name">{t('fullName')}</FieldLabel>
             <Input
@@ -192,7 +192,7 @@ export function TeacherForm({
 
         <FieldSeparator />
 
-        <FormSection icon={PhoneIcon} tone="primary" title={t('phone')}>
+        <FormSection icon={PhoneIcon} title={t('phone')}>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field data-invalid={errors.email ? true : undefined}>
               <FieldLabel htmlFor="teacher-email">{t('email')}</FieldLabel>
@@ -243,7 +243,7 @@ export function TeacherForm({
 
         <FormSection
           icon={GraduationCapIcon}
-          tone="success"
+
           title={tTeachers('detail.teachingTitle')}
         >
           <div className="grid gap-4 sm:grid-cols-[1fr_auto_auto]">
@@ -314,7 +314,7 @@ export function TeacherForm({
 
         <FieldSeparator />
 
-        <FormSection icon={StickyNoteIcon} tone="destructive" title={t('notes')}>
+        <FormSection icon={StickyNoteIcon} title={t('notes')}>
           <Field data-invalid={errors.bio ? true : undefined}>
             <FieldLabel htmlFor="teacher-bio">{t('bio')}</FieldLabel>
             <Textarea

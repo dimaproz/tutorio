@@ -20,20 +20,18 @@ import {
 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import type { EnrollmentResponse, StudentEnrollmentSummary } from '@tutorio/validation';
-import { BackButton } from '@/components/app/back-button';
-import { QueryErrorAlert } from '@/components/app/page-shell';
+import { BackButton } from '@/components/shared/back-button';
+import { QueryErrorAlert } from '@/components/shared/page-shell';
 import { useIsSoloWorkspace } from '@/components/app/session-provider';
-import {
-  BillingTypeBadge,
-  EnrollmentStatusBadge,
-  StudentStatusBadge,
-} from '@/components/app/status-badges';
+import { StudentStatusBadge } from './student-status';
+import { EnrollmentStatusBadge } from '@/components/enrollments/enrollment-status';
+import { BillingTypeBadge } from '@/components/packages/package-status';
 import { StudentDeleteDialog } from './student-delete-dialog';
 import { EnrollmentDialog } from '@/components/enrollments/enrollment-dialog';
 import { StudentLessonsCard } from '@/components/scheduling/student-lessons-card';
 import { StudentFormDialog } from './student-form-dialog';
 import { ParentMiniCard } from '@/components/parents/parent-mini-card';
-import { InfoRow, ProfileHeader, ProfileTag, SectionTitle } from '@/components/app/detail-view';
+import { InfoRow, ProfileHeader, ProfileTag, SectionTitle } from '@/components/shared/detail-view';
 import { Button } from '@/components/ui/button';
 import { Card, CardAction, CardContent, CardHeader } from '@/components/ui/card';
 import {
@@ -48,7 +46,7 @@ import { useEnrollmentsQuery } from '@/lib/api/enrollments';
 import { useStudentQuery } from '@/lib/api/students';
 import { formatMoneyDisplay } from '@/lib/money';
 import { useDateFormatters } from '@/lib/i18n/format';
-import { LoadingPanel } from '@/components/shared';
+import { LoadingPanel } from '@/components/shared/loading';
 
 export function StudentDetailView({ studentId }: { studentId: string }) {
   const t = useTranslations('students');
@@ -155,9 +153,7 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
         <div className="flex flex-col gap-6 lg:col-span-2">
           <Card>
             <CardHeader>
-              <SectionTitle icon={BanknoteIcon} tone="success">
-                {t('detail.pricingTitle')}
-              </SectionTitle>
+              <SectionTitle icon={BanknoteIcon}>{t('detail.pricingTitle')}</SectionTitle>
             </CardHeader>
             <CardContent className="grid gap-3 sm:grid-cols-2">
               <InfoRow
@@ -186,9 +182,7 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
           {isSolo ? null : (
             <Card>
               <CardHeader>
-                <SectionTitle icon={GraduationCapIcon} tone="primary">
-                  {t('detail.enrollmentsTitle')}
-                </SectionTitle>
+                <SectionTitle icon={GraduationCapIcon}>{t('detail.enrollmentsTitle')}</SectionTitle>
                 <CardAction>
                   <Button type="button" size="sm" onClick={openCreate}>
                     <PlusIcon data-icon="inline-start" />
@@ -255,9 +249,7 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
           {data.notes ? (
             <Card>
               <CardHeader>
-                <SectionTitle icon={BookOpenIcon} tone="destructive">
-                  {t('detail.notesTitle')}
-                </SectionTitle>
+                <SectionTitle icon={BookOpenIcon}>{t('detail.notesTitle')}</SectionTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm whitespace-pre-wrap">{data.notes}</p>
@@ -270,9 +262,7 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
         <div className="flex flex-col gap-6">
           <Card>
             <CardHeader>
-              <SectionTitle icon={PhoneIcon} tone="primary">
-                {t('detail.contactsTitle')}
-              </SectionTitle>
+              <SectionTitle icon={PhoneIcon}>{t('detail.contactsTitle')}</SectionTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
               <InfoRow
@@ -314,9 +304,7 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
 
           <Card>
             <CardHeader>
-              <SectionTitle icon={UsersRoundIcon} tone="warning">
-                {t('detail.parentTitle')}
-              </SectionTitle>
+              <SectionTitle icon={UsersRoundIcon}>{t('detail.parentTitle')}</SectionTitle>
             </CardHeader>
             <CardContent>
               {data.parents.length === 0 ? (
@@ -335,9 +323,7 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
 
           <Card>
             <CardHeader>
-              <SectionTitle icon={GraduationCapIcon} tone="primary">
-                {t('detail.groupsTitle')}
-              </SectionTitle>
+              <SectionTitle icon={GraduationCapIcon}>{t('detail.groupsTitle')}</SectionTitle>
             </CardHeader>
             <CardContent>
               {groups.length === 0 ? (

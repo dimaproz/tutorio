@@ -3,7 +3,7 @@
 import { createContext, use, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import type { AuthMe } from '@tutorio/validation';
-import { LoadingScreen } from '@/components/shared';
+import { LoadingScreen } from '@/components/shared/loading';
 import { useSessionQuery } from '@/lib/auth/client';
 
 const SessionContext = createContext<AuthMe | null>(null);

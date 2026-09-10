@@ -8,8 +8,8 @@ import {
   type RowData,
 } from '@tanstack/react-table';
 import { ArrowDownIcon, ArrowUpIcon, ChevronsUpDownIcon } from 'lucide-react';
-import type { ListSort } from '@/components/app/list-controls';
-import { LoadingRegion } from '@/components/shared';
+import type { ListSort } from '@/components/shared/list-controls';
+import { LoadingRegion } from '@/components/shared/loading';
 import {
   Table,
   TableBody,

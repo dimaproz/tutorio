@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import type { ParentListItem } from '@tutorio/validation';
 import { ParentRowActions } from './parent-row-actions';
-import { EntityAvatar } from '@/components/app/entity-avatar';
+import { EntityAvatar } from '@/components/shared/entity-avatar';
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const ROSTER_LIMIT = 3;
@@ -21,10 +21,7 @@ export function ParentCard({ parent }: { parent: ParentListItem }) {
         <div className="flex items-center gap-3">
           <EntityAvatar avatarKey={parent.avatarKey} fullName={parent.fullName} size="sm" />
           <CardTitle className="min-w-0 truncate text-base">
-            <Link
-              href={`/app/parents/${parent.id}`}
-              className="underline-offset-4 hover:underline"
-            >
+            <Link href={`/app/parents/${parent.id}`} className="underline-offset-4 hover:underline">
               {parent.fullName}
             </Link>
           </CardTitle>

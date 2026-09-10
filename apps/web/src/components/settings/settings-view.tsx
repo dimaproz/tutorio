@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { AuditLogTable } from './audit-log-table';
 import { WorkspaceSettingsForm } from './workspace-settings-form';
-import { PageHeader } from '@/components/app/page-shell';
+import { PageHeader } from '@/components/shared/page-shell';
 import { useSession } from '@/components/app/session-provider';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';

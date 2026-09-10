@@ -12,8 +12,9 @@ import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
-import { FormSection } from '@/components/app/form-section';
-import { EntityFormDialog, FormActions } from '@/components/shared';
+import { FormSection } from '@/components/shared/form-section';
+import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
+import { FormActions } from '@/components/shared/form-actions';
 import {
   adjustFormSchema,
   buildAdjustBalanceDto,
@@ -88,12 +89,7 @@ export function AdjustBalanceDialog({
           </Alert>
         ) : null}
 
-        <FormSection
-          icon={SlidersHorizontalIcon}
-          title={t('delta')}
-          description={t('deltaHint')}
-          tone="warning"
-        >
+        <FormSection icon={SlidersHorizontalIcon} title={t('delta')} description={t('deltaHint')}>
           <Field data-invalid={errors.delta ? true : undefined}>
             <FieldLabel htmlFor="adjust-delta">{t('delta')}</FieldLabel>
             <Input
@@ -109,12 +105,7 @@ export function AdjustBalanceDialog({
           </Field>
         </FormSection>
 
-        <FormSection
-          icon={StickyNoteIcon}
-          title={t('note')}
-          description={t('subtitle')}
-          tone="neutral"
-        >
+        <FormSection icon={StickyNoteIcon} title={t('note')} description={t('subtitle')}>
           <Field data-invalid={errors.note ? true : undefined}>
             <FieldLabel htmlFor="adjust-note">{t('note')}</FieldLabel>
             <Textarea

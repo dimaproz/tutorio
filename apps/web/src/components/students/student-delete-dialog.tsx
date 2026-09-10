@@ -4,7 +4,7 @@ import { ArchiveIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { StudentStatusDto } from '@tutorio/validation';
-import { PersonMiniCard } from '@/components/app/person-mini-card';
+import { PersonMiniCard } from '@/components/shared/person-mini-card';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,

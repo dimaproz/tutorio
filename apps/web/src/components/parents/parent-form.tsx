@@ -13,10 +13,11 @@ import { Field, FieldError, FieldGroup, FieldLabel, FieldSeparator } from '@/com
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
-import { AvatarPicker } from '@/components/app/avatar-picker';
-import { FormSection } from '@/components/app/form-section';
-import { StudentStatusBadge } from '@/components/app/status-badges';
-import { EntityMultiSelect, FormActions } from '@/components/shared';
+import { AvatarPicker } from '@/components/shared/avatar-picker';
+import { FormSection } from '@/components/shared/form-section';
+import { StudentStatusBadge } from '@/components/students/student-status';
+import { EntityMultiSelect } from '@/components/shared/entity-picker';
+import { FormActions } from '@/components/shared/form-actions';
 import { errorMessageKey } from '@/lib/api/error-message';
 import { useCreateParentMutation, useUpdateParentMutation } from '@/lib/api/parents';
 import { useStudentsQuery } from '@/lib/api/students';
@@ -154,7 +155,7 @@ export function ParentForm({
           </Alert>
         ) : null}
 
-        <FormSection icon={ImageIcon} tone="neutral" title={t('avatarSection')}>
+        <FormSection icon={ImageIcon} title={t('avatarSection')}>
           <AvatarPicker
             value={values.avatarKey ?? null}
             onChange={(next) => form.setValue('avatarKey', next)}
@@ -165,7 +166,7 @@ export function ParentForm({
 
         <FieldSeparator />
 
-        <FormSection icon={UserIcon} tone="primary" title={t('basicSection')}>
+        <FormSection icon={UserIcon} title={t('basicSection')}>
           <Field data-invalid={errors.fullName ? true : undefined}>
             <FieldLabel htmlFor="parent-full-name">{t('fullName')}</FieldLabel>
             <Input
@@ -180,7 +181,7 @@ export function ParentForm({
 
         <FieldSeparator />
 
-        <FormSection icon={PhoneIcon} tone="primary" title={t('contactsSection')}>
+        <FormSection icon={PhoneIcon} title={t('contactsSection')}>
           <Field data-invalid={errors.phone ? true : undefined}>
             <FieldLabel htmlFor="parent-phone">{t('phone')}</FieldLabel>
             <Input
@@ -219,7 +220,7 @@ export function ParentForm({
 
         <FormSection
           icon={UsersRoundIcon}
-          tone="warning"
+
           title={tParents('detail.studentsTitle')}
           description={tParents('detail.noStudentsDescription')}
         >
@@ -243,7 +244,7 @@ export function ParentForm({
 
         <FieldSeparator />
 
-        <FormSection icon={StickyNoteIcon} tone="destructive" title={t('notesSection')}>
+        <FormSection icon={StickyNoteIcon} title={t('notesSection')}>
           <Field data-invalid={errors.notes ? true : undefined}>
             <FieldLabel htmlFor="parent-notes" className="sr-only">
               {t('notes')}

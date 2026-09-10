@@ -5,9 +5,9 @@ import type { ColumnDef } from '@tanstack/react-table';
 import { ScrollTextIcon } from 'lucide-react';
 import { useFormatter, useTranslations } from 'next-intl';
 import type { AuditActionDto, AuditLogResponse } from '@tutorio/validation';
-import { DataTable } from '@/components/app/data-table';
-import { ListPagination } from '@/components/app/list-controls';
-import { QueryErrorAlert } from '@/components/app/page-shell';
+import { DataTable } from '@/components/shared/data-table';
+import { ListPagination } from '@/components/shared/list-controls';
+import { QueryErrorAlert } from '@/components/shared/page-shell';
 import { Badge } from '@/components/ui/badge';
 import {
   Empty,
@@ -26,7 +26,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useAuditLogsQuery } from '@/lib/api/audit';
-import { LoadingPanel } from '@/components/shared';
+import { LoadingPanel } from '@/components/shared/loading';
 
 const ACTIONS = ['CREATE', 'UPDATE', 'DELETE', 'RESTORE'] as const;
 const ENTITIES = ['STUDENT', 'GROUP', 'ENROLLMENT', 'WORKSPACE'] as const;

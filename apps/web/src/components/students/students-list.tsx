@@ -10,23 +10,24 @@ import { StudentCard } from './student-card';
 import { StudentFormDialog } from './student-form-dialog';
 import { StudentRowActions } from './student-row-actions';
 import { StudentsListSkeleton } from './students-list-skeleton';
-import { StudentStatusBadge } from '@/components/app/status-badges';
-import { STUDENT_STATUS_META } from '@/components/app/status-meta';
-import { DataTable } from '@/components/app/data-table';
-import { PersonCell, PhoneCell, TelegramCell } from '@/components/app/table-cells';
+import { StudentStatusBadge } from '@/components/students/student-status';
+import { STUDENT_STATUS_META } from '@/components/students/student-status';
+import { DataTable } from '@/components/shared/data-table';
+import { PersonCell, PhoneCell, TelegramCell } from '@/components/shared/table-cells';
 import {
   ListPagination,
   ListSearchInput,
   ListSelectFilter,
   useListSort,
-} from '@/components/app/list-controls';
-import { PageHeader, QueryErrorAlert } from '@/components/app/page-shell';
+} from '@/components/shared/list-controls';
+import { PageHeader, QueryErrorAlert } from '@/components/shared/page-shell';
 import { Button } from '@/components/ui/button';
-import { CollectionEmptyState, CollectionToolbar } from '@/components/shared';
+import { CollectionEmptyState } from '@/components/shared/collection-empty-state';
+import { CollectionToolbar } from '@/components/shared/collection-toolbar';
 import { parsePageParam } from '@/lib/api/filters';
 import { useStudentsQuery } from '@/lib/api/students';
 import { useGroupsQuery } from '@/lib/api/groups';
-import { CURRENCY_META } from '@/components/app/currency-option';
+import { CURRENCY_META } from '@/components/shared/currency-option';
 import { formatAmountDisplay } from '@/lib/money';
 
 const STUDENT_STATUSES = ['ACTIVE', 'ON_HOLD', 'ARCHIVED'] as const;

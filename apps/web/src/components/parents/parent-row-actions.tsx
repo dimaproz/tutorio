@@ -5,13 +5,9 @@ import Link from 'next/link';
 import { PencilIcon, Trash2Icon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import { ConfirmDialog } from '@/components/app/confirm-dialog';
-import { RowActionsTrigger } from '@/components/shared';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from '@/components/ui/dropdown-menu';
+import { ConfirmDialog } from '@/components/shared/confirm-dialog';
+import { RowActionsTrigger } from '@/components/shared/row-actions-trigger';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { errorMessageKey } from '@/lib/api/error-message';
 import { useDeleteParentMutation } from '@/lib/api/parents';
 import type { GatewayError } from '@/lib/auth/client';

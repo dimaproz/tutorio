@@ -11,12 +11,12 @@ import {
 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import { BackButton } from '@/components/app/back-button';
-import { ConfirmDialog } from '@/components/app/confirm-dialog';
-import { SectionTitle } from '@/components/app/detail-view';
-import { QueryErrorAlert } from '@/components/app/page-shell';
+import { BackButton } from '@/components/shared/back-button';
+import { ConfirmDialog } from '@/components/shared/confirm-dialog';
+import { SectionTitle } from '@/components/shared/detail-view';
+import { QueryErrorAlert } from '@/components/shared/page-shell';
 import { useSession } from '@/components/app/session-provider';
-import { PackagePaymentStatusBadge, PaymentStatusBadge } from '@/components/app/status-badges';
+import { PackagePaymentStatusBadge, PaymentStatusBadge } from './package-status';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardAction, CardContent, CardHeader } from '@/components/ui/card';
@@ -31,7 +31,7 @@ import { formatMoneyDisplay } from '@/lib/money';
 import { useDateFormatters } from '@/lib/i18n/format';
 import { AdjustBalanceDialog } from './adjust-balance-dialog';
 import { PaymentDialog, type PaymentTarget } from './payment-dialog';
-import { LoadingPanel } from '@/components/shared';
+import { LoadingPanel } from '@/components/shared/loading';
 
 export function PackageDetailView({ packageId }: { packageId: string }) {
   const t = useTranslations('packages');
@@ -116,9 +116,7 @@ export function PackageDetailView({ packageId }: { packageId: string }) {
         <div className="flex flex-col gap-6 lg:col-span-2">
           <Card>
             <CardHeader>
-              <SectionTitle icon={BanknoteIcon} tone="success">
-                {tCard('remaining')}
-              </SectionTitle>
+              <SectionTitle icon={BanknoteIcon}>{tCard('remaining')}</SectionTitle>
               {!isGroup ? (
                 <CardAction>
                   <Button
@@ -173,9 +171,7 @@ export function PackageDetailView({ packageId }: { packageId: string }) {
           {isGroup ? (
             <Card>
               <CardHeader>
-                <SectionTitle icon={UsersRoundIcon} tone="warning">
-                  {tDetail('sharesTitle')}
-                </SectionTitle>
+                <SectionTitle icon={UsersRoundIcon}>{tDetail('sharesTitle')}</SectionTitle>
               </CardHeader>
               <CardContent>
                 <ul className="flex flex-col gap-3">
@@ -220,9 +216,7 @@ export function PackageDetailView({ packageId }: { packageId: string }) {
           {/* The whole point of the ledger: the balance explains itself. */}
           <Card>
             <CardHeader>
-              <SectionTitle icon={HistoryIcon} tone="primary">
-                {tDetail('historyTitle')}
-              </SectionTitle>
+              <SectionTitle icon={HistoryIcon}>{tDetail('historyTitle')}</SectionTitle>
               <p className="text-muted-foreground text-sm">{tDetail('historySubtitle')}</p>
             </CardHeader>
             <CardContent>
@@ -264,9 +258,7 @@ export function PackageDetailView({ packageId }: { packageId: string }) {
 
           <Card>
             <CardHeader>
-              <SectionTitle icon={BanknoteIcon} tone="success">
-                {tDetail('paymentsTitle')}
-              </SectionTitle>
+              <SectionTitle icon={BanknoteIcon}>{tDetail('paymentsTitle')}</SectionTitle>
             </CardHeader>
             <CardContent>
               {payments.isPending ? (

@@ -10,7 +10,7 @@ import {
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { LessonResponse } from '@tutorio/validation';
-import { RowActionsTrigger } from '@/components/shared';
+import { RowActionsTrigger } from '@/components/shared/row-actions-trigger';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -60,10 +60,7 @@ export function LessonRowActions({
               <CalendarClockIcon />
               {t('reschedule')}
             </DropdownMenuItem>
-            <DropdownMenuItem
-              variant="destructive"
-              onSelect={() => onOpenDialog(lesson, 'cancel')}
-            >
+            <DropdownMenuItem variant="destructive" onSelect={() => onOpenDialog(lesson, 'cancel')}>
               <XCircleIcon />
               {t('cancel')}
             </DropdownMenuItem>

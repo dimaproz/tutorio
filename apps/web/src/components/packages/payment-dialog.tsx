@@ -20,10 +20,11 @@ import {
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
-import { FormSection } from '@/components/app/form-section';
-import { MoneyInput } from '@/components/app/money-input';
-import { PersonMiniCard } from '@/components/app/person-mini-card';
-import { EntityFormDialog, FormActions } from '@/components/shared';
+import { FormSection } from '@/components/shared/form-section';
+import { MoneyInput } from '@/components/shared/money-input';
+import { PersonMiniCard } from '@/components/shared/person-mini-card';
+import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
+import { FormActions } from '@/components/shared/form-actions';
 import {
   buildRecordPaymentDto,
   emptyPaymentForm,
@@ -91,9 +92,7 @@ export function PaymentDialog({
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {
-      await recordPayment.mutateAsync(
-        buildRecordPaymentDto(values, { packageId, currency }),
-      );
+      await recordPayment.mutateAsync(buildRecordPaymentDto(values, { packageId, currency }));
       toast.success(tPackages('toasts.paymentRecorded'));
       onOpenChange(false);
     } catch {
@@ -115,13 +114,11 @@ export function PaymentDialog({
       <form onSubmit={onSubmit} noValidate className="flex flex-col gap-7">
         {recordPayment.error ? (
           <Alert variant="destructive" role="alert">
-            <AlertDescription>
-              {tErrors(errorMessageKey(recordPayment.error))}
-            </AlertDescription>
+            <AlertDescription>{tErrors(errorMessageKey(recordPayment.error))}</AlertDescription>
           </Alert>
         ) : null}
 
-        <FormSection icon={UserRoundIcon} title={t('student')} tone="primary">
+        <FormSection icon={UserRoundIcon} title={t('student')}>
           <PersonMiniCard fullName={target.fullName} />
         </FormSection>
 
@@ -137,7 +134,6 @@ export function PaymentDialog({
                 )}`
               : undefined
           }
-          tone="success"
         >
           <Field data-invalid={errors.amount ? true : undefined}>
             <FieldLabel htmlFor="payment-amount">{t('amount')}</FieldLabel>
@@ -175,7 +171,7 @@ export function PaymentDialog({
           />
         </FormSection>
 
-        <FormSection icon={StickyNoteIcon} title={t('note')} tone="neutral">
+        <FormSection icon={StickyNoteIcon} title={t('note')}>
           <Field data-invalid={errors.note ? true : undefined}>
             <FieldLabel htmlFor="payment-note">{t('note')}</FieldLabel>
             <Textarea id="payment-note" {...form.register('note')} />

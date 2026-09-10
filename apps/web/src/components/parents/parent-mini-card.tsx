@@ -1,6 +1,6 @@
 'use client';
 
-import { PersonMiniCard } from '@/components/app/person-mini-card';
+import { PersonMiniCard } from '@/components/shared/person-mini-card';
 
 // Everything the compact card can show — a superset of StudentParentRef and
 // ParentListItem, so both the student form (rich, with contacts) and the

@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { SendIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { EntityAvatar } from '@/components/app/entity-avatar';
+import { EntityAvatar } from '@/components/shared/entity-avatar';
 
 // The cells every collection table shares. A phone reads the same on students
 // and on parents, and so does a person — keeping them here is what stops the

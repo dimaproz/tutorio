@@ -12,12 +12,12 @@ import {
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import { BackButton } from '@/components/app/back-button';
-import { ConfirmDialog } from '@/components/app/confirm-dialog';
-import { PersonMiniCard } from '@/components/app/person-mini-card';
-import { StudentStatusBadge } from '@/components/app/status-badges';
-import { InfoRow, ProfileHeader, SectionTitle } from '@/components/app/detail-view';
-import { QueryErrorAlert, QueryRefreshIndicator } from '@/components/app/page-shell';
+import { BackButton } from '@/components/shared/back-button';
+import { ConfirmDialog } from '@/components/shared/confirm-dialog';
+import { PersonMiniCard } from '@/components/shared/person-mini-card';
+import { StudentStatusBadge } from '@/components/students/student-status';
+import { InfoRow, ProfileHeader, SectionTitle } from '@/components/shared/detail-view';
+import { QueryErrorAlert, QueryRefreshIndicator } from '@/components/shared/page-shell';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
@@ -26,7 +26,7 @@ import { useDeleteParentMutation, useParentQuery } from '@/lib/api/parents';
 import type { GatewayError } from '@/lib/auth/client';
 import { useDateFormatters } from '@/lib/i18n/format';
 import { ParentFormDialog } from './parent-form-dialog';
-import { LoadingPanel } from '@/components/shared';
+import { LoadingPanel } from '@/components/shared/loading';
 
 export function ParentDetailView({ parentId }: { parentId: string }) {
   const t = useTranslations('parents');
@@ -98,9 +98,7 @@ export function ParentDetailView({ parentId }: { parentId: string }) {
         <div className="flex flex-col gap-6 lg:col-span-2">
           <Card>
             <CardHeader>
-              <SectionTitle icon={PhoneIcon} tone="primary">
-                {t('detail.contactsTitle')}
-              </SectionTitle>
+              <SectionTitle icon={PhoneIcon}>{t('detail.contactsTitle')}</SectionTitle>
             </CardHeader>
             <CardContent className="grid gap-3 sm:grid-cols-2">
               <InfoRow
@@ -133,9 +131,7 @@ export function ParentDetailView({ parentId }: { parentId: string }) {
 
           <Card>
             <CardHeader>
-              <SectionTitle icon={BookOpenIcon} tone="destructive">
-                {t('detail.notesTitle')}
-              </SectionTitle>
+              <SectionTitle icon={BookOpenIcon}>{t('detail.notesTitle')}</SectionTitle>
             </CardHeader>
             <CardContent>
               {data.notes ? (
@@ -151,9 +147,7 @@ export function ParentDetailView({ parentId }: { parentId: string }) {
         <div className="flex flex-col gap-6">
           <Card>
             <CardHeader>
-              <SectionTitle icon={UsersRoundIcon} tone="warning">
-                {t('detail.studentsTitle')}
-              </SectionTitle>
+              <SectionTitle icon={UsersRoundIcon}>{t('detail.studentsTitle')}</SectionTitle>
             </CardHeader>
             <CardContent>
               {data.students.length === 0 ? (

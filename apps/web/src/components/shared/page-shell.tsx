@@ -5,8 +5,6 @@ import { useTranslations } from 'next-intl';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
-import { errorMessageKey } from '@/lib/api/error-message';
-import type { GatewayError } from '@/lib/auth/client';
 
 export function PageHeader({
   title,
@@ -46,13 +44,18 @@ export function QueryRefreshIndicator({ isFetching }: { isFetching: boolean }) {
 
 export function QueryErrorAlert({
   error,
+  message,
   title,
   onRetry,
 }: {
-  error: GatewayError;
+  /** Retained while legacy features migrate to their localized `message` slot. */
+  error?: unknown;
+  /** Feature-owned, localized error copy. Falls back to the generic message. */
+  message?: React.ReactNode;
   title: string;
   onRetry: () => void;
 }) {
+  void error;
   const t = useTranslations('errors');
   const tCommon = useTranslations('common');
 
@@ -61,7 +64,7 @@ export function QueryErrorAlert({
       <AlertCircleIcon />
       <AlertTitle>{title}</AlertTitle>
       <AlertDescription className="flex flex-col items-start gap-3">
-        <span>{t(errorMessageKey(error))}</span>
+        <span>{message ?? t('generic')}</span>
         <Button type="button" variant="outline" size="sm" onClick={onRetry}>
           {tCommon('retry')}
         </Button>

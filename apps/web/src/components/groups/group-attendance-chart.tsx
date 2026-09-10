@@ -2,7 +2,7 @@
 
 import { ChartNoAxesColumnIncreasingIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { SectionTitle } from '@/components/app/detail-view';
+import { SectionTitle } from '@/components/shared/detail-view';
 import { Card, CardAction, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -30,9 +30,7 @@ export function GroupAttendanceChart({
   return (
     <Card>
       <CardHeader>
-        <SectionTitle icon={ChartNoAxesColumnIncreasingIcon} tone="success">
-          {t('attendanceTitle')}
-        </SectionTitle>
+        <SectionTitle icon={ChartNoAxesColumnIncreasingIcon}>{t('attendanceTitle')}</SectionTitle>
         <CardDescription>{t('attendanceDescription')}</CardDescription>
         <CardAction>
           <Tabs value={period} onValueChange={changePeriod}>
