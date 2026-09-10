@@ -5,11 +5,13 @@ import { EyeIcon, EyeOffIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
 
-type PasswordInputProps = Omit<React.ComponentProps<typeof InputGroupInput>, 'type'>;
+type PasswordInputProps = Omit<React.ComponentProps<typeof InputGroupInput>, 'type'> & {
+  defaultVisible?: boolean;
+};
 
-export function PasswordInput(props: PasswordInputProps) {
+export function PasswordInput({ defaultVisible = false, ...props }: PasswordInputProps) {
   const t = useTranslations('auth.login');
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(defaultVisible);
 
   return (
     <InputGroup>

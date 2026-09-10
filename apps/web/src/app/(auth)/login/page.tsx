@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
-import { LoginForm } from '@/features/auth';
+import { LoginFormContainer } from '@/features/auth';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('auth.login');
@@ -8,5 +8,5 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function LoginPage() {
-  return <LoginForm />;
+  return <div className="mx-auto w-full max-w-sm"><LoginFormContainer /></div>;
 }

@@ -244,6 +244,27 @@ Acceptance:
 - Storybook browser tests, accessibility checks, static build, and the complete
   frontend verification gate pass.
 
+### Actual result — 2026-09-09
+
+- Replaced the split illustration layout with the centered `bg-muted` auth
+  shell adapted from official `login-03` and `signup-03`; the unused auth hero
+  image was removed.
+- Added localized Tutorio identity with `GraduationCapIcon`, retained the
+  existing locale switcher outside the Card, and kept login at `max-w-sm` and
+  registration at `max-w-md`.
+- Moved authentication UI into the auth feature, with isolated visual forms
+  and thin mutation/router containers that preserve the existing session,
+  gateway, redirect, validation, error-mapping, autocomplete, password-toggle,
+  and duplicate-submit behavior.
+- Added deterministic shell, login, and registration Storybook states and
+  interaction/accessibility coverage for responsive, locale, theme, pending,
+  validation, request-error, focus, password-toggle, mode-switching, retained
+  input, and navigation behavior. Independent review corrected constrained
+  320px story coverage.
+- `pnpm generate`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`,
+  `pnpm --filter @tutorio/web test-storybook`,
+  `pnpm --filter @tutorio/web build-storybook`, and `git diff --check` pass.
+
 ## Frontend Packet F4 — Authenticated Application Shell
 
 Purpose: give every signed-in route one standard responsive CRM frame.

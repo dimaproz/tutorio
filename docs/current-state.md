@@ -1,7 +1,7 @@
 # Tutorio Current State
 
 Last verified: 2026-09-09 against Work Packet 5 implementation commit
-`e362675` and Frontend Packet F2.
+`e362675` and completed Frontend Packet F3.
 
 This is the first project document to read before planning or implementing
 work. It reports the repository as it exists; [`mvp-plan.md`](./mvp-plan.md)
@@ -19,7 +19,7 @@ workflows correct, understandable, tested, and recoverable.
 - The former `refactor/students-design` work was merged by PR #18.
 - `pnpm generate`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build`
   pass on 2026-09-09. Observed unit totals: domain 92, validation 46, API 158,
-  and web 109. Storybook browser tests pass for 59 stories across 15 files,
+  and web 109. Storybook browser tests pass for 87 stories across 18 files,
   including automated accessibility checks, and the static build passes.
 - API E2E passes 78 tests in 6 suites against an isolated PostgreSQL 17
   database after all 20 migrations, including legacy-TEACHER denials, group
@@ -87,8 +87,26 @@ query provider. CI now makes the Storybook browser suite and deterministic
 static build separate gates. Independent review corrected portal theme/locale
 inheritance, concrete narrow-width stories, and field-hierarchy examples. All
 required generation, lint, typecheck, unit test, production build, Storybook
-test, static build, and whitespace checks pass. F3 is next; F4 and F5 have not
-started.
+test, static build, and whitespace checks pass.
+
+### Frontend Packet F3 evidence
+
+Authentication now uses the approved muted, centered `login-03`/`signup-03`
+composition with localized Tutorio identity, `GraduationCapIcon`, the existing
+locale switcher, and one shared feature-owned Card panel. The split illustration
+shell and its unused image asset are removed. The runtime mutation/router
+containers preserve gateway calls, session updates, redirects, cookies, API
+error mapping, browser autocomplete, password visibility, validation, and
+duplicate-submit protection; visual forms remain Storybook-independent of the
+backend, session, and QueryClient. Registration remains one page and one
+submission, with correctly labelled SOLO/SCHOOL radio choices and a conditional
+workspace-name field. Auth shell, login, and registration stories cover desktop,
+320px, light/dark, Ukrainian/English, request failure, pending, validation,
+password visibility, keyboard submission, focus, mode changes, retained input,
+links, and automated accessibility. Independent review found and corrected the
+missing constrained 320px story coverage. All required generation, lint,
+typecheck, unit test, production build, Storybook test, static build, and
+whitespace checks pass. F4 is next; F5 has not started.
 
 ### Work Packet 1 evidence
 
@@ -222,6 +240,6 @@ generated client expose the typed `403` contract for owner-only handlers.
 
 ## Next checkpoint
 
-Frontend Packet F3 — Authentication Shell is the next implementation packet.
+Frontend Packet F4 — Authenticated Application Shell is the next implementation packet.
 Work Packet 6 — Student Quick Create begins only after Frontend Packets F3–F5
 pass their gates.

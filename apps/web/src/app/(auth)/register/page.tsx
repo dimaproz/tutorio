@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
-import { RegisterForm } from '@/features/auth';
+import { RegisterFormContainer } from '@/features/auth';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('auth.register');
@@ -8,5 +8,5 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function RegisterPage() {
-  return <RegisterForm />;
+  return <div className="w-full max-w-md"><RegisterFormContainer /></div>;
 }

@@ -174,10 +174,11 @@ simplification. Full scope and gates live in
 3. **F2 — Storybook Foundation (implemented and reviewed):** added the
    backend-independent Next.js/Vite catalog, deterministic locale/theme
    providers, interaction and accessibility coverage, and CI static-build gate.
-4. **F3 — Authentication Shell (next; screen brief approved):** adapt official
-   shadcn `login-03` and `signup-03` to the existing login/register flows,
-   keeping registration on one page without changing auth behavior.
-5. **F4 — Authenticated Application Shell:** adapt the shell structure from
+4. **F3 — Authentication Shell (implemented and reviewed):** adapted official
+   shadcn `login-03` and `signup-03` to the existing login/register flows;
+   registration remains one page and one submission, and all auth behavior is
+   preserved.
+5. **F4 — Authenticated Application Shell (next):** adapt the shell structure from
    official shadcn `dashboard-01`; preserve routing, permissions, workspace,
    locale, theme, and mobile behavior without importing demo features.
 6. **F5 — Product Composition Boundary:** consolidate shared/app ownership,
