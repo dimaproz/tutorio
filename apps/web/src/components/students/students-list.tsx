@@ -4,31 +4,33 @@ import { useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import type { ColumnDef } from '@tanstack/react-table';
 import { PlusIcon, UsersIcon } from 'lucide-react';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import type { StudentListItem } from '@tutorio/validation';
-import { StudentCard } from './student-card';
+import { StudentAddedDate, StudentCard, StudentLearningFormat } from './student-card';
 import { StudentFormDialog } from './student-form-dialog';
 import { StudentRowActions } from './student-row-actions';
 import { StudentsListSkeleton } from './students-list-skeleton';
 import { StudentStatusBadge } from '@/components/students/student-status';
 import { STUDENT_STATUS_META } from '@/components/students/student-status';
+import { CollectionFrame } from '@/components/shared/collection-frame';
 import { DataTable } from '@/components/shared/data-table';
-import { PersonCell, PhoneCell, TelegramCell } from '@/components/shared/table-cells';
+import { MetricCard } from '@/components/shared/metric-card';
+import { PersonCell } from '@/components/shared/table-cells';
 import {
   ListPagination,
   ListSearchInput,
   ListSelectFilter,
   useListSort,
+  useUpdateSearchParams,
 } from '@/components/shared/list-controls';
-import { PageHeader, QueryErrorAlert } from '@/components/shared/page-shell';
+import { PageHeader, QueryErrorAlert, QueryRefreshIndicator } from '@/components/shared/page-shell';
 import { Button } from '@/components/ui/button';
 import { CollectionEmptyState } from '@/components/shared/collection-empty-state';
 import { CollectionToolbar } from '@/components/shared/collection-toolbar';
+import { Skeleton } from '@/components/ui/skeleton';
 import { parsePageParam } from '@/lib/api/filters';
 import { useStudentsQuery } from '@/lib/api/students';
 import { useGroupsQuery } from '@/lib/api/groups';
-import { CURRENCY_META } from '@/components/shared/currency-option';
-import { formatAmountDisplay } from '@/lib/money';
 
 const STUDENT_STATUSES = ['ACTIVE', 'ON_HOLD', 'ARCHIVED'] as const;
 
@@ -36,15 +38,17 @@ export function StudentsList() {
   const t = useTranslations('students');
   const tStatus = useTranslations('studentStatus');
   const tFilters = useTranslations('students.filters');
+  const tListFilters = useTranslations('filters');
   const tCommon = useTranslations('common');
-  const locale = useLocale();
   const searchParams = useSearchParams();
+  const updateParams = useUpdateSearchParams();
   const [createOpen, setCreateOpen] = useState(false);
 
   const page = parsePageParam(searchParams.get('page'));
   const search = searchParams.get('search')?.trim() || undefined;
   const status = searchParams.get('status') || undefined;
   const groupId = searchParams.get('groupId') || undefined;
+  const state = status === 'ARCHIVED' ? 'deleted' : 'active';
 
   // `fullName` matches the API default, so an unsorted URL stays clean.
   const sort = useListSort('fullName');
@@ -53,10 +57,30 @@ export function StudentsList() {
     search,
     status,
     groupId,
+    state,
     sort: sort.field,
     order: sort.order,
   });
   const groups = useGroupsQuery({ page: 1, pageSize: 100 });
+  const totalMetric = useStudentsQuery({ page: 1, pageSize: 1, state: 'active' });
+  const activeMetric = useStudentsQuery({
+    page: 1,
+    pageSize: 1,
+    state: 'active',
+    status: 'ACTIVE',
+  });
+  const onHoldMetric = useStudentsQuery({
+    page: 1,
+    pageSize: 1,
+    state: 'active',
+    status: 'ON_HOLD',
+  });
+  const archivedMetric = useStudentsQuery({
+    page: 1,
+    pageSize: 1,
+    state: 'deleted',
+    status: 'ARCHIVED',
+  });
 
   const statusOptions = STUDENT_STATUSES.map((value) => ({
     value,
@@ -89,42 +113,15 @@ export function StudentsList() {
         cell: ({ row }) => <StudentStatusBadge status={row.original.status} />,
       },
       {
-        id: 'group',
-        header: () => t('columns.group'),
-        cell: ({ row }) =>
-          row.original.groupNames.length > 0 ? (
-            <span>{row.original.groupNames.join(', ')}</span>
-          ) : (
-            <span className="text-muted-foreground">{t('individual')}</span>
-          ),
+        id: 'learningFormat',
+        header: () => t('columns.learningFormat'),
+        cell: ({ row }) => <StudentLearningFormat student={row.original} />,
       },
       {
-        id: 'price',
-        header: () => t('columns.price'),
-        meta: { sortField: 'hourlyRateMinor' },
-        cell: ({ row }) =>
-          row.original.hourlyRateMinor != null && row.original.currency ? (
-            <span className="tabular font-medium whitespace-nowrap">
-              {formatAmountDisplay(row.original.hourlyRateMinor, locale)}{' '}
-              <span className="text-muted-foreground">
-                {CURRENCY_META[row.original.currency]?.symbol ?? row.original.currency}
-              </span>
-            </span>
-          ) : (
-            <span className="text-muted-foreground">{tCommon('notProvided')}</span>
-          ),
-      },
-      {
-        id: 'phone',
-        header: () => t('columns.phone'),
-        meta: { sortField: 'phone' },
-        cell: ({ row }) => <PhoneCell phone={row.original.phone} />,
-      },
-      {
-        id: 'telegram',
-        header: () => t('columns.telegram'),
-        meta: { sortField: 'telegramUsername' },
-        cell: ({ row }) => <TelegramCell username={row.original.telegramUsername} />,
+        accessorKey: 'createdAt',
+        header: () => t('columns.added'),
+        meta: { sortField: 'createdAt' },
+        cell: ({ row }) => <StudentAddedDate createdAt={row.original.createdAt} />,
       },
       {
         id: 'actions',
@@ -141,67 +138,91 @@ export function StudentsList() {
         ),
       },
     ],
-    [t, tCommon, locale],
+    [t],
   );
 
   const items = students.data?.items ?? [];
   const showEmpty = students.isSuccess && items.length === 0;
+  const filtersActive = Boolean(search || status || groupId);
+  const clearFilters = () =>
+    updateParams({ search: undefined, status: undefined, groupId: undefined }, { resetPage: true });
 
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader
-        title={t('title')}
-        description={t('subtitle')}
-        action={
-          <Button className="h-11 md:h-9" onClick={() => setCreateOpen(true)}>
-            <PlusIcon data-icon />
-            {t('add')}
-          </Button>
+    <>
+      <CollectionFrame
+        header={
+          <PageHeader
+            title={t('title')}
+            description={t('subtitle')}
+            action={
+              <Button className="h-11 md:h-9" onClick={() => setCreateOpen(true)}>
+                <PlusIcon data-icon="inline-start" />
+                {t('add')}
+              </Button>
+            }
+          />
         }
-      />
-
-      <CollectionToolbar>
-        <ListSearchInput label={t('searchLabel')} placeholder={t('searchPlaceholder')} />
-        <ListSelectFilter
-          paramKey="status"
-          value={status}
-          options={statusOptions}
-          label={tFilters('statusAll')}
-        />
-        <ListSelectFilter
-          paramKey="groupId"
-          value={groupId}
-          options={groupOptions}
-          label={tFilters('groupAll')}
-        />
-      </CollectionToolbar>
-
-      {students.isPending ? (
-        <StudentsListSkeleton caption={t('tableCaption')} loadingLabel={tCommon('loading')} />
-      ) : null}
-
-      {students.isError ? (
-        <QueryErrorAlert
-          error={students.error}
-          title={t('error.title')}
-          onRetry={() => void students.refetch()}
-        />
-      ) : null}
-
-      {showEmpty ? (
-        <StudentsEmptyState search={search} onCreate={() => setCreateOpen(true)} />
-      ) : null}
-
-      {items.length > 0 ? (
-        <>
-          {/* Mobile: cards. Desktop: an accessible table — the mobile layout
-              never depends on horizontally scrolling a desktop table. */}
-          <div className="flex flex-col gap-3 md:hidden">
-            {items.map((student) => (
-              <StudentCard key={student.id} student={student} />
-            ))}
+        summary={
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <StudentMetricCard label={t('metrics.total')} query={totalMetric} />
+            <StudentMetricCard label={t('metrics.active')} query={activeMetric} />
+            <StudentMetricCard label={t('metrics.onHold')} query={onHoldMetric} />
+            <StudentMetricCard label={t('metrics.archived')} query={archivedMetric} />
           </div>
-          <div className="hidden md:block">
+        }
+        toolbar={
+          <CollectionToolbar>
+            <ListSearchInput label={t('searchLabel')} placeholder={t('searchPlaceholder')} />
+            <ListSelectFilter
+              paramKey="status"
+              value={status}
+              options={statusOptions}
+              label={tFilters('statusAll')}
+            />
+            <ListSelectFilter
+              paramKey="groupId"
+              value={groupId}
+              options={groupOptions}
+              label={tFilters('groupAll')}
+            />
+            {filtersActive ? (
+              <Button type="button" variant="ghost" onClick={clearFilters}>
+                {tListFilters('clear')}
+              </Button>
+            ) : null}
+          </CollectionToolbar>
+        }
+        refresh={<QueryRefreshIndicator isFetching={students.isFetching && !students.isPending} />}
+        loading={
+          students.isPending ? (
+            <StudentsListSkeleton caption={t('tableCaption')} loadingLabel={tCommon('loading')} />
+          ) : undefined
+        }
+        error={
+          students.isError ? (
+            <QueryErrorAlert
+              error={students.error}
+              title={t('error.title')}
+              onRetry={() => void students.refetch()}
+            />
+          ) : undefined
+        }
+        empty={
+          showEmpty ? (
+            <StudentsEmptyState
+              filtered={filtersActive}
+              onClearFilters={clearFilters}
+              onCreate={() => setCreateOpen(true)}
+            />
+          ) : undefined
+        }
+        mobile={
+          items.length > 0
+            ? items.map((student) => <StudentCard key={student.id} student={student} />)
+            : undefined
+        }
+        desktop={
+          items.length > 0 ? (
             <DataTable
               columns={columns}
               data={items}
@@ -209,19 +230,52 @@ export function StudentsList() {
               sort={sort}
               loading={students.isFetching}
             />
-          </div>
-          <ListPagination page={page} totalPages={students.data?.totalPages ?? 1} />
-        </>
-      ) : null}
-
+          ) : undefined
+        }
+        pagination={
+          items.length > 0 ? (
+            <ListPagination page={page} totalPages={students.data?.totalPages ?? 1} />
+          ) : undefined
+        }
+      />
       <StudentFormDialog open={createOpen} onOpenChange={setCreateOpen} />
-    </div>
+    </>
   );
 }
 
-function StudentsEmptyState({ search, onCreate }: { search?: string; onCreate: () => void }) {
+export function StudentMetricCard({
+  label,
+  query,
+}: {
+  label: string;
+  query: { data?: { total: number }; isPending: boolean; isError: boolean };
+}) {
+  const t = useTranslations('students.metrics');
+  const value = query.isPending ? (
+    <Skeleton className="h-8 w-12" />
+  ) : query.isError ? (
+    t('unavailable')
+  ) : (
+    (query.data?.total ?? 0)
+  );
+
+  return (
+    <MetricCard label={label} value={value} description={query.isError ? t('error') : undefined} />
+  );
+}
+
+export function StudentsEmptyState({
+  filtered,
+  onClearFilters,
+  onCreate,
+}: {
+  filtered: boolean;
+  onClearFilters: () => void;
+  onCreate: () => void;
+}) {
   const t = useTranslations('students');
-  const scope = search ? 'emptySearch' : 'empty';
+  const tFilters = useTranslations('filters');
+  const scope = filtered ? 'emptyFiltered' : 'empty';
 
   return (
     <CollectionEmptyState
@@ -229,12 +283,16 @@ function StudentsEmptyState({ search, onCreate }: { search?: string; onCreate: (
       title={t(`${scope}.title`)}
       description={t(`${scope}.description`)}
       action={
-        scope === 'empty' ? (
+        filtered ? (
+          <Button type="button" variant="outline" onClick={onClearFilters}>
+            {tFilters('clear')}
+          </Button>
+        ) : (
           <Button onClick={onCreate}>
-            <PlusIcon data-icon />
+            <PlusIcon data-icon="inline-start" />
             {t('empty.action')}
           </Button>
-        ) : undefined
+        )
       }
     />
   );

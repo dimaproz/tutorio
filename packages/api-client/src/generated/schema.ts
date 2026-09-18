@@ -921,6 +921,8 @@ export interface components {
                 /** @enum {string|null} */
                 avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
                 /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
                 deletedAt: string | null;
                 activeEnrollmentCount: number;
                 groupNames: string[];
@@ -2420,7 +2422,7 @@ export interface operations {
                 state?: "active" | "deleted" | "all";
                 status?: "ACTIVE" | "ON_HOLD" | "ARCHIVED";
                 groupId?: string;
-                sort?: "fullName" | "status" | "hourlyRateMinor" | "phone" | "telegramUsername" | "createdAt";
+                sort?: "fullName" | "status" | "createdAt";
                 order?: "asc" | "desc";
             };
             header?: never;

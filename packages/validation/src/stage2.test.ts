@@ -11,7 +11,12 @@ import { createGroupSchema, listGroupsQuerySchema, updateGroupSchema } from './g
 import { paginatedResponseSchema, paginationQuerySchema } from './pagination';
 import { createParentSchema, updateParentSchema } from './parents';
 import { z } from 'zod';
-import { createStudentSchema, updateStudentSchema } from './students';
+import {
+  createStudentSchema,
+  listStudentsQuerySchema,
+  studentListItemSchema,
+  updateStudentSchema,
+} from './students';
 import { updateWorkspaceSettingsSchema } from './workspace-settings';
 
 const UUID = '2f9f3a52-8a56-4f7e-9a34-1b4f0c9d2e11';
@@ -131,6 +136,31 @@ describe('students', () => {
         .success,
     ).toBe(false);
     expect(updateStudentSchema.safeParse({ status: 'ARCHIVED' }).success).toBe(false);
+  });
+
+  it('requires createdAt on compact list items and limits list sorting to collection columns', () => {
+    const listItem = {
+      id: UUID,
+      fullName: 'Alice',
+      email: null,
+      phone: null,
+      telegramUsername: null,
+      timezone: 'Europe/Kyiv',
+      status: 'ACTIVE',
+      hourlyRateMinor: null,
+      currency: null,
+      avatarKey: null,
+      createdAt: '2026-09-11T10:00:00.000Z',
+      deletedAt: null,
+      activeEnrollmentCount: 0,
+      groupNames: [],
+    };
+    expect(studentListItemSchema.safeParse(listItem).success).toBe(true);
+    expect(studentListItemSchema.safeParse({ ...listItem, createdAt: undefined }).success).toBe(
+      false,
+    );
+    expect(listStudentsQuerySchema.safeParse({ sort: 'createdAt' }).success).toBe(true);
+    expect(listStudentsQuerySchema.safeParse({ sort: 'phone' }).success).toBe(false);
   });
 
   it('allows clearing optional fields with null on update only', () => {
@@ -259,7 +289,9 @@ describe('workspace settings', () => {
   it('requires at least one field and validates values', () => {
     expect(updateWorkspaceSettingsSchema.safeParse({}).success).toBe(false);
     expect(updateWorkspaceSettingsSchema.safeParse({ defaultCurrency: 'UAH' }).success).toBe(true);
-    expect(updateWorkspaceSettingsSchema.safeParse({ primaryColor: '#5d87ff' }).success).toBe(false);
+    expect(updateWorkspaceSettingsSchema.safeParse({ primaryColor: '#5d87ff' }).success).toBe(
+      false,
+    );
     expect(updateWorkspaceSettingsSchema.safeParse({ cancellationDeadlineHours: 24 }).success).toBe(
       true,
     );

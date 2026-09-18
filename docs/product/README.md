@@ -1,6 +1,6 @@
 # Product Workflow Documentation
 
-Last verified: 2026-09-09.
+Last verified: 2026-09-10.
 
 These documents describe the tutor-facing jobs that cross multiple entities.
 They own user vocabulary, progressive disclosure, success/empty/error states,
@@ -9,11 +9,11 @@ and acceptance criteria. Domain invariants remain authoritative in
 
 ## Pilot-critical workflows
 
-| Workflow                          | Current assessment                                                                           | Target document                   |
-| --------------------------------- | -------------------------------------------------------------------------------------------- | --------------------------------- |
+| Workflow                          | Current assessment                                                                           | Target document                                |
+| --------------------------------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------- |
 | Sign in and create a workspace    | Functional; presentation is inconsistent with the approved shadcn baseline                   | [Authentication workflow](./authentication.md) |
-| Create and onboard a student      | Functional but overloaded; nested parent creation and deletion semantics are unsafe          | [Student workflow](./students.md) |
-| Sell and operate a lesson package | Functional but combines plan, schedule, and payment; financial invariants need stabilization | [Package workflow](./packages.md) |
+| Create and onboard a student      | Audited; WP6 collection, quick-create, detail, lifecycle, and component brief is approved    | [Student workflow](./students.md)              |
+| Sell and operate a lesson package | Functional but combines plan, schedule, and payment; financial invariants need stabilization | [Package workflow](./packages.md)              |
 
 ## Workflow documentation template
 

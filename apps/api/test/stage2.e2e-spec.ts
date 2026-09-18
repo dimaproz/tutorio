@@ -268,6 +268,7 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
       expect(list.body.total).toBe(1);
       expect(list.body.totalPages).toBe(1);
       expect(list.body.items[0].fullName).toBe('Alice Learner');
+      expect(list.body.items[0].createdAt).toEqual(expect.any(String));
     });
 
     it('owner updates with PATCH semantics and audits the diff; no-op adds nothing', async () => {

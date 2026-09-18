@@ -1,6 +1,6 @@
 # Active Work Queue
 
-Last verified: 2026-09-10.
+Last verified: 2026-09-18.
 
 This is the short-lived execution queue for Stage 4.1. It answers “what should I
 work on next?” without requiring a developer to re-derive priorities from the
@@ -158,11 +158,11 @@ Suggested PR intent: `fix(api): enforce package payment integrity`.
 - Regenerated OpenAPI/client artifacts with typed owner-only `403` responses.
   Implementation: `e362675`.
 
-## Frontend Foundation Track — active before Work Packet 6
+## Frontend Foundation Track — implemented
 
-ADR 0005 introduces a bounded presentation-layer reset before workflow
+ADR 0005 introduced a bounded presentation-layer reset before workflow
 simplification. Full scope and gates live in
-[`frontend-plan.md`](./frontend-plan.md). Execute in this order:
+[`frontend-plan.md`](./frontend-plan.md). The completed order is:
 
 1. **F0 — Direction Reset (implemented):** remove `/design`, retire TailAdmin as
    design authority, and establish shadcn blocks plus architect-owned screen
@@ -185,18 +185,82 @@ simplification. Full scope and gates live in
    and Storybook shell contract are the reusable F4 boundary.
 6. **F5 — Product Composition Boundary (implemented):** shared/app ownership,
    documented/tested collection/detail/form references, and dependency direction
-   enforcement are complete.
+   enforcement are complete at `4900755`.
 
-Each packet is independently reviewable and deployable. Do not collapse the
-track into a big-bang page rewrite. The current pages remain behavior evidence,
-not visual templates.
+The foundation is closed. Its primitives, shared compositions, Storybook
+contracts, and architecture checks govern the feature migrations below.
 
-## Work Packet 6 — Student Quick Create (next)
+## Existing Surface Migration Track — active before Work Packet 7
 
-Implement [`product/students.md`](./product/students.md) after lifecycle behavior
-and the frontend foundation are stable: first write the architect-approved
-Students screen brief, then implement compact create, saved-profile next actions,
-parent linking after save, explicit errors, stories, and interaction tests.
+Migrate one domain at a time. The current page is behavior evidence, not a
+visual template. Each packet starts with an architect-approved screen brief,
+builds owned components and states in Storybook, integrates existing behavior,
+passes its verification gate, and remains independently deployable. Do not
+start the next packet while the current one is under review.
+
+### Work Packet 6 — Student Experience and Quick Create (active)
+
+Implement [`product/students.md`](./product/students.md) as the reference feature
+migration:
+
+- redesign the Students collection and detail surfaces on `CollectionFrame` and
+  `DetailFrame`;
+- establish the owning Student row/card representations with explicit density
+  variants instead of page-local copies;
+- replace mandatory full-profile creation with compact quick create and
+  progressive optional details;
+- navigate to the saved profile and expose independently cancellable next
+  actions for lesson, package, study, parent, and profile completion;
+- move parent linking/creation after student persistence;
+- cover loading, query error, filtered empty, archived, destructive, dirty,
+  permission, mobile, theme, locale, interaction, and accessibility states.
+
+The architect-approved Students screen brief is recorded in
+[`product/students.md`](./product/students.md). The collection slice is
+implemented and verified: four independent metrics, URL-backed search/status/
+group controls, filtered-empty recovery, the compact desktop table and mobile
+card, localized `createdAt`, Storybook coverage, and the generated API contract
+are complete. The Student detail foundation is the next active slice. Compact
+create and edit replacement follow the approved list/detail compositions.
+
+### Work Packet 6.1 — Parents
+
+Migrate parent collection, detail, create/edit, relationship, archive, and
+restore surfaces. Validate person identity, contact, relationship, and action
+patterns against Students before promoting any shared abstraction.
+
+### Work Packet 6.2 — Teachers
+
+Migrate teacher collection, detail, form, status, assignment, and workspace-mode
+states. Reuse proven person components where their contracts match; keep
+teacher scheduling and availability behavior feature-owned.
+
+### Work Packet 6.3 — Groups and Enrollments
+
+Migrate group collection/detail, roster, enrollment, lesson summary, and
+archive/restore flows. Preserve lifecycle and suspension semantics while making
+participant and scheduling consequences explicit.
+
+### Work Packet 6.4 — Scheduling
+
+Migrate Calendar, lesson actions, lesson creation/editing, and Recurring
+Patterns. Preserve time-zone, conflict, recurrence-scope, cancellation, credit,
+and pause semantics. Prefer shadcn overlays, fields, tabs, tables, toggles, and
+feedback components; scheduling-specific visualization remains feature-owned.
+
+### Work Packet 6.5 — Package Read Surfaces
+
+Migrate package collection, detail, entitlement, participant-share, ledger,
+payment-history, archive, and adjustment surfaces. Do not redesign package
+creation in this packet: the new sale flow remains Work Packet 7, avoiding a
+temporary form that would immediately be replaced.
+
+### Work Packet 6.6 — Dashboard and Settings
+
+Migrate the Today dashboard and workspace/audit settings after upstream feature
+patterns are stable. Dashboard content remains limited to today and actionable
+exceptions; Settings reuses approved fields, sections, tables, and feedback
+patterns without introducing theme customization.
 
 ## Work Packet 7 — Lesson Pack Sale
 
@@ -214,5 +278,8 @@ actions, lifecycle/detail states, and interaction tests.
 - Keep one active work packet at a time.
 - Keep each PR deployable and green; do not merge intentionally failing tests.
 - Every PR links the ADR/domain rule it implements and updates acceptance evidence.
-- No deferred module or broad visual refactor may enter the active queue without
-  an explicit roadmap decision.
+- A feature component moves to `components/shared` only after at least two
+  domains prove the same stable contract.
+- No deferred module, second visual system, decorative-only redesign, or work
+  outside the ordered migration track may enter the active queue without an
+  explicit roadmap decision.

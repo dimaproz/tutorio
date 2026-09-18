@@ -36,20 +36,30 @@ export function useUpdateSearchParams() {
   const searchParams = useSearchParams();
 
   return (updates: Record<string, string | undefined>, options?: { resetPage?: boolean }) => {
-    const next = new URLSearchParams(searchParams.toString());
-    for (const [key, value] of Object.entries(updates)) {
-      if (value === undefined || value === '') {
-        next.delete(key);
-      } else {
-        next.set(key, value);
-      }
-    }
-    if (options?.resetPage) {
-      next.delete('page');
-    }
+    const next = buildUpdatedSearchParams(searchParams, updates, options?.resetPage);
     const query = next.toString();
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   };
+}
+
+/** Applies URL-backed collection controls without mutating the current query. */
+export function buildUpdatedSearchParams(
+  current: URLSearchParams,
+  updates: Record<string, string | undefined>,
+  resetPage = false,
+): URLSearchParams {
+  const next = new URLSearchParams(current.toString());
+  for (const [key, value] of Object.entries(updates)) {
+    if (value === undefined || value === '') {
+      next.delete(key);
+    } else {
+      next.set(key, value);
+    }
+  }
+  if (resetPage) {
+    next.delete('page');
+  }
+  return next;
 }
 
 export function ListSearchInput({ label, placeholder }: { label: string; placeholder: string }) {

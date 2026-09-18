@@ -1,6 +1,6 @@
 # Tutorio Current State
 
-Last verified: 2026-09-10 after completing Frontend Packet F5 on `develop`.
+Last verified: 2026-09-18 during the verified Work Packet 6 collection slice.
 
 This is the first project document to read before planning or implementing
 work. It reports the repository as it exists; [`mvp-plan.md`](./mvp-plan.md)
@@ -10,20 +10,25 @@ order.
 ## Executive status
 
 Tutorio has a broad, credible Students-to-Money core, but it is not pilot-safe
-yet. The correct next move is not another design-wide refactor or a new product
-module. The next move is a bounded stabilization release that makes four core
-workflows correct, understandable, tested, and recoverable.
+yet. The next move is the approved route-by-route migration of existing pilot
+workflows onto the completed shadcn foundation. This is a bounded stabilization
+track, not a big-bang redesign or a new product module: every migrated route
+must become clearer, tested, responsive, accessible, and independently
+deployable while preserving proven behavior.
 
-- Branch: `develop`; Work Packet 5 implementation is committed as `e362675`.
+- Branch: `develop`; Work Packet 5 implementation is committed as `e362675` and
+  Frontend Packet F5 as `4900755`.
 - The former `refactor/students-design` work was merged by PR #18.
 - `pnpm generate`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build`
-  pass on 2026-09-10. Observed unit totals: domain 92, validation 46, API 158,
-  and web 115. Storybook browser tests pass for 112 tests across 22 files,
+  pass on 2026-09-18. Observed unit totals: domain 92, validation 47, API 158,
+  and web 121. Storybook browser tests pass for 120 tests across 23 files,
   including automated accessibility checks, and the static build passes.
 - API E2E passes 78 tests in 6 suites against an isolated PostgreSQL 17
-  database after all 20 migrations, including legacy-TEACHER denials, group
-  compensation cycles, and package archival. The finance migration verifier
-  passes against a separate clean PostgreSQL 17 database.
+  database after the then-current migration set, including legacy-TEACHER
+  denials, group compensation cycles, and package archival. The finance
+  migration verifier passes against a separate clean PostgreSQL 17 database.
+  The WP6 Student contract slice additionally passes its 29-test Stage 2 suite
+  against a fresh PostgreSQL 17 database after all 21 current migrations.
 - Unit coverage is uneven: core scheduling and package orchestration still have
   important untested branches. Passing totals are not a pilot-readiness signal.
 
@@ -45,20 +50,23 @@ Next.js, shared validation, and pure domain package boundaries are sound.
 
 ## Active milestone: Pilot Core Stabilization
 
-Stage 4.1 remains active. Work Packet 5 — Pilot Authorization is complete. The
-bounded frontend foundation in [`frontend-plan.md`](./frontend-plan.md) now runs
-before Work Packet 6 — Student Quick Create. It standardizes the existing UI
-stack rather than introducing a broad custom redesign. The required order is:
+Stage 4.1 remains active. Work Packet 5 — Pilot Authorization and Frontend
+Packets F0–F5 are complete. The bounded feature-migration track in
+[`frontend-plan.md`](./frontend-plan.md) now runs before Work Packet 7 — Lesson
+Pack Sale. It standardizes each existing pilot surface without introducing a
+second visual system or speculative product scope. The required order is:
 
 1. Lock lifecycle and accounting decisions in ADRs and tests.
 2. Fix P0 data-integrity defects in group deletion/restoration, payment
    ownership, ledger compensation, and package/lesson deletion.
 3. Fix scheduling lifecycle defects: conflict validation, pause behavior,
    effective status, and honest replacement-lesson behavior.
-4. Complete Frontend Packet F5: the reusable composition boundary.
-5. Replace the all-in-one student and package dialogs with progressive,
-   task-based flows documented in `product/`.
-6. Run the complete pilot acceptance matrix with realistic seed data and an
+4. Use Work Packet 6 — Student Experience and Quick Create as the reference
+   feature migration.
+5. Migrate Parents, Teachers, Groups and Enrollments, Scheduling, package read
+   surfaces, Dashboard, and Settings in Work Packets 6.1–6.6.
+6. Replace package creation with the progressive sale flow in Work Packet 7.
+7. Run the complete pilot acceptance matrix with realistic seed data and an
    isolated database.
 
 ### Frontend Packet F0 evidence
@@ -274,5 +282,11 @@ generated client expose the typed `403` contract for owner-only handlers.
 
 Frontend Packet F5 — Product Composition Boundary is complete: shell ownership,
 shared collection/detail/form references, status adapters, Storybook contracts,
-and import-layer enforcement are in place. Work Packet 6 — Student Quick Create
-is the next implementation packet.
+and import-layer enforcement are in place. The authenticated desktop/mobile
+Students audit and architect-approved WP6 screen brief are recorded in
+`product/students.md` on 2026-09-10. Work Packet 6 — Student Experience and
+Quick Create is active. Its collection slice is implemented and verified with
+the approved metrics, URL controls, desktop table, mobile card, API `createdAt`
+contract, Storybook states, and localized copy. The Student detail foundation
+is the next slice; create/edit form replacement follows the approved primary
+page compositions.

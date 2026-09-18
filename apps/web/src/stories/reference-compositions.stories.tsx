@@ -88,6 +88,14 @@ function CollectionReference({
           }
         />
       }
+      summary={
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <MetricCard label="Total students" value="12" />
+          <MetricCard label="Active" value="9" />
+          <MetricCard label="On hold" value="3" />
+          <MetricCard label="Archived" value="2" />
+        </div>
+      }
       toolbar={
         <CollectionToolbar>
           <ListSearchInput label="Search students" placeholder="Search by name, email, or phone" />

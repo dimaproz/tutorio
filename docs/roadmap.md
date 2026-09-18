@@ -1,6 +1,6 @@
 # Tutorio Pilot-First Roadmap
 
-Last verified: 2026-09-09.
+Last verified: 2026-09-10.
 
 This roadmap replaces feature-by-feature expansion as the active delivery
 strategy. Complete phases in order. A later phase may be designed, but it must
@@ -62,9 +62,15 @@ Outcome: a tutor can complete core tasks without understanding the data model.
 - Complete the bounded frontend foundation in `frontend-plan.md`: official
   shadcn baseline, Storybook, authentication shell, application shell, and
   reusable product-component boundary.
-- Replace student creation with a quick-create flow: name first, contact and
-  timezone only when needed, optional details later.
-- Split parent linking/creation from the mandatory student submission path.
+- Use the Students list, detail, and quick-create journey as the first complete
+  feature migration and reference implementation.
+- Migrate every existing pilot surface one domain at a time before Work Packet
+  7: Parents, Teachers, Groups and Enrollments, Scheduling, package read
+  surfaces, then Dashboard and Settings.
+- Preserve proven API, permission, localization, lifecycle, and financial
+  behavior while allowing each page layout and composition to be replaced.
+- Split parent linking/creation from the mandatory student submission path and
+  expose saved-profile next actions.
 - Replace package creation with a short sale flow and post-create next steps.
 - Move recurrence into a dedicated scheduling step and payment into a dedicated
   record-payment action.
@@ -73,10 +79,23 @@ Outcome: a tutor can complete core tasks without understanding the data model.
 - Add form interaction tests, loading/error/empty/success states, mobile checks,
   and locale parity.
 - Split oversized feature components to the documented web boundaries while
-  changing each flow; do not perform another repo-wide UI refactor.
+  changing each flow; never merge the route migrations into a big-bang rewrite.
 
-**Gate:** a first-time tutor completes student setup and package sale in an
-observed usability session without developer explanation or data correction.
+Approved implementation order:
+
+1. Work Packet 6 — Student Experience and Quick Create.
+2. Work Packet 6.1 — Parents.
+3. Work Packet 6.2 — Teachers.
+4. Work Packet 6.3 — Groups and Enrollments.
+5. Work Packet 6.4 — Scheduling: Calendar and Recurring Patterns.
+6. Work Packet 6.5 — Package list, detail, ledger, and payment-history surfaces;
+   the package sale flow remains reserved for Work Packet 7.
+7. Work Packet 6.6 — Dashboard and Settings.
+8. Work Packet 7 — Lesson Pack Sale.
+
+**Gate:** every existing pilot route has passed its migration gate, and a
+first-time tutor completes student setup and package sale in an observed
+usability session without developer explanation or data correction.
 
 ## Then — Phase 3: Pilot operations
 
@@ -120,6 +139,12 @@ Use an 80/20 allocation until pilot graduation:
 - 80% correctness, tests, migration, observability, and workflow completion.
 - 20% design work limited to pilot-critical comprehension, accessibility, and
   responsive quality.
+
+For Work Packets 6–6.6, this rule applies inside each route migration: most
+effort must preserve behavior, complete states, reduce workflow complexity, and
+add tests; visual work remains the standard shadcn composition needed to make
+that route coherent. Decorative branding, custom motion, and speculative polish
+do not enter these packets.
 
 ADR 0005 replaces the former visual direction with a bounded official shadcn
 foundation because the mixed TailAdmin layer made pilot-critical workflows

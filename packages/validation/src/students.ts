@@ -104,14 +104,7 @@ export type UpdateStudentDto = z.infer<typeof updateStudentSchema>;
 // Columns the list can be sorted by. Scalar student fields only: relation
 // aggregates (group names, enrollment counts) are computed per row and cannot
 // be ordered by the database without changing the query shape.
-export const STUDENT_SORT_FIELDS = [
-  'fullName',
-  'status',
-  'hourlyRateMinor',
-  'phone',
-  'telegramUsername',
-  'createdAt',
-] as const;
+export const STUDENT_SORT_FIELDS = ['fullName', 'status', 'createdAt'] as const;
 export const studentSortFieldSchema = z.enum(STUDENT_SORT_FIELDS);
 export type StudentSortField = z.infer<typeof studentSortFieldSchema>;
 
@@ -182,6 +175,7 @@ export const studentListItemSchema = z.object({
   hourlyRateMinor: z.number().int().nonnegative().nullable(),
   currency: currencyCodeSchema.nullable(),
   avatarKey: avatarKeySchema.nullable(),
+  createdAt: isoDateTimeSchema,
   deletedAt: isoDateTimeSchema.nullable(),
   activeEnrollmentCount: z.number().int().nonnegative(),
   groupNames: z.array(z.string()),

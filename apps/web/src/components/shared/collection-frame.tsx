@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
  */
 export function CollectionFrame({
   header,
+  summary,
   toolbar,
   refresh,
   loading,
@@ -16,6 +17,8 @@ export function CollectionFrame({
   pagination,
 }: {
   header: ReactNode;
+  /** Optional feature-owned summary, such as collection-level metrics. */
+  summary?: ReactNode;
   toolbar?: ReactNode;
   refresh?: ReactNode;
   loading?: ReactNode;
@@ -28,6 +31,7 @@ export function CollectionFrame({
   return (
     <section className="flex flex-col gap-6">
       {header}
+      {summary}
       {toolbar}
       {refresh}
       {loading}

@@ -17,7 +17,7 @@ export function MetricCard({
   description,
   className,
 }: {
-  icon: LucideIcon;
+  icon?: LucideIcon;
   label: string;
   value: React.ReactNode;
   description?: React.ReactNode;
@@ -27,12 +27,14 @@ export function MetricCard({
     <Card className={cn('min-w-0', className)}>
       <CardHeader>
         <CardTitle className="text-sm font-normal text-muted-foreground">{label}</CardTitle>
-        <CardAction>
-          <Icon aria-hidden="true" className="size-4 text-muted-foreground" />
-        </CardAction>
+        {Icon ? (
+          <CardAction>
+            <Icon aria-hidden="true" className="size-4 text-muted-foreground" />
+          </CardAction>
+        ) : null}
       </CardHeader>
       <CardContent className="flex flex-col gap-1">
-        <p className="tabular text-2xl font-semibold tracking-tight">{value}</p>
+        <div className="tabular text-2xl font-semibold tracking-tight">{value}</div>
         {description ? <CardDescription>{description}</CardDescription> : null}
       </CardContent>
     </Card>

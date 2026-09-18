@@ -540,9 +540,6 @@
               "enum": [
                 "fullName",
                 "status",
-                "hourlyRateMinor",
-                "phone",
-                "telegramUsername",
                 "createdAt"
               ]
             }
@@ -4502,6 +4499,10 @@
                   ],
                   "nullable": true
                 },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
                 "deletedAt": {
                   "type": "string",
                   "format": "date-time",
@@ -4530,6 +4531,7 @@
                 "hourlyRateMinor",
                 "currency",
                 "avatarKey",
+                "createdAt",
                 "deletedAt",
                 "activeEnrollmentCount",
                 "groupNames"

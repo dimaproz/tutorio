@@ -1,15 +1,16 @@
-# Frontend Foundation Plan
+# Frontend Foundation and Feature Migration Plan
 
 Last verified: 2026-09-10.
 
-This plan defines the bounded frontend track that runs before Work Packet 6.
-It replaces the former TailAdmin-led visual work with a maintainable official
+This plan defines the completed F0–F5 frontend foundation and the bounded,
+route-by-route migration of existing pilot surfaces in Work Packets 6–6.6. It
+replaces the former TailAdmin-led visual work with a maintainable official
 shadcn baseline. The track must preserve working product behavior while making
-future page work consistent, testable, and inexpensive to restyle.
+page work consistent, testable, and inexpensive to restyle.
 
 ## Target outcome
 
-Before Work Packet 6 starts:
+The completed foundation guarantees:
 
 - the official shadcn `radix-luma` preset is the only primitive visual system;
 - TailAdmin-specific runtime styling and documentation are removed;
@@ -20,9 +21,11 @@ Before Work Packet 6 starts:
 - every existing route remains functional, even if its feature content has not
   yet received a page-level redesign.
 
-This is not a pixel-polish project and not a migration to Base UI. It creates a
-stable presentation boundary before the pilot-critical Students and Packages
-flows are simplified.
+Work Packets 6–6.6 now apply that boundary to every existing pilot surface
+before package sale is redesigned in Work Packet 7. This is not a pixel-polish
+project, a migration to Base UI, or a repository-wide rewrite. Each packet is a
+behavior-preserving feature migration with a reviewed screen brief and an
+independent release gate.
 
 ## Design authority
 
@@ -375,12 +378,39 @@ Gate to Work Packet 6:
   or UI layers directly. Storybook documents reference mobile, loading, error,
   empty, and form-footer states.
 
-## Work Packet 6 handoff — Student Quick Create
+## Existing Surface Migration Track — Work Packets 6–6.6
 
-Work Packet 6 is the first feature migration on the new foundation. Before code
-starts, its prompt must include an architect-approved Students screen brief.
-The brief should treat the current screen as behavior evidence and may choose a
-new layout based on the student's primary jobs.
+The track migrates one domain at a time. Before code starts, each prompt must
+include an architect-approved screen brief. The brief treats current screens as
+behavior evidence and may replace their visual hierarchy and composition.
+
+Every packet follows the same sequence:
+
+1. Audit the current route, product document, domain lifecycle, API behavior,
+   permissions, localization, and existing tests.
+2. Approve the user job, information hierarchy, primary action, responsive
+   layout, required states, and relevant official shadcn block or primitives.
+3. Identify existing primitives and Tutorio components before creating another
+   component. Use registry CLI documentation for any primitive being added or
+   changed.
+4. Build or update reusable feature components and their Storybook stories.
+5. Integrate queries and mutations without weakening domain or API semantics.
+6. Review the complete diff separately for duplication, accessibility,
+   responsive behavior, locale parity, and regression risk.
+7. Pass the packet verification gate and synchronize documentation before the
+   next domain starts.
+
+Visual composition may be rewritten from scratch; proven behavior may not. Do
+not delete an old implementation until its API calls, states, permissions, and
+edge cases are accounted for in the replacement. Do not prebuild a speculative
+component library: components originate in their owning feature and move to
+`components/shared` only after at least two domains prove the same stable
+contract.
+
+### Work Packet 6 — Student Experience and Quick Create
+
+Students is the reference feature migration. Its brief and workflow contract
+live in [`product/students.md`](./product/students.md).
 
 Expected reference composition:
 
@@ -391,9 +421,24 @@ Expected reference composition:
   scheduling configuration in the mandatory create form;
 - complete loading, empty, error, archived, permission, mobile, and locale states.
 
-Only after Work Packet 6 establishes the reference feature pattern should the
-remaining domains be migrated one by one. Do not perform a big-bang rewrite of
-all feature pages.
+### Remaining migration order
+
+1. **Work Packet 6.1 — Parents:** validate the reusable person and relationship
+   patterns against Students.
+2. **Work Packet 6.2 — Teachers:** reuse proven person patterns and retain
+   teacher-specific workspace and scheduling behavior.
+3. **Work Packet 6.3 — Groups and Enrollments:** migrate collection, roster,
+   relationship, lesson-summary, and lifecycle surfaces.
+4. **Work Packet 6.4 — Scheduling:** migrate Calendar, lesson overlays, and
+   Recurring Patterns while preserving conflict and recurrence semantics.
+5. **Work Packet 6.5 — Package Read Surfaces:** migrate package collection,
+   detail, ledger, shares, payments, archive, and adjustments. Package creation
+   is intentionally reserved for Work Packet 7.
+6. **Work Packet 6.6 — Dashboard and Settings:** migrate aggregate operational
+   surfaces after their upstream components are stable.
+
+Each packet receives its own reviewed brief immediately before implementation.
+Do not combine packets or perform a big-bang rewrite of all feature pages.
 
 ## Verification for every frontend packet
 

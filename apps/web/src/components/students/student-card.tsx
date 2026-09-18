@@ -1,27 +1,55 @@
 'use client';
 
 import Link from 'next/link';
-import { ClockIcon } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useFormatter, useTranslations } from 'next-intl';
 import type { StudentListItem } from '@tutorio/validation';
 import { StudentRowActions } from './student-row-actions';
 import { StudentStatusBadge } from '@/components/students/student-status';
 import { EntityAvatar } from '@/components/shared/entity-avatar';
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-// Mobile presentation of a student. The desktop table shows the same data as
-// an accessible table instead.
-export function StudentCard({ student }: { student: StudentListItem }) {
+export function studentLearningFormat(
+  student: Pick<StudentListItem, 'groupNames' | 'activeEnrollmentCount'>,
+): 'groups' | 'individual' | 'notConfigured' {
+  if (student.groupNames.length > 0) {
+    return 'groups';
+  }
+  return student.activeEnrollmentCount > 0 ? 'individual' : 'notConfigured';
+}
+
+/** Shared learning-format presentation for the Student table and mobile card. */
+export function StudentLearningFormat({
+  student,
+}: {
+  student: Pick<StudentListItem, 'groupNames' | 'activeEnrollmentCount'>;
+}) {
   const t = useTranslations('students');
-  const tCommon = useTranslations('common');
+  const format = studentLearningFormat(student);
 
+  if (format === 'groups') {
+    return <span>{student.groupNames.join(', ')}</span>;
+  }
+
+  return <span className="text-muted-foreground">{t(format)}</span>;
+}
+
+/** Shared compact absolute date for the Student table and mobile card. */
+export function StudentAddedDate({ createdAt }: { createdAt: string }) {
+  const format = useFormatter();
+  return (
+    <span className="tabular whitespace-nowrap text-muted-foreground">
+      {format.dateTime(new Date(createdAt), {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      })}
+    </span>
+  );
+}
+
+// Mobile presentation of a student. The desktop table uses the same format and
+// date helpers, while keeping the required accessible table structure.
+export function StudentCard({ student }: { student: StudentListItem }) {
   return (
     <Card>
       <CardHeader>
@@ -36,9 +64,6 @@ export function StudentCard({ student }: { student: StudentListItem }) {
                 {student.fullName}
               </Link>
             </CardTitle>
-            <CardDescription className="truncate">
-              {student.email ?? student.phone ?? tCommon('notProvided')}
-            </CardDescription>
           </div>
         </div>
         <CardAction>
@@ -52,18 +77,10 @@ export function StudentCard({ student }: { student: StudentListItem }) {
       </CardHeader>
       <CardContent className="flex flex-col gap-2 text-sm">
         <div className="flex flex-wrap items-center gap-2">
-          {student.status !== 'ACTIVE' ? <StudentStatusBadge status={student.status} /> : null}
-          <span className="tabular text-muted-foreground">
-            {t('activeEnrollments', { count: student.activeEnrollmentCount })}
-          </span>
+          <StudentStatusBadge status={student.status} />
         </div>
-        {student.groupNames.length > 0 ? (
-          <p className="text-muted-foreground">{student.groupNames.join(', ')}</p>
-        ) : null}
-        <p className="flex items-center gap-1.5 text-muted-foreground">
-          <ClockIcon className="size-3.5" aria-hidden="true" />
-          {student.timezone}
-        </p>
+        <StudentLearningFormat student={student} />
+        <StudentAddedDate createdAt={student.createdAt} />
       </CardContent>
     </Card>
   );

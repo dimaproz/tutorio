@@ -1,6 +1,6 @@
 # Tutorio Pilot MVP Product and Architecture Contract
 
-Last verified: 2026-08-24.
+Last verified: 2026-09-10.
 
 ## Product thesis
 
@@ -67,6 +67,18 @@ and recoverable.
 - Audit events for business writes, isolated end-to-end verification, database
   readiness, backup/restore proof, and basic workspace export/deletion handling.
 
+### Presentation delivery
+
+- Migrate the existing pilot routes sequentially onto the approved shadcn and
+  Tutorio composition boundaries before introducing another product module.
+- Use Students as the reference feature, then migrate Parents, Teachers, Groups
+  and Enrollments, Scheduling, package read surfaces, Dashboard, and Settings.
+- Build reusable components from demonstrated product use: feature ownership
+  comes first, and a component moves to `components/shared` only after at least
+  two domains prove the same stable contract.
+- Keep every route migration independently deployable, behavior-preserving,
+  responsive, localized, accessible, and represented in Storybook.
+
 ## Explicitly out of scope
 
 - Full analytics and profitability reporting.
@@ -75,8 +87,9 @@ and recoverable.
 - Automated Telegram communication and branded receipts.
 - Leads pipeline, marketing CRM, subscriptions, and multi-tenant SaaS billing.
 - An unbounded custom visual redesign. The bounded official shadcn foundation
-  in ADR 0005 is allowed because it enables pilot-critical workflow clarity,
-  accessibility, responsive correctness, and inexpensive future theming.
+  and ordered migration of existing pilot screens are allowed because they
+  improve workflow clarity, accessibility, responsive correctness, and
+  inexpensive future theming without introducing a second visual system.
 
 ## Product decisions
 

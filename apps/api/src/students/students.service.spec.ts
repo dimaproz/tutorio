@@ -175,13 +175,13 @@ describe('StudentsService.list', () => {
     ]);
   });
 
-  it('sinks blanks to the bottom when sorting a nullable column', async () => {
+  it('sorts by creation time with a stable id tiebreaker', async () => {
     const { prisma, service } = buildService();
 
-    await service.list(owner, listQuery({ sort: 'hourlyRateMinor' }));
+    await service.list(owner, listQuery({ sort: 'createdAt', order: 'desc' }));
 
     expect(prisma.student.findMany.mock.calls[0][0].orderBy).toEqual([
-      { hourlyRateMinor: { sort: 'asc', nulls: 'last' } },
+      { createdAt: 'desc' },
       { id: 'asc' },
     ]);
   });
@@ -206,6 +206,7 @@ describe('StudentsService.list', () => {
     expect(result.items[0]).toMatchObject({
       activeEnrollmentCount: 2,
       groupNames: ['B1 English', 'Old group'],
+      createdAt: NOW.toISOString(),
     });
   });
 });
