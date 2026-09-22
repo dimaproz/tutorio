@@ -11,3 +11,8 @@ export function nameInitials(fullName: string): string {
       .join('') || '?'
   );
 }
+
+/** Upper-cases the first letter, for dates that open a line ("чт" → "Чт"). */
+export function capitalizeFirst(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}

@@ -163,6 +163,7 @@ export function ParentForm({
             onChange={(next) => form.setValue('avatarKey', next)}
             fullName={values.fullName}
             initialsLabel={t('avatarInitials')}
+            label={t('avatarSection')}
           />
         </FormSection>
 
@@ -218,31 +219,35 @@ export function ParentForm({
           </Field>
         </FormSection>
 
-        {!hideStudentLinks ? <><FieldSeparator />
+        {!hideStudentLinks ? (
+          <>
+            <FieldSeparator />
 
-        <FormSection
-          icon={UsersRoundIcon}
+            <FormSection
+              icon={UsersRoundIcon}
 
-          title={tParents('detail.studentsTitle')}
-          description={tParents('detail.noStudentsDescription')}
-        >
-          <Field>
-            <FieldLabel className="sr-only">{tParents('detail.studentsTitle')}</FieldLabel>
-            <EntityMultiSelect
-              options={studentOptions}
-              selectedIds={values.studentIds}
-              onChange={(studentIds) =>
-                form.setValue('studentIds', studentIds, { shouldValidate: true })
-              }
-              placeholder={tFilters('allStudents')}
-              searchPlaceholder={tFilters('studentSearch')}
-              emptyLabel={tFilters('studentEmpty')}
-              removeLabel={(name) => `${tCommon('remove')} ${name}`}
-              disabled={students.isPending}
-              isLoading={students.isPending}
-            />
-          </Field>
-        </FormSection></> : null}
+              title={tParents('detail.studentsTitle')}
+              description={tParents('detail.noStudentsDescription')}
+            >
+              <Field>
+                <FieldLabel className="sr-only">{tParents('detail.studentsTitle')}</FieldLabel>
+                <EntityMultiSelect
+                  options={studentOptions}
+                  selectedIds={values.studentIds}
+                  onChange={(studentIds) =>
+                    form.setValue('studentIds', studentIds, { shouldValidate: true })
+                  }
+                  placeholder={tFilters('allStudents')}
+                  searchPlaceholder={tFilters('studentSearch')}
+                  emptyLabel={tFilters('studentEmpty')}
+                  removeLabel={(name) => `${tCommon('remove')} ${name}`}
+                  disabled={students.isPending}
+                  isLoading={students.isPending}
+                />
+              </Field>
+            </FormSection>
+          </>
+        ) : null}
 
         <FieldSeparator />
 

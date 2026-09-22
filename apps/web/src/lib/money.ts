@@ -50,3 +50,31 @@ export function formatMoneyDisplay(
     currency,
   }).format(amountMinor / 100);
 }
+
+/**
+ * A money figure for metric cards and chips: whole amounts drop the decimals
+ * and the currency reads as its narrow symbol, 400000 UAH → "4 000 ₴".
+ * `parts` splits the figure from the symbol for layouts that size them apart.
+ */
+export function formatMoneyCompact(
+  amountMinor: number,
+  currency: CurrencyCode | string,
+  locale: string,
+): { text: string; value: string; symbol: string } {
+  const whole = amountMinor % 100 === 0;
+  const parts = new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency,
+    currencyDisplay: 'narrowSymbol',
+    minimumFractionDigits: whole ? 0 : 2,
+    maximumFractionDigits: whole ? 0 : 2,
+  }).formatToParts(amountMinor / 100);
+  const symbol = parts.find((part) => part.type === 'currency')?.value ?? currency;
+  const value = parts
+    .filter((part) => part.type !== 'currency' && part.type !== 'literal')
+    .map((part) => part.value)
+    .join('')
+    // Group separators are narrow no-break spaces in some locales.
+    .trim();
+  return { text: `${value} ${symbol}`, value, symbol };
+}

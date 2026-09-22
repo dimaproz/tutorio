@@ -5,23 +5,54 @@ import { useTranslations } from 'next-intl';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { cn } from '@/lib/utils';
 
+const TITLE_SIZE = {
+  default: 'text-xl font-semibold tracking-tight md:text-2xl',
+  lg: 'text-[34px] leading-[38px] font-semibold tracking-[-0.035em] md:text-5xl md:leading-[52px]',
+  xl: 'text-[40px] leading-[42px] font-semibold tracking-[-0.04em] md:text-[64px] md:leading-16',
+} as const;
+
+/**
+ * The page title block: the one `h1`, a subtitle and the page's primary
+ * actions aligned to the title's baseline. `lg` titles a form page, `xl` a
+ * collection; `default` remains for screens not yet migrated to Studio.
+ */
 export function PageHeader({
   title,
   description,
   action,
+  size = 'default',
 }: {
   title: React.ReactNode;
-  description?: string;
+  description?: React.ReactNode;
   action?: React.ReactNode;
+  size?: keyof typeof TITLE_SIZE;
 }) {
+  const studio = size !== 'default';
+
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-xl font-semibold tracking-tight md:text-2xl">{title}</h1>
-        {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
+    <div
+      className={cn(
+        studio
+          ? 'flex flex-row items-end justify-between gap-3 md:gap-6'
+          : 'flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between',
+      )}
+    >
+      <div className={cn('flex min-w-0 flex-col', studio ? 'gap-1 md:gap-2' : 'gap-1')}>
+        <h1 className={TITLE_SIZE[size]}>{title}</h1>
+        {description ? (
+          <p
+            className={cn(
+              'text-muted-foreground',
+              studio ? 'text-sm md:text-base md:leading-6' : 'text-sm',
+            )}
+          >
+            {description}
+          </p>
+        ) : null}
       </div>
-      {action ? <div className="shrink-0">{action}</div> : null}
+      {action ? <div className="flex shrink-0 flex-wrap items-center gap-2.5">{action}</div> : null}
     </div>
   );
 }

@@ -78,6 +78,29 @@
   --color-stat-track: var(--stat-track);
   --color-stat-divider: var(--stat-divider);
 
+  /* Studio interaction colours: the hover and pressed values the handoff
+     specifies for each painted surface. */
+  --color-line-hover: var(--line-hover);
+  --color-primary-hover: var(--primary-hover);
+  --color-destructive-hover: var(--destructive-hover);
+  --color-brand-soft-hover: var(--brand-soft-hover);
+  --color-paper-hover: var(--paper-hover);
+  --color-secondary-hover: var(--secondary-hover);
+  --color-brand-line: var(--brand-line);
+  --color-ink-line-hover: var(--ink-line-hover);
+  --color-hold-mark: var(--hold-mark);
+
+  /* Studio elevation. Each shadow belongs to one kind of surface. */
+  --shadow-lift: 0 8px 18px -10px rgb(27 31 59 / 0.55);
+  --shadow-lift-danger: 0 8px 18px -10px rgb(178 60 22 / 0.6);
+  --shadow-raise: 0 6px 16px -8px rgb(27 31 59 / 0.35);
+  --shadow-hairline: 0 1px 0 var(--border);
+  --shadow-popover: 0 24px 48px -16px rgb(27 31 59 / 0.28);
+  --shadow-menu: 0 28px 56px -18px rgb(27 31 59 / 0.35);
+  --shadow-bar: 0 24px 48px -20px rgb(27 31 59 / 0.35);
+  --shadow-dialog: 0 32px 80px -20px rgb(27 31 59 / 0.55);
+  --shadow-toast: 0 18px 40px -16px rgb(27 31 59 / 0.5);
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -92,7 +115,9 @@
      installed primitive keeps its current shape until it is restyled. */
   --radius-pill: 9999px;
   --radius-logo: 11px;
+  --radius-control: 12px;
   --radius-item: 14px;
+  --radius-field: 16px;
   --radius-tile: 18px;
   --radius-row: 20px;
   --radius-block: 24px;
@@ -169,6 +194,16 @@
   --ink-muted: #b5bbd6;
   --stat-track: #e8ebf4;
   --stat-divider: #eef0f6;
+
+  --line-hover: #c9cedd;
+  --primary-hover: #2a2f55;
+  --destructive-hover: #982f0f;
+  --brand-soft-hover: #84ccff;
+  --paper-hover: #e7eaf5;
+  --secondary-hover: #e5e8f6;
+  --brand-line: #b9bcf2;
+  --ink-line-hover: #5a6096;
+  --hold-mark: #ffd27a;
 }
 
 .dark {
@@ -223,6 +258,10 @@
   --surface-hover: oklch(0.268 0.007 34.298);
   --stat-track: oklch(1 0 0 / 16%);
   --stat-divider: oklch(1 0 0 / 12%);
+  --line-hover: oklch(1 0 0 / 22%);
+  --primary-hover: color-mix(in oklch, var(--primary), white 12%);
+  --paper-hover: oklch(0.3 0.007 34.298);
+  --secondary-hover: oklch(0.31 0.006 286.033);
 }
 
 @layer base {

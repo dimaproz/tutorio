@@ -67,7 +67,15 @@ export type StatBlockProps = {
   tone?: StatBlockTone;
   className?: string;
 } & (
-  | { type: 'amount'; value: ReactNode; unit?: ReactNode }
+  | {
+      type: 'amount';
+      value: ReactNode;
+      unit?: ReactNode;
+      /** Secondary figure on the right of the value, e.g. "500 ₴". */
+      aside?: ReactNode;
+      /** Caption under `aside`, e.g. "per lesson". */
+      asideLabel?: ReactNode;
+    }
   | { type: 'date'; value: ReactNode; sub?: ReactNode }
   | ({ type: 'chart'; value: ReactNode } & StatBlockChart)
   | { type: 'custom'; items: { label: string; value: ReactNode; percent: number }[] }
@@ -112,7 +120,10 @@ export function StatBlock(props: StatBlockProps) {
           <Badge
             size="sm"
             variant={badge.tone}
-            className={cn('shrink-0', tone === 'ink' && badge.tone === 'neutral' && 'bg-white/15 text-ink-foreground')}
+            className={cn(
+              'shrink-0',
+              tone === 'ink' && badge.tone === 'neutral' && 'bg-white/15 text-ink-foreground',
+            )}
           >
             {badge.label}
           </Badge>
@@ -161,14 +172,30 @@ function StatBlockValue(props: StatBlockProps & { theme: (typeof TONE)[StatBlock
 
   if (props.type === 'amount') {
     return (
-      <div className="flex min-w-0 items-baseline gap-1.5">
-        <span className="text-[40px] leading-[44px] font-semibold tracking-[-0.03em] whitespace-nowrap tabular-nums">
-          {props.value}
-        </span>
-        {props.unit ? (
-          <span className={cn('text-[22px] leading-7 font-medium', theme.muted)}>{props.unit}</span>
+      <>
+        <div className="flex min-w-0 items-baseline gap-1.5">
+          <span className="text-[40px] leading-[44px] font-semibold tracking-[-0.03em] whitespace-nowrap tabular-nums">
+            {props.value}
+          </span>
+          {props.unit ? (
+            <span className={cn('text-[22px] leading-7 font-medium', theme.muted)}>
+              {props.unit}
+            </span>
+          ) : null}
+        </div>
+        {props.aside ? (
+          <div className="flex shrink-0 flex-col items-end gap-0.5 pb-1 text-right">
+            <span className="text-lg leading-[22px] font-semibold tracking-[-0.01em] whitespace-nowrap">
+              {props.aside}
+            </span>
+            {props.asideLabel ? (
+              <span className={cn('text-xs leading-4 whitespace-nowrap', theme.muted)}>
+                {props.asideLabel}
+              </span>
+            ) : null}
+          </div>
         ) : null}
-      </div>
+      </>
     );
   }
 

@@ -50,6 +50,8 @@ interface DataTableProps<TData> {
   layout?: string;
   /** Marks the row that is currently highlighted, e.g. the next lesson's student. */
   isRowHighlighted?: (row: TData) => boolean;
+  /** Quiets a row that is no longer operational, e.g. an archived record. */
+  isRowDimmed?: (row: TData) => boolean;
 }
 
 /**
@@ -67,6 +69,7 @@ export function DataTable<TData>({
   variant = 'default',
   layout,
   isRowHighlighted,
+  isRowDimmed,
 }: DataTableProps<TData>) {
   const rows = variant === 'rows';
   const gridStyle = rows && layout ? { gridTemplateColumns: layout } : undefined;
@@ -83,7 +86,11 @@ export function DataTable<TData>({
   });
 
   return (
-    <LoadingRegion loading={loading} size="lg" className={cn(rows ? 'rounded-card' : 'overflow-x-auto rounded-lg')}>
+    <LoadingRegion
+      loading={loading}
+      size="lg"
+      className={cn(rows ? 'rounded-card' : 'overflow-x-auto rounded-lg')}
+    >
       <Table className={cn(rows && 'w-full')}>
         <TableCaption className="sr-only">{caption}</TableCaption>
         <TableHeader>
@@ -91,7 +98,9 @@ export function DataTable<TData>({
             <TableRow
               key={headerGroup.id}
               style={gridStyle}
-              className={cn(rows && 'grid items-center gap-4 border-0 px-4 pt-3 pb-2 hover:bg-transparent')}
+              className={cn(
+                rows && 'grid items-center gap-4 border-0 px-4 pt-3 pb-2 hover:bg-transparent',
+              )}
             >
               {headerGroup.headers.map((header) => {
                 const sortField = header.column.columnDef.meta?.sortField;
@@ -141,12 +150,13 @@ export function DataTable<TData>({
               key={row.id}
               style={gridStyle}
               data-highlighted={isRowHighlighted?.(row.original) || undefined}
+              data-dimmed={isRowDimmed?.(row.original) || undefined}
               className={cn(
                 rows &&
                   // `relative` makes the row the containing block for a cell's
                   // stretched link. Without it the link resolves against the
                   // nearest positioned ancestor and covers the whole table.
-                  'relative grid h-19 items-center gap-4 rounded-row border-0 px-4 hover:bg-surface-hover data-[highlighted]:bg-surface-hover',
+                  'relative grid h-19 items-center gap-4 rounded-row border-0 px-4 transition-[background-color,box-shadow] duration-150 hover:bg-surface-hover hover:shadow-[inset_0_0_0_1px_var(--border)] data-[dimmed]:text-muted-foreground data-[dimmed]:[&_img]:grayscale data-[highlighted]:bg-surface-hover',
               )}
             >
               {row.getVisibleCells().map((cell) => (

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatPriceInput, parsePriceInput, PRICE_MINOR_MAX } from './money';
+import { formatMoneyCompact, formatPriceInput, parsePriceInput, PRICE_MINOR_MAX } from './money';
 
 describe('parsePriceInput', () => {
   it('accepts the formats a form actually receives', () => {
@@ -32,5 +32,17 @@ describe('formatPriceInput', () => {
     expect(formatPriceInput(0)).toBe('0.00');
     expect(formatPriceInput(5)).toBe('0.05');
     expect(parsePriceInput(formatPriceInput(2599))).toBe(2599);
+  });
+});
+
+describe('formatMoneyCompact', () => {
+  it('drops decimals of whole amounts and uses the narrow symbol', () => {
+    const uah = formatMoneyCompact(400000, 'UAH', 'uk');
+    expect(uah.symbol).toBe('₴');
+    expect(uah.value.replace(/\s/g, ' ')).toBe('4 000');
+    expect(formatMoneyCompact(150050, 'EUR', 'en')).toMatchObject({
+      value: '1,500.50',
+      symbol: '€',
+    });
   });
 });

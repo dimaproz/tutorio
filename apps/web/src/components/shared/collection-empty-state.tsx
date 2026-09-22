@@ -1,12 +1,5 @@
 import type { ComponentType, ReactNode } from 'react';
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '@/components/ui/empty';
+import { EmptyState } from '@/components/shared/empty-state';
 
 /** Standard empty collection state used by every entity list. */
 export function CollectionEmptyState({
@@ -14,22 +7,24 @@ export function CollectionEmptyState({
   title,
   description,
   action,
+  framed = true,
+  minHeight,
 }: {
   icon: ComponentType<{ className?: string }>;
   title: ReactNode;
   description: ReactNode;
   action?: ReactNode;
+  framed?: boolean;
+  minHeight?: number;
 }) {
   return (
-    <Empty className="border border-dashed">
-      <EmptyHeader>
-        <EmptyMedia variant="icon">
-          <Icon />
-        </EmptyMedia>
-        <EmptyTitle>{title}</EmptyTitle>
-        <EmptyDescription>{description}</EmptyDescription>
-      </EmptyHeader>
-      {action ? <EmptyContent>{action}</EmptyContent> : null}
-    </Empty>
+    <EmptyState
+      icon={<Icon />}
+      title={title}
+      text={description}
+      action={action}
+      framed={framed}
+      minHeight={minHeight}
+    />
   );
 }

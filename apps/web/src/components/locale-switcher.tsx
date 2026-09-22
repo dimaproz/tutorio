@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Flag, type FlagCode } from '@/components/shared/flag';
+import { Segmented } from '@/components/shared/segmented';
 import { setLocale } from '@/i18n/actions';
 import { LOCALES, type Locale } from '@/i18n/locale';
 import { cn } from '@/lib/utils';
@@ -52,3 +53,40 @@ export function LocaleSwitcher({ className }: { className?: string }) {
     </Button>
   );
 }
+
+/**
+ * The EN / UA pill from the authentication screens: both locales visible,
+ * the current one filled. Switching refreshes the route in the new locale.
+ */
+export function LocaleSegmented({ className }: { className?: string }) {
+  const t = useTranslations('app.localeSwitcher');
+  const locale = useLocale() as Locale;
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
+  return (
+    <Segmented
+      label={t('label')}
+      variant="paper"
+      value={locale}
+      className={className}
+      onValueChange={(next) =>
+        startTransition(async () => {
+          await setLocale(next);
+          router.refresh();
+        })
+      }
+      // English first, as the design reads: EN · UA.
+      items={[...LOCALES]
+        .sort((a) => (a === 'en' ? -1 : 1))
+        .map((entry) => ({
+          value: entry,
+          label: LOCALE_CODE[entry] ?? entry.toUpperCase(),
+          ariaLabel: t(entry),
+          disabled: isPending,
+        }))}
+    />
+  );
+}
+
+const LOCALE_CODE: Record<string, string> = { en: 'EN', uk: 'UA' };

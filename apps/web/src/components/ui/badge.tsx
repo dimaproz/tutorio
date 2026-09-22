@@ -24,6 +24,8 @@ const badgeVariants = cva(
         surface: 'bg-card text-foreground',
         'on-ink': 'bg-ink-soft text-ink-foreground',
         'on-tint': 'bg-white/60 text-tint-indigo-foreground',
+        /** Success on a tinted card, where the green tint would sink into the ground. */
+        'success-inverse': 'bg-card text-tint-success-foreground',
         outline: 'border-border text-foreground [a]:hover:bg-muted',
         ghost: 'hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50',
         link: 'text-brand underline-offset-4 hover:underline',
@@ -93,7 +95,7 @@ function Badge({
           aria-hidden="true"
           data-slot="badge-dot"
           className={cn(
-            'size-[7px] shrink-0 rounded-pill bg-current group-data-[variant=success]/badge:bg-success group-data-[variant=warning]/badge:bg-warning group-data-[variant=danger]/badge:bg-danger-mark group-data-[variant=destructive]/badge:bg-danger-mark group-data-[variant=neutral]/badge:bg-status-archived group-data-[variant=secondary]/badge:bg-status-archived group-data-[variant=surface]/badge:bg-success group-data-[variant=on-ink]/badge:bg-brand-soft',
+            'size-[7px] shrink-0 rounded-pill bg-current group-data-[variant=success]/badge:bg-success group-data-[variant=warning]/badge:bg-warning group-data-[variant=danger]/badge:bg-danger-mark group-data-[variant=destructive]/badge:bg-danger-mark group-data-[variant=neutral]/badge:bg-status-archived group-data-[variant=secondary]/badge:bg-status-archived group-data-[variant=surface]/badge:bg-success group-data-[variant=on-ink]/badge:bg-brand-soft group-data-[variant=success-inverse]/badge:bg-success group-data-[variant=info]/badge:bg-tint-info-foreground group-data-[variant=indigo]/badge:bg-tint-indigo-foreground group-data-[variant=brand]/badge:bg-ink',
             dotTone && DOT_TONE[dotTone],
           )}
         />

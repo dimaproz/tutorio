@@ -39,6 +39,7 @@ export function EntityPicker({
   disabled = false,
   invalid = false,
   isLoading = false,
+  trigger,
 }: {
   id?: string;
   'aria-label'?: string;
@@ -52,6 +53,11 @@ export function EntityPicker({
   disabled?: boolean;
   invalid?: boolean;
   isLoading?: boolean;
+  /**
+   * A custom opener, e.g. a compact "Link existing" button, for places where
+   * the picker is a command rather than a form field.
+   */
+  trigger?: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   const selected = options.find((option) => option.value === value);
@@ -59,35 +65,37 @@ export function EntityPicker({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button
-          id={id}
-          aria-label={ariaLabel}
-          type="button"
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          aria-invalid={invalid || undefined}
-          disabled={disabled}
-          className="w-full justify-between font-normal"
-        >
-          <span className="flex min-w-0 items-center gap-2 truncate">
-            {selected ? (
-              <EntityAvatar avatarKey={selected.avatarKey} fullName={selected.label} size="xs" />
-            ) : null}
-            <span className={cn('truncate', !selected && 'text-muted-foreground')}>
-              {selected?.label ?? placeholder}
+        {trigger ?? (
+          <Button
+            id={id}
+            aria-label={ariaLabel}
+            type="button"
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            aria-invalid={invalid || undefined}
+            disabled={disabled}
+            className="w-full justify-between font-normal"
+          >
+            <span className="flex min-w-0 items-center gap-2 truncate">
+              {selected ? (
+                <EntityAvatar avatarKey={selected.avatarKey} fullName={selected.label} size="xs" />
+              ) : null}
+              <span className={cn('truncate', !selected && 'text-muted-foreground')}>
+                {selected?.label ?? placeholder}
+              </span>
             </span>
-          </span>
-          {isLoading ? (
-            <Spinner data-icon />
-          ) : (
-            <ChevronsUpDownIcon data-icon className="opacity-50" />
-          )}
-        </Button>
+            {isLoading ? (
+              <Spinner data-icon />
+            ) : (
+              <ChevronsUpDownIcon data-icon className="opacity-50" />
+            )}
+          </Button>
+        )}
       </PopoverTrigger>
       <PopoverContent
         aria-label={ariaLabel ?? placeholder}
-        className="w-[--radix-popover-trigger-width] p-0"
+        className="w-(--radix-popover-trigger-width) min-w-72 p-0"
         align="start"
       >
         <Command>

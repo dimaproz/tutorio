@@ -172,6 +172,7 @@ export function TeacherForm({
             onChange={(next) => form.setValue('avatarKey', next)}
             fullName={values.fullName}
             initialsLabel={t('avatarInitials')}
+            label={t('avatarSection')}
           />
         </FormSection>
 

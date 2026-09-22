@@ -6,7 +6,7 @@ import { cn } from 'cn';
 import { Toggle as TogglePrimitive } from 'radix-ui';
 
 const toggleVariants = cva(
-  "group/toggle inline-flex items-center justify-center gap-1 rounded-3xl text-sm font-medium whitespace-nowrap transition-colors outline-none hover:bg-muted hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-pressed:bg-muted dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/toggle inline-flex items-center justify-center gap-1 rounded-3xl text-sm font-medium whitespace-nowrap transition-[background-color,color,box-shadow] duration-150 ease-out outline-none hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-pressed:bg-muted dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
@@ -14,10 +14,10 @@ const toggleVariants = cva(
         outline: 'border border-input bg-transparent hover:bg-muted',
         /** Item inside a pill container: paper fill marks the pressed item. */
         segmented:
-          'rounded-pill bg-transparent text-muted-foreground hover:bg-transparent hover:text-foreground aria-pressed:bg-background aria-pressed:text-foreground data-[state=on]:bg-background data-[state=on]:text-foreground',
+          'rounded-pill bg-transparent text-muted-foreground hover:bg-foreground/5 hover:text-foreground aria-pressed:bg-background aria-pressed:text-foreground data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:hover:bg-background',
         /** The same container with an ink-filled selection, for facet filters. */
         'segmented-solid':
-          'rounded-pill bg-transparent text-muted-foreground hover:bg-transparent hover:text-foreground aria-pressed:bg-primary aria-pressed:text-primary-foreground data-[state=on]:bg-primary data-[state=on]:text-primary-foreground',
+          'rounded-pill bg-transparent text-muted-foreground hover:bg-foreground/5 hover:text-foreground aria-pressed:bg-primary aria-pressed:text-primary-foreground data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary data-[state=on]:hover:text-primary-foreground',
       },
       size: {
         default:

@@ -13,7 +13,7 @@ const SIZE_CLASS = {
   md: 'size-11',
   lg: 'size-14',
   xl: 'size-20',
-  '2xl': 'size-24 md:size-38',
+  '2xl': 'size-22 md:size-38',
 } as const;
 
 // The initials size has to travel to the fallback itself: AvatarFallback sets

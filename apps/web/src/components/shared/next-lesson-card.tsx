@@ -2,12 +2,19 @@ import type { ReactNode } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ArchiveArt, EmptyArt, PauseArt } from '@/components/shared/next-lesson-art';
 import { cn } from '@/lib/utils';
+
+const ART = { empty: EmptyArt, pause: PauseArt, archive: ArchiveArt } as const;
+
+export type NextLessonArt = keyof typeof ART;
 
 /**
  * The ink "next lesson" ticket. Shows the next scheduled lesson with its two
- * commands, or an empty state that offers to book one. Every string is
- * supplied by the caller.
+ * commands, or an empty state. The empty state either offers an action or,
+ * where the action already lives elsewhere on the page, shows an illustration
+ * of why nothing is planned: a fresh calendar, a pause, or the archive.
+ * Every string is supplied by the caller.
  */
 export function NextLessonCard({
   heading,
@@ -20,6 +27,7 @@ export function NextLessonCard({
   emptyTitle,
   emptyDescription,
   emptyAction,
+  art = 'empty',
   loading = false,
   className,
 }: {
@@ -37,9 +45,13 @@ export function NextLessonCard({
   emptyTitle?: ReactNode;
   emptyDescription?: ReactNode;
   emptyAction?: ReactNode;
+  /** Illustration for an empty card without an action. */
+  art?: NextLessonArt;
   loading?: boolean;
   className?: string;
 }) {
+  const Art = ART[art];
+
   return (
     <Card
       tone="ink"
@@ -83,16 +95,18 @@ export function NextLessonCard({
         </div>
       )}
 
-      <div className="mt-auto flex gap-2 *:min-w-0 *:grow">
-        {date ? (
-          <>
-            {primaryAction}
-            {secondaryAction}
-          </>
-        ) : (
-          emptyAction
-        )}
-      </div>
+      {loading ? null : date ? (
+        <div className="mt-auto flex gap-2 *:min-w-0 *:grow">
+          {primaryAction}
+          {secondaryAction}
+        </div>
+      ) : emptyAction ? (
+        <div className="mt-auto flex *:min-w-0 *:grow">{emptyAction}</div>
+      ) : (
+        <div className="mt-auto">
+          <Art />
+        </div>
+      )}
     </Card>
   );
 }
