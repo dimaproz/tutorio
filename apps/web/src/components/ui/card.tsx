@@ -1,17 +1,41 @@
 import * as React from 'react';
 import { cn } from 'cn';
 
+// Painted card surfaces. Each tone carries its own foreground so it reads the
+// same in both themes; `ink` and the tints are deliberately theme-independent.
+const CARD_TONE = {
+  surface: 'bg-card text-card-foreground',
+  info: 'bg-tint-info text-ink',
+  warning: 'bg-tint-warning text-ink',
+  indigo: 'bg-tint-indigo text-ink',
+  ink: 'bg-ink text-ink-foreground',
+} as const;
+
+const CARD_RADIUS = {
+  card: 'rounded-card *:[img:first-child]:rounded-t-card *:[img:last-child]:rounded-b-card',
+  hero: 'rounded-hero *:[img:first-child]:rounded-t-hero *:[img:last-child]:rounded-b-hero',
+} as const;
+
 function Card({
   className,
   size = 'default',
+  tone = 'surface',
+  radius = 'card',
   ...props
-}: React.ComponentProps<'div'> & { size?: 'default' | 'sm' }) {
+}: React.ComponentProps<'div'> & {
+  size?: 'default' | 'sm';
+  tone?: keyof typeof CARD_TONE;
+  radius?: keyof typeof CARD_RADIUS;
+}) {
   return (
     <div
       data-slot="card"
       data-size={size}
+      data-tone={tone}
       className={cn(
-        'group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-4xl bg-card py-(--card-spacing) text-sm text-card-foreground shadow-md ring-1 ring-foreground/5 [--card-spacing:--spacing(6)] has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(4)] dark:ring-foreground/10 *:[img:first-child]:rounded-t-4xl *:[img:last-child]:rounded-b-4xl',
+        'group/card flex flex-col gap-(--card-spacing) overflow-hidden py-(--card-spacing) text-sm [--card-spacing:--spacing(6)] has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(4)]',
+        CARD_RADIUS[radius],
+        CARD_TONE[tone],
         className,
       )}
       {...props}
@@ -24,7 +48,7 @@ function CardHeader({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-slot="card-header"
       className={cn(
-        'group/card-header @container/card-header grid auto-rows-min items-start gap-1.5 rounded-t-4xl px-(--card-spacing) has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-(--card-spacing)',
+        'group/card-header @container/card-header grid auto-rows-min items-start gap-1.5 rounded-t-card px-(--card-spacing) has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-(--card-spacing)',
         className,
       )}
       {...props}

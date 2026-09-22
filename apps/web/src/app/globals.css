@@ -202,8 +202,11 @@
   --chart-5: oklch(0.473 0.137 46.201);
   --sidebar: oklch(0.216 0.006 56.043);
   --sidebar-foreground: oklch(0.985 0.001 106.423);
-  --sidebar-primary: oklch(0.623 0.214 259.815);
-  --sidebar-primary-foreground: oklch(0.97 0.014 254.604);
+  /* The active nav item is a painted indigo surface, so it keeps its light
+     value: the preset's dark blue only reaches 3.45:1 against its own
+     foreground. */
+  --sidebar-primary: #4b4fe0;
+  --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: oklch(0.268 0.007 34.298);
   --sidebar-accent-foreground: oklch(0.985 0.001 106.423);
   --sidebar-border: oklch(1 0 0 / 10%);
