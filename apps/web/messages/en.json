@@ -436,7 +436,14 @@
       "editProfile": "Edit profile",
       "moreActions": "More student actions",
       "archivedTitle": "This student is archived",
-      "archivedDescription": "The profile and history remain available. Restore the student before scheduling, editing, or changing relationships."
+      "archivedDescription": "The profile and history remain available. Restore the student before scheduling, editing, or changing relationships.",
+      "nextLesson": "Next lesson",
+      "nothingPlanned": "Nothing planned",
+      "nothingPlannedDescription": "Book the next lesson so the package keeps moving.",
+      "callContact": "Call {value}",
+      "messageContact": "Message {value} on Telegram",
+      "emailContact": "Email {value}",
+      "pageLabel": "Profile"
     },
     "setup": {
       "title": "Student created — choose the next step",
@@ -530,6 +537,24 @@
       "creditsLeft": "{left} of {total} left",
       "noCreditsLeft": "No credits left",
       "today": "Today"
+    },
+    "profileMetrics": {
+      "creditsLeft": "Credits left",
+      "paidThisTerm": "Paid this term",
+      "attendance": "Attendance",
+      "level": "Level",
+      "levelCaption": "Language level (CEFR)",
+      "levelMissing": "No level recorded yet",
+      "pending": "Waiting on reporting data"
+    },
+    "sections": {
+      "label": "Student sections",
+      "lessons": "Lessons",
+      "packages": "Packages",
+      "payments": "Payments",
+      "history": "History",
+      "addLesson": "Add lesson",
+      "comingSoon": "This section is not available yet."
     }
   },
   "groups": {
@@ -1099,7 +1124,11 @@
         "kind": "Type",
         "price": "Price",
         "actions": "Actions"
-      }
+      },
+      "comingUp": "Coming up",
+      "earlier": "Earlier",
+      "individualLesson": "Individual lesson",
+      "lessonActions": "Lesson actions"
     },
     "cancelDialog": {
       "title": "Cancel lesson",

@@ -23,7 +23,7 @@ const badgeVariants = cva(
         brand: 'bg-brand-soft text-brand-soft-foreground',
         surface: 'bg-card text-foreground',
         'on-ink': 'bg-ink-soft text-ink-foreground',
-        'on-tint': 'bg-card/60 text-tint-indigo-foreground',
+        'on-tint': 'bg-white/60 text-tint-indigo-foreground',
         outline: 'border-border text-foreground [a]:hover:bg-muted',
         ghost: 'hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50',
         link: 'text-brand underline-offset-4 hover:underline',
@@ -48,16 +48,31 @@ const badgeVariants = cva(
   },
 );
 
+const DOT_TONE = {
+  current: 'bg-current',
+  success: 'bg-success',
+  warning: 'bg-warning',
+  danger: 'bg-danger-mark',
+  archived: 'bg-status-archived',
+  brand: 'bg-brand',
+} as const;
+
 function Badge({
   className,
   variant = 'default',
   size = 'md',
   dot = false,
+  dotTone,
   asChild = false,
   children,
   ...props
 }: React.ComponentProps<'span'> &
-  VariantProps<typeof badgeVariants> & { asChild?: boolean; dot?: boolean }) {
+  VariantProps<typeof badgeVariants> & {
+    asChild?: boolean;
+    dot?: boolean;
+    /** Overrides the dot colour the variant would pick, for painted surfaces. */
+    dotTone?: keyof typeof DOT_TONE;
+  }) {
   const shared = {
     'data-slot': 'badge',
     'data-variant': variant,
@@ -77,7 +92,10 @@ function Badge({
         <span
           aria-hidden="true"
           data-slot="badge-dot"
-          className="size-[7px] shrink-0 rounded-pill bg-current group-data-[variant=success]/badge:bg-success group-data-[variant=warning]/badge:bg-warning group-data-[variant=danger]/badge:bg-danger-mark group-data-[variant=destructive]/badge:bg-danger-mark group-data-[variant=neutral]/badge:bg-status-archived group-data-[variant=secondary]/badge:bg-status-archived group-data-[variant=surface]/badge:bg-success group-data-[variant=on-ink]/badge:bg-brand-soft"
+          className={cn(
+            'size-[7px] shrink-0 rounded-pill bg-current group-data-[variant=success]/badge:bg-success group-data-[variant=warning]/badge:bg-warning group-data-[variant=danger]/badge:bg-danger-mark group-data-[variant=destructive]/badge:bg-danger-mark group-data-[variant=neutral]/badge:bg-status-archived group-data-[variant=secondary]/badge:bg-status-archived group-data-[variant=surface]/badge:bg-success group-data-[variant=on-ink]/badge:bg-brand-soft',
+            dotTone && DOT_TONE[dotTone],
+          )}
         />
       ) : null}
       {children}

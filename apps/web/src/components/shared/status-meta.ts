@@ -1,6 +1,12 @@
 import type { ComponentType } from 'react';
 export type StatusTone =
-  'primary' | 'warning' | 'secondary' | 'destructive' | 'success' | 'neutral';
+  | 'primary'
+  | 'info'
+  | 'warning'
+  | 'secondary'
+  | 'destructive'
+  | 'success'
+  | 'neutral';
 
 export type StatusIcon = ComponentType<{ className?: string }>;
 
@@ -11,6 +17,7 @@ export interface StatusMeta {
 
 export const toneTextClass: Record<StatusTone, string> = {
   primary: 'text-primary',
+  info: 'text-tint-info-foreground',
   warning: 'text-warning',
   secondary: 'text-secondary-foreground',
   destructive: 'text-destructive',
@@ -21,6 +28,6 @@ export const toneTextClass: Record<StatusTone, string> = {
 /** `neutral` has no pill of its own; it reads as the muted secondary badge. */
 export function badgeVariantForTone(
   tone: StatusTone,
-): 'primary' | 'warning' | 'secondary' | 'destructive' | 'success' {
+): 'primary' | 'info' | 'warning' | 'secondary' | 'destructive' | 'success' {
   return tone === 'neutral' ? 'secondary' : tone;
 }

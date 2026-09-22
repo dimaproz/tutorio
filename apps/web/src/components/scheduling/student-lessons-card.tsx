@@ -1,20 +1,17 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-import { CalendarIcon, PlusIcon } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { MoreHorizontalIcon } from 'lucide-react';
+import { useFormatter, useTranslations } from 'next-intl';
 import type { LessonResponse } from '@tutorio/validation';
-import { SectionTitle } from '@/components/shared/detail-view';
 import { Button } from '@/components/ui/button';
-import { Card, CardAction, CardContent, CardHeader } from '@/components/ui/card';
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
+import { LessonItem } from '@/components/shared/lesson-item';
 import { LoadingPanel } from '@/components/shared/loading';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { SectionDivider } from '@/components/shared/section-divider';
 import { useLessonsQuery } from '@/lib/api/scheduling';
 import { LessonActionsDialog, type LessonDialogMode } from './lesson-actions-dialog';
-import { LessonFormDialog } from './lesson-form-dialog';
-import { LessonsTable } from './lessons-table';
-import { LessonMobileList } from './lesson-mobile-list';
+import { LessonStatusBadge } from './lesson-status';
 
 // How far back and forward a student's schedule is read on their profile.
 const PAST_DAYS = 120;
@@ -22,17 +19,26 @@ const FUTURE_DAYS = 120;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
- * The student's own schedule, right where the tutor already is. Upcoming and
- * past lessons plus a one-click booking that arrives with the student
- * pre-selected — no detour through the calendar.
+ * The student's own schedule, grouped into what is coming and what already
+ * happened. It renders as a panel: the profile owns the card, the section
+ * switcher and the booking action, while this component owns the lesson data
+ * and the per-row menu.
  */
-export function StudentLessonsCard({ studentId, readOnly = false, nowMs }: { studentId: string; readOnly?: boolean; nowMs?: number }) {
+export function StudentLessonsCard({
+  studentId,
+  readOnly = false,
+  nowMs,
+}: {
+  studentId: string;
+  readOnly?: boolean;
+  nowMs?: number;
+}) {
   const t = useTranslations('scheduling.studentLessons');
+  const format = useFormatter();
 
   const [selected, setSelected] = useState<LessonResponse | null>(null);
   const [actionsOpen, setActionsOpen] = useState(false);
   const [actionsMode, setActionsMode] = useState<LessonDialogMode>('menu');
-  const [formOpen, setFormOpen] = useState(false);
 
   // Pinned once per mount: the window and the upcoming/past split must not
   // shift underneath the tutor on an unrelated re-render.
@@ -56,58 +62,85 @@ export function StudentLessonsCard({ studentId, readOnly = false, nowMs }: { stu
     };
   }, [lessons.data, now]);
 
-  // One dialog for the whole card: the row menu only says which panel to show.
+  // One dialog for the whole panel: the row menu only says which panel to show.
   const openLesson = useCallback((lesson: LessonResponse, mode: LessonDialogMode = 'menu') => {
     setSelected(lesson);
     setActionsMode(mode);
     setActionsOpen(true);
   }, []);
 
-  return (
-    <Card>
-      <CardHeader>
-        <SectionTitle icon={CalendarIcon}>{t('title')}</SectionTitle>
-        {!readOnly ? <CardAction>
-          <Button type="button" size="sm" onClick={() => setFormOpen(true)}>
-            <PlusIcon data-icon="inline-start" />
-            {t('addLesson')}
-          </Button>
-        </CardAction> : null}
-      </CardHeader>
-      <CardContent>
-        {lessons.isPending ? (
-          <LoadingPanel size="md" className="min-h-32 rounded-xl border-0 bg-transparent" />
-        ) : (
-          <Tabs defaultValue="upcoming">
-            <TabsList>
-              <TabsTrigger value="upcoming">
-                {t('upcoming')}
-                <Badge>{upcoming.length}</Badge>
-              </TabsTrigger>
-              <TabsTrigger value="past">
-                {t('past')}
-                <Badge>{past.length}</Badge>
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="upcoming" className="pt-3">
-              <div className="md:hidden"><LessonMobileList lessons={upcoming} emptyMessage={t('noUpcoming')} onOpenDialog={openLesson} readOnly={readOnly} /></div>
-              <div className="hidden md:block"><LessonsTable lessons={upcoming} emptyMessage={t('noUpcoming')} loading={lessons.isFetching} onOpenDialog={openLesson} readOnly={readOnly} /></div>
-            </TabsContent>
-            <TabsContent value="past" className="pt-3">
-              <div className="md:hidden"><LessonMobileList lessons={past} emptyMessage={t('noPast')} onOpenDialog={openLesson} readOnly={readOnly} /></div>
-              <div className="hidden md:block"><LessonsTable lessons={past} emptyMessage={t('noPast')} loading={lessons.isFetching} onOpenDialog={openLesson} readOnly={readOnly} /></div>
-            </TabsContent>
-          </Tabs>
-        )}
-      </CardContent>
+  if (lessons.isPending) {
+    return <LoadingPanel size="md" className="min-h-32 rounded-row border-0 bg-transparent" />;
+  }
 
-      {!readOnly ? <LessonActionsDialog
-        open={actionsOpen}
-        onOpenChange={setActionsOpen}
-        lesson={selected}
-        initialMode={actionsMode}
-      /> : null}
-      {!readOnly ? <LessonFormDialog open={formOpen} onOpenChange={setFormOpen} lockedStudentId={studentId} /> : null}
-    </Card>
+  if (upcoming.length === 0 && past.length === 0) {
+    return (
+      <Empty>
+        <EmptyHeader>
+          <EmptyTitle>{t('noUpcoming')}</EmptyTitle>
+          <EmptyDescription>{t('noPast')}</EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    );
+  }
+
+  const renderLesson = (lesson: LessonResponse, state: 'next' | 'default' | 'past') => {
+    const start = new Date(lesson.startsAtUtc);
+    const end = new Date(start.getTime() + lesson.durationMin * 60 * 1000);
+
+    return (
+      <LessonItem
+        key={lesson.id}
+        state={state}
+        date={{
+          top: format.dateTime(start, { weekday: 'short' }),
+          day: format.dateTime(start, { day: '2-digit' }),
+        }}
+        title={lesson.group?.name ?? t('individualLesson')}
+        meta={[
+          format.dateTime(start, { month: 'short' }),
+          `${format.dateTime(start, { hour: '2-digit', minute: '2-digit' })} – ${format.dateTime(end, { hour: '2-digit', minute: '2-digit' })}`,
+          lesson.teacher.name,
+        ].join(' · ')}
+        status={<LessonStatusBadge status={lesson.status} />}
+        actions={
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            aria-label={t('lessonActions')}
+            onClick={() => openLesson(lesson)}
+          >
+            <MoreHorizontalIcon />
+          </Button>
+        }
+      />
+    );
+  };
+
+  return (
+    <div className="flex flex-col gap-1">
+      {upcoming.length > 0 ? (
+        <>
+          <SectionDivider label={t('comingUp')} className="mb-1" />
+          {upcoming.map((lesson, index) => renderLesson(lesson, index === 0 ? 'next' : 'default'))}
+        </>
+      ) : null}
+      {past.length > 0 ? (
+        <>
+          <SectionDivider label={t('earlier')} className="my-1" />
+          {past.map((lesson) => renderLesson(lesson, 'past'))}
+        </>
+      ) : null}
+
+      {!readOnly ? (
+        <LessonActionsDialog
+          open={actionsOpen}
+          onOpenChange={setActionsOpen}
+          lesson={selected}
+          initialMode={actionsMode}
+        />
+      ) : null}
+    </div>
   );
 }

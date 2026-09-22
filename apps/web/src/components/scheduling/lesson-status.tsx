@@ -8,7 +8,7 @@ import type { StatusMeta } from '@/components/shared/status-meta';
 import type { StatusOption } from '@/components/shared/status-select';
 
 const LESSON_STATUS_META: Record<LessonStatusDto, StatusMeta> = {
-  SCHEDULED: { tone: 'primary', icon: CalendarClockIcon },
+  SCHEDULED: { tone: 'info', icon: CalendarClockIcon },
   COMPLETED: { tone: 'success', icon: CircleCheckIcon },
   CANCELLED_CHARGED: { tone: 'destructive', icon: CircleXIcon },
   CANCELLED_UNCHARGED: { tone: 'warning', icon: CircleSlashIcon },

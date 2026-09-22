@@ -436,7 +436,14 @@
       "editProfile": "Редагувати профіль",
       "moreActions": "Інші дії з учнем",
       "archivedTitle": "Цього учня заархівовано",
-      "archivedDescription": "Профіль та історія доступні для перегляду. Відновіть учня, щоб планувати уроки, редагувати дані або змінювати зв’язки."
+      "archivedDescription": "Профіль та історія доступні для перегляду. Відновіть учня, щоб планувати уроки, редагувати дані або змінювати зв’язки.",
+      "nextLesson": "Наступне заняття",
+      "nothingPlanned": "Нічого не заплановано",
+      "nothingPlannedDescription": "Заплануйте наступне заняття, щоб пакет рухався далі.",
+      "callContact": "Зателефонувати {value}",
+      "messageContact": "Написати {value} в Telegram",
+      "emailContact": "Написати на {value}",
+      "pageLabel": "Профіль"
     },
     "setup": {
       "title": "Учня створено — оберіть наступний крок",
@@ -530,6 +537,24 @@
       "creditsLeft": "{left} з {total} лишилось",
       "noCreditsLeft": "Занять не лишилось",
       "today": "Сьогодні"
+    },
+    "profileMetrics": {
+      "creditsLeft": "Залишок занять",
+      "paidThisTerm": "Оплачено цього періоду",
+      "attendance": "Відвідуваність",
+      "level": "Рівень",
+      "levelCaption": "Рівень мови (CEFR)",
+      "levelMissing": "Рівень ще не вказано",
+      "pending": "Очікує на дані звітності"
+    },
+    "sections": {
+      "label": "Розділи учня",
+      "lessons": "Заняття",
+      "packages": "Пакети",
+      "payments": "Оплати",
+      "history": "Історія",
+      "addLesson": "Додати заняття",
+      "comingSoon": "Цей розділ ще недоступний."
     }
   },
   "groups": {
@@ -1099,7 +1124,11 @@
         "kind": "Тип",
         "price": "Ціна",
         "actions": "Дії"
-      }
+      },
+      "comingUp": "Найближчі",
+      "earlier": "Раніше",
+      "individualLesson": "Індивідуальне заняття",
+      "lessonActions": "Дії із заняттям"
     },
     "cancelDialog": {
       "title": "Скасувати урок",

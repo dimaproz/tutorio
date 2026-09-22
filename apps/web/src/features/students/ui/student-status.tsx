@@ -3,6 +3,7 @@
 import { ArchiveIcon, CircleCheckIcon, TreePalmIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { StudentStatusDto } from '@tutorio/validation';
+import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/shared/status-badges';
 import type { StatusMeta } from '@/components/shared/status-meta';
 import type { StatusOption } from '@/components/shared/status-select';
@@ -13,8 +14,33 @@ export const STUDENT_STATUS_META: Record<StudentStatusDto, StatusMeta> = {
   ARCHIVED: { tone: 'secondary', icon: ArchiveIcon },
 };
 
-export function StudentStatusBadge({ status }: { status: StudentStatusDto }) {
+const STATUS_DOT_TONE = {
+  ACTIVE: 'success',
+  ON_HOLD: 'warning',
+  ARCHIVED: 'archived',
+} as const;
+
+export function StudentStatusBadge({
+  status,
+  onTint = false,
+}: {
+  status: StudentStatusDto;
+  /**
+   * Renders the chip for a painted surface: an indigo tint on an indigo hero
+   * would disappear, so the status reads as a white chip with a status dot.
+   */
+  onTint?: boolean;
+}) {
   const t = useTranslations('studentStatus');
+
+  if (onTint) {
+    return (
+      <Badge variant="surface" size="lg" dot dotTone={STATUS_DOT_TONE[status]}>
+        {t(status)}
+      </Badge>
+    );
+  }
+
   return <StatusBadge label={t(status)} {...STUDENT_STATUS_META[status]} />;
 }
 
