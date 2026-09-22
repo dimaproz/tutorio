@@ -2,37 +2,43 @@
 
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { useFormatter, useTranslations } from 'next-intl';
+import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import type { StudentListItem, StudentStatusDto } from '@tutorio/validation';
 import { Badge } from '@/components/ui/badge';
 import { CreditMeter } from '@/components/shared/credit-meter';
 import { EntityAvatar, type EntityAvatarStatus } from '@/components/shared/entity-avatar';
-import { PENDING_VALUE } from '@/features/students/model/pending-data';
-import { studentLearningFormat } from './student-card';
+import { isSameLocalDay, type StudentRollup } from '@/features/students/model/rollups';
+import { formatMoneyCompact } from '@/lib/money';
+import { capitalizeFirst, cn } from '@/lib/utils';
+import { studentLearningFormat } from './student-learning-format';
 
-const STATUS_DOT: Record<StudentStatusDto, EntityAvatarStatus> = {
+export const STATUS_DOT: Record<StudentStatusDto, EntityAvatarStatus> = {
   ACTIVE: 'active',
   ON_HOLD: 'hold',
   ARCHIVED: 'archived',
 };
 
+/** The best one-line subtitle for a student: the archive date or a contact. */
+export function useStudentSubtitle(student: StudentListItem): string {
+  const t = useTranslations('students');
+  const format = useFormatter();
+  if (student.status === 'ARCHIVED') {
+    return t('archivedOn', {
+      date: format.dateTime(new Date(student.deletedAt ?? student.createdAt), {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      }),
+    });
+  }
+  const telegram = student.telegramUsername?.replace(/^@/, '');
+  return (telegram ? `@${telegram}` : null) ?? student.email ?? student.phone ?? '';
+}
+
 /** Avatar with the lifecycle dot, linked name, and the best contact we hold. */
 export function StudentIdentityCell({ student }: { student: StudentListItem }) {
-  const t = useTranslations('students');
   const tStatus = useTranslations('studentStatus');
-  const format = useFormatter();
-
-  const archivedAt = student.deletedAt ?? student.createdAt;
-  const subtitle =
-    student.status === 'ARCHIVED'
-      ? t('archivedOn', {
-          date: format.dateTime(new Date(archivedAt), {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric',
-          }),
-        })
-      : (student.telegramUsername ?? student.email ?? student.phone ?? '');
+  const subtitle = useStudentSubtitle(student);
 
   return (
     <div className="flex min-w-0 items-center gap-3.5">
@@ -46,7 +52,7 @@ export function StudentIdentityCell({ student }: { student: StudentListItem }) {
         <Link
           href={`/app/students/${student.id}`}
           // The whole row is the target; the name carries the accessible name.
-          className="truncate text-[15px] leading-5 font-semibold outline-none after:absolute after:inset-0 after:rounded-row focus-visible:after:ring-3 focus-visible:after:ring-ring/30"
+          className="truncate text-[15px] leading-5 font-semibold outline-none after:absolute after:inset-0 after:rounded-row focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-ring"
         >
           {student.fullName}
         </Link>
@@ -60,7 +66,7 @@ export function StudentIdentityCell({ student }: { student: StudentListItem }) {
   );
 }
 
-/** Format chip plus the teacher, which the list endpoint does not return yet. */
+/** Format chip plus the teacher of the student's next lesson. */
 export function StudentLearningCell({
   student,
   teacher,
@@ -80,85 +86,113 @@ export function StudentLearningCell({
       ) : (
         <Badge variant="neutral">{t('notConfigured')}</Badge>
       )}
-      {teacher ? (
-        <span className="truncate text-xs text-muted-foreground">{teacher}</span>
-      ) : null}
+      {teacher ? <span className="truncate text-xs text-muted-foreground">{teacher}</span> : null}
     </div>
   );
 }
 
 /**
- * The one placeholder for an empty cell. Both empty columns share it so they
- * cannot drift apart: routing the text through a component that also draws
- * something else picks up that component's caption size, which is measured to
- * sit under a meter rather than to stand alone in a cell.
+ * The one placeholder for an empty cell, so every empty column shares one
+ * text style instead of borrowing a caption measured for something else.
  */
 function CellPlaceholder({ children }: { children: ReactNode }) {
   return <span className="text-[13px] text-muted-foreground">{children}</span>;
 }
 
-/**
- * Credits, the next lesson and the balance are all per-student rollups the
- * list endpoint does not compute. Each renders the design's own empty state
- * rather than a number, so a reader is never misled.
- */
-export function StudentCreditsCell({ left, total }: { left?: number; total?: number }) {
+export function StudentCreditsCell({ credits }: { credits?: StudentRollup['credits'] }) {
   const t = useTranslations('students.list');
 
-  if (left == null || total == null || total === 0) {
+  if (!credits || credits.total === 0) {
     return <CellPlaceholder>{t('noPackage')}</CellPlaceholder>;
   }
 
   return (
     <CreditMeter
-      left={left}
-      total={total}
-      label={left === 0 ? t('noCreditsLeft') : t('creditsLeft', { left, total })}
+      left={credits.left}
+      total={credits.total}
+      label={
+        credits.left === 0
+          ? t('noCreditsLeft')
+          : t('creditsLeft', { left: credits.left, total: credits.total })
+      }
     />
   );
 }
 
 export function StudentNextLessonCell({
-  date,
-  time,
-  today = false,
+  status,
+  next,
+  now,
+  align = 'start',
 }: {
-  date?: string;
-  time?: string;
-  today?: boolean;
+  status: StudentStatusDto;
+  next?: StudentRollup['next'];
+  now: number;
+  align?: 'start' | 'end';
 }) {
   const t = useTranslations('students.list');
+  const format = useFormatter();
+  const alignClass = align === 'end' ? 'items-end text-right' : 'items-start';
 
-  if (!date && !today) {
+  if (status === 'ON_HOLD') {
+    return (
+      <div className={cn('flex min-w-0 flex-col', alignClass)}>
+        <span className="text-sm leading-5 font-medium">{t('paused')}</span>
+      </div>
+    );
+  }
+
+  if (!next || status === 'ARCHIVED') {
     return <CellPlaceholder>{t('noLessonsPlanned')}</CellPlaceholder>;
   }
 
+  const start = new Date(next.startsAtUtc);
+  const time = `${format.dateTime(start, { hour: '2-digit', minute: '2-digit' })} · ${t('minutes', { minutes: next.durationMin })}`;
+
   return (
-    <div className="flex min-w-0 flex-col items-start">
-      {today ? (
+    <div className={cn('flex min-w-0 flex-col', alignClass)}>
+      {isSameLocalDay(next.startsAtUtc, now) ? (
         <Badge variant="brand" dot className="mb-0.5">
           {t('today')}
         </Badge>
       ) : (
-        <span className="text-sm leading-5 font-medium">{date}</span>
+        <span className="text-sm leading-5 font-medium">
+          {capitalizeFirst(
+            format.dateTime(start, { weekday: 'short', day: 'numeric', month: 'short' }),
+          )}
+        </span>
       )}
-      {time ? <span className="font-mono text-xs text-muted-foreground">{time}</span> : null}
+      <span className="font-mono text-xs text-muted-foreground">{time}</span>
     </div>
   );
 }
 
 export function StudentBalanceCell({
-  label,
-  tone,
-  empty,
+  balance,
+  status,
 }: {
-  label?: string;
-  tone?: 'success' | 'warning' | 'danger' | 'neutral';
-  /** Shown when there is no balance to report. */
-  empty?: string;
+  balance?: StudentRollup['balance'];
+  status: StudentStatusDto;
 }) {
-  if (!label) {
-    return <CellPlaceholder>{empty ?? PENDING_VALUE}</CellPlaceholder>;
+  const t = useTranslations('students.list');
+  const locale = useLocale();
+
+  if (!balance) {
+    return <CellPlaceholder>{t('noBalance')}</CellPlaceholder>;
   }
-  return <Badge variant={tone ?? 'neutral'}>{label}</Badge>;
+  if (balance.kind === 'paid') {
+    return status === 'ARCHIVED' ? (
+      <Badge variant="neutral">{t('settled')}</Badge>
+    ) : (
+      <Badge variant="success">{t('paid')}</Badge>
+    );
+  }
+  if (balance.kind === 'partial') {
+    return <Badge variant="warning">{t('partlyPaid')}</Badge>;
+  }
+  return (
+    <Badge variant="danger">
+      {t('due', { amount: formatMoneyCompact(balance.owedMinor, balance.currency, locale).text })}
+    </Badge>
+  );
 }

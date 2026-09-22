@@ -1,8 +1,8 @@
 'use client';
 
-import { useMemo, useState, type Ref } from 'react';
+import { useMemo, useState, type ReactNode, type Ref } from 'react';
 import Link from 'next/link';
-import { PhoneIcon, PlusIcon, XIcon } from 'lucide-react';
+import { PhoneIcon, PlusIcon, SearchIcon, XIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { ParentListItem, StudentDetail } from '@tutorio/validation';
 import { ParentFormDialog } from '@/components/parents/parent-form-dialog';
@@ -74,24 +74,45 @@ export function StudentParentsCard({
     await saveLinks([...linkedIds, parent.id]);
   };
 
+  const picker = (trigger: ReactNode) => (
+    <EntityPicker
+      id="student-link-parent"
+      aria-label={t('link')}
+      trigger={trigger}
+      options={available.map((parent) => ({
+        value: parent.id,
+        label: parent.fullName,
+        avatarKey: parent.avatarKey,
+      }))}
+      onChange={(parentId) => (parentId ? void saveLinks([...linkedIds, parentId]) : undefined)}
+      placeholder={t('link')}
+      searchPlaceholder={t('search')}
+      emptyLabel={t('noResults')}
+      disabled={parents.isPending || update.isPending}
+      isLoading={parents.isPending}
+    />
+  );
+
   return (
     <>
       <div ref={sectionRef}>
         <InfoCard
           title={t('title')}
           action={
-            !readOnly ? (
-              <Button
-                type="button"
-                variant="link"
-                size="xs"
-                className="px-0"
-                onClick={() => onCreateOpenChange(true)}
-              >
-                <PlusIcon data-icon="inline-start" />
-                {t('create')}
-              </Button>
-            ) : undefined
+            !readOnly && student.parents.length > 0
+              ? picker(
+                  <Button
+                    id="student-link-parent"
+                    type="button"
+                    variant="link"
+                    size="xs"
+                    className="px-0 font-semibold"
+                  >
+                    <PlusIcon data-icon="inline-start" />
+                    {t('linkShort')}
+                  </Button>,
+                )
+              : undefined
           }
         >
           {update.error && retryParentIds ? (
@@ -164,26 +185,28 @@ export function StudentParentsCard({
             ))
           )}
 
-          {!readOnly ? (
-            parents.isError ? (
-              <QueryErrorAlert title={t('loadError')} onRetry={() => void parents.refetch()} />
-            ) : (
-              <EntityPicker
-                id="student-link-parent"
-                aria-label={t('link')}
-                options={available.map((parent) => ({
-                  value: parent.id,
-                  label: parent.fullName,
-                  avatarKey: parent.avatarKey,
-                }))}
-                onChange={(parentId) => (parentId ? void saveLinks([...linkedIds, parentId]) : undefined)}
-                placeholder={t('link')}
-                searchPlaceholder={t('search')}
-                emptyLabel={t('noResults')}
-                disabled={parents.isPending || update.isPending}
-                isLoading={parents.isPending}
-              />
-            )
+          {!readOnly && parents.isError ? (
+            <QueryErrorAlert title={t('loadError')} onRetry={() => void parents.refetch()} />
+          ) : null}
+
+          {!readOnly && student.parents.length === 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {picker(
+                <Button id="student-link-parent" type="button" variant="outline" size="xs">
+                  <SearchIcon data-icon="inline-start" />
+                  {t('link')}
+                </Button>,
+              )}
+              <Button
+                type="button"
+                variant="ghost"
+                size="xs"
+                onClick={() => onCreateOpenChange(true)}
+              >
+                <PlusIcon data-icon="inline-start" />
+                {t('create')}
+              </Button>
+            </div>
           ) : null}
         </InfoCard>
       </div>

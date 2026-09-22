@@ -1,87 +1,71 @@
 'use client';
 
 import Link from 'next/link';
-import { useFormatter, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import type { StudentListItem } from '@tutorio/validation';
-import { StudentRowActions } from './student-row-actions';
-import { StudentStatusBadge } from '@/features/students/ui/student-status';
 import { EntityAvatar } from '@/components/shared/entity-avatar';
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import type { StudentRollup } from '@/features/students/model/rollups';
+import { cn } from '@/lib/utils';
+import {
+  STATUS_DOT,
+  StudentBalanceCell,
+  StudentCreditsCell,
+  StudentNextLessonCell,
+  useStudentSubtitle,
+} from './student-row-cells';
 
-export function studentLearningFormat(
-  student: Pick<StudentListItem, 'groupNames' | 'activeEnrollmentCount'>,
-): 'groups' | 'individual' | 'notConfigured' {
-  if (student.groupNames.length > 0) {
-    return 'groups';
-  }
-  return student.activeEnrollmentCount > 0 ? 'individual' : 'notConfigured';
-}
-
-/** Shared learning-format presentation for the Student table and mobile card. */
-export function StudentLearningFormat({
+/**
+ * The phone representation of a student in the collection: identity with the
+ * balance chip, then the credits meter and the next lesson. The whole card is
+ * the link to the profile; an archived student reads dimmed.
+ */
+export function StudentCard({
   student,
+  rollup,
+  now,
 }: {
-  student: Pick<StudentListItem, 'groupNames' | 'activeEnrollmentCount'>;
+  student: StudentListItem;
+  rollup?: StudentRollup;
+  now: number;
 }) {
-  const t = useTranslations('students');
-  const format = studentLearningFormat(student);
+  const tStatus = useTranslations('studentStatus');
+  const subtitle = useStudentSubtitle(student);
+  const archived = student.status === 'ARCHIVED';
 
-  if (format === 'groups') {
-    return <span>{student.groupNames.join(', ')}</span>;
-  }
-
-  return <span className="text-muted-foreground">{t(format)}</span>;
-}
-
-/** Shared compact absolute date for the Student table and mobile card. */
-export function StudentAddedDate({ createdAt }: { createdAt: string }) {
-  const format = useFormatter();
   return (
-    <span className="tabular whitespace-nowrap text-muted-foreground">
-      {format.dateTime(new Date(createdAt), {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-      })}
-    </span>
-  );
-}
-
-// Mobile presentation of a student. The desktop table uses the same format and
-// date helpers, while keeping the required accessible table structure.
-export function StudentCard({ student }: { student: StudentListItem }) {
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center gap-3">
-          <EntityAvatar avatarKey={student.avatarKey} fullName={student.fullName} size="sm" />
-          <div className="flex min-w-0 flex-col gap-1">
-            <CardTitle className="truncate text-base">
-              <Link
-                href={`/app/students/${student.id}`}
-                className="underline-offset-4 hover:underline"
-              >
-                {student.fullName}
-              </Link>
-            </CardTitle>
-          </div>
+    <article
+      data-slot="student-card"
+      className={cn(
+        'relative flex flex-col gap-3 rounded-row bg-card p-4 text-card-foreground transition-colors duration-150 has-[a:hover]:bg-surface-hover',
+        archived && 'text-muted-foreground [&_img]:grayscale',
+      )}
+    >
+      <div className="flex items-center gap-3">
+        <EntityAvatar
+          avatarKey={student.avatarKey}
+          fullName={student.fullName}
+          status={STATUS_DOT[student.status]}
+          statusLabel={tStatus(student.status)}
+        />
+        <div className="flex min-w-0 grow flex-col">
+          <Link
+            href={`/app/students/${student.id}`}
+            className="text-[17px] leading-[22px] font-semibold outline-none after:absolute after:inset-0 after:rounded-row focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-ring"
+          >
+            {student.fullName}
+          </Link>
+          {subtitle ? (
+            <span className="truncate text-[13px] leading-[18px] text-muted-foreground">
+              {subtitle}
+            </span>
+          ) : null}
         </div>
-        <CardAction>
-          <StudentRowActions
-            studentId={student.id}
-            fullName={student.fullName}
-            avatarKey={student.avatarKey}
-            status={student.status}
-          />
-        </CardAction>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-2 text-sm">
-        <div className="flex flex-wrap items-center gap-2">
-          <StudentStatusBadge status={student.status} />
-        </div>
-        <StudentLearningFormat student={student} />
-        <StudentAddedDate createdAt={student.createdAt} />
-      </CardContent>
-    </Card>
+        <StudentBalanceCell balance={rollup?.balance} status={student.status} />
+      </div>
+      <div className="flex items-end justify-between gap-3 border-t border-border pt-3">
+        <StudentCreditsCell credits={rollup?.credits} />
+        <StudentNextLessonCell status={student.status} next={rollup?.next} now={now} align="end" />
+      </div>
+    </article>
   );
 }

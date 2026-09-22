@@ -6,7 +6,7 @@ describe('studentRowActions', () => {
     expect(studentRowActions('ARCHIVED')).toEqual(['restore']);
   });
 
-  it.each(['ACTIVE', 'ON_HOLD'] as const)('keeps operational actions for %s students', (status) => {
-    expect(studentRowActions(status)).toEqual(['edit', 'toggle-hold', 'archive']);
+  it.each(['ACTIVE', 'ON_HOLD'] as const)('offers Edit for %s students', (status) => {
+    expect(studentRowActions(status)).toEqual(['edit']);
   });
 });

@@ -29,15 +29,16 @@
   },
   "auth": {
     "login": {
-      "title": "Sign in",
-      "subtitle": "Welcome back! Sign in to your workspace.",
+      "title": "Welcome back",
+      "subtitle": "Sign in to your workspace to see today’s lessons, students and payments.",
       "email": "Email",
       "password": "Password",
       "showPassword": "Show password",
       "hidePassword": "Hide password",
       "submit": "Sign in",
       "noAccount": "Don't have an account?",
-      "registerLink": "Create one"
+      "registerLink": "Create one",
+      "emailPlaceholder": "you@example.com"
     },
     "register": {
       "title": "Create your workspace",
@@ -56,7 +57,8 @@
       "modeSolo": "I tutor on my own",
       "modeSchool": "We are a school with several teachers",
       "modeSoloHint": "No teacher pickers anywhere — every lesson is yours. Changeable later in settings.",
-      "modeSchoolHint": "Lessons and enrollments record which teacher they belong to."
+      "modeSchoolHint": "Lessons and enrollments record which teacher they belong to.",
+      "namePlaceholder": "Full name"
     },
     "errors": {
       "EMAIL_TAKEN": "This email is already registered. Try signing in instead.",
@@ -65,6 +67,68 @@
       "SESSION_EXPIRED": "Your session has expired. Please sign in again.",
       "FORBIDDEN": "You don't have permission to do that.",
       "generic": "Something went wrong. Please try again."
+    },
+    "promo": {
+      "login": {
+        "chip": "Financial calendar for tutors",
+        "headline": "Lessons, students and payments in one calm place."
+      },
+      "register": {
+        "chip": "Takes about two minutes",
+        "headline": "Set up your studio, then let the calendar do the counting."
+      },
+      "sample": {
+        "today": "Today · 3 lessons",
+        "thu": "Thu",
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "fri": "Fri",
+        "lesson1": "Speaking practice",
+        "lesson1Meta": "15:30 – 16:15 · Sofiia Melnyk",
+        "lesson2": "IELTS writing",
+        "lesson2Meta": "19:00 – 20:00 · Artem Lysenko",
+        "next": "Next",
+        "scheduled": "Scheduled",
+        "nextLesson": "Next lesson",
+        "inTwoDays": "in 2 days",
+        "nextDate": "Thu, 11 Sep",
+        "nextTime": "17:00 – 18:00 · Speaking",
+        "teacher": "Dmytro Tutor",
+        "teacherSub": "Room 2 · uses 1 credit",
+        "open": "Open lesson",
+        "reschedule": "Reschedule",
+        "paidMonth": "Paid this month",
+        "paidValue": "48 200 ₴",
+        "payments": "31 payments",
+        "student1": "Anna Shevchenko",
+        "student1Sub": "English · B2",
+        "student2": "Sofiia Melnyk",
+        "student2Sub": "English · B1",
+        "student3": "Maksym Tkachenko",
+        "student3Sub": "B1 English",
+        "creditsLeft": "{left} of {total} left",
+        "students": "Students",
+        "credits": "Credits left",
+        "creditsValue": "6 of 8",
+        "package": "B2 package",
+        "used": "2 used",
+        "week": "This week · 14 lessons",
+        "gettingStarted": "Getting started",
+        "stepsDone": "1 of 3 done",
+        "step1": {
+          "title": "Add your students",
+          "text": "Contacts, level, parents — or import them later."
+        },
+        "step2": {
+          "title": "Set packages and prices",
+          "text": "Lessons per package and a price per lesson."
+        },
+        "step3": {
+          "title": "Schedule the first lessons",
+          "text": "Tutorio counts credits and payments for you."
+        }
+      }
     }
   },
   "errors": {
@@ -240,7 +304,9 @@
       "patterns": "Lesson Patterns",
       "teachers": "Teachers",
       "detail": "Details",
-      "toggle": "Toggle sidebar"
+      "toggle": "Toggle sidebar",
+      "tabsLabel": "Quick navigation",
+      "more": "More"
     },
     "sidebar": {
       "toggle": "Toggle sidebar"
@@ -324,7 +390,7 @@
     "notConfigured": "Not configured",
     "metrics": {
       "total": "Total students",
-      "active": "Active",
+      "active": "Active students",
       "onHold": "On hold",
       "archived": "Archived",
       "unavailable": "Unavailable",
@@ -346,7 +412,9 @@
       "awaitingPaymentMixed": "Outstanding in several currencies",
       "awaitingPaymentClearValue": "Nothing due",
       "awaitingPaymentClearBadge": "All paid",
-      "awaitingPaymentClearCaption": "Every active package is settled"
+      "awaitingPaymentClearCaption": "Every active package is settled",
+      "lessonsSplit": "{individual} individual · {group} group",
+      "topUp": "Offer a top-up"
     },
     "filters": {
       "statusAll": "All statuses",
@@ -358,7 +426,8 @@
       "viewList": "List view",
       "viewGrid": "Card view",
       "searchLabel": "Search students",
-      "searchPlaceholder": "Search students"
+      "searchPlaceholder": "Search students",
+      "group": "Group"
     },
     "empty": {
       "title": "No students yet",
@@ -383,9 +452,9 @@
     },
     "form": {
       "createTitle": "New student",
-      "createSubtitle": "Only the name and timezone are required.",
+      "createSubtitle": "Fill in the essentials now — the rest can wait.",
       "editTitle": "Edit student",
-      "editSubtitle": "Update contact details and notes.",
+      "editSubtitle": "Editing the profile · changes apply once saved.",
       "identitySection": "Identity",
       "learningProfileSection": "Learning profile",
       "preferencesSection": "Preferences",
@@ -411,13 +480,67 @@
       "timezoneEmpty": "No timezone found",
       "notes": "Notes",
       "addMoreDetails": "Add more details",
-      "loadErrorTitle": "Could not load the profile",
-      "loadErrorDescription": "Try again before editing. No new student will be created.",
+      "loadErrorTitle": "Couldn’t load the profile",
+      "loadErrorDescription": "Try again before editing.",
       "discardTitle": "Discard changes?",
       "discardDescription": "Your unsaved changes will be lost.",
       "discardAction": "Discard changes",
       "submitCreate": "Create student",
-      "submitEdit": "Save changes"
+      "submitEdit": "Save changes",
+      "editCrumb": "{name} › Edit",
+      "tagRequired": "required",
+      "tagOptional": "optional",
+      "avatar": "Avatar",
+      "emailPlaceholder": "name@example.com",
+      "timezoneFromBrowser": "Filled in from your browser",
+      "notesPlaceholder": "What is worth remembering about this student?",
+      "sectionsLabel": "Form sections",
+      "sectionHasError": "Has an error",
+      "sectionDone": "Complete",
+      "sectionsNote": "Scrolling highlights the current section. Only the name and timezone are required.",
+      "progress": "{done} of {total} filled",
+      "progressReady": "ready to create",
+      "creating": "Creating…",
+      "savingNote": "Saving…",
+      "fixFields": "{count, plural, one {Fix # field to save} other {Fix # fields to save}}",
+      "draftSaved": "Draft saved on this device",
+      "requestErrorTitle": "Couldn’t save the student",
+      "unavailableTitle": "Profile unavailable",
+      "unavailableDescription": "The details appear here once they load. Nothing will be changed.",
+      "unsaved": "{count, plural, one {# unsaved change} other {# unsaved changes}}",
+      "unsavedWithErrors": "{count, plural, one {# unsaved change} other {# unsaved changes}} · {errors, plural, one {# error} other {# errors}}",
+      "noChanges": "No changes",
+      "discard": "Discard",
+      "archivedTitle": "Student is archived",
+      "archivedDescription": "An archived student cannot be edited. Restore them first — the profile and history are kept.",
+      "archivedSubtitle": "View only — saving is off.",
+      "statusIndependent": "The status changes immediately, apart from saving the form — your edits stay.",
+      "sections": {
+        "identity": {
+          "title": "Personal details",
+          "description": "Avatar and name"
+        },
+        "contacts": {
+          "title": "Contacts",
+          "description": "Email, phone, Telegram"
+        },
+        "learning": {
+          "title": "Learning profile",
+          "description": "Age, grade and levels"
+        },
+        "preferences": {
+          "title": "Preferences",
+          "description": "Timezone"
+        },
+        "pricing": {
+          "title": "Price",
+          "description": "Price per lesson and currency"
+        },
+        "notes": {
+          "title": "Notes",
+          "description": "Worth remembering"
+        }
+      }
     },
     "detail": {
       "contactsTitle": "Contacts",
@@ -453,7 +576,15 @@
       "callContact": "Call {value}",
       "messageContact": "Message {value} on Telegram",
       "emailContact": "Email {value}",
-      "pageLabel": "Profile"
+      "pageLabel": "Profile",
+      "levelUnknown": "Level not set",
+      "archivedOn": "Archived {date}",
+      "edit": "Edit",
+      "restore": "Restore",
+      "addPhone": "Add phone",
+      "addTelegram": "Add Telegram",
+      "addEmail": "Add email",
+      "noContacts": "No contacts."
     },
     "setup": {
       "title": "Student created — choose the next step",
@@ -511,13 +642,14 @@
       "create": "Create parent",
       "empty": "No parents linked yet.",
       "emptyArchived": "No parent relationship is recorded.",
-      "link": "Link an existing parent",
+      "link": "Link existing",
       "search": "Search parents…",
       "noResults": "No parent found",
       "unlink": "Unlink {name}",
       "retryLink": "Retry linking",
       "loadError": "Could not load parents",
-      "call": "Call {name}"
+      "call": "Call {name}",
+      "linkShort": "Link"
     },
     "toasts": {
       "created": "Student created",
@@ -525,13 +657,16 @@
       "archived": "Student archived",
       "restored": "Student restored",
       "onHold": "Student put on hold",
-      "reactivated": "Student reactivated"
+      "reactivated": "Student reactivated",
+      "onHoldName": "{name} is on a break",
+      "reactivatedName": "{name} is active again"
     },
     "archiveDialog": {
-      "title": "Archive this student?",
+      "title": "Archive the student?",
       "warning": "The student will leave operational lists. Lessons, enrollments, packages, payments, and history stay intact.",
       "effects": "Future individual lessons and recurring schedules will be suspended. Live group participation is paused. Restoring rechecks calendar conflicts before resuming affected work.",
-      "action": "Archive student"
+      "action": "Archive",
+      "description": "{name} leaves the active list and scheduled lessons are cancelled. The profile, packages and history are kept — restore any time."
     },
     "scheduleLesson": "Schedule lesson",
     "showing": "Showing {shown} of {total} students",
@@ -539,7 +674,7 @@
     "statusTabs": {
       "all": "All",
       "active": "Active",
-      "onHold": "On hold",
+      "onHold": "On a break",
       "archived": "Archived"
     },
     "list": {
@@ -547,7 +682,14 @@
       "noLessonsPlanned": "No lessons planned",
       "creditsLeft": "{left} of {total} left",
       "noCreditsLeft": "No credits left",
-      "today": "Today"
+      "today": "Today",
+      "paused": "Paused",
+      "minutes": "{minutes} min",
+      "noBalance": "No invoices",
+      "paid": "Paid",
+      "settled": "Settled",
+      "partlyPaid": "Partly paid",
+      "due": "Due {amount}"
     },
     "profileMetrics": {
       "creditsLeft": "Credits left",
@@ -555,9 +697,27 @@
       "attendance": "Attendance",
       "level": "Level",
       "levelCaption": "Language level (CEFR)",
-      "levelMissing": "No level recorded yet",
+      "levelMissing": "Add it in the profile",
       "pending": "Waiting on reporting data",
-      "perLesson": "{price} / lesson"
+      "perLesson": "{price} / lesson",
+      "creditsValue": "{left} of {total}",
+      "packageNamed": "Package “{name}”",
+      "package": "Active package",
+      "used": "{count} used",
+      "addPackage": "Add package",
+      "noPackage": "No package",
+      "noDebt": "Nothing due",
+      "debt": "Due {amount}",
+      "paidCaption": "{date} · {count, plural, one {# package} other {# packages}}",
+      "noPayments": "No payments yet",
+      "perLessonShort": "per lesson",
+      "attendanceCaption": "{attended} attended · {charged, plural, one {# late cancel} other {# late cancels}}",
+      "attendanceNone": "None yet",
+      "attendanceNoneSub": "lessons held",
+      "attendanceNoneCaption": "Appears after the first lesson",
+      "levelNone": "Not set",
+      "levelNoneSub": "language level (CEFR)",
+      "knowledgeCaption": "{level} general level"
     },
     "sections": {
       "label": "Student sections",
@@ -580,8 +740,67 @@
       "add": "Add a note",
       "placeholder": "What should you remember about this student?",
       "empty": "No notes yet.",
-      "saved": "Notes saved"
-    }
+      "saved": "Notes saved",
+      "updated": "Profile updated {date}"
+    },
+    "new": "New student",
+    "newShort": "New",
+    "subtitleCounts": "{total, plural, one {# student learns} other {# students learn}} with you — {week} have lessons this week.",
+    "rowActions": "Actions for {name}",
+    "openProfile": "Open profile",
+    "status": {
+      "heading": "Student status",
+      "menuLabel": "Change student status",
+      "close": "Close",
+      "change": "Student status: {status}. Change",
+      "ACTIVE": {
+        "label": "Active",
+        "description": "Lessons are scheduled and charged to the package."
+      },
+      "ON_HOLD": {
+        "label": "On a break",
+        "description": "Paused: no new lessons are planned. The package and history are kept."
+      },
+      "ARCHIVED": {
+        "label": "Archived",
+        "description": "Hidden from the list, view only. Can be restored any time."
+      }
+    },
+    "holdDialog": {
+      "title": "Send the student on a break?",
+      "description": "{name}: no new lessons will be planned. The package, payments and history stay as they are.",
+      "confirm": "Send on a break",
+      "cancelLessons": "{count, plural, one {Cancel # scheduled lesson} other {Cancel # scheduled lessons}}",
+      "cancelLessonsHint": "Cancelled lessons are not charged to the package."
+    },
+    "banner": {
+      "holdTitle": "Student is on a break",
+      "holdText": "No new lessons are planned while the student is on a break. History and packages stay as they are.",
+      "holdAction": "End the break"
+    },
+    "nextLesson": {
+      "heading": "Next lesson",
+      "individual": "Individual lesson",
+      "usesCredit": "Uses 1 package credit",
+      "teacher": "Teacher",
+      "open": "Open lesson",
+      "reschedule": "Reschedule",
+      "empty": {
+        "fresh": {
+          "title": "Nothing planned",
+          "text": "The first lesson will appear here as soon as you schedule it."
+        },
+        "hold": {
+          "title": "Lessons are paused",
+          "text": "The student is on a break. New lessons appear after they return."
+        },
+        "archived": {
+          "title": "No lessons are planned",
+          "text": "The student is archived. Restore them to schedule lessons again."
+        }
+      }
+    },
+    "subtitleShort": "{total, plural, one {# student} other {# students}} · {active} active"
   },
   "groups": {
     "title": "Groups",
@@ -1154,7 +1373,11 @@
       "comingUp": "Coming up",
       "earlier": "Earlier",
       "individualLesson": "Individual lesson",
-      "lessonActions": "Lesson actions"
+      "lessonActions": "Lesson actions",
+      "emptyTitle": "No lessons yet",
+      "emptyDescription": "Schedule the first lesson — it will appear here along with the attendance history.",
+      "emptyArchived": "This student has no lesson history.",
+      "history": "History"
     },
     "cancelDialog": {
       "title": "Cancel lesson",

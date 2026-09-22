@@ -1,56 +1,41 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
+import { PlayIcon, PlusIcon, RotateCcwIcon } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import {
-  ArchiveIcon,
-  CalendarPlusIcon,
-  EllipsisIcon,
-  PauseIcon,
-  PencilIcon,
-  PlayIcon,
-  RotateCcwIcon,
-} from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useNow, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { StudentDetail } from '@tutorio/validation';
 import { PackageFormDialog } from '@/components/packages/package-form-dialog';
 import { LessonFormDialog } from '@/components/scheduling/lesson-form-dialog';
-import { StudentLessonsCard } from '@/components/scheduling/student-lessons-card';
+import {
+  StudentLessonsCard,
+  studentLessonsRange,
+} from '@/components/scheduling/student-lessons-card';
 import { DetailFrame } from '@/components/shared/detail-frame';
-import { NextLessonCard } from '@/components/shared/next-lesson-card';
-import { QueryErrorAlert } from '@/components/shared/page-shell';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Spinner } from '@/components/ui/spinner';
-import { StudentArchiveDialog } from '@/features/students/ui/student-archive-dialog';
-import { StudentEditDialog } from '@/features/students/ui/student-edit-dialog';
-import { StudentInformationCard } from '@/features/students/ui/student-information-card';
-import { StudentLearningCard } from '@/features/students/ui/student-learning-card';
-import { StudentPackagesCard } from '@/features/students/ui/student-packages-card';
-import { StudentParentsCard } from '@/features/students/ui/student-parents-card';
-import { StudentProfileHero } from '@/features/students/ui/student-profile-hero';
-import { StudentProfileMetrics } from '@/features/students/ui/student-profile-metrics';
-import { StudentNotesCard } from '@/features/students/ui/student-notes-card';
-import { StudentSectionsCard } from '@/features/students/ui/student-sections-card';
-import { StudentSetupCard } from '@/features/students/ui/student-setup-card';
-import { studentLifecyclePolicy } from '@/features/students/model/lifecycle';
-import { errorMessageKey } from '@/lib/api/error-message';
-import {
-  useRestoreStudentMutation,
-  useStudentQuery,
-  useUpdateStudentMutation,
-} from '@/lib/api/students';
-import { useDateFormatters } from '@/lib/i18n/format';
 import { LoadingPanel } from '@/components/shared/loading';
-import { StudentStatusBadge } from '@/features/students/ui/student-status';
+import { Notice } from '@/components/shared/notice';
+import { useSetPageCrumb } from '@/components/shared/page-crumb';
+import { QueryErrorAlert } from '@/components/shared/page-shell';
+import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
+import { studentLifecyclePolicy } from '@/features/students/model/lifecycle';
+import { deriveStudentProfileMetrics } from '@/features/students/model/profile-metrics';
+import { errorMessageKey } from '@/lib/api/error-message';
+import { usePackagesQuery } from '@/lib/api/packages';
+import { useLessonsQuery } from '@/lib/api/scheduling';
+import { useRestoreStudentMutation, useStudentQuery } from '@/lib/api/students';
+import { StudentInformationCard } from './student-information-card';
+import { StudentLearningCard } from './student-learning-card';
+import { StudentNextLesson } from './student-next-lesson';
+import { StudentNotesCard } from './student-notes-card';
+import { StudentPackagesCard } from './student-packages-card';
+import { StudentParentsCard } from './student-parents-card';
+import { StudentProfileHero } from './student-profile-hero';
+import { StudentProfileMetrics } from './student-profile-metrics';
+import { StudentSectionsCard } from './student-sections-card';
+import { StudentSetupCard } from './student-setup-card';
+import { useStudentStatusActions } from './student-status-control';
 
 export function StudentDetailView({ studentId }: { studentId: string }) {
   const t = useTranslations('students');
@@ -72,6 +57,11 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
   return <StudentProfileContent student={student.data} />;
 }
 
+/**
+ * The student profile. Order is fixed by the design: the status banner is
+ * always first, then identity with the next lesson, the metric band, the
+ * set-up checklist for a fresh record, the lesson sections and the aside.
+ */
 export function StudentProfileContent({
   student,
   nowMs,
@@ -80,25 +70,43 @@ export function StudentProfileContent({
   nowMs?: number;
 }) {
   const t = useTranslations('students');
-  const tCommon = useTranslations('common');
-  const tLanguage = useTranslations('languageLevel');
-  const tKnowledge = useTranslations('knowledgeLevel');
   const tErrors = useTranslations('errors');
-  const format = useDateFormatters();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const setupVisible = searchParams.get('setup') === '1' && student.status !== 'ARCHIVED';
   const policy = studentLifecyclePolicy(student.status);
-  const updateStudent = useUpdateStudentMutation(student.id);
+  const archived = policy.readOnly;
+  useSetPageCrumb(t('detail.pageLabel'));
+  const setupVisible = searchParams.get('setup') === '1' && !archived;
+  const statusActions = useStudentStatusActions(student);
   const restoreStudent = useRestoreStudentMutation();
   const [lessonOpen, setLessonOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
-  const [archiveOpen, setArchiveOpen] = useState(false);
   const [packageOpen, setPackageOpen] = useState(false);
   const [learningOpen, setLearningOpen] = useState(false);
   const [parentOpen, setParentOpen] = useState(false);
   const parentsSectionRef = useRef<HTMLDivElement>(null);
+
+  // One pinned window shared with the lessons panel, so both read one query.
+  const clock = useNow();
+  const [now] = useState(() => nowMs ?? clock.getTime());
+  const lessons = useLessonsQuery({ ...studentLessonsRange(now), studentId: student.id });
+  const packages = usePackagesQuery({
+    page: 1,
+    pageSize: 100,
+    studentId: student.id,
+    state: archived ? 'all' : 'active',
+  });
+  const metrics = useMemo(
+    () =>
+      lessons.data && (packages.data || packages.isError)
+        ? deriveStudentProfileMetrics({
+            packages: packages.data?.items ?? [],
+            lessons: lessons.data.items,
+            now,
+          })
+        : undefined,
+    [lessons.data, packages.data, packages.isError, now],
+  );
 
   const dismissSetup = () => {
     const next = new URLSearchParams(searchParams.toString());
@@ -110,108 +118,76 @@ export function StudentProfileContent({
       onSuccess: () => toast.success(t('toasts.restored')),
       onError: (error) => toast.error(tErrors(errorMessageKey(error))),
     });
-  const toggleHold = () =>
-    updateStudent.mutate(
-      { status: student.status === 'ON_HOLD' ? 'ACTIVE' : 'ON_HOLD' },
-      {
-        onSuccess: () =>
-          toast.success(
-            student.status === 'ON_HOLD' ? t('toasts.reactivated') : t('toasts.onHold'),
-          ),
-        onError: (error) => toast.error(tErrors(errorMessageKey(error))),
-      },
-    );
   const focusParents = () => {
     parentsSectionRef.current?.scrollIntoView({ block: 'center' });
     parentsSectionRef.current?.querySelector<HTMLButtonElement>('#student-link-parent')?.focus();
   };
+  const schedule = () => setLessonOpen(true);
 
-  const heroMeta = [
-    student.languageLevel ? tLanguage(student.languageLevel) : null,
-    student.knowledgeLevel ? tKnowledge(student.knowledgeLevel) : null,
-    student.age != null ? t('detail.ageYears', { age: student.age }) : null,
-    student.grade != null ? t('detail.gradeShort', { grade: student.grade }) : null,
-    student.timezone,
-  ].filter((value): value is string => Boolean(value));
-
-  const heroActions = (
-    <>
-      {policy.primary === 'restore' ? (
-        <Button type="button" onClick={restore} disabled={restoreStudent.isPending}>
-          {restoreStudent.isPending ? (
-            <Spinner data-icon="inline-start" />
-          ) : (
-            <RotateCcwIcon data-icon="inline-start" />
-          )}
-          {tCommon('restore')}
-        </Button>
-      ) : (
-        <Button type="button" leading={<CalendarPlusIcon />} onClick={() => setLessonOpen(true)}>
-          {t('detail.scheduleLesson')}
-        </Button>
-      )}
-      {policy.secondary.includes('edit') ? (
-        <Button type="button" variant="white" onClick={() => setEditOpen(true)}>
-          <PencilIcon data-icon="inline-start" />
-          {t('detail.editProfile')}
-        </Button>
-      ) : null}
-      {policy.overflow.length > 0 ? (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              type="button"
-              variant="white"
-              size="icon"
-              aria-label={t('detail.moreActions')}
-            >
-              <EllipsisIcon data-icon />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuGroup>
-              <DropdownMenuItem onSelect={toggleHold}>
-                {student.status === 'ON_HOLD' ? <PlayIcon data-icon /> : <PauseIcon data-icon />}
-                {student.status === 'ON_HOLD' ? t('reactivate') : t('putOnHold')}
-              </DropdownMenuItem>
-              <DropdownMenuItem variant="destructive" onSelect={() => setArchiveOpen(true)}>
-                <ArchiveIcon data-icon />
-                {t('archive')}
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ) : null}
-    </>
-  );
+  const banner =
+    student.status === 'ON_HOLD' ? (
+      <Notice
+        tone="info"
+        title={t('banner.holdTitle')}
+        text={t('banner.holdText')}
+        action={
+          <Button
+            type="button"
+            variant="white"
+            size="xs"
+            disabled={statusActions.pending}
+            onClick={() => statusActions.choose('ACTIVE')}
+          >
+            {statusActions.pending ? (
+              <Spinner data-icon="inline-start" />
+            ) : (
+              <PlayIcon data-icon="inline-start" />
+            )}
+            {t('banner.holdAction')}
+          </Button>
+        }
+      />
+    ) : archived ? (
+      <Notice
+        tone="warning"
+        title={t('detail.archivedTitle')}
+        text={t('detail.archivedDescription')}
+        action={
+          <Button
+            type="button"
+            variant="white"
+            size="xs"
+            disabled={restoreStudent.isPending}
+            onClick={restore}
+          >
+            {restoreStudent.isPending ? (
+              <Spinner data-icon="inline-start" />
+            ) : (
+              <RotateCcwIcon data-icon="inline-start" />
+            )}
+            {t('detail.restore')}
+          </Button>
+        }
+      />
+    ) : null;
 
   const identity = (
     <div className="flex flex-col gap-4">
+      {banner}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,2.1fr)_minmax(0,1fr)]">
         <StudentProfileHero
           student={student}
-          statusBadge={<StudentStatusBadge status={student.status} onTint />}
-          since={t('detail.addedOn', { date: format.longDate(student.createdAt) })}
-          meta={heroMeta}
-          actions={heroActions}
+          statusActions={statusActions}
+          onSchedule={schedule}
+          onRestore={restore}
+          restoring={restoreStudent.isPending}
         />
-        {/* The next lesson needs a schedule rollup the student endpoint does not
-            return, so the ticket shows its empty state. It deliberately carries
-            no call to action: the hero's primary button beside it already books
-            a lesson, and two identical buttons on one screen help nobody. */}
-        <NextLessonCard
-          heading={t('detail.nextLesson')}
-          emptyTitle={t('detail.nothingPlanned')}
-          emptyDescription={t('detail.nothingPlannedDescription')}
+        <StudentNextLesson
+          status={student.status}
+          lesson={metrics?.next ?? null}
+          loading={!metrics && !lessons.isError}
         />
       </div>
-      {policy.readOnly ? (
-        <Alert>
-          <ArchiveIcon />
-          <AlertTitle>{t('detail.archivedTitle')}</AlertTitle>
-          <AlertDescription>{t('detail.archivedDescription')}</AlertDescription>
-        </Alert>
-      ) : null}
     </div>
   );
 
@@ -225,18 +201,27 @@ export function StudentProfileContent({
             if (action === 'package') setPackageOpen(true);
             if (action === 'learning') setLearningOpen(true);
             if (action === 'parent') focusParents();
-            if (action === 'profile') setEditOpen(true);
+            if (action === 'profile') router.push(`/app/students/${student.id}/edit`);
           }}
         />
       ) : null}
       <StudentSectionsCard
-        onAddLesson={policy.readOnly ? undefined : () => setLessonOpen(true)}
-        onAddPackage={policy.readOnly ? undefined : () => setPackageOpen(true)}
+        historyOnly={archived}
+        onAddLesson={archived ? undefined : schedule}
+        onAddPackage={archived ? undefined : () => setPackageOpen(true)}
         lessons={
           <StudentLessonsCard
             studentId={student.id}
-            readOnly={policy.readOnly}
-            nowMs={nowMs}
+            readOnly={archived}
+            historyOnly={archived}
+            nowMs={now}
+            emptyAction={
+              !archived ? (
+                <Button type="button" leading={<PlusIcon />} onClick={schedule}>
+                  {t('detail.scheduleLesson')}
+                </Button>
+              ) : undefined
+            }
           />
         }
         packages={
@@ -245,30 +230,32 @@ export function StudentProfileContent({
             studentId={student.id}
             createOpen={packageOpen}
             onCreateOpenChange={setPackageOpen}
-            readOnly={policy.readOnly}
+            readOnly={archived}
           />
         }
       />
-      <StudentLearningCard
-        student={student}
-        createOpen={learningOpen}
-        onCreateOpenChange={setLearningOpen}
-        readOnly={policy.readOnly}
-      />
+      {archived ? null : (
+        <StudentLearningCard
+          student={student}
+          createOpen={learningOpen}
+          onCreateOpenChange={setLearningOpen}
+          readOnly={archived}
+        />
+      )}
     </>
   );
 
   const aside = (
     <>
-      <StudentNotesCard student={student} readOnly={policy.readOnly} />
+      <StudentNotesCard student={student} readOnly={archived} />
       <StudentParentsCard
         student={student}
         createOpen={parentOpen}
         onCreateOpenChange={setParentOpen}
-        readOnly={policy.readOnly}
+        readOnly={archived}
         sectionRef={parentsSectionRef}
       />
-      <StudentInformationCard student={student} />
+      <StudentInformationCard student={student} readOnly={archived} />
     </>
   );
 
@@ -277,29 +264,33 @@ export function StudentProfileContent({
       <DetailFrame
         ratio="wide"
         identity={identity}
-        metrics={<StudentProfileMetrics student={student} />}
+        // An archived profile is history: the live metrics would only mislead.
+        metrics={
+          archived ? undefined : (
+            <StudentProfileMetrics
+              student={student}
+              metrics={metrics}
+              onAddPackage={() => setPackageOpen(true)}
+            />
+          )
+        }
         main={main}
         aside={aside}
       />
-      {!policy.readOnly ? (
-        <>
-          <LessonFormDialog
-            open={lessonOpen}
-            onOpenChange={setLessonOpen}
-            lockedStudentId={student.id}
-          />
-          <PackageFormDialog
-            open={packageOpen}
-            onOpenChange={setPackageOpen}
-            lockedStudentId={student.id}
-          />
-          <StudentEditDialog open={editOpen} onOpenChange={setEditOpen} studentId={student.id} />
-          <StudentArchiveDialog
-            open={archiveOpen}
-            onOpenChange={setArchiveOpen}
-            student={student}
-          />
-        </>
+      {statusActions.dialogs}
+      {!archived ? (
+        <LessonFormDialog
+          open={lessonOpen}
+          onOpenChange={setLessonOpen}
+          lockedStudentId={student.id}
+        />
+      ) : null}
+      {!archived ? (
+        <PackageFormDialog
+          open={packageOpen}
+          onOpenChange={setPackageOpen}
+          lockedStudentId={student.id}
+        />
       ) : null}
     </>
   );

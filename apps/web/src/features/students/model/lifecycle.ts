@@ -1,33 +1,54 @@
 import type { StudentStatusDto } from '@tutorio/validation';
 
-export type StudentLifecycleAction =
-  | 'schedule'
-  | 'edit'
-  | 'toggle-hold'
-  | 'archive'
-  | 'restore';
+export type StudentLifecycleAction = 'schedule' | 'edit' | 'restore';
 
 export interface StudentLifecyclePolicy {
-  primary: StudentLifecycleAction;
-  secondary: StudentLifecycleAction[];
-  overflow: StudentLifecycleAction[];
+  /** Hero commands in order; the first is the primary one. */
+  hero: StudentLifecycleAction[];
+  /** Whether new lessons may be planned. Paused and archived students cannot. */
+  canSchedule: boolean;
   readOnly: boolean;
 }
 
-/** One presentation policy for collection rows, cards, and the detail header. */
+/**
+ * One presentation policy for the profile hero, the collection rows and the
+ * edit page. Status changes are not actions here: they live only in the status
+ * control, so the same command never appears in two menus.
+ */
 export function studentLifecyclePolicy(status: StudentStatusDto): StudentLifecyclePolicy {
   if (status === 'ARCHIVED') {
-    return { primary: 'restore', secondary: [], overflow: [], readOnly: true };
+    return { hero: ['restore'], canSchedule: false, readOnly: true };
   }
-  return {
-    primary: 'schedule',
-    secondary: ['edit'],
-    overflow: ['toggle-hold', 'archive'],
-    readOnly: false,
-  };
+  if (status === 'ON_HOLD') {
+    return { hero: ['edit'], canSchedule: false, readOnly: false };
+  }
+  return { hero: ['schedule', 'edit'], canSchedule: true, readOnly: false };
 }
 
 export function studentCollectionActions(status: StudentStatusDto): StudentLifecycleAction[] {
-  const policy = studentLifecyclePolicy(status);
-  return policy.readOnly ? [policy.primary] : [...policy.secondary, ...policy.overflow];
+  return status === 'ARCHIVED' ? ['restore'] : ['edit'];
+}
+
+/** What choosing a status in the status control does from the current one. */
+export type StudentStatusTransition =
+  | { kind: 'none' }
+  /** Pause with the hold dialog: optional lesson cancellation. */
+  | { kind: 'hold' }
+  /** Archive after a destructive confirmation. */
+  | { kind: 'archive' }
+  /** Resume from a pause immediately. */
+  | { kind: 'reactivate' }
+  /** Restore from the archive immediately. */
+  | { kind: 'restore' }
+  /** Not offered: an archived student is restored before anything else. */
+  | { kind: 'unavailable' };
+
+export function studentStatusTransition(
+  from: StudentStatusDto,
+  to: StudentStatusDto,
+): StudentStatusTransition {
+  if (from === to) return { kind: 'none' };
+  if (to === 'ARCHIVED') return { kind: 'archive' };
+  if (from === 'ARCHIVED') return to === 'ACTIVE' ? { kind: 'restore' } : { kind: 'unavailable' };
+  return to === 'ON_HOLD' ? { kind: 'hold' } : { kind: 'reactivate' };
 }

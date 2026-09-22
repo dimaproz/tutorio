@@ -1,53 +1,40 @@
 'use client';
 
-import { useState } from 'react';
-import { ArchiveIcon, PauseIcon, PencilIcon, PlayIcon, RotateCcwIcon } from 'lucide-react';
+import Link from 'next/link';
+import { PencilIcon, RotateCcwIcon, UserIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { StudentStatusDto } from '@tutorio/validation';
 import { RowActionsTrigger } from '@/components/shared/row-actions-trigger';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
 import { errorMessageKey } from '@/lib/api/error-message';
-import { useRestoreStudentMutation, useUpdateStudentMutation } from '@/lib/api/students';
-import { StudentArchiveDialog } from '@/features/students/ui/student-archive-dialog';
-import { StudentEditDialog } from '@/features/students/ui/student-edit-dialog';
+import { useRestoreStudentMutation } from '@/lib/api/students';
 import { studentRowActions } from './student-row-actions.model';
 
-// Archived students receive only the dedicated restore command. Operational
-// students retain edit, on-hold, and archive actions.
+/**
+ * The row menu of a student in the collection. Status changes deliberately do
+ * not live here: they belong to the status control on the profile and the
+ * edit page, so every lifecycle change passes through its confirmation.
+ */
 export function StudentRowActions({
   studentId,
   fullName,
-  avatarKey,
   status = 'ACTIVE',
-  onArchived,
 }: {
   studentId: string;
   fullName: string;
-  avatarKey?: string | null;
   status?: StudentStatusDto;
-  onArchived?: () => void;
 }) {
   const t = useTranslations('students');
   const tCommon = useTranslations('common');
   const tErrors = useTranslations('errors');
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
-
-  const updateStudent = useUpdateStudentMutation(studentId);
   const restoreStudent = useRestoreStudentMutation();
   const actions = studentRowActions(status);
-
-  const handleToggleHold = () => {
-    updateStudent.mutate(
-      { status: status === 'ON_HOLD' ? 'ACTIVE' : 'ON_HOLD' },
-      {
-        onSuccess: () =>
-          toast.success(status === 'ON_HOLD' ? t('toasts.reactivated') : t('toasts.onHold')),
-        onError: (error) => toast.error(tErrors(errorMessageKey(error))),
-      },
-    );
-  };
 
   const handleRestore = () => {
     restoreStudent.mutate(studentId, {
@@ -57,60 +44,35 @@ export function StudentRowActions({
   };
 
   return (
-    <>
-      <DropdownMenu>
-        <RowActionsTrigger busy={updateStudent.isPending || restoreStudent.isPending} />
-        <DropdownMenuContent align="end">
-          <DropdownMenuGroup>
+    <DropdownMenu>
+      <RowActionsTrigger
+        busy={restoreStudent.isPending}
+        label={t('rowActions', { name: fullName })}
+      />
+      <DropdownMenuContent align="end">
+        <DropdownMenuGroup>
+          <DropdownMenuItem asChild>
+            <Link href={`/app/students/${studentId}`}>
+              <UserIcon data-icon />
+              {t('openProfile')}
+            </Link>
+          </DropdownMenuItem>
+          {actions.includes('edit') ? (
+            <DropdownMenuItem asChild>
+              <Link href={`/app/students/${studentId}/edit`}>
+                <PencilIcon data-icon />
+                {tCommon('edit')}
+              </Link>
+            </DropdownMenuItem>
+          ) : null}
           {actions.includes('restore') ? (
             <DropdownMenuItem onSelect={handleRestore}>
               <RotateCcwIcon data-icon />
               {tCommon('restore')}
             </DropdownMenuItem>
           ) : null}
-          {actions.includes('edit') ? (
-            <DropdownMenuItem onSelect={() => setEditOpen(true)}>
-              <PencilIcon data-icon />
-              {tCommon('edit')}
-            </DropdownMenuItem>
-          ) : null}
-          {actions.includes('toggle-hold') ? (
-            <DropdownMenuItem onSelect={handleToggleHold}>
-              {status === 'ON_HOLD' ? (
-                <>
-                  <PlayIcon data-icon />
-                  {t('reactivate')}
-                </>
-              ) : (
-                <>
-                  <PauseIcon data-icon />
-                  {t('putOnHold')}
-                </>
-              )}
-            </DropdownMenuItem>
-          ) : null}
-          {actions.includes('archive') ? (
-            <DropdownMenuItem variant="destructive" onSelect={() => setConfirmOpen(true)}>
-              <ArchiveIcon data-icon />
-              {t('archive')}
-            </DropdownMenuItem>
-          ) : null}
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {actions.includes('archive') ? (
-        <StudentArchiveDialog
-          open={confirmOpen}
-          onOpenChange={setConfirmOpen}
-          student={{ id: studentId, fullName, avatarKey, status }}
-          onArchived={onArchived}
-        />
-      ) : null}
-
-      {actions.includes('edit') ? (
-        <StudentEditDialog open={editOpen} onOpenChange={setEditOpen} studentId={studentId} />
-      ) : null}
-    </>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

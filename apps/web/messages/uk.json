@@ -29,15 +29,16 @@
   },
   "auth": {
     "login": {
-      "title": "Вхід",
-      "subtitle": "З поверненням! Увійдіть до свого простору.",
+      "title": "З поверненням",
+      "subtitle": "Увійдіть до свого простору, щоб побачити сьогоднішні уроки, учнів і оплати.",
       "email": "Ел. пошта",
       "password": "Пароль",
       "showPassword": "Показати пароль",
       "hidePassword": "Сховати пароль",
       "submit": "Увійти",
       "noAccount": "Ще немає акаунта?",
-      "registerLink": "Створити"
+      "registerLink": "Створити",
+      "emailPlaceholder": "you@example.com"
     },
     "register": {
       "title": "Створіть свій простір",
@@ -56,7 +57,8 @@
       "modeSolo": "Я репетитор і працюю сам",
       "modeSchool": "Ми школа з кількома вчителями",
       "modeSoloHint": "Ніде не буде вибору вчителя — усі уроки ваші. Це можна змінити в налаштуваннях.",
-      "modeSchoolHint": "Уроки та навчання зберігають, якому вчителю вони належать."
+      "modeSchoolHint": "Уроки та навчання зберігають, якому вчителю вони належать.",
+      "namePlaceholder": "Повне ім'я"
     },
     "errors": {
       "EMAIL_TAKEN": "Ця пошта вже зареєстрована. Спробуйте увійти.",
@@ -65,6 +67,68 @@
       "SESSION_EXPIRED": "Ваша сесія закінчилася. Увійдіть знову.",
       "FORBIDDEN": "У вас немає прав для цієї дії.",
       "generic": "Щось пішло не так. Спробуйте ще раз."
+    },
+    "promo": {
+      "login": {
+        "chip": "Фінансовий календар для репетиторів",
+        "headline": "Уроки, учні й оплати в одному спокійному місці."
+      },
+      "register": {
+        "chip": "Займе близько двох хвилин",
+        "headline": "Налаштуйте студію — решту порахує календар."
+      },
+      "sample": {
+        "today": "Сьогодні · 3 уроки",
+        "thu": "Чт",
+        "mon": "Пн",
+        "tue": "Вт",
+        "wed": "Ср",
+        "fri": "Пт",
+        "lesson1": "Розмовна практика",
+        "lesson1Meta": "15:30 – 16:15 · Софія Мельник",
+        "lesson2": "IELTS writing",
+        "lesson2Meta": "19:00 – 20:00 · Артем Лисенко",
+        "next": "Далі",
+        "scheduled": "Заплановано",
+        "nextLesson": "Наступне заняття",
+        "inTwoDays": "за 2 дні",
+        "nextDate": "Чт, 11 вер.",
+        "nextTime": "17:00 – 18:00 · Speaking",
+        "teacher": "Дмитро Тютор",
+        "teacherSub": "Кабінет 2 · спише 1 заняття",
+        "open": "Відкрити урок",
+        "reschedule": "Перенести",
+        "paidMonth": "Оплачено цього місяця",
+        "paidValue": "48 200 ₴",
+        "payments": "31 оплата",
+        "student1": "Анна Шевченко",
+        "student1Sub": "Англійська · B2",
+        "student2": "Софія Мельник",
+        "student2Sub": "Англійська · B1",
+        "student3": "Максим Ткаченко",
+        "student3Sub": "Група B1",
+        "creditsLeft": "залишилось {left} з {total}",
+        "students": "Учні",
+        "credits": "Залишок занять",
+        "creditsValue": "6 з 8",
+        "package": "Пакет B2",
+        "used": "2 використано",
+        "week": "Цей тиждень · 14 уроків",
+        "gettingStarted": "Перші кроки",
+        "stepsDone": "1 з 3 готово",
+        "step1": {
+          "title": "Додайте учнів",
+          "text": "Контакти, рівень, батьки — або імпортуйте пізніше."
+        },
+        "step2": {
+          "title": "Налаштуйте пакети й ціни",
+          "text": "Кількість уроків у пакеті та ціна за урок."
+        },
+        "step3": {
+          "title": "Заплануйте перші уроки",
+          "text": "Tutorio сам порахує заняття й оплати."
+        }
+      }
     }
   },
   "errors": {
@@ -240,7 +304,9 @@
       "patterns": "Шаблони уроків",
       "teachers": "Викладачі",
       "detail": "Деталі",
-      "toggle": "Перемкнути бокову панель"
+      "toggle": "Перемкнути бокову панель",
+      "tabsLabel": "Швидка навігація",
+      "more": "Ще"
     },
     "sidebar": {
       "toggle": "Перемкнути бокову панель"
@@ -324,7 +390,7 @@
     "notConfigured": "Не налаштовано",
     "metrics": {
       "total": "Усього учнів",
-      "active": "Активні",
+      "active": "Активні учні",
       "onHold": "На паузі",
       "archived": "Архівні",
       "unavailable": "Недоступно",
@@ -332,7 +398,7 @@
       "ofTotal": "З {total} учнів",
       "lessonsThisWeek": "Занять цього тижня",
       "lowOnCredits": "Мало занять",
-      "lowOnCreditsBadge": "≤ {count} лишилось",
+      "lowOnCreditsBadge": "≤ {count} залишилось",
       "awaitingPayment": "Очікує оплати",
       "studentsUnit": "{count, plural, one {учень} few {учні} many {учнів} other {учнів}}",
       "lessonsCaption": "Заплановано цього тижня",
@@ -346,7 +412,9 @@
       "awaitingPaymentMixed": "Борг у кількох валютах",
       "awaitingPaymentClearValue": "Боргів немає",
       "awaitingPaymentClearBadge": "Усе оплачено",
-      "awaitingPaymentClearCaption": "Кожен активний пакет оплачено"
+      "awaitingPaymentClearCaption": "Кожен активний пакет оплачено",
+      "lessonsSplit": "{individual} індивідуальних · {group} групових",
+      "topUp": "Запропонувати поповнення"
     },
     "filters": {
       "statusAll": "Усі статуси",
@@ -358,7 +426,8 @@
       "viewList": "Списком",
       "viewGrid": "Картками",
       "searchLabel": "Пошук учнів",
-      "searchPlaceholder": "Пошук учнів"
+      "searchPlaceholder": "Пошук учнів",
+      "group": "Група"
     },
     "empty": {
       "title": "Учнів поки немає",
@@ -383,9 +452,9 @@
     },
     "form": {
       "createTitle": "Новий учень",
-      "createSubtitle": "Обов'язкові лише ім'я та часовий пояс.",
+      "createSubtitle": "Заповніть головне зараз — решту можна додати пізніше.",
       "editTitle": "Редагування учня",
-      "editSubtitle": "Оновіть контакти та нотатки.",
+      "editSubtitle": "Редагування профілю · зміни застосуються після збереження.",
       "identitySection": "Особисті дані",
       "learningProfileSection": "Навчальний профіль",
       "preferencesSection": "Налаштування",
@@ -412,12 +481,66 @@
       "notes": "Нотатки",
       "addMoreDetails": "Додати більше інформації",
       "loadErrorTitle": "Не вдалося завантажити профіль",
-      "loadErrorDescription": "Спробуйте ще раз перед редагуванням. Нового учня не буде створено.",
+      "loadErrorDescription": "Спробуйте ще раз перед редагуванням.",
       "discardTitle": "Відхилити зміни?",
       "discardDescription": "Незбережені зміни буде втрачено.",
       "discardAction": "Відхилити зміни",
       "submitCreate": "Створити учня",
-      "submitEdit": "Зберегти зміни"
+      "submitEdit": "Зберегти зміни",
+      "editCrumb": "{name} › Редагування",
+      "tagRequired": "обов'язково",
+      "tagOptional": "необов’язково",
+      "avatar": "Аватар",
+      "emailPlaceholder": "name@example.com",
+      "timezoneFromBrowser": "Підставлено з вашого браузера",
+      "notesPlaceholder": "Що варто пам’ятати про цього учня?",
+      "sectionsLabel": "Розділи форми",
+      "sectionHasError": "Є помилка",
+      "sectionDone": "Заповнено",
+      "sectionsNote": "Прокрутка підсвічує поточний розділ. Обов’язкові лише ім’я та часовий пояс.",
+      "progress": "Заповнено {done} з {total}",
+      "progressReady": "можна створювати",
+      "creating": "Створюємо…",
+      "savingNote": "Зберігаємо…",
+      "fixFields": "{count, plural, one {Виправте # поле, щоб зберегти} few {Виправте # поля, щоб зберегти} many {Виправте # полів, щоб зберегти} other {Виправте # поля, щоб зберегти}}",
+      "draftSaved": "Чернетку збережено локально",
+      "requestErrorTitle": "Не вдалося зберегти учня",
+      "unavailableTitle": "Профіль недоступний",
+      "unavailableDescription": "Дані з’являться тут, щойно завантажаться. Нічого не буде змінено.",
+      "unsaved": "{count, plural, one {# незбережена зміна} few {# незбережені зміни} many {# незбережених змін} other {# незбереженої зміни}}",
+      "unsavedWithErrors": "{count, plural, one {# незбережена зміна} few {# незбережені зміни} many {# незбережених змін} other {# незбереженої зміни}} · {errors, plural, one {# помилка} few {# помилки} many {# помилок} other {# помилки}}",
+      "noChanges": "Змін немає",
+      "discard": "Відхилити",
+      "archivedTitle": "Учня заархівовано",
+      "archivedDescription": "Редагувати заархівованого учня не можна. Спочатку відновіть його — профіль та історія збережені.",
+      "archivedSubtitle": "Лише перегляд — збереження вимкнено.",
+      "statusIndependent": "Статус змінюється одразу й не залежить від збереження форми — ваші правки залишаться.",
+      "sections": {
+        "identity": {
+          "title": "Особисті дані",
+          "description": "Аватар та ім’я"
+        },
+        "contacts": {
+          "title": "Контакти",
+          "description": "Пошта, телефон, Telegram"
+        },
+        "learning": {
+          "title": "Навчальний профіль",
+          "description": "Вік, клас і рівні"
+        },
+        "preferences": {
+          "title": "Налаштування",
+          "description": "Часовий пояс"
+        },
+        "pricing": {
+          "title": "Ціна",
+          "description": "Ціна за урок і валюта"
+        },
+        "notes": {
+          "title": "Нотатки",
+          "description": "Що варто пам’ятати"
+        }
+      }
     },
     "detail": {
       "contactsTitle": "Контакти",
@@ -453,7 +576,15 @@
       "callContact": "Зателефонувати {value}",
       "messageContact": "Написати {value} в Telegram",
       "emailContact": "Написати на {value}",
-      "pageLabel": "Профіль"
+      "pageLabel": "Профіль",
+      "levelUnknown": "Рівень не вказано",
+      "archivedOn": "Заархівовано {date}",
+      "edit": "Редагувати",
+      "restore": "Відновити",
+      "addPhone": "Додати телефон",
+      "addTelegram": "Додати Telegram",
+      "addEmail": "Додати ел. пошту",
+      "noContacts": "Контактів немає."
     },
     "setup": {
       "title": "Учня створено — оберіть наступний крок",
@@ -511,13 +642,14 @@
       "create": "Створити контакт",
       "empty": "Батьків ще не прив’язано.",
       "emptyArchived": "Зв’язків із батьками немає.",
-      "link": "Прив’язати наявний контакт",
+      "link": "Прив’язати наявний",
       "search": "Пошук батьків…",
       "noResults": "Батьків не знайдено",
       "unlink": "Відв’язати {name}",
       "retryLink": "Повторити прив’язування",
       "loadError": "Не вдалося завантажити батьків",
-      "call": "Зателефонувати {name}"
+      "call": "Зателефонувати {name}",
+      "linkShort": "Прив’язати"
     },
     "toasts": {
       "created": "Учня створено",
@@ -525,13 +657,16 @@
       "archived": "Учня заархівовано",
       "restored": "Учня відновлено",
       "onHold": "Учня відправлено на канікули",
-      "reactivated": "Учня повернено з канікул"
+      "reactivated": "Учня повернено з канікул",
+      "onHoldName": "{name} на канікулах",
+      "reactivatedName": "{name} знову серед активних"
     },
     "archiveDialog": {
       "title": "Заархівувати учня?",
       "warning": "Учень зникне з робочих списків. Уроки, записи на навчання, абонементи, платежі та історія залишаться без змін.",
       "effects": "Майбутні індивідуальні уроки й повторюваний розклад буде призупинено. Активну участь у групах буде поставлено на паузу. Під час відновлення система перевірить конфлікти в календарі.",
-      "action": "Заархівувати учня"
+      "action": "В архів",
+      "description": "{name} зникне зі списку активних учнів, а заплановані уроки буде скасовано. Профіль, абонементи й історія збережуться — відновити можна будь-коли."
     },
     "scheduleLesson": "Запланувати заняття",
     "showing": "Показано {shown} з {total} учнів",
@@ -539,15 +674,22 @@
     "statusTabs": {
       "all": "Усі",
       "active": "Активні",
-      "onHold": "На паузі",
-      "archived": "В архіві"
+      "onHold": "На канікулах",
+      "archived": "Архів"
     },
     "list": {
-      "noPackage": "Немає активного пакета",
+      "noPackage": "Немає абонемента",
       "noLessonsPlanned": "Занять не заплановано",
-      "creditsLeft": "{left} з {total} лишилось",
-      "noCreditsLeft": "Занять не лишилось",
-      "today": "Сьогодні"
+      "creditsLeft": "залишилось {left} з {total}",
+      "noCreditsLeft": "Заняття закінчились",
+      "today": "Сьогодні",
+      "paused": "На паузі",
+      "minutes": "{minutes} хв",
+      "noBalance": "Без рахунків",
+      "paid": "Оплачено",
+      "settled": "Розраховано",
+      "partlyPaid": "Частково",
+      "due": "Борг {amount}"
     },
     "profileMetrics": {
       "creditsLeft": "Залишок занять",
@@ -555,9 +697,27 @@
       "attendance": "Відвідуваність",
       "level": "Рівень",
       "levelCaption": "Рівень мови (CEFR)",
-      "levelMissing": "Рівень ще не вказано",
+      "levelMissing": "Додайте в профілі",
       "pending": "Очікує на дані звітності",
-      "perLesson": "{price} / заняття"
+      "perLesson": "{price} / заняття",
+      "creditsValue": "{left} з {total}",
+      "packageNamed": "Пакет «{name}»",
+      "package": "Активний пакет",
+      "used": "{count} використано",
+      "addPackage": "Додати абонемент",
+      "noPackage": "Немає абонемента",
+      "noDebt": "Боргів немає",
+      "debt": "Борг {amount}",
+      "paidCaption": "{date} · {count, plural, one {# пакет} few {# пакети} many {# пакетів} other {# пакета}}",
+      "noPayments": "Оплат немає",
+      "perLessonShort": "за заняття",
+      "attendanceCaption": "{attended} відвідано · {charged, plural, one {# пізнє скасування} few {# пізні скасування} many {# пізніх скасувань} other {# пізнього скасування}}",
+      "attendanceNone": "Ще немає",
+      "attendanceNoneSub": "проведених занять",
+      "attendanceNoneCaption": "З’явиться після першого уроку",
+      "levelNone": "Не вказано",
+      "levelNoneSub": "рівень мови (CEFR)",
+      "knowledgeCaption": "{level} загальний рівень"
     },
     "sections": {
       "label": "Розділи учня",
@@ -580,8 +740,67 @@
       "add": "Додати нотатку",
       "placeholder": "Що варто пам’ятати про цього учня?",
       "empty": "Нотаток ще немає.",
-      "saved": "Нотатки збережено"
-    }
+      "saved": "Нотатки збережено",
+      "updated": "Профіль оновлено {date}"
+    },
+    "new": "Новий учень",
+    "newShort": "Новий",
+    "subtitleCounts": "{total, plural, one {# учень навчається} few {# учні навчаються} many {# учнів навчаються} other {# учня навчаються}} з вами — {week} мають заняття цього тижня.",
+    "rowActions": "Дії: {name}",
+    "openProfile": "Відкрити профіль",
+    "status": {
+      "heading": "Статус учня",
+      "menuLabel": "Змінити статус учня",
+      "close": "Закрити",
+      "change": "Статус учня: {status}. Змінити",
+      "ACTIVE": {
+        "label": "Активний",
+        "description": "Уроки плануються, заняття списуються з абонемента."
+      },
+      "ON_HOLD": {
+        "label": "На канікулах",
+        "description": "Пауза: нові уроки не плануються. Абонемент та історія зберігаються."
+      },
+      "ARCHIVED": {
+        "label": "В архіві",
+        "description": "Прихований зі списку, лише перегляд. Відновити можна будь-коли."
+      }
+    },
+    "holdDialog": {
+      "title": "Відправити учня на канікули?",
+      "description": "{name}: нові уроки не плануватимуться. Абонемент, оплати й історія залишаться без змін.",
+      "confirm": "Відправити на канікули",
+      "cancelLessons": "{count, plural, one {Скасувати # запланований урок} few {Скасувати # заплановані уроки} many {Скасувати # запланованих уроків} other {Скасувати # запланованого уроку}}",
+      "cancelLessonsHint": "Заняття не спишуться з абонемента."
+    },
+    "banner": {
+      "holdTitle": "Учень на канікулах",
+      "holdText": "Нові уроки не плануються, поки учень на канікулах. Історія та абонементи залишаються без змін.",
+      "holdAction": "Повернути з канікул"
+    },
+    "nextLesson": {
+      "heading": "Наступне заняття",
+      "individual": "Індивідуальне заняття",
+      "usesCredit": "Спише 1 заняття з абонемента",
+      "teacher": "Викладач",
+      "open": "Відкрити урок",
+      "reschedule": "Перенести",
+      "empty": {
+        "fresh": {
+          "title": "Нічого не заплановано",
+          "text": "Перший урок з’явиться тут, щойно ви його заплануєте."
+        },
+        "hold": {
+          "title": "Уроки на паузі",
+          "text": "Учень на канікулах. Нові уроки з’являться після повернення."
+        },
+        "archived": {
+          "title": "Уроки не плануються",
+          "text": "Учень в архіві. Після відновлення можна буде знову планувати уроки."
+        }
+      }
+    },
+    "subtitleShort": "{total, plural, one {# учень} few {# учні} many {# учнів} other {# учня}} · {active} активних"
   },
   "groups": {
     "title": "Групи",
@@ -1154,7 +1373,11 @@
       "comingUp": "Найближчі",
       "earlier": "Раніше",
       "individualLesson": "Індивідуальне заняття",
-      "lessonActions": "Дії із заняттям"
+      "lessonActions": "Дії із заняттям",
+      "emptyTitle": "Занять ще немає",
+      "emptyDescription": "Заплануйте перший урок — він з’явиться тут разом з історією відвідувань.",
+      "emptyArchived": "Історії занять для цього учня немає.",
+      "history": "Історія"
     },
     "cancelDialog": {
       "title": "Скасувати урок",

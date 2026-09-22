@@ -3,7 +3,11 @@
 import { useState } from 'react';
 import { BookOpenIcon, PlusIcon } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import type { EnrollmentResponse, StudentDetail, StudentEnrollmentSummary } from '@tutorio/validation';
+import type {
+  EnrollmentResponse,
+  StudentDetail,
+  StudentEnrollmentSummary,
+} from '@tutorio/validation';
 import { EnrollmentDialog } from '@/components/enrollments/enrollment-dialog';
 import { EnrollmentStatusBadge } from '@/components/enrollments/enrollment-status';
 import { BillingTypeBadge } from '@/components/packages/package-status';
@@ -31,14 +35,80 @@ export function StudentLearningCard({
   const t = useTranslations('students.learning');
   const locale = useLocale();
   const [editing, setEditing] = useState<EnrollmentResponse | null>(null);
+  // Without relationships the profile keeps the section out of the way: the
+  // set-up checklist is where learning is started, and it opens this dialog.
+  const visible = student.enrollments.length > 0;
 
-  return <><Card><CardHeader><SectionTitle icon={BookOpenIcon}>{t('title')}</SectionTitle>{!readOnly ? <CardAction><Button type="button" size="sm" onClick={() => onCreateOpenChange(true)}><PlusIcon data-icon="inline-start" />{t('add')}</Button></CardAction> : null}</CardHeader><CardContent>
-    {student.enrollments.length === 0 ? <Empty><EmptyHeader><EmptyTitle>{t('empty')}</EmptyTitle><EmptyDescription>{readOnly ? t('emptyArchived') : t('emptyDescription')}</EmptyDescription></EmptyHeader></Empty> : <ul className="flex flex-col gap-3">{student.enrollments.map((enrollment) => <StudentEnrollmentItem key={enrollment.id} enrollment={enrollment} locale={locale} readOnly={readOnly} onEdit={setEditing} />)}</ul>}
-  </CardContent></Card>
-  {!readOnly ? <>
-    <EnrollmentDialog open={createOpen} onOpenChange={onCreateOpenChange} lockedStudent={{ id: student.id, fullName: student.fullName, avatarKey: student.avatarKey }} />
-    {editing ? <EnrollmentDialog open onOpenChange={(open) => { if (!open) setEditing(null); }} enrollment={editing} lockedStudent={{ id: student.id, fullName: student.fullName, avatarKey: student.avatarKey }} /> : null}
-  </> : null}</>;
+  return (
+    <>
+      {visible ? (
+        <Card>
+          <CardHeader>
+            <SectionTitle icon={BookOpenIcon}>{t('title')}</SectionTitle>
+            {!readOnly ? (
+              <CardAction>
+                <Button type="button" size="sm" onClick={() => onCreateOpenChange(true)}>
+                  <PlusIcon data-icon="inline-start" />
+                  {t('add')}
+                </Button>
+              </CardAction>
+            ) : null}
+          </CardHeader>
+          <CardContent>
+            {student.enrollments.length === 0 ? (
+              <Empty>
+                <EmptyHeader>
+                  <EmptyTitle>{t('empty')}</EmptyTitle>
+                  <EmptyDescription>
+                    {readOnly ? t('emptyArchived') : t('emptyDescription')}
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            ) : (
+              <ul className="flex flex-col gap-3">
+                {student.enrollments.map((enrollment) => (
+                  <StudentEnrollmentItem
+                    key={enrollment.id}
+                    enrollment={enrollment}
+                    locale={locale}
+                    readOnly={readOnly}
+                    onEdit={setEditing}
+                  />
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+      ) : null}
+      {!readOnly ? (
+        <>
+          <EnrollmentDialog
+            open={createOpen}
+            onOpenChange={onCreateOpenChange}
+            lockedStudent={{
+              id: student.id,
+              fullName: student.fullName,
+              avatarKey: student.avatarKey,
+            }}
+          />
+          {editing ? (
+            <EnrollmentDialog
+              open
+              onOpenChange={(open) => {
+                if (!open) setEditing(null);
+              }}
+              enrollment={editing}
+              lockedStudent={{
+                id: student.id,
+                fullName: student.fullName,
+                avatarKey: student.avatarKey,
+              }}
+            />
+          ) : null}
+        </>
+      ) : null}
+    </>
+  );
 }
 
 function StudentEnrollmentItem({
@@ -64,11 +134,35 @@ function StudentEnrollmentItem({
             <EnrollmentStatusBadge status={enrollment.status} />
             <BillingTypeBadge billingType={enrollment.billingType} />
           </ItemTitle>
-          <ItemDescription>{t('summary', { teacher: enrollment.teacher.name, price: formatMoneyDisplay(enrollment.priceMinor, enrollment.currency, locale) })}</ItemDescription>
+          <ItemDescription>
+            {t('summary', {
+              teacher: enrollment.teacher.name,
+              price: formatMoneyDisplay(enrollment.priceMinor, enrollment.currency, locale),
+            })}
+          </ItemDescription>
         </ItemContent>
-        {!readOnly ? <ItemActions><Button type="button" variant="outline" size="sm" onClick={() => details.data && onEdit(details.data)} disabled={!details.data || details.isFetching}>{details.isFetching ? <Spinner data-icon="inline-start" /> : null}{t('edit')}</Button></ItemActions> : null}
+        {!readOnly ? (
+          <ItemActions>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => details.data && onEdit(details.data)}
+              disabled={!details.data || details.isFetching}
+            >
+              {details.isFetching ? <Spinner data-icon="inline-start" /> : null}
+              {t('edit')}
+            </Button>
+          </ItemActions>
+        ) : null}
       </Item>
-      {!readOnly && details.isError ? <QueryErrorAlert error={details.error} title={t('loadError')} onRetry={() => void details.refetch()} /> : null}
+      {!readOnly && details.isError ? (
+        <QueryErrorAlert
+          error={details.error}
+          title={t('loadError')}
+          onRetry={() => void details.refetch()}
+        />
+      ) : null}
     </li>
   );
 }

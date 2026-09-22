@@ -1,8 +1,14 @@
 'use client';
 
-import { ArrowUpDownIcon, LayoutGridIcon, ListIcon, SlidersHorizontalIcon } from 'lucide-react';
+import { useState } from 'react';
+import {
+  ArrowUpDownIcon,
+  LayoutGridIcon,
+  ListIcon,
+  SearchIcon,
+  SlidersHorizontalIcon,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,7 +16,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { FilterPill } from '@/components/shared/filter-pill';
+import { IconButton } from '@/components/shared/icon-button';
 import { SearchField } from '@/components/shared/search-field';
+import { Segmented } from '@/components/shared/segmented';
 import type { ListSort } from '@/components/shared/list-controls';
 
 export const STUDENT_STATUS_TABS = ['all', 'ACTIVE', 'ON_HOLD', 'ARCHIVED'] as const;
@@ -60,100 +68,116 @@ export function StudentsListFilters({
 
   const selectedGroup = groupOptions.find((option) => option.value === groupId);
 
+  // On desktop the search folds into an icon, so the facet row stays one line
+  // as in the reference; it opens on demand and stays open while it filters.
+  const [searchOpen, setSearchOpen] = useState(Boolean(search));
+  const searchField = (autoFocus = false) => (
+    <SearchField
+      label={t('searchLabel')}
+      placeholder={t('searchPlaceholder')}
+      defaultValue={search ?? ''}
+      autoFocus={autoFocus}
+      onChange={(event) => onSearchChange(event.currentTarget.value)}
+      onBlur={(event) => {
+        if (!event.currentTarget.value) setSearchOpen(false);
+      }}
+    />
+  );
+
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2.5">
-      <div className="flex max-w-full flex-wrap items-center gap-2.5">
-        {/* A facet filter, not a tab set: it switches the query, not a panel.
-            Four segments do not fit a phone, so the row scrolls rather than
-            shrinking the touch targets. */}
-        <div className="max-w-full overflow-x-auto">
-        <ToggleGroup
-          type="single"
-          value={status}
-          onValueChange={(next) => onStatusChange((next || 'all') as StudentStatusTab)}
-          variant="segmented-solid"
-          spacing={0.5}
-          aria-label={t('statusAll')}
-        >
-          {STUDENT_STATUS_TABS.map((tab) => (
-            <ToggleGroupItem
-              key={tab}
-              value={tab}
-              // The count dims only on the filled segment, where 70% still
-              // clears AA; on paper it stays at full muted strength.
-              className="gap-2 px-3.5 data-[state=on]:[&>span]:opacity-70"
-            >
-              {tStatus(TAB_LABEL_KEY[tab])}
-              {counts[tab] != null ? (
-                <span className="font-mono text-xs">{counts[tab]}</span>
-              ) : null}
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
+    <div className="flex flex-col gap-2.5">
+      {/* Phones search first: the list below is what the search narrows. */}
+      <div className="md:hidden">{searchField()}</div>
+      <div className="flex flex-wrap items-center justify-between gap-2.5">
+        <div className="flex max-w-full flex-wrap items-center gap-2.5">
+          {/* A facet filter, not a tab set: it switches the query, not a panel.
+              Four segments do not fit a phone, so the row scrolls rather than
+              shrinking the touch targets. */}
+          <div className="no-scrollbar -mx-4 max-w-[100vw] overflow-x-auto px-4 md:mx-0 md:max-w-full md:px-0">
+            <Segmented
+              label={t('statusAll')}
+              value={status}
+              onValueChange={onStatusChange}
+              items={STUDENT_STATUS_TABS.map((tab) => ({
+                value: tab,
+                label: tStatus(TAB_LABEL_KEY[tab]),
+                count: counts[tab],
+              }))}
+            />
+          </div>
+
+          <div className="flex items-center gap-2.5">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <FilterPill
+                  label={selectedGroup?.label ?? t('group')}
+                  menu
+                  pressed={Boolean(groupId)}
+                />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem onSelect={() => onGroupChange(undefined)}>
+                  {t('groupAll')}
+                </DropdownMenuItem>
+                {groupOptions.map((option) => (
+                  <DropdownMenuItem key={option.value} onSelect={() => onGroupChange(option.value)}>
+                    {option.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <FilterPill
+              label={t('lowCredits')}
+              icon={<SlidersHorizontalIcon />}
+              disabled
+              title={t('comingSoon')}
+              className="hidden md:inline-flex"
+            />
+          </div>
         </div>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <FilterPill label={selectedGroup?.label ?? t('groupAll')} menu pressed={Boolean(groupId)} />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuItem onSelect={() => onGroupChange(undefined)}>
-              {t('groupAll')}
-            </DropdownMenuItem>
-            {groupOptions.map((option) => (
-              <DropdownMenuItem key={option.value} onSelect={() => onGroupChange(option.value)}>
-                {option.label}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="hidden flex-wrap items-center gap-2.5 md:flex">
+          {searchOpen ? (
+            <div className="w-60">{searchField(true)}</div>
+          ) : (
+            <IconButton
+              border
+              icon={<SearchIcon />}
+              label={t('searchLabel')}
+              onClick={() => setSearchOpen(true)}
+            />
+          )}
 
-        <FilterPill
-          label={t('lowCredits')}
-          icon={<SlidersHorizontalIcon />}
-          disabled
-          title={t('comingSoon')}
-        />
-      </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <FilterPill label={tSort(sort.field ?? 'fullName')} icon={<ArrowUpDownIcon />} />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {sortFields.map((field) => (
+                <DropdownMenuItem key={field} onSelect={() => sort.onSort(field)}>
+                  {tSort(field)}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-      <div className="flex flex-wrap items-center gap-2.5">
-        <div className="w-full sm:w-60">
-          <SearchField
-            label={t('searchLabel')}
-            placeholder={t('searchPlaceholder')}
-            defaultValue={search ?? ''}
-            onChange={(event) => onSearchChange(event.currentTarget.value)}
+          <Segmented
+            label={t('view')}
+            value="list"
+            onValueChange={() => undefined}
+            items={[
+              { value: 'list', icon: <ListIcon />, ariaLabel: t('viewList') },
+              {
+                value: 'grid',
+                icon: <LayoutGridIcon />,
+                ariaLabel: t('viewGrid'),
+                disabled: true,
+                title: t('comingSoon'),
+              },
+            ]}
           />
         </div>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <FilterPill label={tSort(sort.field ?? 'fullName')} icon={<ArrowUpDownIcon />} menu />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {sortFields.map((field) => (
-              <DropdownMenuItem key={field} onSelect={() => sort.onSort(field)}>
-                {tSort(field)}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <ToggleGroup
-          type="single"
-          value="list"
-          variant="segmented"
-          size="icon"
-          spacing={0.5}
-          aria-label={t('view')}
-        >
-          <ToggleGroupItem value="list" aria-label={t('viewList')}>
-            <ListIcon />
-          </ToggleGroupItem>
-          <ToggleGroupItem value="grid" aria-label={t('viewGrid')} disabled title={t('comingSoon')}>
-            <LayoutGridIcon />
-          </ToggleGroupItem>
-        </ToggleGroup>
       </div>
     </div>
   );

@@ -1,11 +1,12 @@
 export { StudentDetailView } from './student-detail';
 export { StudentCard } from './student-card';
 export { StudentRowActions } from './student-row-actions';
-export { StudentStatusBadge, useStudentStatusOptions } from './student-status';
+export { StudentStatusBadge } from './student-status';
 export { StudentsList } from './students-list';
 export { StudentQuickCreateDialog } from './student-quick-create-dialog';
-export { StudentEditDialog } from './student-edit-dialog';
-export { StudentArchiveDialog } from './student-archive-dialog';
+export { StudentCreatePage } from './student-create-page';
+export { StudentEditPage } from './student-edit-page';
+export { StudentStatusControl } from './student-status-control';
 export { StudentSetupCard } from './student-setup-card';
 export { StudentPackagesCard } from './student-packages-card';
 export { StudentParentsCard } from './student-parents-card';

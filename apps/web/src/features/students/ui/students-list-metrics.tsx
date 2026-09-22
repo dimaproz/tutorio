@@ -7,9 +7,11 @@ import {
   LOW_CREDIT_THRESHOLD,
   type CollectionMetrics,
 } from '@/features/students/model/collection-metrics';
-import { formatMoneyDisplay } from '@/lib/money';
+import { formatMoneyCompact } from '@/lib/money';
 
 type CountQuery = { data?: { total: number }; isPending: boolean; isError: boolean };
+
+export type WeekLessons = { total: number; individual: number; group: number; range: string };
 
 /**
  * The four collection metrics.
@@ -24,19 +26,22 @@ export function StudentsListMetrics({
   totalQuery,
   lessonsThisWeek,
   metrics,
+  onTopUp,
 }: {
   activeQuery: CountQuery;
   totalQuery: CountQuery;
   /** Lessons this week: undefined while loading, null when unavailable. */
-  lessonsThisWeek?: number | null;
+  lessonsThisWeek?: WeekLessons | null;
   /** Package-derived metrics, or null when they cannot be computed. */
   metrics?: CollectionMetrics | null;
+  /** Opens where a tutor tops up a running-out package. */
+  onTopUp?: () => void;
 }) {
   const t = useTranslations('students.metrics');
   const locale = useLocale();
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="-mx-4 flex gap-3 overflow-x-auto px-4 md:mx-0 md:grid md:grid-cols-2 md:gap-4 md:overflow-visible md:px-0 xl:grid-cols-4 [&>*]:w-65 [&>*]:shrink-0 md:[&>*]:w-auto">
       <StatBlock
         type="amount"
         tone="accent"
@@ -66,26 +71,44 @@ export function StudentsListMetrics({
           ) : lessonsThisWeek === null ? (
             ''
           ) : (
-            String(lessonsThisWeek)
+            String(lessonsThisWeek.total)
           )
         }
+        badge={lessonsThisWeek ? { label: lessonsThisWeek.range, tone: 'neutral' } : undefined}
         caption={
           lessonsThisWeek === null
             ? t('unavailable')
-            : lessonsThisWeek === 0
-              ? t('lessonsNone')
-              : t('lessonsCaption')
+            : lessonsThisWeek === undefined
+              ? undefined
+              : lessonsThisWeek.total === 0
+                ? t('lessonsNone')
+                : t('lessonsSplit', {
+                    individual: lessonsThisWeek.individual,
+                    group: lessonsThisWeek.group,
+                  })
         }
       />
 
-      <LowOnCreditsBlock metrics={metrics} />
+      <LowOnCreditsBlock metrics={metrics} onTopUp={onTopUp} />
 
-      <StatBlock
-        type="amount"
-        tone="tint"
-        label={t('awaitingPayment')}
-        {...awaitingPaymentValue(metrics, locale, t)}
-      />
+      {metrics && metrics.unpaidPackages === 0 ? (
+        // A clear state is a sentence, so it takes the smaller date-type value.
+        <StatBlock
+          type="date"
+          tone="tint"
+          label={t('awaitingPayment')}
+          value={t('awaitingPaymentClearValue')}
+          badge={{ label: t('awaitingPaymentClearBadge'), tone: 'success' }}
+          caption={t('awaitingPaymentClearCaption')}
+        />
+      ) : (
+        <StatBlock
+          type="amount"
+          tone="tint"
+          label={t('awaitingPayment')}
+          {...awaitingPaymentValue(metrics, locale, t)}
+        />
+      )}
     </div>
   );
 }
@@ -94,7 +117,13 @@ export function StudentsListMetrics({
  * Running low is the one metric whose good state is zero, so it earns a
  * different shape: a reassurance rather than a bare 0 followed by "students".
  */
-function LowOnCreditsBlock({ metrics }: { metrics?: CollectionMetrics | null }) {
+function LowOnCreditsBlock({
+  metrics,
+  onTopUp,
+}: {
+  metrics?: CollectionMetrics | null;
+  onTopUp?: () => void;
+}) {
   const t = useTranslations('students.metrics');
 
   if (metrics === undefined) {
@@ -108,17 +137,17 @@ function LowOnCreditsBlock({ metrics }: { metrics?: CollectionMetrics | null }) 
   }
 
   if (metrics === null) {
-    return <StatBlock type="amount" label={t('lowOnCredits')} value="" caption={t('unavailable')} />;
+    return (
+      <StatBlock type="amount" label={t('lowOnCredits')} value="" caption={t('unavailable')} />
+    );
   }
 
   if (metrics.lowOnCredits === 0) {
     return (
       <StatBlock
-        type="amount"
-        tone="accent"
+        type="date"
         label={t('lowOnCredits')}
         value={t('lowOnCreditsClearValue')}
-        badge={{ label: t('lowOnCreditsClearBadge'), tone: 'success' }}
         caption={t('lowOnCreditsClearCaption')}
       />
     );
@@ -131,7 +160,8 @@ function LowOnCreditsBlock({ metrics }: { metrics?: CollectionMetrics | null }) 
       value={String(metrics.lowOnCredits)}
       unit={t('studentsUnit', { count: metrics.lowOnCredits })}
       badge={{ label: t('lowOnCreditsBadge', { count: LOW_CREDIT_THRESHOLD }), tone: 'warning' }}
-      caption={t('lowOnCreditsCaption')}
+      caption={onTopUp ? undefined : t('lowOnCreditsCaption')}
+      action={onTopUp ? { label: t('topUp'), onClick: onTopUp } : undefined}
     />
   );
 }
@@ -166,12 +196,11 @@ function awaitingPaymentValue(
     };
   }
 
-  const money = formatMoneyDisplay(metrics.outstandingMinor, metrics.outstandingCurrency, locale);
-  const [amount, ...rest] = money.split(' ');
+  const money = formatMoneyCompact(metrics.outstandingMinor, metrics.outstandingCurrency, locale);
 
   return {
-    value: amount ?? money,
-    unit: rest.join(' ') || undefined,
+    value: money.value,
+    unit: money.symbol,
     badge: {
       label: t('packagesUnit', { count: metrics.unpaidPackages }),
       tone: 'warning',

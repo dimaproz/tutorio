@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { studentLearningFormat } from './student-card';
+import { studentLearningFormat } from './student-learning-format';
 
 describe('studentLearningFormat', () => {
   it('prefers named groups over the enrollment count', () => {

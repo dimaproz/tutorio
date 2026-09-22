@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { PencilIcon, PlusIcon } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useFormatter, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { StudentDetail } from '@tutorio/validation';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,7 @@ export function StudentNotesCard({
   const tCommon = useTranslations('common');
   const tErrors = useTranslations('errors');
   const update = useUpdateStudentMutation(student.id);
+  const format = useFormatter();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(student.notes ?? '');
 
@@ -56,18 +57,18 @@ export function StudentNotesCard({
   }
 
   return (
-    <Card tone="warning" className="gap-3 p-5">
-      <div className="flex items-center justify-between gap-3">
+    <Card tone="warning" className="gap-2.5 px-6 py-5.5">
+      <div className="flex min-h-8 items-center justify-between gap-3">
         <h2 className="text-base font-semibold">{t('title')}</h2>
-        {!readOnly && !editing ? (
+        {!readOnly && !editing && student.notes ? (
           <Button
             type="button"
-            variant="ghost"
-            size="icon-sm"
-            aria-label={student.notes ? t('edit') : t('add')}
+            variant="translucent"
+            size="icon-xs"
+            aria-label={t('edit')}
             onClick={startEditing}
           >
-            {student.notes ? <PencilIcon /> : <PlusIcon />}
+            <PencilIcon />
           </Button>
         ) : null}
       </div>
@@ -101,9 +102,29 @@ export function StudentNotesCard({
           </div>
         </div>
       ) : student.notes ? (
-        <p className="text-sm whitespace-pre-wrap">{student.notes}</p>
+        <>
+          <p className="text-sm leading-[22px] whitespace-pre-wrap">{student.notes}</p>
+          <p className="text-xs text-tint-warning-foreground">
+            {t('updated', {
+              date: format.dateTime(new Date(student.updatedAt), {
+                day: 'numeric',
+                month: 'short',
+              }),
+            })}
+          </p>
+        </>
       ) : (
-        <p className="text-sm text-tint-warning-foreground">{t('empty')}</p>
+        <>
+          <p className="text-sm leading-5 text-muted-foreground">{t('empty')}</p>
+          {!readOnly ? (
+            <div>
+              <Button type="button" variant="white" size="xs" onClick={startEditing}>
+                <PlusIcon data-icon="inline-start" />
+                {t('add')}
+              </Button>
+            </div>
+          ) : null}
+        </>
       )}
     </Card>
   );

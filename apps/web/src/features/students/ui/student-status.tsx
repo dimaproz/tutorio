@@ -6,7 +6,6 @@ import type { StudentStatusDto } from '@tutorio/validation';
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/shared/status-badges';
 import type { StatusMeta } from '@/components/shared/status-meta';
-import type { StatusOption } from '@/components/shared/status-select';
 
 export const STUDENT_STATUS_META: Record<StudentStatusDto, StatusMeta> = {
   ACTIVE: { tone: 'primary', icon: CircleCheckIcon },
@@ -42,13 +41,4 @@ export function StudentStatusBadge({
   }
 
   return <StatusBadge label={t(status)} {...STUDENT_STATUS_META[status]} />;
-}
-
-export function useStudentStatusOptions(): StatusOption[] {
-  const t = useTranslations('studentStatus');
-  return (Object.keys(STUDENT_STATUS_META) as StudentStatusDto[]).map((value) => ({
-    value,
-    label: t(value),
-    ...STUDENT_STATUS_META[value],
-  }));
 }

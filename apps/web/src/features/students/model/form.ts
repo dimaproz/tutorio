@@ -153,3 +153,114 @@ export function buildStudentEditDto(values: StudentEditValues): UpdateStudentDto
     notes: nullableEditText(values.notes),
   };
 }
+
+// ---------------------------------------------------------------------------
+// Full-page student form (create and edit share one field set)
+// ---------------------------------------------------------------------------
+
+export type StudentFormValues = StudentEditValues;
+
+export const studentFormSchema = studentEditSchema;
+
+export const STUDENT_FORM_SECTIONS = [
+  { id: 'identity', fields: ['fullName', 'avatarKey'] },
+  { id: 'contacts', fields: ['email', 'phone', 'telegramUsername'] },
+  { id: 'learning', fields: ['age', 'grade', 'knowledgeLevel', 'languageLevel'] },
+  { id: 'preferences', fields: ['timezone'] },
+  { id: 'pricing', fields: ['pricePerLesson', 'currency'] },
+  { id: 'notes', fields: ['notes'] },
+] as const satisfies readonly { id: string; fields: readonly (keyof StudentFormValues)[] }[];
+
+export type StudentFormSectionId = (typeof STUDENT_FORM_SECTIONS)[number]['id'];
+export type StudentFormSectionStatus = 'done' | 'error' | 'none';
+
+/** The fields whose value marks a section as filled in. */
+const MEANINGFUL: Record<StudentFormSectionId, readonly (keyof StudentFormValues)[]> = {
+  identity: ['fullName'],
+  contacts: ['email', 'phone', 'telegramUsername'],
+  learning: ['age', 'grade', 'knowledgeLevel', 'languageLevel'],
+  preferences: ['timezone'],
+  pricing: ['pricePerLesson'],
+  notes: ['notes'],
+};
+
+function hasValue(value: unknown): boolean {
+  return typeof value === 'string' ? value.trim() !== '' : value != null;
+}
+
+/**
+ * Where each section stands: an error wins, otherwise a section is done once
+ * one of its meaningful fields holds a value. Drives the section navigation,
+ * the progress meter and the save bar.
+ */
+export function studentFormSectionStatus(
+  values: StudentFormValues,
+  errorFields: readonly string[],
+): Record<StudentFormSectionId, StudentFormSectionStatus> {
+  const errors = new Set(errorFields);
+  return Object.fromEntries(
+    STUDENT_FORM_SECTIONS.map((section) => {
+      const status: StudentFormSectionStatus = section.fields.some((field) => errors.has(field))
+        ? 'error'
+        : MEANINGFUL[section.id].some((field) => hasValue(values[field]))
+          ? 'done'
+          : 'none';
+      return [section.id, status];
+    }),
+  ) as Record<StudentFormSectionId, StudentFormSectionStatus>;
+}
+
+/** The empty full-page form. Timezone and currency are prefilled. */
+export function emptyStudentForm(options: {
+  currency: string;
+  timezone?: string;
+}): StudentFormValues {
+  return {
+    fullName: '',
+    email: '',
+    phone: '',
+    telegramUsername: '',
+    timezone: resolveStudentTimezone(options.timezone),
+    pricePerLesson: '',
+    currency: options.currency as StudentFormValues['currency'],
+    languageLevel: '',
+    knowledgeLevel: '',
+    age: '',
+    grade: '',
+    avatarKey: null,
+    notes: '',
+  };
+}
+
+/** The create request from the full-page form: empty fields are omitted. */
+export function buildStudentCreateDto(values: StudentFormValues): CreateStudentDto {
+  return {
+    ...buildStudentQuickCreateDto(values),
+    languageLevel: values.languageLevel === '' ? undefined : values.languageLevel,
+    knowledgeLevel: values.knowledgeLevel === '' ? undefined : values.knowledgeLevel,
+    avatarKey: values.avatarKey ?? undefined,
+  };
+}
+
+/** Local draft of an unfinished create form, kept in this browser only. */
+export const STUDENT_DRAFT_KEY = 'tutorio.student-create-draft';
+
+export function parseStudentDraft(raw: string | null): Partial<StudentFormValues> | null {
+  if (!raw) return null;
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return null;
+    const draft: Partial<StudentFormValues> = {};
+    for (const [key, value] of Object.entries(parsed)) {
+      if (key === 'avatarKey') {
+        const avatar = avatarKeySchema.nullable().safeParse(value);
+        if (avatar.success) draft.avatarKey = avatar.data;
+      } else if (typeof value === 'string' && key in emptyStudentForm({ currency: 'UAH' })) {
+        (draft as Record<string, string>)[key] = value;
+      }
+    }
+    return draft;
+  } catch {
+    return null;
+  }
+}

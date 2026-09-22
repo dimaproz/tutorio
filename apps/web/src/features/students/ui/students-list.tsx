@@ -2,24 +2,13 @@
 
 import { useMemo, useState } from 'react';
 import { endOfWeek, startOfWeek } from 'date-fns';
-import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import type { ColumnDef } from '@tanstack/react-table';
-import { CalendarPlusIcon, PlusIcon, UsersIcon } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { CalendarIcon, PlusIcon } from 'lucide-react';
+import { useFormatter, useNow, useTranslations } from 'next-intl';
 import type { StudentListItem } from '@tutorio/validation';
-import { StudentCard } from './student-card';
-import { StudentQuickCreateDialog } from './student-quick-create-dialog';
-import { StudentRowActions } from './student-row-actions';
-import { StudentsListSkeleton } from './students-list-skeleton';
-import { StudentsListFilters, type StudentStatusTab } from './students-list-filters';
-import { StudentsListMetrics } from './students-list-metrics';
-import {
-  StudentBalanceCell,
-  StudentCreditsCell,
-  StudentIdentityCell,
-  StudentLearningCell,
-  StudentNextLessonCell,
-} from './student-row-cells';
+import { LessonFormDialog } from '@/components/scheduling/lesson-form-dialog';
 import { CollectionFrame } from '@/components/shared/collection-frame';
 import { DataTable } from '@/components/shared/data-table';
 import {
@@ -27,28 +16,51 @@ import {
   useListSort,
   useUpdateSearchParams,
 } from '@/components/shared/list-controls';
-import { QueryErrorAlert } from '@/components/shared/page-shell';
+import { PageHeader, QueryErrorAlert } from '@/components/shared/page-shell';
 import { Button } from '@/components/ui/button';
-import { CollectionEmptyState } from '@/components/shared/collection-empty-state';
+import { deriveCollectionMetrics } from '@/features/students/model/collection-metrics';
+import { deriveStudentRollups } from '@/features/students/model/rollups';
 import { parsePageParam } from '@/lib/api/filters';
-import { useStudentsQuery } from '@/lib/api/students';
 import { useGroupsQuery } from '@/lib/api/groups';
 import { usePackagesQuery } from '@/lib/api/packages';
 import { useLessonsQuery } from '@/lib/api/scheduling';
-import { deriveCollectionMetrics } from '@/features/students/model/collection-metrics';
+import { useStudentsQuery } from '@/lib/api/students';
+import { StudentCard } from './student-card';
+import { StudentRowActions } from './student-row-actions';
+import {
+  StudentBalanceCell,
+  StudentCreditsCell,
+  StudentIdentityCell,
+  StudentLearningCell,
+  StudentNextLessonCell,
+} from './student-row-cells';
+import { StudentsEmptyState } from './students-empty-state';
+import { StudentsListFilters, type StudentStatusTab } from './students-list-filters';
+import { StudentsListMetrics } from './students-list-metrics';
+import { StudentsListSkeleton } from './students-list-skeleton';
+
+export { StudentsEmptyState } from './students-empty-state';
 
 const SORT_FIELDS = ['fullName', 'status', 'createdAt'] as const;
+const DAY_MS = 24 * 60 * 60 * 1000;
+/** How far ahead the collection looks for each student's next lesson. */
+const UPCOMING_DAYS = 60;
 
 /** Reference layout: student, learning, credits, next lesson, balance, actions. */
 const ROW_LAYOUT =
   'minmax(0,2.3fr) minmax(0,1.5fr) minmax(0,1.25fr) minmax(0,1.25fr) minmax(0,1fr) 40px';
 
-export function StudentsList() {
+export function StudentsList({ nowMs }: { nowMs?: number } = {}) {
   const t = useTranslations('students');
   const tCommon = useTranslations('common');
+  const format = useFormatter();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const updateParams = useUpdateSearchParams();
-  const [createOpen, setCreateOpen] = useState(false);
+  const [lessonOpen, setLessonOpen] = useState(false);
+  // The page reads one pinned clock, so every window it queries lines up.
+  const clock = useNow();
+  const [now] = useState(() => nowMs ?? clock.getTime());
 
   const page = parsePageParam(searchParams.get('page'));
   const search = searchParams.get('search')?.trim() || undefined;
@@ -70,14 +82,22 @@ export function StudentsList() {
   const groups = useGroupsQuery({ page: 1, pageSize: 100 });
 
   // The lesson window is a flat, complete list, so the weekly count is exact.
-  const week = useMemo(() => {
-    const now = new Date();
-    return {
-      from: startOfWeek(now, { weekStartsOn: 1 }).toISOString(),
-      to: endOfWeek(now, { weekStartsOn: 1 }).toISOString(),
-    };
-  }, []);
-  const weekLessons = useLessonsQuery(week);
+  const week = useMemo(
+    () => ({
+      from: startOfWeek(now, { weekStartsOn: 1 }),
+      to: endOfWeek(now, { weekStartsOn: 1 }),
+    }),
+    [now],
+  );
+  const weekLessons = useLessonsQuery({
+    from: week.from.toISOString(),
+    to: week.to.toISOString(),
+  });
+  const upcomingLessons = useLessonsQuery({
+    from: new Date(now).toISOString(),
+    to: new Date(now + UPCOMING_DAYS * DAY_MS).toISOString(),
+    status: 'SCHEDULED',
+  });
 
   // Package metrics are derived client-side, so the page has to cover every
   // package for the aggregate to be true; the model rejects a partial page.
@@ -87,6 +107,18 @@ export function StudentsList() {
     : packages.isError || !packages.data
       ? null
       : deriveCollectionMetrics(packages.data.items, packages.data.total);
+  const rollups = useMemo(
+    () =>
+      deriveStudentRollups({
+        packages: packages.data?.items ?? [],
+        packagesComplete: Boolean(
+          packages.data && packages.data.items.length >= packages.data.total,
+        ),
+        lessons: upcomingLessons.data?.items ?? [],
+        now,
+      }),
+    [packages.data, upcomingLessons.data, now],
+  );
 
   // Facet counts are their own one-row queries: a collection page can never
   // derive a total from the rows it happens to be showing.
@@ -110,6 +142,21 @@ export function StudentsList() {
     status: 'ARCHIVED',
   });
 
+  const weekItems = weekLessons.data?.items;
+  const lessonsThisWeek = weekLessons.isPending
+    ? undefined
+    : !weekItems
+      ? null
+      : {
+          total: weekItems.length,
+          individual: weekItems.filter((lesson) => lesson.groupId === null).length,
+          group: weekItems.filter((lesson) => lesson.groupId !== null).length,
+          range: format.dateTimeRange(week.from, week.to, { day: 'numeric', month: 'short' }),
+        };
+  const studentsThisWeek = weekItems
+    ? new Set(weekItems.flatMap((lesson) => (lesson.student ? [lesson.student.id] : []))).size
+    : undefined;
+
   const columns = useMemo<ColumnDef<StudentListItem, unknown>[]>(
     () => [
       {
@@ -121,22 +168,38 @@ export function StudentsList() {
       {
         id: 'learning',
         header: () => t('columns.learning'),
-        cell: ({ row }) => <StudentLearningCell student={row.original} />,
+        cell: ({ row }) => (
+          <StudentLearningCell
+            student={row.original}
+            teacher={rollups.get(row.original.id)?.teacherName}
+          />
+        ),
       },
       {
         id: 'credits',
         header: () => t('columns.credits'),
-        cell: () => <StudentCreditsCell />,
+        cell: ({ row }) => <StudentCreditsCell credits={rollups.get(row.original.id)?.credits} />,
       },
       {
         id: 'nextLesson',
         header: () => t('columns.nextLesson'),
-        cell: () => <StudentNextLessonCell />,
+        cell: ({ row }) => (
+          <StudentNextLessonCell
+            status={row.original.status}
+            next={rollups.get(row.original.id)?.next}
+            now={now}
+          />
+        ),
       },
       {
         id: 'balance',
         header: () => t('columns.balance'),
-        cell: () => <StudentBalanceCell />,
+        cell: ({ row }) => (
+          <StudentBalanceCell
+            balance={rollups.get(row.original.id)?.balance}
+            status={row.original.status}
+          />
+        ),
       },
       {
         id: 'actions',
@@ -146,19 +209,20 @@ export function StudentsList() {
             <StudentRowActions
               studentId={row.original.id}
               fullName={row.original.fullName}
-              avatarKey={row.original.avatarKey}
               status={row.original.status}
             />
           </div>
         ),
       },
     ],
-    [t],
+    [t, rollups, now],
   );
 
   const items = students.data?.items ?? [];
   const showEmpty = students.isSuccess && items.length === 0;
   const filtersActive = Boolean(search || status || groupId);
+  const total = totalMetric.data?.total;
+  const workspaceEmpty = total === 0 && archivedMetric.data?.total === 0;
   const clearFilters = () =>
     updateParams({ search: undefined, status: undefined, groupId: undefined }, { resetPage: true });
 
@@ -166,63 +230,82 @@ export function StudentsList() {
     <>
       <CollectionFrame
         header={
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div className="flex flex-col gap-2">
-              <h1 className="font-display text-[40px] leading-none font-semibold tracking-[-0.03em] md:text-[64px] md:tracking-[-0.04em]">
-                {t('title')}
-              </h1>
-              <p className="text-base text-muted-foreground">{t('subtitle')}</p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2.5">
-              <Button size="xl" variant="outline">
-                <CalendarPlusIcon data-icon="inline-start" />
-                {t('scheduleLesson')}
-              </Button>
-              <Button size="xl" leading={<PlusIcon />} onClick={() => setCreateOpen(true)}>
-                {t('add')}
-              </Button>
-            </div>
-          </div>
+          <PageHeader
+            size="xl"
+            title={t('title')}
+            description={
+              total && studentsThisWeek !== undefined ? (
+                <>
+                  <span className="md:hidden">
+                    {t('subtitleShort', { total, active: activeMetric.data?.total ?? 0 })}
+                  </span>
+                  <span className="hidden md:inline">
+                    {t('subtitleCounts', { total, week: studentsThisWeek })}
+                  </span>
+                </>
+              ) : (
+                t('subtitle')
+              )
+            }
+            action={
+              <>
+                {workspaceEmpty ? null : (
+                  <Button
+                    size="xl"
+                    variant="outline"
+                    className="hidden md:inline-flex"
+                    onClick={() => setLessonOpen(true)}
+                  >
+                    <CalendarIcon data-icon="inline-start" />
+                    {t('scheduleLesson')}
+                  </Button>
+                )}
+                <Button asChild size="xl" leading={<PlusIcon />} className="max-md:h-11">
+                  <Link href="/app/students/new">
+                    <span className="md:hidden">{t('newShort')}</span>
+                    <span className="hidden md:inline">{workspaceEmpty ? t('add') : t('new')}</span>
+                  </Link>
+                </Button>
+              </>
+            }
+          />
         }
         summary={
           <StudentsListMetrics
             activeQuery={activeMetric}
             totalQuery={totalMetric}
-            lessonsThisWeek={
-              weekLessons.isPending
-                ? undefined
-                : weekLessons.isError || !weekLessons.data
-                  ? null
-                  : weekLessons.data.items.length
-            }
+            lessonsThisWeek={lessonsThisWeek}
             metrics={packageMetrics}
+            onTopUp={() => router.push('/app/packages')}
           />
         }
         toolbar={
-          <StudentsListFilters
-            status={(status ?? 'all') as StudentStatusTab}
-            counts={{
-              all: totalMetric.data?.total,
-              ACTIVE: activeMetric.data?.total,
-              ON_HOLD: onHoldMetric.data?.total,
-              ARCHIVED: archivedMetric.data?.total,
-            }}
-            groupId={groupId}
-            groupOptions={(groups.data?.items ?? []).map((group) => ({
-              value: group.id,
-              label: group.name,
-            }))}
-            search={search}
-            sort={sort}
-            sortFields={SORT_FIELDS}
-            onStatusChange={(next) =>
-              updateParams({ status: next === 'all' ? undefined : next }, { resetPage: true })
-            }
-            onGroupChange={(next) => updateParams({ groupId: next }, { resetPage: true })}
-            onSearchChange={(next) =>
-              updateParams({ search: next.trim() || undefined }, { resetPage: true })
-            }
-          />
+          workspaceEmpty ? undefined : (
+            <StudentsListFilters
+              status={(status ?? 'all') as StudentStatusTab}
+              counts={{
+                all: totalMetric.data?.total,
+                ACTIVE: activeMetric.data?.total,
+                ON_HOLD: onHoldMetric.data?.total,
+                ARCHIVED: archivedMetric.data?.total,
+              }}
+              groupId={groupId}
+              groupOptions={(groups.data?.items ?? []).map((group) => ({
+                value: group.id,
+                label: group.name,
+              }))}
+              search={search}
+              sort={sort}
+              sortFields={SORT_FIELDS}
+              onStatusChange={(next) =>
+                updateParams({ status: next === 'all' ? undefined : next }, { resetPage: true })
+              }
+              onGroupChange={(next) => updateParams({ groupId: next }, { resetPage: true })}
+              onSearchChange={(next) =>
+                updateParams({ search: next.trim() || undefined }, { resetPage: true })
+              }
+            />
+          )
         }
         loading={
           students.isPending ? (
@@ -240,16 +323,19 @@ export function StudentsList() {
         }
         empty={
           showEmpty ? (
-            <StudentsEmptyState
-              filtered={filtersActive}
-              onClearFilters={clearFilters}
-              onCreate={() => setCreateOpen(true)}
-            />
+            <StudentsEmptyState filtered={filtersActive} onClearFilters={clearFilters} />
           ) : undefined
         }
         mobile={
           items.length > 0
-            ? items.map((student) => <StudentCard key={student.id} student={student} />)
+            ? items.map((student) => (
+                <StudentCard
+                  key={student.id}
+                  student={student}
+                  rollup={rollups.get(student.id)}
+                  now={now}
+                />
+              ))
             : undefined
         }
         desktop={
@@ -263,6 +349,7 @@ export function StudentsList() {
                 caption={t('tableCaption')}
                 sort={sort}
                 loading={students.isFetching}
+                isRowDimmed={(student) => student.status === 'ARCHIVED'}
               />
               <div className="mt-2 flex items-center justify-between border-t border-border px-4 pt-3 pb-2">
                 <span className="text-[13px] text-muted-foreground">
@@ -277,40 +364,7 @@ export function StudentsList() {
           ) : undefined
         }
       />
-      {createOpen ? <StudentQuickCreateDialog open onOpenChange={setCreateOpen} /> : null}
+      <LessonFormDialog open={lessonOpen} onOpenChange={setLessonOpen} />
     </>
-  );
-}
-
-export function StudentsEmptyState({
-  filtered,
-  onClearFilters,
-  onCreate,
-}: {
-  filtered: boolean;
-  onClearFilters: () => void;
-  onCreate: () => void;
-}) {
-  const t = useTranslations('students');
-  const tFilters = useTranslations('filters');
-  const scope = filtered ? 'emptyFiltered' : 'empty';
-
-  return (
-    <CollectionEmptyState
-      icon={UsersIcon}
-      title={t(`${scope}.title`)}
-      description={t(`${scope}.description`)}
-      action={
-        filtered ? (
-          <Button type="button" variant="outline" onClick={onClearFilters}>
-            {tFilters('clear')}
-          </Button>
-        ) : (
-          <Button onClick={onCreate} leading={<PlusIcon />}>
-            {t('empty.action')}
-          </Button>
-        )
-      }
-    />
   );
 }

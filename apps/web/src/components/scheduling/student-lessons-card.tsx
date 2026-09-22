@@ -1,11 +1,11 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
-import { MoreHorizontalIcon } from 'lucide-react';
+import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { CalendarIcon, MoreHorizontalIcon } from 'lucide-react';
 import { useFormatter, useTranslations } from 'next-intl';
 import type { LessonResponse } from '@tutorio/validation';
 import { Button } from '@/components/ui/button';
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
+import { EmptyState } from '@/components/shared/empty-state';
 import { LessonItem } from '@/components/shared/lesson-item';
 import { LoadingPanel } from '@/components/shared/loading';
 import { SectionDivider } from '@/components/shared/section-divider';
@@ -18,6 +18,14 @@ const PAST_DAYS = 120;
 const FUTURE_DAYS = 120;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+/** The profile's lesson window; sharing it lets every block reuse one query. */
+export function studentLessonsRange(now: number) {
+  return {
+    from: new Date(now - PAST_DAYS * DAY_MS).toISOString(),
+    to: new Date(now + FUTURE_DAYS * DAY_MS).toISOString(),
+  };
+}
+
 /**
  * The student's own schedule, grouped into what is coming and what already
  * happened. It renders as a panel: the profile owns the card, the section
@@ -27,11 +35,17 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export function StudentLessonsCard({
   studentId,
   readOnly = false,
+  historyOnly = false,
   nowMs,
+  emptyAction,
 }: {
   studentId: string;
   readOnly?: boolean;
+  /** Archived profiles read their history only: nothing is coming up. */
+  historyOnly?: boolean;
   nowMs?: number;
+  /** The empty state's command, e.g. "Schedule lesson". */
+  emptyAction?: ReactNode;
 }) {
   const t = useTranslations('scheduling.studentLessons');
   const format = useFormatter();
@@ -44,13 +58,7 @@ export function StudentLessonsCard({
   // shift underneath the tutor on an unrelated re-render.
   const [now] = useState(() => nowMs ?? Date.now());
 
-  const range = useMemo(
-    () => ({
-      from: new Date(now - PAST_DAYS * DAY_MS).toISOString(),
-      to: new Date(now + FUTURE_DAYS * DAY_MS).toISOString(),
-    }),
-    [now],
-  );
+  const range = useMemo(() => studentLessonsRange(now), [now]);
   const lessons = useLessonsQuery({ ...range, studentId });
 
   const { upcoming, past } = useMemo(() => {
@@ -73,14 +81,14 @@ export function StudentLessonsCard({
     return <LoadingPanel size="md" className="min-h-32 rounded-row border-0 bg-transparent" />;
   }
 
-  if (upcoming.length === 0 && past.length === 0) {
+  if ((historyOnly || upcoming.length === 0) && past.length === 0) {
     return (
-      <Empty>
-        <EmptyHeader>
-          <EmptyTitle>{t('noUpcoming')}</EmptyTitle>
-          <EmptyDescription>{t('noPast')}</EmptyDescription>
-        </EmptyHeader>
-      </Empty>
+      <EmptyState
+        icon={<CalendarIcon />}
+        title={t('emptyTitle')}
+        text={readOnly ? t('emptyArchived') : t('emptyDescription')}
+        action={readOnly ? undefined : emptyAction}
+      />
     );
   }
 
@@ -120,7 +128,7 @@ export function StudentLessonsCard({
 
   return (
     <div className="flex flex-col">
-      {upcoming.length > 0 ? (
+      {!historyOnly && upcoming.length > 0 ? (
         <>
           <SectionDivider label={t('comingUp')} className="pb-1" />
           {upcoming.map((lesson, index) => renderLesson(lesson, index === 0 ? 'next' : 'default'))}
@@ -128,7 +136,7 @@ export function StudentLessonsCard({
       ) : null}
       {past.length > 0 ? (
         <>
-          <SectionDivider label={t('earlier')} className="pt-2 pb-1" />
+          <SectionDivider label={historyOnly ? t('history') : t('earlier')} className="pt-2 pb-1" />
           {past.map((lesson) => renderLesson(lesson, 'past'))}
         </>
       ) : null}

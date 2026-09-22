@@ -19,57 +19,67 @@ export function StudentSectionsCard({
   packages,
   onAddLesson,
   onAddPackage,
+  historyOnly = false,
 }: {
   lessons: ReactNode;
   packages: ReactNode;
   onAddLesson?: () => void;
   onAddPackage?: () => void;
+  /** Archived profiles only read their history, so no section adds anything. */
+  historyOnly?: boolean;
 }) {
   const t = useTranslations('students.sections');
   const [section, setSection] = useState('lessons');
 
   // One action slot that belongs to the visible section: it changes with the
   // segment and disappears where the section has nothing to add.
-  const action =
-    section === 'lessons' && onAddLesson
+  const action = historyOnly
+    ? null
+    : section === 'lessons' && onAddLesson
       ? { label: t('addLesson'), onClick: onAddLesson }
       : section === 'packages' && onAddPackage
         ? { label: t('addPackage'), onClick: onAddPackage }
         : null;
 
+  const actionButton = (className?: string) =>
+    action ? (
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={action.onClick}
+        className={className}
+      >
+        <PlusIcon data-icon="inline-start" />
+        {action.label}
+      </Button>
+    ) : null;
+
   return (
-    <Card className="gap-4 p-5">
-      <Tabs value={section} onValueChange={setSection}>
-        <div className="flex flex-wrap items-center justify-between gap-3">
+    <Card className="gap-3 p-4 md:p-5">
+      <Tabs value={section} onValueChange={setSection} className="gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 md:px-1 md:pt-1 md:pb-2">
           {/* Four segments do not fit a phone, so the row scrolls rather than
               shrinking its touch targets. */}
           <div className="max-w-full overflow-x-auto">
-          <TabsList variant="segmented-subtle" aria-label={t('label')}>
-            <TabsTrigger value="lessons">{t('lessons')}</TabsTrigger>
-            <TabsTrigger value="packages">{t('packages')}</TabsTrigger>
-            <TabsTrigger value="payments">{t('payments')}</TabsTrigger>
-            <TabsTrigger value="history">{t('history')}</TabsTrigger>
-          </TabsList>
+            <TabsList variant="segmented-subtle" aria-label={t('label')} className="bg-background">
+              <TabsTrigger value="lessons">{t('lessons')}</TabsTrigger>
+              <TabsTrigger value="packages">{t('packages')}</TabsTrigger>
+              <TabsTrigger value="payments">{t('payments')}</TabsTrigger>
+              <TabsTrigger value="history">{t('history')}</TabsTrigger>
+            </TabsList>
           </div>
-          {action ? (
-            <Button type="button" variant="outline" size="sm" onClick={action.onClick}>
-              <PlusIcon data-icon="inline-start" />
-              {action.label}
-            </Button>
-          ) : null}
+          {actionButton('hidden md:inline-flex')}
         </div>
-        <TabsContent value="lessons" className="pt-2">
-          {lessons}
-        </TabsContent>
-        <TabsContent value="packages" className="pt-2">
-          {packages}
-        </TabsContent>
-        <TabsContent value="payments" className="pt-2">
+        <TabsContent value="lessons">{lessons}</TabsContent>
+        <TabsContent value="packages">{packages}</TabsContent>
+        <TabsContent value="payments">
           <SectionComingSoon title={t('payments')} />
         </TabsContent>
-        <TabsContent value="history" className="pt-2">
+        <TabsContent value="history">
           <SectionComingSoon title={t('history')} />
         </TabsContent>
+        {actionButton('w-full md:hidden')}
       </Tabs>
     </Card>
   );
