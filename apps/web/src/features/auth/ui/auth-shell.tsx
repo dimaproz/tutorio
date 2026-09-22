@@ -71,8 +71,8 @@ function TintGround({ compact = false }: { compact?: boolean }) {
 }
 
 /**
- * The authentication frame. Desktop: a 640px form card beside an indigo
- * panel with a product collage. Phones: an indigo band with the headline and
+ * The authentication frame. Desktop: the form card (40%) beside an indigo
+ * panel (60%) with a product collage. Phones: an indigo band with the headline and
  * the form card overlapping it by 40px.
  */
 export function AuthShell({ localeControl, children, variant }: AuthShellProps) {
@@ -99,7 +99,7 @@ export function AuthShell({ localeControl, children, variant }: AuthShellProps) 
         </div>
       </section>
 
-      <main className="relative mx-3 -mt-10 mb-6 flex flex-col rounded-card border border-border bg-card px-5 py-6 md:m-0 md:w-160 md:shrink-0 md:px-12 md:py-9">
+      <main className="relative mx-3 -mt-10 mb-6 flex flex-col rounded-card border border-border bg-card px-5 py-6 md:m-0 md:grow md:px-12 md:py-9 lg:min-w-120 lg:grow-0 lg:basis-2/5 lg:px-10 xl:px-12">
         <div className="hidden items-center justify-between md:flex">
           <Logo />
           {localeControl}
@@ -117,8 +117,9 @@ export function AuthShell({ localeControl, children, variant }: AuthShellProps) 
         </div>
       </main>
 
-      {/* Desktop panel: decoration and a headline, never needed to sign in. */}
-      <section className="relative hidden min-w-0 grow flex-col justify-between gap-10 overflow-hidden rounded-hero bg-tint-indigo p-14 text-ink md:flex">
+      {/* Desktop panel: decoration and a headline, never needed to sign in.
+          The split is 40 / 60; below lg the form card has the page alone. */}
+      <section className="relative hidden min-w-0 basis-3/5 flex-col justify-between gap-10 overflow-hidden rounded-hero bg-tint-indigo p-14 text-ink lg:flex">
         <TintGround />
         <div className="relative flex max-w-145 flex-col gap-5">
           <Badge variant="on-tint" size="lg">
