@@ -43,6 +43,7 @@ function ValueControlsContract() {
             onChange={setAvatar}
             fullName="Anna Shevchenko"
             initialsLabel="Use initials"
+            label="Avatar"
           />
         </Field>
         <Field>

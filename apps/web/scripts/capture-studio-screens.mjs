@@ -18,10 +18,20 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { chromium } from 'playwright';
 
+// File names match the handoff's screens/*.png, so `--reference` can point
+// straight at that folder.
 const SCREENS = [
-  { id: 'fidelity-studio--students-list', file: 'students-list' },
-  { id: 'fidelity-studio--student-profile', file: 'student-profile' },
-  { id: 'fidelity-studio--stat-blocks', file: 'stat-block' },
+  { id: 'auth-screens--playground', file: 'AuthLogin' },
+  { id: 'auth-screens--register', file: 'AuthRegister' },
+  { id: 'students-screens-collection--playground', file: 'IndigoStudents' },
+  { id: 'students-screens-collection--empty-workspace', file: 'StudentsEmpty' },
+  { id: 'students-screens-profile--playground', file: 'IndigoStudent' },
+  { id: 'students-screens-profile--fresh', file: 'StudentProfileNew' },
+  { id: 'students-screens-profile--on-hold', file: 'StudentProfileOnHold' },
+  { id: 'students-screens-profile--archived', file: 'StudentProfileArchived' },
+  { id: 'students-screens-form--playground', file: 'StudentFormCreate' },
+  { id: 'students-screens-form--edit', file: 'StudentFormEditPristine' },
+  { id: 'students-screens-form--edit-archived', file: 'StudentFormEditArchived' },
 ];
 
 function arg(name, fallback) {
@@ -63,7 +73,7 @@ async function main() {
 
   const context = await browser.newContext({
     viewport: { width, height: 900 },
-    deviceScaleFactor: 2,
+    deviceScaleFactor: Number(arg('scale', '2')),
     reducedMotion: 'reduce',
     colorScheme: 'light',
     timezoneId: 'Europe/Kyiv',
@@ -84,6 +94,7 @@ async function main() {
   }`);
 
   const page = await context.newPage();
+  page.on('pageerror', (error) => console.error(`page error: ${error.message}`));
   const results = [];
 
   for (const screen of screens) {
@@ -160,8 +171,8 @@ img{display:block;width:100%;image-rendering:pixelated}
   await writeFile(tmp, html, 'utf8');
 
   await page.goto(pathToFileURL(tmp).href, { waitUntil: 'load' });
-  await page.waitForFunction(
-    () => Array.from(document.images).every((image) => image.complete && image.naturalWidth > 0),
+  await page.waitForFunction(() =>
+    Array.from(document.images).every((image) => image.complete && image.naturalWidth > 0),
   );
 
   const score = await page.evaluate(() => {

@@ -80,6 +80,16 @@ const preview: Preview = {
     a11y: {
       test: 'error',
     },
+    // The handoff renders every screen at these two widths.
+    viewport: {
+      options: {
+        handoffDesktop: {
+          name: 'Handoff desktop 1440',
+          styles: { width: '1440px', height: '900px' },
+        },
+        handoffMobile: { name: 'Handoff mobile 390', styles: { width: '390px', height: '844px' } },
+      },
+    },
   },
   decorators: [
     (Story, context) => {
