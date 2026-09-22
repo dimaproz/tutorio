@@ -5,6 +5,14 @@ import { IS_PUBLIC_KEY } from '../auth/decorators/public.decorator';
 import { ROLES_KEY } from '../auth/decorators/roles.decorator';
 import { AppModule } from '../app.module';
 
+// Importing AppModule evaluates ConfigModule.forRoot(), which validates the
+// runtime environment eagerly. This spec only reads route metadata, so it must
+// not depend on DATABASE_URL or JWT secrets being present (e.g. in CI).
+jest.mock('../config/env', () => ({
+  ...jest.requireActual<typeof import('../config/env')>('../config/env'),
+  validateEnv: (config: Record<string, unknown>) => config,
+}));
+
 type ControllerConstructor = Type<object> & {
   name: string;
   prototype: object;
