@@ -7,7 +7,7 @@ import { PlusIcon, UsersIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { StudentListItem } from '@tutorio/validation';
 import { StudentAddedDate, StudentCard, StudentLearningFormat } from './student-card';
-import { StudentFormDialog } from './student-form-dialog';
+import { StudentQuickCreateDialog } from '@/features/students/ui/student-quick-create-dialog';
 import { StudentRowActions } from './student-row-actions';
 import { StudentsListSkeleton } from './students-list-skeleton';
 import { StudentStatusBadge } from '@/components/students/student-status';
@@ -23,7 +23,7 @@ import {
   useListSort,
   useUpdateSearchParams,
 } from '@/components/shared/list-controls';
-import { PageHeader, QueryErrorAlert, QueryRefreshIndicator } from '@/components/shared/page-shell';
+import { PageHeader, QueryErrorAlert } from '@/components/shared/page-shell';
 import { Button } from '@/components/ui/button';
 import { CollectionEmptyState } from '@/components/shared/collection-empty-state';
 import { CollectionToolbar } from '@/components/shared/collection-toolbar';
@@ -192,7 +192,6 @@ export function StudentsList() {
             ) : null}
           </CollectionToolbar>
         }
-        refresh={<QueryRefreshIndicator isFetching={students.isFetching && !students.isPending} />}
         loading={
           students.isPending ? (
             <StudentsListSkeleton caption={t('tableCaption')} loadingLabel={tCommon('loading')} />
@@ -238,7 +237,7 @@ export function StudentsList() {
           ) : undefined
         }
       />
-      <StudentFormDialog open={createOpen} onOpenChange={setCreateOpen} />
+      {createOpen ? <StudentQuickCreateDialog open onOpenChange={setCreateOpen} /> : null}
     </>
   );
 }

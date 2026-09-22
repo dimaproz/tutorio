@@ -37,6 +37,14 @@ export function useEnrollmentsQuery(filters: EnrollmentListFilters, enabled = tr
   });
 }
 
+export function useEnrollmentQuery(enrollmentId: string, enabled = true) {
+  return useQuery<EnrollmentResponse, GatewayError>({
+    queryKey: queryKeys.enrollments.detail(enrollmentId),
+    queryFn: () => gatewayFetch<EnrollmentResponse>(`/api/backend/enrollments/${enrollmentId}`),
+    enabled: enabled && Boolean(enrollmentId),
+  });
+}
+
 // Enrollment mutations carry money rules, so they always use the authoritative
 // server response plus targeted invalidation — never optimistic updates.
 export function useCreateEnrollmentMutation() {

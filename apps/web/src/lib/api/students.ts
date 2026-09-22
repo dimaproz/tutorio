@@ -83,7 +83,7 @@ export function useUpdateStudentMutation(studentId: string) {
 
 // Destructive and restore mutations are never optimistic: the server is the
 // only authority on whether they are allowed.
-export function useDeleteStudentMutation() {
+export function useArchiveStudentMutation() {
   const queryClient = useQueryClient();
   return useMutation<void, GatewayError, string>({
     mutationFn: (studentId) =>

@@ -15,11 +15,13 @@ export function ParentFormDialog({
   onOpenChange,
   parentId,
   onSuccess,
+  hideStudentLinks = false,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   parentId?: string;
   onSuccess?: (parent: { id: string; fullName: string }) => void;
+  hideStudentLinks?: boolean;
 }) {
   const t = useTranslations('parents.form');
   const isEdit = Boolean(parentId);
@@ -40,6 +42,7 @@ export function ParentFormDialog({
           onSuccess?.(created);
         }}
         onCancel={() => onOpenChange(false)}
+        hideStudentLinks={hideStudentLinks}
       />
     </EntityFormDialog>
   );

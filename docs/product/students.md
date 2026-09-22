@@ -1,9 +1,10 @@
 # Student Workflow and Work Packet 6 Screen Brief
 
-Last verified: 2026-09-18 through an authenticated desktop/mobile audit, source
-inspection, validation and API contract inspection, and review of the installed
-`radix-luma` shadcn preset. Status: Work Packet 6 implementation is active; the
-Student collection slice is implemented and verified.
+Last verified: 2026-09-22 through source and contract inspection plus the full
+generation, lint, typecheck, unit, production, Storybook browser/accessibility,
+Storybook static-build, and whitespace gate. The complete 166-test Storybook
+suite passed twice. Status: Work Packet 6 implementation and blocking-review
+remediation are complete; independent re-review remains before Work Packet 6.1.
 
 ## User job
 
@@ -95,8 +96,7 @@ profile editing. These behaviors are evidence to preserve, not layouts to copy.
 
 ## Screen 1 — Student collection
 
-Implementation status: complete and verified on 2026-09-18. The next active
-screen slice is the Student detail foundation.
+Implementation status: complete and verified on 2026-09-20.
 
 ### Information hierarchy
 
@@ -458,25 +458,27 @@ integration of those contracts.
 1. **Collection (implemented):** move to CollectionFrame, redesign row/card
    information density, and fix filtered empty/clear filters. Add stories and
    interactions.
-2. **Detail foundation (next):** move to DetailFrame, correct action hierarchy and
+2. **Detail foundation (implemented):** move to DetailFrame, correct action hierarchy and
    archive language, add archived state, and add responsive lesson rendering.
-3. **Models and boundaries:** split create/edit schemas and DTO builders; add
+3. **Models and boundaries (implemented):** split create/edit schemas and DTO builders; add
    deterministic tests for defaults, timezone, price, contact normalization,
    and lifecycle action policy.
-4. **Quick create:** implement the compact dialog, dirty-close protection,
+4. **Quick create (implemented):** implement the compact dialog, dirty-close protection,
    explicit error handling, and success navigation. Delete the create branch of
    the legacy all-in-one form when parity is proven.
-5. **Saved-profile next actions:** add setup, package summary, learning action,
+5. **Saved-profile next actions (implemented):** add setup, package summary, learning action,
    and parent relationship management with preselected student context.
-6. **Edit:** implement the edit-only accordion dialog, explicit load failure,
+6. **Edit (implemented):** implement the edit-only accordion dialog, explicit load failure,
    and remove the remaining legacy StudentForm path.
-7. **Independent review:** inspect duplication, query invalidation, permission
+7. **Independent review (pending):** inspect duplication, query invalidation, permission
    visibility, lifecycle copy, keyboard/focus, mobile overflow, theme, and locale
    parity. Synchronize this document and pilot acceptance evidence.
-8. **Verification:** run `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`,
-   Storybook browser tests, and Storybook static build. Run API E2E only if WP6
-   changes an API/service contract; otherwise rely on the existing isolated
-   lifecycle evidence.
+8. **Verification (passed 2026-09-22):** `pnpm generate`, `pnpm lint`, `pnpm
+   typecheck`, `pnpm test`, `pnpm build`, two complete 166-test Storybook
+   browser/accessibility runs, Storybook static build, and `git diff --check`
+   pass. API E2E was not required because the remediation changes no API or
+   service contract; the package query only exposes the existing `state`
+   parameter.
 
 Do not start Work Packet 6.1 until every WP6 gate is green and the reference
 Student feature pattern has passed separate review.

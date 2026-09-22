@@ -14,6 +14,7 @@ import { RowActionsTrigger } from '@/components/shared/row-actions-trigger';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
@@ -50,32 +51,36 @@ export function LessonRowActions({
     <DropdownMenu>
       <RowActionsTrigger busy={transition.isPending} />
       <DropdownMenuContent align="end">
+        <DropdownMenuGroup>
         {isScheduled ? (
           <>
             <DropdownMenuItem onSelect={() => flipTo('COMPLETED')}>
-              <CheckIcon />
+              <CheckIcon data-icon />
               {t('complete')}
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => onOpenDialog(lesson, 'reschedule')}>
-              <CalendarClockIcon />
+              <CalendarClockIcon data-icon />
               {t('reschedule')}
             </DropdownMenuItem>
             <DropdownMenuItem variant="destructive" onSelect={() => onOpenDialog(lesson, 'cancel')}>
-              <XCircleIcon />
+              <XCircleIcon data-icon />
               {t('cancel')}
             </DropdownMenuItem>
           </>
         ) : (
           <DropdownMenuItem onSelect={() => flipTo('SCHEDULED')}>
-            <RotateCcwIcon />
+            <RotateCcwIcon data-icon />
             {t('reactivate')}
           </DropdownMenuItem>
         )}
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
+        <DropdownMenuGroup>
         <DropdownMenuItem onSelect={() => onOpenDialog(lesson, 'menu')}>
-          <StickyNoteIcon />
+          <StickyNoteIcon data-icon />
           {t('details')}
         </DropdownMenuItem>
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );

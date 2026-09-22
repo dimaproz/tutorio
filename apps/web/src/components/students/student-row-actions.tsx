@@ -1,16 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { PauseIcon, PencilIcon, PlayIcon, RotateCcwIcon, Trash2Icon } from 'lucide-react';
+import { ArchiveIcon, PauseIcon, PencilIcon, PlayIcon, RotateCcwIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { StudentStatusDto } from '@tutorio/validation';
 import { RowActionsTrigger } from '@/components/shared/row-actions-trigger';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { errorMessageKey } from '@/lib/api/error-message';
 import { useRestoreStudentMutation, useUpdateStudentMutation } from '@/lib/api/students';
-import { StudentDeleteDialog } from './student-delete-dialog';
-import { StudentFormDialog } from './student-form-dialog';
+import { StudentArchiveDialog } from '@/features/students/ui/student-archive-dialog';
+import { StudentEditDialog } from '@/features/students/ui/student-edit-dialog';
 import { studentRowActions } from './student-row-actions.model';
 
 // Archived students receive only the dedicated restore command. Operational
@@ -20,13 +20,13 @@ export function StudentRowActions({
   fullName,
   avatarKey,
   status = 'ACTIVE',
-  onDeleted,
+  onArchived,
 }: {
   studentId: string;
   fullName: string;
   avatarKey?: string | null;
   status?: StudentStatusDto;
-  onDeleted?: () => void;
+  onArchived?: () => void;
 }) {
   const t = useTranslations('students');
   const tCommon = useTranslations('common');
@@ -61,6 +61,7 @@ export function StudentRowActions({
       <DropdownMenu>
         <RowActionsTrigger busy={updateStudent.isPending || restoreStudent.isPending} />
         <DropdownMenuContent align="end">
+          <DropdownMenuGroup>
           {actions.includes('restore') ? (
             <DropdownMenuItem onSelect={handleRestore}>
               <RotateCcwIcon data-icon />
@@ -90,24 +91,25 @@ export function StudentRowActions({
           ) : null}
           {actions.includes('archive') ? (
             <DropdownMenuItem variant="destructive" onSelect={() => setConfirmOpen(true)}>
-              <Trash2Icon data-icon />
-              {tCommon('delete')}
+              <ArchiveIcon data-icon />
+              {t('archive')}
             </DropdownMenuItem>
           ) : null}
+          </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
 
       {actions.includes('archive') ? (
-        <StudentDeleteDialog
+        <StudentArchiveDialog
           open={confirmOpen}
           onOpenChange={setConfirmOpen}
           student={{ id: studentId, fullName, avatarKey, status }}
-          onDeleted={onDeleted}
+          onArchived={onArchived}
         />
       ) : null}
 
       {actions.includes('edit') ? (
-        <StudentFormDialog open={editOpen} onOpenChange={setEditOpen} studentId={studentId} />
+        <StudentEditDialog open={editOpen} onOpenChange={setEditOpen} studentId={studentId} />
       ) : null}
     </>
   );

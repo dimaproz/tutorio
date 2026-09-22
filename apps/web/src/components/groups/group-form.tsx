@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
-import { StudentFormDialog } from '@/components/students/student-form-dialog';
+import { StudentQuickCreateDialog } from '@/features/students/ui/student-quick-create-dialog';
 import { errorMessageKey } from '@/lib/api/error-message';
 import { useCreateGroupMutation, useUpdateGroupMutation } from '@/lib/api/groups';
 import { GroupStudentsField } from './group-students-field';
@@ -42,7 +42,7 @@ import { makeZodErrorMap } from '@/lib/forms/error-map';
 import { groupFormSchema, type GroupFormValues } from '@/features/groups/model/form';
 import { formatPriceInput, parsePriceInput } from '@/lib/money';
 
-// One component for both create and edit, mirroring StudentForm. Rendered
+// One component for both create and edit. Rendered
 // inside a Dialog (see GroupFormDialog) — the caller owns the open state and
 // is told when to close it via onSuccess/onCancel rather than the form
 // navigating itself.
@@ -271,18 +271,17 @@ export function GroupForm({
         </FormActions>
       </FieldGroup>
 
-      <StudentFormDialog
+      <StudentQuickCreateDialog
         open={quickCreateOpen}
         onOpenChange={setQuickCreateOpen}
+        navigateOnSuccess={false}
         onSuccess={(student) => {
-          if (student) {
-            setCreatedStudents((current) =>
-              current.some((item) => item.id === student.id) ? current : [...current, student],
-            );
-            setStudentIds((current) =>
-              current.includes(student.id) ? current : [...current, student.id],
-            );
-          }
+          setCreatedStudents((current) =>
+            current.some((item) => item.id === student.id) ? current : [...current, student],
+          );
+          setStudentIds((current) =>
+            current.includes(student.id) ? current : [...current, student.id],
+          );
         }}
       />
     </form>

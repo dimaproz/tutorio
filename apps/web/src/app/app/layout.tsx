@@ -22,7 +22,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <AppSidebar />
         <SidebarInset>
           <AppHeader />
-          <div className="flex flex-1 flex-col p-4 md:p-6">{children}</div>
+          <div className="flex flex-1 flex-col p-4 md:p-6 bg-muted">{children}</div>
         </SidebarInset>
       </SidebarProvider>
     </SessionProvider>

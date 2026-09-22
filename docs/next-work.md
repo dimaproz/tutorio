@@ -1,6 +1,6 @@
 # Active Work Queue
 
-Last verified: 2026-09-18.
+Last verified: 2026-09-22.
 
 This is the short-lived execution queue for Stage 4.1. It answers “what should I
 work on next?” without requiring a developer to re-derive priorities from the
@@ -198,7 +198,7 @@ builds owned components and states in Storybook, integrates existing behavior,
 passes its verification gate, and remains independently deployable. Do not
 start the next packet while the current one is under review.
 
-### Work Packet 6 — Student Experience and Quick Create (active)
+### Work Packet 6 — Student Experience and Quick Create (implemented; review gate pending)
 
 Implement [`product/students.md`](./product/students.md) as the reference feature
 migration:
@@ -216,12 +216,14 @@ migration:
   permission, mobile, theme, locale, interaction, and accessibility states.
 
 The architect-approved Students screen brief is recorded in
-[`product/students.md`](./product/students.md). The collection slice is
-implemented and verified: four independent metrics, URL-backed search/status/
-group controls, filtered-empty recovery, the compact desktop table and mobile
-card, localized `createdAt`, Storybook coverage, and the generated API contract
-are complete. The Student detail foundation is the next active slice. Compact
-create and edit replacement follow the approved list/detail compositions.
+[`product/students.md`](./product/students.md). Collection and detail now use the
+approved shared compositions; quick create, edit, setup actions, parent
+relationships, archive/read-only behavior, and Scheduling-owned mobile lesson
+items are implemented. The full local verification gate passes on 2026-09-20.
+The 2026-09-22 remediation closes the blocking Student review findings and
+passes the complete 166-test Storybook browser/accessibility suite twice. An
+independent re-review of the remediated reference pattern is the only remaining
+process gate before Work Packet 6.1 begins.
 
 ### Work Packet 6.1 — Parents
 

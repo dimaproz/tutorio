@@ -21,16 +21,25 @@ import {
 } from '@/features/scheduling/model/series-form';
 import { EMPTY_PARENT_FORM, parentFormSchema } from '@/features/parents/model/form';
 import { workspaceSettingsFormSchema } from '@/features/settings/model/form';
-import { EMPTY_STUDENT_FORM, studentFormSchema } from '@/features/students/model/form';
+import {
+  emptyStudentQuickCreate,
+  studentEditSchema,
+  studentQuickCreateSchema,
+} from '@/features/students/model/form';
 import { EMPTY_TEACHER_FORM, teacherFormSchema } from '@/features/teachers/model/form';
 
 describe('feature form models', () => {
   it('keeps defaults and schemas colocated for entity forms', () => {
     expect(
-      studentFormSchema.safeParse({
-        ...EMPTY_STUDENT_FORM,
+      studentQuickCreateSchema.safeParse({
+        ...emptyStudentQuickCreate({ currency: 'EUR', timezone: 'Europe/Kyiv' }),
         fullName: 'Olena Kovalenko',
-        timezone: 'Europe/Kyiv',
+      }).success,
+    ).toBe(true);
+    expect(
+      studentEditSchema.safeParse({
+        ...emptyStudentQuickCreate({ currency: 'EUR', timezone: 'Europe/Kyiv' }),
+        fullName: 'Olena Kovalenko', languageLevel: '', knowledgeLevel: '', avatarKey: null,
       }).success,
     ).toBe(true);
     expect(

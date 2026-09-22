@@ -24,9 +24,9 @@ function EntityPickerContract({ disabled = false, invalid = false, isLoading = f
           value={value}
           options={options}
           onChange={setValue}
-          placeholder={longCopy ? ukMessages.students.form.addParentPlaceholder : 'Link an existing parent'}
-          searchPlaceholder={longCopy ? ukMessages.students.form.addParentSearch : 'Search parents'}
-          emptyLabel={longCopy ? ukMessages.students.form.addParentEmpty : 'No parent found'}
+          placeholder={longCopy ? ukMessages.students.parents.link : 'Link an existing parent'}
+          searchPlaceholder={longCopy ? ukMessages.students.parents.search : 'Search parents'}
+          emptyLabel={longCopy ? ukMessages.students.parents.noResults : 'No parent found'}
           clearLabel="Clear selection"
           disabled={disabled}
           invalid={invalid}

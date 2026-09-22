@@ -155,7 +155,7 @@ export function AppSidebarContent({
   const settings = getSettingsNavigation(access);
 
   return (
-    <Sidebar variant="inset" collapsible="icon">
+    <Sidebar variant="sidebar" collapsible="icon">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>

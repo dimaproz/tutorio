@@ -1,6 +1,6 @@
 # Tutorio Current State
 
-Last verified: 2026-09-18 during the verified Work Packet 6 collection slice.
+Last verified: 2026-09-22 after the Work Packet 6 review-remediation gate.
 
 This is the first project document to read before planning or implementing
 work. It reports the repository as it exists; [`mvp-plan.md`](./mvp-plan.md)
@@ -20,8 +20,8 @@ deployable while preserving proven behavior.
   Frontend Packet F5 as `4900755`.
 - The former `refactor/students-design` work was merged by PR #18.
 - `pnpm generate`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build`
-  pass on 2026-09-18. Observed unit totals: domain 92, validation 47, API 158,
-  and web 121. Storybook browser tests pass for 120 tests across 23 files,
+  pass on 2026-09-22. Observed unit totals: domain 92, validation 47, API 158,
+  and web 128. Storybook browser tests pass twice for 166 tests across 27 files,
   including automated accessibility checks, and the static build passes.
 - API E2E passes 78 tests in 6 suites against an isolated PostgreSQL 17
   database after the then-current migration set, including legacy-TEACHER
@@ -147,6 +147,29 @@ import paths plus the reviewed session-context/root-layout exceptions. Root
 lint, typecheck, test, build, Storybook browser tests (112 across 22 files),
 Storybook static build, and `git diff --check` pass. Work Packet 6 is the next
 planned work.
+
+### Work Packet 6 evidence
+
+The Student reference migration is implemented through the feature boundary.
+The detail uses `DetailFrame` and `ProfileHeader`, lifecycle commands come from
+one tested presentation policy, archived profiles are read-only, and Scheduling
+owns separate mobile lesson items below `md`. Create and edit now have separate
+schemas, DTO builders, and dialogs; quick create navigates to the saved profile
+setup state while the Group caller retains controlled selection without forced
+navigation. Parent relationship management runs only after persistence and
+supports link, unlink, and retry after a successful parent create. The legacy
+combined Student form and delete-labelled dialog are removed.
+
+The review-remediation pass prevents enrollment edit from falling through to
+create mode, uses the workspace currency for previously unpriced students,
+shows package payment state and archived history, exposes both parent paths,
+and makes mobile menu cleanup deterministic. Root generation, lint, typecheck,
+unit tests, production build, two complete 166-test Storybook
+browser/accessibility runs, Storybook static build, and whitespace checks pass
+on 2026-09-22. No API or service contract changed, so the existing isolated
+lifecycle E2E evidence remains applicable. Independent re-review of the
+remediated reference pattern remains the final process gate before Work Packet
+6.1.
 
 ### Work Packet 1 evidence
 
@@ -280,13 +303,9 @@ generated client expose the typed `403` contract for owner-only handlers.
 
 ## Next checkpoint
 
-Frontend Packet F5 — Product Composition Boundary is complete: shell ownership,
-shared collection/detail/form references, status adapters, Storybook contracts,
-and import-layer enforcement are in place. The authenticated desktop/mobile
-Students audit and architect-approved WP6 screen brief are recorded in
-`product/students.md` on 2026-09-10. Work Packet 6 — Student Experience and
-Quick Create is active. Its collection slice is implemented and verified with
-the approved metrics, URL controls, desktop table, mobile card, API `createdAt`
-contract, Storybook states, and localized copy. The Student detail foundation
-is the next slice; create/edit form replacement follows the approved primary
-page compositions.
+Work Packet 6 — Student Experience and Quick Create is implemented and passes
+its complete local verification gate. The resulting Student feature is the
+reference collection/detail/form migration, including saved-profile setup,
+relationship management, responsive lesson rendering, and archived read-only
+behavior. The next checkpoint is a separate review of this reference pattern;
+after that gate, begin Work Packet 6.1 — Parents.

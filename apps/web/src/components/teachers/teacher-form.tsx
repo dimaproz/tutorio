@@ -37,7 +37,7 @@ import {
 } from '@/features/teachers/model/form';
 import { formatPriceInput, parsePriceInput } from '@/lib/money';
 
-// One component for both create and edit, mirroring ParentForm/StudentForm.
+// One component for both create and edit, mirroring ParentForm.
 export function TeacherForm({
   teacher,
   onSuccess,

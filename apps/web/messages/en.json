@@ -291,6 +291,7 @@
     "deletedBadge": "Archived",
     "putOnHold": "Put on hold",
     "reactivate": "Reactivate",
+    "archive": "Archive student",
     "count": "{count, plural, =0 {No students} one {# student} other {# students}}",
     "columns": {
       "student": "Student",
@@ -339,62 +340,48 @@
       "description": "Try changing or clearing the current filters."
     },
     "emptyDeleted": {
-      "title": "Trash is empty",
-      "description": "Deleted students appear here and can be restored."
+      "title": "No archived students",
+      "description": "Archived students appear here and can be restored."
     },
     "error": {
-      "title": "Could not load students"
+      "title": "Could not load students",
+      "detailTitle": "Could not load this student"
     },
     "form": {
       "createTitle": "New student",
       "createSubtitle": "Only the name and timezone are required.",
       "editTitle": "Edit student",
       "editSubtitle": "Update contact details and notes.",
-      "avatarSection": "Avatar",
+      "identitySection": "Identity",
+      "learningProfileSection": "Learning profile",
+      "preferencesSection": "Preferences",
       "avatarInitials": "Initials",
-      "basicSection": "Basic information",
       "contactsSection": "Student contacts",
-      "contactsHint": "Optional — useful for reminders later.",
-      "timezoneSection": "Timezone",
-      "timezoneHint": "Lesson times are shown to the student in this timezone.",
-      "academicSection": "Academic profile",
       "pricingSection": "Pricing",
-      "pricingHint": "Default price for this student's lessons — an enrollment can still override it.",
-      "parentSection": "Parents",
-      "parentHint": "Link an existing parent or create a new one.",
       "notesSection": "Notes",
       "fullName": "Full name",
       "fullNamePlaceholder": "e.g. Anna Shevchenko",
       "email": "Email",
-      "emailPlaceholder": "name@example.com",
       "phone": "Phone",
-      "phonePlaceholder": "+380 XX XXX XX XX",
       "telegramUsername": "Telegram username",
-      "telegramPlaceholder": "username",
-      "subject": "Subject",
-      "status": "Status",
-      "languageLevel": "Language level",
-      "languageLevelHint": "For language courses — level on the CEFR scale.",
-      "knowledgeLevel": "Knowledge level",
       "age": "Age",
-      "agePlaceholder": "e.g. 14",
       "grade": "Grade",
-      "gradePlaceholder": "Select grade",
-      "gradeOption": "Grade {grade}",
-      "hourlyRate": "Hourly rate",
-      "hourlyRateHint": "Per lesson, e.g. 500 or 500.50",
+      "pricePerLesson": "Price per lesson",
+      "pricePerLessonHint": "e.g. 500 or 500.50",
+      "generalLevel": "General level",
+      "languageLevelCefr": "Language level (CEFR)",
       "currency": "Currency",
       "timezone": "Timezone",
       "timezonePlaceholder": "Select a timezone",
       "timezoneSearch": "Search timezones…",
       "timezoneEmpty": "No timezone found",
-      "addParentPlaceholder": "Link an existing parent",
-      "addParentSearch": "Search parents…",
-      "addParentEmpty": "No parent found",
-      "newParent": "Create new",
-      "removeParent": "Remove {name}",
       "notes": "Notes",
-      "notesPlaceholder": "Goals, preferences, anything worth remembering",
+      "addMoreDetails": "Add more details",
+      "loadErrorTitle": "Could not load the profile",
+      "loadErrorDescription": "Try again before editing. No new student will be created.",
+      "discardTitle": "Discard changes?",
+      "discardDescription": "Your unsaved changes will be lost.",
+      "discardAction": "Discard changes",
       "submitCreate": "Create student",
       "submitEdit": "Save changes"
     },
@@ -420,24 +407,45 @@
       "deadline": "Cancellation deadline",
       "deadlineHours": "{hours, plural, one {# hour} other {# hours}} before the lesson",
       "deadlineInherited": "Workspace default",
-      "deletedTitle": "This student is in the trash",
-      "deletedDescription": "Restore the student to edit them again."
+      "informationTitle": "Student information",
+      "scheduleLesson": "Schedule lesson",
+      "editProfile": "Edit profile",
+      "moreActions": "More student actions",
+      "archivedTitle": "This student is archived",
+      "archivedDescription": "The profile and history remain available. Restore the student before scheduling, editing, or changing relationships."
+    },
+    "setup": {
+      "title": "Student created — choose the next step",
+      "description": "These actions are independent. You can dismiss this card and return later.",
+      "dismiss": "Dismiss setup suggestions",
+      "lesson": { "title": "Schedule first lesson", "description": "Book a one-off lesson for this student.", "action": "Schedule" },
+      "package": { "title": "Add lesson package", "description": "Set lesson balance and payment details.", "action": "Add package" },
+      "learning": { "title": "Set up learning", "description": "Connect individual or group learning.", "action": "Set up" },
+      "parent": { "title": "Link or create parent", "description": "Add a contact for this saved profile.", "action": "Add parent" },
+      "profile": { "title": "Complete profile", "description": "Add levels, avatar, preferences, and notes.", "action": "Edit profile" }
+    },
+    "packages": {
+      "title": "Lesson packages", "add": "Add package", "error": "Could not load packages", "empty": "No packages yet", "emptyDescription": "Add a package when this student buys lessons.", "emptyArchived": "No package history is recorded for this student.", "unnamed": "Lesson package", "balance": "{remaining} of {total} lessons left"
+    },
+    "learning": {
+      "title": "Learning relationships", "add": "Set up learning", "edit": "Edit", "loadError": "Could not load this enrollment", "empty": "Learning is not configured", "emptyDescription": "Add individual or group learning when the student is ready.", "emptyArchived": "No learning relationship is recorded.", "individual": "Individual lessons", "summary": "{teacher} · {price} per lesson"
+    },
+    "parents": {
+      "title": "Parents", "create": "Create parent", "empty": "No parents linked yet.", "emptyArchived": "No parent relationship is recorded.", "link": "Link an existing parent", "search": "Search parents…", "noResults": "No parent found", "unlink": "Unlink {name}", "retryLink": "Retry linking", "loadError": "Could not load parents"
     },
     "toasts": {
       "created": "Student created",
       "updated": "Changes saved",
-      "deleted": "Student permanently deleted",
       "archived": "Student archived",
       "restored": "Student restored",
       "onHold": "Student put on hold",
       "reactivated": "Student reactivated"
     },
-    "deleteDialog": {
+    "archiveDialog": {
       "title": "Archive this student?",
       "warning": "The student will leave operational lists. Lessons, enrollments, packages, payments, and history stay intact.",
-      "archiveHint": "Future individual lessons and recurring schedules will be suspended and can be restored after conflict checks.",
-      "archiveAction": "Archive",
-      "confirm": "Archive"
+      "effects": "Future individual lessons and recurring schedules will be suspended. Live group participation is paused. Restoring rechecks calendar conflicts before resuming affected work.",
+      "action": "Archive student"
     }
   },
   "groups": {

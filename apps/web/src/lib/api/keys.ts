@@ -73,6 +73,7 @@ export interface PackageListFilters {
   studentId?: string;
   groupId?: string;
   paymentStatus?: string;
+  state?: 'active' | 'deleted' | 'all';
 }
 
 export interface PaymentListFilters {
@@ -110,6 +111,7 @@ export const queryKeys = {
   enrollments: {
     all: ['enrollments'] as const,
     lists: (filters: EnrollmentListFilters) => ['enrollments', 'list', filters] as const,
+    detail: (enrollmentId: string) => ['enrollments', 'detail', enrollmentId] as const,
   },
   audit: {
     all: ['audit'] as const,

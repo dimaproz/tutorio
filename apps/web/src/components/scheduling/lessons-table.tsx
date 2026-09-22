@@ -23,12 +23,14 @@ export function LessonsTable({
   emptyMessage,
   loading = false,
   onOpenDialog,
+  readOnly = false,
 }: {
   lessons: LessonResponse[];
   emptyMessage: string;
   /** True while the lesson list refetches — e.g. right after a row action. */
   loading?: boolean;
   onOpenDialog: (lesson: LessonResponse, mode: LessonDialogMode) => void;
+  readOnly?: boolean;
 }) {
   const t = useTranslations('scheduling.studentLessons');
   const tKind = useTranslations('scheduling.lessonKind');
@@ -43,7 +45,7 @@ export function LessonsTable({
         header: () => t('columns.datetime'),
         meta: { sortField: 'startsAtUtc' },
         cell: ({ row }) => (
-          <button
+          readOnly ? <span className="tabular font-medium">{format.dayMonthTime(row.original.startsAtUtc)}</span> : <button
             type="button"
             onClick={() => onOpenDialog(row.original, 'menu')}
             className="tabular font-medium underline-offset-4 transition-colors hover:text-primary hover:underline"
@@ -92,13 +94,13 @@ export function LessonsTable({
         id: 'actions',
         header: () => <span className="sr-only">{t('columns.actions')}</span>,
         cell: ({ row }) => (
-          <div className="flex justify-end">
+          !readOnly ? <div className="flex justify-end">
             <LessonRowActions lesson={row.original} onOpenDialog={onOpenDialog} />
-          </div>
+          </div> : null
         ),
       },
     ],
-    [t, tKind, locale, format, onOpenDialog],
+    [t, tKind, locale, format, onOpenDialog, readOnly],
   );
 
   const rows = useMemo(

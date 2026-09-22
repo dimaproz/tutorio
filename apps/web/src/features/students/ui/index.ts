@@ -1,2 +1,10 @@
-export { StudentDetailView } from '@/components/students/student-detail';
+export { StudentDetailView } from './student-detail';
 export { StudentsList } from '@/components/students/students-list';
+export { StudentQuickCreateDialog } from './student-quick-create-dialog';
+export { StudentEditDialog } from './student-edit-dialog';
+export { StudentArchiveDialog } from './student-archive-dialog';
+export { StudentSetupCard } from './student-setup-card';
+export { StudentPackagesCard } from './student-packages-card';
+export { StudentParentsCard } from './student-parents-card';
+export { StudentInformationCard } from './student-information-card';
+export { StudentLearningCard } from './student-learning-card';

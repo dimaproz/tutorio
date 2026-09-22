@@ -28,17 +28,19 @@ import {
   type ParentFormValues,
 } from '@/features/parents/model/form';
 
-// One component for both create and edit, mirroring StudentForm/GroupForm.
+// One component for both create and edit, mirroring GroupForm.
 // Rendered inside a Dialog (see ParentFormDialog) — the caller owns the open
 // state and is told when to close it via onSuccess/onCancel.
 export function ParentForm({
   parent,
   onSuccess,
   onCancel,
+  hideStudentLinks = false,
 }: {
   parent?: ParentDetail;
   onSuccess?: (parent: { id: string; fullName: string }) => void;
   onCancel?: () => void;
+  hideStudentLinks?: boolean;
 }) {
   const t = useTranslations('parents.form');
   const tParents = useTranslations('parents');
@@ -216,7 +218,7 @@ export function ParentForm({
           </Field>
         </FormSection>
 
-        <FieldSeparator />
+        {!hideStudentLinks ? <><FieldSeparator />
 
         <FormSection
           icon={UsersRoundIcon}
@@ -240,7 +242,7 @@ export function ParentForm({
               isLoading={students.isPending}
             />
           </Field>
-        </FormSection>
+        </FormSection></> : null}
 
         <FieldSeparator />
 

@@ -42,6 +42,7 @@ export function usePackagesQuery(filters: PackageListFilters, enabled = true) {
           studentId: filters.studentId,
           groupId: filters.groupId,
           paymentStatus: filters.paymentStatus,
+          state: filters.state,
         })}`,
       ),
     placeholderData: (previous) => previous,

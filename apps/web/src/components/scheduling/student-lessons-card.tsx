@@ -14,6 +14,7 @@ import { useLessonsQuery } from '@/lib/api/scheduling';
 import { LessonActionsDialog, type LessonDialogMode } from './lesson-actions-dialog';
 import { LessonFormDialog } from './lesson-form-dialog';
 import { LessonsTable } from './lessons-table';
+import { LessonMobileList } from './lesson-mobile-list';
 
 // How far back and forward a student's schedule is read on their profile.
 const PAST_DAYS = 120;
@@ -25,7 +26,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
  * past lessons plus a one-click booking that arrives with the student
  * pre-selected — no detour through the calendar.
  */
-export function StudentLessonsCard({ studentId }: { studentId: string }) {
+export function StudentLessonsCard({ studentId, readOnly = false, nowMs }: { studentId: string; readOnly?: boolean; nowMs?: number }) {
   const t = useTranslations('scheduling.studentLessons');
 
   const [selected, setSelected] = useState<LessonResponse | null>(null);
@@ -35,7 +36,7 @@ export function StudentLessonsCard({ studentId }: { studentId: string }) {
 
   // Pinned once per mount: the window and the upcoming/past split must not
   // shift underneath the tutor on an unrelated re-render.
-  const [now] = useState(() => Date.now());
+  const [now] = useState(() => nowMs ?? Date.now());
 
   const range = useMemo(
     () => ({
@@ -66,12 +67,12 @@ export function StudentLessonsCard({ studentId }: { studentId: string }) {
     <Card>
       <CardHeader>
         <SectionTitle icon={CalendarIcon}>{t('title')}</SectionTitle>
-        <CardAction>
+        {!readOnly ? <CardAction>
           <Button type="button" size="sm" onClick={() => setFormOpen(true)}>
             <PlusIcon data-icon="inline-start" />
             {t('addLesson')}
           </Button>
-        </CardAction>
+        </CardAction> : null}
       </CardHeader>
       <CardContent>
         {lessons.isPending ? (
@@ -89,32 +90,24 @@ export function StudentLessonsCard({ studentId }: { studentId: string }) {
               </TabsTrigger>
             </TabsList>
             <TabsContent value="upcoming" className="pt-3">
-              <LessonsTable
-                lessons={upcoming}
-                emptyMessage={t('noUpcoming')}
-                loading={lessons.isFetching}
-                onOpenDialog={openLesson}
-              />
+              <div className="md:hidden"><LessonMobileList lessons={upcoming} emptyMessage={t('noUpcoming')} onOpenDialog={openLesson} readOnly={readOnly} /></div>
+              <div className="hidden md:block"><LessonsTable lessons={upcoming} emptyMessage={t('noUpcoming')} loading={lessons.isFetching} onOpenDialog={openLesson} readOnly={readOnly} /></div>
             </TabsContent>
             <TabsContent value="past" className="pt-3">
-              <LessonsTable
-                lessons={past}
-                emptyMessage={t('noPast')}
-                loading={lessons.isFetching}
-                onOpenDialog={openLesson}
-              />
+              <div className="md:hidden"><LessonMobileList lessons={past} emptyMessage={t('noPast')} onOpenDialog={openLesson} readOnly={readOnly} /></div>
+              <div className="hidden md:block"><LessonsTable lessons={past} emptyMessage={t('noPast')} loading={lessons.isFetching} onOpenDialog={openLesson} readOnly={readOnly} /></div>
             </TabsContent>
           </Tabs>
         )}
       </CardContent>
 
-      <LessonActionsDialog
+      {!readOnly ? <LessonActionsDialog
         open={actionsOpen}
         onOpenChange={setActionsOpen}
         lesson={selected}
         initialMode={actionsMode}
-      />
-      <LessonFormDialog open={formOpen} onOpenChange={setFormOpen} lockedStudentId={studentId} />
+      /> : null}
+      {!readOnly ? <LessonFormDialog open={formOpen} onOpenChange={setFormOpen} lockedStudentId={studentId} /> : null}
     </Card>
   );
 }

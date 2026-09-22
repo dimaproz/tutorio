@@ -47,7 +47,7 @@ export const ValidationError: Story = {
 
 export const LongUkrainianCopy: Story = {
   args: {
-    placeholder: ukMessages.students.form.notesPlaceholder,
+    placeholder: ukMessages.students.setup.description,
   },
   globals: {
     locale: 'uk',

@@ -60,7 +60,7 @@ function AppShellContract({
             localeControl={<Button variant="ghost" size="icon" aria-label="Language">EN</Button>}
             themeControl={<Button variant="ghost" size="icon" aria-label="Theme">◐</Button>}
           />
-          <div className="flex flex-1 flex-col p-4 md:p-6">
+          <div className="flex flex-1 flex-col p-4 md:p-6 bg-muted">
             <h1 className="text-lg font-medium">Feature content</h1>
           </div>
         </SidebarInset>
@@ -152,7 +152,7 @@ export const UserMenuAndLogoutPending: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: 'Account menu' }));
     const menu = within(document.body);
-    await expect(menu.getByRole('menuitem', { name: 'Settings' })).toBeVisible();
+    await waitFor(() => expect(menu.getByRole('menuitem', { name: 'Settings' })).toBeVisible());
     await expect(menu.getByRole('menuitem', { name: 'Sign out' })).toHaveAttribute('data-disabled');
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(menu.queryByRole('menu')).not.toBeInTheDocument());
@@ -189,7 +189,7 @@ export const MobileSidebar: Story = {
 
     const sheet = within(document.body);
     const openedFromKeyboard = sheet.getByRole('dialog', { name: 'Sidebar' });
-    await expect(openedFromKeyboard).toBeVisible();
+    await waitFor(() => expect(openedFromKeyboard).toBeVisible());
     openedFromKeyboard.focus();
     await userEvent.keyboard('{Escape}');
     await waitFor(() =>
@@ -198,6 +198,7 @@ export const MobileSidebar: Story = {
 
     await userEvent.click(trigger);
     const dialog = sheet.getByRole('dialog', { name: 'Sidebar' });
+    await waitFor(() => expect(dialog).toBeVisible());
     await userEvent.click(within(dialog).getByRole('link', { name: 'Students' }));
     await waitFor(() => expect(sheet.queryByRole('dialog', { name: 'Sidebar' })).not.toBeVisible());
   },
