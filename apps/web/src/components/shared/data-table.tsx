@@ -99,7 +99,9 @@ export function DataTable<TData>({
               key={headerGroup.id}
               style={gridStyle}
               className={cn(
-                rows && 'grid items-center gap-4 border-0 px-4 pt-3 pb-2 hover:bg-transparent',
+                rows && // The bottom padding keeps a hovered first row's outline clear of
+                  // the column labels, matching the air under the last row.
+                  'grid items-center gap-4 border-0 px-4 pt-3 pb-4 hover:bg-transparent',
               )}
             >
               {headerGroup.headers.map((header) => {
