@@ -12,8 +12,6 @@ import {
   PaginationEllipsis,
   PaginationItem,
   PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
 } from '@/components/ui/pagination';
 import {
   Select,
@@ -303,69 +301,31 @@ export function ListPagination({
   };
 
   return (
-    <Pagination aria-label={t('label')}>
-      {/* Previous and Next sit on the edges with the page numbers centred —
-          the legacy table pager. */}
-      <PaginationContent className="w-full justify-between gap-2">
-        <PaginationItem>
-          <PaginationPrevious
-            href="#"
-            text={t('previous')}
-            aria-disabled={page <= 1}
-            className={page <= 1 ? 'pointer-events-none opacity-50' : undefined}
-            onClick={(event) => {
-              event.preventDefault();
-              if (page > 1) {
-                goTo(page - 1);
-              }
-            }}
-          />
-        </PaginationItem>
-
-        {/* Numbers need room; on phones the pager falls back to a summary. */}
-        <PaginationItem className="text-sm text-muted-foreground sm:hidden">
-          {t('summary', { page, totalPages })}
-        </PaginationItem>
-        <PaginationItem className="hidden sm:block">
-          <ul className="flex items-center gap-1">
-            {buildPageSlots(page, totalPages).map((slot, index) =>
-              slot === PAGE_ELLIPSIS ? (
-                <li key={`gap-${index}`}>
-                  <PaginationEllipsis />
-                </li>
-              ) : (
-                <li key={slot}>
-                  <PaginationLink
-                    href="#"
-                    isActive={slot === page}
-                    aria-label={t('goToPage', { page: slot })}
-                    onClick={(event) => {
-                      event.preventDefault();
-                      goTo(slot);
-                    }}
-                  >
-                    {slot}
-                  </PaginationLink>
-                </li>
-              ),
-            )}
-          </ul>
-        </PaginationItem>
-
-        <PaginationItem>
-          <PaginationNext
-            href="#"
-            text={t('next')}
-            aria-disabled={page >= totalPages}
-            className={page >= totalPages ? 'pointer-events-none opacity-50' : undefined}
-            onClick={(event) => {
-              event.preventDefault();
-              if (page < totalPages) {
-                goTo(page + 1);
-              }
-            }}
-          />
-        </PaginationItem>
+    <Pagination aria-label={t('label')} className="mx-0 w-auto justify-end">
+      {/* Round page numbers only. Previous and Next were a second way to do
+          what the numbers already do, and they crowded a narrow footer. */}
+      <PaginationContent className="gap-1">
+        {buildPageSlots(page, totalPages).map((slot, index) =>
+          slot === PAGE_ELLIPSIS ? (
+            <PaginationItem key={`gap-${index}`}>
+              <PaginationEllipsis className="size-9" />
+            </PaginationItem>
+          ) : (
+            <PaginationItem key={slot}>
+              <PaginationLink
+                href="#"
+                isActive={slot === page}
+                aria-label={t('goToPage', { page: slot })}
+                onClick={(event) => {
+                  event.preventDefault();
+                  goTo(slot);
+                }}
+              >
+                {slot}
+              </PaginationLink>
+            </PaginationItem>
+          ),
+        )}
       </PaginationContent>
     </Pagination>
   );

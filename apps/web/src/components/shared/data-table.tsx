@@ -116,10 +116,12 @@ export function DataTable<TData>({
                       <button
                         type="button"
                         onClick={() => sort?.onSort(sortField as string)}
-                        className={cn(
-                          '-mx-1.5 inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 transition-colors outline-none hover:text-primary focus-visible:ring-3 focus-visible:ring-ring/50',
-                          active && 'text-primary',
-                        )}
+                        // A sortable column reads exactly like a static one.
+                        // The indicator is the affordance: it appears on hover
+                        // and focus, and stays once the column is sorted.
+                        // The UA stylesheet resets text-transform on buttons,
+                        // so it has to be inherited back from the header cell.
+                        className="group/sort inline-flex items-center gap-1.5 rounded-sm text-inherit [text-transform:inherit] outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                       >
                         {content}
                         <SortIndicator active={active} order={sort?.order} />
@@ -161,12 +163,15 @@ export function DataTable<TData>({
 }
 
 function SortIndicator({ active, order }: { active: boolean; order?: ListSort['order'] }) {
+  const reveal =
+    'size-3.5 shrink-0 opacity-0 transition-opacity group-hover/sort:opacity-100 group-focus-visible/sort:opacity-100';
+
   if (!active) {
-    return <ChevronsUpDownIcon className="size-3.5 text-muted-foreground" aria-hidden="true" />;
+    return <ChevronsUpDownIcon className={reveal} aria-hidden="true" />;
   }
   return order === 'asc' ? (
-    <ArrowUpIcon className="size-3.5" aria-hidden="true" />
+    <ArrowUpIcon className="size-3.5 shrink-0" aria-hidden="true" />
   ) : (
-    <ArrowDownIcon className="size-3.5" aria-hidden="true" />
+    <ArrowDownIcon className="size-3.5 shrink-0" aria-hidden="true" />
   );
 }

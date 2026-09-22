@@ -22,7 +22,6 @@ import { NextLessonCard } from '@/components/shared/next-lesson-card';
 import { QueryErrorAlert } from '@/components/shared/page-shell';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,6 +38,7 @@ import { StudentPackagesCard } from '@/features/students/ui/student-packages-car
 import { StudentParentsCard } from '@/features/students/ui/student-parents-card';
 import { StudentProfileHero } from '@/features/students/ui/student-profile-hero';
 import { StudentProfileMetrics } from '@/features/students/ui/student-profile-metrics';
+import { StudentNotesCard } from '@/features/students/ui/student-notes-card';
 import { StudentSectionsCard } from '@/features/students/ui/student-sections-card';
 import { StudentSetupCard } from '@/features/students/ui/student-setup-card';
 import { studentLifecyclePolicy } from '@/features/students/model/lifecycle';
@@ -231,6 +231,7 @@ export function StudentProfileContent({
       ) : null}
       <StudentSectionsCard
         onAddLesson={policy.readOnly ? undefined : () => setLessonOpen(true)}
+        onAddPackage={policy.readOnly ? undefined : () => setPackageOpen(true)}
         lessons={
           <StudentLessonsCard
             studentId={student.id}
@@ -259,6 +260,7 @@ export function StudentProfileContent({
 
   const aside = (
     <>
+      <StudentNotesCard student={student} readOnly={policy.readOnly} />
       <StudentParentsCard
         student={student}
         createOpen={parentOpen}
@@ -267,12 +269,6 @@ export function StudentProfileContent({
         sectionRef={parentsSectionRef}
       />
       <StudentInformationCard student={student} />
-      {student.notes ? (
-        <Card tone="warning" className="gap-3 p-5">
-          <h2 className="text-base font-semibold">{t('detail.notesTitle')}</h2>
-          <p className="text-sm whitespace-pre-wrap">{student.notes}</p>
-        </Card>
-      ) : null}
     </>
   );
 

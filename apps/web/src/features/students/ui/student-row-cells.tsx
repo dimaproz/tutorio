@@ -79,7 +79,9 @@ export function StudentLearningCell({
       ) : (
         <Badge variant="neutral">{t('notConfigured')}</Badge>
       )}
-      <span className="truncate text-xs text-muted-foreground">{teacher ?? PENDING_VALUE}</span>
+      {teacher ? (
+        <span className="truncate text-xs text-muted-foreground">{teacher}</span>
+      ) : null}
     </div>
   );
 }
@@ -116,6 +118,10 @@ export function StudentNextLessonCell({
 }) {
   const t = useTranslations('students.list');
 
+  if (!date && !today) {
+    return <span className="text-[13px] text-muted-foreground">{t('noLessonsPlanned')}</span>;
+  }
+
   return (
     <div className="flex min-w-0 flex-col items-start">
       {today ? (
@@ -123,11 +129,9 @@ export function StudentNextLessonCell({
           {t('today')}
         </Badge>
       ) : (
-        <span className="text-sm leading-5 font-medium">{date ?? PENDING_VALUE}</span>
+        <span className="text-sm leading-5 font-medium">{date}</span>
       )}
-      <span className="font-mono text-xs text-muted-foreground">
-        {time ?? t('noLessonsPlanned')}
-      </span>
+      {time ? <span className="font-mono text-xs text-muted-foreground">{time}</span> : null}
     </div>
   );
 }

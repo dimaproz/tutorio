@@ -217,6 +217,9 @@
      its own foreground pair, so contrast stays AA. Only the tokens that
      describe the page itself are re-pointed at the dark palette. A full dark
      palette is a tracked follow-up. */
+  /* Brand is a colour, not a painted surface: as link and chart ink it has to
+     lift off a dark ground to stay readable. */
+  --brand: #8f93f2;
   --surface-hover: oklch(0.268 0.007 34.298);
   --stat-track: oklch(1 0 0 / 16%);
   --stat-divider: oklch(1 0 0 / 12%);

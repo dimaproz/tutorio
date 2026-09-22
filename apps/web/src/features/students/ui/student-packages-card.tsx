@@ -31,8 +31,10 @@ export function StudentPackagesCard({ studentId, createOpen, onCreateOpenChange,
 
   const dialog = !readOnly ? <PackageFormDialog open={createOpen} onOpenChange={onCreateOpenChange} lockedStudentId={studentId} /> : null;
 
+  // In `bare` mode the profile's section card owns the add action, so the panel
+  // never shows a second button for the same job.
   if (bare) {
-    return <div className="flex flex-col gap-2">{body}{!readOnly ? <Button type="button" variant="outline" size="sm" className="self-start" onClick={() => onCreateOpenChange(true)}><PackagePlusIcon data-icon="inline-start" />{t('add')}</Button> : null}</div>;
+    return <div className="flex flex-col gap-2">{body}</div>;
   }
 
   return <><Card><CardHeader><SectionTitle icon={WalletCardsIcon}>{t('title')}</SectionTitle>{!readOnly ? <CardAction><Button type="button" size="sm" onClick={() => onCreateOpenChange(true)}><PackagePlusIcon data-icon="inline-start" />{t('add')}</Button></CardAction> : null}</CardHeader><CardContent>{body}</CardContent></Card>{dialog}</>;

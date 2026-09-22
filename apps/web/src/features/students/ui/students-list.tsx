@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { endOfWeek, startOfWeek } from 'date-fns';
 import { useSearchParams } from 'next/navigation';
 import type { ColumnDef } from '@tanstack/react-table';
 import { CalendarPlusIcon, PlusIcon, UsersIcon } from 'lucide-react';
@@ -32,6 +33,9 @@ import { CollectionEmptyState } from '@/components/shared/collection-empty-state
 import { parsePageParam } from '@/lib/api/filters';
 import { useStudentsQuery } from '@/lib/api/students';
 import { useGroupsQuery } from '@/lib/api/groups';
+import { usePackagesQuery } from '@/lib/api/packages';
+import { useLessonsQuery } from '@/lib/api/scheduling';
+import { deriveCollectionMetrics } from '@/features/students/model/collection-metrics';
 
 const SORT_FIELDS = ['fullName', 'status', 'createdAt'] as const;
 
@@ -64,6 +68,25 @@ export function StudentsList() {
     order: sort.order,
   });
   const groups = useGroupsQuery({ page: 1, pageSize: 100 });
+
+  // The lesson window is a flat, complete list, so the weekly count is exact.
+  const week = useMemo(() => {
+    const now = new Date();
+    return {
+      from: startOfWeek(now, { weekStartsOn: 1 }).toISOString(),
+      to: endOfWeek(now, { weekStartsOn: 1 }).toISOString(),
+    };
+  }, []);
+  const weekLessons = useLessonsQuery(week);
+
+  // Package metrics are derived client-side, so the page has to cover every
+  // package for the aggregate to be true; the model rejects a partial page.
+  const packages = usePackagesQuery({ page: 1, pageSize: 200, state: 'active' });
+  const packageMetrics = packages.isPending
+    ? undefined
+    : packages.isError || !packages.data
+      ? null
+      : deriveCollectionMetrics(packages.data.items, packages.data.total);
 
   // Facet counts are their own one-row queries: a collection page can never
   // derive a total from the rows it happens to be showing.
@@ -161,7 +184,20 @@ export function StudentsList() {
             </div>
           </div>
         }
-        summary={<StudentsListMetrics activeQuery={activeMetric} totalQuery={totalMetric} />}
+        summary={
+          <StudentsListMetrics
+            activeQuery={activeMetric}
+            totalQuery={totalMetric}
+            lessonsThisWeek={
+              weekLessons.isPending
+                ? undefined
+                : weekLessons.isError || !weekLessons.data
+                  ? null
+                  : weekLessons.data.items.length
+            }
+            metrics={packageMetrics}
+          />
+        }
         toolbar={
           <StudentsListFilters
             status={(status ?? 'all') as StudentStatusTab}

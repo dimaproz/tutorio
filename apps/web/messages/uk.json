@@ -332,16 +332,26 @@
       "ofTotal": "З {total} учнів",
       "lessonsThisWeek": "Занять цього тижня",
       "lowOnCredits": "Мало занять",
-      "lowOnCreditsBadge": "≤ 2 лишилось",
+      "lowOnCreditsBadge": "≤ {count} лишилось",
       "awaitingPayment": "Очікує оплати",
-      "studentsUnit": "учнів",
-      "pending": "Очікує на дані звітності"
+      "studentsUnit": "{count, plural, one {учень} few {учні} many {учнів} other {учнів}}",
+      "lessonsCaption": "Заплановано цього тижня",
+      "lessonsNone": "Цього тижня занять немає",
+      "lowOnCreditsCaption": "Учні, яким потрібен новий пакет",
+      "lowOnCreditsClearValue": "Усе гаразд",
+      "lowOnCreditsClearBadge": "Нічого не горить",
+      "lowOnCreditsClearCaption": "У кожному активному пакеті є заняття",
+      "packagesUnit": "{count, plural, one {# пакет} few {# пакети} many {# пакетів} other {# пакетів}}",
+      "awaitingPaymentCaption": "Борг за активними пакетами",
+      "awaitingPaymentMixed": "Борг у кількох валютах",
+      "awaitingPaymentClearValue": "Боргів немає",
+      "awaitingPaymentClearBadge": "Усе оплачено",
+      "awaitingPaymentClearCaption": "Кожен активний пакет оплачено"
     },
     "filters": {
       "statusAll": "Усі статуси",
       "subjectAll": "Усі предмети",
       "groupAll": "Усі групи",
-      "teacherAll": "Викладач",
       "lowCredits": "Мало занять",
       "comingSoon": "Ще недоступно",
       "view": "Вигляд",
@@ -410,7 +420,7 @@
       "submitEdit": "Зберегти зміни"
     },
     "detail": {
-      "contactsTitle": "Контактні дані",
+      "contactsTitle": "Контакти",
       "academicTitle": "Навчальний профіль",
       "pricingTitle": "Ставка та часовий пояс",
       "parentTitle": "Батьки",
@@ -506,7 +516,8 @@
       "noResults": "Батьків не знайдено",
       "unlink": "Відв’язати {name}",
       "retryLink": "Повторити прив’язування",
-      "loadError": "Не вдалося завантажити батьків"
+      "loadError": "Не вдалося завантажити батьків",
+      "call": "Зателефонувати {name}"
     },
     "toasts": {
       "created": "Учня створено",
@@ -533,7 +544,7 @@
     },
     "list": {
       "noPackage": "Немає активного пакета",
-      "noLessonsPlanned": "занять не заплановано",
+      "noLessonsPlanned": "Занять не заплановано",
       "creditsLeft": "{left} з {total} лишилось",
       "noCreditsLeft": "Занять не лишилось",
       "today": "Сьогодні"
@@ -545,7 +556,8 @@
       "level": "Рівень",
       "levelCaption": "Рівень мови (CEFR)",
       "levelMissing": "Рівень ще не вказано",
-      "pending": "Очікує на дані звітності"
+      "pending": "Очікує на дані звітності",
+      "perLesson": "{price} / заняття"
     },
     "sections": {
       "label": "Розділи учня",
@@ -554,7 +566,21 @@
       "payments": "Оплати",
       "history": "Історія",
       "addLesson": "Додати заняття",
-      "comingSoon": "Цей розділ ще недоступний."
+      "comingSoon": "Цей розділ ще недоступний.",
+      "addPackage": "Додати пакет"
+    },
+    "sort": {
+      "fullName": "Ім'я учня",
+      "status": "Статус",
+      "createdAt": "Дата додавання"
+    },
+    "notes": {
+      "title": "Нотатки",
+      "edit": "Редагувати нотатки",
+      "add": "Додати нотатку",
+      "placeholder": "Що варто пам’ятати про цього учня?",
+      "empty": "Нотаток ще немає.",
+      "saved": "Нотатки збережено"
     }
   },
   "groups": {

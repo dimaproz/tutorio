@@ -36,7 +36,11 @@ export function PersonItem({
   subtitle?: ReactNode;
   /** Primary control on the trailing edge, typically a round icon button. */
   action?: ReactNode;
-  /** Quieter trailing affordance, such as a chevron or overflow glyph. */
+  /**
+   * Quieter trailing decoration, such as a chevron. It is hidden from
+   * assistive technology, so it must never contain anything focusable —
+   * controls belong in `action`.
+   */
   trail?: ReactNode;
   tone?: PersonItemTone;
   size?: 'md' | 'sm';

@@ -245,6 +245,9 @@ export const ParentsArchivedReadOnly: Story = {
   render: () => <Parents readOnly />,
   play: async ({ canvas }) => {
     await expect(canvas.queryByRole('button', { name: 'Create parent' })).not.toBeInTheDocument();
-    await expect(canvas.getByRole('link', { name: /Iryna Shevchenko/ })).toBeVisible();
+    // The name links to the parent; the call control is a link too, so the
+    // name is matched exactly rather than by substring.
+    await expect(canvas.getByRole('link', { name: 'Iryna Shevchenko' })).toBeVisible();
+    await expect(canvas.queryByRole('button', { name: /Unlink/ })).not.toBeInTheDocument();
   },
 };

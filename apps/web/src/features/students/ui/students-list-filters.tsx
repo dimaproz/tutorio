@@ -55,7 +55,7 @@ export function StudentsListFilters({
   onSearchChange: (next: string) => void;
 }) {
   const t = useTranslations('students.filters');
-  const tColumns = useTranslations('students.columns');
+  const tSort = useTranslations('students.sort');
   const tStatus = useTranslations('students.statusTabs');
 
   const selectedGroup = groupOptions.find((option) => option.value === groupId);
@@ -108,7 +108,6 @@ export function StudentsListFilters({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <FilterPill label={t('teacherAll')} menu disabled title={t('comingSoon')} />
         <FilterPill
           label={t('lowCredits')}
           icon={<SlidersHorizontalIcon />}
@@ -129,12 +128,12 @@ export function StudentsListFilters({
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <FilterPill label={tColumns(sort.field ?? 'student')} icon={<ArrowUpDownIcon />} menu />
+            <FilterPill label={tSort(sort.field ?? 'fullName')} icon={<ArrowUpDownIcon />} menu />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {sortFields.map((field) => (
               <DropdownMenuItem key={field} onSelect={() => sort.onSort(field)}>
-                {tColumns(field)}
+                {tSort(field)}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
