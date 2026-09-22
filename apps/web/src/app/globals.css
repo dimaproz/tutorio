@@ -43,54 +43,132 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Studio semantic colours. Tint and ink surfaces are theme-independent by
+     design: an ink ticket stays ink in both themes, and every tint ships with
+     its own foreground pair. */
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-soft-foreground: var(--brand-soft-foreground);
+  --color-surface-hover: var(--surface-hover);
+  --color-tint-indigo: var(--tint-indigo);
+  --color-tint-indigo-foreground: var(--tint-indigo-foreground);
+  --color-tint-indigo-muted: var(--tint-indigo-muted);
+  --color-tint-indigo-glyph: var(--tint-indigo-glyph);
+  --color-tint-sky: var(--tint-sky);
+  --color-tint-sky-muted: var(--tint-sky-muted);
+  --color-tint-info: var(--tint-info);
+  --color-tint-info-foreground: var(--tint-info-foreground);
+  --color-tint-success: var(--tint-success);
+  --color-tint-success-foreground: var(--tint-success-foreground);
+  --color-tint-warning: var(--tint-warning);
+  --color-tint-warning-foreground: var(--tint-warning-foreground);
+  --color-tint-danger: var(--tint-danger);
+  --color-tint-danger-foreground: var(--tint-danger-foreground);
+  --color-danger-mark: var(--danger-mark);
+  --color-status-active: var(--status-active);
+  --color-status-hold: var(--status-hold);
+  --color-status-archived: var(--status-archived);
+  --color-ink: var(--ink);
+  --color-ink-foreground: var(--ink-foreground);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-line: var(--ink-line);
+  --color-ink-muted: var(--ink-muted);
+  --color-stat-track: var(--stat-track);
+  --color-stat-divider: var(--stat-divider);
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --font-heading: var(--font-sans);
+  --font-display: var(--font-geist-sans);
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Studio semantic radii. The numeric scale above stays untouched so every
+     installed primitive keeps its current shape until it is restyled. */
+  --radius-pill: 9999px;
+  --radius-logo: 11px;
+  --radius-item: 14px;
+  --radius-tile: 18px;
+  --radius-row: 20px;
+  --radius-block: 24px;
+  --radius-card: 28px;
+  --radius-hero: 32px;
 }
 
 :root {
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.147 0.004 49.25);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.147 0.004 49.25);
-  --primary: oklch(0.488 0.243 264.376);
-  --primary-foreground: oklch(0.97 0.014 254.604);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.97 0.001 106.424);
-  --muted-foreground: oklch(0.553 0.013 58.071);
-  --accent: oklch(0.97 0.001 106.424);
-  --accent-foreground: oklch(0.216 0.006 56.043);
-  --destructive: oklch(0.505 0.213 27.518);
-  --destructive-foreground: oklch(0.985 0 0);
-  --success: oklch(0.627 0.194 149.214);
-  --success-foreground: oklch(0.985 0 0);
-  --warning: oklch(0.769 0.188 70.08);
-  --warning-foreground: oklch(0.205 0 0);
-  --border: oklch(0.923 0.003 48.717);
-  --input: oklch(0.923 0.003 48.717);
-  --ring: oklch(0.709 0.01 56.259);
-  --chart-1: oklch(0.879 0.169 91.605);
-  --chart-2: oklch(0.769 0.188 70.08);
-  --chart-3: oklch(0.666 0.179 58.318);
-  --chart-4: oklch(0.555 0.163 48.998);
-  --chart-5: oklch(0.473 0.137 46.201);
+  --card: #ffffff;
+  --card-foreground: #1b1f3b;
+  --popover: #ffffff;
+  --popover-foreground: #1b1f3b;
+  --primary: #1b1f3b;
+  --primary-foreground: #ffffff;
+  --secondary: #eef1fb;
+  --secondary-foreground: #1b1f3b;
+  --muted: #eef1fb;
+  --muted-foreground: #5e6582;
+  --accent: #eef1fb;
+  --accent-foreground: #1b1f3b;
+  --destructive: #b23c16;
+  --destructive-foreground: #ffffff;
+  --success: #22a06b;
+  --success-foreground: #ffffff;
+  --warning: #e8a33d;
+  --warning-foreground: #1b1f3b;
+  --border: #e2e6f0;
+  --input: #e2e6f0;
+  --ring: #4b4fe0;
+  --chart-1: #4b4fe0;
+  --chart-2: #9ed8ff;
+  --chart-3: #22a06b;
+  --chart-4: #e8a33d;
+  --chart-5: #ff8a65;
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0.001 106.423);
-  --sidebar-foreground: oklch(0.147 0.004 49.25);
-  --sidebar-primary: oklch(0.546 0.245 262.881);
-  --sidebar-primary-foreground: oklch(0.97 0.014 254.604);
-  --sidebar-accent: oklch(0.97 0.001 106.424);
-  --sidebar-accent-foreground: oklch(0.216 0.006 56.043);
-  --sidebar-border: oklch(0.923 0.003 48.717);
-  --sidebar-ring: oklch(0.709 0.01 56.259);
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.147 0.004 49.25);
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1b1f3b;
+  --sidebar-primary: #4b4fe0;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #eef1fb;
+  --sidebar-accent-foreground: #1b1f3b;
+  --sidebar-border: #e2e6f0;
+  --sidebar-ring: #4b4fe0;
+  --background: #f3f5fa;
+  --foreground: #1b1f3b;
+
+  --brand: #4b4fe0;
+  --brand-foreground: #ffffff;
+  --brand-soft: #9ed8ff;
+  --brand-soft-foreground: #1b1f3b;
+  --surface-hover: #f7f9fd;
+  --tint-indigo: #e6e8ff;
+  --tint-indigo-foreground: #4b3fd0;
+  --tint-indigo-muted: #4a4f75;
+  --tint-indigo-glyph: #d2d6ff;
+  --tint-sky: #eaf4ff;
+  --tint-sky-muted: #4a5a80;
+  --tint-info: #e3ecff;
+  --tint-info-foreground: #3440c9;
+  --tint-success: #ddf4ec;
+  --tint-success-foreground: #146b4e;
+  --tint-warning: #fff3d1;
+  --tint-warning-foreground: #7a5500;
+  --tint-danger: #ffede6;
+  --tint-danger-foreground: #b23c16;
+  --danger-mark: #ff8a65;
+  --status-active: #22a06b;
+  --status-hold: #e8a33d;
+  --status-archived: #aab0c4;
+  --ink: #1b1f3b;
+  --ink-foreground: #ffffff;
+  --ink-soft: #2a2f55;
+  --ink-line: #3a4070;
+  --ink-muted: #b5bbd6;
+  --stat-track: #e8ebf4;
+  --stat-divider: #eef0f6;
 }
 
 .dark {
@@ -130,6 +208,15 @@
   --sidebar-accent-foreground: oklch(0.985 0.001 106.423);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.553 0.013 58.071);
+
+  /* Dark theme is deliberately out of the Studio redesign scope. Tint and ink
+     surfaces keep their light values because each one is a painted surface with
+     its own foreground pair, so contrast stays AA. Only the tokens that
+     describe the page itself are re-pointed at the dark palette. A full dark
+     palette is a tracked follow-up. */
+  --surface-hover: oklch(0.268 0.007 34.298);
+  --stat-track: oklch(1 0 0 / 16%);
+  --stat-divider: oklch(1 0 0 / 12%);
 }
 
 @layer base {
