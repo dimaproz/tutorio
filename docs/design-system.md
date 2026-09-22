@@ -108,11 +108,21 @@ the reverse.
 | Status presentation                      | `StatusBadge`, `StatusSelect` — `@/components/shared/status-badges`, `status-select`                                                                           | `label`, semantic `tone`, optional icon / mapped options                                       | Feature/domain adapters only        | `Shared/Reference compositions`                                 |
 | Entity input and reusable value controls | `EntityPicker`, `AvatarPicker`, `MoneyInput`, `DurationInput`, `TimezoneCombobox`, `DatePicker`, `AppointmentField`, `WeekdayPicker` — `@/components/shared/*` | controlled values and localized labels; no API calls                                           | Feature forms                       | `Shared/EntityPicker`, `Shared/Value controls`                  |
 | Entity metrics                           | `MetricCard` — `@/components/shared/metric-card`                                                                                                               | label, value, optional description/icon                                                        | Feature detail sections             | `Shared/Reference compositions`                                 |
+| Entity metrics, Studio                   | `StatBlock` — `@/components/shared/stat-block`                                                                                                                 | `type` amount/date/chart/custom, `tone` surface/tint/accent/ink, label, caption, detail, badge, footer action | Feature list and detail screens     | `Shared/StatBlock`                                              |
+| Lesson list rows                         | `DateTile`, `LessonItem`, `SectionDivider` — `@/components/shared/date-tile`, `lesson-item`, `section-divider`                                                  | date parts, title, meta, status and action slots, `state` next/default/past                    | Lesson lists in any feature         | `Shared/Dates and lessons`                                      |
+| Person rows and credits                  | `PersonItem`, `PersonItemTile`, `CreditMeter` — `@/components/shared/person-item`, `credit-meter`                                                               | media/name/subtitle with action and trail slots, `tone` surface/soft/ink; credits left/total with caller-supplied captions | Feature screens, shell, pickers     | `Shared/People and credits`                                     |
+| Profile identity and next lesson         | `ProfileHero`, `NextLessonCard` — `@/components/shared/profile-hero`, `next-lesson-card`                                                                       | avatar, badges, name, meta, contact and action slots, decorative glyph; lesson date/time/teacher with its own empty and loading states | Person profile screens              | `Shared/Studio cards`                                           |
+| Aside blocks and contacts                | `InfoCard`, `ContactRow` — `@/components/shared/info-card`, `contact-row`                                                                                      | title with optional action; icon + value rows, `mono` for figures                              | Feature detail asides               | `Shared/Studio cards`                                           |
+| Search and collection filters            | `SearchField`, `FilterPill` — `@/components/shared/search-field`, `filter-pill`                                                                                | placeholder and shortcut; label, icon, `menu` or `pressed`, optional count                     | Application shell, feature lists    | `Shared/Studio cards`                                           |
 
 The generic status contract deliberately has no validation DTO import. Each
-domain adapter maps its lifecycle DTO and localized copy locally. `MetricCard`
-is a reusable entity/detail metric; the dashboard-only `StatTile` remains in
-`features/dashboard` and is not a competing shared contract.
+domain adapter maps its lifecycle DTO and localized copy locally. `StatBlock` is
+the metric block for redesigned screens; `MetricCard` stays until every caller
+has migrated, and the dashboard-only `StatTile` remains in `features/dashboard`.
+None of the three is a competing contract: new work uses `StatBlock`.
+
+Shared components own no copy. Every label, caption and empty-state string is
+supplied by the feature that knows the domain and the locale.
 
 #### Reference compositions
 
@@ -192,9 +202,23 @@ manual dark-mode colors are forbidden outside:
 - documented user-provided colors, such as a teacher color;
 - temporary Storybook token demonstrations.
 
-The pilot baseline keeps official shadcn theme values. Tutorio may retain only
-domain semantics missing from the default theme, such as `success` and
-`warning`. Narrow token corrections are permitted when automated accessibility
+The theme is the approved "Studio - Indigo & Sky" token set. Alongside the
+shadcn variables it defines the product semantics the design depends on:
+`brand` and `brand-soft`, `surface-hover`, the `tint-*` families with their
+foreground pairs, `danger-mark`, the `status-*` lifecycle colours, the `ink-*`
+surface family and the `stat-*` chart pair, plus the semantic radii
+`pill`, `logo`, `item`, `tile`, `row`, `block`, `card` and `hero`.
+
+Tint and ink surfaces are theme-independent on purpose: each is a painted
+surface with its own foreground, so an ink ticket stays ink and a tinted chip
+keeps its contrast in both themes. Only tokens that describe the page itself
+follow the theme. A full dark palette is an open follow-up.
+
+Badge accents are therefore no longer capped at five. The approved set is
+`neutral`, `primary`/`indigo`, `info`, `success`, `warning`, `danger`,
+`brand`, `surface`, `on-ink` and `on-tint`. Domain code still speaks the
+`StatusTone` vocabulary and maps to a Badge variant through
+`badgeVariantForTone`; it must not reach for a tint token directly. Narrow token corrections are permitted when automated accessibility
 tests prove that an upstream preset value misses the required contrast; the
 current baseline corrects the light destructive and dark primary pairs for this
 reason. Workspace colour customization is not a pilot capability. Adding it

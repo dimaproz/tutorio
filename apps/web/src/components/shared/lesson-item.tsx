@@ -1,0 +1,66 @@
+import type { ReactNode } from 'react';
+import { DateTile, type DateTileState } from '@/components/shared/date-tile';
+import { cn } from '@/lib/utils';
+
+// The reference dims a past row to 75%. That drops its meta line and its
+// status chip below 4.5:1, so the row keeps full strength and reads as past
+// through its status chip instead.
+const STATE_CLASS = {
+  next: 'bg-surface-hover',
+  default: '',
+  past: '',
+} as const;
+
+const TILE_STATE: Record<keyof typeof STATE_CLASS, DateTileState> = {
+  next: 'highlighted',
+  default: 'default',
+  past: 'default',
+};
+
+export type LessonItemState = keyof typeof STATE_CLASS;
+
+/**
+ * One lesson in a list: date tile, title and meta, a status chip and row
+ * actions. Shared by the student profile today, and by the group and teacher
+ * lesson lists once they migrate.
+ */
+export function LessonItem({
+  date,
+  title,
+  meta,
+  status,
+  actions,
+  state = 'default',
+  className,
+}: {
+  date: { top: string; day: string };
+  title: ReactNode;
+  meta?: ReactNode;
+  /** Status chip, supplied by the feature that owns the lifecycle copy. */
+  status?: ReactNode;
+  actions?: ReactNode;
+  state?: LessonItemState;
+  className?: string;
+}) {
+  return (
+    <div
+      data-slot="lesson-item"
+      data-state={state}
+      className={cn(
+        'flex w-full items-center gap-4 rounded-row p-2.5 text-foreground',
+        STATE_CLASS[state],
+        className,
+      )}
+    >
+      <DateTile top={date.top} day={date.day} state={TILE_STATE[state]} />
+      <div className="flex min-w-0 grow flex-col gap-0.5">
+        <span className="truncate text-[15px] leading-5 font-semibold">{title}</span>
+        {meta ? (
+          <span className="truncate text-[13px] leading-[18px] text-muted-foreground">{meta}</span>
+        ) : null}
+      </div>
+      {status}
+      {actions}
+    </div>
+  );
+}

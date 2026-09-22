@@ -89,8 +89,11 @@ when its entity collection outgrows the picker page.
   `success`, `warning`, `destructive`) from `components/ui/badge`. Map domain
   states to those roles; do not create a parallel status palette, status
   `<span>` elements, or inline `backgroundColor` / `color` styles.
-- The only approved semantic accents are `neutral`, `primary`, `success`,
-  `warning`, and `destructive`.
+- The approved semantic accents are `neutral`, `primary`/`indigo`, `info`,
+  `success`, `warning`, `danger`, `brand`, `surface`, `on-ink` and `on-tint`.
+  Domain code maps its lifecycle to a `StatusTone` and lets
+  `badgeVariantForTone` pick the Badge variant; it never reaches for a tint
+  token directly.
 - Use `gap-*`, not `space-x-*` or `space-y-*`; use `size-*` for square items;
   use `cn()` for conditional classes.
 - Every dialog, sheet, and drawer has a title. Dialogs use the shared shell:
