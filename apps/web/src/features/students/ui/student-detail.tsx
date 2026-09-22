@@ -29,7 +29,7 @@ import { errorMessageKey } from '@/lib/api/error-message';
 import { useRestoreStudentMutation, useStudentQuery, useUpdateStudentMutation } from '@/lib/api/students';
 import { useDateFormatters } from '@/lib/i18n/format';
 import { LoadingPanel } from '@/components/shared/loading';
-import { StudentStatusBadge } from '@/components/students/student-status';
+import { StudentStatusBadge } from '@/features/students/ui/student-status';
 
 export function StudentDetailView({ studentId }: { studentId: string }) {
   const t = useTranslations('students');

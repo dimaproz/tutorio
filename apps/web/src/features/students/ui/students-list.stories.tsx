@@ -5,7 +5,8 @@ import type { StudentListItem, StudentListResponse } from '@tutorio/validation';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { QueryErrorAlert } from '@/components/shared/page-shell';
 import { StudentCard } from './student-card';
-import { StudentMetricCard, StudentsEmptyState, StudentsList } from './students-list';
+import { StudentsEmptyState, StudentsList } from './students-list';
+import { StudentsListMetrics } from './students-list-metrics';
 import { StudentsListSkeleton } from './students-list-skeleton';
 import { queryKeys } from '@/lib/api/keys';
 
@@ -149,12 +150,20 @@ export const Populated: Story = {
 
 export const MetricLoading: Story = {
   render: () => (
-    <StudentMetricCard label="Total students" query={{ isPending: true, isError: false }} />
+    <StudentsListMetrics
+      activeQuery={{ isPending: true, isError: false }}
+      totalQuery={{ isPending: true, isError: false }}
+    />
   ),
 };
 
 export const PartialMetricError: Story = {
-  render: () => <StudentMetricCard label="Archived" query={{ isPending: false, isError: true }} />,
+  render: () => (
+    <StudentsListMetrics
+      activeQuery={{ isPending: false, isError: true }}
+      totalQuery={{ isPending: false, isError: true }}
+    />
+  ),
 };
 
 export const InitialLoading: Story = {

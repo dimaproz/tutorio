@@ -15,6 +15,9 @@ const toggleVariants = cva(
         /** Item inside a pill container: paper fill marks the pressed item. */
         segmented:
           'rounded-pill bg-transparent text-muted-foreground hover:bg-transparent hover:text-foreground aria-pressed:bg-background aria-pressed:text-foreground data-[state=on]:bg-background data-[state=on]:text-foreground',
+        /** The same container with an ink-filled selection, for facet filters. */
+        'segmented-solid':
+          'rounded-pill bg-transparent text-muted-foreground hover:bg-transparent hover:text-foreground aria-pressed:bg-primary aria-pressed:text-primary-foreground data-[state=on]:bg-primary data-[state=on]:text-primary-foreground',
       },
       size: {
         default:

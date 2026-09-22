@@ -40,6 +40,16 @@ interface DataTableProps<TData> {
   sort?: ListSort;
   /** Blurs the current rows under a spinner while the next page loads. */
   loading?: boolean;
+  /**
+   * `rows` lays each row out as a card-like grid instead of table cells. The
+   * table semantics are unchanged: it is still a table with column headers,
+   * so sorting and screen-reader navigation keep working.
+   */
+  variant?: 'default' | 'rows';
+  /** `grid-template-columns` for the `rows` variant. */
+  layout?: string;
+  /** Marks the row that is currently highlighted, e.g. the next lesson's student. */
+  isRowHighlighted?: (row: TData) => boolean;
 }
 
 /**
@@ -54,7 +64,12 @@ export function DataTable<TData>({
   caption,
   sort,
   loading = false,
+  variant = 'default',
+  layout,
+  isRowHighlighted,
 }: DataTableProps<TData>) {
+  const rows = variant === 'rows';
+  const gridStyle = rows && layout ? { gridTemplateColumns: layout } : undefined;
   // TanStack Table intentionally returns imperative table methods. React
   // Compiler safely skips this boundary; memoizing it would risk stale rows.
   // eslint-disable-next-line react-hooks/incompatible-library
@@ -68,12 +83,16 @@ export function DataTable<TData>({
   });
 
   return (
-    <LoadingRegion loading={loading} size="lg" className="overflow-x-auto rounded-lg">
-      <Table>
+    <LoadingRegion loading={loading} size="lg" className={cn(rows ? 'rounded-card' : 'overflow-x-auto rounded-lg')}>
+      <Table className={cn(rows && 'w-full')}>
         <TableCaption className="sr-only">{caption}</TableCaption>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
+            <TableRow
+              key={headerGroup.id}
+              style={gridStyle}
+              className={cn(rows && 'grid items-center gap-4 border-0 px-4 pt-3 pb-2 hover:bg-transparent')}
+            >
               {headerGroup.headers.map((header) => {
                 const sortField = header.column.columnDef.meta?.sortField;
                 const sortable = Boolean(sort && sortField);
@@ -88,6 +107,10 @@ export function DataTable<TData>({
                     aria-sort={
                       active ? (sort?.order === 'asc' ? 'ascending' : 'descending') : undefined
                     }
+                    className={cn(
+                      rows &&
+                        'h-auto min-w-0 p-0 text-xs font-medium tracking-[0.04em] text-muted-foreground uppercase',
+                    )}
                   >
                     {sortable ? (
                       <button
@@ -112,9 +135,17 @@ export function DataTable<TData>({
         </TableHeader>
         <TableBody>
           {table.getRowModel().rows.map((row) => (
-            <TableRow key={row.id}>
+            <TableRow
+              key={row.id}
+              style={gridStyle}
+              data-highlighted={isRowHighlighted?.(row.original) || undefined}
+              className={cn(
+                rows &&
+                  'grid h-19 items-center gap-4 rounded-row border-0 px-4 hover:bg-surface-hover data-[highlighted]:bg-surface-hover',
+              )}
+            >
               {row.getVisibleCells().map((cell) => (
-                <TableCell key={cell.id}>
+                <TableCell key={cell.id} className={cn(rows && 'min-w-0 p-0')}>
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </TableCell>
               ))}

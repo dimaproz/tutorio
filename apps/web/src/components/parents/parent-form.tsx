@@ -15,7 +15,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { AvatarPicker } from '@/components/shared/avatar-picker';
 import { FormSection } from '@/components/shared/form-section';
-import { StudentStatusBadge } from '@/components/students/student-status';
+import { StudentStatusBadge } from '@/features/students';
 import { EntityMultiSelect } from '@/components/shared/entity-picker';
 import { FormActions } from '@/components/shared/form-actions';
 import { errorMessageKey } from '@/lib/api/error-message';

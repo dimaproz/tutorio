@@ -3,42 +3,44 @@
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import type { ColumnDef } from '@tanstack/react-table';
-import { PlusIcon, UsersIcon } from 'lucide-react';
+import { CalendarPlusIcon, PlusIcon, UsersIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { StudentListItem } from '@tutorio/validation';
-import { StudentAddedDate, StudentCard, StudentLearningFormat } from './student-card';
-import { StudentQuickCreateDialog } from '@/features/students/ui/student-quick-create-dialog';
+import { StudentCard } from './student-card';
+import { StudentQuickCreateDialog } from './student-quick-create-dialog';
 import { StudentRowActions } from './student-row-actions';
 import { StudentsListSkeleton } from './students-list-skeleton';
-import { StudentStatusBadge } from '@/components/students/student-status';
-import { STUDENT_STATUS_META } from '@/components/students/student-status';
+import { StudentsListFilters, type StudentStatusTab } from './students-list-filters';
+import { StudentsListMetrics } from './students-list-metrics';
+import {
+  StudentBalanceCell,
+  StudentCreditsCell,
+  StudentIdentityCell,
+  StudentLearningCell,
+  StudentNextLessonCell,
+} from './student-row-cells';
 import { CollectionFrame } from '@/components/shared/collection-frame';
 import { DataTable } from '@/components/shared/data-table';
-import { MetricCard } from '@/components/shared/metric-card';
-import { PersonCell } from '@/components/shared/table-cells';
 import {
   ListPagination,
-  ListSearchInput,
-  ListSelectFilter,
   useListSort,
   useUpdateSearchParams,
 } from '@/components/shared/list-controls';
-import { PageHeader, QueryErrorAlert } from '@/components/shared/page-shell';
+import { QueryErrorAlert } from '@/components/shared/page-shell';
 import { Button } from '@/components/ui/button';
 import { CollectionEmptyState } from '@/components/shared/collection-empty-state';
-import { CollectionToolbar } from '@/components/shared/collection-toolbar';
-import { Skeleton } from '@/components/ui/skeleton';
 import { parsePageParam } from '@/lib/api/filters';
 import { useStudentsQuery } from '@/lib/api/students';
 import { useGroupsQuery } from '@/lib/api/groups';
 
-const STUDENT_STATUSES = ['ACTIVE', 'ON_HOLD', 'ARCHIVED'] as const;
+const SORT_FIELDS = ['fullName', 'status', 'createdAt'] as const;
+
+/** Reference layout: student, learning, credits, next lesson, balance, actions. */
+const ROW_LAYOUT =
+  'minmax(0,2.3fr) minmax(0,1.5fr) minmax(0,1.25fr) minmax(0,1.25fr) minmax(0,1fr) 40px';
 
 export function StudentsList() {
   const t = useTranslations('students');
-  const tStatus = useTranslations('studentStatus');
-  const tFilters = useTranslations('students.filters');
-  const tListFilters = useTranslations('filters');
   const tCommon = useTranslations('common');
   const searchParams = useSearchParams();
   const updateParams = useUpdateSearchParams();
@@ -62,6 +64,9 @@ export function StudentsList() {
     order: sort.order,
   });
   const groups = useGroupsQuery({ page: 1, pageSize: 100 });
+
+  // Facet counts are their own one-row queries: a collection page can never
+  // derive a total from the rows it happens to be showing.
   const totalMetric = useStudentsQuery({ page: 1, pageSize: 1, state: 'active' });
   const activeMetric = useStudentsQuery({
     page: 1,
@@ -82,52 +87,39 @@ export function StudentsList() {
     status: 'ARCHIVED',
   });
 
-  const statusOptions = STUDENT_STATUSES.map((value) => ({
-    value,
-    label: tStatus(value),
-    ...STUDENT_STATUS_META[value],
-  }));
-  const groupOptions = (groups.data?.items ?? []).map((group) => ({
-    value: group.id,
-    label: group.name,
-  }));
-
   const columns = useMemo<ColumnDef<StudentListItem, unknown>[]>(
     () => [
       {
         accessorKey: 'fullName',
         header: () => t('columns.student'),
         meta: { sortField: 'fullName' },
-        cell: ({ row }) => (
-          <PersonCell
-            avatarKey={row.original.avatarKey}
-            fullName={row.original.fullName}
-            href={`/app/students/${row.original.id}`}
-          />
-        ),
+        cell: ({ row }) => <StudentIdentityCell student={row.original} />,
       },
       {
-        id: 'status',
-        header: () => t('columns.status'),
-        meta: { sortField: 'status' },
-        cell: ({ row }) => <StudentStatusBadge status={row.original.status} />,
+        id: 'learning',
+        header: () => t('columns.learning'),
+        cell: ({ row }) => <StudentLearningCell student={row.original} />,
       },
       {
-        id: 'learningFormat',
-        header: () => t('columns.learningFormat'),
-        cell: ({ row }) => <StudentLearningFormat student={row.original} />,
+        id: 'credits',
+        header: () => t('columns.credits'),
+        cell: () => <StudentCreditsCell />,
       },
       {
-        accessorKey: 'createdAt',
-        header: () => t('columns.added'),
-        meta: { sortField: 'createdAt' },
-        cell: ({ row }) => <StudentAddedDate createdAt={row.original.createdAt} />,
+        id: 'nextLesson',
+        header: () => t('columns.nextLesson'),
+        cell: () => <StudentNextLessonCell />,
+      },
+      {
+        id: 'balance',
+        header: () => t('columns.balance'),
+        cell: () => <StudentBalanceCell />,
       },
       {
         id: 'actions',
         header: () => <span className="sr-only">{t('columns.actions')}</span>,
         cell: ({ row }) => (
-          <div className="flex justify-end">
+          <div className="relative z-1 flex justify-end">
             <StudentRowActions
               studentId={row.original.id}
               fullName={row.original.fullName}
@@ -151,46 +143,50 @@ export function StudentsList() {
     <>
       <CollectionFrame
         header={
-          <PageHeader
-            title={t('title')}
-            description={t('subtitle')}
-            action={
-              <Button className="h-11 md:h-9" onClick={() => setCreateOpen(true)}>
-                <PlusIcon data-icon="inline-start" />
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div className="flex flex-col gap-2">
+              <h1 className="font-display text-[64px] leading-none font-semibold tracking-[-0.04em]">
+                {t('title')}
+              </h1>
+              <p className="text-base text-muted-foreground">{t('subtitle')}</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <Button size="xl" variant="outline">
+                <CalendarPlusIcon data-icon="inline-start" />
+                {t('scheduleLesson')}
+              </Button>
+              <Button size="xl" leading={<PlusIcon />} onClick={() => setCreateOpen(true)}>
                 {t('add')}
               </Button>
-            }
-          />
-        }
-        summary={
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <StudentMetricCard label={t('metrics.total')} query={totalMetric} />
-            <StudentMetricCard label={t('metrics.active')} query={activeMetric} />
-            <StudentMetricCard label={t('metrics.onHold')} query={onHoldMetric} />
-            <StudentMetricCard label={t('metrics.archived')} query={archivedMetric} />
+            </div>
           </div>
         }
+        summary={<StudentsListMetrics activeQuery={activeMetric} totalQuery={totalMetric} />}
         toolbar={
-          <CollectionToolbar>
-            <ListSearchInput label={t('searchLabel')} placeholder={t('searchPlaceholder')} />
-            <ListSelectFilter
-              paramKey="status"
-              value={status}
-              options={statusOptions}
-              label={tFilters('statusAll')}
-            />
-            <ListSelectFilter
-              paramKey="groupId"
-              value={groupId}
-              options={groupOptions}
-              label={tFilters('groupAll')}
-            />
-            {filtersActive ? (
-              <Button type="button" variant="ghost" onClick={clearFilters}>
-                {tListFilters('clear')}
-              </Button>
-            ) : null}
-          </CollectionToolbar>
+          <StudentsListFilters
+            status={(status ?? 'all') as StudentStatusTab}
+            counts={{
+              all: totalMetric.data?.total,
+              ACTIVE: activeMetric.data?.total,
+              ON_HOLD: onHoldMetric.data?.total,
+              ARCHIVED: archivedMetric.data?.total,
+            }}
+            groupId={groupId}
+            groupOptions={(groups.data?.items ?? []).map((group) => ({
+              value: group.id,
+              label: group.name,
+            }))}
+            search={search}
+            sort={sort}
+            sortFields={SORT_FIELDS}
+            onStatusChange={(next) =>
+              updateParams({ status: next === 'all' ? undefined : next }, { resetPage: true })
+            }
+            onGroupChange={(next) => updateParams({ groupId: next }, { resetPage: true })}
+            onSearchChange={(next) =>
+              updateParams({ search: next.trim() || undefined }, { resetPage: true })
+            }
+          />
         }
         loading={
           students.isPending ? (
@@ -222,44 +218,31 @@ export function StudentsList() {
         }
         desktop={
           items.length > 0 ? (
-            <DataTable
-              columns={columns}
-              data={items}
-              caption={t('tableCaption')}
-              sort={sort}
-              loading={students.isFetching}
-            />
-          ) : undefined
-        }
-        pagination={
-          items.length > 0 ? (
-            <ListPagination page={page} totalPages={students.data?.totalPages ?? 1} />
+            <div className="flex flex-col rounded-card bg-card p-2">
+              <DataTable
+                variant="rows"
+                layout={ROW_LAYOUT}
+                columns={columns}
+                data={items}
+                caption={t('tableCaption')}
+                sort={sort}
+                loading={students.isFetching}
+              />
+              <div className="mt-2 flex items-center justify-between border-t border-border px-4 pt-3 pb-2">
+                <span className="text-[13px] text-muted-foreground">
+                  {t('showing', {
+                    shown: items.length,
+                    total: students.data?.total ?? items.length,
+                  })}
+                </span>
+                <ListPagination page={page} totalPages={students.data?.totalPages ?? 1} />
+              </div>
+            </div>
           ) : undefined
         }
       />
       {createOpen ? <StudentQuickCreateDialog open onOpenChange={setCreateOpen} /> : null}
     </>
-  );
-}
-
-export function StudentMetricCard({
-  label,
-  query,
-}: {
-  label: string;
-  query: { data?: { total: number }; isPending: boolean; isError: boolean };
-}) {
-  const t = useTranslations('students.metrics');
-  const value = query.isPending ? (
-    <Skeleton className="h-8 w-12" />
-  ) : query.isError ? (
-    t('unavailable')
-  ) : (
-    (query.data?.total ?? 0)
-  );
-
-  return (
-    <MetricCard label={label} value={value} description={query.isError ? t('error') : undefined} />
   );
 }
 
@@ -287,8 +270,7 @@ export function StudentsEmptyState({
             {tFilters('clear')}
           </Button>
         ) : (
-          <Button onClick={onCreate}>
-            <PlusIcon data-icon="inline-start" />
+          <Button onClick={onCreate} leading={<PlusIcon />}>
             {t('empty.action')}
           </Button>
         )

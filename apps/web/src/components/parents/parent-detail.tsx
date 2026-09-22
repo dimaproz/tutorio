@@ -15,7 +15,7 @@ import { toast } from 'sonner';
 import { BackButton } from '@/components/shared/back-button';
 import { ConfirmDialog } from '@/components/shared/confirm-dialog';
 import { PersonMiniCard } from '@/components/shared/person-mini-card';
-import { StudentStatusBadge } from '@/components/students/student-status';
+import { StudentStatusBadge } from '@/features/students';
 import { InfoRow, ProfileHeader, SectionTitle } from '@/components/shared/detail-view';
 import { QueryErrorAlert, QueryRefreshIndicator } from '@/components/shared/page-shell';
 import { Button } from '@/components/ui/button';

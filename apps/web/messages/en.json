@@ -309,7 +309,13 @@
       "telegram": "Telegram",
       "enrollments": "Enrollments",
       "timezone": "Timezone",
-      "actions": "Actions"
+      "actions": "Actions",
+      "learning": "Learning",
+      "credits": "Credits",
+      "nextLesson": "Next lesson",
+      "balance": "Balance",
+      "fullName": "Student",
+      "createdAt": "Added"
     },
     "tableCaption": "Workspace students with their groups and active enrollments",
     "activeEnrollments": "{count, plural, =0 {No active enrollments} one {# active enrollment} other {# active enrollments}}",
@@ -322,12 +328,27 @@
       "onHold": "On hold",
       "archived": "Archived",
       "unavailable": "Unavailable",
-      "error": "Could not load this count"
+      "error": "Could not load this count",
+      "ofTotal": "Of {total} students",
+      "lessonsThisWeek": "Lessons this week",
+      "lowOnCredits": "Low on credits",
+      "lowOnCreditsBadge": "≤ 2 left",
+      "awaitingPayment": "Awaiting payment",
+      "studentsUnit": "students",
+      "pending": "Waiting on reporting data"
     },
     "filters": {
       "statusAll": "All statuses",
       "subjectAll": "All subjects",
-      "groupAll": "All groups"
+      "groupAll": "All groups",
+      "teacherAll": "Teacher",
+      "lowCredits": "Low credits",
+      "comingSoon": "Not available yet",
+      "view": "View",
+      "viewList": "List view",
+      "viewGrid": "Card view",
+      "searchLabel": "Search students",
+      "searchPlaceholder": "Search students"
     },
     "empty": {
       "title": "No students yet",
@@ -493,6 +514,22 @@
       "warning": "The student will leave operational lists. Lessons, enrollments, packages, payments, and history stay intact.",
       "effects": "Future individual lessons and recurring schedules will be suspended. Live group participation is paused. Restoring rechecks calendar conflicts before resuming affected work.",
       "action": "Archive student"
+    },
+    "scheduleLesson": "Schedule lesson",
+    "showing": "Showing {shown} of {total} students",
+    "archivedOn": "Archived {date}",
+    "statusTabs": {
+      "all": "All",
+      "active": "Active",
+      "onHold": "On hold",
+      "archived": "Archived"
+    },
+    "list": {
+      "noPackage": "No active package",
+      "noLessonsPlanned": "no lessons planned",
+      "creditsLeft": "{left} of {total} left",
+      "noCreditsLeft": "No credits left",
+      "today": "Today"
     }
   },
   "groups": {

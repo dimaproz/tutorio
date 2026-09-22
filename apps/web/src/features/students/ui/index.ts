@@ -1,5 +1,8 @@
 export { StudentDetailView } from './student-detail';
-export { StudentsList } from '@/components/students/students-list';
+export { StudentCard } from './student-card';
+export { StudentRowActions } from './student-row-actions';
+export { StudentStatusBadge, useStudentStatusOptions } from './student-status';
+export { StudentsList } from './students-list';
 export { StudentQuickCreateDialog } from './student-quick-create-dialog';
 export { StudentEditDialog } from './student-edit-dialog';
 export { StudentArchiveDialog } from './student-archive-dialog';
