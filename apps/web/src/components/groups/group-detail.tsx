@@ -15,7 +15,6 @@ import {
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { GroupEnrollmentSummary } from '@tutorio/validation';
-import { BackButton } from '@/components/shared/back-button';
 import { ConfirmDialog } from '@/components/shared/confirm-dialog';
 import { MetricCard } from '@/components/shared/metric-card';
 import { ProfileHeader, ProfileTag, SectionTitle } from '@/components/shared/detail-view';
@@ -153,8 +152,7 @@ export function GroupDetailView({ groupId }: { groupId: string }) {
 
   return (
     <>
-      <div className="flex items-center justify-between gap-3">
-        <BackButton href="/app/groups" />
+      <div className="flex items-center justify-end gap-3">
         {isDeleted ? (
           isOwner ? (
             <Button

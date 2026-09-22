@@ -85,6 +85,9 @@ const preview: Preview = {
     (Story, context) => {
       const locale = context.globals.locale === 'uk' ? 'uk' : 'en';
       const isDark = context.globals.theme === 'dark';
+      // Page fixtures own the viewport edge-to-edge: the story padding would
+      // offset every measurement in a screenshot comparison.
+      const fullBleed = context.parameters.fullBleed === true;
 
       return (
         <StoryEnvironment isDark={isDark} locale={locale}>
@@ -94,7 +97,11 @@ const preview: Preview = {
             now={new Date('2026-09-09T12:00:00.000Z')}
             timeZone="Europe/Kyiv"
           >
-            <div className={`${fontVariableClasses} min-h-svh bg-background p-4 text-foreground`}>
+            <div
+              className={`${fontVariableClasses} min-h-svh bg-background text-foreground ${
+                fullBleed ? '' : 'p-4'
+              }`}
+            >
               <Story />
             </div>
           </NextIntlClientProvider>

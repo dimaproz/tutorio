@@ -29,12 +29,16 @@ export function StudentSectionsCard({
     <Card className="gap-4 p-5">
       <Tabs defaultValue="lessons">
         <div className="flex flex-wrap items-center justify-between gap-3">
+          {/* Four segments do not fit a phone, so the row scrolls rather than
+              shrinking its touch targets. */}
+          <div className="max-w-full overflow-x-auto">
           <TabsList variant="segmented-subtle" aria-label={t('label')}>
             <TabsTrigger value="lessons">{t('lessons')}</TabsTrigger>
             <TabsTrigger value="packages">{t('packages')}</TabsTrigger>
             <TabsTrigger value="payments">{t('payments')}</TabsTrigger>
             <TabsTrigger value="history">{t('history')}</TabsTrigger>
           </TabsList>
+          </div>
           {onAddLesson ? (
             <Button type="button" variant="outline" size="sm" onClick={onAddLesson}>
               <PlusIcon data-icon="inline-start" />

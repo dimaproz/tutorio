@@ -119,16 +119,16 @@ export function StudentLessonsCard({
   };
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col">
       {upcoming.length > 0 ? (
         <>
-          <SectionDivider label={t('comingUp')} className="mb-1" />
+          <SectionDivider label={t('comingUp')} className="pb-1" />
           {upcoming.map((lesson, index) => renderLesson(lesson, index === 0 ? 'next' : 'default'))}
         </>
       ) : null}
       {past.length > 0 ? (
         <>
-          <SectionDivider label={t('earlier')} className="my-1" />
+          <SectionDivider label={t('earlier')} className="pt-2 pb-1" />
           {past.map((lesson) => renderLesson(lesson, 'past'))}
         </>
       ) : null}

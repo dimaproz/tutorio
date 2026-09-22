@@ -62,8 +62,11 @@ export function StudentsListFilters({
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-2.5">
-      <div className="flex flex-wrap items-center gap-2.5">
-        {/* A facet filter, not a tab set: it switches the query, not a panel. */}
+      <div className="flex max-w-full flex-wrap items-center gap-2.5">
+        {/* A facet filter, not a tab set: it switches the query, not a panel.
+            Four segments do not fit a phone, so the row scrolls rather than
+            shrinking the touch targets. */}
+        <div className="max-w-full overflow-x-auto">
         <ToggleGroup
           type="single"
           value={status}
@@ -73,14 +76,21 @@ export function StudentsListFilters({
           aria-label={t('statusAll')}
         >
           {STUDENT_STATUS_TABS.map((tab) => (
-            <ToggleGroupItem key={tab} value={tab} className="gap-2 px-3.5">
+            <ToggleGroupItem
+              key={tab}
+              value={tab}
+              // The count dims only on the filled segment, where 70% still
+              // clears AA; on paper it stays at full muted strength.
+              className="gap-2 px-3.5 data-[state=on]:[&>span]:opacity-70"
+            >
               {tStatus(TAB_LABEL_KEY[tab])}
               {counts[tab] != null ? (
-                <span className="font-mono text-xs opacity-70">{counts[tab]}</span>
+                <span className="font-mono text-xs">{counts[tab]}</span>
               ) : null}
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
+        </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -108,7 +118,7 @@ export function StudentsListFilters({
       </div>
 
       <div className="flex flex-wrap items-center gap-2.5">
-        <div className="w-60">
+        <div className="w-full sm:w-60">
           <SearchField
             label={t('searchLabel')}
             placeholder={t('searchPlaceholder')}

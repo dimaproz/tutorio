@@ -11,7 +11,6 @@ import {
 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import { BackButton } from '@/components/shared/back-button';
 import { ConfirmDialog } from '@/components/shared/confirm-dialog';
 import { SectionTitle } from '@/components/shared/detail-view';
 import { QueryErrorAlert } from '@/components/shared/page-shell';
@@ -88,8 +87,7 @@ export function PackageDetailView({ packageId }: { packageId: string }) {
 
   return (
     <>
-      <div className="flex items-center justify-between gap-3">
-        <BackButton href="/app/packages" />
+      <div className="flex items-center justify-end gap-3">
         <div className="flex flex-wrap gap-2">
           {isOwner ? (
             <Button variant="outline" onClick={() => setAdjustOpen(true)}>

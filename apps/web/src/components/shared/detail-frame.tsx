@@ -36,8 +36,8 @@ export function DetailFrame({
         {identity}
         {metrics}
         <div className="grid gap-4 lg:grid-cols-[minmax(0,2.1fr)_minmax(0,1fr)]">
-          <div className="flex flex-col gap-4">{main}</div>
-          {aside ? <aside className="flex flex-col gap-4">{aside}</aside> : null}
+          <div className="flex min-w-0 flex-col gap-4">{main}</div>
+          {aside ? <aside className="flex min-w-0 flex-col gap-4">{aside}</aside> : null}
         </div>
       </section>
     );
@@ -49,8 +49,14 @@ export function DetailFrame({
       {identity}
       {metrics}
       <div className="grid gap-6 lg:grid-cols-3">
-        <div className={aside ? 'flex flex-col gap-6 lg:col-span-2' : 'lg:col-span-3'}>{main}</div>
-        {aside ? <aside className="flex flex-col gap-6">{aside}</aside> : null}
+        <div
+          className={
+            aside ? 'flex min-w-0 flex-col gap-6 lg:col-span-2' : 'min-w-0 lg:col-span-3'
+          }
+        >
+          {main}
+        </div>
+        {aside ? <aside className="flex min-w-0 flex-col gap-6">{aside}</aside> : null}
       </div>
     </section>
   );

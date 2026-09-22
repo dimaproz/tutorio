@@ -13,7 +13,7 @@ const SIZE_CLASS = {
   md: 'size-11 text-sm',
   lg: 'size-14 text-base',
   xl: 'size-20 text-xl',
-  '2xl': 'size-38 text-5xl',
+  '2xl': 'size-24 text-3xl md:size-38 md:text-5xl',
 } as const;
 
 const TINT_CLASS = {
@@ -61,7 +61,7 @@ export function EntityAvatar({
     <Avatar
       className={cn(
         SIZE_CLASS[size],
-        ring === 'hero' && 'ring-[6px] ring-card',
+        ring === 'hero' && 'm-1.5 ring-[6px] ring-card',
         ring === true && 'ring-2 ring-border ring-offset-2 ring-offset-background',
         className,
       )}

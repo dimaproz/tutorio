@@ -145,7 +145,7 @@ export function StudentsList() {
         header={
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div className="flex flex-col gap-2">
-              <h1 className="font-display text-[64px] leading-none font-semibold tracking-[-0.04em]">
+              <h1 className="font-display text-[40px] leading-none font-semibold tracking-[-0.03em] md:text-[64px] md:tracking-[-0.04em]">
                 {t('title')}
               </h1>
               <p className="text-base text-muted-foreground">{t('subtitle')}</p>

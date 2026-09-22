@@ -54,14 +54,14 @@ function AppShellContract({
           isLogoutPending={isLogoutPending}
           onLogout={() => undefined}
         />
-        <SidebarInset>
+        <SidebarInset className="gap-6 p-4 md:pt-5 md:pr-6 md:pb-4 md:pl-0">
           <AppHeaderContent
             pathname={pathname}
             workspaceName={session.workspace.name}
             localeControl={<Button variant="outline" size="icon" aria-label="Language">EN</Button>}
             themeControl={<Button variant="outline" size="icon" aria-label="Theme">◐</Button>}
           />
-          <div className="flex flex-1 flex-col gap-6 p-4 md:pt-5 md:pr-6 md:pb-4 md:pl-0">
+          <div className="flex flex-1 flex-col gap-6">
             <h1 className="text-lg font-medium">Feature content</h1>
           </div>
         </SidebarInset>

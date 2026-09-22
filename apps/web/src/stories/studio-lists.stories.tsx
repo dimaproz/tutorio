@@ -55,7 +55,7 @@ export const Divider: Story = {
 export const Lessons: Story = {
   render: () => (
     <div className="flex flex-col rounded-card bg-card p-5">
-      <SectionDivider label="Coming up · Tue & Thu at 17:00" className="mb-2" />
+      <SectionDivider label="Coming up · Tue & Thu at 17:00" className="pb-1" />
       <LessonItem
         state="next"
         date={{ top: 'Thu', day: '11' }}
@@ -78,7 +78,7 @@ export const Lessons: Story = {
         status={<Badge variant="info">Scheduled</Badge>}
         actions={<LessonActions label="Mock exam actions" />}
       />
-      <SectionDivider label="Earlier" className="my-2" />
+      <SectionDivider label="Earlier" className="pt-2 pb-1" />
       <LessonItem
         state="past"
         date={{ top: 'Tue', day: '09' }}

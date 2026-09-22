@@ -21,11 +21,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         }
       >
         <AppSidebar />
-        <SidebarInset>
+        {/* The page ground carries 16px of padding and a 24px rhythm; the top
+            bar is the first item in that column, not a band above it. */}
+        <SidebarInset className="gap-6 p-4 md:pt-5 md:pr-6 md:pb-4 md:pl-0">
           <AppHeader />
-          <div className="flex flex-1 flex-col gap-6 p-4 md:pt-5 md:pr-6 md:pb-4 md:pl-0">
-            {children}
-          </div>
+          <div className="flex flex-1 flex-col gap-6">{children}</div>
         </SidebarInset>
       </SidebarProvider>
     </SessionProvider>

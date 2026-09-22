@@ -127,7 +127,9 @@ export function StatBlock(props: StatBlockProps) {
         className={cn(
           'flex items-center justify-between gap-2 border-t',
           theme.divider,
-          action ? 'h-8 pt-2.5' : 'h-5 pt-3',
+          // The reference measures the footer as content plus its top padding
+          // and rule, so the heights here are that total: 20+12+1 and 32+10+1.
+          action ? 'h-[43px] pt-2.5' : 'h-[33px] pt-3',
         )}
       >
         <span className={cn('min-w-0 truncate text-[13px] leading-[18px]', theme.muted)}>

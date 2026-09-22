@@ -12,7 +12,6 @@ import {
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import { BackButton } from '@/components/shared/back-button';
 import { ConfirmDialog } from '@/components/shared/confirm-dialog';
 import { PersonMiniCard } from '@/components/shared/person-mini-card';
 import { StudentStatusBadge } from '@/features/students';
@@ -75,8 +74,7 @@ export function ParentDetailView({ parentId }: { parentId: string }) {
   return (
     <>
       {/* Top bar: back link + primary actions. */}
-      <div className="flex items-center justify-between gap-3">
-        <BackButton href="/app/parents" />
+      <div className="flex items-center justify-end gap-3">
         <div className="flex flex-wrap gap-2">
           <QueryRefreshIndicator isFetching={parent.isFetching && !parent.isPending} />
           <Button type="button" variant="outline" onClick={() => setEditOpen(true)}>

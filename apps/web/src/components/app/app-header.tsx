@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { BackButton } from '@/components/shared/back-button';
 import { SearchField } from '@/components/shared/search-field';
 import { getRouteContext } from './app-navigation';
 import { useSession } from './session-provider';
@@ -35,6 +36,8 @@ export function AppHeaderContent({
   const t = useTranslations('app.nav');
   const tHeader = useTranslations('app.header');
   const context = getRouteContext(pathname);
+  const parentHref = context.length === 2 ? context[0].href : undefined;
+  const parent = parentHref ? { key: context[0].key, href: parentHref } : null;
 
   return (
     <header className="flex h-12 shrink-0 items-center justify-between gap-4">
@@ -42,6 +45,14 @@ export function AppHeaderContent({
         {/* The Studio sidebar is always open on desktop, so the trigger only
             has a job where the navigation is an off-canvas sheet. */}
         <SidebarTrigger aria-label={t('toggle')} className="md:hidden" />
+        {/* A detail route is a place you came from, not a path you browse: the
+            bar carries the way back instead of a three-level trail. */}
+        {parent ? (
+          <div className="flex min-w-0 items-center gap-3">
+            <BackButton href={parent.href} label={t(parent.key)} />
+            <span className="truncate text-sm text-muted-foreground">{t('detail')}</span>
+          </div>
+        ) : (
         <Breadcrumb className="min-w-0">
           <BreadcrumbList className="flex-nowrap text-sm">
             {workspaceName ? (
@@ -68,6 +79,7 @@ export function AppHeaderContent({
             ))}
           </BreadcrumbList>
         </Breadcrumb>
+        )}
       </div>
       <div className="flex shrink-0 items-center gap-2.5">
         <div className="hidden w-85 md:block">

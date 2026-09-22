@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import { BackButton } from '@/components/shared/back-button';
 import { ConfirmDialog } from '@/components/shared/confirm-dialog';
 import { InfoRow, ProfileHeader, SectionTitle } from '@/components/shared/detail-view';
 import { QueryErrorAlert, QueryRefreshIndicator } from '@/components/shared/page-shell';
@@ -76,8 +75,7 @@ export function TeacherDetail({ teacherId }: { teacherId: string }) {
 
   return (
     <>
-      <div className="flex items-center justify-between gap-3">
-        <BackButton href="/app/teachers" />
+      <div className="flex items-center justify-end gap-3">
         <div className="flex flex-wrap gap-2">
           <QueryRefreshIndicator isFetching={teacher.isFetching && !teacher.isPending} />
           <Button type="button" variant="outline" onClick={() => setEditOpen(true)}>

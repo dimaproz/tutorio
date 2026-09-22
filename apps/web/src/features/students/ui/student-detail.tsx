@@ -17,7 +17,6 @@ import type { StudentDetail } from '@tutorio/validation';
 import { PackageFormDialog } from '@/components/packages/package-form-dialog';
 import { LessonFormDialog } from '@/components/scheduling/lesson-form-dialog';
 import { StudentLessonsCard } from '@/components/scheduling/student-lessons-card';
-import { BackButton } from '@/components/shared/back-button';
 import { DetailFrame } from '@/components/shared/detail-frame';
 import { NextLessonCard } from '@/components/shared/next-lesson-card';
 import { QueryErrorAlert } from '@/components/shared/page-shell';
@@ -281,12 +280,6 @@ export function StudentProfileContent({
     <>
       <DetailFrame
         ratio="wide"
-        back={
-          <div className="flex items-center gap-3">
-            <BackButton href="/app/students" label={t('title')} />
-            <span className="text-sm text-muted-foreground">{t('detail.pageLabel')}</span>
-          </div>
-        }
         identity={identity}
         metrics={<StudentProfileMetrics student={student} />}
         main={main}
