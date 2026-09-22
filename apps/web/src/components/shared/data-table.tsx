@@ -99,9 +99,7 @@ export function DataTable<TData>({
               key={headerGroup.id}
               style={gridStyle}
               className={cn(
-                rows && // The bottom padding keeps a hovered first row's outline clear of
-                  // the column labels, matching the air under the last row.
-                  'grid items-center gap-4 border-0 px-4 pt-3 pb-4 hover:bg-transparent',
+                rows && 'grid items-center gap-4 border-0 px-4 pt-3 pb-2 hover:bg-transparent',
               )}
             >
               {headerGroup.headers.map((header) => {
@@ -146,7 +144,9 @@ export function DataTable<TData>({
             </TableRow>
           ))}
         </TableHeader>
-        <TableBody>
+        {/* The header keeps its rule, so the first row steps off it: a hovered
+            row's outline would otherwise sit flush against the line. */}
+        <TableBody className={cn(rows && '[&>tr:first-child]:mt-2')}>
           {table.getRowModel().rows.map((row) => (
             <TableRow
               key={row.id}
