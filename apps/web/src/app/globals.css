@@ -264,6 +264,34 @@
   --secondary-hover: oklch(0.31 0.006 286.033);
 }
 
+/* A painted light surface that keeps its light palette in both themes, for
+   illustrations that sit on a tint (the auth promo panel). Everything inside
+   reads the light values, so a card on the tint stays a white card. */
+.surface-light,
+.dark .surface-light {
+  --background: #f3f5fa;
+  --foreground: #1b1f3b;
+  --card: #ffffff;
+  --card-foreground: #1b1f3b;
+  --popover: #ffffff;
+  --popover-foreground: #1b1f3b;
+  --primary: #1b1f3b;
+  --primary-foreground: #ffffff;
+  --secondary: #eef1fb;
+  --secondary-foreground: #1b1f3b;
+  --muted: #eef1fb;
+  --muted-foreground: #5e6582;
+  --accent: #eef1fb;
+  --accent-foreground: #1b1f3b;
+  --border: #e2e6f0;
+  --input: #e2e6f0;
+  --brand: #4b4fe0;
+  --surface-hover: #f7f9fd;
+  --stat-track: #e8ebf4;
+  --stat-divider: #eef0f6;
+  color-scheme: light;
+}
+
 @layer base {
   * { @apply border-border outline-ring/50; }
   body { @apply bg-background text-foreground; }
