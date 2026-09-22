@@ -1,17 +1,16 @@
-import { cookies } from 'next/headers';
 import { AppHeader } from '@/components/app/app-header';
 import { AppSidebar } from '@/components/app/app-sidebar';
 import { SessionProvider } from '@/components/app/session-provider';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 
-export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = await cookies();
-  const defaultOpen = cookieStore.get('sidebar_state')?.value !== 'false';
-
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
+      {/* The desktop sidebar is always open, so there is no persisted collapse
+          state to restore — and a stale one would strand a user behind a
+          sidebar nothing can reopen. */}
       <SidebarProvider
-        defaultOpen={defaultOpen}
+        defaultOpen
         style={
           {
             // 276px card + 16px page padding + the 24px gutter to the content.

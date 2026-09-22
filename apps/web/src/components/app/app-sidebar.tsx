@@ -25,7 +25,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarRail,
   useSidebar,
 } from '@/components/ui/sidebar';
 import { EntityAvatar } from '@/components/shared/entity-avatar';
@@ -188,6 +187,9 @@ export function AppSidebarContent({
   const settings = getSettingsNavigation(access);
 
   return (
+    // `offcanvas` is the mobile behaviour: below md the sidebar is a sheet.
+    // On desktop it never collapses — the design has no control for it, and
+    // nothing here offers one.
     <Sidebar variant="floating" collapsible="offcanvas" className="p-4 pr-6">
       <SidebarHeader className="gap-5.5 p-0 px-3.5 pt-5">
         <Link
@@ -233,7 +235,6 @@ export function AppSidebarContent({
           onLogout={onLogout}
         />
       </SidebarFooter>
-      <SidebarRail />
     </Sidebar>
   );
 }
