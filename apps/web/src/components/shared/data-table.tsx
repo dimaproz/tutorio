@@ -141,7 +141,10 @@ export function DataTable<TData>({
               data-highlighted={isRowHighlighted?.(row.original) || undefined}
               className={cn(
                 rows &&
-                  'grid h-19 items-center gap-4 rounded-row border-0 px-4 hover:bg-surface-hover data-[highlighted]:bg-surface-hover',
+                  // `relative` makes the row the containing block for a cell's
+                  // stretched link. Without it the link resolves against the
+                  // nearest positioned ancestor and covers the whole table.
+                  'relative grid h-19 items-center gap-4 rounded-row border-0 px-4 hover:bg-surface-hover data-[highlighted]:bg-surface-hover',
               )}
             >
               {row.getVisibleCells().map((cell) => (
