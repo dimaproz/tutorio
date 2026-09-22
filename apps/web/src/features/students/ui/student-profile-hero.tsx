@@ -80,7 +80,7 @@ export function StudentProfileHero({
           fullName={student.fullName}
           size="2xl"
           ring="hero"
-          tint="indigo"
+          tint="surface"
         />
       }
       badges={

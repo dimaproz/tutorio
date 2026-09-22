@@ -129,7 +129,7 @@ export const Hero: Story = {
 export const HeroWithoutAvatarOrGlyph: Story = {
   render: () => (
     <ProfileHero
-      avatar={<EntityAvatar fullName="Kateryna Bondarenko" size="2xl" ring="hero" tint="indigo" />}
+      avatar={<EntityAvatar fullName="Kateryna Bondarenko" size="2xl" ring="hero" tint="surface" />}
       badges={
         <Badge variant="surface" size="lg" dot>
           Active

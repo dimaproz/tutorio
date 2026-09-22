@@ -8,18 +8,32 @@ import { cn, nameInitials } from '@/lib/utils';
 // profile headers, and `ring="hero"` the thick surface ring the profile hero
 // uses. `status` adds the lifecycle dot that list rows and the hero share.
 const SIZE_CLASS = {
-  xs: 'size-7 text-xs',
-  sm: 'size-9 text-xs',
-  md: 'size-11 text-sm',
-  lg: 'size-14 text-base',
-  xl: 'size-20 text-xl',
-  '2xl': 'size-24 text-3xl md:size-38 md:text-5xl',
+  xs: 'size-7',
+  sm: 'size-9',
+  md: 'size-11',
+  lg: 'size-14',
+  xl: 'size-20',
+  '2xl': 'size-24 md:size-38',
+} as const;
+
+// The initials size has to travel to the fallback itself: AvatarFallback sets
+// its own `text-sm`, which wins over anything inherited from the root.
+const INITIALS_CLASS = {
+  xs: 'text-xs',
+  sm: 'text-xs',
+  md: 'text-sm',
+  lg: 'text-base',
+  xl: 'text-xl',
+  '2xl': 'text-3xl md:text-5xl',
 } as const;
 
 const TINT_CLASS = {
   paper: 'bg-background text-muted-foreground',
   warning: 'bg-tint-warning text-tint-warning-foreground',
   indigo: 'bg-tint-indigo text-tint-indigo-foreground',
+  // For a person sitting on an indigo surface, where the indigo tint would
+  // paint the avatar the same colour as the card behind it.
+  surface: 'bg-card text-tint-indigo-foreground',
 } as const;
 
 const STATUS_CLASS = {
@@ -67,7 +81,7 @@ export function EntityAvatar({
       )}
     >
       {avatarKey ? <AvatarImage src={avatarSrc(avatarKey as AvatarKeyDto)} alt="" /> : null}
-      <AvatarFallback className={cn('font-medium', TINT_CLASS[tint])}>
+      <AvatarFallback className={cn('font-medium', TINT_CLASS[tint], INITIALS_CLASS[size])}>
         {nameInitials(fullName)}
       </AvatarFallback>
     </Avatar>
