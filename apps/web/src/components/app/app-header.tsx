@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Fragment } from 'react';
+import { BellIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { LocaleSwitcher } from '@/components/locale-switcher';
 import {
@@ -13,30 +14,44 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { SearchField } from '@/components/shared/search-field';
 import { getRouteContext } from './app-navigation';
+import { useSession } from './session-provider';
 import { ThemeToggle } from './theme-toggle';
 
 export function AppHeaderContent({
   pathname,
-  localeControl = <LocaleSwitcher />,
-  themeControl = <ThemeToggle />,
+  workspaceName,
+  localeControl = <LocaleSwitcher className="size-11 border border-border bg-card" />,
+  themeControl = <ThemeToggle className="size-11 border border-border bg-card" />,
 }: {
   pathname: string;
+  workspaceName?: string;
   localeControl?: React.ReactNode;
   themeControl?: React.ReactNode;
 }) {
   const t = useTranslations('app.nav');
+  const tHeader = useTranslations('app.header');
   const context = getRouteContext(pathname);
 
   return (
-    <header className="sticky top-0 z-10 flex h-(--header-height) shrink-0 items-center gap-2 border-b bg-background">
-      <div className="flex min-w-0 flex-1 items-center gap-2 px-4 md:px-6">
-        <SidebarTrigger aria-label={t('toggle')} />
-        <Separator orientation="vertical"/>
+    <header className="flex h-12 shrink-0 items-center justify-between gap-4">
+      <div className="flex min-w-0 items-center gap-2">
+        {/* The Studio sidebar is always open on desktop, so the trigger only
+            has a job where the navigation is an off-canvas sheet. */}
+        <SidebarTrigger aria-label={t('toggle')} className="md:hidden" />
         <Breadcrumb className="min-w-0">
-          <BreadcrumbList className="flex-nowrap">
+          <BreadcrumbList className="flex-nowrap text-sm">
+            {workspaceName ? (
+              <>
+                <BreadcrumbItem className="min-w-0">
+                  <span className="truncate">{workspaceName}</span>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+              </>
+            ) : null}
             {context.map((item, index) => (
               <Fragment key={item.key}>
                 {index > 0 ? <BreadcrumbSeparator /> : null}
@@ -46,7 +61,7 @@ export function AppHeaderContent({
                       <Link href={item.href}>{t(item.key)}</Link>
                     </BreadcrumbLink>
                   ) : (
-                    <BreadcrumbPage className="truncate">{t(item.key)}</BreadcrumbPage>
+                    <BreadcrumbPage className="truncate font-medium">{t(item.key)}</BreadcrumbPage>
                   )}
                 </BreadcrumbItem>
               </Fragment>
@@ -54,14 +69,30 @@ export function AppHeaderContent({
           </BreadcrumbList>
         </Breadcrumb>
       </div>
-      <div className="flex shrink-0 items-center gap-1 px-2 md:px-4">
+      <div className="flex shrink-0 items-center gap-2.5">
+        <div className="hidden w-85 md:block">
+          <SearchField
+            label={tHeader('search')}
+            placeholder={tHeader('searchPlaceholder')}
+            shortcut="⌘K"
+          />
+        </div>
         {localeControl}
         {themeControl}
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          indicator
+          aria-label={tHeader('notifications')}
+        >
+          <BellIcon />
+        </Button>
       </div>
     </header>
   );
 }
 
 export function AppHeader() {
-  return <AppHeaderContent pathname={usePathname()} />;
+  return <AppHeaderContent pathname={usePathname()} workspaceName={useSession().workspace.name} />;
 }

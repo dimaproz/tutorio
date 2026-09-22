@@ -22,8 +22,6 @@ export type NavigationKey =
   | 'packages'
   | 'settings';
 
-export type NavigationGroupLabelKey = 'mainGroup' | 'peopleGroup' | 'managementGroup';
-
 export type NavigationItem = {
   key: NavigationKey;
   href: string;
@@ -33,44 +31,22 @@ export type NavigationItem = {
   schoolOnly?: boolean;
 };
 
-export type NavigationGroup = {
-  key: 'main' | 'people' | 'management';
-  labelKey: NavigationGroupLabelKey;
-  items: NavigationItem[];
-};
-
 export type NavigationAccess = {
   isOwner: boolean;
   isSolo: boolean;
 };
 
-const navigationGroups: NavigationGroup[] = [
-  {
-    key: 'main',
-    labelKey: 'mainGroup',
-    items: [
-      { key: 'dashboard', href: '/app', icon: LayoutDashboardIcon, exact: true },
-      { key: 'calendar', href: '/app/calendar', icon: CalendarIcon },
-    ],
-  },
-  {
-    key: 'people',
-    labelKey: 'peopleGroup',
-    items: [
-      { key: 'students', href: '/app/students', icon: UsersIcon },
-      { key: 'groups', href: '/app/groups', icon: GraduationCapIcon },
-      { key: 'parents', href: '/app/parents', icon: ContactIcon },
-      { key: 'teachers', href: '/app/teachers', icon: PresentationIcon, schoolOnly: true },
-    ],
-  },
-  {
-    key: 'management',
-    labelKey: 'managementGroup',
-    items: [
-      { key: 'patterns', href: '/app/lessons/patterns', icon: RepeatIcon },
-      { key: 'packages', href: '/app/packages', icon: PackageIcon },
-    ],
-  },
+// One flat list, in the order the design reads it. Grouping headings were
+// dropped with the Studio shell: eight destinations do not need three labels.
+const navigationItems: NavigationItem[] = [
+  { key: 'dashboard', href: '/app', icon: LayoutDashboardIcon, exact: true },
+  { key: 'calendar', href: '/app/calendar', icon: CalendarIcon },
+  { key: 'students', href: '/app/students', icon: UsersIcon },
+  { key: 'groups', href: '/app/groups', icon: GraduationCapIcon },
+  { key: 'parents', href: '/app/parents', icon: ContactIcon },
+  { key: 'teachers', href: '/app/teachers', icon: PresentationIcon, schoolOnly: true },
+  { key: 'packages', href: '/app/packages', icon: PackageIcon },
+  { key: 'patterns', href: '/app/lessons/patterns', icon: RepeatIcon },
 ];
 
 const settingsItem: NavigationItem = {
@@ -84,11 +60,8 @@ function isVisible(item: NavigationItem, { isOwner, isSolo }: NavigationAccess):
   return (!item.ownerOnly || isOwner) && (!item.schoolOnly || !isSolo);
 }
 
-export function getNavigationGroups(access: NavigationAccess): NavigationGroup[] {
-  return navigationGroups.map((group) => ({
-    ...group,
-    items: group.items.filter((item) => isVisible(item, access)),
-  }));
+export function getNavigationItems(access: NavigationAccess): NavigationItem[] {
+  return navigationItems.filter((item) => isVisible(item, access));
 }
 
 export function getSettingsNavigation(access: NavigationAccess): NavigationItem | null {
@@ -104,7 +77,7 @@ export type RouteContext = {
   href?: string;
 };
 
-const routeContextItems = [...navigationGroups.flatMap((group) => group.items), settingsItem].sort(
+const routeContextItems = [...navigationItems, settingsItem].sort(
   (left, right) => right.href.length - left.href.length,
 );
 

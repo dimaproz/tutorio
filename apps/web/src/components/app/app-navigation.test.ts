@@ -1,30 +1,36 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   closeMobileNavigation,
-  getNavigationGroups,
+  getNavigationItems,
   getRouteContext,
   getSettingsNavigation,
   isNavigationActive,
 } from './app-navigation';
 
 describe('application navigation', () => {
-  it('groups the supported destinations and keeps detail routes active', () => {
-    const groups = getNavigationGroups({ isOwner: true, isSolo: false });
+  it('lists the supported destinations in order and keeps detail routes active', () => {
+    const items = getNavigationItems({ isOwner: true, isSolo: false });
 
-    expect(groups.map((group) => group.key)).toEqual(['main', 'people', 'management']);
-    expect(groups[0]?.items.map((item) => item.key)).toEqual(['dashboard', 'calendar']);
-    expect(isNavigationActive('/app/students/83d4d4e3-5e9b-4fd0-b9cc-8d6e5f3d0e8e', groups[1]!.items[0]!)).toBe(true);
-    expect(isNavigationActive('/app', groups[0]!.items[0]!)).toBe(true);
-    expect(isNavigationActive('/app/students', groups[0]!.items[0]!)).toBe(false);
+    expect(items.map((item) => item.key)).toEqual([
+      'dashboard',
+      'calendar',
+      'students',
+      'groups',
+      'parents',
+      'teachers',
+      'packages',
+      'patterns',
+    ]);
+    expect(
+      isNavigationActive('/app/students/83d4d4e3-5e9b-4fd0-b9cc-8d6e5f3d0e8e', items[2]!),
+    ).toBe(true);
+    expect(isNavigationActive('/app', items[0]!)).toBe(true);
+    expect(isNavigationActive('/app/students', items[0]!)).toBe(false);
   });
 
   it('hides teachers for SOLO workspaces and settings for non-owners', () => {
-    const soloItems = getNavigationGroups({ isOwner: true, isSolo: true }).flatMap(
-      (group) => group.items,
-    );
-    const schoolItems = getNavigationGroups({ isOwner: false, isSolo: false }).flatMap(
-      (group) => group.items,
-    );
+    const soloItems = getNavigationItems({ isOwner: true, isSolo: true });
+    const schoolItems = getNavigationItems({ isOwner: false, isSolo: false });
 
     expect(soloItems.map((item) => item.key)).not.toContain('teachers');
     expect(schoolItems.map((item) => item.key)).toContain('teachers');

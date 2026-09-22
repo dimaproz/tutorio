@@ -229,7 +229,7 @@
     "nav": {
       "label": "Main navigation",
       "menuLabel": "Menu",
-      "dashboard": "Dashboard",
+      "dashboard": "Today",
       "students": "Students",
       "parents": "Parents",
       "groups": "Groups",
@@ -240,17 +240,15 @@
       "patterns": "Lesson Patterns",
       "teachers": "Teachers",
       "detail": "Details",
-      "mainGroup": "Main",
-      "peopleGroup": "People",
-      "managementGroup": "Management",
       "toggle": "Toggle sidebar"
     },
     "sidebar": {
       "toggle": "Toggle sidebar"
     },
     "header": {
-      "searchPlaceholder": "Search (coming soon)",
-      "notifications": "Notifications (coming soon)"
+      "search": "Search students, lessons, payments",
+      "searchPlaceholder": "Search students, lessons, payments",
+      "notifications": "Notifications"
     },
     "userMenu": {
       "label": "Account menu",
@@ -280,6 +278,11 @@
       "emptyDescription": "Students, groups, calendar and finance will appear here in the next stages. For now, explore the navigation and account settings.",
       "noneThisWeek": "No lessons this week.",
       "noneThisWeekHint": "Book a lesson or set up a recurring schedule."
+    },
+    "workspace": {
+      "switch": "Switch workspace",
+      "school": "School",
+      "soloTutor": "Individual tutor"
     }
   },
   "students": {
@@ -418,20 +421,64 @@
       "title": "Student created — choose the next step",
       "description": "These actions are independent. You can dismiss this card and return later.",
       "dismiss": "Dismiss setup suggestions",
-      "lesson": { "title": "Schedule first lesson", "description": "Book a one-off lesson for this student.", "action": "Schedule" },
-      "package": { "title": "Add lesson package", "description": "Set lesson balance and payment details.", "action": "Add package" },
-      "learning": { "title": "Set up learning", "description": "Connect individual or group learning.", "action": "Set up" },
-      "parent": { "title": "Link or create parent", "description": "Add a contact for this saved profile.", "action": "Add parent" },
-      "profile": { "title": "Complete profile", "description": "Add levels, avatar, preferences, and notes.", "action": "Edit profile" }
+      "lesson": {
+        "title": "Schedule first lesson",
+        "description": "Book a one-off lesson for this student.",
+        "action": "Schedule"
+      },
+      "package": {
+        "title": "Add lesson package",
+        "description": "Set lesson balance and payment details.",
+        "action": "Add package"
+      },
+      "learning": {
+        "title": "Set up learning",
+        "description": "Connect individual or group learning.",
+        "action": "Set up"
+      },
+      "parent": {
+        "title": "Link or create parent",
+        "description": "Add a contact for this saved profile.",
+        "action": "Add parent"
+      },
+      "profile": {
+        "title": "Complete profile",
+        "description": "Add levels, avatar, preferences, and notes.",
+        "action": "Edit profile"
+      }
     },
     "packages": {
-      "title": "Lesson packages", "add": "Add package", "error": "Could not load packages", "empty": "No packages yet", "emptyDescription": "Add a package when this student buys lessons.", "emptyArchived": "No package history is recorded for this student.", "unnamed": "Lesson package", "balance": "{remaining} of {total} lessons left"
+      "title": "Lesson packages",
+      "add": "Add package",
+      "error": "Could not load packages",
+      "empty": "No packages yet",
+      "emptyDescription": "Add a package when this student buys lessons.",
+      "emptyArchived": "No package history is recorded for this student.",
+      "unnamed": "Lesson package",
+      "balance": "{remaining} of {total} lessons left"
     },
     "learning": {
-      "title": "Learning relationships", "add": "Set up learning", "edit": "Edit", "loadError": "Could not load this enrollment", "empty": "Learning is not configured", "emptyDescription": "Add individual or group learning when the student is ready.", "emptyArchived": "No learning relationship is recorded.", "individual": "Individual lessons", "summary": "{teacher} · {price} per lesson"
+      "title": "Learning relationships",
+      "add": "Set up learning",
+      "edit": "Edit",
+      "loadError": "Could not load this enrollment",
+      "empty": "Learning is not configured",
+      "emptyDescription": "Add individual or group learning when the student is ready.",
+      "emptyArchived": "No learning relationship is recorded.",
+      "individual": "Individual lessons",
+      "summary": "{teacher} · {price} per lesson"
     },
     "parents": {
-      "title": "Parents", "create": "Create parent", "empty": "No parents linked yet.", "emptyArchived": "No parent relationship is recorded.", "link": "Link an existing parent", "search": "Search parents…", "noResults": "No parent found", "unlink": "Unlink {name}", "retryLink": "Retry linking", "loadError": "Could not load parents"
+      "title": "Parents",
+      "create": "Create parent",
+      "empty": "No parents linked yet.",
+      "emptyArchived": "No parent relationship is recorded.",
+      "link": "Link an existing parent",
+      "search": "Search parents…",
+      "noResults": "No parent found",
+      "unlink": "Unlink {name}",
+      "retryLink": "Retry linking",
+      "loadError": "Could not load parents"
     },
     "toasts": {
       "created": "Student created",

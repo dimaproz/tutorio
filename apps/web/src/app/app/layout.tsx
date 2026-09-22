@@ -14,15 +14,18 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         defaultOpen={defaultOpen}
         style={
           {
-            '--sidebar-width': '18rem',
-            '--header-height': '3.5rem',
+            // 276px card + 16px page padding + the 24px gutter to the content.
+            '--sidebar-width': '316px',
+            '--header-height': '3rem',
           } as React.CSSProperties
         }
       >
         <AppSidebar />
         <SidebarInset>
           <AppHeader />
-          <div className="flex flex-1 flex-col p-4 md:p-6 bg-muted">{children}</div>
+          <div className="flex flex-1 flex-col gap-6 p-4 md:pt-5 md:pr-6 md:pb-4 md:pl-0">
+            {children}
+          </div>
         </SidebarInset>
       </SidebarProvider>
     </SessionProvider>

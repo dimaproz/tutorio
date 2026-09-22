@@ -2,11 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { GraduationCapIcon, LogOutIcon, SettingsIcon } from 'lucide-react';
+import { ChevronDownIcon, LogOutIcon, MoreVerticalIcon, SettingsIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { AuthMe } from '@tutorio/validation';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,7 +21,6 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -30,11 +28,12 @@ import {
   SidebarRail,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { EntityAvatar } from '@/components/shared/entity-avatar';
+import { PersonItem } from '@/components/shared/person-item';
 import { useLogoutMutation } from '@/lib/auth/client';
-import { nameInitials } from '@/lib/utils';
 import {
   closeMobileNavigation,
-  getNavigationGroups,
+  getNavigationItems,
   getSettingsNavigation,
   isNavigationActive,
   type NavigationItem,
@@ -64,6 +63,42 @@ function SidebarNavigationLink({ item, pathname }: { item: NavigationItem; pathn
   );
 }
 
+/**
+ * The workspace context row. A school shows its name and scale; a solo tutor
+ * shows their own identity. It is hidden when there is nothing to disambiguate.
+ */
+function WorkspaceSwitcher({ session, isSolo }: { session: AuthMe; isSolo: boolean }) {
+  const t = useTranslations('app.workspace');
+
+  return (
+    <button
+      type="button"
+      aria-label={t('switch')}
+      className="flex h-16 w-full items-center gap-3 rounded-row bg-secondary pr-3.5 pl-2.5 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
+    >
+      {isSolo ? (
+        <EntityAvatar fullName={session.user.name} size="md" />
+      ) : (
+        <span
+          aria-hidden="true"
+          className="flex size-11 shrink-0 items-center justify-center rounded-item border border-border bg-card text-lg font-bold text-tint-indigo-foreground"
+        >
+          {(isSolo ? session.user.name : session.workspace.name).slice(0, 1)}
+        </span>
+      )}
+      <span className="flex min-w-0 grow flex-col gap-0.5">
+        <span className="truncate text-sm leading-[18px] font-semibold">
+          {isSolo ? session.user.name : session.workspace.name}
+        </span>
+        <span className="truncate text-xs leading-4 text-muted-foreground">
+          {isSolo ? t('soloTutor') : t('school')}
+        </span>
+      </span>
+      <ChevronDownIcon aria-hidden="true" className="size-4 shrink-0" />
+    </button>
+  );
+}
+
 export function SidebarUserMenu({
   session,
   canAccessSettings,
@@ -80,58 +115,56 @@ export function SidebarUserMenu({
   const tNav = useTranslations('app.nav');
 
   return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton size="lg" tooltip={t('label')} aria-label={t('label')}>
-              <Avatar>
-                <AvatarFallback>{nameInitials(session.user.name)}</AvatarFallback>
-              </Avatar>
-              <div className="grid min-w-0 flex-1 text-left leading-tight">
-                <span className="truncate">{session.user.name}</span>
-                <span className="truncate text-muted-foreground">{session.user.email}</span>
-              </div>
-            </SidebarMenuButton>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent side={isMobile ? 'bottom' : 'right'} align="end" sideOffset={4}>
-            <DropdownMenuLabel>
-              <div className="flex min-w-0 items-center gap-2">
-                <Avatar size="lg">
-                  <AvatarFallback>{nameInitials(session.user.name)}</AvatarFallback>
-                </Avatar>
-                <div className="grid min-w-0 flex-1 gap-0.5">
-                  <span className="truncate text-foreground">{session.user.name}</span>
-                  <span className="truncate">{session.user.email}</span>
-                  <span>{t(`roles.${session.role}`)}</span>
-                </div>
-              </div>
-            </DropdownMenuLabel>
-            {canAccessSettings ? (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup>
-                  <DropdownMenuItem asChild>
-                    <Link
-                      href="/app/settings"
-                      onClick={() => closeMobileNavigation(isMobile, setOpenMobile)}
-                    >
-                      <SettingsIcon />
-                      {tNav('settings')}
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-              </>
-            ) : null}
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          aria-label={t('label')}
+          className="w-full rounded-tile bg-secondary p-2.5 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
+        >
+          <PersonItem
+            size="sm"
+            media={<EntityAvatar fullName={session.user.name} size="sm" />}
+            name={session.user.name}
+            subtitle={t(`roles.${session.role}`)}
+            trail={<MoreVerticalIcon className="size-4.5" />}
+          />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent side={isMobile ? 'bottom' : 'right'} align="end" sideOffset={4}>
+        <DropdownMenuLabel>
+          <div className="flex min-w-0 items-center gap-2">
+            <EntityAvatar fullName={session.user.name} size="sm" />
+            <div className="grid min-w-0 flex-1 gap-0.5">
+              <span className="truncate text-foreground">{session.user.name}</span>
+              <span className="truncate">{session.user.email}</span>
+              <span>{t(`roles.${session.role}`)}</span>
+            </div>
+          </div>
+        </DropdownMenuLabel>
+        {canAccessSettings ? (
+          <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive" disabled={isLogoutPending} onSelect={onLogout}>
-              <LogOutIcon />
-              {t('logout')}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </SidebarMenuItem>
-    </SidebarMenu>
+            <DropdownMenuGroup>
+              <DropdownMenuItem asChild>
+                <Link
+                  href="/app/settings"
+                  onClick={() => closeMobileNavigation(isMobile, setOpenMobile)}
+                >
+                  <SettingsIcon />
+                  {tNav('settings')}
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </>
+        ) : null}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem variant="destructive" disabled={isLogoutPending} onSelect={onLogout}>
+          <LogOutIcon />
+          {t('logout')}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -151,48 +184,48 @@ export function AppSidebarContent({
   const t = useTranslations('app.nav');
   const { isMobile, setOpenMobile } = useSidebar();
   const access = { isOwner: session.role === 'OWNER', isSolo };
-  const groups = getNavigationGroups(access);
+  const items = getNavigationItems(access);
   const settings = getSettingsNavigation(access);
 
   return (
-    <Sidebar variant="sidebar" collapsible="icon">
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild size="lg" tooltip={t('dashboard')}>
-              <Link href="/app" onClick={() => closeMobileNavigation(isMobile, setOpenMobile)}>
-                <GraduationCapIcon />
-                <span className="truncate">Tutorio</span>
-                <span className="truncate text-muted-foreground">{session.workspace.name}</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+    <Sidebar variant="floating" collapsible="offcanvas" className="p-4 pr-6">
+      <SidebarHeader className="gap-5.5 p-0 px-3.5 pt-5">
+        <Link
+          href="/app"
+          onClick={() => closeMobileNavigation(isMobile, setOpenMobile)}
+          className="flex items-center gap-2.5 px-2 outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
+        >
+          <span
+            aria-hidden="true"
+            className="flex size-8.5 items-center justify-center rounded-logo bg-brand-soft text-xl font-bold text-brand-soft-foreground"
+          >
+            t
+          </span>
+          <span className="text-[22px] font-semibold tracking-[-0.02em]">tutorio</span>
+        </Link>
+        <WorkspaceSwitcher session={session} isSolo={isSolo} />
       </SidebarHeader>
-      <SidebarContent>
-        {groups.map((group) => (
-          <SidebarGroup key={group.key}>
-            <SidebarGroupLabel>{t(group.labelKey)}</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu aria-label={t(group.labelKey)}>
-                {group.items.map((item) => (
-                  <SidebarNavigationLink key={item.key} item={item} pathname={pathname} />
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ))}
+      <SidebarContent className="gap-5.5 pt-5.5">
+        <SidebarGroup className="p-0 px-3.5">
+          <SidebarGroupContent>
+            <SidebarMenu aria-label={t('label')} className="gap-1">
+              {items.map((item) => (
+                <SidebarNavigationLink key={item.key} item={item} pathname={pathname} />
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
         {settings ? (
-          <SidebarGroup className="mt-auto">
+          <SidebarGroup className="mt-auto p-0 px-3.5">
             <SidebarGroupContent>
-              <SidebarMenu>
+              <SidebarMenu className="gap-1">
                 <SidebarNavigationLink item={settings} pathname={pathname} />
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         ) : null}
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter className="p-0 px-3.5 pb-5">
         <SidebarUserMenu
           session={session}
           canAccessSettings={settings !== null}

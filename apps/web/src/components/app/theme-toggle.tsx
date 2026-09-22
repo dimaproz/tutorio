@@ -19,12 +19,12 @@ export function ThemeToggle({ className }: { className?: string }) {
       type="button"
       variant="ghost"
       size="icon"
-      className={cn('size-11 md:size-9', className)}
+      className={cn('size-11', className)}
       aria-label={t('theme')}
       onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
     >
-      <SunIcon className="dark:hidden" data-icon />
-      <MoonIcon className="hidden dark:block" data-icon />
+      <MoonIcon className="dark:hidden" data-icon />
+      <SunIcon className="hidden dark:block" data-icon />
     </Button>
   );
 }

@@ -4,26 +4,54 @@
     {
       "name": "api",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@tutorio/api", "dev"],
+      "runtimeArgs": [
+        "--filter",
+        "@tutorio/api",
+        "dev"
+      ],
       "port": 4000
     },
     {
       "name": "web",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@tutorio/web", "dev"],
+      "runtimeArgs": [
+        "--filter",
+        "@tutorio/web",
+        "dev"
+      ],
       "port": 3000
     },
     {
       "name": "web-clean",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@tutorio/web", "dev:clean"],
+      "runtimeArgs": [
+        "--filter",
+        "@tutorio/web",
+        "dev:clean"
+      ],
       "port": 3000
     },
     {
       "name": "web-lab",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@tutorio/web", "dev", "-p", "3007"],
+      "runtimeArgs": [
+        "--filter",
+        "@tutorio/web",
+        "dev",
+        "-p",
+        "3007"
+      ],
       "port": 3007
+    },
+    {
+      "name": "storybook",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@tutorio/web",
+        "storybook"
+      ],
+      "port": 6006
     }
   ]
 }

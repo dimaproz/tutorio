@@ -42,8 +42,8 @@ function AppShellContract({
       <SidebarProvider
         style={
           {
-            '--sidebar-width': '18rem',
-            '--header-height': '3.5rem',
+            '--sidebar-width': '316px',
+            '--header-height': '3rem',
           } as React.CSSProperties
         }
       >
@@ -57,10 +57,11 @@ function AppShellContract({
         <SidebarInset>
           <AppHeaderContent
             pathname={pathname}
-            localeControl={<Button variant="ghost" size="icon" aria-label="Language">EN</Button>}
-            themeControl={<Button variant="ghost" size="icon" aria-label="Theme">◐</Button>}
+            workspaceName={session.workspace.name}
+            localeControl={<Button variant="outline" size="icon" aria-label="Language">EN</Button>}
+            themeControl={<Button variant="outline" size="icon" aria-label="Theme">◐</Button>}
           />
-          <div className="flex flex-1 flex-col p-4 md:p-6 bg-muted">
+          <div className="flex flex-1 flex-col gap-6 p-4 md:pt-5 md:pr-6 md:pb-4 md:pl-0">
             <h1 className="text-lg font-medium">Feature content</h1>
           </div>
         </SidebarInset>
@@ -105,21 +106,30 @@ type Story = StoryObj<typeof meta>;
 export const DesktopExpanded: Story = {
   play: async ({ canvas }) => {
     const studentNavigation = canvas.getAllByRole('link', { name: 'Students' })[0];
-    await expect(studentNavigation).toHaveAttribute(
-      'data-active',
-      'true',
-    );
+    await expect(studentNavigation).toHaveAttribute('data-active', 'true');
     await expect(studentNavigation).toHaveAttribute('aria-current', 'page');
-    await expect(canvas.getByRole('button', { name: 'Toggle sidebar' })).toBeVisible();
-    await expect(canvas.queryByRole('button', { name: /search/i })).toBeNull();
-    await expect(canvas.queryByRole('button', { name: /notification/i })).toBeNull();
+    // Search and notifications are part of the shell now; the collapse trigger
+    // is not, because the Studio sidebar is always open on desktop.
+    await expect(
+      canvas.getByRole('searchbox', { name: 'Search students, lessons, payments' }),
+    ).toBeVisible();
+    await expect(canvas.getByRole('button', { name: 'Notifications' })).toBeVisible();
+    await expect(canvas.queryByRole('button', { name: 'Toggle sidebar' })).toBeNull();
   },
 };
 
-export const DesktopCollapsed: Story = {
-  play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Toggle sidebar' }));
-    await expect(canvas.getAllByRole('link', { name: 'Students' })[0]).toBeVisible();
+export const WorkspaceContext: Story = {
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('button', { name: 'Switch workspace' })).toBeVisible();
+    await expect(canvas.getAllByText('Kyiv Language Studio').length).toBeGreaterThan(0);
+  },
+};
+
+export const SoloWorkspaceIdentity: Story = {
+  args: { isSolo: true },
+  play: async ({ canvas }) => {
+    const workspace = canvas.getByRole('button', { name: 'Switch workspace' });
+    await expect(within(workspace).getByText('Individual tutor')).toBeVisible();
   },
 };
 
