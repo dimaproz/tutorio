@@ -113,10 +113,13 @@ available through the status filter.
 
 ### Statistics
 
-Four simple `MetricCard` instances appear above the collection. They contain a
-label, value, and, only when a metric request fails, a short muted explanation.
-They do not show charts, trends, percentages, coloured backgrounds, or
-decorative graphics.
+Four `StatBlock` instances appear above the collection, in the Studio shapes:
+Active students, Lessons this week, Low on credits, and Awaiting payment.
+
+Only the first has an endpoint. The other three are placeholders that say they
+are waiting on reporting data; none of them shows a number the API cannot
+support. The facet counts the collection used to spend metric cards on now live
+on the status control, where they also drive the filter.
 
 The cards use separate lightweight Student list queries with `pageSize: 1` and
 their returned `total`; collection-page rows are never used to derive a metric:
@@ -140,18 +143,24 @@ Use `CollectionFrame`, `PageHeader`, `CollectionToolbar`, `ListSearchInput`,
 
 The table columns are:
 
-| Column          | Content                                                                                            |
-| --------------- | -------------------------------------------------------------------------------------------------- |
-| Student         | Avatar and linked full name                                                                        |
-| Status          | Active, on hold, or archived badge; never colour alone                                             |
-| Learning format | Group names when present; otherwise Individual with an active enrollment; otherwise Not configured |
-| Added           | Compact localized absolute `createdAt` date                                                        |
-| Actions         | Accessible overflow trigger                                                                        |
+| Column      | Content                                                                                            |
+| ----------- | -------------------------------------------------------------------------------------------------- |
+| Student     | Avatar with its lifecycle dot, linked full name, and the best contact on file                      |
+| Learning    | Group name, Individual with an active enrollment, or Not configured; teacher below                 |
+| Credits     | Segmented credit meter, or "No active package"                                                     |
+| Next lesson | Date and time, or the design's empty state                                                         |
+| Balance     | Tinted payment badge                                                                               |
+| Actions     | Accessible overflow trigger                                                                        |
 
-Only Student, Status, and Added are server-sortable. Learning format is not
-sortable because it is relational presentation. Subject, package, price,
-timezone, phone, email, and Telegram are not collection columns. Contact values
-remain searchable and available on the profile.
+Status is no longer a column: the avatar dot carries it and the status control
+filters by it, and every row is reachable from exactly one facet. Credits, next
+lesson, balance and the teacher have no per-student rollup yet, so each renders
+its empty state and takes the real value as an optional prop.
+
+Only Student, Status, and Added are server-sortable, and the sort control
+offers exactly those. Relational and rolled-up columns are not sortable.
+Subject, price, timezone, phone, email, and Telegram are not columns; contact
+values remain searchable and available on the profile.
 
 ### Mobile composition
 

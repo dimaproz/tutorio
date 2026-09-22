@@ -285,3 +285,40 @@ actions, lifecycle/detail states, and interaction tests.
 - No deferred module, second visual system, decorative-only redesign, or work
   outside the ordered migration track may enter the active queue without an
   explicit roadmap decision.
+
+## Studio redesign follow-ups (open)
+
+The "Studio - Indigo & Sky" redesign of the application shell, the student
+collection and the student profile is implemented. These are the parts it could
+not finish, each with the slot already in place.
+
+### Backend data the design shows and the API does not provide
+
+Listed in `apps/web/src/features/students/model/pending-data.ts`. Every one of
+them renders a documented empty state today and takes the real value as an
+optional prop, so wiring one up is a single argument.
+
+1. Per-student rollups for the collection row: package credits left/total, the
+   next lesson, the balance status, and the teacher on the list item.
+2. Collection aggregates: the weekly lesson trend series, the running-low
+   count, and the outstanding total.
+3. Profile metrics: credits left, paid this term, and an attendance series.
+   Attendance has no data model at all.
+4. Notes authorship: who last edited a student's notes and when.
+5. Navigation counters and the workspace teacher count.
+
+### Product surfaces the design shows that are not built
+
+The teacher filter and the low-credit filter (no query support), the card view
+(no grid view), and the profile's Payments and History sections. Each renders
+disabled or as a named empty state rather than pretending.
+
+### Visual follow-ups
+
+1. A dark palette. Tint and ink surfaces are theme-independent by design and
+   keep their contrast, but the dark theme still carries the old preset values
+   for everything else.
+2. Migrate the remaining `MetricCard` callers in groups to `StatBlock`.
+3. Input and Select are still 36px while buttons are 44px. The handoff does not
+   cover forms, so they were left alone; they need one reviewed pass.
+4. The mobile layout for both screens is a proposal, not an approved design.
