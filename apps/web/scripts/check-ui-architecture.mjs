@@ -71,6 +71,8 @@ const appShellFiles = new Set([
   'app-shell-actions.ts',
   'app-shell.stories.tsx',
   'app-sidebar.tsx',
+  'mobile-app-bar.tsx',
+  'mobile-tab-bar.tsx',
   'session-provider.tsx',
   'theme-toggle.tsx',
 ]);

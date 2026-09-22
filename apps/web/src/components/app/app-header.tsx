@@ -14,9 +14,10 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { Button } from '@/components/ui/button';
+import { IconButton } from '@/components/shared/icon-button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { BackButton } from '@/components/shared/back-button';
+import { usePageCrumb } from '@/components/shared/page-crumb';
 import { SearchField } from '@/components/shared/search-field';
 import { getRouteContext } from './app-navigation';
 import { useSession } from './session-provider';
@@ -25,11 +26,14 @@ import { ThemeToggle } from './theme-toggle';
 export function AppHeaderContent({
   pathname,
   workspaceName,
+  crumb,
   localeControl = <LocaleSwitcher className="size-11 border border-border bg-card" />,
   themeControl = <ThemeToggle className="size-11 border border-border bg-card" />,
 }: {
   pathname: string;
   workspaceName?: string;
+  /** The page's own name for itself, e.g. "Anna Shevchenko › Edit". */
+  crumb?: string | null;
   localeControl?: React.ReactNode;
   themeControl?: React.ReactNode;
 }) {
@@ -50,35 +54,37 @@ export function AppHeaderContent({
         {parent ? (
           <div className="flex min-w-0 items-center gap-3">
             <BackButton href={parent.href} label={t(parent.key)} />
-            <span className="truncate text-sm text-muted-foreground">{t('detail')}</span>
+            <span className="truncate text-sm text-muted-foreground">{crumb ?? t('detail')}</span>
           </div>
         ) : (
-        <Breadcrumb className="min-w-0">
-          <BreadcrumbList className="flex-nowrap text-sm">
-            {workspaceName ? (
-              <>
-                <BreadcrumbItem className="min-w-0">
-                  <span className="truncate">{workspaceName}</span>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-              </>
-            ) : null}
-            {context.map((item, index) => (
-              <Fragment key={item.key}>
-                {index > 0 ? <BreadcrumbSeparator /> : null}
-                <BreadcrumbItem className="min-w-0">
-                  {item.href && index < context.length - 1 ? (
-                    <BreadcrumbLink asChild className="truncate">
-                      <Link href={item.href}>{t(item.key)}</Link>
-                    </BreadcrumbLink>
-                  ) : (
-                    <BreadcrumbPage className="truncate font-medium">{t(item.key)}</BreadcrumbPage>
-                  )}
-                </BreadcrumbItem>
-              </Fragment>
-            ))}
-          </BreadcrumbList>
-        </Breadcrumb>
+          <Breadcrumb className="min-w-0">
+            <BreadcrumbList className="flex-nowrap text-sm">
+              {workspaceName ? (
+                <>
+                  <BreadcrumbItem className="min-w-0">
+                    <span className="truncate">{workspaceName}</span>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                </>
+              ) : null}
+              {context.map((item, index) => (
+                <Fragment key={item.key}>
+                  {index > 0 ? <BreadcrumbSeparator /> : null}
+                  <BreadcrumbItem className="min-w-0">
+                    {item.href && index < context.length - 1 ? (
+                      <BreadcrumbLink asChild className="truncate">
+                        <Link href={item.href}>{t(item.key)}</Link>
+                      </BreadcrumbLink>
+                    ) : (
+                      <BreadcrumbPage className="truncate font-medium">
+                        {t(item.key)}
+                      </BreadcrumbPage>
+                    )}
+                  </BreadcrumbItem>
+                </Fragment>
+              ))}
+            </BreadcrumbList>
+          </Breadcrumb>
         )}
       </div>
       <div className="flex shrink-0 items-center gap-2.5">
@@ -91,20 +97,18 @@ export function AppHeaderContent({
         </div>
         {localeControl}
         {themeControl}
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          indicator
-          aria-label={tHeader('notifications')}
-        >
-          <BellIcon />
-        </Button>
+        <IconButton border icon={<BellIcon />} label={tHeader('notifications')} indicator />
       </div>
     </header>
   );
 }
 
 export function AppHeader() {
-  return <AppHeaderContent pathname={usePathname()} workspaceName={useSession().workspace.name} />;
+  return (
+    <AppHeaderContent
+      pathname={usePathname()}
+      workspaceName={useSession().workspace.name}
+      crumb={usePageCrumb()}
+    />
+  );
 }

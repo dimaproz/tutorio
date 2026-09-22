@@ -1,11 +1,11 @@
 import type { LucideIcon } from 'lucide-react';
 import {
+  BoxIcon,
   CalendarIcon,
-  ContactIcon,
   GraduationCapIcon,
-  LayoutDashboardIcon,
-  PackageIcon,
-  PresentationIcon,
+  HeartIcon,
+  HomeIcon,
+  LayersIcon,
   RepeatIcon,
   SettingsIcon,
   UsersIcon,
@@ -39,13 +39,13 @@ export type NavigationAccess = {
 // One flat list, in the order the design reads it. Grouping headings were
 // dropped with the Studio shell: eight destinations do not need three labels.
 const navigationItems: NavigationItem[] = [
-  { key: 'dashboard', href: '/app', icon: LayoutDashboardIcon, exact: true },
+  { key: 'dashboard', href: '/app', icon: HomeIcon, exact: true },
   { key: 'calendar', href: '/app/calendar', icon: CalendarIcon },
   { key: 'students', href: '/app/students', icon: UsersIcon },
-  { key: 'groups', href: '/app/groups', icon: GraduationCapIcon },
-  { key: 'parents', href: '/app/parents', icon: ContactIcon },
-  { key: 'teachers', href: '/app/teachers', icon: PresentationIcon, schoolOnly: true },
-  { key: 'packages', href: '/app/packages', icon: PackageIcon },
+  { key: 'groups', href: '/app/groups', icon: LayersIcon },
+  { key: 'parents', href: '/app/parents', icon: HeartIcon },
+  { key: 'teachers', href: '/app/teachers', icon: GraduationCapIcon, schoolOnly: true },
+  { key: 'packages', href: '/app/packages', icon: BoxIcon },
   { key: 'patterns', href: '/app/lessons/patterns', icon: RepeatIcon },
 ];
 
@@ -69,7 +69,9 @@ export function getSettingsNavigation(access: NavigationAccess): NavigationItem 
 }
 
 export function isNavigationActive(pathname: string, item: Pick<NavigationItem, 'href' | 'exact'>) {
-  return item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`);
+  return item.exact
+    ? pathname === item.href
+    : pathname === item.href || pathname.startsWith(`${item.href}/`);
 }
 
 export type RouteContext = {

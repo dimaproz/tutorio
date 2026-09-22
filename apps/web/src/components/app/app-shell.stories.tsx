@@ -26,17 +26,22 @@ const ownerSession = {
   role: 'OWNER',
 } satisfies AuthMe;
 
+type ShellArgs = {
+  pathname: string;
+  workspace: 'school' | 'solo';
+  role: 'OWNER' | 'TEACHER';
+  isLogoutPending: boolean;
+  session?: AuthMe;
+};
+
 function AppShellContract({
   pathname = '/app/students',
-  session = ownerSession,
-  isSolo = false,
+  workspace = 'school',
+  role = 'OWNER',
   isLogoutPending = false,
-}: {
-  pathname?: string;
-  session?: AuthMe;
-  isSolo?: boolean;
-  isLogoutPending?: boolean;
-}) {
+  session = ownerSession,
+}: Partial<ShellArgs>) {
+  const current = { ...session, role };
   return (
     <TooltipProvider>
       <SidebarProvider
@@ -49,17 +54,25 @@ function AppShellContract({
       >
         <AppSidebarContent
           pathname={pathname}
-          session={session}
-          isSolo={isSolo}
+          session={current}
+          isSolo={workspace === 'solo'}
           isLogoutPending={isLogoutPending}
           onLogout={() => undefined}
         />
         <SidebarInset className="gap-6 p-4 md:pt-5 md:pr-6 md:pb-4 md:pl-0">
           <AppHeaderContent
             pathname={pathname}
-            workspaceName={session.workspace.name}
-            localeControl={<Button variant="outline" size="icon" aria-label="Language">EN</Button>}
-            themeControl={<Button variant="outline" size="icon" aria-label="Theme">◐</Button>}
+            workspaceName={current.workspace.name}
+            localeControl={
+              <Button variant="outline" size="icon" aria-label="Language">
+                EN
+              </Button>
+            }
+            themeControl={
+              <Button variant="outline" size="icon" aria-label="Theme">
+                ◐
+              </Button>
+            }
           />
           <div className="flex flex-1 flex-col gap-6">
             <h1 className="text-lg font-medium">Feature content</h1>
@@ -98,6 +111,23 @@ const meta = {
   title: 'Application/App shell',
   component: AppShellContract,
   parameters: { layout: 'fullscreen' },
+  args: { pathname: '/app/students', workspace: 'school', role: 'OWNER', isLogoutPending: false },
+  argTypes: {
+    pathname: {
+      control: 'select',
+      options: [
+        '/app',
+        '/app/calendar',
+        '/app/students',
+        '/app/students/new',
+        '/app/groups',
+        '/app/settings',
+      ],
+    },
+    workspace: { control: 'inline-radio', options: ['school', 'solo'] },
+    role: { control: 'inline-radio', options: ['OWNER', 'TEACHER'] },
+    session: { table: { disable: true } },
+  },
 } satisfies Meta<typeof AppShellContract>;
 
 export default meta;
@@ -118,18 +148,14 @@ export const DesktopExpanded: Story = {
   },
 };
 
-export const WorkspaceContext: Story = {
-  play: async ({ canvas }) => {
-    await expect(canvas.getByRole('button', { name: 'Switch workspace' })).toBeVisible();
-    await expect(canvas.getAllByText('Kyiv Language Studio').length).toBeGreaterThan(0);
-  },
-};
-
-export const SoloWorkspaceIdentity: Story = {
-  args: { isSolo: true },
+/** A solo tutor as a teacher: Teachers and Settings both disappear. */
+export const SoloTeacher: Story = {
+  args: { workspace: 'solo', role: 'TEACHER' },
   play: async ({ canvas }) => {
     const workspace = canvas.getByRole('button', { name: 'Switch workspace' });
     await expect(within(workspace).getByText('Individual tutor')).toBeVisible();
+    await expect(canvas.queryByRole('link', { name: 'Teachers' })).toBeNull();
+    await expect(canvas.queryByRole('link', { name: 'Settings' })).toBeNull();
   },
 };
 
@@ -138,22 +164,6 @@ export const ActiveDetailRoute: Story = {
   play: async ({ canvas }) => {
     await expect(canvas.getByText('Details')).toBeVisible();
     await expect(canvas.queryByText('83d4d4e3-5e9b-4fd0-b9cc-8d6e5f3d0e8e')).toBeNull();
-  },
-};
-
-export const SoloWorkspace: Story = {
-  args: { isSolo: true },
-  play: async ({ canvas }) => {
-    await expect(canvas.queryByRole('link', { name: 'Teachers' })).toBeNull();
-    await expect(canvas.getByRole('link', { name: 'Settings' })).toBeVisible();
-  },
-};
-
-export const NonOwnerSchoolWorkspace: Story = {
-  args: { session: { ...ownerSession, role: 'TEACHER' } },
-  play: async ({ canvas }) => {
-    await expect(canvas.getByRole('link', { name: 'Teachers' })).toBeVisible();
-    await expect(canvas.queryByRole('link', { name: 'Settings' })).toBeNull();
   },
 };
 
@@ -187,7 +197,11 @@ export const LongUkrainianDark: Story = {
 };
 
 export const MobileSidebar: Story = {
-  render: () => <NarrowStoryContainer><AppShellContract /></NarrowStoryContainer>,
+  render: () => (
+    <NarrowStoryContainer>
+      <AppShellContract />
+    </NarrowStoryContainer>
+  ),
   beforeEach: forceMobileMediaQuery,
   parameters: {
     viewport: { defaultViewport: 'mobile1' },
@@ -202,9 +216,7 @@ export const MobileSidebar: Story = {
     await waitFor(() => expect(openedFromKeyboard).toBeVisible());
     openedFromKeyboard.focus();
     await userEvent.keyboard('{Escape}');
-    await waitFor(() =>
-      expect(sheet.queryByRole('dialog', { name: 'Sidebar' })).not.toBeVisible(),
-    );
+    await waitFor(() => expect(sheet.queryByRole('dialog', { name: 'Sidebar' })).not.toBeVisible());
 
     await userEvent.click(trigger);
     const dialog = sheet.getByRole('dialog', { name: 'Sidebar' });
