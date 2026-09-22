@@ -8,5 +8,5 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function LoginPage() {
-  return <div className="mx-auto w-full max-w-sm"><LoginFormContainer /></div>;
+  return <LoginFormContainer />;
 }

@@ -8,5 +8,5 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function RegisterPage() {
-  return <div className="w-full max-w-md"><RegisterFormContainer /></div>;
+  return <RegisterFormContainer />;
 }

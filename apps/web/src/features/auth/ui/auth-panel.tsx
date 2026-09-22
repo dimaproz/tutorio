@@ -1,12 +1,4 @@
 import type { ReactNode } from 'react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 
 interface AuthPanelProps {
   title: string;
@@ -15,15 +7,20 @@ interface AuthPanelProps {
   children: ReactNode;
 }
 
+/** The heading, form and footer link of an authentication screen. */
 export function AuthPanel({ title, description, footer, children }: AuthPanelProps) {
   return (
-    <Card>
-      <CardHeader className="text-center">
-        <CardTitle className="text-xl">{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>{children}</CardContent>
-      <CardFooter className="justify-center text-center">{footer}</CardFooter>
-    </Card>
+    <div className="flex flex-col gap-6 md:gap-8">
+      <div className="flex flex-col gap-2 md:gap-2.5">
+        <h1 className="text-[30px] leading-[34px] font-semibold tracking-[-0.03em] md:text-[40px] md:leading-[44px] md:tracking-[-0.035em]">
+          {title}
+        </h1>
+        <p className="text-[15px] leading-[22px] text-muted-foreground md:text-base md:leading-6">
+          {description}
+        </p>
+      </div>
+      {children}
+      <div className="text-center text-sm leading-5 text-muted-foreground">{footer}</div>
+    </div>
   );
 }

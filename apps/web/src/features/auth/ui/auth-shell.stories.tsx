@@ -1,46 +1,63 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect } from 'storybook/test';
-import { Button } from '@/components/ui/button';
-import { NarrowStoryContainer } from '@/stories/story-helpers';
+import { LocaleSegmented } from '@/components/locale-switcher';
 import { AuthShell } from './auth-shell';
 import { LoginForm } from './login-form';
+import { RegisterForm } from './register-form';
 
-async function noOp() {}
+type Args = {
+  screen: 'login' | 'register';
+  requestError: string;
+  registerMode: 'SOLO' | 'SCHOOL';
+};
 
-function AuthShellStory() {
+/**
+ * The sign-in and create-workspace screens with their frame: the form card
+ * beside the indigo panel on desktop, the indigo band above an overlapping
+ * card on phones (viewport toolbar: Handoff mobile 390).
+ */
+function AuthScreen({ screen, requestError, registerMode }: Args) {
   return (
-    <AuthShell
-      localeControl={
-        <Button variant="ghost" size="icon" aria-label="Change language">
-          EN
-        </Button>
-      }
-    >
-      <div className="mx-auto w-full max-w-sm">
-        <LoginForm onSubmit={noOp} />
-      </div>
+    <AuthShell variant={screen} localeControl={<LocaleSegmented />}>
+      {screen === 'login' ? (
+        <LoginForm requestError={requestError || undefined} onSubmit={async () => undefined} />
+      ) : (
+        <RegisterForm
+          key={registerMode}
+          defaultMode={registerMode}
+          requestError={requestError || undefined}
+          onSubmit={async () => undefined}
+        />
+      )}
     </AuthShell>
   );
 }
 
 const meta = {
-  title: 'Auth/Shell',
-  component: AuthShellStory,
-  parameters: { layout: 'fullscreen' },
-} satisfies Meta<typeof AuthShellStory>;
+  title: 'Auth/Screens',
+  component: AuthScreen,
+  parameters: { layout: 'fullscreen', fullBleed: true },
+  args: { screen: 'login', requestError: '', registerMode: 'SCHOOL' },
+  argTypes: {
+    screen: { control: 'inline-radio', options: ['login', 'register'] },
+    registerMode: {
+      control: 'inline-radio',
+      options: ['SOLO', 'SCHOOL'],
+      if: { arg: 'screen', eq: 'register' },
+    },
+  },
+} satisfies Meta<typeof AuthScreen>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Desktop: Story = {
+export const Playground: Story = {
   play: async ({ canvas }) => {
-    await expect(getComputedStyle(canvas.getByText('Tutorio')).fontFamily).toMatch(/geist/i);
+    await expect(canvas.getByRole('heading', { level: 1, name: 'Welcome back' })).toBeVisible();
+    await expect(getComputedStyle(canvas.getByRole('heading', { level: 1 })).fontFamily).toMatch(
+      /geist/i,
+    );
   },
 };
-export const Mobile320: Story = {
-  render: () => (
-    <NarrowStoryContainer>
-      <AuthShellStory />
-    </NarrowStoryContainer>
-  ),
-};
+
+export const Register: Story = { args: { screen: 'register' } };

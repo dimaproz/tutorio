@@ -2,18 +2,18 @@
 
 import Link from 'next/link';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { ArrowRightIcon, Building2Icon, MailIcon, UserIcon } from 'lucide-react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Field, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Spinner } from '@/components/ui/spinner';
+import { ChoiceCardGroup } from '@/components/shared/choice-card';
+import { Notice } from '@/components/shared/notice';
+import { TextField } from '@/components/shared/text-field';
 import { makeZodErrorMap } from '@/lib/forms/error-map';
+import { cn } from '@/lib/utils';
 import { registerFormSchema, type RegisterFormValues } from '../model/register-form';
 import { AuthPanel } from './auth-panel';
-import { PasswordInput } from './password-input';
 
 interface RegisterFormProps {
   onSubmit: (values: RegisterFormValues) => Promise<void>;
@@ -31,6 +31,7 @@ export function RegisterForm({
   defaultPasswordVisible = false,
 }: RegisterFormProps) {
   const t = useTranslations('auth.register');
+  const tLogin = useTranslations('auth.login');
   const tValidation = useTranslations('validation');
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerFormSchema, {
@@ -50,84 +51,108 @@ export function RegisterForm({
   const { errors, isSubmitting } = form.formState;
   const mode = useWatch({ control: form.control, name: 'mode' });
   const submitting = pending || isSubmitting;
+  const reveal = { show: tLogin('showPassword'), hide: tLogin('hidePassword') };
 
   return (
     <AuthPanel
       title={t('title')}
       description={t('subtitle')}
       footer={
-        <p className="text-sm text-muted-foreground">
+        <p>
           {t('haveAccount')}{' '}
-          <Link href="/login" className="font-medium text-primary hover:underline">
+          <Link
+            href="/login"
+            className="font-semibold text-tint-indigo-foreground no-underline hover:underline"
+          >
             {t('loginLink')}
           </Link>
         </p>
       }
     >
-      <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
-        <FieldGroup>
-          {requestError ? (
-            <Alert variant="destructive">
-              <AlertDescription>{requestError}</AlertDescription>
-            </Alert>
-          ) : null}
-          <FieldSet>
-            <FieldLegend>{t('mode')}</FieldLegend>
-            <RadioGroup
-              aria-label={t('mode')}
-              value={mode}
-              onValueChange={(value) => form.setValue('mode', value as RegisterFormValues['mode'], { shouldValidate: true })}
-            >
-              <Field orientation="horizontal">
-                <RadioGroupItem id="register-mode-solo" value="SOLO" />
-                <FieldContent>
-                  <FieldLabel htmlFor="register-mode-solo">{t('modeSolo')}</FieldLabel>
-                  <FieldDescription>{t('modeSoloHint')}</FieldDescription>
-                </FieldContent>
-              </Field>
-              <Field orientation="horizontal">
-                <RadioGroupItem id="register-mode-school" value="SCHOOL" />
-                <FieldContent>
-                  <FieldLabel htmlFor="register-mode-school">{t('modeSchool')}</FieldLabel>
-                  <FieldDescription>{t('modeSchoolHint')}</FieldDescription>
-                </FieldContent>
-              </Field>
-            </RadioGroup>
-          </FieldSet>
-          <Field data-invalid={errors.name ? true : undefined}>
-            <FieldLabel htmlFor="register-name">{t('name')}</FieldLabel>
-            <Input id="register-name" autoComplete="name" aria-invalid={errors.name ? true : undefined} {...form.register('name')} />
-            <FieldError errors={[errors.name]} />
-          </Field>
+      <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="flex flex-col gap-5">
+        <fieldset className="flex flex-col gap-2.5">
+          <legend className="mb-2.5 text-sm leading-5 font-medium">{t('mode')}</legend>
+          <ChoiceCardGroup
+            label={t('mode')}
+            value={mode}
+            onValueChange={(value) => form.setValue('mode', value, { shouldValidate: true })}
+            options={[
+              { value: 'SOLO', title: t('modeSolo'), hint: t('modeSoloHint'), icon: <UserIcon /> },
+              {
+                value: 'SCHOOL',
+                title: t('modeSchool'),
+                hint: t('modeSchoolHint'),
+                icon: <Building2Icon />,
+              },
+            ]}
+          />
+        </fieldset>
+
+        {/* The workspace name only matters for a school: a solo tutor's
+            workspace is named after them. */}
+        <div className={cn('grid gap-4 sm:items-start', mode === 'SCHOOL' && 'sm:grid-cols-2')}>
+          <TextField
+            id="register-name"
+            label={t('name')}
+            placeholder={t('namePlaceholder')}
+            autoComplete="name"
+            error={errors.name?.message}
+            {...form.register('name')}
+          />
           {mode === 'SCHOOL' ? (
-            <Field data-invalid={errors.workspaceName ? true : undefined}>
-              <FieldLabel htmlFor="register-workspace">{t('workspaceName')}</FieldLabel>
-              <Input id="register-workspace" autoComplete="organization" aria-invalid={errors.workspaceName ? true : undefined} aria-describedby="register-workspace-hint" {...form.register('workspaceName')} />
-              <FieldDescription id="register-workspace-hint">{t('workspaceNameHint')}</FieldDescription>
-              <FieldError errors={[errors.workspaceName]} />
-            </Field>
+            <TextField
+              id="register-workspace"
+              label={t('workspaceName')}
+              autoComplete="organization"
+              hint={t('workspaceNameHint')}
+              error={errors.workspaceName?.message}
+              {...form.register('workspaceName')}
+            />
           ) : null}
-          <Field data-invalid={errors.email ? true : undefined}>
-            <FieldLabel htmlFor="register-email">{t('email')}</FieldLabel>
-            <Input id="register-email" type="email" autoComplete="email" inputMode="email" spellCheck={false} aria-invalid={errors.email ? true : undefined} {...form.register('email')} />
-            <FieldError errors={[errors.email]} />
-          </Field>
-          <Field data-invalid={errors.password ? true : undefined}>
-            <FieldLabel htmlFor="register-password">{t('password')}</FieldLabel>
-            <PasswordInput id="register-password" autoComplete="new-password" aria-invalid={errors.password ? true : undefined} aria-describedby="register-password-hint" defaultVisible={defaultPasswordVisible} {...form.register('password')} />
-            <FieldDescription id="register-password-hint">{t('passwordHint')}</FieldDescription>
-            <FieldError errors={[errors.password]} />
-          </Field>
-          <Field data-invalid={errors.confirmPassword ? true : undefined}>
-            <FieldLabel htmlFor="register-confirm-password">{t('confirmPassword')}</FieldLabel>
-            <PasswordInput id="register-confirm-password" autoComplete="new-password" aria-invalid={errors.confirmPassword ? true : undefined} {...form.register('confirmPassword')} />
-            <FieldError errors={[errors.confirmPassword]} />
-          </Field>
-          <Button type="submit" disabled={submitting} className="w-full">
-            {submitting ? <Spinner data-icon="inline-start" /> : null}
-            {t('submit')}
-          </Button>
-        </FieldGroup>
+        </div>
+
+        <TextField
+          id="register-email"
+          label={t('email')}
+          type="email"
+          icon={<MailIcon />}
+          placeholder={tLogin('emailPlaceholder')}
+          autoComplete="email"
+          inputMode="email"
+          spellCheck={false}
+          error={errors.email?.message}
+          {...form.register('email')}
+        />
+
+        <div className="grid gap-4 sm:grid-cols-2 sm:items-start">
+          <TextField
+            id="register-password"
+            label={t('password')}
+            type="password"
+            autoComplete="new-password"
+            hint={t('passwordHint')}
+            revealLabels={reveal}
+            defaultRevealed={defaultPasswordVisible}
+            error={errors.password?.message}
+            {...form.register('password')}
+          />
+          <TextField
+            id="register-confirm-password"
+            label={t('confirmPassword')}
+            type="password"
+            autoComplete="new-password"
+            revealLabels={reveal}
+            error={errors.confirmPassword?.message}
+            {...form.register('confirmPassword')}
+          />
+        </div>
+
+        <Button type="submit" size="xl" disabled={submitting} className="mt-1 w-full">
+          {submitting ? <Spinner data-icon="inline-start" /> : null}
+          {t('submit')}
+          {submitting ? null : <ArrowRightIcon data-icon="inline-end" />}
+        </Button>
+        {requestError ? <Notice tone="danger" text={requestError} /> : null}
       </form>
     </AuthPanel>
   );
