@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { useFormatter, useTranslations } from 'next-intl';
 import type { StudentListItem, StudentStatusDto } from '@tutorio/validation';
@@ -87,6 +88,16 @@ export function StudentLearningCell({
 }
 
 /**
+ * The one placeholder for an empty cell. Both empty columns share it so they
+ * cannot drift apart: routing the text through a component that also draws
+ * something else picks up that component's caption size, which is measured to
+ * sit under a meter rather than to stand alone in a cell.
+ */
+function CellPlaceholder({ children }: { children: ReactNode }) {
+  return <span className="text-[13px] text-muted-foreground">{children}</span>;
+}
+
+/**
  * Credits, the next lesson and the balance are all per-student rollups the
  * list endpoint does not compute. Each renders the design's own empty state
  * rather than a number, so a reader is never misled.
@@ -95,7 +106,7 @@ export function StudentCreditsCell({ left, total }: { left?: number; total?: num
   const t = useTranslations('students.list');
 
   if (left == null || total == null || total === 0) {
-    return <CreditMeter left={0} total={0} label={t('noPackage')} />;
+    return <CellPlaceholder>{t('noPackage')}</CellPlaceholder>;
   }
 
   return (
@@ -119,7 +130,7 @@ export function StudentNextLessonCell({
   const t = useTranslations('students.list');
 
   if (!date && !today) {
-    return <span className="text-[13px] text-muted-foreground">{t('noLessonsPlanned')}</span>;
+    return <CellPlaceholder>{t('noLessonsPlanned')}</CellPlaceholder>;
   }
 
   return (
@@ -139,12 +150,15 @@ export function StudentNextLessonCell({
 export function StudentBalanceCell({
   label,
   tone,
+  empty,
 }: {
   label?: string;
   tone?: 'success' | 'warning' | 'danger' | 'neutral';
+  /** Shown when there is no balance to report. */
+  empty?: string;
 }) {
   if (!label) {
-    return <span className="text-sm text-muted-foreground">{PENDING_VALUE}</span>;
+    return <CellPlaceholder>{empty ?? PENDING_VALUE}</CellPlaceholder>;
   }
   return <Badge variant={tone ?? 'neutral'}>{label}</Badge>;
 }
