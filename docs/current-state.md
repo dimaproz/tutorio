@@ -69,6 +69,18 @@ second visual system or speculative product scope. The required order is:
 7. Run the complete pilot acceptance matrix with realistic seed data and an
    isolated database.
 
+### Studio students & auth handoff
+
+The students and authentication screens follow the Studio handoff: the
+shared base, form and status kits (`TextField`, `ChoiceCard`, `Notice`,
+`Segmented`, `IconButton`, `SectionNav`, `ActionBar`, `StatusTrigger` with
+its menu and sheet, `AdaptiveDialog`, and more), full-page student create and
+edit routes, the status control with the hold and archive flows, collection
+rows and profile metrics derived from package and lesson data, the phone
+app bar and tab bar, and the two-column sign-in and registration screens.
+Storybook was reorganised to one entry per component with controls; screen
+stories render the real features against an in-memory story backend.
+
 ### Frontend Packet F0 evidence
 
 ADR 0005 replaces TailAdmin and the current page layouts as design authorities.

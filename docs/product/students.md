@@ -1,10 +1,51 @@
 # Student Workflow and Work Packet 6 Screen Brief
 
-Last verified: 2026-09-22 through source and contract inspection plus the full
+Last verified: 2026-09-22 (Studio students handoff) through source and contract inspection plus the full
 generation, lint, typecheck, unit, production, Storybook browser/accessibility,
 Storybook static-build, and whitespace gate. The complete 166-test Storybook
 suite passed twice. Status: Work Packet 6 implementation and blocking-review
 remediation are complete; independent re-review remains before Work Packet 6.1.
+
+## Studio students handoff (2026-09-22) — current contract
+
+The students & auth design handoff supersedes the dialog-based create/edit
+and the overflow lifecycle menu described further down. Where the sections
+below disagree with this one, this one wins.
+
+- **Create and edit are full pages**: `/app/students/new` and
+  `/app/students/[studentId]/edit`. Six sections (personal details, contacts,
+  learning profile, preferences, price, notes) with a scroll-following
+  `SectionNav` (chips on phones), per-section done/error marks, a progress
+  meter on create and a sticky `ActionBar`. Only the name and timezone are
+  required. Create keeps a local draft in this browser until it is created
+  or discarded; leaving a dirty form asks first. Edit shows loading, load
+  error (never a create form), unsaved-change counts, request error with
+  retry, and a read-only archived state. Success navigates to the profile
+  (`?setup=1` after create) with a toast.
+- `StudentQuickCreateDialog` remains only for creating a student inline from
+  another workflow (the group form). The edit dialog and the separate
+  archive dialog are removed.
+- **Status lives in one control**, in the profile hero and the edit header:
+  a dropdown on desktop, a bottom sheet on phones. Active → on a break opens
+  the hold dialog, which can cancel the student's upcoming *individual*
+  scheduled lessons as `CANCELLED_UNCHARGED` by the teacher (group lessons
+  keep running); on a break → active and archived → active apply at once;
+  any → archived confirms first. The row menu no longer changes status.
+  The design's optional return date is not offered: the API has no field to
+  store it and no reminder to send.
+- **Profile order**: status banner (on a break / archived) first, then the
+  hero with the next-lesson ticket, four metrics, the set-up checklist for a
+  fresh student, the lesson sections and the aside (notes, parents,
+  contacts). Hero commands follow the status: active schedules and edits, on
+  a break edits, archived restores. Metrics are derived from the student's
+  packages and lessons (`model/profile-metrics`); an archived profile shows
+  no live metrics.
+- **Collection rows carry real rollups** (`model/rollups`): credits of the
+  live package, what is owed, the next scheduled lesson and its teacher, all
+  from the package and lesson reads the page already makes. A partial
+  package read reports nothing rather than a false "paid". The teacher
+  filter is removed; the low-credit filter and the card view stay disabled
+  until the API can filter by them.
 
 ## User job
 
