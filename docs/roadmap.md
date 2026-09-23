@@ -84,7 +84,7 @@ Outcome: a tutor can complete core tasks without understanding the data model.
 Approved implementation order:
 
 1. Work Packet 6 — Student Experience and Quick Create.
-2. Work Packet 6.1 — Parents.
+2. Work Packet 6.1 — Parents (closed 2026-09-23).
 3. Work Packet 6.2 — Teachers.
 4. Work Packet 6.3 — Groups and Enrollments.
 5. Work Packet 6.4 — Scheduling: Calendar and Recurring Patterns.

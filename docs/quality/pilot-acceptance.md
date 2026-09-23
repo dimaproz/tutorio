@@ -1,6 +1,6 @@
 # Pilot Acceptance Matrix
 
-Last verified: 2026-09-08.
+Last verified: 2026-09-23.
 
 Status values: `Not run`, `Fail`, `Pass`, or `Not applicable`. A row may be
 marked `Pass` only with a linked automated test, screenshot/report, or run log.
@@ -20,14 +20,15 @@ marked `Pass` only with a linked automated test, screenshot/report, or run log.
 
 ## UX acceptance
 
-| Surface                     | Required evidence                                                                | Status                                        |
-| --------------------------- | -------------------------------------------------------------------------------- | --------------------------------------------- |
-| Student quick create        | First-time user completes required path; interaction test; mobile/desktop; uk/en | Fail — current all-in-one modal is overloaded |
-| Package sale                | User can explain entitlement, price, payment state, and next step before submit  | Fail — creation mixes three jobs              |
-| Package detail/history      | Every balance change is traceable to a dated human-readable event                | Not run                                       |
-| Destructive confirmation    | Consequences list affected lessons, credits, payments, and reversibility         | Not run                                       |
-| Loading/empty/error/success | Each pilot route has tested recoverable states                                   | Not run                                       |
-| Accessibility               | Keyboard flow, focus return, labels, contrast, and non-drag alternative verified | Not run                                       |
+| Surface                     | Required evidence                                                                                               | Status                                                                                                                                                               |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Student quick create        | First-time user completes required path; interaction test; mobile/desktop; uk/en                                | Fail — current all-in-one modal is overloaded                                                                                                                        |
+| Parent contacts and linking | Collection/profile/form states; linking and unlinking from both sides; owner-only delete; mobile/desktop; uk/en | Pass — `Parents/Screens/*` Storybook play and axe tests (223/223, 2026-09-23) and `apps/api/test/stage2.e2e-spec.ts` parents block on isolated PostgreSQL 17 (80/80) |
+| Package sale                | User can explain entitlement, price, payment state, and next step before submit                                 | Fail — creation mixes three jobs                                                                                                                                     |
+| Package detail/history      | Every balance change is traceable to a dated human-readable event                                               | Not run                                                                                                                                                              |
+| Destructive confirmation    | Consequences list affected lessons, credits, payments, and reversibility                                        | Not run                                                                                                                                                              |
+| Loading/empty/error/success | Each pilot route has tested recoverable states                                                                  | Not run                                                                                                                                                              |
+| Accessibility               | Keyboard flow, focus return, labels, contrast, and non-drag alternative verified                                | Not run                                                                                                                                                              |
 
 ## Engineering and operations
 

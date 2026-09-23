@@ -113,11 +113,12 @@ the reverse.
 | Person rows and credits                  | `PersonItem`, `PersonItemTile`, `CreditMeter` — `@/components/shared/person-item`, `credit-meter`                                                               | media/name/subtitle with action, `menu` and trail slots, optional `href` (the whole row links, row hover), `tone` surface/soft/ink; credits left/total with caller-supplied captions | Feature screens, shell, pickers     | `Shared/Base/PersonItem`, `Shared/Base/CreditMeter`            |
 | Profile identity and next lesson         | `ProfileHero`, `NextLessonCard` — `@/components/shared/profile-hero`, `next-lesson-card`                                                                       | avatar, badges, name, meta, contact, action and `menu` slots, decorative glyph; lesson date/time/teacher with its own empty and loading states | Person profile screens              | `Shared/Cards/*`                                                |
 | Aside blocks and contacts                | `InfoCard`, `ContactRow` — `@/components/shared/info-card`, `contact-row`                                                                                      | title with optional action; icon + value rows, `mono` for figures                              | Feature detail asides               | `Shared/Cards/*`                                                |
+| Profile notes                            | `NotesCard` — `@/components/shared/notes-card`                                                                                                                | notes, updated label, labels, max length, read-only, `pending`; `onSave` resolves true to close the editor | Person profiles                     | `Shared/Cards/NotesCard`                                        |
 | Search and collection filters            | `SearchField`, `FilterPill` — `@/components/shared/search-field`, `filter-pill`                                                                                | placeholder and shortcut; label, icon, `menu` or `pressed`, optional count                     | Application shell, feature lists    | `Shared/Collection/*`                                           |
 | Design glyphs and icon buttons           | `Glyph`/`GLYPHS`, `IconButton` — `@/components/shared/glyph`, `icon-button`                                                                                    | design glyph names mapped to Lucide; required `label`, size 44/38/36/32, tone, border, indicator | Everything                          | `Shared/Base/Icon`, `Shared/Base/IconButton`                    |
 | Collection segments                      | `Segmented` — `@/components/shared/segmented`                                                                                                                  | items with label/icon/count, `surface`/`paper`; single choice                                   | Feature lists, auth locale switch   | `Shared/Collection/Segmented`                                   |
 | Form fields and choices                  | `TextField`, `fieldBoxClass`, `ChoiceCardGroup` — `@/components/shared/text-field`, `choice-card`                                                              | label, required mark, aside, hint/error wired to the control; text/email/password/select/textarea | Every form                          | `Shared/Form/TextField`, `Shared/Form/ChoiceCard`               |
-| Full-page form frame                     | `FormSectionHeader`, `FormSectionCard`, `SectionNav`, `SectionChips`, `ActionBar`, `SectionSkeleton`, `ProgressMeter` — `@/components/shared/*`                 | section ids, per-section status done/error, sticky save bar with note tone and caller-owned buttons; the progress caption sits on its own line under the bars | Feature form pages                  | `Shared/Form/*`                                                 |
+| Full-page form frame                     | `FormPageLayout`, `FormSectionHeader`, `FormSectionCard`, `SectionNav`, `SectionChips`, `ActionBar`, `SectionSkeleton`, `ProgressMeter` — `@/components/shared/*` | `FormPageLayout` owns header, navigation (chips on phones), a block under it, notice, sections and bar; section ids, per-section status done/error, sticky save bar with note tone and caller-owned buttons; the progress caption sits on its own line under the bars | Feature form pages                  | `Shared/Form/*`                                                 |
 | Relationship linking                     | `LinkPicker`, `LinkPickerDialog` — `@/components/shared/link-picker`, `link-picker-dialog`                                                                     | linked set with ✕, controlled search, `results`/`selected`/`onToggle`, listbox keyboard, optional create row; dialog: modal on desktop, sheet on phones, `confirmLabel`, `busy` | Feature forms and profiles          | `Shared/Form/LinkPicker`, `Shared/Form/LinkPickerDialog`        |
 | Linked records on a profile              | `LinkedCard` — `@/components/shared/linked-card`                                                                                                              | title with count, `addLabel` (omit for read-only), items with `href` and caller-owned `menu`, empty text and up to two actions, `size` md/sm | Both sides of a relationship        | `Shared/Cards/LinkedCard`                                       |
 | Destructive block of an edit form        | `DangerZone` — `@/components/shared/danger-zone`                                                                                                              | title, what is lost, action label, `onAction`; the caller renders nothing for a viewer who cannot act | Feature edit pages                  | `Shared/Form/DangerZone`                                        |
@@ -129,10 +130,19 @@ the reverse.
 `LinkPicker` is the multi-select relationship picker; `EntityPicker` stays the
 single-select combobox for form fields and filters. Do not merge them. Both
 sides of a relationship use one `LinkedCard` with one `LinkPickerDialog` and
-save the whole set through `useLinkedSet` (`@/hooks/use-linked-set`), which
-keeps the last sent set authoritative until the record refreshes. Unlinking
-confirms with the neutral `ConfirmDialog`; the red one is reserved for
-deleting a record. `Card tone="danger"` exists only for `DangerZone`.
+run on `useRelationshipLinks` (`@/hooks/use-relationship-links`): picker state,
+unlink confirmation, rows for the set, and the save through `useLinkedSet`,
+which keeps the last sent set authoritative until a newer record arrives and
+holds the controls while the record refreshes. Unlinking confirms with the
+neutral `ConfirmDialog`; the red one is reserved for deleting a record.
+`Card tone="danger"` exists only for `DangerZone`.
+
+A dialog opened from state rather than a trigger (`ConfirmDialog`,
+`LinkPickerDialog`) returns focus to what opened it through `useReturnFocus`,
+with a caller-supplied fallback when that element is gone. Input filters that
+clean typed text (`@/lib/forms/input-filters`) wrap the registration's own
+`onChange` with `filteredRegistration`; the `onChange` option of `register`
+runs after react-hook-form has stored the value and cannot filter it.
 
 The generic status contract deliberately has no validation DTO import. Each
 domain adapter maps its lifecycle DTO and localized copy locally. `StatBlock` is

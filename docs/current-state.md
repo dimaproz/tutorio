@@ -18,14 +18,14 @@ deployable while preserving proven behavior.
 
 - Branch: `develop`; Work Packet 5 implementation is committed as `e362675`,
   Frontend Packet F5 as `4900755`, and Work Packet 6 is closed on 2026-09-23.
-  Work Packet 6.1 — Parents is implemented on 2026-09-23; its independent
-  review is pending.
+  Work Packet 6.1 — Parents is closed on 2026-09-23 after a four-slice
+  independent review and its remediation.
 - The former `refactor/students-design` work was merged by PR #18.
 - `pnpm generate`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build`
   pass on 2026-09-23. Observed unit totals: domain 92, validation 49, API 158,
-  and web 175. Storybook browser tests pass for 217 tests across 73 files,
+  and web 182. Storybook browser tests pass for 223 tests across 75 files,
   including automated accessibility checks, and the static build passes.
-- API E2E passes 79 tests in 6 suites against an isolated PostgreSQL 17
+- API E2E passes 80 tests in 6 suites against an isolated PostgreSQL 17
   database after all 22 migrations (WP6.1 adds parent email, the "no students"
   filter and the server-side sort). Earlier runs passed 78 tests in 6 suites
   against an isolated PostgreSQL 17
@@ -185,6 +185,17 @@ the whole set through `useLinkedSet`, and confirm an unlink with the neutral
 dialog. Parent email is stored end to end. Delete is hidden for non-owners in
 the row menu, the profile menu and the edit form. See
 [`product/parents.md`](./product/parents.md).
+
+Closure, 2026-09-23: four independent reviews (frontend correctness, API and
+contract, design-system compliance, accessibility and responsive layout) found
+no blocker. The remediation fixed the confirmed findings: input filters that
+never reached the submitted value (the student form shared the defect), a
+search field that kept cleared text, stale-set edge cases in `useLinkedSet`,
+the duplicated linking cards (now one `useRelationshipLinks`), cloned form
+layouts and notes cards (now the shared `FormPageLayout` and `NotesCard`),
+focus return from dialogs, picker scrolling and announcements, phone touch
+targets, and thin E2E assertions. The declined items and their reasons are in
+the brief's review section.
 
 ### Work Packet 6 evidence
 
@@ -358,6 +369,7 @@ generated client expose the typed `403` contract for owner-only handlers.
 Work Packet 6 — Student Experience and Quick Create is closed: it passed an
 independent four-dimension review, its remediation, a verifying re-review, and
 the complete local gate on 2026-09-23. The Student feature is the reference
-collection/detail/form migration. The next checkpoint is Work Packet 6.1 —
-Parents, which starts with its architect-approved screen brief in
-`docs/product/`.
+collection/detail/form migration. Work Packet 6.1 — Parents is closed on the
+same pattern, with its brief in [`product/parents.md`](./product/parents.md).
+The next checkpoint is Work Packet 6.2 — Teachers, which starts with its
+architect-approved screen brief in `docs/product/`.

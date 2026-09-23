@@ -38,8 +38,8 @@ cross-workspace and non-owner denial.
 | Relationships  | Many-to-many students through `StudentParent`.                                                                                      |
 | Create/update  | Name plus optional email, phone, Telegram, avatar and notes, and optional student IDs; updates replace the full student-link set in one audited transaction. Email is normalized like a student's. |
 | List query     | Search covers name, email, phone and Telegram. `studentId` narrows to one student's parents, `linked=none` to parents with no live linked student, and `sort=fullName\|createdAt` with `order` sorts on the server, so every filter holds across pages. |
-| Target removal | Archive/restore is normal. Unused record may be hard-deleted by owner.                                                              |
-| Current gap    | DELETE hard-deletes the parent and links; stale `deletedAt`/trash concepts imply a restore lifecycle that the API does not provide. |
+| Lifecycle      | None: a parent is active until the owner deletes it. DELETE is owner-only and permanent — it removes the parent and its links, never the students or their history. There is no archive, trash or restore. |
+| Known leftover | The `deletedAt` column and the `state` list parameter predate the hard-delete decision; no command sets `deletedAt` on a parent. |
 | UX rule        | Do not persist a nested parent before an unsaved student. Create/link after student save unless one atomic API command owns both.   |
 
 Acceptance scenarios: create unlinked, link to multiple students, unlink one,

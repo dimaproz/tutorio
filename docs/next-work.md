@@ -231,7 +231,7 @@ and every major finding were fixed with tests or stories, a verifying re-review
 passed, and the full gate is green with 183 Storybook tests. Details are in
 [`current-state.md`](./current-state.md#work-packet-6-evidence).
 
-### Work Packet 6.1 — Parents (implemented 2026-09-23, review pending)
+### Work Packet 6.1 — Parents (closed 2026-09-23)
 
 Implements the Studio parents handoff; the brief is
 [`product/parents.md`](./product/parents.md). Collection, profile, full-page
@@ -243,10 +243,16 @@ The API gained parent `email` (migration `20260923120000_parent_email`), the
 archive/restore surfaces the plan once named do not exist; delete stays
 owner-only and permanent.
 
+Closure, 2026-09-23: a four-slice independent review found no blocker; the
+confirmed findings are fixed and the full gate is green (223 Storybook tests,
+80 API E2E on an isolated PostgreSQL 17). The shared `FormPageLayout`,
+`NotesCard`, `useRelationshipLinks` and `useReturnFocus` came out of the review
+and are ready for Teachers. Details are in the brief's review section.
+
 Open product decisions: a stored relation (mother, guardian) and a payer flag;
 a student schedule view for the parent-side row menu.
 
-### Work Packet 6.2 — Teachers
+### Work Packet 6.2 — Teachers (next)
 
 Migrate teacher collection, detail, form, status, assignment, and workspace-mode
 states. Reuse proven person components where their contracts match; keep

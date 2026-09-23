@@ -423,8 +423,10 @@ Expected reference composition:
 
 ### Remaining migration order
 
-1. **Work Packet 6.1 — Parents:** validate the reusable person and relationship
-   patterns against Students.
+1. **Work Packet 6.1 — Parents (closed 2026-09-23):** validated the person and
+   relationship patterns against Students and promoted the shared linking
+   components, `FormPageLayout` and `NotesCard`; see
+   [`product/parents.md`](./product/parents.md).
 2. **Work Packet 6.2 — Teachers:** reuse proven person patterns and retain
    teacher-specific workspace and scheduling behavior.
 3. **Work Packet 6.3 — Groups and Enrollments:** migrate collection, roster,
