@@ -19,15 +19,18 @@ deployable while preserving proven behavior.
 - Branch: `develop`; Work Packet 5 implementation is committed as `e362675`,
   Frontend Packet F5 as `4900755`, and Work Packet 6 is closed on 2026-09-23.
   Work Packet 6.1 — Parents is closed on 2026-09-23 after a four-slice
-  independent review and its remediation.
+  independent review and its remediation. Work Packet 6.3 — Groups is
+  implemented, reviewed in two slices and remediated on 2026-09-23, ahead of
+  Work Packet 6.2 at the product owner's request.
 - The former `refactor/students-design` work was merged by PR #18.
 - `pnpm generate`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build`
-  pass on 2026-09-23. Observed unit totals: domain 92, validation 49, API 158,
-  and web 182. Storybook browser tests pass for 223 tests across 75 files,
-  including automated accessibility checks, and the static build passes.
-- API E2E passes 80 tests in 6 suites against an isolated PostgreSQL 17
-  database after all 22 migrations (WP6.1 adds parent email, the "no students"
-  filter and the server-side sort). Earlier runs passed 78 tests in 6 suites
+  pass on 2026-09-23 after the WP6.3 remediation. Observed unit totals: domain
+  107, validation 53, API 215, and web 234. Storybook browser tests pass for
+  249 tests across 79 files, including automated accessibility checks.
+- API E2E passes 94 tests in 7 suites against an isolated PostgreSQL 17
+  database after all 23 migrations (WP6.3 adds the group teacher, seats and
+  per-student attendance). The WP6.1 run passed 80 tests in 6 suites after
+  22 migrations. Earlier runs passed 78 tests in 6 suites
   against an isolated PostgreSQL 17
   database after the then-current migration set, including legacy-TEACHER
   denials, group compensation cycles, and package archival. The finance
@@ -211,6 +214,12 @@ windows round to whole days; package pages, profile reads and group page
 reads start in parallel; student counts and profile enrollments come in one
 request; 4xx answers are not retried; the calendar loads on demand and unused
 barrel exports drop from bundles.
+
+Review, 2026-09-23: two independent reviewers (backend; web) found five
+backend and ten web defects, none a data-loss blocker; the most serious were a
+reschedule that failed on marked lessons and an edit save that could reassign
+a legacy group's lessons. All are fixed with tests or stories; details are in
+the brief's review section.
 
 ### Work Packet 6.1 evidence
 
@@ -410,5 +419,7 @@ independent four-dimension review, its remediation, a verifying re-review, and
 the complete local gate on 2026-09-23. The Student feature is the reference
 collection/detail/form migration. Work Packet 6.1 — Parents is closed on the
 same pattern, with its brief in [`product/parents.md`](./product/parents.md).
-The next checkpoint is Work Packet 6.2 — Teachers, which starts with its
-architect-approved screen brief in `docs/product/`.
+Work Packet 6.3 — Groups is implemented and reviewed, with its brief in
+[`product/groups.md`](./product/groups.md). The next checkpoint is Work
+Packet 6.2 — Teachers, which starts with its architect-approved screen brief
+in `docs/product/`.

@@ -3,7 +3,7 @@
 Last verified: 2026-09-23 through source inspection, the full lint,
 typecheck, unit, production build and Storybook browser/accessibility gate,
 and API E2E on an isolated PostgreSQL 17. Status: Work Packet 6.3 is
-implemented and independently reviewed.
+implemented, independently reviewed in two slices, and remediated.
 
 Groups follow Students and Parents: the Studio "Indigo & Sky" look, full pages
 instead of dialogs, both themes and phone layouts. The handoff screens are the
@@ -126,7 +126,9 @@ highlighted) and `GroupAttendanceCard` (`AttendanceList`) on the left;
   command for the owner; nothing else can be changed.
 
 Phones stack everything; lesson rows are compact (no overflow menu, shorter
-meta), attendance rows use short names, and the picker is a bottom sheet.
+meta) and each row is one button — a held lesson opens attendance marking, any
+other opens the lesson; attendance rows use short names, and the picker is a
+bottom sheet.
 
 ## Screen 3 — Create and edit
 
@@ -189,6 +191,38 @@ fixed `message`, which would bypass the localized error map
   ranges; API unit tests cover the group service and API E2E the list filters,
   summary, teacher reassignment, first schedule, archive/restore and the
   attendance routes.
+
+## Independent review — 2026-09-23
+
+Two reviewers, each given only the diff and the contracts, covered the
+backend (groups, attendance, the audit fixes, the migration) and the web
+(the groups feature, the shared lists, query invalidation, design system,
+accessibility). All confirmed findings were fixed with a test or a story:
+
+- **Backend.** A "this and following" reschedule of a started lesson with
+  marks failed on the attendance foreign key; regeneration now keeps that
+  lesson. A schedule an empty roster suspended vanished from the page and the
+  list while still blocking a new one; it is now shown everywhere and a
+  schedule set by PATCH on an empty group stays live, as on create. A teacher
+  change left archived memberships with the old teacher and a returning
+  student came back to them; every membership moves now and a reactivated one
+  joins the group's teacher. A student restore could take teacher locks out
+  of order across groups; it now pre-locks them in one sorted call. A group
+  whose roster emptied while archived could be refused restore over lessons
+  the restore suspends at once; the check now runs only with active members.
+- **Web.** Any edit save of a group without its own teacher reassigned every
+  upcoming lesson (the form compared against the record, not its own
+  defaults). Lesson and package actions left the group page, metrics and
+  attendance stale. Phones had no way to mark attendance; rows are now tap
+  targets. The picker could show "no results" while unlinked students
+  remained. Also fixed: a cancelled-then-repeated detail read after each link
+  save, full group rows read just to name them in filters, attendance
+  re-read on every rename, an archive confirmation that briefly said no
+  lessons stop, unnamed weekday pickers, locale-fixed quotes, a share line
+  that always warned, and hand-drawn loading cards and divider.
+
+Declined: wrapping the rows view in `Card` — the `DataTable` rows wrapper is
+the same one Students and Parents use; changing it belongs to a shared pass.
 
 ## Open product decisions
 

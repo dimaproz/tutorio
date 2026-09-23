@@ -252,7 +252,7 @@ and are ready for Teachers. Details are in the brief's review section.
 Open product decisions: a stored relation (mother, guardian) and a payer flag;
 a student schedule view for the parent-side row menu.
 
-### Work Packet 6.3 — Groups (implemented 2026-09-23, ahead of 6.2)
+### Work Packet 6.3 — Groups (closed 2026-09-23, ahead of 6.2)
 
 Implements the Studio groups handoff; the brief is
 [`product/groups.md`](./product/groups.md) and the schema decisions are
@@ -272,6 +272,10 @@ first-schedule path in the group form, and teacher reassignment (migration
 `20260924120000_group_teacher_capacity_attendance`). The same pass audited the
 students, teachers, parents and groups services and cut the web's request
 volume; see [`current-state.md`](./current-state.md#work-packet-63-evidence).
+
+Closure, 2026-09-23: a two-slice independent review (backend; web) found no
+blocker; its fifteen confirmed findings are fixed and the full gate is green
+(249 Storybook tests, 94 API E2E on an isolated PostgreSQL 17).
 
 Follow-ups, in the order they unblock the pilot:
 
