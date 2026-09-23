@@ -1,6 +1,6 @@
 # Authentication Workflow
 
-Last verified: 2026-09-09 through source and official shadcn block inspection.
+Last verified: 2026-09-23 against the Studio sign-in and registration screens.
 
 ## User job
 
@@ -27,79 +27,72 @@ the interface.
   autocomplete attributes, cookie/session behavior, and duplicate-submit
   protection already exist and remain authoritative.
 
-The current split-screen illustration and cardless form are presentation only.
-They are not design authority and may be removed without changing the workflow.
+## Approved screen brief — Studio handoff
 
-## Approved F3 screen brief
+The F3 `login-03`/`signup-03` centred card was superseded by the approved
+"Studio - Indigo & Sky" handoff (see `docs/current-state.md`). The workflow,
+validation, and API behavior above are unchanged; only the composition moved.
 
-### Visual direction
+### Composition
 
-Use the official shadcn `login-03` and `signup-03` blocks as structural
-references. The auth shell uses a full-height `bg-muted` canvas, a compact
-centered column, `GraduationCapIcon` with the localized Tutorio name, and a
-standard `Card`. The locale control stays outside the card in the top right.
-Use only the installed `radix-luma` primitives and semantic tokens.
-
-Remove the decorative auth illustration and its two-column layout. Do not add a
-gradient, custom asset, custom shadow/radius, theme picker, or animation library.
-Stock component focus, hover, and pending transitions are sufficient for this
-packet.
+- Desktop (`lg` and up) is a 40 / 60 split: the form card on the left, a
+  decorative promo panel on the right. Below `lg` the form card has the page
+  alone.
+- Phones show a compact tinted band above the form card with the logo, the
+  EN / UA locale switch, and the same promo chip and headline.
+- The promo panel, the phone band's chip and headline, and the collage of
+  product cards are decoration. They are `aria-hidden`, contain nothing
+  focusable, and never carry information or an action needed to sign in. The
+  panel pins the light palette with `.surface-light` in both themes.
+- The form card holds the logo and the locale switch on desktop, then the
+  title, description, fields, the primary action, and the link to the other
+  form.
 
 ### Sign-in hierarchy
 
-1. Product identity.
-2. Card title and concise workspace-oriented description.
-3. Email field.
-4. Password field with show/hide control.
-5. Primary sign-in button.
-6. Registration link inside the card footer area.
-
-Request failures render as a destructive `Alert` above the fields without
-clearing user input. The form keeps one obvious primary action.
+1. Title and a concise workspace-oriented description.
+2. Email field.
+3. Password field with show/hide control.
+4. Primary sign-in button.
+5. Request error, when present, as an announced `Notice` directly under the
+   primary action; entered values are kept.
+6. Registration link.
 
 ### Registration hierarchy
 
 Registration remains one page and one submission. Do not introduce a wizard or
 stepper.
 
-1. Product identity.
-2. Card title and concise description.
-3. A labelled workspace-mode group with two descriptive choices: solo tutor or
+1. Title and concise description.
+2. A labelled workspace-mode choice (`ChoiceCardGroup`): solo tutor or
    multi-teacher school.
-4. Tutor name.
-5. Workspace name only when `SCHOOL` is selected.
-6. Email.
-7. Password and confirmation as separate vertical fields.
-8. Primary create-workspace button.
-9. Sign-in link inside the card footer area.
-
-The sign-in card uses a `max-w-sm` column. Registration may use `max-w-md` so
-the descriptive mode choices remain readable. Both pages remain single-column.
+3. Tutor name, and the workspace name beside it only when `SCHOOL` is
+   selected (one column on phones, two from `sm`).
+4. Email.
+5. Password and confirmation, side by side from `sm`, stacked on phones.
+6. Primary create-workspace button, with the request error under it.
+7. Sign-in link.
 
 ### Component boundary
 
-Compose existing `Card`, `FieldGroup`, `Field`, `FieldSet`, `FieldLegend`,
-`FieldLabel`, `FieldDescription`, `FieldError`, `Input`, `InputGroup`,
-`RadioGroup`, `Alert`, `Button`, and `Spinner` primitives. Reuse the existing
-`PasswordInput` and `LocaleSwitcher`.
-
-One feature-owned auth panel may be introduced because login and registration
-share the same semantic shell. Keep API mutations and navigation in thin
-runtime containers; keep the visual forms deterministic and backend-independent
-so Storybook does not require a session, API server, or global query provider.
+Compose `TextField`, `ChoiceCardGroup`, `Notice`, `Segmented` (through
+`LocaleSegmented`), `Badge`, `Button`, and `Spinner`. The shell and the promo
+collage are feature-owned (`features/auth/ui`). Keep API mutations and
+navigation in thin runtime containers; keep the visual forms deterministic and
+backend-independent so Storybook does not require a session, API server, or
+global query provider.
 
 ## Responsive and accessibility contract
 
-- Desktop centers the card when it fits; long registration content may scroll
-  naturally.
 - Mobile uses normal document scrolling, safe page padding, full-width actions,
   and no horizontal overflow or clipped controls at 320px.
 - Labels remain visible; placeholders do not replace them.
-- Validation uses `data-invalid`, `aria-invalid`, field errors, and focus on the
-  first invalid field.
+- Validation sets `aria-invalid` on the control, wires its hint and error with
+  `aria-describedby`, and moves focus to the first invalid field.
 - Request errors use an announced alert and retain entered values.
 - Keyboard submission, password toggle operation, focus visibility, and focus
-  order remain complete.
+  order remain complete; the decorative promo adds no tab stops and nothing to
+  the accessibility tree.
 - Pending submission disables the primary action and displays `Spinner` without
   changing the button width.
 - Ukrainian and English copy must fit without truncating actions or labels.
@@ -129,6 +122,7 @@ Storybook browser suite, and static Storybook build must pass.
 - Password reset or recovery.
 - Remember-me controls.
 - Terms or privacy acceptance UI without corresponding product routes.
-- Promotional content or decorative imagery.
+- Promotional content that carries information or an action needed to sign
+  in; the promo panel stays decoration.
 - Changes to authentication APIs, cookies, workspace-mode semantics, or session
   lifetime.
