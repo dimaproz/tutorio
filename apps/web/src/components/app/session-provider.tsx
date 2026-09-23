@@ -9,11 +9,19 @@ import { useSessionQuery } from '@/lib/auth/client';
 const SessionContext = createContext<AuthMe | null>(null);
 
 // The authoritative session check for the protected shell: proxy.ts only does
-// optimistic cookie-presence redirects, while this validates against the API
-// via /api/backend/auth/me (which transparently refreshes tokens once).
-export function SessionProvider({ children }: { children: React.ReactNode }) {
+// optimistic cookie-presence redirects, while this validates against the API.
+// On a full page load the layout has usually read the session on the server
+// already (`initialSession`); otherwise the client asks /api/backend/auth/me,
+// which transparently refreshes tokens once.
+export function SessionProvider({
+  children,
+  initialSession,
+}: {
+  children: React.ReactNode;
+  initialSession?: AuthMe;
+}) {
   const router = useRouter();
-  const session = useSessionQuery();
+  const session = useSessionQuery(initialSession);
 
   const unauthenticated = session.isError && session.error.status === 401;
 

@@ -5,11 +5,16 @@ import { MobileTabBar } from '@/components/app/mobile-tab-bar';
 import { OwnerAccessGate } from '@/components/app/owner-access-gate';
 import { PageCrumbProvider } from '@/components/shared/page-crumb';
 import { SessionProvider } from '@/components/app/session-provider';
+import { readServerSession } from '@/lib/auth/server-session';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  // Read on the server so a full page load does not wait for the browser to
+  // ask; null leaves the check to the client, as before.
+  const session = await readServerSession();
+
   return (
-    <SessionProvider>
+    <SessionProvider initialSession={session ?? undefined}>
       <PageCrumbProvider>
         {/* The desktop sidebar is always open, so there is no persisted collapse
           state to restore — and a stale one would strand a user behind a

@@ -38,11 +38,17 @@ export async function gatewayFetch<T>(input: string, init?: RequestInit): Promis
 
 export const SESSION_QUERY_KEY = ['session'] as const;
 
-export function useSessionQuery() {
+/**
+ * The signed-in session. `initialSession` is what the server already read on
+ * a full page load; with it the shell renders at once and the query only
+ * refreshes once it goes stale.
+ */
+export function useSessionQuery(initialSession?: AuthMe) {
   return useQuery<AuthMe, GatewayError>({
     queryKey: SESSION_QUERY_KEY,
     queryFn: () => gatewayFetch<AuthMe>('/api/backend/auth/me'),
     retry: (failureCount, error) => error.status !== 401 && failureCount < 2,
+    initialData: initialSession,
   });
 }
 
