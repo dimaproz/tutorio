@@ -11,7 +11,7 @@ import {
   uuidSchema,
   studentLanguageLevelSchema,
 } from './common';
-import { enrollmentStatusSchema, billingTypeSchema, priceMinorSchema } from './enrollments';
+import { enrollmentResponseSchema, priceMinorSchema } from './enrollments';
 import { paginatedResponseSchema, paginationQuerySchema } from './pagination';
 import { telegramUsernameSchema } from './parents';
 
@@ -108,10 +108,19 @@ export type StudentSortField = z.infer<typeof studentSortFieldSchema>;
 export const listStudentsQuerySchema = paginationQuerySchema
   .extend({
     search: z.string().trim().min(1).max(120).optional(),
-    // deleted/all are OWNER-only (enforced by the service).
-    state: recordStateSchema.default('active'),
+    // Students are archived (status ARCHIVED), never soft-deleted, so for
+    // students `state` selects by status. deleted/all are OWNER-only
+    // (enforced by the service).
+    state: recordStateSchema
+      .default('active')
+      .describe(
+        'active = every student that is not ARCHIVED; deleted = ARCHIVED ' +
+          'students; all = every status. An explicit `status` wins over `state`.',
+      ),
     // Optional facet filters, combined with AND.
     status: studentStatusSchema.optional(),
+    // Students with a live membership: ACTIVE or PAUSED enrollment in a group
+    // that is not archived.
     groupId: uuidSchema.optional(),
     // Sorting is server-side so it applies to the whole collection, not just
     // the page the client happens to hold.
@@ -184,18 +193,10 @@ export const studentListResponseSchema = paginatedResponseSchema(studentListItem
 
 export type StudentListResponse = z.infer<typeof studentListResponseSchema>;
 
-// Compact enrollment summary shown on the student profile.
-export const studentEnrollmentSummarySchema = z.object({
-  id: uuidSchema,
-  status: enrollmentStatusSchema,
-  billingType: billingTypeSchema,
-  priceMinor: z.number().int().nonnegative(),
-  currency: z.string(),
-  cancellationDeadlineHours: z.number().int().nonnegative().nullable(),
-  effectiveCancellationDeadlineHours: z.number().int().nonnegative(),
-  group: z.object({ id: uuidSchema, name: z.string() }).nullable(),
-  teacher: z.object({ id: uuidSchema, name: z.string(), color: z.string().nullable() }),
-});
+// Enrollment shown on the student profile. It is the full enrollment
+// response, so the profile can open the enrollment editor without fetching
+// each enrollment again.
+export const studentEnrollmentSummarySchema = enrollmentResponseSchema;
 
 export type StudentEnrollmentSummary = z.infer<typeof studentEnrollmentSummarySchema>;
 
@@ -204,3 +205,14 @@ export const studentDetailSchema = studentResponseSchema.extend({
 });
 
 export type StudentDetail = z.infer<typeof studentDetailSchema>;
+
+// Tab and header counts for the students collection, from one grouped query.
+// `all` counts every student that is not ARCHIVED (the default list state).
+export const studentsSummarySchema = z.object({
+  all: z.number().int().nonnegative(),
+  ACTIVE: z.number().int().nonnegative(),
+  ON_HOLD: z.number().int().nonnegative(),
+  ARCHIVED: z.number().int().nonnegative(),
+});
+
+export type StudentsSummary = z.infer<typeof studentsSummarySchema>;
