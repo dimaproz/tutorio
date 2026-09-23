@@ -199,7 +199,11 @@ export function AppointmentField({
             <span className="truncate">{label ?? placeholder ?? t('pickSlot')}</span>
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
+        <PopoverContent
+          aria-label={placeholder ?? t('pickSlot')}
+          className="w-auto p-0"
+          align="start"
+        >
           <AppointmentPanel {...props} onComplete={() => setOpen(false)} />
         </PopoverContent>
       </Popover>

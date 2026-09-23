@@ -111,7 +111,7 @@ function CalendarPopover({
             <span className="truncate">{hasValue ? label : placeholder}</span>
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
+        <PopoverContent aria-label={placeholder} className="w-auto p-0" align="start">
           {children}
         </PopoverContent>
       </Popover>

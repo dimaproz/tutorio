@@ -77,6 +77,7 @@ export function PresetNumberInput({
         </InputGroup>
       </PopoverAnchor>
       <PopoverContent
+        aria-label={presetsLabel}
         align="start"
         className="w-(--radix-popover-trigger-width) space-y-3"
         onOpenAutoFocus={(event) => event.preventDefault()}

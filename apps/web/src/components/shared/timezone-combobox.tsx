@@ -143,7 +143,13 @@ export function TimezoneCombobox({
           <ChevronDownIcon aria-hidden="true" className="size-4.5 text-muted-foreground" />
         </button>
       </PopoverTrigger>
-      <PopoverContent id={listId} className="w-(--radix-popover-trigger-width) p-1.5" align="start">
+      {/* The popover is a dialog to assistive tech, so it needs a name. */}
+      <PopoverContent
+        id={listId}
+        aria-label={placeholder}
+        className="w-(--radix-popover-trigger-width) p-1.5"
+        align="start"
+      >
         <Command className="bg-transparent p-0">
           <CommandInput placeholder={searchPlaceholder} />
           <CommandList>
