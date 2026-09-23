@@ -55,7 +55,7 @@ export function PersonMiniCard({
   if (href) {
     return (
       <Item asChild variant="outline" className={className}>
-        <Link href={href}>
+        <Link prefetch={false} href={href}>
           {body}
           <ItemActions>
             <ChevronRightIcon className="size-4 text-muted-foreground" />

@@ -50,6 +50,7 @@ export function TeachersList() {
             />
             <div className="flex min-w-0 flex-col gap-1">
               <Link
+                prefetch={false}
                 href={`/app/teachers/${row.original.id}`}
                 className="truncate font-medium underline-offset-4 transition-colors hover:text-primary hover:underline"
               >

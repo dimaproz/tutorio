@@ -51,6 +51,7 @@ export function StudentIdentityCell({ student }: { student: StudentListItem }) {
       />
       <div className="flex min-w-0 flex-col">
         <Link
+          prefetch={false}
           href={`/app/students/${student.id}`}
           // The whole row is the target; the name carries the accessible name.
           className="truncate text-[15px] leading-5 font-semibold outline-none after:absolute after:inset-0 after:rounded-row focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-ring"

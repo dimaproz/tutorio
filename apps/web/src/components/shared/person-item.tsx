@@ -85,6 +85,7 @@ export function PersonItem({
         >
           {href ? (
             <Link
+              prefetch={false}
               href={href}
               aria-label={hrefLabel}
               className="outline-none after:absolute after:inset-0 after:rounded-tile focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-ring"

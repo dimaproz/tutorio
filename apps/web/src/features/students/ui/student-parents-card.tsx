@@ -90,7 +90,7 @@ export function StudentParentsCard({
           <DropdownMenuContent align="end">
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
-                <Link href={`/app/parents/${row.id}`}>
+                <Link prefetch={false} href={`/app/parents/${row.id}`}>
                   <UserIcon data-icon />
                   {tLinks('openProfile')}
                 </Link>
@@ -105,7 +105,7 @@ export function StudentParentsCard({
               ) : null}
               {!readOnly ? (
                 <DropdownMenuItem asChild>
-                  <Link href={`/app/parents/${row.id}/edit`}>
+                  <Link prefetch={false} href={`/app/parents/${row.id}/edit`}>
                     <PencilIcon data-icon />
                     {t('editContact')}
                   </Link>

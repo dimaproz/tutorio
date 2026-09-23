@@ -52,6 +52,7 @@ export function StudentCard({
         />
         <div className="flex min-w-0 grow flex-col">
           <Link
+            prefetch={false}
             href={`/app/students/${student.id}`}
             className="text-[17px] leading-[22px] font-semibold outline-none after:absolute after:inset-0 after:rounded-row focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-ring"
           >

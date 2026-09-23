@@ -93,7 +93,7 @@ export function ParentStudentsCard({
         <DropdownMenuContent align="end">
           <DropdownMenuGroup>
             <DropdownMenuItem asChild>
-              <Link href={`/app/students/${row.id}`}>
+              <Link prefetch={false} href={`/app/students/${row.id}`}>
                 <UserIcon data-icon />
                 {tLinks('openProfile')}
               </Link>

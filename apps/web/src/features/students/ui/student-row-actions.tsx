@@ -52,14 +52,14 @@ export function StudentRowActions({
       <DropdownMenuContent align="end">
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
-            <Link href={`/app/students/${studentId}`}>
+            <Link prefetch={false} href={`/app/students/${studentId}`}>
               <UserIcon data-icon />
               {t('openProfile')}
             </Link>
           </DropdownMenuItem>
           {actions.includes('edit') ? (
             <DropdownMenuItem asChild>
-              <Link href={`/app/students/${studentId}/edit`}>
+              <Link prefetch={false} href={`/app/students/${studentId}/edit`}>
                 <PencilIcon data-icon />
                 {tCommon('edit')}
               </Link>

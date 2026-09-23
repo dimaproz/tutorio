@@ -69,7 +69,7 @@ export function StudentPackagesCard({
           {items.map((item) => (
             <li key={item.id}>
               <Item asChild variant="outline">
-                <Link href={`/app/packages/${item.id}`}>
+                <Link prefetch={false} href={`/app/packages/${item.id}`}>
                   <ItemContent>
                     <ItemTitle>{item.name ?? t('unnamed')}</ItemTitle>
                     <ItemDescription>

@@ -27,7 +27,7 @@ export function PackageSummaryCard({ package: pkg }: { package: PackageResponse 
     <Card size="sm">
       <CardHeader>
         <CardTitle className="truncate text-sm">
-          <Link href={`/app/packages/${pkg.id}`} className="hover:text-primary">
+          <Link prefetch={false} href={`/app/packages/${pkg.id}`} className="hover:text-primary">
             {pkg.name ?? t('remaining')}
           </Link>
         </CardTitle>

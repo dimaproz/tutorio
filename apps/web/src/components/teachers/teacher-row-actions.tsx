@@ -48,7 +48,9 @@ export function TeacherRowActions({
         <DropdownMenuContent align="end">
           {showOpenLink ? (
             <DropdownMenuItem asChild>
-              <Link href={`/app/teachers/${teacherId}`}>{tCommon('open')}</Link>
+              <Link prefetch={false} href={`/app/teachers/${teacherId}`}>
+                {tCommon('open')}
+              </Link>
             </DropdownMenuItem>
           ) : null}
           <DropdownMenuItem onSelect={() => setEditOpen(true)}>

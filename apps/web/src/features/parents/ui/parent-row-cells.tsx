@@ -44,6 +44,7 @@ export function ParentIdentityCell({
       <EntityAvatar avatarKey={parent.avatarKey} fullName={parent.fullName} tint="indigo" />
       <div className="flex min-w-0 flex-col">
         <Link
+          prefetch={false}
           href={`/app/parents/${parent.id}`}
           // The whole row is the target; the name carries the accessible name.
           className={cn(

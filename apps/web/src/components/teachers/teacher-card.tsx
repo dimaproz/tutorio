@@ -20,6 +20,7 @@ export function TeacherCard({ teacher }: { teacher: TeacherListItem }) {
           <EntityAvatar avatarKey={teacher.avatarKey} fullName={teacher.fullName} size="sm" />
           <CardTitle className="min-w-0 truncate text-base">
             <Link
+              prefetch={false}
               href={`/app/teachers/${teacher.id}`}
               className="underline-offset-4 hover:underline"
             >

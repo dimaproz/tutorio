@@ -37,7 +37,7 @@ export function ParentRowActions({
       <DropdownMenuContent align="end">
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
-            <Link href={`/app/parents/${parent.id}`}>
+            <Link prefetch={false} href={`/app/parents/${parent.id}`}>
               <UserIcon data-icon />
               {t('openProfile')}
             </Link>
@@ -51,7 +51,7 @@ export function ParentRowActions({
             </DropdownMenuItem>
           ) : null}
           <DropdownMenuItem asChild>
-            <Link href={`/app/parents/${parent.id}/edit`}>
+            <Link prefetch={false} href={`/app/parents/${parent.id}/edit`}>
               <PencilIcon data-icon />
               {tCommon('edit')}
             </Link>
