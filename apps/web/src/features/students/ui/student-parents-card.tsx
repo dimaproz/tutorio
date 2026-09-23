@@ -3,16 +3,11 @@
 import { useCallback, useMemo, type Ref } from 'react';
 import { useIsFetching, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { PencilIcon, PhoneIcon, UserIcon, XIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { StudentDetail } from '@tutorio/validation';
-// Parents imports this feature back (the student quick create); the cycle is
-// harmless because both sides use each other only inside components.
-import {
-  ParentQuickCreateDialog,
-  useParentLinkResults,
-  useParentLinkRow,
-} from '@/features/parents';
+import { useParentLinkResults, useParentLinkRow } from '@/features/parents';
 import { ConfirmDialog } from '@/components/shared/confirm-dialog';
 import { LinkedCard } from '@/components/shared/linked-card';
 import { LinkPickerDialog } from '@/components/shared/link-picker-dialog';
@@ -39,20 +34,16 @@ const ADD_ID = 'student-link-parent';
  * The family block — the student's side of the relationship whose parent
  * side is the parent profile's linked-students card. Both run on
  * `useRelationshipLinks` and render one `LinkedCard` with one
- * `LinkPickerDialog`. Creating a contact happens only on a saved student and
- * links it straight after. An archived student keeps the rows and the view
+ * `LinkPickerDialog`. "Create a new contact" opens the parent form with this
+ * student already linked. An archived student keeps the rows and the view
  * actions and loses every command that changes the links.
  */
 export function StudentParentsCard({
   student,
-  createOpen,
-  onCreateOpenChange,
   readOnly = false,
   sectionRef,
 }: {
   student: StudentDetail;
-  createOpen: boolean;
-  onCreateOpenChange: (open: boolean) => void;
   readOnly?: boolean;
   sectionRef?: Ref<HTMLDivElement>;
 }) {
@@ -60,6 +51,7 @@ export function StudentParentsCard({
   const tLinks = useTranslations('links');
   const tErrors = useTranslations('errors');
   const mobile = useIsMobile();
+  const router = useRouter();
   const queryClient = useQueryClient();
   const refreshing = useIsFetching({ queryKey: queryKeys.students.detail(student.id) }) > 0;
   const { mutateAsync: updateStudent } = useUpdateStudentMutation(student.id);
@@ -182,7 +174,7 @@ export function StudentParentsCard({
             title={t('pickerTitle')}
             subtitle={student.fullName}
             createLabel={t('createContact')}
-            onCreate={() => onCreateOpenChange(true)}
+            onCreate={() => router.push(`/app/parents/new?studentId=${student.id}`)}
             returnFocus={addButton}
           />
 
@@ -196,12 +188,6 @@ export function StudentParentsCard({
             pending={flow.unlink.pending}
             onConfirm={flow.unlink.confirm}
             returnFocus={addButton}
-          />
-
-          <ParentQuickCreateDialog
-            open={createOpen}
-            onOpenChange={onCreateOpenChange}
-            onSuccess={(parent) => flow.linkCreated(toRow(parent))}
           />
         </>
       ) : null}

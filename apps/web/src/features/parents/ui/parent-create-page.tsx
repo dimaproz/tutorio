@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { RotateCcwIcon } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { FormProvider, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -13,7 +13,7 @@ import { useSetPageCrumb } from '@/components/shared/page-crumb';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { buildParentCreateDto, EMPTY_PARENT_FORM } from '@/features/parents/model/form';
-import { StudentQuickCreateDialog } from '@/features/students';
+import { useStudentQuery } from '@/lib/api/students';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLeaveGuard } from '@/hooks/use-leave-guard';
 import { errorMessageKey } from '@/lib/api/error-message';
@@ -24,10 +24,14 @@ import { ParentFormSections } from './parent-form-sections';
 import { useParentForm, useParentFormState } from './parent-form-state';
 import { useParentStudentPicker } from './use-parent-student-picker';
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /**
  * Create a parent on a full page. Only the name is required. Unlike the
  * student form, nothing is kept as a local draft: leaving a dirty form asks
  * once and then discards it, and nothing is written to browser storage.
+ * Opened from a student's profile (`?studentId=`), that student is linked
+ * from the start.
  */
 export function ParentCreatePage() {
   const t = useTranslations('parents.form');
@@ -40,15 +44,41 @@ export function ParentCreatePage() {
   useSetPageCrumb(t('createTitle'));
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [leavingTo, setLeavingTo] = useState<string | null>(null);
-  const [studentCreateOpen, setStudentCreateOpen] = useState(false);
-  const form = useParentForm(EMPTY_PARENT_FORM);
+  const requested = useSearchParams().get('studentId') ?? '';
+  const prelinkedId = UUID.test(requested) ? requested : '';
+  const prelinked = useStudentQuery(prelinkedId, Boolean(prelinkedId));
+  const [defaults] = useState(() =>
+    prelinkedId ? { ...EMPTY_PARENT_FORM, studentIds: [prelinkedId] } : EMPTY_PARENT_FORM,
+  );
+  const form = useParentForm(defaults);
   const state = useParentFormState(form);
   const { isDirty, isSubmitting } = form.formState;
   const saving = isSubmitting || create.isPending;
   const studentIds = useWatch({ control: form.control, name: 'studentIds' });
+  const prelinkedStudents = useMemo(
+    () =>
+      prelinked.data
+        ? [
+            {
+              id: prelinked.data.id,
+              fullName: prelinked.data.fullName,
+              avatarKey: prelinked.data.avatarKey,
+              status: prelinked.data.status,
+              languageLevel: prelinked.data.languageLevel,
+            },
+          ]
+        : [],
+    [prelinked.data],
+  );
   const picker = useParentStudentPicker({
     linkedIds: studentIds,
-    onCreate: () => setStudentCreateOpen(true),
+    initial: prelinkedStudents,
+    // Creating a student is its own page; leaving asks first if anything was typed.
+    onCreate: () => {
+      if (!form.formState.isDirty) return router.push('/app/students/new');
+      setLeavingTo('/app/students/new');
+      setLeaveOpen(true);
+    },
   });
 
   useLeaveGuard(isDirty && !saving, (href) => {
@@ -71,7 +101,7 @@ export function ParentCreatePage() {
   );
 
   const leave = () => {
-    form.reset(EMPTY_PARENT_FORM);
+    form.reset(defaults);
     setLeaveOpen(false);
     router.push(leavingTo ?? '/app/parents');
   };
@@ -155,18 +185,6 @@ export function ParentCreatePage() {
         description={t('leaveDescription')}
         confirmLabel={t('leaveAction')}
         onConfirm={leave}
-      />
-      <StudentQuickCreateDialog
-        open={studentCreateOpen}
-        onOpenChange={setStudentCreateOpen}
-        navigateOnSuccess={false}
-        onSuccess={(student) => {
-          picker.remember({ id: student.id, name: student.fullName, avatarKey: student.avatarKey });
-          form.setValue('studentIds', [...form.getValues('studentIds'), student.id], {
-            shouldDirty: true,
-          });
-          picker.onOpenChange(false);
-        }}
       />
     </FormProvider>
   );

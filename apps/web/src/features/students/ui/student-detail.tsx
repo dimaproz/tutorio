@@ -77,7 +77,6 @@ export function StudentProfileContent({
   const [lessonOpen, setLessonOpen] = useState(false);
   const [packageOpen, setPackageOpen] = useState(false);
   const [learningOpen, setLearningOpen] = useState(false);
-  const [parentOpen, setParentOpen] = useState(false);
   const parentsSectionRef = useRef<HTMLDivElement>(null);
 
   // One pinned window shared with the lessons panel, so both read one query.
@@ -93,8 +92,7 @@ export function StudentProfileContent({
   // A failed or partial read is reported as unknown, never as an empty record:
   // "0 credits" and "no payments" would be claims the page cannot back.
   const packagesUnavailable =
-    packages.isError ||
-    Boolean(packages.data && packages.data.items.length < packages.data.total);
+    packages.isError || Boolean(packages.data && packages.data.items.length < packages.data.total);
   const metrics = useMemo(
     () =>
       (lessons.data || lessons.isError) && (packages.data || packages.isError)
@@ -153,13 +151,7 @@ export function StudentProfileContent({
         title={t('detail.archivedTitle')}
         text={t('detail.archivedDescription')}
         action={
-          <Button
-            type="button"
-            variant="white"
-            size="xs"
-            disabled={restoring}
-            onClick={restore}
-          >
+          <Button type="button" variant="white" size="xs" disabled={restoring} onClick={restore}>
             {restoring ? (
               <Spinner data-icon="inline-start" />
             ) : (
@@ -249,13 +241,7 @@ export function StudentProfileContent({
   const aside = (
     <>
       <StudentNotesCard student={student} readOnly={archived} />
-      <StudentParentsCard
-        student={student}
-        createOpen={parentOpen}
-        onCreateOpenChange={setParentOpen}
-        readOnly={archived}
-        sectionRef={parentsSectionRef}
-      />
+      <StudentParentsCard student={student} readOnly={archived} sectionRef={parentsSectionRef} />
       <StudentInformationCard student={student} readOnly={archived} />
     </>
   );

@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useIsFetching, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { CalendarPlusIcon, UserIcon, XIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { ParentDetail } from '@tutorio/validation';
@@ -20,7 +21,6 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { LessonFormDialog } from '@/features/scheduling';
-import { StudentQuickCreateDialog } from '@/features/students';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useRelationshipLinks } from '@/hooks/use-relationship-links';
 import { errorMessageKey } from '@/lib/api/error-message';
@@ -51,10 +51,10 @@ export function ParentStudentsCard({
   const tLinks = useTranslations('links');
   const tErrors = useTranslations('errors');
   const mobile = useIsMobile();
+  const router = useRouter();
   const queryClient = useQueryClient();
   const refreshing = useIsFetching({ queryKey: queryKeys.parents.detail(parent.id) }) > 0;
   const { mutateAsync: updateParent } = useUpdateParentMutation(parent.id);
-  const [createOpen, setCreateOpen] = useState(false);
   const [scheduleFor, setScheduleFor] = useState<string | null>(null);
   const toRow = useStudentLinkRow();
 
@@ -157,7 +157,7 @@ export function ParentStudentsCard({
         title={t('pickerTitle')}
         subtitle={parent.fullName}
         createLabel={t('createStudent')}
-        onCreate={() => setCreateOpen(true)}
+        onCreate={() => router.push('/app/students/new')}
         returnFocus={addButton}
       />
 
@@ -171,13 +171,6 @@ export function ParentStudentsCard({
         pending={flow.unlink.pending}
         onConfirm={flow.unlink.confirm}
         returnFocus={addButton}
-      />
-
-      <StudentQuickCreateDialog
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        navigateOnSuccess={false}
-        onSuccess={(student) => flow.linkCreated(toRow(student))}
       />
 
       <LessonFormDialog

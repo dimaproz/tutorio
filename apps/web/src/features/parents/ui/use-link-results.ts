@@ -5,11 +5,15 @@ import { useTranslations } from 'next-intl';
 import type { ParentListItem, ParentStudentRef } from '@tutorio/validation';
 import type { LinkPickerItem } from '@/components/shared/link-picker';
 import { parentContactLine, parentRoleNames } from '@/features/parents/model/presentation';
+import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { useParentsQuery } from '@/lib/api/parents';
 import { useStudentsQuery } from '@/lib/api/students';
 
-/** One search page is plenty for a picker: the tutor narrows by typing. */
-const RESULTS_PAGE_SIZE = 20;
+/**
+ * The pickers are autocompletes: the first ten records show on opening, and
+ * typing asks the server for the matching ones.
+ */
+const RESULTS_PAGE_SIZE = 10;
 
 type LinkSearch = { text: string; enabled: boolean; exclude: readonly string[] };
 
@@ -41,8 +45,9 @@ export function useStudentLinkRow() {
 /** Students to link to a parent, without the ones already linked. */
 export function useStudentLinkResults({ text, enabled, exclude }: LinkSearch) {
   const toRow = useStudentLinkRow();
+  const search = useDebouncedValue(text);
   const students = useStudentsQuery(
-    { page: 1, pageSize: RESULTS_PAGE_SIZE, search: text || undefined },
+    { page: 1, pageSize: RESULTS_PAGE_SIZE, search: search || undefined },
     enabled,
   );
   return {
@@ -83,8 +88,9 @@ export function useParentLinkRow() {
 /** Parents to link to a student, without the ones already linked. */
 export function useParentLinkResults({ text, enabled, exclude }: LinkSearch) {
   const toRow = useParentLinkRow();
+  const search = useDebouncedValue(text);
   const parents = useParentsQuery(
-    { page: 1, pageSize: RESULTS_PAGE_SIZE, search: text || undefined },
+    { page: 1, pageSize: RESULTS_PAGE_SIZE, search: search || undefined },
     enabled,
   );
   return {

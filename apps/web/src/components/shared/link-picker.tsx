@@ -77,13 +77,13 @@ export type LinkPickerProps = {
   /** Announced when a linked row is removed. */
   unlinkedAnnouncement?: (name: string) => string;
 
-  /** The "+ Create…" row at the end of the results; omit to hide it. */
+  /** The "+ Create…" command under the results; omit to hide it. */
   createLabel?: string;
   onCreate?: () => void;
+  /** Sizes the scrolling result list, e.g. a maximum height in a dialog. */
+  listClassName?: string;
   className?: string;
 };
-
-const CREATE = '__create';
 
 /**
  * Search plus multi-select over one entity type, with the already-linked set
@@ -131,6 +131,7 @@ export function LinkPicker({
   unlinkedAnnouncement,
   createLabel,
   onCreate,
+  listClassName,
   className,
 }: LinkPickerProps) {
   const listId = useId();
@@ -141,7 +142,7 @@ export function LinkPicker({
   const linkedRef = useRef<HTMLUListElement>(null);
   const [active, setActive] = useState(0);
   const [announcement, setAnnouncement] = useState('');
-  const keys = [...results.map((item) => item.id), ...(createLabel && onCreate ? [CREATE] : [])];
+  const keys = results.map((item) => item.id);
   const activeIndex = Math.min(active, Math.max(keys.length - 1, 0));
   const activeKey = open && !loading ? keys[activeIndex] : undefined;
 
@@ -156,10 +157,6 @@ export function LinkPicker({
 
   const choose = (key: string) => {
     if (disabled) return;
-    if (key === CREATE) {
-      onCreate?.();
-      return;
-    }
     const item = results.find((result) => result.id === key);
     if (item && linkedAnnouncement) setAnnouncement(linkedAnnouncement(item.name));
     onToggle(key);
@@ -228,8 +225,20 @@ export function LinkPicker({
   );
 
   const count = selected.length;
-  const list = (
-    <div className="flex flex-col gap-0.5">
+  // Only the results scroll; the field above and the commands below stay put.
+  // The region is focusable so it can be scrolled from the keyboard.
+  const resultList = (
+    <div
+      role="group"
+      tabIndex={0}
+      aria-label={listLabel}
+      className={cn(
+        'flex min-h-0 flex-col gap-0.5 overflow-x-hidden overflow-y-auto rounded-item outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        // A floating list shows about six rows and scrolls the rest.
+        popover && 'max-h-80',
+        listClassName,
+      )}
+    >
       {loading
         ? Array.from({ length: 3 }, (_, index) => (
             <div key={index} aria-hidden="true" className="flex items-center gap-3 px-3 py-2">
@@ -311,31 +320,27 @@ export function LinkPicker({
                 </div>
               );
             })}
-
-        {createLabel && onCreate ? (
-          <>
-            <Separator decorative className="mx-1.5 mt-1 mb-0.5 w-auto" />
-            <div
-              id={optionId(CREATE)}
-              role="option"
-              aria-selected={false}
-              aria-disabled={disabled || undefined}
-              data-active={activeKey === CREATE || undefined}
-              onMouseDown={(event) => event.preventDefault()}
-              onMouseMove={() => setActive(keys.indexOf(CREATE))}
-              onClick={() => choose(CREATE)}
-              className={cn(
-                'flex cursor-pointer items-center gap-2.5 rounded-item px-3 py-2.5 text-sm max-md:min-h-11 leading-[18px] font-semibold text-brand transition-colors duration-150 hover:bg-surface-hover aria-disabled:cursor-not-allowed aria-disabled:opacity-55 [&_svg]:size-4',
-                activeKey === CREATE && 'bg-surface-hover',
-              )}
-            >
-              <PlusIcon aria-hidden="true" />
-              {createLabel}
-            </div>
-          </>
-        ) : null}
       </div>
-
+    </div>
+  );
+  const list = (
+    <div className="flex min-h-0 flex-col gap-0.5">
+      {resultList}
+      {createLabel && onCreate ? (
+        <>
+          <Separator decorative className="mx-1.5 mt-1 mb-0.5 w-auto" />
+          <button
+            type="button"
+            disabled={disabled}
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={onCreate}
+            className="flex min-h-10 w-full cursor-pointer items-center gap-2.5 rounded-item px-3 py-2.5 text-left text-sm leading-[18px] font-semibold text-brand transition-colors duration-150 outline-none hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-55 max-md:min-h-11 [&_svg]:size-4"
+          >
+            <PlusIcon aria-hidden="true" />
+            {createLabel}
+          </button>
+        </>
+      ) : null}
       {hint ? (
         <div className="flex items-center justify-between gap-2 px-3 pt-2 pb-1 text-xs text-muted-foreground">
           <span aria-live="polite">
@@ -434,18 +439,9 @@ export function LinkPicker({
               if (anchorRef.current?.contains(event.target as Node)) event.preventDefault();
             }}
             aria-label={listLabel}
-            className="w-(--radix-popover-trigger-width) gap-0 p-1.5"
+            className="max-h-(--radix-popover-content-available-height) w-(--radix-popover-trigger-width) gap-0 p-1.5"
           >
-            {/* The results scroll inside the space the viewport leaves; the
-                region is focusable so it can be scrolled from the keyboard. */}
-            <div
-              role="group"
-              tabIndex={0}
-              aria-label={listLabel}
-              className="max-h-[calc(var(--radix-popover-content-available-height)-12px)] overflow-y-auto rounded-item outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              {list}
-            </div>
+            {list}
           </PopoverContent>
         </Popover>
       ) : (

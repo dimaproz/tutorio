@@ -148,32 +148,3 @@ export function buildParentEditDto(
   if (!linksChanged) delete dto.studentIds;
   return dto;
 }
-
-// ---------------------------------------------------------------------------
-// Quick create: a contact made from the student side, linked right after
-// ---------------------------------------------------------------------------
-
-export const parentQuickCreateSchema = parentFormSchema.pick({
-  fullName: true,
-  email: true,
-  phone: true,
-  telegramUsername: true,
-});
-export type ParentQuickCreateValues = z.infer<typeof parentQuickCreateSchema>;
-
-export const EMPTY_PARENT_QUICK_CREATE: ParentQuickCreateValues = {
-  fullName: '',
-  email: '',
-  phone: '',
-  telegramUsername: '',
-};
-
-/** The quick-create request. The link to the student is saved separately. */
-export function buildParentQuickCreateDto(values: ParentQuickCreateValues): CreateParentDto {
-  const { studentIds: _studentIds, ...dto } = buildParentCreateDto({
-    ...EMPTY_PARENT_FORM,
-    ...values,
-  });
-  void _studentIds;
-  return dto;
-}

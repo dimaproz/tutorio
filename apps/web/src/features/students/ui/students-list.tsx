@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CalendarIcon, PlusIcon } from 'lucide-react';
@@ -92,8 +92,16 @@ export function StudentsList({ nowMs }: { nowMs?: number } = {}) {
   const filtersActive = Boolean(search || status || groupId);
   const total = totalMetric.data?.total;
   const workspaceEmpty = total === 0 && archivedMetric.data?.total === 0;
-  const clearFilters = () =>
+  const searchRef = useRef<HTMLInputElement>(null);
+  // Both commands remove the control that ran them, so focus goes to search.
+  const clearFilters = () => {
     updateParams({ search: undefined, status: undefined, groupId: undefined }, { resetPage: true });
+    searchRef.current?.focus();
+  };
+  const resetFilters = () => {
+    updateParams({ status: undefined, groupId: undefined }, { resetPage: true });
+    searchRef.current?.focus();
+  };
 
   return (
     <>
@@ -164,6 +172,7 @@ export function StudentsList({ nowMs }: { nowMs?: number } = {}) {
                 label: group.name,
               }))}
               search={search}
+              searchRef={searchRef}
               sort={sort}
               sortFields={SORT_FIELDS}
               onStatusChange={(next) =>
@@ -173,6 +182,7 @@ export function StudentsList({ nowMs }: { nowMs?: number } = {}) {
               onSearchChange={(next) =>
                 updateParams({ search: next.trim() || undefined }, { resetPage: true })
               }
+              onReset={resetFilters}
             />
           )
         }

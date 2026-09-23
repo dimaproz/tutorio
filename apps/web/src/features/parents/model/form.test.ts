@@ -4,7 +4,6 @@ import {
   EMPTY_PARENT_FORM,
   buildParentCreateDto,
   buildParentEditDto,
-  buildParentQuickCreateDto,
   parentFormDefaults,
   parentFormSchema,
   parentFormSectionStatus,
@@ -97,17 +96,6 @@ describe('parent form', () => {
       parentFormSchema.safeParse({ ...EMPTY_PARENT_FORM, fullName: 'Iryna', studentIds: many })
         .success,
     ).toBe(false);
-  });
-
-  it('sends no student links from quick create', () => {
-    expect(
-      buildParentQuickCreateDto({
-        fullName: 'Oleh',
-        email: '',
-        phone: '+380',
-        telegramUsername: '',
-      }),
-    ).not.toHaveProperty('studentIds');
   });
 
   it('marks sections done, empty or in error', () => {

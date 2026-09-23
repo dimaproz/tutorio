@@ -155,6 +155,7 @@ export const NoResults: Story = {
   args: { noResults: true, linkedCount: 0 },
   play: async ({ canvas }) => {
     await expect(await canvas.findByText('Nothing found')).toBeVisible();
-    await expect(canvas.getByRole('option', { name: 'Create a new student' })).toBeVisible();
+    // The create command sits under the results, outside the scrolling list.
+    await expect(canvas.getByRole('button', { name: 'Create a new student' })).toBeVisible();
   },
 };

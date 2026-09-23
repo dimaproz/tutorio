@@ -17,7 +17,6 @@ import { SectionSkeleton } from '@/components/shared/section-skeleton';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { buildParentEditDto, parentFormDefaults } from '@/features/parents/model/form';
-import { StudentQuickCreateDialog } from '@/features/students';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLeaveGuard } from '@/hooks/use-leave-guard';
 import { errorMessageKey } from '@/lib/api/error-message';
@@ -97,7 +96,6 @@ function ParentEditForm({ parent }: { parent: ParentDetail }) {
   const profileHref = `/app/parents/${parent.id}`;
   const [discardOpen, setDiscardOpen] = useState(false);
   const [leavingTo, setLeavingTo] = useState<string | null>(null);
-  const [studentCreateOpen, setStudentCreateOpen] = useState(false);
   const [defaults] = useState(() => parentFormDefaults(parent));
   const form = useParentForm(defaults);
   const state = useParentFormState(form);
@@ -107,7 +105,12 @@ function ParentEditForm({ parent }: { parent: ParentDetail }) {
   const picker = useParentStudentPicker({
     linkedIds: studentIds,
     initial: parent.students,
-    onCreate: () => setStudentCreateOpen(true),
+    // Creating a student is its own page; leaving asks first if anything changed.
+    onCreate: () => {
+      if (!form.formState.isDirty) return router.push('/app/students/new');
+      setLeavingTo('/app/students/new');
+      setDiscardOpen(true);
+    },
   });
   const [deleted, setDeleted] = useState(false);
   const removal = useParentDelete({
@@ -240,18 +243,6 @@ function ParentEditForm({ parent }: { parent: ParentDetail }) {
         onConfirm={discard}
       />
       {removal.dialog}
-      <StudentQuickCreateDialog
-        open={studentCreateOpen}
-        onOpenChange={setStudentCreateOpen}
-        navigateOnSuccess={false}
-        onSuccess={(student) => {
-          picker.remember({ id: student.id, name: student.fullName, avatarKey: student.avatarKey });
-          form.setValue('studentIds', [...form.getValues('studentIds'), student.id], {
-            shouldDirty: true,
-          });
-          picker.onOpenChange(false);
-        }}
-      />
     </FormProvider>
   );
 }

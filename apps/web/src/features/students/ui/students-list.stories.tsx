@@ -62,6 +62,20 @@ export const EmptyWorkspace: Story = {
   },
 };
 
+/** A set filter offers "Reset", as on the parents list; search stays as typed. */
+export const ResetFilters: Story = {
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: '/app/students', query: { status: 'ON_HOLD' } },
+    },
+  },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole('button', { name: 'Reset' })).toBeVisible();
+    await expect(canvas.getByRole('searchbox', { name: 'Search students' })).toBeVisible();
+  },
+};
+
 /** The archived facet, as it arrives in the URL: rows dim and offer Restore. */
 export const ArchivedFilter: Story = {
   parameters: {

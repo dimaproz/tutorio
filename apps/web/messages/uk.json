@@ -431,7 +431,9 @@
       "viewGrid": "Картками",
       "searchLabel": "Пошук учнів",
       "searchPlaceholder": "Пошук учнів",
-      "group": "Група"
+      "group": "Група",
+      "groupValue": "Група: {name}",
+      "reset": "Скинути"
     },
     "empty": {
       "title": "Учнів поки немає",
@@ -737,7 +739,8 @@
     "sort": {
       "fullName": "Ім'я учня",
       "status": "Статус",
-      "createdAt": "Дата додавання"
+      "createdAt": "Дата додавання",
+      "current": "Сортування: {value}"
     },
     "notes": {
       "title": "Нотатки",
@@ -1060,8 +1063,6 @@
       "editTitle": "Редагування запису",
       "editSubtitle": "Редагування запису батьків · зміни застосуються після збереження.",
       "editCrumb": "{name} › Редагування",
-      "quickCreateTitle": "Новий контакт",
-      "quickCreateSubtitle": "Обов’язкове лише ім’я. Контакт одразу прив’яжеться до учня.",
       "sections": {
         "identity": {
           "title": "Особисті дані",

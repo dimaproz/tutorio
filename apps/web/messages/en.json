@@ -431,7 +431,9 @@
       "viewGrid": "Card view",
       "searchLabel": "Search students",
       "searchPlaceholder": "Search students",
-      "group": "Group"
+      "group": "Group",
+      "groupValue": "Group: {name}",
+      "reset": "Reset"
     },
     "empty": {
       "title": "No students yet",
@@ -737,7 +739,8 @@
     "sort": {
       "fullName": "Student name",
       "status": "Status",
-      "createdAt": "Date added"
+      "createdAt": "Date added",
+      "current": "Sort: {value}"
     },
     "notes": {
       "title": "Notes",
@@ -1060,8 +1063,6 @@
       "editTitle": "Edit record",
       "editSubtitle": "Editing a parent record · changes apply when you save.",
       "editCrumb": "{name} › Edit",
-      "quickCreateTitle": "New contact",
-      "quickCreateSubtitle": "Only the name is required. The contact is linked to the student straight away.",
       "sections": {
         "identity": {
           "title": "Personal details",

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
-import { StoryBackend, storyParentId } from '@/stories/story-backend';
+import { SAMPLE_STUDENTS, StoryBackend, storyParentId } from '@/stories/story-backend';
 import { StoryAppShell } from '@/stories/story-shell';
 import { ParentCreatePage } from './parent-create-page';
 import { ParentEditPage } from './parent-edit-page';
@@ -97,6 +97,20 @@ export const Edit: Story = {
     await expect(canvas.getByText('saved')).toBeVisible();
     await expect(canvas.getByRole('button', { name: 'Save changes' })).toBeDisabled();
     await expect(canvas.getByRole('heading', { name: 'Delete record' })).toBeVisible();
+  },
+};
+
+/** Opened from a student's profile, the student is linked from the start. */
+export const PrelinkedStudent: Story = {
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: '/app/parents/new', query: { studentId: SAMPLE_STUDENTS[0].id } },
+    },
+  },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText('Anna Shevchenko')).toBeVisible();
+    await expect(canvas.getByText('Linked · 1')).toBeVisible();
   },
 };
 

@@ -1,10 +1,12 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import type { ParentStudentRef } from '@tutorio/validation';
 import type { LinkPickerItem } from '@/components/shared/link-picker';
 import type { ParentStudentPicker } from './parent-form-sections';
 import { useStudentLinkResults, useStudentLinkRow } from './use-link-results';
+
+const NO_STUDENTS: readonly ParentStudentRef[] = [];
 
 /**
  * The student search behind the parent form's linked-students section: the
@@ -13,7 +15,7 @@ import { useStudentLinkResults, useStudentLinkRow } from './use-link-results';
  */
 export function useParentStudentPicker({
   linkedIds,
-  initial = [],
+  initial = NO_STUDENTS,
   onCreate,
 }: {
   linkedIds: readonly string[];
@@ -23,8 +25,15 @@ export function useParentStudentPicker({
   const toRow = useStudentLinkRow();
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
-  const [known, setKnown] = useState<Record<string, LinkPickerItem>>(() =>
-    Object.fromEntries(initial.map((student) => [student.id, toRow(student)])),
+  const [remembered, setRemembered] = useState<Record<string, LinkPickerItem>>({});
+  // The record's own students may arrive after the form opens (a prelinked
+  // student on create), so they are read on every render.
+  const known = useMemo(
+    () => ({
+      ...Object.fromEntries(initial.map((student) => [student.id, toRow(student)])),
+      ...remembered,
+    }),
+    [initial, remembered, toRow],
   );
   const { results, loading } = useStudentLinkResults({
     text: search.trim(),
@@ -32,7 +41,7 @@ export function useParentStudentPicker({
     exclude: linkedIds,
   });
   const remember = useCallback(
-    (item: LinkPickerItem) => setKnown((current) => ({ ...current, [item.id]: item })),
+    (item: LinkPickerItem) => setRemembered((current) => ({ ...current, [item.id]: item })),
     [],
   );
 

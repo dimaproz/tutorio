@@ -106,6 +106,8 @@ export function LinkPickerDialog({
       open
       autoFocus={!sheet}
       hint={!sheet}
+      // The field stays put; only the results scroll.
+      listClassName={sheet ? 'max-h-[45vh]' : 'max-h-[min(22rem,48vh)]'}
     />
   );
   const confirm = (
@@ -146,7 +148,7 @@ export function LinkPickerDialog({
             </div>
             <DrawerClose asChild>{close}</DrawerClose>
           </DrawerHeader>
-          <div className="min-h-0 overflow-x-hidden overflow-y-auto px-4 pt-3.5 pb-1">{body}</div>
+          <div className="px-4 pt-3.5 pb-1">{body}</div>
           <DrawerFooter className="px-4 pt-3.5">{confirm}</DrawerFooter>
         </DrawerContent>
       </Drawer>
@@ -171,10 +173,8 @@ export function LinkPickerDialog({
           </div>
           <DialogClose asChild>{close}</DialogClose>
         </DialogHeader>
-        {/* The inset keeps the focus ring of the search field clear of the clip. */}
-        <div className="-m-1 max-h-[min(440px,55vh)] min-h-0 overflow-x-hidden overflow-y-auto p-1">
-          {body}
-        </div>
+        {/* The inset keeps the focus ring of the search field clear of the edge. */}
+        <div className="-m-1 p-1">{body}</div>
         <DialogFooter className="gap-2.5">
           <DialogClose asChild>
             <Button type="button" variant="outline" disabled={busy}>
