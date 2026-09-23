@@ -1,6 +1,6 @@
 # Active Work Queue
 
-Last verified: 2026-09-22.
+Last verified: 2026-09-23.
 
 This is the short-lived execution queue for Stage 4.1. It answers “what should I
 work on next?” without requiring a developer to re-derive priorities from the
@@ -198,7 +198,7 @@ builds owned components and states in Storybook, integrates existing behavior,
 passes its verification gate, and remains independently deployable. Do not
 start the next packet while the current one is under review.
 
-### Work Packet 6 — Student Experience and Quick Create (implemented; review gate pending)
+### Work Packet 6 — Student Experience and Quick Create (closed 2026-09-23)
 
 Implement [`product/students.md`](./product/students.md) as the reference feature
 migration:
@@ -221,11 +221,21 @@ approved shared compositions; quick create, edit, setup actions, parent
 relationships, archive/read-only behavior, and Scheduling-owned mobile lesson
 items are implemented. The full local verification gate passes on 2026-09-20.
 The 2026-09-22 remediation closes the blocking Student review findings and
-passes the complete 166-test Storybook browser/accessibility suite twice. An
-independent re-review of the remediated reference pattern is the only remaining
-process gate before Work Packet 6.1 begins.
+passes the complete 166-test Storybook browser/accessibility suite twice.
 
-### Work Packet 6.1 — Parents
+Closure, 2026-09-23: four independent reviews (Students correctness,
+authentication, design-system compliance, accessibility/responsive) covered
+everything since `4900755`, including the Studio redesign, the 40 / 60 auth
+screens and the dark theme. The blocker (package reads over the API's page cap)
+and every major finding were fixed with tests or stories, a verifying re-review
+passed, and the full gate is green with 183 Storybook tests. Details are in
+[`current-state.md`](./current-state.md#work-packet-6-evidence).
+
+### Work Packet 6.1 — Parents (next)
+
+Starts with an architect-approved screen brief at `docs/product/parents.md`.
+It also exports `ParentFormDialog` from the Parents barrel so Students can stop
+importing it directly.
 
 Migrate parent collection, detail, create/edit, relationship, archive, and
 restore surfaces. Validate person identity, contact, relationship, and action
@@ -285,6 +295,29 @@ actions, lifecycle/detail states, and interaction tests.
 - No deferred module, second visual system, decorative-only redesign, or work
   outside the ordered migration track may enter the active queue without an
   explicit roadmap decision.
+
+## WP6 review follow-ups (open, minor)
+
+Found by the closure review and deliberately left out of the remediation:
+
+- Product decisions: whether non-owner roles see Students controls (the API is
+  owner-only today); what the hold dialog does when counting lessons fails.
+- Focus return after dismissing the setup checklist, unlinking a parent, or a
+  status change; the browser Back button is not covered by the leave guard.
+- Completing or cancelling a lesson does not refresh package credits until the
+  next refetch.
+- Accessibility polish: the mobile navigation sheet's English-only title and
+  hidden close button, the "More" tab without `aria-expanded`, the phone status
+  sheet radio group without a name or arrow keys, sort direction and result
+  counts not announced, the timezone field not marked required, targets below
+  the contract's 44px phone minimum.
+- Design-system hygiene: arbitrary type sizes and radii in feature code, raw
+  `white` utilities in `stat-block`/`button`/`sonner`, `-space-x` for the
+  empty-state avatars, a duplicated status-dot map, translated strings reshaped
+  in components, registry entries missing for `PageHeader` and the newer
+  `DataTable` props, locale-specific stories, and shared components with a
+  single caller that should be reviewed against the two-caller rule.
+- The header search, phone search and notifications bell are not wired yet.
 
 ## Studio redesign follow-ups (open)
 

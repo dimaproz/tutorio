@@ -1,6 +1,6 @@
 # Tutorio Current State
 
-Last verified: 2026-09-22 after the Work Packet 6 review-remediation gate.
+Last verified: 2026-09-23 after the Work Packet 6 closure gate.
 
 This is the first project document to read before planning or implementing
 work. It reports the repository as it exists; [`mvp-plan.md`](./mvp-plan.md)
@@ -16,13 +16,13 @@ track, not a big-bang redesign or a new product module: every migrated route
 must become clearer, tested, responsive, accessible, and independently
 deployable while preserving proven behavior.
 
-- Branch: `develop`; Work Packet 5 implementation is committed as `e362675` and
-  Frontend Packet F5 as `4900755`.
+- Branch: `develop`; Work Packet 5 implementation is committed as `e362675`,
+  Frontend Packet F5 as `4900755`, and Work Packet 6 is closed on 2026-09-23.
 - The former `refactor/students-design` work was merged by PR #18.
 - `pnpm generate`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build`
-  pass on 2026-09-22. Observed unit totals: domain 92, validation 47, API 158,
-  and web 128. Storybook browser tests pass twice for 166 tests across 27 files,
-  including automated accessibility checks, and the static build passes.
+  pass on 2026-09-23. Observed unit totals: domain 92, validation 47, API 158,
+  and web 164. Storybook browser tests pass repeatedly for 183 tests across 65
+  files, including automated accessibility checks, and the static build passes.
 - API E2E passes 78 tests in 6 suites against an isolated PostgreSQL 17
   database after the then-current migration set, including legacy-TEACHER
   denials, group compensation cycles, and package archival. The finance
@@ -62,7 +62,7 @@ second visual system or speculative product scope. The required order is:
 3. Fix scheduling lifecycle defects: conflict validation, pause behavior,
    effective status, and honest replacement-lesson behavior.
 4. Use Work Packet 6 — Student Experience and Quick Create as the reference
-   feature migration.
+   feature migration (closed 2026-09-23).
 5. Migrate Parents, Teachers, Groups and Enrollments, Scheduling, package read
    surfaces, Dashboard, and Settings in Work Packets 6.1–6.6.
 6. Replace package creation with the progressive sale flow in Work Packet 7.
@@ -79,7 +79,15 @@ edit routes, the status control with the hold and archive flows, collection
 rows and profile metrics derived from package and lesson data, the phone
 app bar and tab bar, and the two-column sign-in and registration screens.
 Storybook was reorganised to one entry per component with controls; screen
-stories render the real features against an in-memory story backend.
+stories render the real features against an in-memory story backend, which
+validates list pagination the way the API does.
+
+Authentication is a 40 / 60 desktop split: the form card beside a decorative
+promo panel (hidden from assistive technology and pinned to the light palette),
+with a compact promo band above the form on phones. The approved Studio dark
+palette is shipped as token pairs in `globals.css`; see the theme contract in
+[`design-system.md`](./design-system.md). The timezone picker offers 25 main
+zones and keeps a saved or browser zone outside them selectable.
 
 ### Frontend Packet F0 evidence
 
@@ -179,9 +187,25 @@ and makes mobile menu cleanup deterministic. Root generation, lint, typecheck,
 unit tests, production build, two complete 166-test Storybook
 browser/accessibility runs, Storybook static build, and whitespace checks pass
 on 2026-09-22. No API or service contract changed, so the existing isolated
-lifecycle E2E evidence remains applicable. Independent re-review of the
-remediated reference pattern remains the final process gate before Work Packet
-6.1.
+lifecycle E2E evidence remains applicable.
+
+The 2026-09-23 closure gate reviewed everything since `4900755` — the Student
+migration, the Studio redesign, the auth screens and the dark theme — in four
+independent passes: Students correctness, authentication, design-system
+compliance, and accessibility/responsive behavior. They found one blocker (the
+collection requested 200 packages per page against the API's cap of 100, so
+every row reported "No active package") and a set of major defects: invented
+profile zeros on failed reads, a parent link/unlink race, unsaved edits lost on
+in-app navigation, a low-credit count that followed used-up packages, the phone
+save button hidden under the tab bar, no phone pagination, tablet overflow and
+clipping, invisible focus, and names that did not match visible labels. All
+were fixed with regression tests or stories where behavior exists; the story
+backend now rejects out-of-range pagination. A second independent pass verified
+every fix and found five minor follow-ons, also fixed. Root generation, lint,
+typecheck, unit tests, production build, repeated 183-test Storybook
+browser/accessibility runs, the Storybook static build, and whitespace checks
+pass. No API contract changed; the one API commit adjusts a test-only spec.
+Remaining minor items are listed in [`next-work.md`](./next-work.md).
 
 ### Work Packet 1 evidence
 
@@ -279,15 +303,13 @@ generated client expose the typed `403` contract for owner-only handlers.
 
 ### P1 — UX and delivery confidence
 
-- Student creation combines identity, avatar, contacts, timezone, learning
-  profile, price, parent creation/linking, and notes in one long modal.
 - Package creation combines customer assignment, billing model, price, expiry,
   recurrence, timezone, first-lesson calculation, and payment state in one
   modal. A tutor must understand several internal concepts before completing a
   basic sale.
-- Large form components exceed the web architecture target and lack workflow-
-  level interaction tests. The primitive baseline and Storybook foundation are
-  stable, but page composition and form simplification remain F3-F7 work.
+- Legacy form components outside Students mix several roles and lack
+  workflow-level interaction tests; they are migrated domain by domain in Work
+  Packets 6.1–7.
 - The package list fetches a fixed first page without a complete pagination
   experience. Some non-auth session errors can leave the UI in a permanent
   loading state.
@@ -315,9 +337,9 @@ generated client expose the typed `403` contract for owner-only handlers.
 
 ## Next checkpoint
 
-Work Packet 6 — Student Experience and Quick Create is implemented and passes
-its complete local verification gate. The resulting Student feature is the
-reference collection/detail/form migration, including saved-profile setup,
-relationship management, responsive lesson rendering, and archived read-only
-behavior. The next checkpoint is a separate review of this reference pattern;
-after that gate, begin Work Packet 6.1 — Parents.
+Work Packet 6 — Student Experience and Quick Create is closed: it passed an
+independent four-dimension review, its remediation, a verifying re-review, and
+the complete local gate on 2026-09-23. The Student feature is the reference
+collection/detail/form migration. The next checkpoint is Work Packet 6.1 —
+Parents, which starts with its architect-approved screen brief in
+`docs/product/`.
