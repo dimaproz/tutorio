@@ -172,10 +172,13 @@ export function useStudentStatusActions(student: StatusControlStudent) {
         scheduledLessons={
           scheduled.isSuccess && !scheduled.isPlaceholderData
             ? (individual?.length ?? 0)
-            : scheduled.isError
-              ? 0
-              : undefined
+            : undefined
         }
+        // A failed count is said out loud: the tutor retries or pauses knowing
+        // the booked lessons stay in place.
+        countFailed={scheduled.isError}
+        retryingCount={scheduled.isFetching}
+        onRetryCount={() => void scheduled.refetch()}
         pending={cancelling || update.isPending}
         onConfirm={(options) => void confirmHold(options)}
       />

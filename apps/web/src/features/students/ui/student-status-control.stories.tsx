@@ -96,3 +96,38 @@ export const HoldDialog: StoryObj<HoldArgs> = {
     await expect(args.onConfirm).toHaveBeenCalledWith({ cancelLessons: true });
   },
 };
+
+/** The lessons could not be counted: retry, or pause and keep every lesson. */
+export const HoldDialogCountFailed: StoryObj<HoldArgs & { onRetryCount: () => void }> = {
+  args: {
+    fullName: 'Anna Shevchenko',
+    lessons: 0,
+    pending: false,
+    onConfirm: fn(),
+    onRetryCount: fn(),
+  },
+  render: ({ fullName, pending, onConfirm, onRetryCount }) => (
+    <StudentHoldDialog
+      open
+      onOpenChange={() => undefined}
+      fullName={fullName}
+      countFailed
+      onRetryCount={onRetryCount}
+      pending={pending}
+      onConfirm={onConfirm}
+    />
+  ),
+  play: async ({ args }) => {
+    const dialog = within(await within(document.body).findByRole('dialog'));
+    await waitFor(() =>
+      expect(dialog.getByText('Couldn’t check the scheduled lessons')).toBeVisible(),
+    );
+    await expect(dialog.queryByRole('checkbox')).toBeNull();
+    await userEvent.click(dialog.getByRole('button', { name: 'Try again' }));
+    await expect(args.onRetryCount).toHaveBeenCalled();
+    await userEvent.click(
+      dialog.getByRole('button', { name: 'Send on a break without cancelling lessons' }),
+    );
+    await expect(args.onConfirm).toHaveBeenCalledWith({ cancelLessons: false });
+  },
+};

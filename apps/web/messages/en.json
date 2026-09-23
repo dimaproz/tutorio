@@ -779,7 +779,10 @@
       "description": "{name}: no new lessons will be planned. The package, payments and history stay as they are.",
       "confirm": "Send on a break",
       "cancelLessons": "{count, plural, one {Cancel # scheduled lesson} other {Cancel # scheduled lessons}}",
-      "cancelLessonsHint": "Cancelled lessons are not charged to the package."
+      "cancelLessonsHint": "Cancelled lessons are not charged to the package.",
+      "countFailedTitle": "Couldn’t check the scheduled lessons",
+      "countFailedText": "Try again, or send the student on a break and keep every booked lesson in the calendar.",
+      "confirmWithoutCancelling": "Send on a break without cancelling lessons"
     },
     "banner": {
       "holdTitle": "Student is on a break",
