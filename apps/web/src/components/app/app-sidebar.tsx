@@ -228,7 +228,7 @@ export function AppSidebarContent({
           </SidebarGroup>
         ) : null}
       </SidebarContent>
-      <SidebarFooter className="p-0 px-3.5 pb-5">
+      <SidebarFooter className="p-0 px-3.5 pt-2 pb-5">
         <SidebarUserMenu
           session={session}
           canAccessSettings={settings !== null}
