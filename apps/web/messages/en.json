@@ -689,7 +689,8 @@
       "paid": "Paid",
       "settled": "Settled",
       "partlyPaid": "Partly paid",
-      "due": "Due {amount}"
+      "due": "Due {amount}",
+      "unavailable": "Unavailable"
     },
     "profileMetrics": {
       "creditsLeft": "Credits left",
@@ -717,7 +718,9 @@
       "attendanceNoneCaption": "Appears after the first lesson",
       "levelNone": "Not set",
       "levelNoneSub": "language level (CEFR)",
-      "knowledgeCaption": "{level} general level"
+      "knowledgeCaption": "{level} general level",
+      "unavailable": "Unavailable",
+      "mixedCurrency": "Several currencies"
     },
     "sections": {
       "label": "Student sections",

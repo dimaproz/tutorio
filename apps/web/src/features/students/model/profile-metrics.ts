@@ -22,6 +22,12 @@ export type StudentProfileMetrics = {
   } | null;
   /** The nearest scheduled lesson. */
   next: LessonResponse | null;
+  /** The package read failed or was partial: credits and money are unknown. */
+  packagesUnavailable: boolean;
+  /** The lesson read failed: attendance and the next lesson are unknown. */
+  lessonsUnavailable: boolean;
+  /** The live packages are priced in more than one currency, so no one sum exists. */
+  mixedCurrency: boolean;
 };
 
 const ATTENDANCE_WINDOW = 12;
@@ -35,10 +41,14 @@ export function deriveStudentProfileMetrics({
   packages,
   lessons,
   now,
+  packagesUnavailable = false,
+  lessonsUnavailable = false,
 }: {
   packages: PackageResponse[];
   lessons: LessonResponse[];
   now: number;
+  packagesUnavailable?: boolean;
+  lessonsUnavailable?: boolean;
 }): StudentProfileMetrics {
   const byPurchase = [...packages].sort((a, b) => b.purchasedAt.localeCompare(a.purchasedAt));
   const current = byPurchase.find((pkg) => pkg.remainingCredits > 0) ?? byPurchase[0];
@@ -94,5 +104,13 @@ export function deriveStudentProfileMetrics({
       )
       .sort((a, b) => a.startsAtUtc.localeCompare(b.startsAtUtc))[0] ?? null;
 
-  return { credits, paid, attendance, next };
+  return {
+    credits: packagesUnavailable ? null : credits,
+    paid: packagesUnavailable ? null : paid,
+    attendance: lessonsUnavailable ? null : attendance,
+    next: lessonsUnavailable ? null : next,
+    packagesUnavailable,
+    lessonsUnavailable,
+    mixedCurrency: !packagesUnavailable && currencies.size > 1,
+  };
 }

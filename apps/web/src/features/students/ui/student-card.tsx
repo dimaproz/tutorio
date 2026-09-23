@@ -12,6 +12,7 @@ import {
   StudentCreditsCell,
   StudentNextLessonCell,
   useStudentSubtitle,
+  type PackagesReadState,
 } from './student-row-cells';
 
 /**
@@ -22,10 +23,12 @@ import {
 export function StudentCard({
   student,
   rollup,
+  packages = 'ready',
   now,
 }: {
   student: StudentListItem;
   rollup?: StudentRollup;
+  packages?: PackagesReadState;
   now: number;
 }) {
   const tStatus = useTranslations('studentStatus');
@@ -60,10 +63,10 @@ export function StudentCard({
             </span>
           ) : null}
         </div>
-        <StudentBalanceCell balance={rollup?.balance} status={student.status} />
+        <StudentBalanceCell balance={rollup?.balance} status={student.status} packages={packages} />
       </div>
       <div className="flex items-end justify-between gap-3 border-t border-border pt-3">
-        <StudentCreditsCell credits={rollup?.credits} />
+        <StudentCreditsCell credits={rollup?.credits} packages={packages} />
         <StudentNextLessonCell status={student.status} next={rollup?.next} now={now} align="end" />
       </div>
     </article>

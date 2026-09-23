@@ -134,6 +134,8 @@ export const queryKeys = {
   packages: {
     all: ['packages'] as const,
     lists: (filters: PackageListFilters) => ['packages', 'list', filters] as const,
+    everything: (filters: Omit<PackageListFilters, 'page' | 'pageSize'>) =>
+      ['packages', 'list', 'everything', filters] as const,
     detail: (packageId: string) => ['packages', 'detail', packageId] as const,
     ledger: (packageId: string) => ['packages', 'ledger', packageId] as const,
   },

@@ -689,7 +689,8 @@
       "paid": "Оплачено",
       "settled": "Розраховано",
       "partlyPaid": "Частково",
-      "due": "Борг {amount}"
+      "due": "Борг {amount}",
+      "unavailable": "Недоступно"
     },
     "profileMetrics": {
       "creditsLeft": "Залишок занять",
@@ -717,7 +718,9 @@
       "attendanceNoneCaption": "З’явиться після першого уроку",
       "levelNone": "Не вказано",
       "levelNoneSub": "рівень мови (CEFR)",
-      "knowledgeCaption": "{level} загальний рівень"
+      "knowledgeCaption": "{level} загальний рівень",
+      "unavailable": "Недоступно",
+      "mixedCurrency": "Кілька валют"
     },
     "sections": {
       "label": "Розділи учня",

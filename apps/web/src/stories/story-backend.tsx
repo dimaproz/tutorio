@@ -9,6 +9,7 @@ import type {
   StudentDetail,
   StudentListItem,
 } from '@tutorio/validation';
+import { paginationQuerySchema } from '@tutorio/validation';
 import { SessionProvider } from '@/components/app/session-provider';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { SESSION_QUERY_KEY } from '@/lib/auth/client';
@@ -324,6 +325,16 @@ function createHandler(options: StoryBackendOptions) {
     const never = () => new Promise<Response>(() => undefined);
 
     if (path === '/auth/me') return json(storySession);
+
+    // The API validates every list query; so does the story backend, or a
+    // screen that asks for more than the API allows looks fine only here.
+    if (method === 'GET' && query.has('pageSize')) {
+      const paging = paginationQuerySchema.safeParse({
+        page: query.get('page') ?? undefined,
+        pageSize: query.get('pageSize') ?? undefined,
+      });
+      if (!paging.success) return json({ code: 'VALIDATION_FAILED' }, 400);
+    }
 
     const detailMatch = path.match(/^\/students\/([^/]+)(\/restore)?$/);
     if (detailMatch) {

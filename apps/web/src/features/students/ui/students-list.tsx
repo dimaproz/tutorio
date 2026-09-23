@@ -22,7 +22,7 @@ import { deriveCollectionMetrics } from '@/features/students/model/collection-me
 import { deriveStudentRollups } from '@/features/students/model/rollups';
 import { parsePageParam } from '@/lib/api/filters';
 import { useGroupsQuery } from '@/lib/api/groups';
-import { usePackagesQuery } from '@/lib/api/packages';
+import { useAllPackagesQuery } from '@/lib/api/packages';
 import { useLessonsQuery } from '@/lib/api/scheduling';
 import { useStudentsQuery } from '@/lib/api/students';
 import { StudentCard } from './student-card';
@@ -33,6 +33,7 @@ import {
   StudentIdentityCell,
   StudentLearningCell,
   StudentNextLessonCell,
+  type PackagesReadState,
 } from './student-row-cells';
 import { StudentsEmptyState } from './students-empty-state';
 import { StudentsListFilters, type StudentStatusTab } from './students-list-filters';
@@ -99,9 +100,17 @@ export function StudentsList({ nowMs }: { nowMs?: number } = {}) {
     status: 'SCHEDULED',
   });
 
-  // Package metrics are derived client-side, so the page has to cover every
-  // package for the aggregate to be true; the model rejects a partial page.
-  const packages = usePackagesQuery({ page: 1, pageSize: 200, state: 'active' });
+  // Package metrics are derived client-side, so the read has to cover every
+  // package for the aggregate to be true; the model rejects a partial set.
+  const packages = useAllPackagesQuery({ state: 'active' });
+  const packagesComplete = Boolean(
+    packages.data && packages.data.items.length >= packages.data.total,
+  );
+  const packagesState: PackagesReadState = packages.isPending
+    ? 'loading'
+    : packages.isError || !packagesComplete
+      ? 'unavailable'
+      : 'ready';
   const packageMetrics = packages.isPending
     ? undefined
     : packages.isError || !packages.data
@@ -111,13 +120,11 @@ export function StudentsList({ nowMs }: { nowMs?: number } = {}) {
     () =>
       deriveStudentRollups({
         packages: packages.data?.items ?? [],
-        packagesComplete: Boolean(
-          packages.data && packages.data.items.length >= packages.data.total,
-        ),
+        packagesComplete,
         lessons: upcomingLessons.data?.items ?? [],
         now,
       }),
-    [packages.data, upcomingLessons.data, now],
+    [packages.data, packagesComplete, upcomingLessons.data, now],
   );
 
   // Facet counts are their own one-row queries: a collection page can never
@@ -178,7 +185,12 @@ export function StudentsList({ nowMs }: { nowMs?: number } = {}) {
       {
         id: 'credits',
         header: () => t('columns.credits'),
-        cell: ({ row }) => <StudentCreditsCell credits={rollups.get(row.original.id)?.credits} />,
+        cell: ({ row }) => (
+          <StudentCreditsCell
+            credits={rollups.get(row.original.id)?.credits}
+            packages={packagesState}
+          />
+        ),
       },
       {
         id: 'nextLesson',
@@ -198,6 +210,7 @@ export function StudentsList({ nowMs }: { nowMs?: number } = {}) {
           <StudentBalanceCell
             balance={rollups.get(row.original.id)?.balance}
             status={row.original.status}
+            packages={packagesState}
           />
         ),
       },
@@ -215,7 +228,7 @@ export function StudentsList({ nowMs }: { nowMs?: number } = {}) {
         ),
       },
     ],
-    [t, rollups, now],
+    [t, rollups, packagesState, now],
   );
 
   const items = students.data?.items ?? [];
@@ -333,6 +346,7 @@ export function StudentsList({ nowMs }: { nowMs?: number } = {}) {
                   key={student.id}
                   student={student}
                   rollup={rollups.get(student.id)}
+                  packages={packagesState}
                   now={now}
                 />
               ))

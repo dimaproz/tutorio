@@ -28,6 +28,28 @@ describe('deriveStudentProfileMetrics', () => {
       paid: null,
       attendance: null,
       next: null,
+      packagesUnavailable: false,
+      lessonsUnavailable: false,
+      mixedCurrency: false,
+    });
+  });
+
+  it('reports unknown rather than empty when a read failed', () => {
+    const metrics = deriveStudentProfileMetrics({
+      packages: [pkg({})],
+      lessons: [lesson('2026-09-01T10:00:00.000Z', 'COMPLETED')],
+      now: NOW,
+      packagesUnavailable: true,
+      lessonsUnavailable: true,
+    });
+    expect(metrics).toMatchObject({
+      credits: null,
+      paid: null,
+      attendance: null,
+      next: null,
+      packagesUnavailable: true,
+      lessonsUnavailable: true,
+      mixedCurrency: false,
     });
   });
 
@@ -57,6 +79,7 @@ describe('deriveStudentProfileMetrics', () => {
       now: NOW,
     });
     expect(metrics.paid).toBeNull();
+    expect(metrics.mixedCurrency).toBe(true);
   });
 
   it('counts attendance over finished lessons and finds the next one', () => {

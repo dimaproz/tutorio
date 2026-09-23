@@ -11,7 +11,8 @@ import { formatMoneyCompact } from '@/lib/money';
 /**
  * The profile metric band: credits left, money received, attendance and the
  * level. Every figure is read from the student's packages and lessons; a
- * student without them shows zeros and the next step, never a dash.
+ * student without them shows zeros and the next step. Only a read that
+ * failed, or money in several currencies, shows a dash with the reason.
  */
 export function StudentProfileMetrics({
   student,
@@ -43,6 +44,8 @@ export function StudentProfileMetrics({
     paid?.currency ?? student.currency ?? 'UAH',
     locale,
   );
+  // Unknown or not summable: a zero here would read as "nothing paid".
+  const unknownPaid = Boolean(metrics && !paid && (metrics.packagesUnavailable || metrics.mixedCurrency));
   const shortDate = (iso: string) =>
     format.dateTime(new Date(iso), { day: 'numeric', month: 'short' });
 
@@ -50,6 +53,8 @@ export function StudentProfileMetrics({
     <div className="-mx-4 flex gap-3 overflow-x-auto px-4 md:mx-0 md:grid md:grid-cols-2 md:gap-4 md:overflow-visible md:px-0 xl:grid-cols-4 [&>*]:w-65 [&>*]:shrink-0 md:[&>*]:w-auto">
       {!metrics ? (
         <StatBlock type="amount" label={t('creditsLeft')} value={loading} />
+      ) : metrics.packagesUnavailable ? (
+        <StatBlock type="amount" label={t('creditsLeft')} value="—" caption={t('unavailable')} />
       ) : credits && credits.total > 0 ? (
         <StatBlock
           type="chart"
@@ -75,8 +80,8 @@ export function StudentProfileMetrics({
       <StatBlock
         type="amount"
         label={t('paidThisTerm')}
-        value={metrics ? paidMoney.value : loading}
-        unit={metrics ? paidMoney.symbol : undefined}
+        value={!metrics ? loading : paid ? paidMoney.value : unknownPaid ? '—' : paidMoney.value}
+        unit={metrics && !unknownPaid ? paidMoney.symbol : undefined}
         badge={
           !paid
             ? undefined
@@ -94,7 +99,11 @@ export function StudentProfileMetrics({
             ? undefined
             : paid
               ? t('paidCaption', { date: shortDate(paid.lastPurchaseAt), count: paid.packages })
-              : t('noPayments')
+              : metrics.packagesUnavailable
+                ? t('unavailable')
+                : metrics.mixedCurrency
+                  ? t('mixedCurrency')
+                  : t('noPayments')
         }
         detail={!mobile && price ? t('perLesson', { price }) : undefined}
         aside={mobile && price ? price : undefined}
@@ -117,9 +126,15 @@ export function StudentProfileMetrics({
         <StatBlock
           type="date"
           label={t('attendance')}
-          value={metrics ? t('attendanceNone') : loading}
-          sub={metrics ? t('attendanceNoneSub') : undefined}
-          caption={metrics ? t('attendanceNoneCaption') : undefined}
+          value={!metrics ? loading : metrics.lessonsUnavailable ? '—' : t('attendanceNone')}
+          sub={metrics && !metrics.lessonsUnavailable ? t('attendanceNoneSub') : undefined}
+          caption={
+            !metrics
+              ? undefined
+              : metrics.lessonsUnavailable
+                ? t('unavailable')
+                : t('attendanceNoneCaption')
+          }
         />
       )}
 

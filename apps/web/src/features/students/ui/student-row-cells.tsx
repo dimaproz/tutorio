@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import type { StudentListItem, StudentStatusDto } from '@tutorio/validation';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { CreditMeter } from '@/components/shared/credit-meter';
 import { EntityAvatar, type EntityAvatarStatus } from '@/components/shared/entity-avatar';
 import { isSameLocalDay, type StudentRollup } from '@/features/students/model/rollups';
@@ -99,8 +100,34 @@ function CellPlaceholder({ children }: { children: ReactNode }) {
   return <span className="text-[13px] text-muted-foreground">{children}</span>;
 }
 
-export function StudentCreditsCell({ credits }: { credits?: StudentRollup['credits'] }) {
+/**
+ * Whether the package read behind the credits and balance cells is complete.
+ * Only a complete read may say "no package" or "no invoices"; a failed or
+ * partial one says the value is unavailable instead of inventing an absence.
+ */
+export type PackagesReadState = 'loading' | 'ready' | 'unavailable';
+
+function PackagesPending({ state }: { state: Exclude<PackagesReadState, 'ready'> }) {
   const t = useTranslations('students.list');
+  return state === 'loading' ? (
+    <Skeleton className="h-4 w-20" />
+  ) : (
+    <CellPlaceholder>{t('unavailable')}</CellPlaceholder>
+  );
+}
+
+export function StudentCreditsCell({
+  credits,
+  packages = 'ready',
+}: {
+  credits?: StudentRollup['credits'];
+  packages?: PackagesReadState;
+}) {
+  const t = useTranslations('students.list');
+
+  if (packages !== 'ready') {
+    return <PackagesPending state={packages} />;
+  }
 
   if (!credits || credits.total === 0) {
     return <CellPlaceholder>{t('noPackage')}</CellPlaceholder>;
@@ -170,12 +197,18 @@ export function StudentNextLessonCell({
 export function StudentBalanceCell({
   balance,
   status,
+  packages = 'ready',
 }: {
   balance?: StudentRollup['balance'];
   status: StudentStatusDto;
+  packages?: PackagesReadState;
 }) {
   const t = useTranslations('students.list');
   const locale = useLocale();
+
+  if (packages !== 'ready') {
+    return <PackagesPending state={packages} />;
+  }
 
   if (!balance) {
     return <CellPlaceholder>{t('noBalance')}</CellPlaceholder>;

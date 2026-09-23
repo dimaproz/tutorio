@@ -6,6 +6,9 @@ function pkg(overrides: Partial<PackageResponse>): PackageResponse {
   return {
     studentId: 'student-1',
     remainingCredits: 8,
+    lessonsTotal: 8,
+    purchasedAt: '2026-09-01T00:00:00.000Z',
+    shares: [],
     effectiveTotalMinor: 100_000,
     paidMinor: 100_000,
     currency: 'UAH',
@@ -26,6 +29,18 @@ describe('collection metrics', () => {
     );
 
     expect(metrics?.lowOnCredits).toBe(2);
+  });
+
+  it('follows the package a student uses now, not an older used-up one', () => {
+    const metrics = deriveCollectionMetrics(
+      [
+        pkg({ studentId: 'a', remainingCredits: 0, purchasedAt: '2026-06-01T00:00:00.000Z' }),
+        pkg({ studentId: 'a', remainingCredits: 10, purchasedAt: '2026-09-01T00:00:00.000Z' }),
+      ],
+      2,
+    );
+
+    expect(metrics?.lowOnCredits).toBe(0);
   });
 
   it('sums only what is still owed', () => {

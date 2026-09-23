@@ -1,7 +1,7 @@
 import type { LessonResponse, PackageResponse } from '@tutorio/validation';
-import { LOW_CREDIT_THRESHOLD } from './collection-metrics';
+import { currentCreditsByStudent, type StudentCredits } from './collection-metrics';
 
-export type StudentCredits = { left: number; total: number };
+export { isLowOnCredits, type StudentCredits } from './collection-metrics';
 
 export type StudentBalance =
   | { kind: 'paid' }
@@ -73,19 +73,11 @@ export function deriveStudentRollups({
       current.mixed ||= current.currency !== currency;
     };
 
-    // Newest purchase first, so the first package that still has credits is
-    // the one the student is using now.
-    const byPurchase = [...packages].sort((a, b) => b.purchasedAt.localeCompare(a.purchasedAt));
-    for (const pkg of byPurchase) {
-      const holders = pkg.studentId ? [pkg.studentId] : pkg.shares.map((share) => share.student.id);
-      for (const studentId of holders) {
-        const rollup = rollupOf(studentId);
-        const credits = { left: Math.max(pkg.remainingCredits, 0), total: pkg.lessonsTotal };
-        if (!rollup.credits || (rollup.credits.left === 0 && credits.left > 0)) {
-          rollup.credits = credits;
-        }
-      }
+    for (const [studentId, credits] of currentCreditsByStudent(packages)) {
+      rollupOf(studentId).credits = credits;
+    }
 
+    for (const pkg of packages) {
       if (pkg.studentId) {
         addMoney(
           pkg.studentId,
@@ -135,11 +127,6 @@ export function deriveStudentRollups({
   }
 
   return rollups;
-}
-
-/** A package is running out at or below the collection's low-credit threshold. */
-export function isLowOnCredits(credits: StudentCredits | undefined): boolean {
-  return Boolean(credits && credits.total > 0 && credits.left <= LOW_CREDIT_THRESHOLD);
 }
 
 /** Whether a timestamp falls on the same local calendar day as `now`. */

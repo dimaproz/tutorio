@@ -49,6 +49,47 @@ export function usePackagesQuery(filters: PackageListFilters, enabled = true) {
   });
 }
 
+/** The API's largest page; a larger `pageSize` is rejected with a 400. */
+export const PACKAGE_PAGE_SIZE_MAX = 100;
+/** Stop after this many pages so a runaway workspace cannot stall the page. */
+const PACKAGE_PAGES_MAX = 20;
+
+/**
+ * Every package matching the filters, read page by page. Client-side
+ * aggregates need the whole set; the response keeps the server's `total`, so
+ * a caller can still tell when the page cap left the set incomplete.
+ */
+export function useAllPackagesQuery(
+  filters: Omit<PackageListFilters, 'page' | 'pageSize'>,
+  enabled = true,
+) {
+  return useQuery<PackageListResponse, GatewayError>({
+    queryKey: queryKeys.packages.everything(filters),
+    enabled,
+    queryFn: async () => {
+      const fetchPage = (page: number) =>
+        gatewayFetch<PackageListResponse>(
+          `/api/backend/packages${buildQueryString({
+            page,
+            pageSize: PACKAGE_PAGE_SIZE_MAX,
+            studentId: filters.studentId,
+            groupId: filters.groupId,
+            paymentStatus: filters.paymentStatus,
+            state: filters.state,
+          })}`,
+        );
+      const first = await fetchPage(1);
+      const items = [...first.items];
+      const lastPage = Math.min(first.totalPages, PACKAGE_PAGES_MAX);
+      for (let page = 2; page <= lastPage; page += 1) {
+        items.push(...(await fetchPage(page)).items);
+      }
+      return { ...first, items, page: 1, pageSize: items.length || PACKAGE_PAGE_SIZE_MAX };
+    },
+    placeholderData: (previous) => previous,
+  });
+}
+
 export function usePackageQuery(packageId: string, enabled = true) {
   return useQuery<PackageResponse, GatewayError>({
     queryKey: queryKeys.packages.detail(packageId),

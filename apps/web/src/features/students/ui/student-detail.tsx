@@ -96,16 +96,23 @@ export function StudentProfileContent({
     studentId: student.id,
     state: archived ? 'all' : 'active',
   });
+  // A failed or partial read is reported as unknown, never as an empty record:
+  // "0 credits" and "no payments" would be claims the page cannot back.
+  const packagesUnavailable =
+    packages.isError ||
+    Boolean(packages.data && packages.data.items.length < packages.data.total);
   const metrics = useMemo(
     () =>
-      lessons.data && (packages.data || packages.isError)
+      (lessons.data || lessons.isError) && (packages.data || packages.isError)
         ? deriveStudentProfileMetrics({
-            packages: packages.data?.items ?? [],
-            lessons: lessons.data.items,
+            packages: packagesUnavailable ? [] : (packages.data?.items ?? []),
+            lessons: lessons.data?.items ?? [],
             now,
+            packagesUnavailable,
+            lessonsUnavailable: lessons.isError,
           })
         : undefined,
-    [lessons.data, packages.data, packages.isError, now],
+    [lessons.data, lessons.isError, packages.data, packages.isError, packagesUnavailable, now],
   );
 
   const dismissSetup = () => {
