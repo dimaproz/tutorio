@@ -17,7 +17,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
       closeButton
       icons={{
         success: (
-          <span className="flex size-7 items-center justify-center rounded-pill bg-success text-white">
+          <span className="flex size-7 items-center justify-center rounded-pill bg-success text-success-foreground">
             <CheckIcon className="size-4" strokeWidth={2.5} />
           </span>
         ),

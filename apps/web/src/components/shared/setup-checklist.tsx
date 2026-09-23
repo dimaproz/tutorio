@@ -32,13 +32,13 @@ export function SetupChecklist({
   return (
     <section
       data-slot="setup-checklist"
-      className="flex flex-col gap-4 rounded-card bg-tint-sky p-5.5 text-ink"
+      className="flex flex-col gap-4 rounded-card bg-tint-sky p-5.5 text-tint-foreground"
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3.5">
           <span
             aria-hidden="true"
-            className="flex size-10 shrink-0 items-center justify-center rounded-pill bg-success text-white"
+            className="flex size-10 shrink-0 items-center justify-center rounded-pill bg-success text-success-foreground"
           >
             <CheckIcon className="size-5" strokeWidth={2.5} />
           </span>

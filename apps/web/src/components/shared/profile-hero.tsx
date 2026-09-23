@@ -78,14 +78,14 @@ export function ProfileHero({
       <h1
         className={cn(
           'relative col-span-2 text-[32px] leading-9 font-semibold tracking-[-0.03em] md:col-span-1 md:col-start-2 md:text-[56px] md:leading-[56px] md:tracking-[-0.04em]',
-          dim && 'text-ink-soft',
+          dim && 'text-tint-indigo-meta',
         )}
       >
         {name}
       </h1>
 
       {metaItems.length > 0 ? (
-        <div className="relative col-span-2 -mt-2 flex flex-wrap gap-2 text-[13px] text-ink-soft md:col-span-1 md:col-start-2 md:mt-0 md:text-sm">
+        <div className="relative col-span-2 -mt-2 flex flex-wrap gap-2 text-[13px] text-tint-indigo-meta md:col-span-1 md:col-start-2 md:mt-0 md:text-sm">
           {metaItems.map((item, index) => (
             // Meta values are positional and static within a render.
             <span key={index} className="contents">

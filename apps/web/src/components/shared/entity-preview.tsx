@@ -24,7 +24,7 @@ export function EntityPreview({
   return (
     <aside
       data-slot="entity-preview"
-      className="flex w-full flex-col gap-4 rounded-card bg-tint-indigo p-5.5 text-ink"
+      className="flex w-full flex-col gap-4 rounded-card bg-tint-indigo p-5.5 text-tint-foreground"
     >
       <span className="text-xs leading-4 font-medium tracking-[0.04em] text-tint-indigo-foreground uppercase">
         {heading}

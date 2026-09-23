@@ -90,7 +90,7 @@ function ChoiceCard<T extends string>({
       <RadioGroupItem
         id={id}
         value={option.value}
-        className="mt-0.5 size-5.5 border-2 border-border bg-transparent focus-visible:ring-0 data-checked:border-brand data-checked:bg-brand dark:data-checked:bg-brand [&_[data-slot=radio-group-indicator]]:size-5.5 [&_[data-slot=radio-group-indicator]>span]:size-2.5 [&_[data-slot=radio-group-indicator]>span]:bg-white"
+        className="mt-0.5 size-5.5 border-2 border-border bg-transparent focus-visible:ring-0 data-checked:border-brand data-checked:bg-brand dark:data-checked:bg-brand [&_[data-slot=radio-group-indicator]]:size-5.5 [&_[data-slot=radio-group-indicator]>span]:size-2.5 [&_[data-slot=radio-group-indicator]>span]:bg-brand-foreground"
       />
     </label>
   );

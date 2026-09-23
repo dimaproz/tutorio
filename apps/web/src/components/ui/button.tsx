@@ -12,8 +12,9 @@ const buttonVariants = cva(
         primary: 'bg-primary text-primary-foreground hover:bg-primary-hover hover:shadow-lift',
         outline:
           'border-border bg-card text-foreground hover:border-line-hover hover:bg-surface-hover aria-expanded:border-line-hover aria-expanded:bg-surface-hover dark:bg-transparent dark:hover:bg-input/30',
+        /** Raised paper on a tint: white in light, a hairlined chip in dark. */
         white:
-          'bg-card text-foreground hover:-translate-y-px hover:shadow-raise aria-expanded:shadow-raise',
+          'border-raised-line bg-raised text-foreground hover:-translate-y-px hover:shadow-raise aria-expanded:shadow-raise',
         soft: 'bg-brand-soft font-semibold text-brand-soft-foreground hover:bg-brand-soft-hover',
         'dark-outline':
           'border-ink-line bg-transparent text-ink-foreground hover:border-ink-line-hover hover:bg-white/8',

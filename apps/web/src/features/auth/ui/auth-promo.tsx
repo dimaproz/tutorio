@@ -189,7 +189,7 @@ export function AuthPromoRegister() {
             <span
               className={cn(
                 'flex size-8 shrink-0 items-center justify-center rounded-pill font-mono text-[13px] font-medium',
-                index === 0 && 'bg-success text-white',
+                index === 0 && 'bg-success text-success-foreground',
                 index === 1 && 'bg-primary text-primary-foreground',
                 index === 2 && 'bg-background text-muted-foreground',
               )}
