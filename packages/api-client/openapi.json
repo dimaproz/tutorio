@@ -109,7 +109,7 @@
     },
     "/api/auth/refresh": {
       "post": {
-        "description": "Returns a new token pair. Replaying a previously rotated token revokes the session.",
+        "description": "Returns a new token pair. The token rotated away within the last 30 seconds returns the already-issued successor (parallel requests share one rotation); any other replay of a rotated token revokes the session.",
         "operationId": "AuthController_refresh",
         "parameters": [],
         "requestBody": {
@@ -457,7 +457,7 @@
     },
     "/api/students": {
       "get": {
-        "description": "Paginated summaries with active enrollment counts and group names. Search covers full name, contacts and Telegram username. state=deleted|all is owner-only.",
+        "description": "Paginated summaries with active enrollment counts and group names. Search covers full name, contacts and Telegram username. Students are archived, never soft-deleted: state=active lists every student that is not ARCHIVED, state=deleted the ARCHIVED ones and state=all every status; an explicit status wins. groupId matches live memberships (ACTIVE or PAUSED, group not archived). state=deleted|all is owner-only.",
         "operationId": "StudentsController_list",
         "parameters": [
           {
@@ -498,6 +498,7 @@
             "name": "state",
             "required": false,
             "in": "query",
+            "description": "active = every student that is not ARCHIVED; deleted = ARCHIVED students; all = every status. An explicit `status` wins over `state`.",
             "schema": {
               "default": "active",
               "type": "string",
@@ -631,6 +632,44 @@
           }
         ],
         "summary": "Create a student",
+        "tags": [
+          "students"
+        ]
+      }
+    },
+    "/api/students/summary": {
+      "get": {
+        "description": "One grouped query for the collection tabs and header: `all` counts every student that is not ARCHIVED; ACTIVE, ON_HOLD and ARCHIVED count each status.",
+        "operationId": "StudentsController_summary",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudentsSummaryDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Count workspace students by status",
         "tags": [
           "students"
         ]
@@ -1157,7 +1196,7 @@
         ]
       },
       "patch": {
-        "description": "PATCH semantics: omitted fields stay unchanged, null clears an optional field. A no-op update creates no audit entry.",
+        "description": "PATCH semantics: omitted fields stay unchanged, null clears an optional field. A no-op update creates no audit entry. Returns the parent detail with its live student roster.",
         "operationId": "ParentsController_update",
         "parameters": [
           {
@@ -1185,7 +1224,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ParentDto"
+                  "$ref": "#/components/schemas/ParentDetailDto"
                 }
               }
             }
@@ -4959,6 +4998,37 @@
           "totalPages"
         ]
       },
+      "StudentsSummaryDto": {
+        "type": "object",
+        "properties": {
+          "all": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "ACTIVE": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "ON_HOLD": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "ARCHIVED": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          }
+        },
+        "required": [
+          "all",
+          "ACTIVE",
+          "ON_HOLD",
+          "ARCHIVED"
+        ]
+      },
       "CreateStudentDto": {
         "type": "object",
         "properties": {
@@ -5453,40 +5523,38 @@
                   "type": "string",
                   "format": "uuid"
                 },
-                "status": {
+                "workspaceId": {
                   "type": "string",
-                  "enum": [
-                    "ACTIVE",
-                    "PAUSED",
-                    "ARCHIVED"
-                  ]
+                  "format": "uuid"
                 },
-                "billingType": {
+                "studentId": {
                   "type": "string",
-                  "enum": [
-                    "PACKAGE",
-                    "MONTHLY",
-                    "PER_LESSON"
-                  ]
+                  "format": "uuid"
                 },
-                "priceMinor": {
-                  "type": "integer",
-                  "minimum": 0,
-                  "exclusiveMinimum": false
-                },
-                "currency": {
-                  "type": "string"
-                },
-                "cancellationDeadlineHours": {
-                  "type": "integer",
-                  "minimum": 0,
-                  "exclusiveMinimum": false,
+                "groupId": {
+                  "type": "string",
+                  "format": "uuid",
                   "nullable": true
                 },
-                "effectiveCancellationDeadlineHours": {
-                  "type": "integer",
-                  "minimum": 0,
-                  "exclusiveMinimum": false
+                "teacherId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "student": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "fullName": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "fullName"
+                  ]
                 },
                 "group": {
                   "type": "object",
@@ -5525,18 +5593,83 @@
                     "name",
                     "color"
                   ]
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "ACTIVE",
+                    "PAUSED",
+                    "ARCHIVED"
+                  ]
+                },
+                "billingType": {
+                  "type": "string",
+                  "enum": [
+                    "PACKAGE",
+                    "MONTHLY",
+                    "PER_LESSON"
+                  ]
+                },
+                "priceMinor": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false,
+                  "maximum": 2147483647,
+                  "exclusiveMaximum": false
+                },
+                "currency": {
+                  "type": "string",
+                  "enum": [
+                    "EUR",
+                    "UAH",
+                    "PLN",
+                    "USD",
+                    "GBP"
+                  ]
+                },
+                "cancellationDeadlineHours": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false,
+                  "nullable": true
+                },
+                "effectiveCancellationDeadlineHours": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "deletedAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
                 }
               },
               "required": [
                 "id",
+                "workspaceId",
+                "studentId",
+                "groupId",
+                "teacherId",
+                "student",
+                "group",
+                "teacher",
                 "status",
                 "billingType",
                 "priceMinor",
                 "currency",
                 "cancellationDeadlineHours",
                 "effectiveCancellationDeadlineHours",
-                "group",
-                "teacher"
+                "createdAt",
+                "updatedAt",
+                "deletedAt"
               ]
             }
           }

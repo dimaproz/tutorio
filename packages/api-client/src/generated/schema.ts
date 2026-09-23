@@ -71,7 +71,7 @@ export interface paths {
         put?: never;
         /**
          * Rotate the refresh token
-         * @description Returns a new token pair. Replaying a previously rotated token revokes the session.
+         * @description Returns a new token pair. The token rotated away within the last 30 seconds returns the already-issued successor (parallel requests share one rotation); any other replay of a rotated token revokes the session.
          */
         post: operations["AuthController_refresh"];
         delete?: never;
@@ -203,12 +203,32 @@ export interface paths {
         };
         /**
          * List workspace students
-         * @description Paginated summaries with active enrollment counts and group names. Search covers full name, contacts and Telegram username. state=deleted|all is owner-only.
+         * @description Paginated summaries with active enrollment counts and group names. Search covers full name, contacts and Telegram username. Students are archived, never soft-deleted: state=active lists every student that is not ARCHIVED, state=deleted the ARCHIVED ones and state=all every status; an explicit status wins. groupId matches live memberships (ACTIVE or PAUSED, group not archived). state=deleted|all is owner-only.
          */
         get: operations["StudentsController_list"];
         put?: never;
         /** Create a student */
         post: operations["StudentsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/students/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Count workspace students by status
+         * @description One grouped query for the collection tabs and header: `all` counts every student that is not ARCHIVED; ACTIVE, ON_HOLD and ARCHIVED count each status.
+         */
+        get: operations["StudentsController_summary"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -318,7 +338,7 @@ export interface paths {
         head?: never;
         /**
          * Update a parent
-         * @description PATCH semantics: omitted fields stay unchanged, null clears an optional field. A no-op update creates no audit entry.
+         * @description PATCH semantics: omitted fields stay unchanged, null clears an optional field. A no-op update creates no audit entry. Returns the parent detail with its live student roster.
          */
         patch: operations["ParentsController_update"];
         trace?: never;
@@ -1022,6 +1042,12 @@ export interface components {
             total: number;
             totalPages: number;
         };
+        StudentsSummaryDto: {
+            all: number;
+            ACTIVE: number;
+            ON_HOLD: number;
+            ARCHIVED: number;
+        };
         CreateStudentDto: {
             fullName: string;
             /** Format: email */
@@ -1130,14 +1156,19 @@ export interface components {
             enrollments: {
                 /** Format: uuid */
                 id: string;
-                /** @enum {string} */
-                status: "ACTIVE" | "PAUSED" | "ARCHIVED";
-                /** @enum {string} */
-                billingType: "PACKAGE" | "MONTHLY" | "PER_LESSON";
-                priceMinor: number;
-                currency: string;
-                cancellationDeadlineHours: number | null;
-                effectiveCancellationDeadlineHours: number;
+                /** Format: uuid */
+                workspaceId: string;
+                /** Format: uuid */
+                studentId: string;
+                /** Format: uuid */
+                groupId: string | null;
+                /** Format: uuid */
+                teacherId: string;
+                student: {
+                    /** Format: uuid */
+                    id: string;
+                    fullName: string;
+                };
                 group: {
                     /** Format: uuid */
                     id: string;
@@ -1149,6 +1180,21 @@ export interface components {
                     name: string;
                     color: string | null;
                 };
+                /** @enum {string} */
+                status: "ACTIVE" | "PAUSED" | "ARCHIVED";
+                /** @enum {string} */
+                billingType: "PACKAGE" | "MONTHLY" | "PER_LESSON";
+                priceMinor: number;
+                /** @enum {string} */
+                currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+                cancellationDeadlineHours: number | null;
+                effectiveCancellationDeadlineHours: number;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+                /** Format: date-time */
+                deletedAt: string | null;
             }[];
         };
         UpdateStudentDto: {
@@ -2704,6 +2750,7 @@ export interface operations {
                 page?: number;
                 pageSize?: number;
                 search?: string;
+                /** @description active = every student that is not ARCHIVED; deleted = ARCHIVED students; all = every status. An explicit `status` wins over `state`. */
                 state?: "active" | "deleted" | "all";
                 status?: "ACTIVE" | "ON_HOLD" | "ARCHIVED";
                 groupId?: string;
@@ -2753,6 +2800,34 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StudentDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    StudentsController_summary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentsSummaryDto"];
                 };
             };
             /** @description OWNER role required */
@@ -3126,7 +3201,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ParentDto"];
+                    "application/json": components["schemas"]["ParentDetailDto"];
                 };
             };
             /** @description OWNER role required */
