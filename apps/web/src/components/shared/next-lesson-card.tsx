@@ -57,7 +57,7 @@ export function NextLessonCard({
       tone="feature"
       radius="hero"
       data-slot="next-lesson-card"
-      className={cn('gap-4.5 p-6.5 md:h-80', className)}
+      className={cn('gap-4.5 p-6.5 md:min-h-80', className)}
     >
       <div className="flex items-center justify-between gap-3">
         <span className="text-[13px] font-semibold tracking-[0.06em] text-feature-heading uppercase">

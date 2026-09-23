@@ -55,7 +55,7 @@ export function MobileTabBarContent({
   return (
     <nav
       aria-label={t('tabsLabel')}
-      className="fixed inset-x-0 bottom-0 z-40 flex border-t border-border bg-card px-2 pt-2 pb-[max(env(safe-area-inset-bottom),18px)] md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 flex min-h-(--mobile-tab-bar-height) border-t border-border bg-card px-2 pt-2 pb-[max(env(safe-area-inset-bottom),18px)] md:hidden"
     >
       {TABS.map((tab) => {
         const active = isNavigationActive(pathname, tab);

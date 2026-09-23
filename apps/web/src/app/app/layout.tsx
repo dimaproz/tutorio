@@ -26,9 +26,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <AppSidebar />
           {/* The page ground carries 16px of padding and a 24px rhythm; the top
             bar is the first item in that column, not a band above it. */}
-          {/* Phones get their own bar and a fixed tab bar; the 110px of bottom
-            padding keeps the last card clear of it. */}
-          <SidebarInset className="gap-4 px-4 pt-1 pb-[110px] md:gap-6 md:pt-5 md:pr-6 md:pb-4 md:pl-0">
+          {/* Phones get their own bar and a fixed tab bar; the bottom padding
+            keeps the last card clear of it. */}
+          <SidebarInset className="gap-4 px-4 pt-1 pb-[calc(var(--mobile-tab-bar-height)+24px)] md:gap-6 md:pt-5 md:pr-6 md:pb-4 md:pl-0">
             <div className="md:hidden">
               <MobileAppBar />
             </div>

@@ -49,7 +49,7 @@ export function ProfileHero({
       data-slot="profile-hero"
       data-dim={dim || undefined}
       className={cn(
-        'relative grid grid-cols-[auto_minmax(0,1fr)] content-center items-center gap-x-4 gap-y-4 p-5 md:h-80 md:gap-x-7 md:gap-y-3.5 md:py-8 md:pr-3 md:pl-8',
+        'relative grid grid-cols-[auto_minmax(0,1fr)] content-center items-center gap-x-4 gap-y-4 p-5 md:min-h-80 md:gap-x-7 md:gap-y-3.5 md:py-8 md:pr-3 md:pl-8',
         className,
       )}
     >
@@ -77,7 +77,7 @@ export function ProfileHero({
 
       <h1
         className={cn(
-          'relative col-span-2 text-[32px] leading-9 font-semibold tracking-[-0.03em] md:col-span-1 md:col-start-2 md:text-[56px] md:leading-[56px] md:tracking-[-0.04em]',
+          'relative col-span-2 text-[32px] leading-9 font-semibold tracking-[-0.03em] break-words md:col-span-1 md:col-start-2 md:text-[56px] md:leading-[56px] md:tracking-[-0.04em]',
           dim && 'text-tint-indigo-meta',
         )}
       >

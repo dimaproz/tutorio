@@ -173,7 +173,8 @@ function StudentEditForm({ student }: { student: StudentDetail }) {
   );
 
   const bar = archived ? undefined : mobile ? (
-    <div className="sticky bottom-4 z-10">{primary}</div>
+    // Above the fixed tab bar: at bottom-4 it sat underneath it.
+    <div className="sticky bottom-[calc(var(--mobile-tab-bar-height)+16px)] z-10">{primary}</div>
   ) : (
     <ActionBar
       tone={state.errorCount > 0 ? 'danger' : isDirty ? 'warning' : 'muted'}

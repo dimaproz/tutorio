@@ -427,6 +427,13 @@
   --shadow-boost: 0.1;
 }
 
+/* Layout: the phone tab bar is fixed to the bottom, so anything that must stay
+   in reach above it (the page's end, a sticky save button) offsets by this.
+   68px of bar plus the safe-area inset, never less than 18px. */
+:root {
+  --mobile-tab-bar-height: calc(68px + max(env(safe-area-inset-bottom), 18px));
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

@@ -92,7 +92,7 @@ export function AppHeaderContent({
         )}
       </div>
       <div className="flex shrink-0 items-center gap-2.5">
-        <div className="hidden w-85 md:block">
+        <div className="hidden w-85 lg:block">
           <SearchField
             label={tHeader('search')}
             placeholder={tHeader('searchPlaceholder')}
