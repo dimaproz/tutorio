@@ -125,7 +125,11 @@ function ParentEditForm({ parent }: { parent: ParentDetail }) {
   const submit = form.handleSubmit(
     async (values) => {
       try {
-        await update.mutateAsync(buildParentEditDto(values));
+        await update.mutateAsync(
+          buildParentEditDto(values, {
+            linksChanged: Boolean(form.formState.dirtyFields.studentIds),
+          }),
+        );
         form.reset(values);
         toast.success(tParents('toasts.updated'));
         router.push(profileHref);

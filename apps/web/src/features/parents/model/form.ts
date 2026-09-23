@@ -14,6 +14,8 @@ import { optionalText } from '@/lib/forms/helpers';
 
 /** The API's limit for parent notes. */
 export const PARENT_NOTES_MAX = 2000;
+/** The API's limit for the students linked in one request. */
+export const PARENT_STUDENTS_MAX = 20;
 
 /** One schema for create and edit: only the name is required. */
 export const parentFormSchema = z.object({
@@ -22,7 +24,8 @@ export const parentFormSchema = z.object({
   phone: optionalText(phoneSchema),
   telegramUsername: optionalText(telegramUsernameSchema),
   avatarKey: avatarKeySchema.nullable(),
-  studentIds: z.array(z.string().uuid()),
+  // The API links at most this many students in one request.
+  studentIds: z.array(z.string().uuid()).max(PARENT_STUDENTS_MAX),
   notes: optionalText(notesSchema),
 });
 export type ParentFormValues = z.infer<typeof parentFormSchema>;
@@ -123,10 +126,17 @@ export function buildParentCreateDto(values: ParentFormValues): CreateParentDto 
   };
 }
 
-/** The edit request: an emptied optional field is cleared with null. */
-export function buildParentEditDto(values: ParentFormValues): UpdateParentDto {
+/**
+ * The edit request: an emptied optional field is cleared with null. The
+ * student links go only when the form changed them, so a rename cannot
+ * overwrite links made elsewhere since the page opened.
+ */
+export function buildParentEditDto(
+  values: ParentFormValues,
+  { linksChanged = true }: { linksChanged?: boolean } = {},
+): UpdateParentDto {
   const telegram = bareTelegram(values.telegramUsername);
-  return {
+  const dto: UpdateParentDto = {
     fullName: values.fullName.trim(),
     email: nullableEditText(values.email),
     phone: nullableEditText(values.phone),
@@ -135,6 +145,8 @@ export function buildParentEditDto(values: ParentFormValues): UpdateParentDto {
     studentIds: values.studentIds,
     notes: nullableEditText(values.notes),
   };
+  if (!linksChanged) delete dto.studentIds;
+  return dto;
 }
 
 // ---------------------------------------------------------------------------

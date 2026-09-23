@@ -92,6 +92,12 @@ export const LinkInForm: Story = {
 /** The edit form as the tutor finds it: every section filled, the danger zone last. */
 export const Edit: Story = {
   args: { mode: 'edit' },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByDisplayValue('iryna.sh@example.test')).toBeVisible();
+    await expect(canvas.getByText('saved')).toBeVisible();
+    await expect(canvas.getByRole('button', { name: 'Save changes' })).toBeDisabled();
+    await expect(canvas.getByRole('heading', { name: 'Delete record' })).toBeVisible();
+  },
 };
 
 /** Edit carries the danger zone at the end, and its confirmation is the red one. */

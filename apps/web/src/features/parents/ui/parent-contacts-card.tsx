@@ -33,7 +33,13 @@ export function ParentContactsCard({ parent }: { parent: ParentDetail }) {
     <InfoCard
       title={t('contactsTitle')}
       action={
-        <Button asChild variant="paper" size="icon-xs" aria-label={t('editContacts')}>
+        <Button
+          asChild
+          variant="paper"
+          size="icon-xs"
+          className="max-md:size-11"
+          aria-label={t('editContacts')}
+        >
           <Link href={editHref}>
             <PencilIcon />
           </Link>
@@ -49,7 +55,7 @@ export function ParentContactsCard({ parent }: { parent: ParentDetail }) {
         <ContactRow key={row.key} icon={row.icon} className="text-muted-foreground">
           <Link
             href={editHref}
-            className="font-medium text-tint-indigo-foreground no-underline hover:underline"
+            className="inline-flex items-center font-medium text-tint-indigo-foreground no-underline hover:underline max-md:min-h-11"
           >
             {row.label}
           </Link>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import type { LinkPickerItem } from '@/components/shared/link-picker';
 import { LinkPickerDialog } from '@/components/shared/link-picker-dialog';
 import { Button } from '@/components/ui/button';
@@ -74,6 +74,7 @@ function LinkPickerDialogStory({ layout, busy, withCreate, onConfirm }: Args) {
         emptyHint="Check the spelling or create a new record."
         chooseText="Pick from the list"
         selectedText={(value) => `${value} selected`}
+        keyboardHint="↑ ↓ · Enter"
         createLabel={withCreate ? 'Create a new contact' : undefined}
         onCreate={withCreate ? () => undefined : undefined}
         confirmLabel={layout === 'sheet' ? `Done · ${count}` : `Link · ${count}`}
@@ -110,6 +111,22 @@ export const PickAndConfirm: Story = {
     await userEvent.click(dialog.getByRole('option', { name: /Oleh Shevchenko/ }));
     await userEvent.click(dialog.getByRole('button', { name: 'Link · 1' }));
     await expect(args.onConfirm).toHaveBeenCalledWith(['oleh']);
+  },
+};
+
+/** Closing returns focus to the command that opened the picker. */
+export const FocusReturn: Story = {
+  play: async ({ canvas }) => {
+    const body = within(document.body);
+    await userEvent.click(
+      within(await body.findByRole('dialog')).getByRole('button', { name: 'Cancel' }),
+    );
+    await waitFor(() => expect(body.queryByRole('dialog')).toBeNull());
+    const opener = canvas.getByRole('button', { name: 'Link parents' });
+    await userEvent.click(opener);
+    await body.findByRole('dialog');
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(opener).toHaveFocus());
   },
 };
 

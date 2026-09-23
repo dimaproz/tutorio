@@ -85,6 +85,20 @@ describe('parent form', () => {
     });
   });
 
+  it('leaves the links out of an edit that did not change them', () => {
+    const values = parentFormDefaults(detail);
+    expect(buildParentEditDto(values, { linksChanged: false })).not.toHaveProperty('studentIds');
+    expect(buildParentEditDto(values)).toHaveProperty('studentIds', [STUDENT]);
+  });
+
+  it('caps the linked students at the API limit', () => {
+    const many = Array.from({ length: 21 }, () => STUDENT);
+    expect(
+      parentFormSchema.safeParse({ ...EMPTY_PARENT_FORM, fullName: 'Iryna', studentIds: many })
+        .success,
+    ).toBe(false);
+  });
+
   it('sends no student links from quick create', () => {
     expect(
       buildParentQuickCreateDto({

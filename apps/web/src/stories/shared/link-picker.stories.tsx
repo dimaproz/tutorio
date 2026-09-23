@@ -84,6 +84,9 @@ function LinkPickerStory({
         emptyHint="Check the spelling or create a new record."
         chooseText="Pick from the list"
         selectedText={(count) => `${count} selected`}
+        keyboardHint="↑ ↓ · Enter"
+        linkedAnnouncement={(name) => `Added: ${name}`}
+        unlinkedAnnouncement={(name) => `Removed: ${name}`}
         createLabel={withCreate ? 'Create a new student' : undefined}
         onCreate={withCreate ? () => undefined : undefined}
       />
@@ -139,6 +142,11 @@ export const Unlink: Story = {
   play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole('button', { name: 'Remove Anna Shevchenko' }));
     await expect(await canvas.findByText('Nothing linked yet')).toBeVisible();
+    // The ✕ left with its row, so focus moved on to the search field.
+    await waitFor(() =>
+      expect(canvas.getByRole('combobox', { name: 'Add a student' })).toHaveFocus(),
+    );
+    await expect(canvas.getByText('Removed: Anna Shevchenko')).toBeInTheDocument();
     await expect(canvas.getByRole('option', { name: /Anna Shevchenko/ })).toBeVisible();
   },
 };

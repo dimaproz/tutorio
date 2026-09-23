@@ -59,8 +59,10 @@ export const TwoQuickEdits: Story = {
     await userEvent.click(confirmLink);
     // In flight: nothing can edit the set again until the profile has refreshed.
     await waitFor(() => expect(confirmLink).toBeDisabled());
-    // The sent set is already the one the picker builds on: Oleh is no longer offered.
-    await expect(dialog.queryByRole('option', { name: /Oleh Lysenko/ })).toBeNull();
+    await expect(dialog.getByRole('option', { name: /Oleh Lysenko/ })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
     await expect(await canvas.findByRole('heading', { name: 'Parents · 2' })).toBeVisible();
     await waitFor(() => expect(canvas.getByRole('button', { name: 'Link' })).toBeEnabled());
 

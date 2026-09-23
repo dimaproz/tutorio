@@ -27,7 +27,8 @@ import { useStudentQuery, useUpdateStudentMutation } from '@/lib/api/students';
 import { scrollToFirstError } from '@/lib/forms/focus-error';
 import { StudentFormLayout, useStudentFormNavItems } from './student-form-layout';
 import { StudentFormSections } from './student-form-sections';
-import { useLeaveGuard, useStudentForm, useStudentFormState } from './student-form-state';
+import { useStudentForm, useStudentFormState } from './student-form-state';
+import { useLeaveGuard } from '@/hooks/use-leave-guard';
 import { StudentStatusControl, useStudentStatusActions } from './student-status-control';
 
 /**

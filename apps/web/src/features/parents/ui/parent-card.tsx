@@ -14,6 +14,7 @@ import { ParentIdentityCell, ParentStudentsAvatars } from './parent-row-cells';
  */
 export function ParentCard({ parent }: { parent: ParentListItem }) {
   const t = useTranslations('parents');
+  const tLinks = useTranslations('links');
   const handle = telegramHandle(parent.telegramUsername);
   const hasContacts = Boolean(parent.phone || handle);
 
@@ -61,7 +62,7 @@ export function ParentCard({ parent }: { parent: ParentListItem }) {
                 asChild
                 variant="paper"
                 size="icon"
-                aria-label={t('messageName', { name: parent.fullName })}
+                aria-label={`${t('messageName', { name: parent.fullName })} ${tLinks('newTab')}`}
               >
                 <a href={`https://t.me/${handle}`} target="_blank" rel="noreferrer">
                   <SendIcon />

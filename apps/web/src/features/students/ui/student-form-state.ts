@@ -56,5 +56,3 @@ export function useStudentFormState(form: UseFormReturn<StudentFormValues>) {
     dirtyCount,
   };
 }
-
-export { useLeaveGuard } from '@/hooks/use-leave-guard';

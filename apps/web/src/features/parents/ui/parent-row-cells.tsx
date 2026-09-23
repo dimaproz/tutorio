@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { SendIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { ParentListItem, ParentStudentRef } from '@tutorio/validation';
+import { AvatarGroup } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { EntityAvatar } from '@/components/shared/entity-avatar';
 import { parentRoleNames, telegramHandle } from '@/features/parents/model/presentation';
@@ -83,7 +84,7 @@ export function ParentStudentsAvatars({
 }) {
   const visible = students.slice(0, max);
   return (
-    <span aria-hidden="true" className="flex shrink-0 items-center -space-x-2">
+    <AvatarGroup aria-hidden="true" className="shrink-0">
       {visible.map((student) => (
         <EntityAvatar
           key={student.id}
@@ -91,10 +92,9 @@ export function ParentStudentsAvatars({
           fullName={student.fullName}
           tint="indigo"
           size="xs"
-          className="ring-2 ring-card"
         />
       ))}
-    </span>
+    </AvatarGroup>
   );
 }
 

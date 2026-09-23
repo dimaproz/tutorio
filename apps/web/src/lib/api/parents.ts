@@ -69,6 +69,8 @@ export function useCreateParentMutation() {
 export function useUpdateParentMutation(parentId: string) {
   const queryClient = useQueryClient();
   return useMutation<ParentResponse, GatewayError, UpdateParentDto>({
+    // Lets the profile hold its link command while any save of this parent runs.
+    mutationKey: ['parents', 'update', parentId],
     mutationFn: (dto) =>
       gatewayFetch<ParentResponse>(`/api/backend/parents/${parentId}`, {
         method: 'PATCH',

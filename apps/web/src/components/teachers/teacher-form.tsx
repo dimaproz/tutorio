@@ -36,6 +36,7 @@ import {
   type TeacherFormValues,
 } from '@/features/teachers/model/form';
 import { formatPriceInput, parsePriceInput } from '@/lib/money';
+import { keepPhoneCharacters } from '@/lib/forms/input-filters';
 
 // One component for both create and edit, mirroring ParentForm.
 export function TeacherForm({
@@ -92,7 +93,7 @@ export function TeacherForm({
   const phoneField = {
     ...phoneRegistration,
     onChange: (event: ChangeEvent<HTMLInputElement>) => {
-      event.target.value = event.target.value.replace(/[^\d\s()+-]/g, '');
+      event.target.value = keepPhoneCharacters(event.target.value);
       return phoneRegistration.onChange(event);
     },
   };

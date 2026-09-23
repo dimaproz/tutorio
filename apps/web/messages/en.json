@@ -651,8 +651,7 @@
       "editContact": "Edit contact",
       "unlink": "Unlink from student",
       "unlinkTitle": "Unlink this contact?",
-      "unlinkText": "{name} stays in Parents — only the link to the student goes. You can link them again at any time.",
-      "loadError": "Could not load parents"
+      "unlinkText": "{name} stays in Parents — only the link to the student goes. You can link them again at any time."
     },
     "toasts": {
       "created": "Student created",
@@ -1015,7 +1014,8 @@
     "sort": {
       "label": "Sort",
       "fullName": "By name",
-      "createdAt": "Newest first"
+      "createdAt": "Newest first",
+      "current": "Sort: {value}"
     },
     "columns": {
       "parent": "Parent",
@@ -1110,7 +1110,6 @@
       "fixFields": "{count, plural, one {Fix # field to save} other {Fix # fields to save}}",
       "unsaved": "{count, plural, one {# unsaved change} other {# unsaved changes}}",
       "noChanges": "No changes",
-      "discard": "Discard",
       "discardTitle": "Discard changes?",
       "discardDescription": "Your unsaved changes will be lost.",
       "discardAction": "Discard changes",
@@ -1158,8 +1157,7 @@
       "schedule": "Schedule a lesson",
       "unlink": "Unlink from parent",
       "unlinkTitle": "Unlink this student?",
-      "unlinkText": "{name} stays in Students — only the link to this contact goes. You can link them again at any time.",
-      "loadError": "Could not load students"
+      "unlinkText": "{name} stays in Students — only the link to this contact goes. You can link them again at any time."
     },
     "toasts": {
       "created": "Record created",
@@ -1194,7 +1192,12 @@
     "saveError": "Couldn’t save the links",
     "retry": "Retry",
     "saved": "Links saved",
-    "unlinked": "Link removed"
+    "unlinked": "Link removed",
+    "keyboardHint": "↑ ↓ · Enter",
+    "cancel": "Cancel",
+    "linkedAnnouncement": "Added: {name}",
+    "unlinkedAnnouncement": "Removed: {name}",
+    "newTab": "(opens in a new tab)"
   },
   "enrollments": {
     "editor": {

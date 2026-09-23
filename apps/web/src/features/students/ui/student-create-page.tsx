@@ -28,7 +28,8 @@ import { useCreateStudentMutation } from '@/lib/api/students';
 import { scrollToFirstError } from '@/lib/forms/focus-error';
 import { StudentFormLayout } from './student-form-layout';
 import { StudentFormSections } from './student-form-sections';
-import { useLeaveGuard, useStudentForm, useStudentFormState } from './student-form-state';
+import { useStudentForm, useStudentFormState } from './student-form-state';
+import { useLeaveGuard } from '@/hooks/use-leave-guard';
 
 function readDraft(key: string): Partial<StudentFormValues> | null {
   try {

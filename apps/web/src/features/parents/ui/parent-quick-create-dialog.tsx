@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, type ChangeEvent } from 'react';
+import { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { MailIcon, PhoneIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -25,6 +25,11 @@ import { errorMessageKey } from '@/lib/api/error-message';
 import { useCreateParentMutation } from '@/lib/api/parents';
 import { makeZodErrorMap } from '@/lib/forms/error-map';
 import { scrollToFirstError } from '@/lib/forms/focus-error';
+import {
+  filteredRegistration,
+  keepPhoneCharacters,
+  keepTelegramCharacters,
+} from '@/lib/forms/input-filters';
 
 /**
  * Create a parent contact without leaving another workflow — the student
@@ -74,16 +79,8 @@ export function ParentQuickCreateDialog({
     onOpenChange(false);
   };
 
-  const phone = form.register('phone', {
-    onChange: (event: ChangeEvent<HTMLInputElement>) => {
-      event.target.value = event.target.value.replace(/[^\d\s()+-]/g, '');
-    },
-  });
-  const telegram = form.register('telegramUsername', {
-    onChange: (event: ChangeEvent<HTMLInputElement>) => {
-      event.target.value = event.target.value.replace(/^@+/, '').replace(/[^\w]/g, '');
-    },
-  });
+  const phone = filteredRegistration(form.register('phone'), keepPhoneCharacters);
+  const telegram = filteredRegistration(form.register('telegramUsername'), keepTelegramCharacters);
 
   const submit = form.handleSubmit(async (values) => {
     try {

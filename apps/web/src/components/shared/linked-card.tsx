@@ -78,7 +78,7 @@ export function LinkedCard({
       type="button"
       variant="link"
       size="xs"
-      className="px-0 font-semibold"
+      className="px-0 font-semibold max-md:h-11"
       disabled={addDisabled}
       onClick={addHref ? undefined : onAdd}
     >
@@ -149,6 +149,7 @@ export function LinkedCard({
                   type="button"
                   variant={action.variant ?? 'outline'}
                   size="xs"
+                  className="max-md:h-11"
                   disabled={action.disabled}
                   onClick={action.onClick}
                 >

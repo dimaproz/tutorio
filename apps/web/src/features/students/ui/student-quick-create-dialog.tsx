@@ -42,6 +42,7 @@ import { errorMessageKey } from '@/lib/api/error-message';
 import { useCreateStudentMutation } from '@/lib/api/students';
 import { makeZodErrorMap } from '@/lib/forms/error-map';
 import { scrollToFirstError } from '@/lib/forms/focus-error';
+import { keepPhoneCharacters, keepTelegramCharacters } from '@/lib/forms/input-filters';
 
 /** Fields rendered inside the collapsible "More details" section. */
 const MORE_DETAIL_FIELDS = new Set(['email', 'age', 'grade', 'notes', 'timezone']);
@@ -111,7 +112,7 @@ export function StudentQuickCreateDialog({
   const phoneField = {
     ...phoneRegistration,
     onChange: (event: ChangeEvent<HTMLInputElement>) => {
-      event.target.value = event.target.value.replace(/[^\d\s()+-]/g, '');
+      event.target.value = keepPhoneCharacters(event.target.value);
       return phoneRegistration.onChange(event);
     },
   };
@@ -119,7 +120,7 @@ export function StudentQuickCreateDialog({
   const telegramField = {
     ...telegramRegistration,
     onChange: (event: ChangeEvent<HTMLInputElement>) => {
-      event.target.value = event.target.value.replace(/^@+/, '').replace(/[^\w]/g, '');
+      event.target.value = keepTelegramCharacters(event.target.value);
       return telegramRegistration.onChange(event);
     },
   };

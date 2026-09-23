@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { CheckIcon, PlusIcon, SearchIcon, UsersIcon, XIcon } from 'lucide-react';
 import { EntityAvatar } from '@/components/shared/entity-avatar';
 import { FormSectionHeader, type FormSectionTag } from '@/components/shared/form-section';
@@ -70,6 +70,12 @@ export type LinkPickerProps = {
   selectedText?: (count: number) => ReactNode;
   /** Shows the footer with the keyboard hint; off on phones. */
   hint?: boolean;
+  /** The keys the footer names, e.g. "↑ ↓ · Enter". */
+  keyboardHint?: string;
+  /** Announced when a result is added to the linked set. */
+  linkedAnnouncement?: (name: string) => string;
+  /** Announced when a linked row is removed. */
+  unlinkedAnnouncement?: (name: string) => string;
 
   /** The "+ Create…" row at the end of the results; omit to hide it. */
   createLabel?: string;
@@ -120,6 +126,9 @@ export function LinkPicker({
   chooseText,
   selectedText,
   hint = true,
+  keyboardHint,
+  linkedAnnouncement,
+  unlinkedAnnouncement,
   createLabel,
   onCreate,
   className,
@@ -127,15 +136,47 @@ export function LinkPicker({
   const listId = useId();
   const optionId = (key: string) => `${listId}-${key}`;
   const anchorRef = useRef<HTMLDivElement>(null);
+  const fieldRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const linkedRef = useRef<HTMLUListElement>(null);
   const [active, setActive] = useState(0);
+  const [announcement, setAnnouncement] = useState('');
   const keys = [...results.map((item) => item.id), ...(createLabel && onCreate ? [CREATE] : [])];
   const activeIndex = Math.min(active, Math.max(keys.length - 1, 0));
   const activeKey = open && !loading ? keys[activeIndex] : undefined;
 
+  // Keeps the option Enter would toggle in view as the arrows move.
+  useEffect(() => {
+    if (!activeKey) return;
+    listRef.current
+      ?.querySelector(`[id="${CSS.escape(optionId(activeKey))}"]`)
+      ?.scrollIntoView?.({ block: 'nearest' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- optionId is derived from listId
+  }, [activeKey, listId]);
+
   const choose = (key: string) => {
     if (disabled) return;
-    if (key === CREATE) onCreate?.();
-    else onToggle(key);
+    if (key === CREATE) {
+      onCreate?.();
+      return;
+    }
+    const item = results.find((result) => result.id === key);
+    if (item && linkedAnnouncement) setAnnouncement(linkedAnnouncement(item.name));
+    onToggle(key);
+  };
+
+  // The removed row takes its ✕ with it, so focus moves to the next ✕, or to
+  // the search field when none is left.
+  const unlink = (index: number, item: LinkPickerItem) => {
+    if (!onUnlink) return;
+    if (unlinkedAnnouncement) setAnnouncement(unlinkedAnnouncement(item.name));
+    const buttons = linkedRef.current?.querySelectorAll<HTMLButtonElement>('button');
+    const next = buttons?.[index + 1] ?? buttons?.[index - 1];
+    onUnlink(item.id);
+    requestAnimationFrame(() => {
+      if (next?.isConnected) next.focus();
+      else fieldRef.current?.querySelector('input')?.focus();
+    });
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -202,7 +243,7 @@ export function LinkPicker({
           ))
         : null}
       {!loading && results.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 px-4 py-5.5 text-center">
+        <div role="status" className="flex flex-col items-center gap-2 px-4 py-5.5 text-center">
           {emptyTitle ? <span className="text-sm font-semibold">{emptyTitle}</span> : null}
           {emptyHint ? (
             <span className="text-[13px] text-muted-foreground">{emptyHint}</span>
@@ -210,6 +251,7 @@ export function LinkPicker({
         </div>
       ) : null}
       <div
+        ref={listRef}
         id={listId}
         role="listbox"
         aria-label={listLabel}
@@ -250,12 +292,14 @@ export function LinkPicker({
                   >
                     {checked ? <CheckIcon /> : null}
                   </span>
-                  <EntityAvatar
-                    avatarKey={item.avatarKey}
-                    fullName={item.name}
-                    tint="indigo"
-                    className="size-8.5"
-                  />
+                  <span aria-hidden="true" className="flex shrink-0">
+                    <EntityAvatar
+                      avatarKey={item.avatarKey}
+                      fullName={item.name}
+                      tint="indigo"
+                      className="size-8.5"
+                    />
+                  </span>
                   <span className="flex min-w-0 grow flex-col">
                     <span className="truncate text-sm leading-[18px] font-medium">{item.name}</span>
                     {item.meta ? (
@@ -281,7 +325,7 @@ export function LinkPicker({
               onMouseMove={() => setActive(keys.indexOf(CREATE))}
               onClick={() => choose(CREATE)}
               className={cn(
-                'flex cursor-pointer items-center gap-2.5 rounded-item px-3 py-2.5 text-sm leading-[18px] font-semibold text-brand transition-colors duration-150 hover:bg-surface-hover aria-disabled:cursor-not-allowed aria-disabled:opacity-55 [&_svg]:size-4',
+                'flex cursor-pointer items-center gap-2.5 rounded-item px-3 py-2.5 text-sm max-md:min-h-11 leading-[18px] font-semibold text-brand transition-colors duration-150 hover:bg-surface-hover aria-disabled:cursor-not-allowed aria-disabled:opacity-55 [&_svg]:size-4',
                 activeKey === CREATE && 'bg-surface-hover',
               )}
             >
@@ -297,20 +341,21 @@ export function LinkPicker({
           <span aria-live="polite">
             {count > 0 && selectedText ? selectedText(count) : chooseText}
           </span>
-          <span aria-hidden="true" className="font-mono">
-            ↑ ↓ · Enter
-          </span>
+          {keyboardHint ? (
+            <span aria-hidden="true" className="font-mono">
+              {keyboardHint}
+            </span>
+          ) : null}
         </div>
       ) : null}
     </div>
   );
 
   return (
-    <section
-      data-slot="link-picker"
-      aria-label={framed ? undefined : searchLabel}
-      className={cn('flex w-full flex-col gap-3.5', className)}
-    >
+    <div data-slot="link-picker" className={cn('flex w-full flex-col gap-3.5', className)}>
+      <span aria-live="polite" className="sr-only">
+        {announcement}
+      </span>
       {framed && title ? (
         <>
           <FormSectionHeader
@@ -330,13 +375,15 @@ export function LinkPicker({
               {linkedLabel}
             </span>
           ) : null}
-          <ul className="flex flex-col gap-2">
-            {linked.map((item) => (
+          <ul ref={linkedRef} className="flex flex-col gap-2">
+            {linked.map((item, index) => (
               <li
                 key={item.id}
                 className="flex items-center gap-3 rounded-tile bg-surface-hover p-2"
               >
-                <EntityAvatar avatarKey={item.avatarKey} fullName={item.name} tint="indigo" />
+                <span aria-hidden="true" className="flex shrink-0">
+                  <EntityAvatar avatarKey={item.avatarKey} fullName={item.name} tint="indigo" />
+                </span>
                 <span className="flex min-w-0 grow flex-col">
                   <span className="truncate text-sm leading-[19px] font-semibold">{item.name}</span>
                   {item.meta ? (
@@ -352,7 +399,8 @@ export function LinkPicker({
                     icon={<XIcon />}
                     label={unlinkLabel?.(item.name) ?? item.name}
                     disabled={disabled}
-                    onClick={() => onUnlink(item.id)}
+                    className="max-md:size-11"
+                    onClick={() => unlink(index, item)}
                   />
                 ) : null}
               </li>
@@ -371,7 +419,9 @@ export function LinkPicker({
       {popover ? (
         <Popover open={open} onOpenChange={onOpenChange}>
           <PopoverAnchor asChild>
-            <div ref={anchorRef}>{field}</div>
+            <div ref={anchorRef}>
+              <div ref={fieldRef}>{field}</div>
+            </div>
           </PopoverAnchor>
           <PopoverContent
             align="start"
@@ -386,15 +436,24 @@ export function LinkPicker({
             aria-label={listLabel}
             className="w-(--radix-popover-trigger-width) gap-0 p-1.5"
           >
-            {list}
+            {/* The results scroll inside the space the viewport leaves; the
+                region is focusable so it can be scrolled from the keyboard. */}
+            <div
+              role="group"
+              tabIndex={0}
+              aria-label={listLabel}
+              className="max-h-[calc(var(--radix-popover-content-available-height)-12px)] overflow-y-auto rounded-item outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {list}
+            </div>
           </PopoverContent>
         </Popover>
       ) : (
         <>
-          {field}
+          <div ref={fieldRef}>{field}</div>
           {open ? list : null}
         </>
       )}
-    </section>
+    </div>
   );
 }

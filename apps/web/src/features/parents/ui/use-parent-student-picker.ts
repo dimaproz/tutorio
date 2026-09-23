@@ -1,16 +1,15 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { useTranslations } from 'next-intl';
 import type { ParentStudentRef } from '@tutorio/validation';
 import type { LinkPickerItem } from '@/components/shared/link-picker';
-import { useStudentsQuery } from '@/lib/api/students';
 import type { ParentStudentPicker } from './parent-form-sections';
+import { useStudentLinkResults, useStudentLinkRow } from './use-link-results';
 
 /**
- * The student search behind the parent form's linked-students section: a
- * server-side search, the results without the students already linked, and
- * the names of every student the form has seen.
+ * The student search behind the parent form's linked-students section: the
+ * same search and rows as the profile's picker, and the names of every
+ * student the form has seen so a linked row always shows a name.
  */
 export function useParentStudentPicker({
   linkedIds,
@@ -21,38 +20,17 @@ export function useParentStudentPicker({
   initial?: readonly ParentStudentRef[];
   onCreate?: () => void;
 }): ParentStudentPicker {
-  const tStatus = useTranslations('studentStatus');
+  const toRow = useStudentLinkRow();
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
   const [known, setKnown] = useState<Record<string, LinkPickerItem>>(() =>
-    Object.fromEntries(
-      initial.map((student) => [
-        student.id,
-        {
-          id: student.id,
-          name: student.fullName,
-          avatarKey: student.avatarKey,
-          meta: [student.languageLevel, tStatus(student.status).toLowerCase()]
-            .filter(Boolean)
-            .join(' · '),
-        },
-      ]),
-    ),
+    Object.fromEntries(initial.map((student) => [student.id, toRow(student)])),
   );
-  const students = useStudentsQuery(
-    { page: 1, pageSize: 20, search: search.trim() || undefined },
-    open,
-  );
-  const results = (students.data?.items ?? [])
-    .filter((student) => !linkedIds.includes(student.id))
-    .map((student) => ({
-      id: student.id,
-      name: student.fullName,
-      avatarKey: student.avatarKey,
-      meta: [tStatus(student.status).toLowerCase(), student.groupNames[0]]
-        .filter(Boolean)
-        .join(' · '),
-    }));
+  const { results, loading } = useStudentLinkResults({
+    text: search.trim(),
+    enabled: open,
+    exclude: linkedIds,
+  });
   const remember = useCallback(
     (item: LinkPickerItem) => setKnown((current) => ({ ...current, [item.id]: item })),
     [],
@@ -64,7 +42,7 @@ export function useParentStudentPicker({
     open,
     onOpenChange: setOpen,
     results,
-    loading: students.isPending && open,
+    loading,
     known,
     remember,
     onCreate,

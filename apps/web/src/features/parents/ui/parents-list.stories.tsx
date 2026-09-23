@@ -97,9 +97,10 @@ export const FilteredByStudent: Story = {
     },
   },
   play: async ({ canvas }) => {
+    // A menu opener, not a toggle: the chosen student is in its name.
     await expect(
       await canvas.findByRole('button', { name: 'Student: Anna Shevchenko' }),
-    ).toHaveAttribute('aria-pressed', 'true');
+    ).not.toHaveAttribute('aria-pressed');
     await expect(
       await canvas.findByText('Showing only those linked to Anna Shevchenko.'),
     ).toBeVisible();

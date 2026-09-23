@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useIsMutating } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import type { ParentDetail } from '@tutorio/validation';
@@ -46,6 +47,7 @@ export function ParentProfileContent({ parent }: { parent: ParentDetail }) {
   const router = useRouter();
   useSetPageCrumb(t('detail.pageLabel'));
   const [pickerOpen, setPickerOpen] = useState(false);
+  const saving = useIsMutating({ mutationKey: ['parents', 'update', parent.id] }) > 0;
   const removal = useParentDelete({ onDeleted: () => router.push('/app/parents') });
 
   return (
@@ -55,6 +57,7 @@ export function ParentProfileContent({ parent }: { parent: ParentDetail }) {
           <ParentProfileHero
             parent={parent}
             onLink={() => setPickerOpen(true)}
+            linkDisabled={saving}
             canDelete={removal.canDelete}
             onDelete={() => removal.request(parent)}
           />

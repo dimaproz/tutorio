@@ -2,17 +2,13 @@
 
 import type { ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
-import { PageHeader } from '@/components/shared/page-shell';
+import { FormPageLayout } from '@/components/shared/form-page-layout';
 import { ProgressMeter } from '@/components/shared/progress-meter';
-import { SectionChips, SectionNav, type SectionNavItem } from '@/components/shared/section-nav';
-import { Skeleton } from '@/components/ui/skeleton';
-import { PARENT_FORM_SECTIONS } from '@/features/parents/model/form';
+import type { SectionNavItem } from '@/components/shared/section-nav';
 
 /**
- * The full-page parent form frame: page header, the 280px section navigation
- * (chips on phones) with the progress meter, the section column and the save
- * bar. It owns layout only; the form, its states and its commands are the
- * caller's.
+ * The parent form's frame: the shared `FormPageLayout` with the parent labels
+ * and the progress meter under the navigation.
  */
 export function ParentFormLayout({
   title,
@@ -44,68 +40,35 @@ export function ParentFormLayout({
 }) {
   const t = useTranslations('parents.form');
   const done = navItems.filter((item) => item.status === 'done').length;
-  const labels = { errorLabel: t('sectionHasError'), doneLabel: t('sectionDone') };
 
   return (
-    <div className="flex flex-1 flex-col gap-5">
-      <PageHeader size="lg" title={title} description={subtitle} />
-
-      <div className="sticky top-0 z-10 -mx-4 bg-background px-4 py-2 md:hidden">
-        <SectionChips
-          label={t('sectionsLabel')}
-          items={navItems}
-          active={activeSection}
-          onSelect={onSelectSection}
-          {...labels}
-        />
-      </div>
-
-      <div className="grid items-start gap-6 md:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className="sticky top-6 hidden flex-col gap-4 md:flex">
-          {navLoading ? (
-            <div aria-hidden="true" className="flex flex-col gap-1">
-              {PARENT_FORM_SECTIONS.map(({ id }) => (
-                <div key={id} className="flex items-center gap-3 px-3 py-2.5">
-                  <Skeleton className="size-8 rounded-[10px] bg-secondary" />
-                  <div className="flex grow flex-col gap-1.5">
-                    <Skeleton className="h-3.5 w-32 bg-secondary" />
-                    <Skeleton className="h-3 w-24 bg-secondary" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <SectionNav
-              label={t('sectionsLabel')}
-              items={navItems}
-              active={activeSection}
-              onSelect={onSelectSection}
-              note={navNote}
-              {...labels}
-            />
-          )}
-          {progressCaption && !navLoading ? (
-            <ProgressMeter
-              value={done}
-              total={navItems.length}
-              label={t('progress', { done, total: navItems.length })}
-              caption={progressCaption}
-            />
-          ) : null}
-        </aside>
-        <div className="flex min-w-0 flex-col gap-4">
-          {notice}
-          {children}
-        </div>
-      </div>
-
-      {bar ? (
-        <>
-          {/* Keeps the last section clear of the floating bar. */}
-          <div aria-hidden="true" className="h-4" />
-          {bar}
-        </>
-      ) : null}
-    </div>
+    <FormPageLayout
+      title={title}
+      subtitle={subtitle}
+      navItems={navItems}
+      activeSection={activeSection}
+      onSelectSection={onSelectSection}
+      labels={{
+        sections: t('sectionsLabel'),
+        error: t('sectionHasError'),
+        done: t('sectionDone'),
+      }}
+      navNote={navNote}
+      navAside={
+        progressCaption ? (
+          <ProgressMeter
+            value={done}
+            total={navItems.length}
+            label={t('progress', { done, total: navItems.length })}
+            caption={progressCaption}
+          />
+        ) : undefined
+      }
+      navLoading={navLoading}
+      notice={notice}
+      bar={bar}
+    >
+      {children}
+    </FormPageLayout>
   );
 }

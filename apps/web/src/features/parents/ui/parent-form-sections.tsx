@@ -1,6 +1,6 @@
 'use client';
 
-import type { ChangeEvent, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { FileTextIcon, MailIcon, PhoneIcon, UserIcon, UsersIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
@@ -8,12 +8,18 @@ import { AvatarPicker } from '@/components/shared/avatar-picker';
 import { FormSectionCard, type FormSectionTag } from '@/components/shared/form-section';
 import { LinkPicker, type LinkPickerItem } from '@/components/shared/link-picker';
 import { TextField } from '@/components/shared/text-field';
+import { FieldError } from '@/components/ui/field';
 import {
   PARENT_NOTES_MAX,
   type ParentFormSectionId,
   type ParentFormSectionStatus,
   type ParentFormValues,
 } from '@/features/parents/model/form';
+import {
+  filteredRegistration,
+  keepPhoneCharacters,
+  keepTelegramCharacters,
+} from '@/lib/forms/input-filters';
 
 export const PARENT_FORM_SECTION_ICON: Record<ParentFormSectionId, ReactNode> = {
   identity: <UserIcon />,
@@ -24,14 +30,6 @@ export const PARENT_FORM_SECTION_ICON: Record<ParentFormSectionId, ReactNode> = 
 
 export function parentFormSectionId(id: ParentFormSectionId) {
   return `parent-form-${id}`;
-}
-
-function onlyPhoneCharacters(event: ChangeEvent<HTMLInputElement>) {
-  event.target.value = event.target.value.replace(/[^\d\s()+-]/g, '');
-}
-
-function onlyTelegramCharacters(event: ChangeEvent<HTMLInputElement>) {
-  event.target.value = event.target.value.replace(/^@+/, '').replace(/[^\w]/g, '');
 }
 
 /**
@@ -90,8 +88,8 @@ export function ParentFormSections({
     </FormSectionCard>
   );
 
-  const phone = register('phone', { onChange: onlyPhoneCharacters });
-  const telegram = register('telegramUsername', { onChange: onlyTelegramCharacters });
+  const phone = filteredRegistration(register('phone'), keepPhoneCharacters);
+  const telegram = filteredRegistration(register('telegramUsername'), keepTelegramCharacters);
   const setStudents = (next: string[]) =>
     setValue('studentIds', next, { shouldDirty: true, shouldValidate: formState.isSubmitted });
   const linked = (studentIds ?? []).map((id) => picker.known[id] ?? { id, name: '…' });
@@ -169,36 +167,44 @@ export function ParentFormSections({
       {section(
         'students',
         optional,
-        <LinkPicker
-          framed={false}
-          linked={linked}
-          linkedLabel={tLinks('linkedCount', { count: linked.length })}
-          emptyText={tLinks('nothingLinked')}
-          unlinkLabel={(name) => tLinks('remove', { name })}
-          onUnlink={(id) => setStudents(getValues('studentIds').filter((item) => item !== id))}
-          fieldLabel={t('addStudent')}
-          searchLabel={t('addStudent')}
-          placeholder={tLinks('searchPlaceholder')}
-          search={picker.search}
-          onSearchChange={picker.onSearchChange}
-          open={picker.open}
-          onOpenChange={picker.onOpenChange}
-          results={picker.results}
-          loading={picker.loading}
-          selected={[]}
-          onToggle={(id) => {
-            const item = picker.results.find((result) => result.id === id);
-            if (item) picker.remember(item);
-            setStudents([...getValues('studentIds'), id]);
-          }}
-          listLabel={tLinks('listLabel')}
-          emptyTitle={tLinks('noResultsTitle')}
-          emptyHint={tLinks('noResultsHint')}
-          chooseText={tLinks('choose')}
-          createLabel={picker.onCreate ? tParentLinks('createStudent') : undefined}
-          onCreate={picker.onCreate}
-          disabled={disabled}
-        />,
+        <>
+          <LinkPicker
+            framed={false}
+            linked={linked}
+            linkedLabel={tLinks('linkedCount', { count: linked.length })}
+            emptyText={tLinks('nothingLinked')}
+            unlinkLabel={(name) => tLinks('remove', { name })}
+            onUnlink={(id) => setStudents(getValues('studentIds').filter((item) => item !== id))}
+            fieldLabel={t('addStudent')}
+            searchLabel={t('addStudent')}
+            placeholder={tLinks('searchPlaceholder')}
+            search={picker.search}
+            onSearchChange={picker.onSearchChange}
+            open={picker.open}
+            onOpenChange={picker.onOpenChange}
+            results={picker.results}
+            loading={picker.loading}
+            selected={[]}
+            onToggle={(id) => {
+              const item = picker.results.find((result) => result.id === id);
+              if (item) picker.remember(item);
+              setStudents([...getValues('studentIds'), id]);
+            }}
+            listLabel={tLinks('listLabel')}
+            emptyTitle={tLinks('noResultsTitle')}
+            emptyHint={tLinks('noResultsHint')}
+            chooseText={tLinks('choose')}
+            keyboardHint={tLinks('keyboardHint')}
+            linkedAnnouncement={(name) => tLinks('linkedAnnouncement', { name })}
+            unlinkedAnnouncement={(name) => tLinks('unlinkedAnnouncement', { name })}
+            createLabel={picker.onCreate ? tParentLinks('createStudent') : undefined}
+            onCreate={picker.onCreate}
+            disabled={disabled}
+          />
+          {errors.studentIds ? (
+            <FieldError className="text-[13px]">{errors.studentIds.message}</FieldError>
+          ) : null}
+        </>,
       )}
 
       {section(

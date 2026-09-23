@@ -46,6 +46,7 @@ export function ParentProfileHero({
   onDelete: () => void;
 }) {
   const t = useTranslations('parents');
+  const tLinks = useTranslations('links');
   const format = useFormatter();
   const role = useParentRoleLine(parent.students);
   const handle = telegramHandle(parent.telegramUsername);
@@ -71,7 +72,7 @@ export function ParentProfileHero({
         {handle
           ? contact(
               `https://t.me/${handle}`,
-              t('messageName', { name: parent.fullName }),
+              `${t('messageName', { name: parent.fullName })} ${tLinks('newTab')}`,
               <SendIcon />,
               true,
             )
@@ -132,6 +133,7 @@ export function ParentProfileHero({
                 type="button"
                 variant="translucent"
                 size="icon-sm"
+                className="max-md:size-11"
                 aria-label={t('detail.recordActions')}
               >
                 <MoreVerticalIcon />

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { PlusIcon } from 'lucide-react';
@@ -33,8 +33,7 @@ export function ParentsList() {
   const tCommon = useTranslations('common');
   const searchParams = useSearchParams();
   const updateParams = useUpdateSearchParams();
-  // Remounts the uncontrolled search field when a command clears it.
-  const [searchKey, setSearchKey] = useState(0);
+  const searchRef = useRef<HTMLInputElement>(null);
 
   const page = parsePageParam(searchParams.get('page'));
   const search = searchParams.get('search')?.trim() || undefined;
@@ -65,7 +64,14 @@ export function ParentsList() {
   const filteredStudent = useStudentQuery(studentId ?? '', Boolean(studentId) && !listedStudent);
   const studentName = listedStudent?.label ?? filteredStudent.data?.fullName;
 
-  const removal = useParentDelete();
+  const removal = useParentDelete({
+    // Deleting the last row of a later page steps back to a page that exists.
+    onDeleted: () => {
+      if (page > 1 && (parents.data?.items.length ?? 0) <= 1) {
+        updateParams({ page: page - 1 > 1 ? String(page - 1) : undefined });
+      }
+    },
+  });
   const columns = useParentsListColumns({
     canDelete: removal.canDelete,
     onDelete: removal.request,
@@ -77,12 +83,24 @@ export function ParentsList() {
   const filtersActive = Boolean(studentId || unlinked);
   const showEmpty = parents.isSuccess && items.length === 0;
 
+  // A page past the end (a stale link, a shrunken list) shows the last page.
+  const totalPages = parents.data?.totalPages;
+  useEffect(() => {
+    if (totalPages && page > totalPages) {
+      updateParams({ page: totalPages > 1 ? String(totalPages) : undefined });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs on the page and its bound only
+  }, [page, totalPages]);
+
+  // Both commands remove the control that ran them, so focus goes to search.
   const clearSearch = () => {
-    setSearchKey((key) => key + 1);
     updateParams({ search: undefined }, { resetPage: true });
+    searchRef.current?.focus();
   };
-  const resetFilters = () =>
+  const resetFilters = () => {
     updateParams({ studentId: undefined, linked: undefined }, { resetPage: true });
+    searchRef.current?.focus();
+  };
 
   const description = workspaceEmpty
     ? t('subtitleEmpty')
@@ -94,10 +112,13 @@ export function ParentsList() {
           ? t('subtitle')
           : search && showEmpty
             ? t('subtitleNoMatch', { total })
-            : t('subtitleCounts', { total, linked: total - (unlinkedQuery.data?.total ?? 0) });
+            : unlinkedQuery.data
+              ? t('subtitleCounts', { total, linked: total - unlinkedQuery.data.total })
+              : t('subtitle');
 
   const shownTotal = parents.data?.total ?? items.length;
-  const from = (page - 1) * PAGE_SIZE + 1;
+  // The rows shown may still be the previous page's while the next one loads.
+  const from = ((parents.data?.page ?? page) - 1) * PAGE_SIZE + 1;
   const footer =
     shownTotal > items.length
       ? t('showing', { from, to: from + items.length - 1, total: shownTotal })
@@ -124,8 +145,8 @@ export function ParentsList() {
         toolbar={
           workspaceEmpty ? undefined : (
             <ParentsListFilters
-              key={searchKey}
               search={search}
+              searchRef={searchRef}
               studentId={studentId}
               studentName={studentName}
               studentOptions={studentOptions}

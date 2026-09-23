@@ -122,6 +122,12 @@ export const ReadOnly: Story = {
   },
 };
 
+/** Nothing linked: the heading drops its count and the empty actions appear. */
 export const Empty: Story = {
   args: { count: 0, withEmptyActions: true },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('heading', { name: 'Linked students' })).toBeVisible();
+    await expect(canvas.getByText('No students linked yet.')).toBeVisible();
+    await expect(canvas.getByRole('button', { name: 'Create new' })).toBeVisible();
+  },
 };

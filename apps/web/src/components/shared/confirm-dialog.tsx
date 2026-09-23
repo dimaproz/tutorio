@@ -14,6 +14,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Spinner } from '@/components/ui/spinner';
+import { useReturnFocus } from '@/hooks/use-return-focus';
 import { cn } from '@/lib/utils';
 
 const TONE = {
@@ -47,6 +48,7 @@ export function ConfirmDialog({
   pending = false,
   tone = 'danger',
   icon,
+  returnFocus,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -59,13 +61,19 @@ export function ConfirmDialog({
   tone?: ConfirmDialogTone;
   /** Overrides the tone's default glyph. */
   icon?: ReactNode;
+  /**
+   * Where focus goes on close when the element that opened the dialog is
+   * gone, e.g. the row a confirmed unlink removed.
+   */
+  returnFocus?: () => HTMLElement | null;
 }) {
   const t = useTranslations('common');
   const { tile, action, Icon } = TONE[tone];
+  const onCloseAutoFocus = useReturnFocus(open, returnFocus);
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="sm:max-w-105">
+      <AlertDialogContent className="sm:max-w-105" onCloseAutoFocus={onCloseAutoFocus}>
         <AlertDialogHeader className="grid-cols-[auto_1fr] grid-rows-none place-items-start gap-x-3.5 gap-y-1 text-left">
           <span
             aria-hidden="true"

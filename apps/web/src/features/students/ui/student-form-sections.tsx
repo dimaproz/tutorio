@@ -1,6 +1,6 @@
 'use client';
 
-import type { ChangeEvent, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import {
   ClockIcon,
   FileTextIcon,
@@ -24,6 +24,11 @@ import type {
   StudentFormSectionStatus,
   StudentFormValues,
 } from '@/features/students/model/form';
+import {
+  filteredRegistration,
+  keepPhoneCharacters,
+  keepTelegramCharacters,
+} from '@/lib/forms/input-filters';
 
 const NOTES_MAX = 4000;
 /** Radix Select cannot hold an empty value, so "not set" has its own token. */
@@ -40,14 +45,6 @@ export const STUDENT_FORM_SECTION_ICON: Record<StudentFormSectionId, ReactNode> 
 
 export function studentFormSectionId(id: StudentFormSectionId) {
   return `student-form-${id}`;
-}
-
-function onlyPhoneCharacters(event: ChangeEvent<HTMLInputElement>) {
-  event.target.value = event.target.value.replace(/[^\d\s()+-]/g, '');
-}
-
-function onlyTelegramCharacters(event: ChangeEvent<HTMLInputElement>) {
-  event.target.value = event.target.value.replace(/^@+/, '').replace(/[^\w]/g, '');
 }
 
 /**
@@ -92,8 +89,8 @@ export function StudentFormSections({
     </FormSectionCard>
   );
 
-  const phone = register('phone', { onChange: onlyPhoneCharacters });
-  const telegram = register('telegramUsername', { onChange: onlyTelegramCharacters });
+  const phone = filteredRegistration(register('phone'), keepPhoneCharacters);
+  const telegram = filteredRegistration(register('telegramUsername'), keepTelegramCharacters);
 
   return (
     <div className="flex flex-col gap-4">

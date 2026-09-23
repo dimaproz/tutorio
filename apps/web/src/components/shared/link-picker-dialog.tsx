@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/drawer';
 import { Spinner } from '@/components/ui/spinner';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useReturnFocus } from '@/hooks/use-return-focus';
 
 /** The picker props the dialog passes through; framing and the linked list are its own. */
 type PickerProps = Omit<
@@ -63,6 +64,8 @@ export type LinkPickerDialogProps = PickerProps & {
   onConfirm: (ids: string[]) => void;
   /** Disables the picker and the confirm while saving. */
   busy?: boolean;
+  /** Where focus goes on close when the opener is gone. */
+  returnFocus?: () => HTMLElement | null;
 };
 
 /**
@@ -82,11 +85,13 @@ export function LinkPickerDialog({
   closeLabel,
   onConfirm,
   busy = false,
+  returnFocus,
   selected,
   disabled,
   ...picker
 }: LinkPickerDialogProps) {
   const mobile = useIsMobile();
+  const onCloseAutoFocus = useReturnFocus(open, returnFocus);
   const sheet = (layout ?? (mobile ? 'sheet' : 'modal')) === 'sheet';
   const locked = busy || disabled;
 
@@ -116,13 +121,20 @@ export function LinkPickerDialog({
     </Button>
   );
   const close = (
-    <IconButton size={36} tone="ghost" icon={<XIcon />} label={closeLabel} disabled={busy} />
+    <IconButton
+      size={36}
+      tone="ghost"
+      icon={<XIcon />}
+      label={closeLabel}
+      disabled={busy}
+      className="max-md:size-11"
+    />
   );
 
   if (sheet) {
     return (
       <Drawer open={open} onOpenChange={(next) => (busy ? undefined : onOpenChange(next))}>
-        <DrawerContent>
+        <DrawerContent onCloseAutoFocus={onCloseAutoFocus}>
           <DrawerHeader className="flex-row items-start justify-between gap-4 px-4 pt-3 pb-0 text-left">
             <div className="flex flex-col gap-0.5">
               <DrawerTitle className="text-lg leading-6 font-semibold">{title}</DrawerTitle>
@@ -143,7 +155,11 @@ export function LinkPickerDialog({
 
   return (
     <Dialog open={open} onOpenChange={(next) => (busy ? undefined : onOpenChange(next))}>
-      <DialogContent showCloseButton={false} className="gap-4 sm:max-w-130">
+      <DialogContent
+        showCloseButton={false}
+        className="gap-4 sm:max-w-130"
+        onCloseAutoFocus={onCloseAutoFocus}
+      >
         <DialogHeader className="flex-row items-start justify-between gap-4 text-left">
           <div className="flex flex-col gap-0.5">
             <DialogTitle className="text-xl leading-[26px] font-semibold">{title}</DialogTitle>
