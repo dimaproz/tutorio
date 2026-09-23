@@ -218,11 +218,13 @@ export class ParentsService {
     return { ...toResponse(parent), students: toRoster(parent) };
   }
 
+  // Answers with the parent detail (including the roster) so the client
+  // does not need to refetch it after saving.
   async update(
     auth: AuthenticatedUser,
     parentId: string,
     dto: UpdateParentDto,
-  ): Promise<ParentResponse> {
+  ): Promise<ParentDetail> {
     const parent = await this.prisma.$transaction(async (tx) => {
       const { studentIds: rawStudentIds, ...scalarDto } = dto;
       const studentIds =
@@ -260,13 +262,12 @@ export class ParentsService {
       );
       if (!changes) {
         // No-op PATCH: nothing to persist, no audit row.
-        return before;
+        return tx.parent.findUniqueOrThrow({
+          where: { id: before.id },
+          include: studentRosterInclude,
+        });
       }
 
-      const updated = await tx.parent.update({
-        where: { id: before.id },
-        data: scalarDto,
-      });
       if (studentIds !== undefined) {
         await tx.studentParent.deleteMany({ where: { parentId: before.id } });
         if (studentIds.length > 0) {
@@ -278,6 +279,12 @@ export class ParentsService {
           });
         }
       }
+      // Links first, so the updated row's roster reflects them.
+      const updated = await tx.parent.update({
+        where: { id: before.id },
+        data: scalarDto,
+        include: studentRosterInclude,
+      });
       await this.audit.record(tx, {
         workspaceId: auth.workspaceId,
         actorId: auth.userId,
@@ -288,7 +295,7 @@ export class ParentsService {
       });
       return updated;
     });
-    return toResponse(parent);
+    return { ...toResponse(parent), students: toRoster(parent) };
   }
 
   /**

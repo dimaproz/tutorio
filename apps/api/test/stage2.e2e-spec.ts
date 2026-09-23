@@ -1480,7 +1480,7 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
     });
 
     it('updates with PATCH semantics and audits the diff; no-op adds nothing', async () => {
-      await server()
+      const saved = await server()
         .patch(`/api/parents/${parentId}`)
         .set('Authorization', auth(ownerA))
         .send({ phone: null, email: null, notes: 'Prefers Telegram' })
@@ -1491,12 +1491,15 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
         .set('Authorization', auth(ownerA))
         .expect(200);
       expect(cleared.body).toMatchObject({ phone: null, email: null });
+      // PATCH answers with the same detail, roster included.
+      expect(saved.body).toEqual(cleared.body);
 
-      await server()
+      const unchanged = await server()
         .patch(`/api/parents/${parentId}`)
         .set('Authorization', auth(ownerA))
         .send({ notes: 'Prefers Telegram' })
         .expect(200);
+      expect(unchanged.body.students).toEqual(cleared.body.students);
       expect(await auditCount('PARENT', parentId, 'UPDATE')).toBe(1);
     });
 

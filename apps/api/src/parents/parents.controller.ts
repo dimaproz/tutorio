@@ -96,16 +96,17 @@ export class ParentsController {
     summary: 'Update a parent',
     description:
       'PATCH semantics: omitted fields stay unchanged, null clears an ' +
-      'optional field. A no-op update creates no audit entry.',
+      'optional field. A no-op update creates no audit entry. Returns the ' +
+      'parent detail with its live student roster.',
   })
-  @ApiOkResponse({ type: ParentDto })
+  @ApiOkResponse({ type: ParentDetailDto })
   @ApiNotFoundResponse({ type: ApiErrorDto })
-  @ZodSerializerDto(ParentDto)
+  @ZodSerializerDto(ParentDetailDto)
   update(
     @CurrentUser() user: AuthenticatedUser,
     @Param('parentId', ParseUUIDPipe) parentId: string,
     @Body() dto: UpdateParentDto,
-  ): Promise<ParentDto> {
+  ): Promise<ParentDetailDto> {
     return this.parents.update(user, parentId, dto);
   }
 
