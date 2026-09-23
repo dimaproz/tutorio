@@ -73,24 +73,31 @@ describe('lessonFormSchema', () => {
     expect(lessonFormSchema.safeParse(base).success).toBe(true);
   });
 
+  it('records a no-show for an individual lesson only (L-52)', () => {
+    expect(lessonFormSchema.safeParse({ ...base, status: 'NO_SHOW' }).success).toBe(true);
+    const group = lessonFormSchema.safeParse({
+      ...base,
+      target: 'group',
+      groupId: '99999999-9999-4999-8999-999999999999',
+      status: 'NO_SHOW',
+    });
+    expect(group.success ? [] : group.error.issues.map((issue) => issue.path.join('.'))).toEqual([
+      'status',
+    ]);
+  });
+
   it('requires a student', () => {
     expect(lessonFormSchema.safeParse({ ...base, studentId: '' }).success).toBe(false);
   });
 
   it('allows a blank teacher so the server can resolve it', () => {
     expect(lessonFormSchema.safeParse({ ...base, teacherId: '' }).success).toBe(true);
-    expect(
-      lessonFormSchema.safeParse({ ...base, teacherId: TEACHER_ID }).success,
-    ).toBe(true);
+    expect(lessonFormSchema.safeParse({ ...base, teacherId: TEACHER_ID }).success).toBe(true);
   });
 
   it('rejects a duration outside the domain bounds', () => {
-    expect(lessonFormSchema.safeParse({ ...base, durationMin: '2' }).success).toBe(
-      false,
-    );
-    expect(lessonFormSchema.safeParse({ ...base, durationMin: '900' }).success).toBe(
-      false,
-    );
+    expect(lessonFormSchema.safeParse({ ...base, durationMin: '2' }).success).toBe(false);
+    expect(lessonFormSchema.safeParse({ ...base, durationMin: '900' }).success).toBe(false);
   });
 
   it('allows a blank price but rejects an unparseable one', () => {
@@ -99,12 +106,12 @@ describe('lessonFormSchema', () => {
   });
 
   it('requires at least one filled date', () => {
-    expect(lessonFormSchema.safeParse({ ...base, startsAt: [{ value: '' }] }).success).toBe(
-      false,
-    );
+    expect(lessonFormSchema.safeParse({ ...base, startsAt: [{ value: '' }] }).success).toBe(false);
     expect(
-      lessonFormSchema.safeParse({ ...base, startsAt: [{ value: '' }, { value: '2026-08-01T09:00' }] })
-        .success,
+      lessonFormSchema.safeParse({
+        ...base,
+        startsAt: [{ value: '' }, { value: '2026-08-01T09:00' }],
+      }).success,
     ).toBe(true);
   });
 });
@@ -196,8 +203,7 @@ describe('buildCreateLessonDto', () => {
 
   it('trims a real note', () => {
     expect(
-      buildCreateLessonDto({ ...base, notes: '  Past Simple  ' }, { teacherId: TEACHER_ID })
-        .notes,
+      buildCreateLessonDto({ ...base, notes: '  Past Simple  ' }, { teacherId: TEACHER_ID }).notes,
     ).toBe('Past Simple');
   });
 });

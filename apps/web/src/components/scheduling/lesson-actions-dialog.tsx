@@ -7,9 +7,10 @@ import {
   RotateCcwIcon,
   StickyNoteIcon,
   Trash2Icon,
+  UserXIcon,
   XCircleIcon,
 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useNow, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { cancellationTiming, hoursUntil, suggestedCancellationStatus } from '@tutorio/domain';
 import type { CancelledByDto, LessonResponse } from '@tutorio/validation';
@@ -47,6 +48,7 @@ import {
 } from '@/lib/api/scheduling';
 import { toLocalDateTimeInput } from '@/lib/datetime';
 import { useDateFormatters } from '@/lib/i18n/format';
+import { lessonActions } from '@/features/scheduling/model/lesson-actions';
 
 const CANCELLED_BY: CancelledByDto[] = ['TEACHER', 'STUDENT', 'GROUP'];
 
@@ -73,6 +75,8 @@ export function LessonActionsDialog({
   const tCommon = useTranslations('common');
   const tErrors = useTranslations('errors');
   const format = useDateFormatters();
+  // Re-read each minute, so the actions follow a lesson that starts or ends.
+  const now = useNow({ updateInterval: 60_000 });
 
   const transition = useTransitionLessonMutation();
   const reschedule = useRescheduleLessonMutation();
@@ -124,6 +128,7 @@ export function LessonActionsDialog({
 
   const anyError = transition.error ?? reschedule.error ?? deleteLesson.error ?? updateLesson.error;
   const isScheduled = lesson.status === 'SCHEDULED';
+  const actions = lessonActions(lesson, now.getTime());
   const notesDirty = notes !== (lesson.notes ?? '');
 
   const runTransition = async (dto: Parameters<typeof transition.mutateAsync>[0]['dto']) => {
@@ -204,25 +209,39 @@ export function LessonActionsDialog({
           {mode === 'menu' ? (
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
-                {isScheduled ? (
-                  <>
-                    <Button
-                      disabled={busy}
-                      onClick={() => void runTransition({ targetStatus: 'COMPLETED' })}
-                    >
-                      <CheckIcon data-icon="inline-start" />
-                      {t('complete')}
-                    </Button>
-                    <Button variant="outline" disabled={busy} onClick={() => setMode('reschedule')}>
-                      <CalendarClockIcon data-icon="inline-start" />
-                      {t('reschedule')}
-                    </Button>
-                    <Button variant="destructive" disabled={busy} onClick={() => setMode('cancel')}>
-                      <XCircleIcon data-icon="inline-start" />
-                      {t('cancel')}
-                    </Button>
-                  </>
-                ) : (
+                {actions.complete ? (
+                  <Button
+                    variant={isScheduled ? 'default' : 'outline'}
+                    disabled={busy}
+                    onClick={() => void runTransition({ targetStatus: 'COMPLETED' })}
+                  >
+                    <CheckIcon data-icon="inline-start" />
+                    {isScheduled ? t('complete') : t('markHeld')}
+                  </Button>
+                ) : null}
+                {actions.reschedule ? (
+                  <Button variant="outline" disabled={busy} onClick={() => setMode('reschedule')}>
+                    <CalendarClockIcon data-icon="inline-start" />
+                    {t('reschedule')}
+                  </Button>
+                ) : null}
+                {actions.noShow ? (
+                  <Button
+                    variant="outline"
+                    disabled={busy}
+                    onClick={() => void runTransition({ targetStatus: 'NO_SHOW' })}
+                  >
+                    <UserXIcon data-icon="inline-start" />
+                    {t('noShow')}
+                  </Button>
+                ) : null}
+                {actions.cancel ? (
+                  <Button variant="destructive" disabled={busy} onClick={() => setMode('cancel')}>
+                    <XCircleIcon data-icon="inline-start" />
+                    {t('cancel')}
+                  </Button>
+                ) : null}
+                {actions.reactivate ? (
                   <Button
                     variant="outline"
                     disabled={busy}
@@ -231,7 +250,7 @@ export function LessonActionsDialog({
                     <RotateCcwIcon data-icon="inline-start" />
                     {t('reactivate')}
                   </Button>
-                )}
+                ) : null}
                 <Button
                   variant="ghost"
                   className="text-destructive hover:text-destructive"

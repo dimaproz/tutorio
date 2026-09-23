@@ -17,6 +17,10 @@ function lesson(overrides: Partial<LessonResponse> & { id: string }): LessonResp
     status: 'SCHEDULED',
     isDetached: false,
     rescheduledCount: 0,
+    kind: 'REGULAR',
+    originalLessonId: null,
+    makeupLessonId: null,
+    topic: null,
     rescheduledAt: null,
     cancelledBy: null,
     cancelledReason: null,
@@ -39,17 +43,30 @@ const ids = (items: LessonResponse[]) => items.map((item) => item.id);
 describe('lessonKind', () => {
   it('reads the group ref, not the enrollment', () => {
     expect(lessonKind(lesson({ id: 'a' }))).toBe('INDIVIDUAL');
-    expect(
-      lessonKind(lesson({ id: 'b', group: { id: 'g1', name: 'B1' } })),
-    ).toBe('GROUP');
+    expect(lessonKind(lesson({ id: 'b', group: { id: 'g1', name: 'B1' } }))).toBe('GROUP');
   });
 });
 
 describe('sortLessons', () => {
   const items = [
-    lesson({ id: 'b', startsAtUtc: '2026-08-03T12:00:00.000Z', durationMin: 45, priceMinor: 90000 }),
-    lesson({ id: 'a', startsAtUtc: '2026-08-01T09:00:00.000Z', durationMin: 90, priceMinor: 30000 }),
-    lesson({ id: 'c', startsAtUtc: '2026-08-05T08:00:00.000Z', durationMin: 60, priceMinor: 60000 }),
+    lesson({
+      id: 'b',
+      startsAtUtc: '2026-08-03T12:00:00.000Z',
+      durationMin: 45,
+      priceMinor: 90000,
+    }),
+    lesson({
+      id: 'a',
+      startsAtUtc: '2026-08-01T09:00:00.000Z',
+      durationMin: 90,
+      priceMinor: 30000,
+    }),
+    lesson({
+      id: 'c',
+      startsAtUtc: '2026-08-05T08:00:00.000Z',
+      durationMin: 60,
+      priceMinor: 60000,
+    }),
   ];
 
   it('orders by start time in both directions', () => {

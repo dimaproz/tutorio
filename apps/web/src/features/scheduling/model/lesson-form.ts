@@ -182,6 +182,14 @@ export const lessonFormSchema = z
         path: ['cancelledBy'],
       });
     }
+    // A group lesson records absences through attendance (L-52).
+    if (values.status === 'NO_SHOW' && values.target === 'group') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        params: { key: 'noShowIndividualOnly' },
+        path: ['status'],
+      });
+    }
   });
 
 export type LessonFormValues = z.infer<typeof lessonFormSchema>;
@@ -225,9 +233,7 @@ export function buildCreateLessonDto(
   const starts = filledDates(values);
 
   return {
-    ...(values.target === 'group'
-      ? { groupId: values.groupId }
-      : { studentId: values.studentId }),
+    ...(values.target === 'group' ? { groupId: values.groupId } : { studentId: values.studentId }),
     ...(context.teacherId ? { teacherId: context.teacherId } : {}),
     startsAt: starts.map(localInputToIso),
     durationMin: Number(values.durationMin),
@@ -235,9 +241,7 @@ export function buildCreateLessonDto(
       ? { priceMinor, currency: values.currency as CreateLessonDto['currency'] }
       : {}),
     status: values.status,
-    ...(cancelled
-      ? { cancelledBy: values.cancelledBy as CreateLessonDto['cancelledBy'] }
-      : {}),
+    ...(cancelled ? { cancelledBy: values.cancelledBy as CreateLessonDto['cancelledBy'] } : {}),
     // One payment belongs to one lesson. Booking several dates at once is a
     // batch of separate lessons, and stamping them all with the same payment
     // date would be a guess — so the field only travels with a single booking.

@@ -172,9 +172,14 @@
     "SOLO_MODE_SINGLE_TEACHER": "A solo workspace keeps a single teacher. Switch to school mode in settings to add more.",
     "GROUP_TEACHER_REQUIRED": "The group needs a teacher before it can have students or a schedule.",
     "GROUP_SCHEDULE_EXISTS": "The group already has a schedule. Change it on the recurring lessons screen.",
-    "ATTENDANCE_NOT_MARKABLE": "Attendance is marked once a lesson has started, unless it was cancelled."
+    "ATTENDANCE_NOT_MARKABLE": "Attendance is marked once a lesson has started, unless it was cancelled.",
+    "LESSON_ENDED": "This lesson has ended. Change its status instead of scheduling it again.",
+    "NO_SHOW_INDIVIDUAL_ONLY": "A group lesson records absences through attendance.",
+    "MAKEUP_NOT_ALLOWED": "A makeup can replace only a cancelled or missed individual lesson.",
+    "MAKEUP_EXISTS": "This lesson already has a makeup."
   },
   "validation": {
+    "noShowIndividualOnly": "A group lesson records absences through attendance",
     "emailInvalid": "Enter a valid email address",
     "passwordTooShort": "Password must be at least 12 characters",
     "passwordTooLong": "Password must be at most 128 characters",
@@ -1640,7 +1645,8 @@
       "SCHEDULED": "Scheduled",
       "COMPLETED": "Completed",
       "CANCELLED_CHARGED": "Cancelled (charged)",
-      "CANCELLED_UNCHARGED": "Cancelled (free)"
+      "CANCELLED_UNCHARGED": "Cancelled (free)",
+      "NO_SHOW": "No-show"
     },
     "cancelledBy": {
       "TEACHER": "Teacher",
@@ -1653,6 +1659,8 @@
       "cancel": "Cancel lesson",
       "reschedule": "Reschedule",
       "reactivate": "Reactivate",
+      "noShow": "No-show",
+      "markHeld": "Mark as held",
       "notes": "Lesson notes",
       "notesPlaceholder": "e.g. covered Past Simple, homework p. 42",
       "saveNotes": "Save note",

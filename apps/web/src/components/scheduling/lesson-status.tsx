@@ -1,6 +1,12 @@
 'use client';
 
-import { CalendarClockIcon, CircleCheckIcon, CircleSlashIcon, CircleXIcon } from 'lucide-react';
+import {
+  CalendarClockIcon,
+  CircleCheckIcon,
+  CircleSlashIcon,
+  CircleXIcon,
+  UserXIcon,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { LessonStatusDto } from '@tutorio/validation';
 import { StatusBadge } from '@/components/shared/status-badges';
@@ -12,6 +18,7 @@ const LESSON_STATUS_META: Record<LessonStatusDto, StatusMeta> = {
   COMPLETED: { tone: 'success', icon: CircleCheckIcon },
   CANCELLED_CHARGED: { tone: 'destructive', icon: CircleXIcon },
   CANCELLED_UNCHARGED: { tone: 'warning', icon: CircleSlashIcon },
+  NO_SHOW: { tone: 'destructive', icon: UserXIcon },
 };
 
 export function LessonStatusBadge({ status }: { status: LessonStatusDto }) {

@@ -89,7 +89,11 @@ export function LessonStatusSection() {
   const tBy = useTranslations('scheduling.cancelledBy');
   const form = useFormContext<LessonFormValues>();
   const { errors } = form.formState;
-  const statusOptions = useLessonStatusOptions();
+  const target = useWatch({ control: form.control, name: 'target' });
+  // A no-show is an individual lesson's status; a group records attendance.
+  const statusOptions = useLessonStatusOptions().filter(
+    (option) => option.value !== 'NO_SHOW' || target === 'student',
+  );
   const status = useWatch({ control: form.control, name: 'status' });
   const startsAt = useWatch({ control: form.control, name: 'startsAt' });
   const isSingleBooking = filledDates({ startsAt: startsAt ?? [] }).length <= 1;

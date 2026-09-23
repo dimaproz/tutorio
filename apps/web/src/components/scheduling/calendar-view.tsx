@@ -58,6 +58,7 @@ const STATUS_CLASS: Record<LessonResponse['status'], string> = {
   COMPLETED: 'tutorio-event--completed',
   CANCELLED_CHARGED: 'tutorio-event--cancelled-charged',
   CANCELLED_UNCHARGED: 'tutorio-event--cancelled-uncharged',
+  NO_SHOW: 'tutorio-event--no-show',
 };
 
 const LESSON_STATUSES = Object.keys(STATUS_CLASS) as LessonResponse['status'][];

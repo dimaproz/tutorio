@@ -248,6 +248,13 @@
   text-decoration-thickness: 1px;
 }
 
+/* A no-show was charged but nobody came: the charged tint, not struck out. */
+.tutorio-calendar .tutorio-event--no-show {
+  background: color-mix(in srgb, var(--destructive) 12%, var(--card));
+  color: var(--foreground);
+  border-left: 3px dashed var(--destructive);
+}
+
 .tutorio-calendar .rbc-show-more {
   background: transparent;
   color: var(--primary);
