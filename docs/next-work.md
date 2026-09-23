@@ -315,9 +315,10 @@ disabled or as a named empty state rather than pretending.
 
 ### Visual follow-ups
 
-1. A dark palette. Tint and ink surfaces are theme-independent by design and
-   keep their contrast, but the dark theme still carries the old preset values
-   for everything else.
+1. ~~A dark palette.~~ Shipped on 2026-09-23; the token families are described
+   in [`design-system.md`](./design-system.md#theme-contract). Open design
+   questions: the white 6px avatar ring on the dark profile hero, and the
+   canvas discrepancies listed in the dark-theme PR.
 2. Migrate the remaining `MetricCard` callers in groups to `StatBlock`.
 3. Input and Select are still 36px while buttons are 44px. The handoff does not
    cover forms, so they were left alone; they need one reviewed pass.

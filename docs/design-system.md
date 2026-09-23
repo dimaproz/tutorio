@@ -1,6 +1,6 @@
 # Tutorio Design System Contract
 
-Last verified: 2026-09-22.
+Last verified: 2026-09-23.
 
 ## Purpose
 
@@ -217,10 +217,45 @@ foreground pairs, `danger-mark`, the `status-*` lifecycle colours, the `ink-*`
 surface family and the `stat-*` chart pair, plus the semantic radii
 `pill`, `logo`, `item`, `tile`, `row`, `block`, `card` and `hero`.
 
-Tint and ink surfaces are theme-independent on purpose: each is a painted
-surface with its own foreground, so an ink ticket stays ink and a tinted chip
-keeps its contrast in both themes. Only tokens that describe the page itself
-follow the theme. A full dark palette is an open follow-up.
+Both themes are complete. `:root` holds the light palette and `.dark` the
+approved dark palette; every token, including the tints and the ink family, is
+redefined by the dark theme. A tint keeps its hue and inverts its lightness, so
+a light tint never shines out of a dark page. `.surface-light` shares the
+`:root` block and pins the whole light palette for illustrations that must stay
+light in both themes (the auth promo panel). Shadows are mixed from
+`--shadow-ink`, and the dark theme raises every alpha by `--shadow-boost`.
+
+Some light values do two jobs that stop agreeing on a dark page, so they have
+their own tokens. In light each equals the value it replaced:
+
+- `tint-foreground` — body text on any tint (`Card` tones `info`, `warning`,
+  `indigo`; `StatBlock` tint and accent; `EntityPreview`; `SetupChecklist`).
+  Never write `text-ink` on a tint: in dark `ink` is a deep surface colour.
+- `tint-indigo-meta` — the secondary line on the indigo hero.
+- `tile-indigo` and its foreground — small indigo tiles: icon tiles, initials,
+  the mobile tab pill. **Rule: a surface under ~64px is a tile and uses
+  `tile-indigo`; a larger surface (the profile hero, `Card tone="indigo"`, the
+  avatar preview) uses `tint-indigo`.** In dark a tile at the hero's value
+  vanishes.
+- `chip-on-tint` and its foreground — the `on-tint` Badge.
+- `stat-track-on-tint` — chart tracks inside a tinted `StatBlock`.
+- `feature-*` (`feature`, `-foreground`, `-heading`, `-muted`, `-soft`,
+  `-line`) — the one highlight card on a page, `Card tone="feature"`
+  (`NextLessonCard`, its `PersonItem tone="ink"` row and `on-ink` chip). It is
+  the ink card in light and the saturated indigo in dark, while `ink-*` stays a
+  quiet deep surface (`StatBlock tone="ink"`, toasts).
+- `raised` and `raised-line` — the `white` Button: white paper in light, a
+  hairlined chip in dark.
+- `nav-selected-*` — the current `SectionNav` item: a white row in light, a
+  painted `tile-indigo` row with a `brand-soft` icon tile in dark.
+- `scrim` — modal overlays.
+- `shadow-ink` and `shadow-boost` — the colour and dark alpha step of every
+  elevation shadow.
+
+Feature and screen code never adds `dark:` colour utilities: when a surface
+needs a different value in dark, the fix is a token pair in `globals.css`.
+The only `dark:` utilities left are upstream shadcn opacity tweaks in
+`components/ui`.
 
 Badge accents are therefore no longer capped at five. The approved set is
 `neutral`, `primary`/`indigo`, `info`, `success`, `warning`, `danger`,
@@ -228,8 +263,9 @@ Badge accents are therefore no longer capped at five. The approved set is
 `StatusTone` vocabulary and maps to a Badge variant through
 `badgeVariantForTone`; it must not reach for a tint token directly. Narrow token corrections are permitted when automated accessibility
 tests prove that an upstream preset value misses the required contrast; the
-current baseline corrects the light destructive and dark primary pairs for this
-reason. Workspace colour customization is not a pilot capability. Adding it
+current baseline corrects the light destructive pair for this reason. Contrast
+for every dark pair is measured against WCAG 2.1 AA; re-measure before
+changing a value. Workspace colour customization is not a pilot capability. Adding it
 again requires a separate decision that defines its data contract and keeps it
 isolated from core component tokens.
 
