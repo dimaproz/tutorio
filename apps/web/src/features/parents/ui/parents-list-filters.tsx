@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type Ref } from 'react';
+import type { Ref } from 'react';
 import { ArrowUpDownIcon, ListFilterIcon, XIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import {
 import { EntityPicker, type EntityPickerOption } from '@/components/shared/entity-picker';
 import { FilterPill } from '@/components/shared/filter-pill';
 import { SearchField } from '@/components/shared/search-field';
+import { useUrlSearchText } from '@/hooks/use-url-search-text';
 import { cn } from '@/lib/utils';
 
 /** Name A–Z, or the newest record first. */
@@ -57,13 +58,8 @@ export function ParentsListFilters({
   onReset: () => void;
 }) {
   const t = useTranslations('parents');
-  const [text, setText] = useState(search ?? '');
-  const [seen, setSeen] = useState(search);
-  // The URL changed without the field: a cleared search, back/forward.
-  if (search !== seen) {
-    setSeen(search);
-    if ((search ?? '') !== text.trim()) setText(search ?? '');
-  }
+  // The field answers every key; the URL, and so the query, once typing pauses.
+  const [text, setText] = useUrlSearchText(search, onSearchChange);
 
   return (
     <div className="flex flex-col gap-2.5 md:flex-row md:flex-wrap md:items-center md:justify-between">
@@ -73,10 +69,7 @@ export function ParentsListFilters({
           label={t('searchLabel')}
           placeholder={t('searchPlaceholder')}
           value={text}
-          onChange={(event) => {
-            setText(event.currentTarget.value);
-            onSearchChange(event.currentTarget.value);
-          }}
+          onChange={(event) => setText(event.currentTarget.value)}
           className="md:w-110"
         />
         <div className="flex flex-wrap items-center gap-2.5">

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type Ref } from 'react';
+import type { Ref } from 'react';
 import {
   ArrowUpDownIcon,
   LayoutGridIcon,
@@ -21,6 +21,7 @@ import { FilterPill } from '@/components/shared/filter-pill';
 import { SearchField } from '@/components/shared/search-field';
 import { Segmented } from '@/components/shared/segmented';
 import type { ListSort } from '@/components/shared/list-controls';
+import { useUrlSearchText } from '@/hooks/use-url-search-text';
 import { cn } from '@/lib/utils';
 
 export const STUDENT_STATUS_TABS = ['all', 'ACTIVE', 'ON_HOLD', 'ARCHIVED'] as const;
@@ -80,13 +81,8 @@ export function StudentsListFilters({
   const filtered = status !== 'all' || Boolean(groupId);
   const sortLabel = tSort(sort.field ?? 'fullName');
 
-  const [text, setText] = useState(search ?? '');
-  const [seen, setSeen] = useState(search);
-  // The URL changed without the field: a cleared search, back/forward.
-  if (search !== seen) {
-    setSeen(search);
-    if ((search ?? '') !== text.trim()) setText(search ?? '');
-  }
+  // The field answers every key; the URL, and so the query, once typing pauses.
+  const [text, setText] = useUrlSearchText(search, onSearchChange);
 
   const sortMenu = (className: string) => (
     <DropdownMenu>
@@ -133,10 +129,7 @@ export function StudentsListFilters({
           label={t('searchLabel')}
           placeholder={t('searchPlaceholder')}
           value={text}
-          onChange={(event) => {
-            setText(event.currentTarget.value);
-            onSearchChange(event.currentTarget.value);
-          }}
+          onChange={(event) => setText(event.currentTarget.value)}
           // Phones search first: the list below is what the search narrows.
           className="max-md:order-first md:w-72"
         />

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ArchiveIcon, CircleCheckIcon, LayersIcon, SearchIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { StatusRow } from '@/components/shared/status-select';
+import { useUrlSearchText } from '@/hooks/use-url-search-text';
 import { buildPageSlots, PAGE_ELLIPSIS } from '@/lib/pagination';
 import type { StatusIcon, StatusTone } from '@/components/shared/status-meta';
 
@@ -34,10 +35,48 @@ export function useUpdateSearchParams() {
   const searchParams = useSearchParams();
 
   return (updates: Record<string, string | undefined>, options?: { resetPage?: boolean }) => {
-    const next = buildUpdatedSearchParams(searchParams, updates, options?.resetPage);
-    const query = next.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    const write = planSearchParamsWrite({
+      pathname,
+      rendered: searchParams,
+      location: typeof window === 'undefined' ? undefined : window.location,
+      updates,
+      resetPage: options?.resetPage,
+    });
+    if (write.native) {
+      // The page reads its filters on the client, so there is nothing for the
+      // server to render: native history keeps useSearchParams in sync
+      // without an RSC request.
+      window.history.replaceState(null, '', write.href);
+    } else {
+      router.replace(write.href, { scroll: false });
+    }
   };
+}
+
+/**
+ * Where a collection-control update writes. While the page on screen is the
+ * one that rendered the control, the live URL is the base (an update renders
+ * in a transition, so two quick updates must not both start from the params
+ * the last render saw) and native history takes the write. Anywhere else —
+ * a navigation in flight, a mocked router — the router does, as before.
+ */
+export function planSearchParamsWrite({
+  pathname,
+  rendered,
+  location,
+  updates,
+  resetPage = false,
+}: {
+  pathname: string;
+  rendered: URLSearchParams;
+  location?: { pathname: string; search: string };
+  updates: Record<string, string | undefined>;
+  resetPage?: boolean;
+}): { href: string; native: boolean } {
+  const native = location !== undefined && location.pathname === pathname;
+  const base = native ? new URLSearchParams(location.search) : rendered;
+  const query = buildUpdatedSearchParams(base, updates, resetPage).toString();
+  return { href: query ? `${pathname}?${query}` : pathname, native };
 }
 
 /** Applies URL-backed collection controls without mutating the current query. */
@@ -63,30 +102,12 @@ export function buildUpdatedSearchParams(
 export function ListSearchInput({ label, placeholder }: { label: string; placeholder: string }) {
   const searchParams = useSearchParams();
   const updateParams = useUpdateSearchParams();
-  const urlSearch = searchParams.get('search') ?? '';
-  const [value, setValue] = useState(urlSearch);
-  const [syncedSearch, setSyncedSearch] = useState(urlSearch);
-
-  // Keep the field in sync when the URL changes from elsewhere (back button,
-  // filter reset) without fighting the user while they type. Adjusting state
-  // during render is the supported pattern here — an effect would cause an
-  // extra render pass.
-  if (urlSearch !== syncedSearch) {
-    setSyncedSearch(urlSearch);
-    setValue(urlSearch);
-  }
-
-  useEffect(() => {
-    if (value === urlSearch) {
-      return;
-    }
-    const timeout = setTimeout(() => {
-      updateParams({ search: value.trim() || undefined }, { resetPage: true });
-    }, 300);
-    return () => clearTimeout(timeout);
-    // updateParams is recreated per render; the debounce only depends on input.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value, urlSearch]);
+  // The field follows the URL (back button, filter reset) and writes to it
+  // once typing pauses.
+  const [value, setValue] = useUrlSearchText(
+    searchParams.get('search')?.trim() || undefined,
+    (next) => updateParams({ search: next.trim() || undefined }, { resetPage: true }),
+  );
 
   return (
     <div className="flex-1 sm:max-w-xs">

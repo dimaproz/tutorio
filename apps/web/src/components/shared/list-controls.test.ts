@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildUpdatedSearchParams } from './list-controls';
+import { buildUpdatedSearchParams, planSearchParamsWrite } from './list-controls';
 
 describe('buildUpdatedSearchParams', () => {
   it('resets pagination when search, filters, or sorting change', () => {
@@ -32,5 +32,47 @@ describe('buildUpdatedSearchParams', () => {
     const current = new URLSearchParams('search=anna');
 
     expect(buildUpdatedSearchParams(current, { page: '2' }).toString()).toBe('search=anna&page=2');
+  });
+});
+
+describe('planSearchParamsWrite', () => {
+  const rendered = new URLSearchParams('search=ann');
+
+  it('writes through native history from the live URL while the page is on screen', () => {
+    // The render still saw `search=ann`; the URL already holds a later commit.
+    expect(
+      planSearchParamsWrite({
+        pathname: '/app/students',
+        rendered,
+        location: { pathname: '/app/students', search: '?search=anna&page=2' },
+        updates: { status: 'ACTIVE' },
+        resetPage: true,
+      }),
+    ).toEqual({ href: '/app/students?search=anna&status=ACTIVE', native: true });
+  });
+
+  it('drops the query string entirely when every control is cleared', () => {
+    expect(
+      planSearchParamsWrite({
+        pathname: '/app/parents',
+        rendered,
+        location: { pathname: '/app/parents', search: '?search=anna' },
+        updates: { search: undefined },
+      }),
+    ).toEqual({ href: '/app/parents', native: true });
+  });
+
+  it('leaves the write to the router when the URL belongs to another page', () => {
+    expect(
+      planSearchParamsWrite({
+        pathname: '/app/students',
+        rendered,
+        location: { pathname: '/iframe.html', search: '?id=story' },
+        updates: { page: '2' },
+      }),
+    ).toEqual({ href: '/app/students?search=ann&page=2', native: false });
+    expect(
+      planSearchParamsWrite({ pathname: '/app/students', rendered, updates: { page: '2' } }),
+    ).toEqual({ href: '/app/students?search=ann&page=2', native: false });
   });
 });
