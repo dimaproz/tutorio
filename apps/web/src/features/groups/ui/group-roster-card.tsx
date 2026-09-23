@@ -72,7 +72,13 @@ export function GroupRosterCard({
     [updateGroup, teacherId],
   );
   const refetch = useCallback(
-    () => queryClient.refetchQueries({ queryKey: queryKeys.groups.detail(group.id) }),
+    // Joins the read the save's invalidation already started instead of
+    // cancelling it and sending a second one.
+    () =>
+      queryClient.refetchQueries(
+        { queryKey: queryKeys.groups.detail(group.id) },
+        { cancelRefetch: false },
+      ),
     [queryClient, group.id],
   );
   const flow = useRelationshipLinks({
@@ -142,7 +148,12 @@ export function GroupRosterCard({
             ? []
             : [
                 { label: t('linkExisting'), icon: SearchIcon, onClick: flow.openPicker },
-                { label: t('createStudent'), icon: PlusIcon, variant: 'ghost', onClick: createStudent },
+                {
+                  label: t('createStudent'),
+                  icon: PlusIcon,
+                  variant: 'ghost',
+                  onClick: createStudent,
+                },
               ]
         }
         size={mobile ? 'sm' : 'md'}

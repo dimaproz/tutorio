@@ -21,16 +21,14 @@ const TOPICS = [
   'Writing workshop',
 ];
 
-function lesson(index: number, past: boolean): LessonListItem {
+function lesson(index: number, past: boolean, onSelect: (id: string) => void): LessonListItem {
   const day = past ? 9 - index : 11 + index * 2;
   return {
     id: `${past ? 'p' : 'u'}${index}`,
     weekday: ['Tue', 'Thu'][index % 2]!,
     day: String(Math.max(1, day)).padStart(2, '0'),
     title: TOPICS[index % TOPICS.length],
-    meta: past
-      ? 'Sep · 17:00 · came 5 of 6'
-      : 'Sep · 17:00 – 18:00 · Dmytro Tutor',
+    meta: past ? 'Sep · 17:00 · came 5 of 6' : 'Sep · 17:00 – 18:00 · Dmytro Tutor',
     metaShort: past ? '17:00 · came 5 of 6' : '17:00 – 18:00 · Dmytro',
     status: past ? (
       <Badge variant="success">Taught</Badge>
@@ -43,6 +41,9 @@ function lesson(index: number, past: boolean): LessonListItem {
     menu: (
       <IconButton tone="ghost" size={36} icon={<MoreHorizontalIcon />} label="Lesson actions" />
     ),
+    // Phones drop the menu; the whole row opens the lesson instead.
+    onSelect: () => onSelect(`${past ? 'p' : 'u'}${index}`),
+    selectLabel: `Open ${TOPICS[index % TOPICS.length]}`,
   };
 }
 
@@ -56,6 +57,7 @@ type Args = {
   loadingMore: boolean;
   maxHeight: number;
   onAction: () => void;
+  onSelectLesson: (id: string) => void;
 };
 
 const COUNTS: Record<Content, { upcoming: number; past: number }> = {
@@ -80,11 +82,12 @@ function LessonListStory({
   loadingMore,
   maxHeight,
   onAction,
+  onSelectLesson,
 }: Args) {
   const counts = COUNTS[content];
   const all = [
-    ...Array.from({ length: counts.upcoming }, (_, index) => lesson(index, false)),
-    ...Array.from({ length: counts.past }, (_, index) => lesson(index, true)),
+    ...Array.from({ length: counts.upcoming }, (_, index) => lesson(index, false, onSelectLesson)),
+    ...Array.from({ length: counts.past }, (_, index) => lesson(index, true, onSelectLesson)),
   ];
   const [shown, setShown] = useState(7);
   const [tab, setTab] = useState('lessons');
@@ -103,7 +106,11 @@ function LessonListStory({
       <LessonList
         header={
           header === 'title'
-            ? { kind: 'title', title: 'Group lessons', meta: `${all.length} in total · ${counts.upcoming} ahead` }
+            ? {
+                kind: 'title',
+                title: 'Group lessons',
+                meta: `${all.length} in total · ${counts.upcoming} ahead`,
+              }
             : header === 'tabs'
               ? {
                   kind: 'tabs',
@@ -153,6 +160,7 @@ const meta = {
     loadingMore: false,
     maxHeight: 360,
     onAction: fn(),
+    onSelectLesson: fn(),
   },
   argTypes: {
     content: { control: 'inline-radio', options: ['both', 'upcoming', 'past', 'empty', 'long'] },
@@ -181,5 +189,17 @@ export const LoadsMoreInPlace: Story = {
     // Still one scrolling region: the page did not grow a second list.
     await expect(canvas.getAllByRole('region')).toHaveLength(1);
     await expect(region.scrollHeight).toBeGreaterThan(region.clientHeight);
+  },
+};
+
+/** A phone row has no menu: the whole row is one button that opens the lesson. */
+export const PhoneRowOpens: Story = {
+  args: { compact: true },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.queryByRole('button', { name: 'Lesson actions' })).toBeNull();
+    // The topic repeats among the earlier lessons; the first row is the upcoming one.
+    await userEvent.click(canvas.getAllByRole('button', { name: 'Open Grammar: past perfect' })[0]!);
+    await expect(args.onSelectLesson).toHaveBeenCalledWith('u1');
   },
 };

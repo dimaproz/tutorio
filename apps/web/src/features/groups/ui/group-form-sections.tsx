@@ -205,11 +205,12 @@ export function GroupFormSections({
               name="weekdays"
               render={({ field }) => (
                 <Field className="gap-2">
-                  <FieldLabel htmlFor="group-weekdays" className="text-sm leading-5 font-medium">
+                  <FieldLabel id="group-weekdays-label" className="text-sm leading-5 font-medium">
                     {t('weekdays')}
                   </FieldLabel>
                   <WeekdayPicker
                     id="group-weekdays"
+                    aria-labelledby="group-weekdays-label"
                     appearance="pills"
                     value={field.value}
                     onChange={field.onChange}

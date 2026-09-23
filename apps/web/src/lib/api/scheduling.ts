@@ -25,10 +25,16 @@ import { buildQueryString } from './filters';
 import { queryKeys, type LessonListFilters, type SeriesListFilters } from './keys';
 
 // Lessons, series and the audit trail all move together on any scheduling
-// mutation, so every mutation invalidates the whole scheduling graph.
+// mutation, so every mutation invalidates the whole scheduling graph. A group
+// reads its next lesson, lesson counts, week total and attendance from the
+// lessons, so its reads follow; only the name list of the pickers does not.
 function invalidateSchedulingGraph(queryClient: QueryClient) {
   void queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all });
   void queryClient.invalidateQueries({ queryKey: queryKeys.series.all });
+  void queryClient.invalidateQueries({
+    queryKey: queryKeys.groups.all,
+    predicate: (query) => query.queryKey[1] !== 'options',
+  });
   // The audit log lives on the settings page: mark it stale, read it when shown.
   void queryClient.invalidateQueries({ queryKey: queryKeys.audit.all, refetchType: 'none' });
 }

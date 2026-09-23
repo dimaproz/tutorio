@@ -109,6 +109,7 @@ export const queryKeys = {
   groups: {
     all: ['groups'] as const,
     lists: (filters: GroupListFilters) => ['groups', 'list', filters] as const,
+    listsAll: ['groups', 'list'] as const,
     summary: ['groups', 'summary'] as const,
     options: ['groups', 'options'] as const,
     detail: (groupId: string) => ['groups', 'detail', groupId] as const,

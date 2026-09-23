@@ -32,6 +32,9 @@ function invalidateFinanceGraph(queryClient: QueryClient) {
   // Booking a package provisions lessons.
   void queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all });
   void queryClient.invalidateQueries({ queryKey: queryKeys.series.all });
+  // Group rows and the collection metrics say which groups owe money.
+  void queryClient.invalidateQueries({ queryKey: queryKeys.groups.listsAll });
+  void queryClient.invalidateQueries({ queryKey: queryKeys.groups.summary });
 }
 
 // ---------------------------------------------------------------------------

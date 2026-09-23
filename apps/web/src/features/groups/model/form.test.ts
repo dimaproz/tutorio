@@ -40,7 +40,11 @@ describe('group form schema', () => {
 
   it('asks for a start and a duration once a weekday is picked', () => {
     expect(
-      issueKeys(school.safeParse(values({ teacherId: TEACHER, weekdays: [2], localTime: '', durationMin: '3' }))),
+      issueKeys(
+        school.safeParse(
+          values({ teacherId: TEACHER, weekdays: [2], localTime: '', durationMin: '3' }),
+        ),
+      ),
     ).toEqual(['localTime:timeInvalid', 'durationMin:durationRange']);
     // Without weekdays the start and duration are not the schedule yet.
     expect(solo.safeParse(values({ localTime: '', durationMin: '' })).success).toBe(true);
@@ -58,7 +62,9 @@ describe('group form schema', () => {
   });
 
   it('bounds the seats and checks the price', () => {
-    expect(issueKeys(solo.safeParse(values({ capacity: '0' })))).toEqual(['capacity:capacityRange']);
+    expect(issueKeys(solo.safeParse(values({ capacity: '0' })))).toEqual([
+      'capacity:capacityRange',
+    ]);
     expect(issueKeys(solo.safeParse(values({ capacity: '12a' })))).toEqual([
       'capacity:capacityRange',
     ]);
@@ -71,10 +77,9 @@ describe('group form schema', () => {
 
 describe('group form sections', () => {
   it('marks sections done by their meaningful field and errors first', () => {
-    const status = groupFormSectionStatus(
-      values({ weekdays: [2], studentIds: [ANNA] }),
-      ['pricePerLesson'],
-    );
+    const status = groupFormSectionStatus(values({ weekdays: [2], studentIds: [ANNA] }), [
+      'pricePerLesson',
+    ]);
     expect(status).toEqual({
       basics: 'done',
       schedule: 'done',
@@ -127,12 +132,21 @@ describe('group requests', () => {
 
   it('on edit sends the roster and the teacher only when they changed', () => {
     const original = { teacherId: TEACHER, studentIds: [ANNA, MARK] };
-    const unchanged = buildGroupEditDto(values({ teacherId: TEACHER, studentIds: [MARK, ANNA] }), original, {
-      scheduleLocked: true,
-    });
+    const unchanged = buildGroupEditDto(
+      values({ teacherId: TEACHER, studentIds: [MARK, ANNA] }),
+      original,
+      {
+        scheduleLocked: true,
+      },
+    );
     expect(unchanged).not.toHaveProperty('students');
     expect(unchanged).not.toHaveProperty('teacherId');
-    expect(unchanged).toMatchObject({ capacity: null, pricePerLesson: null, currency: null, notes: null });
+    expect(unchanged).toMatchObject({
+      capacity: null,
+      pricePerLesson: null,
+      currency: null,
+      notes: null,
+    });
 
     const changed = buildGroupEditDto(
       values({ teacherId: OTHER_TEACHER, studentIds: [ANNA] }),
@@ -143,6 +157,29 @@ describe('group requests', () => {
       teacherId: OTHER_TEACHER,
       students: { studentIds: [ANNA], teacherId: OTHER_TEACHER },
     });
+  });
+
+  it('keeps a legacy group teacherless when the form keeps the roster teacher it opened with', () => {
+    // No teacher of its own: the form opens with the roster's most common one.
+    const legacy = {
+      name: 'B2 evening',
+      teacherId: null,
+      teacher: { id: TEACHER, name: 'Dmytro', avatarKey: null, color: null },
+      capacity: null,
+      pricePerLesson: null,
+      currency: null,
+      notes: null,
+      enrollments: [{ studentId: ANNA }],
+    } as unknown as GroupDetail;
+    const defaults = groupFormDefaults(legacy, 'UAH');
+    const dto = buildGroupEditDto(
+      { ...defaults, notes: 'Bring the workbook' },
+      { teacherId: defaults.teacherId, studentIds: defaults.studentIds },
+      { scheduleLocked: true },
+    );
+    // A teacher change would move every upcoming lesson; a notes save must not.
+    expect(dto).not.toHaveProperty('teacherId');
+    expect(dto).not.toHaveProperty('students');
   });
 
   it('adds a first schedule only when the group has none', () => {

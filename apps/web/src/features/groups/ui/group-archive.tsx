@@ -7,11 +7,7 @@ import { toast } from 'sonner';
 import { useSession } from '@/components/app/session-provider';
 import { ConfirmDialog } from '@/components/shared/confirm-dialog';
 import { errorMessageKey } from '@/lib/api/error-message';
-import {
-  useArchiveGroupMutation,
-  useGroupQuery,
-  useRestoreGroupMutation,
-} from '@/lib/api/groups';
+import { useArchiveGroupMutation, useGroupQuery, useRestoreGroupMutation } from '@/lib/api/groups';
 import type { GatewayError } from '@/lib/auth/client';
 
 type Target = { id: string; name: string };
@@ -63,12 +59,18 @@ export function useGroupArchive({
       icon={<ArchiveIcon />}
       title={t('archiveDialog.title', { name: target?.name ?? '' })}
       description={
-        upcoming
-          ? t('archiveDialog.description', { count: upcoming })
-          : t('archiveDialog.descriptionNoLessons')
+        // Never "no lessons stop" before the count is in: a quick confirm
+        // from the list must not hide that lessons are cancelled.
+        detail.isPending
+          ? t('archiveDialog.descriptionCounting')
+          : detail.isError
+            ? t('archiveDialog.descriptionUnknown')
+            : upcoming
+              ? t('archiveDialog.description', { count: upcoming })
+              : t('archiveDialog.descriptionNoLessons')
       }
       confirmLabel={t('archiveDialog.confirm')}
-      pending={archive.isPending}
+      pending={archive.isPending || detail.isPending}
       onConfirm={() => void confirm()}
       returnFocus={returnFocus}
     />

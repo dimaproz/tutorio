@@ -18,6 +18,7 @@ import { CreditMeter } from '@/components/shared/credit-meter';
 import { EntityAvatar } from '@/components/shared/entity-avatar';
 import { SectionDivider } from '@/components/shared/section-divider';
 import { formatMoneyCompact } from '@/lib/money';
+import { cn } from '@/lib/utils';
 
 const SHARE_BADGE = { PAID: 'success', PENDING: 'warning', PARTIAL: 'warning' } as const;
 const SHARE_LABEL = { PAID: 'paid', PENDING: 'pending', PARTIAL: 'partial' } as const;
@@ -85,7 +86,13 @@ export function GroupPackageCard({
         {header}
         <p className="text-sm leading-5 text-muted-foreground">{t('emptyText')}</p>
         {readOnly ? null : (
-          <Button type="button" variant="outline" size="xs" className="self-start max-md:h-11" onClick={onCreate}>
+          <Button
+            type="button"
+            variant="outline"
+            size="xs"
+            className="self-start max-md:h-11"
+            onClick={onCreate}
+          >
             <PlusIcon data-icon="inline-start" />
             {t('create')}
           </Button>
@@ -96,9 +103,11 @@ export function GroupPackageCard({
 
   const paid = pkg.shares.filter((share) => share.paymentStatus === 'PAID').length;
   const meta = [
-    pkg.name ? `«${pkg.name}»` : null,
+    pkg.name ? t('packageName', { name: pkg.name }) : null,
     pkg.expiresAt
-      ? t('until', { date: format.dateTime(new Date(pkg.expiresAt), { day: 'numeric', month: 'short' }) })
+      ? t('until', {
+          date: format.dateTime(new Date(pkg.expiresAt), { day: 'numeric', month: 'short' }),
+        })
       : null,
     t('perLesson', {
       price: formatMoneyCompact(pkg.pricePerLessonMinorSnapshot, pkg.currency, locale).text,
@@ -125,7 +134,12 @@ export function GroupPackageCard({
       />
       {pkg.shares.length > 0 ? (
         compact ? (
-          <span className="text-[13px] text-tint-warning-foreground">
+          <span
+            className={cn(
+              'text-[13px]',
+              paid < pkg.shares.length ? 'text-tint-warning-foreground' : 'text-muted-foreground',
+            )}
+          >
             {t('sharesShort', { paid, total: pkg.shares.length })}
           </span>
         ) : (

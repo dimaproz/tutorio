@@ -215,9 +215,10 @@ export function SeriesFormDialog({
             name="weekdays"
             render={({ field }) => (
               <Field data-invalid={errors.weekdays ? true : undefined}>
-                <FieldLabel htmlFor="series-weekdays">{t('weekdays')}</FieldLabel>
+                <FieldLabel id="series-weekdays-label">{t('weekdays')}</FieldLabel>
                 <WeekdayPicker
                   id="series-weekdays"
+                  aria-labelledby="series-weekdays-label"
                   value={field.value}
                   onChange={field.onChange}
                   invalid={Boolean(errors.weekdays)}

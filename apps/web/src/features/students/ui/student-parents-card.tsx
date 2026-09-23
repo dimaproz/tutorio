@@ -64,7 +64,13 @@ export function StudentParentsCard({
   );
   const save = useCallback((parentIds: string[]) => updateStudent({ parentIds }), [updateStudent]);
   const refetch = useCallback(
-    () => queryClient.refetchQueries({ queryKey: queryKeys.students.detail(student.id) }),
+    // Joins the read the save's invalidation already started instead of
+    // cancelling it and sending a second one.
+    () =>
+      queryClient.refetchQueries(
+        { queryKey: queryKeys.students.detail(student.id) },
+        { cancelRefetch: false },
+      ),
     [queryClient, student.id],
   );
   const flow = useRelationshipLinks({ serverRows, save, refetch, refreshing });

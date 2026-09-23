@@ -57,7 +57,9 @@ export const Playground: Story = {
     await expect(
       await canvas.findByText('6 groups · 8 students · 9 lessons this week'),
     ).toBeVisible();
-    const card = (await canvas.findAllByRole('link', { name: 'Open group · B2 prep · evening' }))[0]!;
+    const card = (
+      await canvas.findAllByRole('link', { name: 'Open group · B2 prep · evening' })
+    )[0]!;
     await expect(card).toBeVisible();
     // The tabs carry the summary's counts, archive included for the owner.
     await expect(canvas.getByRole('radio', { name: /Archive/ })).toBeVisible();
@@ -87,7 +89,9 @@ export const UnpaidFilter: Story = {
     await expect(
       (await canvas.findAllByRole('link', { name: 'Open group · IELTS intensive' }))[0],
     ).toBeVisible();
-    await expect(canvas.queryAllByRole('link', { name: /Open group · Speaking club/ })).toHaveLength(0);
+    await expect(
+      canvas.queryAllByRole('link', { name: /Open group · Speaking club/ }),
+    ).toHaveLength(0);
     await expect(canvas.getByRole('button', { name: 'Unpaid', pressed: true })).toBeVisible();
     await expect(canvas.getByRole('button', { name: 'Reset' })).toBeVisible();
   },
@@ -123,7 +127,8 @@ export const Archive: Story = {
       await canvas.findByRole('button', { name: 'Actions for group Summer camp 2026' }),
     );
     const menu = within(await within(document.body).findByRole('menu'));
-    await expect(menu.getByRole('menuitem', { name: 'Restore' })).toBeVisible();
+    // The menu fades in: wait for it rather than catch it mid-animation.
+    await waitFor(() => expect(menu.getByRole('menuitem', { name: 'Restore' })).toBeVisible());
     await expect(menu.queryByRole('menuitem', { name: 'Edit' })).toBeNull();
     // Closed again, so the page is checked without the menu's modal layer.
     await userEvent.keyboard('{Escape}');
@@ -141,8 +146,11 @@ export const ArchiveFromRow: Story = {
     const menu = within(await within(document.body).findByRole('menu'));
     await userEvent.click(menu.getByRole('menuitem', { name: 'Archive' }));
     const dialog = within(await within(document.body).findByRole('alertdialog'));
-    await expect(dialog.getByText('Archive “B2 prep · evening”?')).toBeVisible();
-    await expect(await dialog.findByText(/12 upcoming lessons are cancelled/)).toBeVisible();
+    // The dialog fades in, and the count arrives with the group read.
+    await waitFor(() => expect(dialog.getByText('Archive “B2 prep · evening”?')).toBeVisible());
+    await waitFor(() =>
+      expect(dialog.getByText(/12 upcoming lessons are cancelled/)).toBeVisible(),
+    );
     await userEvent.click(dialog.getByRole('button', { name: 'Cancel' }));
   },
 };

@@ -3,6 +3,7 @@ import { ChevronDownIcon } from 'lucide-react';
 import { EntityAvatar } from '@/components/shared/entity-avatar';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 
 export type AttendanceCellState = 'present' | 'absent' | 'excused' | 'cancelled' | 'unmarked';
@@ -202,7 +203,7 @@ export function AttendanceList({
 
           {rows.length > 0 ? (
             <>
-              <div aria-hidden="true" className="h-px bg-border" />
+              <Separator />
               <ul className="flex flex-col gap-1">
                 {shownRows.map((row) => {
                   const tone = ROW_CLASS[row.tone ?? 'plain'];

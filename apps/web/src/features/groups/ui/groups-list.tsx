@@ -12,6 +12,7 @@ import { DataTable } from '@/components/shared/data-table';
 import { ListPagination, useUpdateSearchParams } from '@/components/shared/list-controls';
 import { PageHeader, QueryErrorAlert } from '@/components/shared/page-shell';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { LessonFormDialog } from '@/features/scheduling';
 import { parsePageParam } from '@/lib/api/filters';
@@ -250,12 +251,12 @@ export function GroupsList() {
               className="grid gap-4 md:grid-cols-2 xl:grid-cols-3"
             >
               {Array.from({ length: 6 }, (_, index) => (
-                <div key={index} className="flex flex-col gap-4 rounded-card bg-card p-7">
+                <Card key={index} className="gap-4 p-7">
                   <Skeleton className="h-6 w-48" />
                   <Skeleton className="h-4 w-32" />
                   <Skeleton className="h-9 w-40" />
                   <Skeleton className="h-9 w-56" />
-                </div>
+                </Card>
               ))}
             </div>
           ) : undefined

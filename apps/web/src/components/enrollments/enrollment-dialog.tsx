@@ -23,7 +23,7 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { errorMessageKey } from '@/lib/api/error-message';
 import { useCreateEnrollmentMutation, useUpdateEnrollmentMutation } from '@/lib/api/enrollments';
-import { useGroupsQuery } from '@/lib/api/groups';
+import { useGroupOptionsQuery } from '@/lib/api/groups';
 import { useStudentsQuery } from '@/lib/api/students';
 import { useTeachersQuery } from '@/lib/api/teachers';
 import { useIsSoloWorkspace, useSession } from '@/components/app/session-provider';
@@ -97,7 +97,7 @@ export function EnrollmentDialog({
 
   // Pickers only need live records; one long page covers MVP workspace size.
   const students = useStudentsQuery({ page: 1, pageSize: 100 }, open && !lockedStudentId);
-  const groups = useGroupsQuery({ page: 1, pageSize: 100 }, open && !lockedGroupId);
+  const groups = useGroupOptionsQuery(open && !lockedGroupId);
   const teachers = useTeachersQuery({ page: 1, pageSize: 100 }, open);
   const session = useSession();
   const isSolo = useIsSoloWorkspace();

@@ -42,7 +42,11 @@ export function GroupEditPage({ groupId }: { groupId: string }) {
   const tCommon = useTranslations('common');
   const group = useGroupQuery(groupId);
   const navItems = useGroupFormNavItems();
-  const labels = { sections: t('sectionsLabel'), error: t('sectionHasError'), done: t('sectionDone') };
+  const labels = {
+    sections: t('sectionsLabel'),
+    error: t('sectionHasError'),
+    done: t('sectionDone'),
+  };
   useSetPageCrumb(t('editTitle'));
 
   if (group.isPending) {
@@ -65,7 +69,12 @@ export function GroupEditPage({ groupId }: { groupId: string }) {
 
   if (!group.data || group.data.deletedAt) {
     return (
-      <FormPageLayout title={t('editTitle')} subtitle={t('editSubtitle')} navItems={navItems} labels={labels}>
+      <FormPageLayout
+        title={t('editTitle')}
+        subtitle={t('editSubtitle')}
+        navItems={navItems}
+        labels={labels}
+      >
         {group.data ? (
           <Notice tone="warning" text={t('archivedNotice')} />
         ) : (
@@ -164,7 +173,10 @@ function GroupEditForm({ group }: { group: GroupDetail }) {
         await update.mutateAsync(
           buildGroupEditDto(
             values,
-            { teacherId: group.teacherId, studentIds: defaults.studentIds },
+            // Against what the form started with: a group without its own
+            // teacher opens with the roster's, and keeping it must not send
+            // a teacher change that moves every upcoming lesson.
+            { teacherId: defaults.teacherId, studentIds: defaults.studentIds },
             { scheduleLocked },
           ),
         );
@@ -240,7 +252,11 @@ function GroupEditForm({ group }: { group: GroupDetail }) {
           navItems={state.navItems}
           activeSection={state.activeSection}
           onSelectSection={state.setActiveSection}
-          labels={{ sections: t('sectionsLabel'), error: t('sectionHasError'), done: t('sectionDone') }}
+          labels={{
+            sections: t('sectionsLabel'),
+            error: t('sectionHasError'),
+            done: t('sectionDone'),
+          }}
           navAside={
             <ProgressMeter
               value={done}

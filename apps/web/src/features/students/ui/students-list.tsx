@@ -17,7 +17,7 @@ import {
 import { PageHeader, QueryErrorAlert } from '@/components/shared/page-shell';
 import { Button } from '@/components/ui/button';
 import { parsePageParam } from '@/lib/api/filters';
-import { useGroupsQuery } from '@/lib/api/groups';
+import { useGroupOptionsQuery } from '@/lib/api/groups';
 import { useStudentsQuery, useStudentsSummaryQuery } from '@/lib/api/students';
 import { StudentCard } from './student-card';
 import { STUDENTS_ROW_LAYOUT, useStudentsListColumns } from './students-list-columns';
@@ -59,7 +59,8 @@ export function StudentsList({ nowMs }: { nowMs?: number } = {}) {
     sort: sort.field,
     order: sort.order,
   });
-  const groups = useGroupsQuery({ page: 1, pageSize: 100 });
+  // The filter needs names only, not the full rows of the groups list.
+  const groups = useGroupOptionsQuery();
 
   // Facet counts come from the server's per-status summary: a collection page
   // can never derive a total from the rows it happens to be showing.

@@ -27,6 +27,12 @@ export type LessonListItem = {
   state?: LessonItemState;
   /** The row's `…` menu; phones drop it. */
   menu?: ReactNode;
+  /**
+   * What a tap on a phone row does, in place of the menu it drops; the
+   * label names the action for assistive technology.
+   */
+  onSelect?: () => void;
+  selectLabel?: string;
 };
 
 export type LessonListGroup = {
@@ -187,6 +193,8 @@ export function LessonList<T extends string = string>({
                         )
                       }
                       status={item.status}
+                      onSelect={compact ? item.onSelect : undefined}
+                      selectLabel={compact ? item.selectLabel : undefined}
                       actions={
                         !compact && item.menu ? (
                           <div className="max-md:hidden">{item.menu}</div>

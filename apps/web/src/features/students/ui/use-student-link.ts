@@ -12,6 +12,8 @@ import { useStudentsQuery } from '@/lib/api/students';
  * typing asks the server for the matching ones.
  */
 const RESULTS_PAGE_SIZE = 10;
+/** The API's page-size cap. */
+const RESULTS_READ_MAX = 100;
 
 type StudentRowSource = Pick<ParentStudentRef, 'id' | 'fullName' | 'avatarKey' | 'status'> & {
   languageLevel?: string | null;
@@ -51,13 +53,18 @@ export function useStudentLinkResults({
 }) {
   const toRow = useStudentLinkRow();
   const search = useDebouncedValue(text);
-  const students = useStudentsQuery(
-    { page: 1, pageSize: RESULTS_PAGE_SIZE, search: search || undefined },
-    enabled,
+  // The linked students are dropped here, so read enough to still fill the
+  // list without them — in steps of ten, so linking one more student does
+  // not start a new read each time.
+  const pageSize = Math.min(
+    RESULTS_READ_MAX,
+    Math.ceil((RESULTS_PAGE_SIZE + exclude.length) / RESULTS_PAGE_SIZE) * RESULTS_PAGE_SIZE,
   );
+  const students = useStudentsQuery({ page: 1, pageSize, search: search || undefined }, enabled);
   return {
     results: (students.data?.items ?? [])
       .filter((student) => !exclude.includes(student.id))
+      .slice(0, RESULTS_PAGE_SIZE)
       .map(toRow),
     loading: enabled && students.isPending,
   };

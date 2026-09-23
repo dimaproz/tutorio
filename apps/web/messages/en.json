@@ -1022,6 +1022,8 @@
       "open": "Open lesson",
       "mark": "Mark attendance",
       "actions": "Actions for the lesson on {date}",
+      "openOn": "Open the lesson on {date}",
+      "markOn": "Mark attendance for the lesson on {date}",
       "and": "and"
     },
     "attendance": {
@@ -1073,6 +1075,7 @@
       "open": "Open package",
       "lessonsLeft": "{left} of {total} lessons",
       "until": "until {date}",
+      "packageName": "“{name}”",
       "perLesson": "{price} / lesson",
       "used": "{count} used",
       "left": "{count} left",
@@ -1187,6 +1190,8 @@
       "title": "Archive “{name}”?",
       "description": "The group leaves the list and {count, plural, one {# upcoming lesson is} other {# upcoming lessons are}} cancelled without a charge. The roster, taught lessons, packages and payments stay. The owner can restore the group.",
       "descriptionNoLessons": "The group leaves the list. The roster, taught lessons, packages and payments stay. The owner can restore the group.",
+      "descriptionCounting": "Counting the upcoming lessons that stop…",
+      "descriptionUnknown": "The group leaves the list and its upcoming lessons are cancelled without a charge. The roster, taught lessons, packages and payments stay. The owner can restore the group.",
       "confirm": "Archive"
     },
     "attendanceDialog": {

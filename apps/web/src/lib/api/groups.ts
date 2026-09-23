@@ -25,7 +25,12 @@ function invalidateAfterGroupChange(
   queryClient: QueryClient,
   touched: { roster?: boolean; schedule?: boolean } = {},
 ) {
-  void queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
+  // The attendance sheet changes only with the roster; a rename or a notes
+  // save must not read it again.
+  void queryClient.invalidateQueries({
+    queryKey: queryKeys.groups.all,
+    predicate: (query) => touched.roster === true || query.queryKey[1] !== 'attendance',
+  });
   if (touched.roster) {
     // Student rows name their groups; enrollments are the roster itself.
     void queryClient.invalidateQueries({ queryKey: queryKeys.enrollments.all });

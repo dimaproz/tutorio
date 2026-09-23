@@ -18,8 +18,14 @@ export function WeekdayPicker({
   disabled = false,
   invalid = false,
   appearance = 'compact',
+  'aria-labelledby': labelledBy,
 }: {
   id?: string;
+  /**
+   * The id of the visible label. The picker is a group of toggles, which a
+   * `<label for>` cannot name, so the label is referenced instead.
+   */
+  'aria-labelledby'?: string;
   /** Selected weekday indices, 0 = Sunday … 6 = Saturday. */
   value: number[];
   onChange: (weekdays: number[]) => void;
@@ -39,6 +45,7 @@ export function WeekdayPicker({
   return (
     <ToggleGroup
       id={id}
+      aria-labelledby={labelledBy}
       type="multiple"
       variant={appearance === 'pills' ? 'default' : 'outline'}
       disabled={disabled}

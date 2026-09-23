@@ -7,11 +7,7 @@ import { useFormatter, useTranslations } from 'next-intl';
 import type { GroupDetail, LessonResponse } from '@tutorio/validation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { EmptyState } from '@/components/shared/empty-state';
 import { LessonList, type LessonListItem } from '@/components/shared/lesson-list';
 import { RowActionsTrigger } from '@/components/shared/row-actions-trigger';
@@ -74,10 +70,9 @@ export function GroupLessonsCard({
   const comingUp =
     slots.length > 0 && times.size === 1
       ? t('comingUpAt', {
-          days: format.list(
-            [...new Set(slots.map((slot) => shortDays[slot.weekday] ?? ''))],
-            { type: 'conjunction' },
-          ),
+          days: format.list([...new Set(slots.map((slot) => shortDays[slot.weekday] ?? ''))], {
+            type: 'conjunction',
+          }),
           time: slots[0]!.localTime,
         })
       : t('comingUp');
@@ -94,22 +89,27 @@ export function GroupLessonsCard({
     const teacher = lesson.teacher.name;
     const next = lesson.id === buckets.nextId;
     const markable = !archived && isAttendanceMarkable(lesson, now);
+    const dateLabel = format.dateTime(start, { day: 'numeric', month: 'long' });
     return {
       id: lesson.id,
       weekday: format.dateTime(start, { weekday: 'short' }),
       day: format.dateTime(start, { day: '2-digit' }),
       title: lesson.notes?.split('\n')[0] || t('fallbackTitle'),
-      meta: past ? [month, time(start), came ?? teacher].join(' · ') : [month, range, teacher].join(' · '),
+      meta: past
+        ? [month, time(start), came ?? teacher].join(' · ')
+        : [month, range, teacher].join(' · '),
       metaShort: past
         ? [time(start), came].filter(Boolean).join(' · ')
         : [range, teacher.split(' ')[0]].join(' · '),
       state: next ? 'next' : past ? 'past' : 'default',
-      status: next ? <Badge variant="brand">{t('next')}</Badge> : <LessonStatusBadge status={lesson.status} />,
+      status: next ? (
+        <Badge variant="brand">{t('next')}</Badge>
+      ) : (
+        <LessonStatusBadge status={lesson.status} />
+      ),
       menu: (
         <DropdownMenu>
-          <RowActionsTrigger
-            label={t('actions', { date: format.dateTime(start, { day: 'numeric', month: 'long' }) })}
-          />
+          <RowActionsTrigger label={t('actions', { date: dateLabel })} />
           <DropdownMenuContent align="end">
             <DropdownMenuItem onSelect={() => onOpenLesson(lesson)}>
               <ExternalLinkIcon data-icon />
@@ -124,6 +124,10 @@ export function GroupLessonsCard({
           </DropdownMenuContent>
         </DropdownMenu>
       ),
+      // A phone row has no menu: a held lesson opens who came, which is what
+      // a tutor does with it; any other lesson opens the lesson.
+      onSelect: markable ? () => onMarkAttendance(lesson) : () => onOpenLesson(lesson),
+      selectLabel: markable ? t('markOn', { date: dateLabel }) : t('openOn', { date: dateLabel }),
     };
   };
 
@@ -143,11 +147,15 @@ export function GroupLessonsCard({
       groups={[
         {
           label: comingUp,
-          items: buckets.upcoming.filter((lesson) => visibleIds.has(lesson.id)).map((lesson) => toItem(lesson, false)),
+          items: buckets.upcoming
+            .filter((lesson) => visibleIds.has(lesson.id))
+            .map((lesson) => toItem(lesson, false)),
         },
         {
           label: t('earlier'),
-          items: buckets.past.filter((lesson) => visibleIds.has(lesson.id)).map((lesson) => toItem(lesson, true)),
+          items: buckets.past
+            .filter((lesson) => visibleIds.has(lesson.id))
+            .map((lesson) => toItem(lesson, true)),
         },
       ]}
       shown={visible.length}

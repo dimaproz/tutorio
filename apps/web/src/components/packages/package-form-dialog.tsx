@@ -665,8 +665,9 @@ function ScheduleFields({
         name="weekdays"
         render={({ field }) => (
           <Field data-invalid={Boolean(errors.weekdays) || undefined}>
-            <FieldLabel>{t('weekdays')}</FieldLabel>
+            <FieldLabel id="package-weekdays-label">{t('weekdays')}</FieldLabel>
             <WeekdayPicker
+              aria-labelledby="package-weekdays-label"
               appearance="cards"
               value={field.value}
               onChange={(days) => {

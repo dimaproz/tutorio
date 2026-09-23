@@ -130,9 +130,7 @@ export function groupFormSectionStatus(
       const status: GroupFormSectionStatus = section.fields.some((field) => errors.has(field))
         ? 'error'
         : (section.id === 'schedule' && scheduleLocked) ||
-            MEANINGFUL[section.id].some((field) =>
-              hasValue(values[field as keyof typeof values]),
-            )
+            MEANINGFUL[section.id].some((field) => hasValue(values[field as keyof typeof values]))
           ? 'done'
           : 'none';
       return [section.id, status];
@@ -202,7 +200,8 @@ export function buildGroupCreateDto(values: GroupFormValues): CreateGroupDto {
  */
 export function buildGroupEditDto(
   values: GroupFormValues,
-  original: Pick<GroupDetail, 'teacherId'> & { studentIds: readonly string[] },
+  /** The values the form opened with (`groupFormDefaults`), not the record. */
+  original: Pick<GroupFormValues, 'teacherId'> & { studentIds: readonly string[] },
   { scheduleLocked }: { scheduleLocked: boolean },
 ): UpdateGroupDto {
   const price = priceOf(values);
