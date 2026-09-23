@@ -71,6 +71,7 @@ const session: AuthMe = {
     mode: 'SCHOOL',
     defaultCurrency: 'UAH',
     cancellationDeadlineHours: 12,
+    timezone: 'Europe/Kyiv',
   },
   role: 'OWNER',
 };

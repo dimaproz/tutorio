@@ -38,6 +38,7 @@ export class WorkspacesService {
         defaultCurrency: membership.workspace.defaultCurrency,
         cancellationDeadlineHours:
           membership.workspace.cancellationDeadlineHours,
+        timezone: membership.workspace.timezone,
       },
       role: membership.role,
     };

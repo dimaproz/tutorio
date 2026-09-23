@@ -77,6 +77,8 @@ export const authWorkspaceSchema = z.object({
   mode: workspaceModeSchema,
   defaultCurrency: z.string(),
   cancellationDeadlineHours: z.number().int(),
+  /** IANA zone the studio's recurring schedules are generated in. */
+  timezone: z.string(),
 });
 
 export type AuthWorkspace = z.infer<typeof authWorkspaceSchema>;

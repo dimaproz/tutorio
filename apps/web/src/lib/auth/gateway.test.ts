@@ -21,6 +21,7 @@ const SESSION_PAYLOAD = {
     mode: 'SOLO',
     defaultCurrency: 'EUR',
     cancellationDeadlineHours: 24,
+    timezone: 'Europe/Kyiv',
   },
   role: 'OWNER',
 };

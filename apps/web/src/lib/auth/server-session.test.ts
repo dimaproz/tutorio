@@ -25,6 +25,7 @@ const SESSION = {
     mode: 'SOLO',
     defaultCurrency: 'EUR',
     cancellationDeadlineHours: 24,
+    timezone: 'Europe/Kyiv',
   },
   role: 'OWNER',
 };

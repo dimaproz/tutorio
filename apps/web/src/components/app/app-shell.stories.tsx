@@ -23,6 +23,7 @@ const ownerSession = {
     mode: 'SCHOOL',
     defaultCurrency: 'UAH',
     cancellationDeadlineHours: 24,
+    timezone: 'Europe/Kyiv',
   },
   role: 'OWNER',
 } satisfies AuthMe;

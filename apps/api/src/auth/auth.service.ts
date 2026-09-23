@@ -386,6 +386,7 @@ export class AuthService {
       mode: workspace.mode,
       defaultCurrency: workspace.defaultCurrency,
       cancellationDeadlineHours: workspace.cancellationDeadlineHours,
+      timezone: workspace.timezone,
     };
   }
 
