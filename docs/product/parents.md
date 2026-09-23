@@ -105,10 +105,14 @@ scroll-following `SectionNav` (chips on phones), per-section done and error
 marks, a `ProgressMeter` and the sticky `ActionBar`; a full-width sticky save
 on phones. Only the name is required.
 
-- The linked-students section is a bare `LinkPicker` with a floating result
-  list. The ✕ on a linked row removes it with no dialog: the change applies on
-  save. "Create a new student" opens `StudentQuickCreateDialog` and adds the
-  new student to the set.
+- The linked-students section is a bare `LinkPicker` with a floating
+  autocomplete: the first ten students on opening, the matching ones as the
+  tutor types, in a list of about six rows that scrolls. The ✕ on a linked row
+  removes it with no dialog: the change applies on save. "Create a new
+  student" goes to the student create page, asking first if the form holds
+  unsaved input.
+- Opened from a student's profile as `/app/parents/new?studentId=…`, the form
+  starts with that student linked.
 - **No local draft.** Leaving a dirty create form asks once and then discards
   it; nothing is written to browser storage.
 - Create success opens the new profile with a toast; edit success returns to
@@ -132,9 +136,14 @@ with one `LinkPickerDialog`:
   schedule a lesson for a student) and, under a divider, "Unlink" in the
   destructive colour; a read-only card (an archived student) keeps only the
   view actions and drops "+ Link";
-- the picker: search, checkbox results without the already-linked records,
-  "Create a new contact" / "Create a new student", and Cancel / "Link · N"
-  (a bottom sheet with one full-width "Done · N" on phones).
+- the picker: an autocomplete search that stays at the top, checkbox results
+  without the already-linked records (the first ten on opening, the matching
+  ones as the tutor types) in the only part that scrolls, "Create a new
+  contact" / "Create a new student", and Cancel / "Link · N" (a bottom sheet
+  with one full-width "Done · N" on phones);
+- the create command opens the owning create page, never a dialog: a new
+  contact goes to `/app/parents/new?studentId=…` with the student linked, a new
+  student to `/app/students/new`.
 
 Saving sends the whole set (`PATCH /parents/:id { studentIds }` or
 `PATCH /students/:id { parentIds }`). Both cards run on `useRelationshipLinks`
@@ -162,9 +171,9 @@ is reserved for deleting the parent record itself.
   `useLeaveGuard` live in `src/hooks`; `filteredRegistration` and the phone and
   Telegram filters in `lib/forms/input-filters`.
 - Parents feature (`features/parents`): the collection, row cells and card,
-  the profile and its cards, the form pages, `ParentQuickCreateDialog` (the
-  student side's "Create a new contact") and the delete hook. The legacy
-  `components/parents` modules are removed.
+  the profile and its cards, the form pages, the link search hooks the student
+  side reuses, and the delete hook. The legacy `components/parents` modules
+  and the quick-create dialog are removed.
 
 ## Storybook and test contract
 

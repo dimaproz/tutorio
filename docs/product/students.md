@@ -23,8 +23,14 @@ below disagree with this one, this one wins.
   retry, and a read-only archived state. Success navigates to the profile
   (`?setup=1` after create) with a toast.
 - `StudentQuickCreateDialog` remains only for creating a student inline from
-  another workflow (the group form). The edit dialog and the separate
-  archive dialog are removed.
+  the legacy group form, until Work Packet 6.3 replaces it. Linking flows
+  (the parent profile and the parent form) open `/app/students/new` instead.
+  The edit dialog and the separate archive dialog are removed.
+- **Collection filters follow the parents list** (2026-09-23): the search
+  field is always visible and follows the URL, the group pill names the chosen
+  group and is a menu with the current choice checked, "Reset" appears once
+  the status or group filter is set and clears both, and the sort is a
+  checked menu available on phones too.
 - **Status lives in one control**, in the profile hero and the edit header:
   a dropdown on desktop, a bottom sheet on phones. Active → on a break opens
   the hold dialog, which can cancel the student's upcoming *individual*
