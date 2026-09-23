@@ -27,8 +27,12 @@ export function AppHeaderContent({
   pathname,
   workspaceName,
   crumb,
-  localeControl = <LocaleSwitcher className="size-11 border border-border bg-card" />,
-  themeControl = <ThemeToggle className="size-11 border border-border bg-card" />,
+  localeControl = (
+    <LocaleSwitcher className="size-11 border border-border bg-card hover:border-line-hover" />
+  ),
+  themeControl = (
+    <ThemeToggle className="size-11 border border-border bg-card hover:border-line-hover" />
+  ),
 }: {
   pathname: string;
   workspaceName?: string;
