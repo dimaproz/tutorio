@@ -106,6 +106,7 @@ model User {
 
   creditEntries LessonCreditEntry[]
   payments      Payment[]
+  attendanceMarks LessonAttendance[]
 
   @@map("users")
 }
@@ -138,6 +139,7 @@ model Workspace {
   creditEntries     LessonCreditEntry[]
   participantShares PackageParticipantShare[]
   payments          Payment[]
+  attendance        LessonAttendance[]
 
   @@map("workspaces")
 }
@@ -281,6 +283,13 @@ model Group {
   // per-enrollment override, non-negative (DB CHECK below).
   pricePerLesson Int?
   currency       String?
+  // The teacher who runs the group: the default for new roster enrollments and
+  // for the group's recurring schedule. Null only for a group created before
+  // this column existed and never given a roster or a schedule.
+  teacherId      String?
+  // How many seats the group has; null means the tutor did not set a limit.
+  // Informational only — the roster is never refused for being full.
+  capacity       Int?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
   deletedAt      DateTime?
@@ -289,6 +298,7 @@ model Group {
   rosterSuspensionToken String?
 
   workspace    Workspace       @relation(fields: [workspaceId], references: [id])
+  teacher      Teacher?        @relation("GroupTeacher", fields: [teacherId], references: [id])
   enrollments  Enrollment[]
   lessons      Lesson[]
   lessonSeries LessonSeries[]
@@ -296,6 +306,7 @@ model Group {
 
   @@index([workspaceId, deletedAt])
   @@index([workspaceId, name])
+  @@index([teacherId])
   @@index([workspaceId, updatedAt])
   @@map("groups")
 }
@@ -339,6 +350,7 @@ model Enrollment {
   creditEntries     LessonCreditEntry[]
   participantShares PackageParticipantShare[]
   payments          Payment[]
+  attendance        LessonAttendance[]
 
   // Uniqueness among non-deleted rows only (one active enrollment per
   // student+group, one active individual enrollment per student+teacher) is
@@ -401,6 +413,7 @@ model Teacher {
   workspace       Workspace        @relation(fields: [workspaceId], references: [id])
   workspaceMember WorkspaceMember? @relation(fields: [workspaceMemberId], references: [id])
   enrollments     Enrollment[]     @relation("EnrollmentTeacher")
+  groups          Group[]          @relation("GroupTeacher")
   lessons         Lesson[]         @relation("LessonTeacher")
   lessonSeries    LessonSeries[]   @relation("LessonSeriesTeacher")
 
@@ -502,6 +515,7 @@ model Lesson {
   teacher    Teacher       @relation("LessonTeacher", fields: [teacherId], references: [id])
 
   creditEntries LessonCreditEntry[]
+  attendance    LessonAttendance[]
 
   // One materialized slot per series instant — the materializer's idempotency key.
   @@unique([seriesId, startsAtUtc])
@@ -511,6 +525,41 @@ model Lesson {
   @@index([enrollmentId])
   @@index([groupId])
   @@map("lessons")
+}
+
+// Whether one participant was at one lesson. EXCUSED is an absence the tutor
+// accepted in advance; it is neither a presence nor a miss in the rates.
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  EXCUSED
+
+  @@map("attendance_status")
+}
+
+// One mark per (lesson, enrollment). A lesson's status stays the authority for
+// whether it took place; attendance only says who was there. Marks are edited
+// in place (the audit log keeps the history), never soft-deleted.
+model LessonAttendance {
+  id           String           @id @default(uuid())
+  workspaceId  String
+  lessonId     String
+  enrollmentId String
+  status       AttendanceStatus
+  markedAt     DateTime         @default(now())
+  markedById   String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  workspace  Workspace  @relation(fields: [workspaceId], references: [id])
+  lesson     Lesson     @relation(fields: [lessonId], references: [id])
+  enrollment Enrollment @relation(fields: [enrollmentId], references: [id])
+  markedBy   User?      @relation(fields: [markedById], references: [id])
+
+  @@unique([lessonId, enrollmentId])
+  @@index([enrollmentId])
+  @@index([workspaceId])
+  @@map("lesson_attendance")
 }
 
 // ---------------------------------------------------------------------------

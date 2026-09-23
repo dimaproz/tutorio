@@ -118,7 +118,7 @@ describe('deriveStudentRollups', () => {
             {
               id: 'sh1',
               enrollmentId: 'e1',
-              student: { id: 's3', fullName: 'Maksym' },
+              student: { id: 's3', fullName: 'Maksym', avatarKey: null },
               oweMinor: 200000,
               paidMinor: 200000,
               paymentStatus: 'PAID',

@@ -100,6 +100,31 @@ export const groupLegacyRepairRequired = () =>
     HttpStatus.CONFLICT,
   );
 
+// A recurring schedule is taught by someone: a group needs a teacher first.
+export const groupTeacherRequired = () =>
+  new BusinessApiException(
+    'GROUP_TEACHER_REQUIRED',
+    'The group needs a teacher before it can have a schedule',
+    HttpStatus.BAD_REQUEST,
+  );
+
+// The group form only creates a first schedule. Changing an existing one
+// rebuilds booked lessons, so it goes through the recurring-pattern screen.
+export const groupScheduleExists = () =>
+  new BusinessApiException(
+    'GROUP_SCHEDULE_EXISTS',
+    'The group already has a schedule; change it on the recurring patterns screen',
+    HttpStatus.CONFLICT,
+  );
+
+// Attendance is marked for a lesson that has started and was not cancelled.
+export const attendanceNotMarkable = () =>
+  new BusinessApiException(
+    'ATTENDANCE_NOT_MARKABLE',
+    'Attendance can be marked only for a lesson that started and was not cancelled',
+    HttpStatus.CONFLICT,
+  );
+
 export const duplicateEnrollment = () =>
   new BusinessApiException(
     'DUPLICATE_ENROLLMENT',

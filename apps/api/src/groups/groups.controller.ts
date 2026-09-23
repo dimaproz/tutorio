@@ -12,6 +12,7 @@ import {
   Query,
 } from '@nestjs/common';
 import {
+  ApiBadRequestResponse,
   ApiBearerAuth,
   ApiConflictResponse,
   ApiCreatedResponse,
@@ -29,12 +30,17 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { ApiErrorDto } from '../auth/dto/auth.dto';
 import {
   CreateGroupDto,
+  GroupAttendanceDto,
+  GroupAttendanceQueryDto,
   GroupDetailDto,
   GroupDto,
   GroupListDto,
+  GroupOptionsDto,
+  GroupSummaryDto,
   ListGroupsQueryDto,
   UpdateGroupDto,
 } from './dto/groups.dto';
+import { GroupAttendanceService } from './group-attendance.service';
 import { GroupsService } from './groups.service';
 
 @ApiTags('groups')
@@ -42,15 +48,20 @@ import { GroupsService } from './groups.service';
 @ApiForbiddenResponse({ type: ApiErrorDto, description: 'OWNER role required' })
 @Controller('groups')
 export class GroupsController {
-  constructor(private readonly groups: GroupsService) {}
+  constructor(
+    private readonly groups: GroupsService,
+    private readonly attendance: GroupAttendanceService,
+  ) {}
 
   @Get()
   @Roles('OWNER')
   @ApiOperation({
     summary: 'List workspace groups',
     description:
-      'Paginated summaries with active student counts. ' +
-      'state=deleted|all is owner-only.',
+      'Paginated rows with the live roster, schedule, teacher, next lesson ' +
+      'and whether money is outstanding. Filters: search, state ' +
+      '(deleted|all is owner-only), status, studentId, teacherId, weekday ' +
+      '(0 = Sunday), payment=unpaid. Every filter is answered by the API.',
   })
   @ApiOkResponse({ type: GroupListDto })
   @ApiForbiddenResponse({ type: ApiErrorDto })
@@ -62,10 +73,47 @@ export class GroupsController {
     return this.groups.list(user, query);
   }
 
+  // Static routes come before `:groupId`, which would otherwise capture them.
+  @Get('summary')
+  @Roles('OWNER')
+  @ApiOperation({
+    summary: 'Group collection headline',
+    description:
+      'Tab counts (live, active, empty, archived) and the four metrics: ' +
+      'students in groups, free seats, group lessons this week and today ' +
+      '(workspace timezone) and groups with money outstanding.',
+  })
+  @ApiOkResponse({ type: GroupSummaryDto })
+  @ZodSerializerDto(GroupSummaryDto)
+  summary(@CurrentUser() user: AuthenticatedUser): Promise<GroupSummaryDto> {
+    return this.groups.summary(user);
+  }
+
+  @Get('options')
+  @Roles('OWNER')
+  @ApiOperation({
+    summary: 'Live groups by name',
+    description: 'Id and name of every live group, for filters and pickers.',
+  })
+  @ApiOkResponse({ type: GroupOptionsDto })
+  @ZodSerializerDto(GroupOptionsDto)
+  options(@CurrentUser() user: AuthenticatedUser): Promise<GroupOptionsDto> {
+    return this.groups.options(user);
+  }
+
   @Post()
   @Roles('OWNER')
-  @ApiOperation({ summary: 'Create a group' })
+  @ApiOperation({
+    summary: 'Create a group',
+    description:
+      'Optionally with a roster and a first recurring schedule, in one ' +
+      'transaction. The teacher defaults to the roster teacher, then to the ' +
+      'only active teacher of the workspace. A schedule needs a teacher ' +
+      '(400 GROUP_TEACHER_REQUIRED) and a free calendar (409 SCHEDULE_CONFLICT).',
+  })
   @ApiCreatedResponse({ type: GroupDto })
+  @ApiBadRequestResponse({ type: ApiErrorDto })
+  @ApiConflictResponse({ type: ApiErrorDto })
   @ZodSerializerDto(GroupDto)
   create(
     @CurrentUser() user: AuthenticatedUser,
@@ -76,7 +124,12 @@ export class GroupsController {
 
   @Get(':groupId')
   @Roles('OWNER')
-  @ApiOperation({ summary: 'Get a group with enrollment summaries' })
+  @ApiOperation({
+    summary: 'The group page',
+    description:
+      'The group with its live roster, schedule, teacher, next lesson and ' +
+      'lesson counts. An archived group stays readable so it can be restored.',
+  })
   @ApiOkResponse({ type: GroupDetailDto })
   @ApiNotFoundResponse({ type: ApiErrorDto })
   @ZodSerializerDto(GroupDetailDto)
@@ -85,6 +138,26 @@ export class GroupsController {
     @Param('groupId', ParseUUIDPipe) groupId: string,
   ): Promise<GroupDetailDto> {
     return this.groups.getDetail(user, groupId);
+  }
+
+  @Get(':groupId/attendance')
+  @Roles('OWNER')
+  @ApiOperation({
+    summary: 'Group attendance over its last held lessons',
+    description:
+      'The current roster over the last `window` held lessons (default 8): ' +
+      'tiles and one row per participant, worst first. Cancelled lessons are ' +
+      'no one’s miss; participants on hold stay out of the group figures.',
+  })
+  @ApiOkResponse({ type: GroupAttendanceDto })
+  @ApiNotFoundResponse({ type: ApiErrorDto })
+  @ZodSerializerDto(GroupAttendanceDto)
+  getAttendance(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('groupId', ParseUUIDPipe) groupId: string,
+    @Query() query: GroupAttendanceQueryDto,
+  ): Promise<GroupAttendanceDto> {
+    return this.attendance.summarize(user, groupId, query);
   }
 
   @Patch(':groupId')
@@ -96,10 +169,15 @@ export class GroupsController {
       'optional field. A no-op update creates no audit entry. `students` ' +
       'carries the complete roster and is reconciled into enrollments in the ' +
       'same transaction — added students are enrolled, dropped ones are ' +
-      'archived — so a roster edit never costs one request per student.',
+      'removed — so a roster edit never costs one request per student. A new ' +
+      '`teacherId` moves the roster, the schedule and every upcoming lesson ' +
+      'to that teacher after a clash check. `schedule` only creates the ' +
+      'first schedule (409 GROUP_SCHEDULE_EXISTS otherwise).',
   })
   @ApiOkResponse({ type: GroupDto })
   @ApiNotFoundResponse({ type: ApiErrorDto })
+  @ApiBadRequestResponse({ type: ApiErrorDto })
+  @ApiConflictResponse({ type: ApiErrorDto })
   @ZodSerializerDto(GroupDto)
   update(
     @CurrentUser() user: AuthenticatedUser,
@@ -131,7 +209,7 @@ export class GroupsController {
   @Post(':groupId/restore')
   @HttpCode(HttpStatus.OK)
   @Roles('OWNER')
-  @ApiOperation({ summary: 'Restore a soft-deleted group (owner only)' })
+  @ApiOperation({ summary: 'Restore an archived group (owner only)' })
   @ApiOkResponse({ type: GroupDto })
   @ApiConflictResponse({
     type: ApiErrorDto,

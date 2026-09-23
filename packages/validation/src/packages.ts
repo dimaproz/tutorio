@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import {
+  avatarKeySchema,
   currencyCodeSchema,
   isoDateTimeSchema,
   notesSchema,
@@ -268,7 +269,7 @@ export type CreditEntryResponse = z.infer<typeof creditEntryResponseSchema>;
 export const participantShareResponseSchema = z.object({
   id: uuidSchema,
   enrollmentId: uuidSchema,
-  student: studentRefSchema,
+  student: studentRefSchema.extend({ avatarKey: avatarKeySchema.nullable() }),
   oweMinor: z.number().int(),
   paidMinor: z.number().int(),
   paymentStatus: packagePaymentStatusSchema,

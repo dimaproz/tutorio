@@ -26,6 +26,7 @@ const lesson: LessonResponse = {
   completedAt: null,
   paidAt: null,
   notes: null,
+  attendance: null,
   cancellationDeadlineHours: 12,
   student: { id: '55555555-5555-4555-8555-555555555555', fullName: 'Anna Shevchenko' },
   group: null,

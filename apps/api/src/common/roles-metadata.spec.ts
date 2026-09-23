@@ -66,6 +66,8 @@ const selfRoutes = new Set([
 ]);
 
 const ownerRoutes = new Set([
+  'AttendanceController.get',
+  'AttendanceController.set',
   'AuditController.list',
   'EnrollmentsController.create',
   'EnrollmentsController.getDetail',
@@ -74,10 +76,13 @@ const ownerRoutes = new Set([
   'EnrollmentsController.softDelete',
   'EnrollmentsController.update',
   'GroupsController.create',
+  'GroupsController.getAttendance',
   'GroupsController.getDetail',
   'GroupsController.list',
+  'GroupsController.options',
   'GroupsController.restore',
   'GroupsController.softDelete',
+  'GroupsController.summary',
   'GroupsController.update',
   'LessonsController.create',
   'LessonsController.list',

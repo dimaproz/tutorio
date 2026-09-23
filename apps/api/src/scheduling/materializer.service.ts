@@ -14,7 +14,7 @@ import {
 } from './lifecycle-suspension';
 
 // How far ahead recurring lessons are kept materialized.
-const HORIZON_WEEKS = 12;
+export const HORIZON_WEEKS = 12;
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 type SeriesForMaterialize = Pick<
@@ -131,6 +131,41 @@ export class MaterializerService {
     }
 
     return toCreate;
+  }
+
+  /**
+   * Checks that the occurrences a series would generate over the horizon are
+   * free, without writing them. A series created for a target that cannot
+   * materialize yet — a group with no students — is checked here, so a
+   * double-booking surfaces when the schedule is set rather than later, when
+   * the first student joins.
+   */
+  async assertSeriesSlotsFree(
+    tx: Prisma.TransactionClient,
+    series: SeriesForMaterialize,
+    from: Date,
+    horizonUntil: Date = this.horizonUntil(),
+  ): Promise<void> {
+    await lockTeacherSchedules(tx, series.workspaceId, [series.teacherId]);
+    const until =
+      series.endsAt && series.endsAt < horizonUntil
+        ? series.endsAt
+        : horizonUntil;
+    if (until <= from) return;
+    const { toCreate } = planMaterialization({
+      rule: {
+        weekdays: series.weekdays,
+        localTime: series.localTime,
+        timezone: series.timezone,
+        startDate: series.startDate,
+      },
+      from,
+      horizonUntil: until,
+      existingSlots: [],
+    });
+    if (toCreate.length > 0) {
+      await this.assertCandidatesAreFree(tx, series, toCreate);
+    }
   }
 
   /**

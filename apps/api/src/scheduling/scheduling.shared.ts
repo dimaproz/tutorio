@@ -36,6 +36,8 @@ export const lessonInclude = {
   group: { select: { id: true, name: true } },
   teacher: { select: { id: true, fullName: true, color: true } },
   workspace: { select: { cancellationDeadlineHours: true } },
+  // Only the statuses: a lesson row reports "5 of 6 came", not who.
+  attendance: { select: { status: true } },
 } satisfies Prisma.LessonInclude;
 
 export type LessonRow = Prisma.LessonGetPayload<{
@@ -81,6 +83,14 @@ export function toLessonResponse(row: LessonRow): LessonResponse {
       row.enrollment?.cancellationDeadlineHours,
       row.workspace.cancellationDeadlineHours,
     ),
+    attendance:
+      row.attendance.length > 0
+        ? {
+            present: row.attendance.filter((mark) => mark.status === 'PRESENT')
+              .length,
+            marked: row.attendance.length,
+          }
+        : null,
     student: row.enrollment?.student ?? null,
     group: row.group,
     teacher: {

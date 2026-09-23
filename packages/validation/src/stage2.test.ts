@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { groupAttendanceQuerySchema, setLessonAttendanceSchema } from './attendance';
 import { auditChangesSchema, listAuditLogsQuerySchema } from './audit';
 import {
   businessErrorCodeSchema,
@@ -184,12 +185,45 @@ describe('groups', () => {
     const students = { studentIds: [UUID, UUID_2], teacherId: UUID_3 };
     expect(createGroupSchema.parse({ name: 'B1 English', students }).students).toEqual(students);
     expect(updateGroupSchema.parse({ students }).students).toEqual(students);
-    // An empty roster is how the UI clears a group; a teacher is always needed.
+    // An empty roster is how the UI clears a group. The roster teacher is
+    // optional: new members default to the group's own teacher.
     expect(
       updateGroupSchema.safeParse({ students: { studentIds: [], teacherId: UUID } }).success,
     ).toBe(true);
-    expect(updateGroupSchema.safeParse({ students: { studentIds: [UUID] } }).success).toBe(false);
+    expect(updateGroupSchema.safeParse({ students: { studentIds: [UUID] } }).success).toBe(true);
     expect(updateGroupSchema.safeParse({ students: null }).success).toBe(false);
+  });
+
+  it('takes a teacher, seats and a first schedule, and never clears the teacher', () => {
+    const parsed = createGroupSchema.parse({
+      name: 'B2 evening',
+      teacherId: UUID,
+      capacity: 8,
+      schedule: { weekdays: [2, 4], localTime: '17:00', durationMin: 60 },
+    });
+    expect(parsed).toMatchObject({ capacity: 8, schedule: { weekdays: [2, 4] } });
+    expect(createGroupSchema.safeParse({ name: 'X', capacity: 0 }).success).toBe(false);
+    expect(createGroupSchema.safeParse({ name: 'X', capacity: 501 }).success).toBe(false);
+    expect(
+      createGroupSchema.safeParse({
+        name: 'X',
+        schedule: { weekdays: [], localTime: '17:00', durationMin: 60 },
+      }).success,
+    ).toBe(false);
+    expect(updateGroupSchema.safeParse({ capacity: null }).success).toBe(true);
+    expect(updateGroupSchema.safeParse({ teacherId: null }).success).toBe(false);
+  });
+
+  it('coerces the list filters the query string carries', () => {
+    const parsed = listGroupsQuerySchema.parse({
+      teacherId: UUID,
+      weekday: '3',
+      payment: 'unpaid',
+      sort: 'createdAt',
+    });
+    expect(parsed).toMatchObject({ teacherId: UUID, weekday: 3, payment: 'unpaid' });
+    expect(listGroupsQuerySchema.safeParse({ weekday: '7' }).success).toBe(false);
+    expect(listGroupsQuerySchema.safeParse({ payment: 'paid' }).success).toBe(false);
   });
 
   it('accepts group filters and list sort fields', () => {
@@ -355,5 +389,33 @@ describe('audit filters', () => {
     ).toBe(true);
     expect(auditChangesSchema.safeParse({ fields: 'nope' }).success).toBe(false);
     expect(auditChangesSchema.safeParse({}).success).toBe(false);
+  });
+});
+
+describe('attendance', () => {
+  it('accepts one mark per participant and rejects duplicates', () => {
+    expect(
+      setLessonAttendanceSchema.safeParse({
+        marks: [
+          { enrollmentId: UUID, status: 'PRESENT' },
+          { enrollmentId: UUID_2, status: 'EXCUSED' },
+        ],
+      }).success,
+    ).toBe(true);
+    expect(
+      setLessonAttendanceSchema.safeParse({
+        marks: [
+          { enrollmentId: UUID, status: 'PRESENT' },
+          { enrollmentId: UUID, status: 'ABSENT' },
+        ],
+      }).success,
+    ).toBe(false);
+    expect(setLessonAttendanceSchema.safeParse({ marks: [] }).success).toBe(false);
+  });
+
+  it('bounds the attendance window', () => {
+    expect(groupAttendanceQuerySchema.parse({}).window).toBe(8);
+    expect(groupAttendanceQuerySchema.parse({ window: '12' }).window).toBe(12);
+    expect(groupAttendanceQuerySchema.safeParse({ window: '25' }).success).toBe(false);
   });
 });

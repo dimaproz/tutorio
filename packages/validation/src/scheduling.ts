@@ -359,6 +359,13 @@ export const lessonResponseSchema = z.object({
   // value, else the workspace default). Lets the UI say whether cancelling now
   // is late before the tutor commits to charging.
   cancellationDeadlineHours: z.number().int(),
+  // Who came, for a group lesson that has attendance marks; null otherwise.
+  attendance: z
+    .object({
+      present: z.number().int().nonnegative(),
+      marked: z.number().int().nonnegative(),
+    })
+    .nullable(),
   // Compact refs for calendar event rendering (avoids request waterfalls).
   student: studentRefSchema.nullable(),
   group: groupRefSchema.nullable(),

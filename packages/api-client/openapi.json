@@ -1640,7 +1640,7 @@
     },
     "/api/groups": {
       "get": {
-        "description": "Paginated summaries with active student counts. state=deleted|all is owner-only.",
+        "description": "Paginated rows with the live roster, schedule, teacher, next lesson and whether money is outstanding. Filters: search, state (deleted|all is owner-only), status, studentId, teacherId, weekday (0 = Sunday), payment=unpaid. Every filter is answered by the API.",
         "operationId": "GroupsController_list",
         "parameters": [
           {
@@ -1713,6 +1713,38 @@
             }
           },
           {
+            "name": "teacherId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "weekday",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 0,
+              "maximum": 6,
+              "exclusiveMaximum": false,
+              "exclusiveMinimum": false,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "payment",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "unpaid"
+              ]
+            }
+          },
+          {
             "name": "sort",
             "required": false,
             "in": "query",
@@ -1723,7 +1755,8 @@
                 "name",
                 "pricePerLesson",
                 "activeStudentCount",
-                "schedule"
+                "schedule",
+                "createdAt"
               ]
             }
           },
@@ -1774,6 +1807,7 @@
         ]
       },
       "post": {
+        "description": "Optionally with a roster and a first recurring schedule, in one transaction. The teacher defaults to the roster teacher, then to the only active teacher of the workspace. A schedule needs a teacher (400 GROUP_TEACHER_REQUIRED) and a free calendar (409 SCHEDULE_CONFLICT).",
         "operationId": "GroupsController_create",
         "parameters": [],
         "requestBody": {
@@ -1797,8 +1831,28 @@
               }
             }
           },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
           "403": {
             "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -1819,8 +1873,85 @@
         ]
       }
     },
+    "/api/groups/summary": {
+      "get": {
+        "description": "Tab counts (live, active, empty, archived) and the four metrics: students in groups, free seats, group lessons this week and today (workspace timezone) and groups with money outstanding.",
+        "operationId": "GroupsController_summary",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupSummaryDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Group collection headline",
+        "tags": [
+          "groups"
+        ]
+      }
+    },
+    "/api/groups/options": {
+      "get": {
+        "description": "Id and name of every live group, for filters and pickers.",
+        "operationId": "GroupsController_options",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupOptionsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Live groups by name",
+        "tags": [
+          "groups"
+        ]
+      }
+    },
     "/api/groups/{groupId}": {
       "get": {
+        "description": "The group with its live roster, schedule, teacher, next lesson and lesson counts. An archived group stays readable so it can be restored.",
         "operationId": "GroupsController_getDetail",
         "parameters": [
           {
@@ -1869,13 +2000,13 @@
             "bearer": []
           }
         ],
-        "summary": "Get a group with enrollment summaries",
+        "summary": "The group page",
         "tags": [
           "groups"
         ]
       },
       "patch": {
-        "description": "PATCH semantics: omitted fields stay unchanged, null clears an optional field. A no-op update creates no audit entry. `students` carries the complete roster and is reconciled into enrollments in the same transaction — added students are enrolled, dropped ones are archived — so a roster edit never costs one request per student.",
+        "description": "PATCH semantics: omitted fields stay unchanged, null clears an optional field. A no-op update creates no audit entry. `students` carries the complete roster and is reconciled into enrollments in the same transaction — added students are enrolled, dropped ones are removed — so a roster edit never costs one request per student. A new `teacherId` moves the roster, the schedule and every upcoming lesson to that teacher after a clash check. `schedule` only creates the first schedule (409 GROUP_SCHEDULE_EXISTS otherwise).",
         "operationId": "GroupsController_update",
         "parameters": [
           {
@@ -1908,6 +2039,16 @@
               }
             }
           },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
           "403": {
             "description": "OWNER role required",
             "content": {
@@ -1919,6 +2060,16 @@
             }
           },
           "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "409": {
             "description": "",
             "content": {
               "application/json": {
@@ -1998,6 +2149,76 @@
         ]
       }
     },
+    "/api/groups/{groupId}/attendance": {
+      "get": {
+        "description": "The current roster over the last `window` held lessons (default 8): tiles and one row per participant, worst first. Cancelled lessons are no one’s miss; participants on hold stay out of the group figures.",
+        "operationId": "GroupsController_getAttendance",
+        "parameters": [
+          {
+            "name": "groupId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "window",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 24,
+              "exclusiveMaximum": false,
+              "exclusiveMinimum": false,
+              "default": 8,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupAttendanceDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Group attendance over its last held lessons",
+        "tags": [
+          "groups"
+        ]
+      }
+    },
     "/api/groups/{groupId}/restore": {
       "post": {
         "operationId": "GroupsController_restore",
@@ -2058,7 +2279,7 @@
             "bearer": []
           }
         ],
-        "summary": "Restore a soft-deleted group (owner only)",
+        "summary": "Restore an archived group (owner only)",
         "tags": [
           "groups"
         ]
@@ -2951,6 +3172,138 @@
           }
         ],
         "summary": "Change a lesson status",
+        "tags": [
+          "scheduling"
+        ]
+      }
+    },
+    "/api/lessons/{lessonId}/attendance": {
+      "get": {
+        "description": "Participants are everyone already marked plus, for a group lesson, the live group roster.",
+        "operationId": "AttendanceController_get",
+        "parameters": [
+          {
+            "name": "lessonId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LessonAttendanceDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "A lesson's participants and their attendance marks",
+        "tags": [
+          "scheduling"
+        ]
+      },
+      "put": {
+        "description": "Sets the given participants’ marks; others keep theirs. Accepted once the lesson has started, unless it was cancelled (409 ATTENDANCE_NOT_MARKABLE). An unchanged mark writes nothing.",
+        "operationId": "AttendanceController_set",
+        "parameters": [
+          {
+            "name": "lessonId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetLessonAttendanceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LessonAttendanceDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark attendance for a lesson",
         "tags": [
           "scheduling"
         ]
@@ -6287,6 +6640,51 @@
                 "name": {
                   "type": "string"
                 },
+                "teacher": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "avatarKey": {
+                      "type": "string",
+                      "enum": [
+                        "user-1",
+                        "user-2",
+                        "user-3",
+                        "user-4",
+                        "user-5",
+                        "user-6",
+                        "user-7",
+                        "user-8",
+                        "user-9",
+                        "user-10"
+                      ],
+                      "nullable": true
+                    },
+                    "color": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "avatarKey",
+                    "color"
+                  ],
+                  "nullable": true
+                },
+                "capacity": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": true,
+                  "nullable": true
+                },
                 "pricePerLesson": {
                   "type": "integer",
                   "minimum": 0,
@@ -6395,11 +6793,40 @@
                       "timezone"
                     ]
                   }
+                },
+                "nextLesson": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "startsAtUtc": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "durationMin": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "startsAtUtc",
+                    "durationMin"
+                  ],
+                  "nullable": true
+                },
+                "paymentDue": {
+                  "type": "boolean"
                 }
               },
               "required": [
                 "id",
                 "name",
+                "teacher",
+                "capacity",
                 "pricePerLesson",
                 "currency",
                 "notes",
@@ -6407,7 +6834,9 @@
                 "status",
                 "activeStudentCount",
                 "students",
-                "schedules"
+                "schedules",
+                "nextLesson",
+                "paymentDue"
               ]
             }
           },
@@ -6440,6 +6869,111 @@
           "totalPages"
         ]
       },
+      "GroupSummaryDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "active": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "empty": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "archived": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "studentsInGroups": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "studioStudents": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "freeSeats": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "nullable": true
+          },
+          "lessonsThisWeek": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "lessonsToday": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "unpaidGroups": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "weekStart": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "weekEnd": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "total",
+          "active",
+          "empty",
+          "archived",
+          "studentsInGroups",
+          "studioStudents",
+          "freeSeats",
+          "lessonsThisWeek",
+          "lessonsToday",
+          "unpaidGroups",
+          "weekStart",
+          "weekEnd"
+        ]
+      },
+      "GroupOptionsDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "name"
+              ]
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
       "CreateGroupDto": {
         "type": "object",
         "properties": {
@@ -6447,6 +6981,17 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 120
+          },
+          "teacherId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "capacity": {
+            "type": "integer",
+            "minimum": 1,
+            "exclusiveMinimum": false,
+            "maximum": 500,
+            "exclusiveMaximum": false
           },
           "pricePerLesson": {
             "type": "integer",
@@ -6486,8 +7031,40 @@
               }
             },
             "required": [
-              "studentIds",
-              "teacherId"
+              "studentIds"
+            ]
+          },
+          "schedule": {
+            "type": "object",
+            "properties": {
+              "weekdays": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 7,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false,
+                  "maximum": 6,
+                  "exclusiveMaximum": false
+                }
+              },
+              "localTime": {
+                "type": "string",
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+              },
+              "durationMin": {
+                "type": "integer",
+                "minimum": 5,
+                "exclusiveMinimum": false,
+                "maximum": 720,
+                "exclusiveMaximum": false
+              }
+            },
+            "required": [
+              "weekdays",
+              "localTime",
+              "durationMin"
             ]
           }
         },
@@ -6508,6 +7085,17 @@
           },
           "name": {
             "type": "string"
+          },
+          "teacherId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "capacity": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "nullable": true
           },
           "pricePerLesson": {
             "type": "integer",
@@ -6548,6 +7136,8 @@
           "id",
           "workspaceId",
           "name",
+          "teacherId",
+          "capacity",
           "pricePerLesson",
           "currency",
           "notes",
@@ -6569,6 +7159,17 @@
           },
           "name": {
             "type": "string"
+          },
+          "teacherId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "capacity": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "nullable": true
           },
           "pricePerLesson": {
             "type": "integer",
@@ -6603,6 +7204,55 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "EMPTY"
+            ]
+          },
+          "teacher": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "name": {
+                "type": "string"
+              },
+              "avatarKey": {
+                "type": "string",
+                "enum": [
+                  "user-1",
+                  "user-2",
+                  "user-3",
+                  "user-4",
+                  "user-5",
+                  "user-6",
+                  "user-7",
+                  "user-8",
+                  "user-9",
+                  "user-10"
+                ],
+                "nullable": true
+              },
+              "color": {
+                "type": "string",
+                "nullable": true
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "avatarKey",
+              "color"
+            ],
+            "nullable": true
+          },
+          "teacherMismatch": {
+            "type": "boolean"
           },
           "enrollments": {
             "type": "array",
@@ -6687,12 +7337,34 @@
                         "user-10"
                       ],
                       "nullable": true
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "ACTIVE",
+                        "ON_HOLD",
+                        "ARCHIVED"
+                      ]
+                    },
+                    "languageLevel": {
+                      "type": "string",
+                      "enum": [
+                        "A1",
+                        "A2",
+                        "B1",
+                        "B2",
+                        "C1",
+                        "C2"
+                      ],
+                      "nullable": true
                     }
                   },
                   "required": [
                     "id",
                     "fullName",
-                    "avatarKey"
+                    "avatarKey",
+                    "status",
+                    "languageLevel"
                   ]
                 },
                 "teacher": {
@@ -6731,19 +7403,336 @@
                 "teacher"
               ]
             }
+          },
+          "schedules": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "weekdays": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "exclusiveMinimum": false,
+                    "maximum": 6,
+                    "exclusiveMaximum": false
+                  }
+                },
+                "localTime": {
+                  "type": "string"
+                },
+                "durationMin": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": true
+                },
+                "timezone": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "required": [
+                "weekdays",
+                "localTime",
+                "durationMin",
+                "timezone",
+                "id"
+              ]
+            }
+          },
+          "nextLesson": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "startsAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "durationMin": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true
+              },
+              "notes": {
+                "type": "string",
+                "nullable": true
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "SCHEDULED",
+                  "COMPLETED",
+                  "CANCELLED_CHARGED",
+                  "CANCELLED_UNCHARGED"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "startsAtUtc",
+              "durationMin",
+              "notes",
+              "status"
+            ],
+            "nullable": true
+          },
+          "lessonCounts": {
+            "type": "object",
+            "properties": {
+              "completed": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "upcoming": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              }
+            },
+            "required": [
+              "completed",
+              "upcoming"
+            ]
           }
         },
         "required": [
           "id",
           "workspaceId",
           "name",
+          "teacherId",
+          "capacity",
           "pricePerLesson",
           "currency",
           "notes",
           "createdAt",
           "updatedAt",
           "deletedAt",
-          "enrollments"
+          "status",
+          "teacher",
+          "teacherMismatch",
+          "enrollments",
+          "schedules",
+          "nextLesson",
+          "lessonCounts"
+        ]
+      },
+      "GroupAttendanceDto": {
+        "type": "object",
+        "properties": {
+          "window": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "lessons": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "startsAtUtc": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "SCHEDULED",
+                    "COMPLETED",
+                    "CANCELLED_CHARGED",
+                    "CANCELLED_UNCHARGED"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "startsAtUtc",
+                "status"
+              ]
+            }
+          },
+          "stats": {
+            "type": "object",
+            "properties": {
+              "lessons": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "held": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "rate": {
+                "type": "number",
+                "minimum": 0,
+                "exclusiveMinimum": false,
+                "maximum": 1,
+                "exclusiveMaximum": false,
+                "nullable": true
+              },
+              "previousRate": {
+                "type": "number",
+                "minimum": 0,
+                "exclusiveMinimum": false,
+                "maximum": 1,
+                "exclusiveMaximum": false,
+                "nullable": true
+              },
+              "misses": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "expected": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "cancelled": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "cancelledCharged": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "cancelledFree": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              }
+            },
+            "required": [
+              "lessons",
+              "held",
+              "rate",
+              "previousRate",
+              "misses",
+              "expected",
+              "cancelled",
+              "cancelledCharged",
+              "cancelledFree"
+            ]
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "enrollmentId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "student": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "fullName": {
+                      "type": "string"
+                    },
+                    "avatarKey": {
+                      "type": "string",
+                      "enum": [
+                        "user-1",
+                        "user-2",
+                        "user-3",
+                        "user-4",
+                        "user-5",
+                        "user-6",
+                        "user-7",
+                        "user-8",
+                        "user-9",
+                        "user-10"
+                      ],
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "fullName",
+                    "avatarKey"
+                  ]
+                },
+                "cells": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "present",
+                      "absent",
+                      "excused",
+                      "cancelled",
+                      "unmarked"
+                    ]
+                  }
+                },
+                "rate": {
+                  "type": "number",
+                  "minimum": 0,
+                  "exclusiveMinimum": false,
+                  "maximum": 1,
+                  "exclusiveMaximum": false,
+                  "nullable": true
+                },
+                "misses": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                },
+                "trailingMisses": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                },
+                "lastPresentAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                },
+                "hold": {
+                  "type": "boolean"
+                },
+                "risk": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "enrollmentId",
+                "student",
+                "cells",
+                "rate",
+                "misses",
+                "trailingMisses",
+                "lastPresentAt",
+                "hold",
+                "risk"
+              ]
+            }
+          }
+        },
+        "required": [
+          "window",
+          "lessons",
+          "stats",
+          "rows"
         ]
       },
       "UpdateGroupDto": {
@@ -6753,6 +7742,18 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 120
+          },
+          "teacherId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "capacity": {
+            "type": "integer",
+            "minimum": 1,
+            "exclusiveMinimum": false,
+            "maximum": 500,
+            "exclusiveMaximum": false,
+            "nullable": true
           },
           "pricePerLesson": {
             "type": "integer",
@@ -6795,8 +7796,40 @@
               }
             },
             "required": [
-              "studentIds",
-              "teacherId"
+              "studentIds"
+            ]
+          },
+          "schedule": {
+            "type": "object",
+            "properties": {
+              "weekdays": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 7,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false,
+                  "maximum": 6,
+                  "exclusiveMaximum": false
+                }
+              },
+              "localTime": {
+                "type": "string",
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+              },
+              "durationMin": {
+                "type": "integer",
+                "minimum": 5,
+                "exclusiveMinimum": false,
+                "maximum": 720,
+                "exclusiveMaximum": false
+              }
+            },
+            "required": [
+              "weekdays",
+              "localTime",
+              "durationMin"
             ]
           }
         }
@@ -7377,6 +8410,26 @@
                 "cancellationDeadlineHours": {
                   "type": "integer"
                 },
+                "attendance": {
+                  "type": "object",
+                  "properties": {
+                    "present": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": false
+                    },
+                    "marked": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": false
+                    }
+                  },
+                  "required": [
+                    "present",
+                    "marked"
+                  ],
+                  "nullable": true
+                },
                 "student": {
                   "type": "object",
                   "properties": {
@@ -7469,6 +8522,7 @@
                 "paidAt",
                 "notes",
                 "cancellationDeadlineHours",
+                "attendance",
                 "student",
                 "group",
                 "teacher",
@@ -7733,6 +8787,26 @@
           "cancellationDeadlineHours": {
             "type": "integer"
           },
+          "attendance": {
+            "type": "object",
+            "properties": {
+              "present": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "marked": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              }
+            },
+            "required": [
+              "present",
+              "marked"
+            ],
+            "nullable": true
+          },
           "student": {
             "type": "object",
             "properties": {
@@ -7825,6 +8899,7 @@
           "paidAt",
           "notes",
           "cancellationDeadlineHours",
+          "attendance",
           "student",
           "group",
           "teacher",
@@ -7888,6 +8963,137 @@
         },
         "required": [
           "targetStatus"
+        ]
+      },
+      "LessonAttendanceDto": {
+        "type": "object",
+        "properties": {
+          "lessonId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "startsAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "SCHEDULED",
+              "COMPLETED",
+              "CANCELLED_CHARGED",
+              "CANCELLED_UNCHARGED"
+            ]
+          },
+          "markable": {
+            "type": "boolean"
+          },
+          "participants": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "enrollmentId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "student": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "fullName": {
+                      "type": "string"
+                    },
+                    "avatarKey": {
+                      "type": "string",
+                      "enum": [
+                        "user-1",
+                        "user-2",
+                        "user-3",
+                        "user-4",
+                        "user-5",
+                        "user-6",
+                        "user-7",
+                        "user-8",
+                        "user-9",
+                        "user-10"
+                      ],
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "fullName",
+                    "avatarKey"
+                  ]
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "PRESENT",
+                    "ABSENT",
+                    "EXCUSED"
+                  ],
+                  "nullable": true
+                },
+                "markedAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                }
+              },
+              "required": [
+                "enrollmentId",
+                "student",
+                "status",
+                "markedAt"
+              ]
+            }
+          }
+        },
+        "required": [
+          "lessonId",
+          "startsAtUtc",
+          "status",
+          "markable",
+          "participants"
+        ]
+      },
+      "SetLessonAttendanceDto": {
+        "type": "object",
+        "properties": {
+          "marks": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 200,
+            "items": {
+              "type": "object",
+              "properties": {
+                "enrollmentId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "PRESENT",
+                    "ABSENT",
+                    "EXCUSED"
+                  ]
+                }
+              },
+              "required": [
+                "enrollmentId",
+                "status"
+              ]
+            }
+          }
+        },
+        "required": [
+          "marks"
         ]
       },
       "LessonSeriesListDto": {
@@ -8563,11 +9769,28 @@
                           },
                           "fullName": {
                             "type": "string"
+                          },
+                          "avatarKey": {
+                            "type": "string",
+                            "enum": [
+                              "user-1",
+                              "user-2",
+                              "user-3",
+                              "user-4",
+                              "user-5",
+                              "user-6",
+                              "user-7",
+                              "user-8",
+                              "user-9",
+                              "user-10"
+                            ],
+                            "nullable": true
                           }
                         },
                         "required": [
                           "id",
-                          "fullName"
+                          "fullName",
+                          "avatarKey"
                         ]
                       },
                       "oweMinor": {
@@ -8812,11 +10035,28 @@
                     },
                     "fullName": {
                       "type": "string"
+                    },
+                    "avatarKey": {
+                      "type": "string",
+                      "enum": [
+                        "user-1",
+                        "user-2",
+                        "user-3",
+                        "user-4",
+                        "user-5",
+                        "user-6",
+                        "user-7",
+                        "user-8",
+                        "user-9",
+                        "user-10"
+                      ],
+                      "nullable": true
                     }
                   },
                   "required": [
                     "id",
-                    "fullName"
+                    "fullName",
+                    "avatarKey"
                   ]
                 },
                 "oweMinor": {

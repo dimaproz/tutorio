@@ -438,6 +438,64 @@ async function main() {
   await ensureLesson(aliceGroup, at(2, 19)); // in two days
   await ensureLesson(aliceIndividual, at(-1, 9), 'COMPLETED'); // yesterday, done
 
+  // The group names its teacher and seats (older seeds predate both), and
+  // its recent evenings carry attendance so the group page has a history.
+  if (!group.teacherId || group.capacity === null) {
+    group = await prisma.group.update({
+      where: { id: group.id },
+      data: {
+        teacherId: group.teacherId ?? ownerTeacher.id,
+        capacity: group.capacity ?? 8,
+      },
+    });
+  }
+  const groupLessonAt = async (
+    startsAtUtc: Date,
+    status: 'COMPLETED' | 'CANCELLED_UNCHARGED',
+  ) =>
+    (await prisma.lesson.findFirst({
+      where: { workspaceId: workspace.id, groupId: group.id, startsAtUtc },
+    })) ??
+    prisma.lesson.create({
+      data: {
+        workspaceId: workspace.id,
+        groupId: group.id,
+        teacherId: ownerTeacher.id,
+        startsAtUtc,
+        durationMin: 60,
+        priceMinor: 30000,
+        currency: 'EUR',
+        status,
+        completedAt: status === 'COMPLETED' ? startsAtUtc : null,
+        cancelledAt: status === 'COMPLETED' ? null : startsAtUtc,
+        cancelledBy: status === 'COMPLETED' ? null : 'TEACHER',
+      },
+    });
+  const pastEvenings = [
+    await groupLessonAt(at(-14, 19), 'COMPLETED'),
+    await groupLessonAt(at(-10, 19), 'CANCELLED_UNCHARGED'),
+    await groupLessonAt(at(-7, 19), 'COMPLETED'),
+    await groupLessonAt(at(-3, 19), 'COMPLETED'),
+  ];
+  for (const lesson of pastEvenings) {
+    if (lesson.status !== 'COMPLETED') continue;
+    await prisma.lessonAttendance.upsert({
+      where: {
+        lessonId_enrollmentId: {
+          lessonId: lesson.id,
+          enrollmentId: aliceGroup.id,
+        },
+      },
+      create: {
+        workspaceId: workspace.id,
+        lessonId: lesson.id,
+        enrollmentId: aliceGroup.id,
+        status: lesson === pastEvenings[3] ? 'ABSENT' : 'PRESENT',
+      },
+      update: {},
+    });
+  }
+
   console.log('Seed complete.');
   console.log(`  Workspace: ${workspace.name} (${workspace.id})`);
   console.log(`  Owner:     ${OWNER_EMAIL} / ${DEMO_PASSWORD}`);

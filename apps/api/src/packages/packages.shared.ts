@@ -29,9 +29,12 @@ export const packageInclude = {
   shares: {
     include: {
       enrollment: {
-        select: { student: { select: { id: true, fullName: true } } },
+        select: {
+          student: { select: { id: true, fullName: true, avatarKey: true } },
+        },
       },
     },
+    orderBy: [{ enrollment: { student: { fullName: 'asc' } } }, { id: 'asc' }],
   },
   // Only settled money is reported as paid; a PENDING online payment is not
   // money in hand yet.
@@ -115,7 +118,11 @@ export function toPackageResponse(row: PackageRow): PackageResponse {
     shares: row.shares.map((share) => ({
       id: share.id,
       enrollmentId: share.enrollmentId,
-      student: share.enrollment.student,
+      student: {
+        ...share.enrollment.student,
+        avatarKey: share.enrollment.student
+          .avatarKey as PackageResponse['shares'][number]['student']['avatarKey'],
+      },
       oweMinor: share.oweMinor,
       paidMinor: share.paidMinor,
       paymentStatus: paymentStatusOf(share.oweMinor, share.paidMinor),

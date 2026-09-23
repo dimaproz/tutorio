@@ -108,6 +108,32 @@ export class AuditService {
     });
   }
 
+  /**
+   * Writes several audit rows in one statement, with the same transaction and
+   * no-op rules as `record`. Used by bulk commands such as a roster save.
+   */
+  async recordMany(
+    tx: Prisma.TransactionClient,
+    entries: readonly AuditEntry[],
+  ): Promise<void> {
+    const rows = entries
+      .filter((entry) => entry.action !== 'UPDATE' || entry.changes != null)
+      .map((entry) => ({
+        workspaceId: entry.workspaceId,
+        actorId: entry.actorId,
+        action: entry.action,
+        entity: entry.entity,
+        entityId: entry.entityId,
+        diff:
+          entry.changes == null
+            ? Prisma.DbNull
+            : (entry.changes as Prisma.InputJsonValue),
+      }));
+    if (rows.length > 0) {
+      await tx.auditLog.createMany({ data: rows });
+    }
+  }
+
   /** Owner-only, workspace-scoped, newest-first audit trail with filters. */
   async list(
     auth: AuthenticatedUser,

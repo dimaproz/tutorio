@@ -392,12 +392,55 @@ export interface paths {
         };
         /**
          * List workspace groups
-         * @description Paginated summaries with active student counts. state=deleted|all is owner-only.
+         * @description Paginated rows with the live roster, schedule, teacher, next lesson and whether money is outstanding. Filters: search, state (deleted|all is owner-only), status, studentId, teacherId, weekday (0 = Sunday), payment=unpaid. Every filter is answered by the API.
          */
         get: operations["GroupsController_list"];
         put?: never;
-        /** Create a group */
+        /**
+         * Create a group
+         * @description Optionally with a roster and a first recurring schedule, in one transaction. The teacher defaults to the roster teacher, then to the only active teacher of the workspace. A schedule needs a teacher (400 GROUP_TEACHER_REQUIRED) and a free calendar (409 SCHEDULE_CONFLICT).
+         */
         post: operations["GroupsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/groups/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Group collection headline
+         * @description Tab counts (live, active, empty, archived) and the four metrics: students in groups, free seats, group lessons this week and today (workspace timezone) and groups with money outstanding.
+         */
+        get: operations["GroupsController_summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/groups/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Live groups by name
+         * @description Id and name of every live group, for filters and pickers.
+         */
+        get: operations["GroupsController_options"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -411,7 +454,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get a group with enrollment summaries */
+        /**
+         * The group page
+         * @description The group with its live roster, schedule, teacher, next lesson and lesson counts. An archived group stays readable so it can be restored.
+         */
         get: operations["GroupsController_getDetail"];
         put?: never;
         post?: never;
@@ -424,9 +470,29 @@ export interface paths {
         head?: never;
         /**
          * Update a group
-         * @description PATCH semantics: omitted fields stay unchanged, null clears an optional field. A no-op update creates no audit entry. `students` carries the complete roster and is reconciled into enrollments in the same transaction — added students are enrolled, dropped ones are archived — so a roster edit never costs one request per student.
+         * @description PATCH semantics: omitted fields stay unchanged, null clears an optional field. A no-op update creates no audit entry. `students` carries the complete roster and is reconciled into enrollments in the same transaction — added students are enrolled, dropped ones are removed — so a roster edit never costs one request per student. A new `teacherId` moves the roster, the schedule and every upcoming lesson to that teacher after a clash check. `schedule` only creates the first schedule (409 GROUP_SCHEDULE_EXISTS otherwise).
          */
         patch: operations["GroupsController_update"];
+        trace?: never;
+    };
+    "/api/groups/{groupId}/attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Group attendance over its last held lessons
+         * @description The current roster over the last `window` held lessons (default 8): tiles and one row per participant, worst first. Cancelled lessons are no one’s miss; participants on hold stay out of the group figures.
+         */
+        get: operations["GroupsController_getAttendance"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/groups/{groupId}/restore": {
@@ -438,7 +504,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Restore a soft-deleted group (owner only) */
+        /** Restore an archived group (owner only) */
         post: operations["GroupsController_restore"];
         delete?: never;
         options?: never;
@@ -601,6 +667,30 @@ export interface paths {
          * @description Enforces the lesson state machine. Cancelling requires cancelledBy. Charged terminal states consume one package credit and restoration appends an exact compensation.
          */
         patch: operations["LessonsController_transition"];
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A lesson's participants and their attendance marks
+         * @description Participants are everyone already marked plus, for a group lesson, the live group roster.
+         */
+        get: operations["AttendanceController_get"];
+        /**
+         * Mark attendance for a lesson
+         * @description Sets the given participants’ marks; others keep theirs. Accepted once the lesson has started, unless it was cancelled (409 ATTENDANCE_NOT_MARKABLE). An unchanged mark writes nothing.
+         */
+        put: operations["AttendanceController_set"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/lesson-series": {
@@ -1295,6 +1385,15 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 name: string;
+                teacher: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    /** @enum {string|null} */
+                    avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
+                    color: string | null;
+                } | null;
+                capacity: number | null;
                 pricePerLesson: number | null;
                 /** @enum {string|null} */
                 currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
@@ -1317,14 +1416,48 @@ export interface components {
                     durationMin: number;
                     timezone: string;
                 }[];
+                nextLesson: {
+                    /** Format: uuid */
+                    id: string;
+                    /** Format: date-time */
+                    startsAtUtc: string;
+                    durationMin: number;
+                } | null;
+                paymentDue: boolean;
             }[];
             page: number;
             pageSize: number;
             total: number;
             totalPages: number;
         };
+        GroupSummaryDto: {
+            total: number;
+            active: number;
+            empty: number;
+            archived: number;
+            studentsInGroups: number;
+            studioStudents: number;
+            freeSeats: number | null;
+            lessonsThisWeek: number;
+            lessonsToday: number;
+            unpaidGroups: number;
+            /** Format: date-time */
+            weekStart: string;
+            /** Format: date-time */
+            weekEnd: string;
+        };
+        GroupOptionsDto: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            }[];
+        };
         CreateGroupDto: {
             name: string;
+            /** Format: uuid */
+            teacherId?: string;
+            capacity?: number;
             pricePerLesson?: number;
             /** @enum {string} */
             currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
@@ -1332,7 +1465,12 @@ export interface components {
             students?: {
                 studentIds: string[];
                 /** Format: uuid */
-                teacherId: string;
+                teacherId?: string;
+            };
+            schedule?: {
+                weekdays: number[];
+                localTime: string;
+                durationMin: number;
             };
         };
         GroupDto: {
@@ -1341,6 +1479,9 @@ export interface components {
             /** Format: uuid */
             workspaceId: string;
             name: string;
+            /** Format: uuid */
+            teacherId: string | null;
+            capacity: number | null;
             pricePerLesson: number | null;
             /** @enum {string|null} */
             currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
@@ -1358,6 +1499,9 @@ export interface components {
             /** Format: uuid */
             workspaceId: string;
             name: string;
+            /** Format: uuid */
+            teacherId: string | null;
+            capacity: number | null;
             pricePerLesson: number | null;
             /** @enum {string|null} */
             currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
@@ -1368,6 +1512,17 @@ export interface components {
             updatedAt: string;
             /** Format: date-time */
             deletedAt: string | null;
+            /** @enum {string} */
+            status: "ACTIVE" | "EMPTY";
+            teacher: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                /** @enum {string|null} */
+                avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
+                color: string | null;
+            } | null;
+            teacherMismatch: boolean;
             enrollments: {
                 /** Format: uuid */
                 id: string;
@@ -1391,6 +1546,10 @@ export interface components {
                     fullName: string;
                     /** @enum {string|null} */
                     avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
+                    /** @enum {string} */
+                    status: "ACTIVE" | "ON_HOLD" | "ARCHIVED";
+                    /** @enum {string|null} */
+                    languageLevel: "A1" | "A2" | "B1" | "B2" | "C1" | "C2" | null;
                 };
                 teacher: {
                     /** Format: uuid */
@@ -1399,9 +1558,75 @@ export interface components {
                     color: string | null;
                 };
             }[];
+            schedules: {
+                weekdays: number[];
+                localTime: string;
+                durationMin: number;
+                timezone: string;
+                /** Format: uuid */
+                id: string;
+            }[];
+            nextLesson: {
+                /** Format: uuid */
+                id: string;
+                /** Format: date-time */
+                startsAtUtc: string;
+                durationMin: number;
+                notes: string | null;
+                /** @enum {string} */
+                status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED";
+            } | null;
+            lessonCounts: {
+                completed: number;
+                upcoming: number;
+            };
+        };
+        GroupAttendanceDto: {
+            window: number;
+            lessons: {
+                /** Format: uuid */
+                id: string;
+                /** Format: date-time */
+                startsAtUtc: string;
+                /** @enum {string} */
+                status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED";
+            }[];
+            stats: {
+                lessons: number;
+                held: number;
+                rate: number | null;
+                previousRate: number | null;
+                misses: number;
+                expected: number;
+                cancelled: number;
+                cancelledCharged: number;
+                cancelledFree: number;
+            };
+            rows: {
+                /** Format: uuid */
+                enrollmentId: string;
+                student: {
+                    /** Format: uuid */
+                    id: string;
+                    fullName: string;
+                    /** @enum {string|null} */
+                    avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
+                };
+                cells: ("present" | "absent" | "excused" | "cancelled" | "unmarked")[];
+                rate: number | null;
+                misses: number;
+                trailingMisses: number;
+                /** Format: date-time */
+                lastPresentAt: string | null;
+                hold: boolean;
+                risk: boolean;
+            }[];
         };
         UpdateGroupDto: {
             name?: string;
+            /** Format: uuid */
+            teacherId?: string;
+            capacity?: number | null;
             pricePerLesson?: number | null;
             /** @enum {string|null} */
             currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
@@ -1409,7 +1634,12 @@ export interface components {
             students?: {
                 studentIds: string[];
                 /** Format: uuid */
-                teacherId: string;
+                teacherId?: string;
+            };
+            schedule?: {
+                weekdays: number[];
+                localTime: string;
+                durationMin: number;
             };
         };
         EnrollmentListDto: {
@@ -1570,6 +1800,10 @@ export interface components {
                 paidAt: string | null;
                 notes: string | null;
                 cancellationDeadlineHours: number;
+                attendance: {
+                    present: number;
+                    marked: number;
+                } | null;
                 student: {
                     /** Format: uuid */
                     id: string;
@@ -1668,6 +1902,10 @@ export interface components {
             paidAt: string | null;
             notes: string | null;
             cancellationDeadlineHours: number;
+            attendance: {
+                present: number;
+                marked: number;
+            } | null;
             student: {
                 /** Format: uuid */
                 id: string;
@@ -1707,6 +1945,38 @@ export interface components {
             /** @enum {string} */
             cancelledBy?: "TEACHER" | "STUDENT" | "GROUP";
             cancelledReason?: string | null;
+        };
+        LessonAttendanceDto: {
+            /** Format: uuid */
+            lessonId: string;
+            /** Format: date-time */
+            startsAtUtc: string;
+            /** @enum {string} */
+            status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED";
+            markable: boolean;
+            participants: {
+                /** Format: uuid */
+                enrollmentId: string;
+                student: {
+                    /** Format: uuid */
+                    id: string;
+                    fullName: string;
+                    /** @enum {string|null} */
+                    avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
+                };
+                /** @enum {string|null} */
+                status: "PRESENT" | "ABSENT" | "EXCUSED" | null;
+                /** Format: date-time */
+                markedAt: string | null;
+            }[];
+        };
+        SetLessonAttendanceDto: {
+            marks: {
+                /** Format: uuid */
+                enrollmentId: string;
+                /** @enum {string} */
+                status: "PRESENT" | "ABSENT" | "EXCUSED";
+            }[];
         };
         LessonSeriesListDto: {
             items: {
@@ -1892,6 +2162,8 @@ export interface components {
                         /** Format: uuid */
                         id: string;
                         fullName: string;
+                        /** @enum {string|null} */
+                        avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
                     };
                     oweMinor: number;
                     paidMinor: number;
@@ -1959,6 +2231,8 @@ export interface components {
                     /** Format: uuid */
                     id: string;
                     fullName: string;
+                    /** @enum {string|null} */
+                    avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
                 };
                 oweMinor: number;
                 paidMinor: number;
@@ -3102,7 +3376,10 @@ export interface operations {
                 state?: "active" | "deleted" | "all";
                 status?: "ACTIVE" | "EMPTY";
                 studentId?: string;
-                sort?: "name" | "pricePerLesson" | "activeStudentCount" | "schedule";
+                teacherId?: string;
+                weekday?: number;
+                payment?: "unpaid";
+                sort?: "name" | "pricePerLesson" | "activeStudentCount" | "schedule" | "createdAt";
                 order?: "asc" | "desc";
             };
             header?: never;
@@ -3148,6 +3425,78 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GroupDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    GroupsController_summary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupSummaryDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    GroupsController_options: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupOptionsDto"];
                 };
             };
             /** @description OWNER role required */
@@ -3264,6 +3613,62 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GroupDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    GroupsController_getAttendance: {
+        parameters: {
+            query?: {
+                window?: number;
+            };
+            header?: never;
+            path: {
+                groupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupAttendanceDto"];
                 };
             };
             /** @description OWNER role required */
@@ -3796,6 +4201,94 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LessonDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    AttendanceController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonAttendanceDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    AttendanceController_set: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetLessonAttendanceDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonAttendanceDto"];
                 };
             };
             /** @description OWNER role required */
