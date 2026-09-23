@@ -78,12 +78,13 @@ export function useAllPackagesQuery(
             state: filters.state,
           })}`,
         );
+      // The first page says how many there are; the rest are read at once.
       const first = await fetchPage(1);
-      const items = [...first.items];
       const lastPage = Math.min(first.totalPages, PACKAGE_PAGES_MAX);
-      for (let page = 2; page <= lastPage; page += 1) {
-        items.push(...(await fetchPage(page)).items);
-      }
+      const rest = await Promise.all(
+        Array.from({ length: Math.max(lastPage - 1, 0) }, (_, index) => fetchPage(index + 2)),
+      );
+      const items = [...first.items, ...rest.flatMap((page) => page.items)];
       return { ...first, items, page: 1, pageSize: items.length || PACKAGE_PAGE_SIZE_MAX };
     },
     placeholderData: (previous) => previous,
