@@ -44,9 +44,8 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* Studio semantic colours. Tint and ink surfaces are theme-independent by
-     design: an ink ticket stays ink in both themes, and every tint ships with
-     its own foreground pair. */
+  /* Studio semantic colours. Every painted surface ships with its own
+     foreground pair, and every pair is redefined by the dark theme. */
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
   --color-brand-soft: var(--brand-soft);
@@ -78,6 +77,26 @@
   --color-stat-track: var(--stat-track);
   --color-stat-divider: var(--stat-divider);
 
+  /* Pairs that let one light value do two jobs apart in the dark theme: body
+     text on any tint, small indigo tiles versus the indigo hero, the chip on a
+     tint, the chart track on a tint, and the one highlight card. */
+  --color-tint-foreground: var(--tint-foreground);
+  --color-tint-indigo-meta: var(--tint-indigo-meta);
+  --color-tile-indigo: var(--tile-indigo);
+  --color-tile-indigo-foreground: var(--tile-indigo-foreground);
+  --color-chip-on-tint: var(--chip-on-tint);
+  --color-chip-on-tint-foreground: var(--chip-on-tint-foreground);
+  --color-stat-track-on-tint: var(--stat-track-on-tint);
+  --color-feature: var(--feature);
+  --color-feature-foreground: var(--feature-foreground);
+  --color-feature-heading: var(--feature-heading);
+  --color-feature-muted: var(--feature-muted);
+  --color-feature-soft: var(--feature-soft);
+  --color-feature-line: var(--feature-line);
+  --color-raised: var(--raised);
+  --color-raised-line: var(--raised-line);
+  --color-scrim: var(--scrim);
+
   /* Studio interaction colours: the hover and pressed values the handoff
      specifies for each painted surface. */
   --color-line-hover: var(--line-hover);
@@ -90,16 +109,18 @@
   --color-ink-line-hover: var(--ink-line-hover);
   --color-hold-mark: var(--hold-mark);
 
-  /* Studio elevation. Each shadow belongs to one kind of surface. */
-  --shadow-lift: 0 8px 18px -10px rgb(27 31 59 / 0.55);
+  /* Studio elevation. Each shadow belongs to one kind of surface. The colour
+     comes from --shadow-ink and the dark theme raises every alpha by
+     --shadow-boost: a navy shadow is invisible on a navy page. */
+  --shadow-lift: 0 8px 18px -10px rgb(var(--shadow-ink) / calc(0.55 + var(--shadow-boost)));
   --shadow-lift-danger: 0 8px 18px -10px rgb(178 60 22 / 0.6);
-  --shadow-raise: 0 6px 16px -8px rgb(27 31 59 / 0.35);
+  --shadow-raise: 0 6px 16px -8px rgb(var(--shadow-ink) / calc(0.35 + var(--shadow-boost)));
   --shadow-hairline: 0 1px 0 var(--border);
-  --shadow-popover: 0 24px 48px -16px rgb(27 31 59 / 0.28);
-  --shadow-menu: 0 28px 56px -18px rgb(27 31 59 / 0.35);
-  --shadow-bar: 0 24px 48px -20px rgb(27 31 59 / 0.35);
-  --shadow-dialog: 0 32px 80px -20px rgb(27 31 59 / 0.55);
-  --shadow-toast: 0 18px 40px -16px rgb(27 31 59 / 0.5);
+  --shadow-popover: 0 24px 48px -16px rgb(var(--shadow-ink) / calc(0.28 + var(--shadow-boost)));
+  --shadow-menu: 0 28px 56px -18px rgb(var(--shadow-ink) / calc(0.35 + var(--shadow-boost)));
+  --shadow-bar: 0 24px 48px -20px rgb(var(--shadow-ink) / calc(0.35 + var(--shadow-boost)));
+  --shadow-dialog: 0 32px 80px -20px rgb(var(--shadow-ink) / calc(0.55 + var(--shadow-boost)));
+  --shadow-toast: 0 18px 40px -16px rgb(var(--shadow-ink) / calc(0.5 + var(--shadow-boost)));
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -125,7 +146,12 @@
   --radius-hero: 32px;
 }
 
-:root {
+/* The light palette. `.surface-light` pins it for illustrations that sit on a
+   tint in both themes (the auth promo panel): everything inside reads the light
+   values, so a card on the tint stays a white card even in the dark theme. */
+:root,
+.surface-light,
+.dark .surface-light {
   --card: #ffffff;
   --card-foreground: #1b1f3b;
   --popover: #ffffff;
@@ -204,92 +230,178 @@
   --brand-line: #b9bcf2;
   --ink-line-hover: #5a6096;
   --hold-mark: #ffd27a;
+
+  --tint-foreground: #1b1f3b;
+  --tint-indigo-meta: #2a2f55;
+  --tile-indigo: #e6e8ff;
+  --tile-indigo-foreground: #4b3fd0;
+  --chip-on-tint: rgb(255 255 255 / 0.6);
+  --chip-on-tint-foreground: #4b3fd0;
+  --stat-track-on-tint: rgb(27 31 59 / 0.12);
+  --feature: #1b1f3b;
+  --feature-foreground: #ffffff;
+  --feature-heading: #9ed8ff;
+  --feature-muted: #b5bbd6;
+  --feature-soft: #2a2f55;
+  --feature-line: #3a4070;
+  --raised: #ffffff;
+  --raised-line: transparent;
+  --scrim: rgb(27 31 59 / 0.46);
+
+  --shadow-ink: 27 31 59;
+  --shadow-boost: 0;
+}
+
+.surface-light,
+.dark .surface-light {
+  color-scheme: light;
 }
 
 .dark {
-  --background: oklch(0.147 0.004 49.25);
-  --foreground: oklch(0.985 0.001 106.423);
-  --card: oklch(0.216 0.006 56.043);
-  --card-foreground: oklch(0.985 0.001 106.423);
-  --popover: oklch(0.216 0.006 56.043);
-  --popover-foreground: oklch(0.985 0.001 106.423);
-  --primary: oklch(0.707 0.165 254.624);
-  --primary-foreground: oklch(0.147 0.004 49.25);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.268 0.007 34.298);
-  --muted-foreground: oklch(0.709 0.01 56.259);
-  --accent: oklch(0.268 0.007 34.298);
-  --accent-foreground: oklch(0.985 0.001 106.423);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.145 0 0);
-  --success: oklch(0.792 0.209 151.711);
-  --success-foreground: oklch(0.145 0 0);
-  --warning: oklch(0.828 0.189 84.429);
-  --warning-foreground: oklch(0.145 0 0);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.553 0.013 58.071);
-  --chart-1: oklch(0.879 0.169 91.605);
-  --chart-2: oklch(0.769 0.188 70.08);
-  --chart-3: oklch(0.666 0.179 58.318);
-  --chart-4: oklch(0.555 0.163 48.998);
-  --chart-5: oklch(0.473 0.137 46.201);
-  --sidebar: oklch(0.216 0.006 56.043);
-  --sidebar-foreground: oklch(0.985 0.001 106.423);
-  /* The active nav item is a painted indigo surface, so it keeps its light
-     value: the preset's dark blue only reaches 3.45:1 against its own
-     foreground. */
+  color-scheme: dark;
+
+  /* Page and paper -------------------------------------------------------- */
+  --background: #0e1020;
+  --foreground: #e7e9f5;
+  --card: #171a2e;
+  --card-foreground: #e7e9f5;
+  --popover: #1b1f33;
+  --popover-foreground: #e7e9f5;
+
+  --secondary: #232741;
+  --secondary-foreground: #e7e9f5;
+  --muted: #232741;
+  --muted-foreground: #9aa2c4;
+  --accent: #232741;
+  --accent-foreground: #e7e9f5;
+
+  --border: #2c3150;
+  --input: #2c3150;
+  --ring: #7d82ff;
+
+  /* Interaction ----------------------------------------------------------- */
+  --surface-hover: #1e2238;
+  --paper-hover: #232741;
+  --secondary-hover: #2b3050;
+  --line-hover: #3a4068;
+
+  /* Brand ------------------------------------------------------------------
+     `primary` is a painted surface: on a dark page the near-black light value
+     disappears, so the primary button becomes the indigo itself.
+     `brand` is ink (links, chart bars, focus accents) and has to lift off the
+     dark ground, so it goes the other way — light lavender. */
+  --primary: #4b4fe0;
+  --primary-foreground: #ffffff;
+  --primary-hover: #5a5fea;
+  --brand: #a9aeff;
+  --brand-foreground: #0e1020;
+  --brand-line: #5a6096;
+  --brand-soft: #9ed8ff;
+  --brand-soft-foreground: #0e1020;
+  --brand-soft-hover: #84ccff;
+
+  /* Semantic colours -------------------------------------------------------
+     Each of these is used BOTH as a painted surface and as ink (text-destructive,
+     text-success). On a dark ground the ink reading wins: the hue is lifted and
+     the paired foreground goes dark. */
+  --destructive: #ff7a55;
+  --destructive-foreground: #1a0803;
+  --destructive-hover: #ff9370;
+  --success: #4fd39f;
+  --success-foreground: #05291c;
+  --warning: #f0b95e;
+  --warning-foreground: #2a1b02;
+
+  /* Charts ---------------------------------------------------------------- */
+  --chart-1: #7d82ff;
+  --chart-2: #9ed8ff;
+  --chart-3: #4fd39f;
+  --chart-4: #f0b95e;
+  --chart-5: #ff9b7a;
+
+  /* Sidebar ----------------------------------------------------------------
+     One step darker than a card, so the rail reads as chrome and the content
+     cards float above it. */
+  --sidebar: #14172b;
+  --sidebar-foreground: #e7e9f5;
   --sidebar-primary: #4b4fe0;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: oklch(0.268 0.007 34.298);
-  --sidebar-accent-foreground: oklch(0.985 0.001 106.423);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.553 0.013 58.071);
+  --sidebar-accent: #232741;
+  --sidebar-accent-foreground: #e7e9f5;
+  --sidebar-border: #262b47;
+  --sidebar-ring: #7d82ff;
 
-  /* Dark theme is deliberately out of the Studio redesign scope. Tint and ink
-     surfaces keep their light values because each one is a painted surface with
-     its own foreground pair, so contrast stays AA. Only the tokens that
-     describe the page itself are re-pointed at the dark palette. A full dark
-     palette is a tracked follow-up. */
-  /* Brand is a colour, not a painted surface: as link and chart ink it has to
-     lift off a dark ground to stay readable. */
-  --brand: #8f93f2;
-  --surface-hover: oklch(0.268 0.007 34.298);
-  --stat-track: oklch(1 0 0 / 16%);
-  --stat-divider: oklch(1 0 0 / 12%);
-  --line-hover: oklch(1 0 0 / 22%);
-  --primary-hover: color-mix(in oklch, var(--primary), white 12%);
-  --paper-hover: oklch(0.3 0.007 34.298);
-  --secondary-hover: oklch(0.31 0.006 286.033);
-}
+  /* Tints ------------------------------------------------------------------
+     No longer theme-independent: a light tint on a dark page is a flashlight.
+     Each tint keeps its hue and inverts its lightness; every tint reads body
+     text through the single `--tint-foreground` token. */
+  --tint-foreground: #e7e9f5;
+  --tint-indigo: #232a56;
+  /* Accent ink on the indigo tint (chips, bullets, links): the lavender of the
+     approved screens, 6.63:1 on the tint and 8.32:1 on a card. */
+  --tint-indigo-foreground: #a9aeff;
+  --tint-indigo-muted: #c7cce6;
+  --tint-indigo-meta: #c7cce6;
+  /* Wallpaper: darker than the hero, never lighter. */
+  --tint-indigo-glyph: #2a3164;
+  /* Surfaces under ~64px are tiles; at the hero's value they would vanish. */
+  --tile-indigo: #343c7f;
+  --tile-indigo-foreground: #cfd4ff;
+  --tint-sky: #182543;
+  --tint-sky-muted: #9aa6c8;
+  --tint-info: #1c2550;
+  --tint-info-foreground: #a3b4ff;
+  --tint-success: #123a2c;
+  --tint-success-foreground: #68d6a8;
+  --tint-warning: #3b2f12;
+  --tint-warning-foreground: #f0c36a;
+  --tint-danger: #3b2018;
+  --tint-danger-foreground: #ff9b7a;
+  --chip-on-tint: rgb(169 174 255 / 0.18);
+  --chip-on-tint-foreground: #c9ceff;
 
-/* A painted light surface that keeps its light palette in both themes, for
-   illustrations that sit on a tint (the auth promo panel). Everything inside
-   reads the light values, so a card on the tint stays a white card. */
-.surface-light,
-.dark .surface-light {
-  --background: #f3f5fa;
-  --foreground: #1b1f3b;
-  --card: #ffffff;
-  --card-foreground: #1b1f3b;
-  --popover: #ffffff;
-  --popover-foreground: #1b1f3b;
-  --primary: #1b1f3b;
-  --primary-foreground: #ffffff;
-  --secondary: #eef1fb;
-  --secondary-foreground: #1b1f3b;
-  --muted: #eef1fb;
-  --muted-foreground: #5e6582;
-  --accent: #eef1fb;
-  --accent-foreground: #1b1f3b;
-  --border: #e2e6f0;
-  --input: #e2e6f0;
-  --brand: #4b4fe0;
-  --surface-hover: #f7f9fd;
-  --stat-track: #e8ebf4;
-  --stat-divider: #eef0f6;
-  color-scheme: light;
+  /* Marks and lifecycle --------------------------------------------------- */
+  --danger-mark: #ff9b7a;
+  --hold-mark: #f0c36a;
+  --status-active: #4fd39f;
+  --status-hold: #f0b95e;
+  --status-archived: #8a92b4;
+
+  /* Ink: the deep neutral surface (stat blocks, toasts) ------------------- */
+  --ink: #141833;
+  --ink-foreground: #e7e9f5;
+  --ink-soft: #1e2340;
+  --ink-line: #2c3150;
+  --ink-muted: #a7aecc;
+  --ink-line-hover: #5a6096;
+
+  /* Feature: the one highlight card (next lesson) -------------------------
+     In light it is the ink card; on a dark page a near-black card disappears,
+     so it becomes the one saturated accent. */
+  --feature: #4348d6;
+  --feature-foreground: #ffffff;
+  --feature-heading: #bfe3ff;
+  --feature-muted: #cdd1ff;
+  --feature-soft: rgb(255 255 255 / 0.12);
+  --feature-line: rgb(255 255 255 / 0.18);
+
+  /* Charts inside stat blocks --------------------------------------------- */
+  --stat-track: rgb(255 255 255 / 0.14);
+  --stat-divider: rgb(255 255 255 / 0.10);
+  --stat-track-on-tint: rgb(255 255 255 / 0.14);
+
+  /* Raised paper: the white button on a tint lifts off it with a hairline. */
+  --raised: #232741;
+  --raised-line: #3a4068;
+
+  /* Modal scrim: near-black, since the ink would lighten a dark page. */
+  --scrim: rgb(2 4 12 / 0.6);
+
+  /* Elevation -------------------------------------------------------------
+     Shadows are mixed from --shadow-ink. On a dark ground a navy shadow is
+     invisible, so it goes to near-black and each alpha is raised one step. */
+  --shadow-ink: 2 4 12;
+  --shadow-boost: 0.1;
 }
 
 @layer base {
