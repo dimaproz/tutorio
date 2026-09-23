@@ -89,7 +89,8 @@ export function AuthShell({ localeControl, children, variant }: AuthShellProps) 
           <Logo compact />
           {localeControl}
         </div>
-        <div className="relative flex flex-col gap-3">
+        {/* Marketing copy is decoration: it must not be read before the form. */}
+        <div aria-hidden="true" className="relative flex flex-col gap-3">
           <Badge variant="on-tint" size="lg">
             {t('chip')}
           </Badge>
@@ -119,7 +120,10 @@ export function AuthShell({ localeControl, children, variant }: AuthShellProps) 
 
       {/* Desktop panel: decoration and a headline, never needed to sign in.
           The split is 40 / 60; below lg the form card has the page alone. */}
-      <section className="surface-light relative hidden min-w-0 basis-3/5 flex-col justify-between gap-10 overflow-hidden rounded-hero bg-tint-indigo p-14 text-tint-foreground lg:flex">
+      <section
+        aria-hidden="true"
+        className="surface-light relative hidden min-w-0 basis-3/5 flex-col justify-between gap-10 overflow-hidden rounded-hero bg-tint-indigo p-14 text-tint-foreground lg:flex"
+      >
         <TintGround />
         <div className="relative flex max-w-145 flex-col gap-5">
           <Badge variant="on-tint" size="lg">
@@ -135,7 +139,7 @@ export function AuthShell({ localeControl, children, variant }: AuthShellProps) 
             {t('headline')}
           </p>
         </div>
-        <div aria-hidden="true" className="relative">
+        <div className="relative">
           {kind === 'register' ? <AuthPromoRegister /> : <AuthPromoLogin />}
         </div>
       </section>
