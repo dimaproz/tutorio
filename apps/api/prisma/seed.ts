@@ -117,7 +117,16 @@ async function main() {
       where: { workspaceId: workspace.id, fullName: data.fullName },
     });
     if (existing) {
-      return existing;
+      // Fill fields added after the row was first seeded, never overwrite.
+      const missing = Object.fromEntries(
+        Object.entries(data).filter(
+          ([key, value]) =>
+            value != null && existing[key as keyof typeof existing] == null,
+        ),
+      );
+      return Object.keys(missing).length > 0
+        ? prisma.parent.update({ where: { id: existing.id }, data: missing })
+        : existing;
     }
     const created = await prisma.parent.create({
       data: { workspaceId: workspace.id, ...data },
@@ -171,6 +180,12 @@ async function main() {
     notes: 'Primary contact for billing questions.',
   });
   await ensureStudentParentLink(alice.id, irynaParent.id);
+  // A contact not yet linked to anyone, so the "No students" filter has a row.
+  await ensureParent({
+    fullName: 'Mariia Demo',
+    telegramUsername: '@mariia_demo',
+    notes: 'Enquired about lessons for a younger sibling.',
+  });
   const bohdan = await ensureStudent({
     fullName: 'Bohdan Demo',
     timezone: 'Europe/Warsaw',

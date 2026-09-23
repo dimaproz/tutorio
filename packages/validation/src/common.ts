@@ -121,3 +121,9 @@ export const BUSINESS_ERROR_CODES = [
 export const businessErrorCodeSchema = z.enum(BUSINESS_ERROR_CODES);
 
 export type BusinessErrorCode = z.infer<typeof businessErrorCodeSchema>;
+
+// CEFR levels. Shared here because both the student record and a parent's
+// roster ref carry one, and students.ts already imports from parents.ts.
+export const STUDENT_LANGUAGE_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const;
+export const studentLanguageLevelSchema = z.enum(STUDENT_LANGUAGE_LEVELS);
+export type StudentLanguageLevelDto = z.infer<typeof studentLanguageLevelSchema>;

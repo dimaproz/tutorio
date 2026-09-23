@@ -1219,40 +1219,116 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
         .set('Authorization', auth(ownerA))
         .send({ fullName: 'Aaa Unlinked Parent' })
         .expect(201);
+      try {
+        const unlinked = await server()
+          .get('/api/parents')
+          .query({ linked: 'none', pageSize: 100 })
+          .set('Authorization', auth(ownerA))
+          .expect(200);
+        const unlinkedIds = unlinked.body.items.map(
+          (item: { id: string }) => item.id,
+        );
+        expect(unlinkedIds).toContain(lonely.body.id);
+        expect(unlinkedIds).not.toContain(parentId);
+        expect(
+          unlinked.body.items.every(
+            (item: { students: unknown[] }) => item.students.length === 0,
+          ),
+        ).toBe(true);
 
-      const unlinked = await server()
-        .get('/api/parents')
-        .query({ linked: 'none', pageSize: 100 })
-        .set('Authorization', auth(ownerA))
-        .expect(200);
-      const unlinkedIds = unlinked.body.items.map(
-        (item: { id: string }) => item.id,
-      );
-      expect(unlinkedIds).toContain(lonely.body.id);
-      expect(unlinkedIds).not.toContain(parentId);
-      expect(
-        unlinked.body.items.every(
-          (item: { students: unknown[] }) => item.students.length === 0,
-        ),
-      ).toBe(true);
+        const newest = await server()
+          .get('/api/parents')
+          .query({ sort: 'createdAt', order: 'desc', pageSize: 1 })
+          .set('Authorization', auth(ownerA))
+          .expect(200);
+        expect(newest.body.items[0].id).toBe(lonely.body.id);
 
-      const newest = await server()
-        .get('/api/parents')
-        .query({ sort: 'createdAt', order: 'desc', pageSize: 1 })
-        .set('Authorization', auth(ownerA))
-        .expect(200);
-      expect(newest.body.items[0].id).toBe(lonely.body.id);
+        await server()
+          .get('/api/parents')
+          .query({ sort: 'phone' })
+          .set('Authorization', auth(ownerA))
+          .expect(400);
+      } finally {
+        await server()
+          .delete(`/api/parents/${lonely.body.id}`)
+          .set('Authorization', auth(ownerA));
+      }
+    });
 
-      await server()
-        .get('/api/parents')
-        .query({ sort: 'phone' })
+    it('counts a link to an archived student as linked and audits the email diff', async () => {
+      const guardian = await server()
+        .post('/api/parents')
         .set('Authorization', auth(ownerA))
-        .expect(400);
+        .send({
+          fullName: 'Archive Link Parent',
+          email: 'guardian@example.test',
+        })
+        .expect(201);
+      const pupil = await server()
+        .post('/api/students')
+        .set('Authorization', auth(ownerA))
+        .send({
+          fullName: 'Archived Pupil',
+          timezone: 'UTC',
+          parentIds: [guardian.body.id],
+        })
+        .expect(201);
 
-      await server()
-        .delete(`/api/parents/${lonely.body.id}`)
-        .set('Authorization', auth(ownerA))
-        .expect(204);
+      try {
+        // Archiving keeps the link: the parent is still someone's parent.
+        await server()
+          .delete(`/api/students/${pupil.body.id}`)
+          .set('Authorization', auth(ownerA))
+          .expect(204);
+        const unlinked = await server()
+          .get('/api/parents')
+          .query({ linked: 'none', pageSize: 100 })
+          .set('Authorization', auth(ownerA))
+          .expect(200);
+        expect(
+          unlinked.body.items.map((item: { id: string }) => item.id),
+        ).not.toContain(guardian.body.id);
+
+        // The default order is by name, with the id as the tie-breaker.
+        const byName = await server()
+          .get('/api/parents')
+          .query({ pageSize: 100 })
+          .set('Authorization', auth(ownerA))
+          .expect(200);
+        const names = byName.body.items.map(
+          (item: { fullName: string }) => item.fullName,
+        );
+        expect(names.indexOf('Archive Link Parent')).toBeLessThan(
+          names.indexOf('Standalone Parent'),
+        );
+
+        await server()
+          .patch(`/api/parents/${guardian.body.id}`)
+          .set('Authorization', auth(ownerA))
+          .send({ email: 'Guardian.New@Example.TEST' })
+          .expect(200);
+        const logs = await server()
+          .get('/api/audit-logs')
+          .query({
+            entity: 'PARENT',
+            entityId: guardian.body.id,
+            action: 'UPDATE',
+          })
+          .set('Authorization', auth(ownerA))
+          .expect(200);
+        expect(logs.body.items[0].changes).toEqual({
+          fields: {
+            email: {
+              before: 'guardian@example.test',
+              after: 'guardian.new@example.test',
+            },
+          },
+        });
+      } finally {
+        await server()
+          .delete(`/api/parents/${guardian.body.id}`)
+          .set('Authorization', auth(ownerA));
+      }
     });
 
     it('updates with PATCH semantics and audits the diff; no-op adds nothing', async () => {

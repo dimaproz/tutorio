@@ -7,6 +7,7 @@ import {
   phoneSchema,
   recordStateSchema,
   sortOrderSchema,
+  studentLanguageLevelSchema,
   uuidSchema,
 } from './common';
 import { paginatedResponseSchema, paginationQuerySchema } from './pagination';
@@ -110,7 +111,7 @@ export const parentStudentRefSchema = z.object({
   avatarKey: avatarKeySchema.nullable(),
   status: z.enum(['ACTIVE', 'ON_HOLD', 'ARCHIVED']),
   // CEFR level, the second line of a student row on the parent's side.
-  languageLevel: z.string().nullable(),
+  languageLevel: studentLanguageLevelSchema.nullable(),
 });
 
 export type ParentStudentRef = z.infer<typeof parentStudentRefSchema>;

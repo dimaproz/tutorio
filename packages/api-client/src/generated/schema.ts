@@ -286,7 +286,7 @@ export interface paths {
         };
         /**
          * List workspace parents
-         * @description Paginated summaries with each parent’s linked-student roster. Search covers full name, phone and Telegram username. state=deleted|all is owner-only.
+         * @description Paginated summaries with each parent’s linked-student roster. Search covers full name, email, phone and Telegram username. studentId narrows to one student’s parents; linked=none keeps only parents with no live linked student and is ignored with studentId. sort=fullName|createdAt with order sorts the whole collection. state=deleted|all is owner-only.
          */
         get: operations["ParentsController_list"];
         put?: never;
@@ -1104,7 +1104,8 @@ export interface components {
                     avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
                     /** @enum {string} */
                     status: "ACTIVE" | "ON_HOLD" | "ARCHIVED";
-                    languageLevel: string | null;
+                    /** @enum {string|null} */
+                    languageLevel: "A1" | "A2" | "B1" | "B2" | "C1" | "C2" | null;
                 }[];
             }[];
             page: number;
@@ -1168,7 +1169,8 @@ export interface components {
                 avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
                 /** @enum {string} */
                 status: "ACTIVE" | "ON_HOLD" | "ARCHIVED";
-                languageLevel: string | null;
+                /** @enum {string|null} */
+                languageLevel: "A1" | "A2" | "B1" | "B2" | "C1" | "C2" | null;
             }[];
         };
         UpdateParentDto: {

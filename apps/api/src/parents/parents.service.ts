@@ -67,7 +67,8 @@ function toRoster(
     avatarKey: link.student
       .avatarKey as ParentDetail['students'][number]['avatarKey'],
     status: link.student.status,
-    languageLevel: link.student.languageLevel,
+    languageLevel: link.student
+      .languageLevel as ParentDetail['students'][number]['languageLevel'],
   }));
 }
 
@@ -120,12 +121,20 @@ export class ParentsService {
       ...deletedAtFilter(query.state),
       ...search,
       AND: [
+        // Both conditions match the roster: a link to a deleted student is
+        // neither shown nor counted.
         query.studentId
-          ? { students: { some: { studentId: query.studentId } } }
+          ? {
+              students: {
+                some: {
+                  studentId: query.studentId,
+                  student: { deletedAt: null },
+                },
+              },
+            }
           : {},
-        // "No students" means no live link: a link to a deleted student does
-        // not count, exactly as the roster below does not show it.
-        query.linked === 'none'
+        // "No students" contradicts a student filter, so it yields to it.
+        query.linked === 'none' && !query.studentId
           ? { students: { none: { student: { deletedAt: null } } } }
           : {},
       ],

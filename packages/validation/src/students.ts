@@ -9,6 +9,7 @@ import {
   sortOrderSchema,
   timezoneSchema,
   uuidSchema,
+  studentLanguageLevelSchema,
 } from './common';
 import { enrollmentStatusSchema, billingTypeSchema, priceMinorSchema } from './enrollments';
 import { paginatedResponseSchema, paginationQuerySchema } from './pagination';
@@ -23,10 +24,6 @@ export const studentNotesSchema = z.string().trim().max(4000);
 export const studentStatusSchema = z.enum(['ACTIVE', 'ON_HOLD', 'ARCHIVED']);
 export type StudentStatusDto = z.infer<typeof studentStatusSchema>;
 const studentOperationalStatusSchema = z.enum(['ACTIVE', 'ON_HOLD']);
-
-export const STUDENT_LANGUAGE_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const;
-export const studentLanguageLevelSchema = z.enum(STUDENT_LANGUAGE_LEVELS);
-export type StudentLanguageLevelDto = z.infer<typeof studentLanguageLevelSchema>;
 
 export const STUDENT_KNOWLEDGE_LEVELS = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'] as const;
 export const studentKnowledgeLevelSchema = z.enum(STUDENT_KNOWLEDGE_LEVELS);

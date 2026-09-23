@@ -923,7 +923,7 @@
     },
     "/api/parents": {
       "get": {
-        "description": "Paginated summaries with each parent’s linked-student roster. Search covers full name, phone and Telegram username. state=deleted|all is owner-only.",
+        "description": "Paginated summaries with each parent’s linked-student roster. Search covers full name, email, phone and Telegram username. studentId narrows to one student’s parents; linked=none keeps only parents with no live linked student and is ignored with studentId. sort=fullName|createdAt with order sorts the whole collection. state=deleted|all is owner-only.",
         "operationId": "ParentsController_list",
         "parameters": [
           {
@@ -5425,6 +5425,14 @@
                       },
                       "languageLevel": {
                         "type": "string",
+                        "enum": [
+                          "A1",
+                          "A2",
+                          "B1",
+                          "B2",
+                          "C1",
+                          "C2"
+                        ],
                         "nullable": true
                       }
                     },
@@ -5712,6 +5720,14 @@
                 },
                 "languageLevel": {
                   "type": "string",
+                  "enum": [
+                    "A1",
+                    "A2",
+                    "B1",
+                    "B2",
+                    "C1",
+                    "C2"
+                  ],
                   "nullable": true
                 }
               },

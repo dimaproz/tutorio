@@ -49,7 +49,10 @@ export class ParentsController {
     summary: 'List workspace parents',
     description:
       'Paginated summaries with each parent’s linked-student roster. ' +
-      'Search covers full name, phone and Telegram username. ' +
+      'Search covers full name, email, phone and Telegram username. ' +
+      'studentId narrows to one student’s parents; linked=none keeps only ' +
+      'parents with no live linked student and is ignored with studentId. ' +
+      'sort=fullName|createdAt with order sorts the whole collection. ' +
       'state=deleted|all is owner-only.',
   })
   @ApiOkResponse({ type: ParentListDto })
