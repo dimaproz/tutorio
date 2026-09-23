@@ -1,6 +1,6 @@
 # Tutorio Current State
 
-Last verified: 2026-09-23 after the Work Packet 6 closure gate.
+Last verified: 2026-09-23 after the Work Packet 6.1 (Parents) gate.
 
 This is the first project document to read before planning or implementing
 work. It reports the repository as it exists; [`mvp-plan.md`](./mvp-plan.md)
@@ -18,12 +18,17 @@ deployable while preserving proven behavior.
 
 - Branch: `develop`; Work Packet 5 implementation is committed as `e362675`,
   Frontend Packet F5 as `4900755`, and Work Packet 6 is closed on 2026-09-23.
+  Work Packet 6.1 — Parents is implemented on 2026-09-23; its independent
+  review is pending.
 - The former `refactor/students-design` work was merged by PR #18.
 - `pnpm generate`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build`
-  pass on 2026-09-23. Observed unit totals: domain 92, validation 47, API 158,
-  and web 164. Storybook browser tests pass repeatedly for 183 tests across 65
-  files, including automated accessibility checks, and the static build passes.
-- API E2E passes 78 tests in 6 suites against an isolated PostgreSQL 17
+  pass on 2026-09-23. Observed unit totals: domain 92, validation 49, API 158,
+  and web 175. Storybook browser tests pass for 217 tests across 73 files,
+  including automated accessibility checks, and the static build passes.
+- API E2E passes 79 tests in 6 suites against an isolated PostgreSQL 17
+  database after all 22 migrations (WP6.1 adds parent email, the "no students"
+  filter and the server-side sort). Earlier runs passed 78 tests in 6 suites
+  against an isolated PostgreSQL 17
   database after the then-current migration set, including legacy-TEACHER
   denials, group compensation cycles, and package archival. The finance
   migration verifier passes against a separate clean PostgreSQL 17 database.
@@ -167,6 +172,19 @@ import paths plus the reviewed session-context/root-layout exceptions. Root
 lint, typecheck, test, build, Storybook browser tests (112 across 22 files),
 Storybook static build, and `git diff --check` pass. Work Packet 6 is the next
 planned work.
+
+### Work Packet 6.1 evidence
+
+Parents follow the Studio handoff on the pattern Students set: a collection
+with search, a student filter, a "no students" filter and a name sort, all
+answered by the API; a profile with the hero, linked students, contact details
+and notes; full-page create and edit with section navigation, progress and the
+sticky save bar, no local draft, and the owner-only danger zone. Linking is
+symmetric: both profiles use one `LinkedCard` with one `LinkPickerDialog`, save
+the whole set through `useLinkedSet`, and confirm an unlink with the neutral
+dialog. Parent email is stored end to end. Delete is hidden for non-owners in
+the row menu, the profile menu and the edit form. See
+[`product/parents.md`](./product/parents.md).
 
 ### Work Packet 6 evidence
 

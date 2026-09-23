@@ -231,15 +231,20 @@ and every major finding were fixed with tests or stories, a verifying re-review
 passed, and the full gate is green with 183 Storybook tests. Details are in
 [`current-state.md`](./current-state.md#work-packet-6-evidence).
 
-### Work Packet 6.1 — Parents (next)
+### Work Packet 6.1 — Parents (implemented 2026-09-23, review pending)
 
-Starts with an architect-approved screen brief at `docs/product/parents.md`.
-It also exports `ParentFormDialog` from the Parents barrel so Students can stop
-importing it directly.
+Implements the Studio parents handoff; the brief is
+[`product/parents.md`](./product/parents.md). Collection, profile, full-page
+create and edit, and linking from both sides are on the shared `LinkPicker`,
+`LinkPickerDialog`, `LinkedCard` and `DangerZone`; `components/parents` is
+removed and Students import `ParentQuickCreateDialog` from the Parents barrel.
+The API gained parent `email` (migration `20260923120000_parent_email`), the
+`linked=none` filter and a server-side sort. Parents have no lifecycle, so the
+archive/restore surfaces the plan once named do not exist; delete stays
+owner-only and permanent.
 
-Migrate parent collection, detail, create/edit, relationship, archive, and
-restore surfaces. Validate person identity, contact, relationship, and action
-patterns against Students before promoting any shared abstraction.
+Open product decisions: a stored relation (mother, guardian) and a payer flag;
+a student schedule view for the parent-side row menu.
 
 ### Work Packet 6.2 — Teachers
 

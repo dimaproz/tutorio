@@ -13,6 +13,7 @@ and acceptance criteria. Domain invariants remain authoritative in
 | --------------------------------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------- |
 | Sign in and create a workspace    | Functional; presentation is inconsistent with the approved shadcn baseline                   | [Authentication workflow](./authentication.md) |
 | Create and onboard a student      | Audited; WP6 collection, quick-create, detail, lifecycle, and component brief is approved    | [Student workflow](./students.md)              |
+| Keep and link parent contacts     | WP6.1 collection, profile, full-page form and two-sided linking implemented                  | [Parent workflow](./parents.md)                |
 | Sell and operate a lesson package | Functional but combines plan, schedule, and payment; financial invariants need stabilization | [Package workflow](./packages.md)              |
 
 ## Workflow documentation template

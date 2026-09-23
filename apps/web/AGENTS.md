@@ -32,6 +32,7 @@ For a pilot-critical workflow, also read its product contract before changing
 the form or action sequence:
 
 - students: `../../docs/product/students.md`;
+- parents: `../../docs/product/parents.md`;
 - packages and payments: `../../docs/product/packages.md`.
 
 The workflow document owns required fields, progressive disclosure, next
@@ -75,6 +76,12 @@ person-like entity (student, parent, teacher) in a form or a filter. Supply an
 avatar key and display name for every option; do not introduce a second custom
 combobox for the same purpose. The feature owns loading and server-side search
 when its entity collection outgrows the picker page.
+
+Linking records to each other (a student's parents, a parent's students) is a
+multi-select relationship, not a field value: use `LinkPicker` /
+`LinkPickerDialog` for the picking, `LinkedCard` for the linked list on a
+profile, and `useLinkedSet` to save the whole set. Both sides of one
+relationship must use the same components.
 
 ## UI and Styling
 
