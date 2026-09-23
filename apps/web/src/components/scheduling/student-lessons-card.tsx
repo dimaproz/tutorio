@@ -7,9 +7,8 @@ import { useFormatter, useTranslations } from 'next-intl';
 import type { LessonResponse } from '@tutorio/validation';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/shared/empty-state';
-import { LessonItem } from '@/components/shared/lesson-item';
-import { LoadingPanel } from '@/components/shared/loading';
-import { SectionDivider } from '@/components/shared/section-divider';
+import { LessonList, type LessonListItem } from '@/components/shared/lesson-list';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useLessonsQuery } from '@/lib/api/scheduling';
 import { LessonActionsDialog, type LessonDialogMode } from './lesson-actions-dialog';
 import { LessonStatusBadge } from './lesson-status';
@@ -17,6 +16,9 @@ import { LessonStatusBadge } from './lesson-status';
 // How far back and forward a student's schedule is read on their profile.
 const PAST_DAYS = 120;
 const FUTURE_DAYS = 120;
+/** The first rows, and how many more each "show more" reveals. */
+const FIRST_PAGE = 10;
+const MORE = 12;
 
 /**
  * The profile's lesson window; sharing it lets every block reuse one query.
@@ -34,9 +36,11 @@ export function studentLessonsRange(now: number) {
 
 /**
  * The student's own schedule, grouped into what is coming and what already
- * happened. It renders as a panel: the profile owns the card, the section
- * switcher and the booking action, while this component owns the lesson data
- * and the per-row menu.
+ * happened, on the shared `LessonList`: a fixed-height box that scrolls, so a
+ * long history never grows the profile, with "show more" filling the same
+ * box. It renders bare: the profile owns the card, the section switcher and
+ * the booking action, while this component owns the lesson data and the
+ * per-row menu.
  */
 export function StudentLessonsCard({
   studentId,
@@ -54,7 +58,10 @@ export function StudentLessonsCard({
   emptyAction?: ReactNode;
 }) {
   const t = useTranslations('scheduling.studentLessons');
+  const tCommon = useTranslations('common');
   const format = useFormatter();
+  const mobile = useIsMobile();
+  const [shown, setShown] = useState(FIRST_PAGE);
 
   const [selected, setSelected] = useState<LessonResponse | null>(null);
   const [actionsOpen, setActionsOpen] = useState(false);
@@ -83,69 +90,79 @@ export function StudentLessonsCard({
     setActionsOpen(true);
   }, []);
 
-  if (lessons.isPending) {
-    return <LoadingPanel size="md" className="min-h-32 rounded-row border-0 bg-transparent" />;
-  }
+  const ordered = historyOnly ? past : [...upcoming, ...past];
+  const visible = ordered.slice(0, shown);
+  const visibleIds = new Set(visible.map((lesson) => lesson.id));
+  const nextId = historyOnly ? null : (upcoming[0]?.id ?? null);
 
-  if ((historyOnly || upcoming.length === 0) && past.length === 0) {
-    return (
-      <EmptyState
-        icon={<CalendarIcon />}
-        title={t('emptyTitle')}
-        text={readOnly ? t('emptyArchived') : t('emptyDescription')}
-        action={readOnly ? undefined : emptyAction}
-      />
-    );
-  }
-
-  const renderLesson = (lesson: LessonResponse, state: 'next' | 'default' | 'past') => {
+  const toItem = (lesson: LessonResponse): LessonListItem => {
     const start = new Date(lesson.startsAtUtc);
     const end = new Date(start.getTime() + lesson.durationMin * 60 * 1000);
-
-    return (
-      <LessonItem
-        key={lesson.id}
-        state={state}
-        date={{
-          top: format.dateTime(start, { weekday: 'short' }),
-          day: format.dateTime(start, { day: '2-digit' }),
-        }}
-        title={lesson.group?.name ?? t('individualLesson')}
-        meta={[
-          format.dateTime(start, { month: 'short' }),
-          `${format.dateTime(start, { hour: '2-digit', minute: '2-digit' })} – ${format.dateTime(end, { hour: '2-digit', minute: '2-digit' })}`,
-          lesson.teacher.name,
-        ].join(' · ')}
-        status={<LessonStatusBadge status={lesson.status} />}
-        actions={
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            aria-label={t('lessonActions')}
-            onClick={() => openLesson(lesson)}
-          >
-            <MoreHorizontalIcon />
-          </Button>
-        }
-      />
-    );
+    const range = `${format.dateTime(start, { hour: '2-digit', minute: '2-digit' })} – ${format.dateTime(end, { hour: '2-digit', minute: '2-digit' })}`;
+    const past = start.getTime() < now;
+    return {
+      id: lesson.id,
+      weekday: format.dateTime(start, { weekday: 'short' }),
+      day: format.dateTime(start, { day: '2-digit' }),
+      title: lesson.group?.name ?? t('individualLesson'),
+      meta: [format.dateTime(start, { month: 'short' }), range, lesson.teacher.name].join(' · '),
+      metaShort: [range, lesson.teacher.name.split(' ')[0]].join(' · '),
+      state: lesson.id === nextId ? 'next' : past ? 'past' : 'default',
+      status: <LessonStatusBadge status={lesson.status} />,
+      menu: readOnly ? undefined : (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          aria-label={t('lessonActions')}
+          onClick={() => openLesson(lesson)}
+        >
+          <MoreHorizontalIcon />
+        </Button>
+      ),
+    };
   };
 
+  const more = Math.min(MORE, ordered.length - visible.length);
+
   return (
-    <div className="flex flex-col">
-      {!historyOnly && upcoming.length > 0 ? (
-        <>
-          <SectionDivider label={t('comingUp')} className="pb-1" />
-          {upcoming.map((lesson, index) => renderLesson(lesson, index === 0 ? 'next' : 'default'))}
-        </>
-      ) : null}
-      {past.length > 0 ? (
-        <>
-          <SectionDivider label={historyOnly ? t('history') : t('earlier')} className="pt-2 pb-1" />
-          {past.map((lesson) => renderLesson(lesson, 'past'))}
-        </>
-      ) : null}
+    <>
+      <LessonList
+        framed={false}
+        groups={[
+          {
+            label: t('comingUp'),
+            items: historyOnly
+              ? []
+              : upcoming.filter((lesson) => visibleIds.has(lesson.id)).map(toItem),
+          },
+          {
+            label: historyOnly ? t('history') : t('earlier'),
+            items: past.filter((lesson) => visibleIds.has(lesson.id)).map(toItem),
+          },
+        ]}
+        shown={visible.length}
+        total={ordered.length}
+        countLabel={
+          ordered.length > visible.length
+            ? t('showing', { shown: visible.length, total: ordered.length })
+            : undefined
+        }
+        onLoadMore={() => setShown((current) => current + MORE)}
+        loadMoreLabel={t('showMore', { count: more })}
+        loading={lessons.isPending}
+        loadingLabel={tCommon('loading')}
+        regionLabel={t('region')}
+        compact={mobile}
+        empty={
+          <EmptyState
+            icon={<CalendarIcon />}
+            title={t('emptyTitle')}
+            text={readOnly ? t('emptyArchived') : t('emptyDescription')}
+            action={readOnly ? undefined : emptyAction}
+          />
+        }
+      />
 
       {!readOnly ? (
         <LessonActionsDialog
@@ -155,6 +172,6 @@ export function StudentLessonsCard({
           initialMode={actionsMode}
         />
       ) : null}
-    </div>
+    </>
   );
 }
