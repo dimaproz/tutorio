@@ -469,3 +469,19 @@
     @apply font-sans;
   }
 }
+
+/* A thin scrollbar in the line colour, for lists that scroll inside a card
+   (the lesson list). Both themes read the same token. */
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-hover) transparent;
+}
+
+/* Hides the scrollbar of a row that scrolls sideways on phones (filter and
+   metric strips); the content stays reachable by swipe and keyboard. */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

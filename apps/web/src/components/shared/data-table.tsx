@@ -52,6 +52,11 @@ interface DataTableProps<TData> {
   isRowHighlighted?: (row: TData) => boolean;
   /** Quiets a row that is no longer operational, e.g. an archived record. */
   isRowDimmed?: (row: TData) => boolean;
+  /**
+   * `fixed` rows are 76px; `auto` rows grow with cells that wrap, such as a
+   * group's weekday pills, keeping 76px as the minimum.
+   */
+  rowHeight?: 'fixed' | 'auto';
 }
 
 /**
@@ -70,6 +75,7 @@ export function DataTable<TData>({
   layout,
   isRowHighlighted,
   isRowDimmed,
+  rowHeight = 'fixed',
 }: DataTableProps<TData>) {
   const rows = variant === 'rows';
   const gridStyle = rows && layout ? { gridTemplateColumns: layout } : undefined;
@@ -158,7 +164,8 @@ export function DataTable<TData>({
                   // `relative` makes the row the containing block for a cell's
                   // stretched link. Without it the link resolves against the
                   // nearest positioned ancestor and covers the whole table.
-                  'relative grid h-19 items-center gap-4 rounded-row border-0 px-4 transition-[background-color,box-shadow] duration-150 hover:bg-surface-hover hover:shadow-[inset_0_0_0_1px_var(--border)] data-[dimmed]:text-muted-foreground data-[dimmed]:[&_img]:grayscale data-[highlighted]:bg-surface-hover',
+                  'relative grid items-center gap-4 rounded-row border-0 px-4 transition-[background-color,box-shadow] duration-150 hover:bg-surface-hover hover:shadow-[inset_0_0_0_1px_var(--border)] data-[dimmed]:text-muted-foreground data-[dimmed]:[&_img]:grayscale data-[highlighted]:bg-surface-hover',
+                rows && (rowHeight === 'auto' ? 'min-h-19 py-3' : 'h-19'),
               )}
             >
               {row.getVisibleCells().map((cell) => (

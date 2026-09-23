@@ -6,12 +6,13 @@ import { TextField } from '@/components/shared/text-field';
 import { glyphControl, glyphNode } from '../story-helpers';
 
 type Args = {
-  type: 'text' | 'email' | 'password' | 'select' | 'textarea';
+  type: 'text' | 'email' | 'password' | 'time' | 'select' | 'textarea';
   label: string;
   placeholder: string;
   value: string;
   icon: GlyphName | 'none';
   prefix: string;
+  suffix: string;
   hint: string;
   error: string;
   aside: string;
@@ -70,6 +71,7 @@ function TextFieldStory(args: Args) {
           {...chrome}
           type={args.type}
           prefix={args.prefix || undefined}
+          suffix={args.suffix || undefined}
           placeholder={args.placeholder}
           value={value}
           onChange={(event) => setValue(event.target.value)}
@@ -91,6 +93,7 @@ const meta = {
     value: '',
     icon: 'mail',
     prefix: '',
+    suffix: '',
     hint: '',
     error: '',
     aside: '',
@@ -99,9 +102,13 @@ const meta = {
     rows: 3,
   },
   argTypes: {
-    type: { control: 'inline-radio', options: ['text', 'email', 'password', 'select', 'textarea'] },
+    type: {
+      control: 'inline-radio',
+      options: ['text', 'email', 'password', 'time', 'select', 'textarea'],
+    },
     icon: glyphControl,
     prefix: { description: 'Leading unit in its own cell, e.g. `@`.' },
+    suffix: { description: 'Trailing unit inside the box, e.g. `min`.' },
     aside: { description: 'Mono note beside the label, e.g. a counter.' },
     rows: { control: { type: 'range', min: 2, max: 8 }, if: { arg: 'type', eq: 'textarea' } },
   },

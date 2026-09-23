@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { UserIcon } from 'lucide-react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 import ukMessages from '../../messages/uk.json';
@@ -20,11 +21,14 @@ function EntityPickerContract({
   invalid = false,
   isLoading = false,
   longCopy = false,
+  appearance = 'button',
 }: {
   disabled?: boolean;
   invalid?: boolean;
   isLoading?: boolean;
   longCopy?: boolean;
+  /** `field` is the 52px form box of `TextField`, used by full-page forms. */
+  appearance?: 'button' | 'field';
 }) {
   const [value, setValue] = useState<string | undefined>();
 
@@ -45,6 +49,8 @@ function EntityPickerContract({
           disabled={disabled}
           invalid={invalid}
           isLoading={isLoading}
+          appearance={appearance}
+          icon={appearance === 'field' ? <UserIcon /> : undefined}
         />
         {invalid ? <FieldError>Select a parent or leave the field empty.</FieldError> : null}
       </Field>
@@ -72,6 +78,9 @@ function EntityMultiSelectContract() {
 const meta = {
   title: 'Shared/EntityPicker',
   component: EntityPickerContract,
+  argTypes: {
+    appearance: { control: 'inline-radio', options: ['button', 'field'] },
+  },
 } satisfies Meta<typeof EntityPickerContract>;
 
 export default meta;

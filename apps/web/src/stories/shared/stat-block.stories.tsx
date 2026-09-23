@@ -28,6 +28,7 @@ type Args = {
   type: 'amount' | 'date' | 'chart' | 'custom';
   chart: 'bars' | 'ring' | 'segments';
   tone: 'surface' | 'tint' | 'accent' | 'ink';
+  size: 'md' | 'sm';
   label: string;
   value: string;
   unit: string;
@@ -52,6 +53,7 @@ function StatBlockStory(args: Args) {
   const common = {
     label: args.label,
     tone: args.tone,
+    size: args.size,
     caption: args.caption || undefined,
     detail: args.detail || undefined,
     badge: args.badge ? { label: args.badge, tone: args.badgeTone } : undefined,
@@ -90,6 +92,7 @@ const meta = {
     type: 'amount',
     chart: 'bars',
     tone: 'surface',
+    size: 'md',
     label: 'Paid this term',
     value: '4 000',
     unit: '₴',
@@ -112,6 +115,11 @@ const meta = {
       if: { arg: 'type', eq: 'chart' },
     },
     tone: { control: 'inline-radio', options: ['surface', 'tint', 'accent', 'ink'] },
+    size: {
+      control: 'inline-radio',
+      options: ['md', 'sm'],
+      description: '`sm` is the phone tile: label, value and caption only.',
+    },
     badgeTone: {
       control: 'inline-radio',
       options: ['success', 'warning', 'danger', 'info', 'neutral'],

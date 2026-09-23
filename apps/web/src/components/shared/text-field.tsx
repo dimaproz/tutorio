@@ -48,9 +48,11 @@ export type TextFieldOption = { value: string; label: ReactNode };
 
 type InputProps = Chrome &
   Omit<ComponentProps<'input'>, 'className' | 'id' | 'prefix'> & {
-    type?: 'text' | 'email' | 'password' | 'tel' | 'number' | 'search' | 'url';
+    type?: 'text' | 'email' | 'password' | 'tel' | 'number' | 'search' | 'url' | 'time';
     /** Leading unit in its own paper cell, e.g. `@` for a username. */
     prefix?: ReactNode;
+    /** Trailing unit inside the box, e.g. "min" after a duration. */
+    suffix?: ReactNode;
     /** Accessible names for the password reveal toggle. */
     revealLabels?: { show: string; hide: string };
     /** Starts a password field revealed. */
@@ -223,6 +225,7 @@ function TextFieldInput({
   const {
     type = 'text',
     prefix,
+    suffix,
     revealLabels,
     defaultRevealed = false,
     ...rest
@@ -252,9 +255,14 @@ function TextFieldInput({
         className={cn(
           'h-full text-[15px] md:text-[15px]',
           prefix ? 'pl-3.5' : icon ? 'pl-2.5' : 'pl-4',
-          password ? 'pr-1' : 'pr-4',
+          password ? 'pr-1' : suffix ? 'pr-1.5' : 'pr-4',
         )}
       />
+      {suffix ? (
+        <InputGroupAddon align="inline-end" className="pr-4 text-[15px] text-muted-foreground">
+          {suffix}
+        </InputGroupAddon>
+      ) : null}
       {password && revealLabels ? (
         <InputGroupAddon align="inline-end" className="pr-2">
           <IconButton

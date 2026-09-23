@@ -65,6 +65,11 @@ export type StatBlockProps = {
   action?: { label: ReactNode; onClick?: () => void };
   badge?: { label: ReactNode; tone: StatBlockBadgeTone };
   tone?: StatBlockTone;
+  /**
+   * `sm` is the phone tile: label, value and caption only, at content height.
+   * Charts, badges, footers and actions belong to the full block.
+   */
+  size?: 'md' | 'sm';
   className?: string;
 } & (
   | {
@@ -99,8 +104,36 @@ function clampPercent(value: number): number {
  * and caption always carry the meaning.
  */
 export function StatBlock(props: StatBlockProps) {
-  const { label, caption, detail, action, badge, tone = 'surface', className } = props;
+  const { label, caption, detail, action, badge, tone = 'surface', size = 'md', className } = props;
   const theme = TONE[tone];
+
+  if (size === 'sm') {
+    const value = props.type === 'custom' ? null : props.value;
+    const unit = props.type === 'amount' ? props.unit : null;
+    return (
+      <section
+        data-slot="stat-block"
+        data-tone={tone}
+        data-size="sm"
+        className={cn(
+          'flex w-full min-w-0 flex-col gap-0.5 rounded-item px-4 py-3.5',
+          theme.surface,
+          className,
+        )}
+      >
+        <span className={cn('truncate text-[13px] leading-[18px] font-medium', theme.muted)}>
+          {label}
+        </span>
+        <span className="flex min-w-0 items-baseline gap-1 text-[22px] leading-7 font-semibold tracking-[-0.02em] whitespace-nowrap tabular-nums">
+          {value}
+          {unit ? <span className={cn('text-base font-medium', theme.muted)}>{unit}</span> : null}
+        </span>
+        {caption ? (
+          <span className={cn('truncate text-xs leading-4', theme.muted)}>{caption}</span>
+        ) : null}
+      </section>
+    );
+  }
 
   return (
     <section

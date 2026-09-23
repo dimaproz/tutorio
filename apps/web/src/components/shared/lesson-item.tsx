@@ -31,6 +31,7 @@ export function LessonItem({
   status,
   actions,
   state = 'default',
+  compact = false,
   className,
 }: {
   date: { top: string; day: string };
@@ -40,6 +41,8 @@ export function LessonItem({
   status?: ReactNode;
   actions?: ReactNode;
   state?: LessonItemState;
+  /** Phone density: the 52px date tile and tighter spacing. */
+  compact?: boolean;
   className?: string;
 }) {
   return (
@@ -47,12 +50,18 @@ export function LessonItem({
       data-slot="lesson-item"
       data-state={state}
       className={cn(
-        'flex w-full items-center gap-4 rounded-row p-2.5 text-foreground',
+        'flex w-full items-center rounded-row text-foreground',
+        compact ? 'gap-3 p-2' : 'gap-4 p-2.5',
         STATE_CLASS[state],
         className,
       )}
     >
-      <DateTile top={date.top} day={date.day} state={TILE_STATE[state]} />
+      <DateTile
+        top={date.top}
+        day={date.day}
+        state={TILE_STATE[state]}
+        size={compact ? 52 : 60}
+      />
       <div className="flex min-w-0 grow flex-col gap-0.5">
         <span className="truncate text-[15px] leading-5 font-semibold">{title}</span>
         {meta ? (

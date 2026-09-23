@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Spinner } from '@/components/ui/spinner';
+import { fieldBoxClass } from '@/components/shared/text-field';
 import { cn } from '@/lib/utils';
 
 export interface EntityPickerOption {
@@ -40,6 +41,9 @@ export function EntityPicker({
   invalid = false,
   isLoading = false,
   trigger,
+  appearance = 'button',
+  icon,
+  'aria-describedby': describedBy,
 }: {
   id?: string;
   'aria-label'?: string;
@@ -58,6 +62,11 @@ export function EntityPicker({
    * the picker is a command rather than a form field.
    */
   trigger?: ReactNode;
+  /** `field` draws the 52px form field box of `TextField` around the choice. */
+  appearance?: 'button' | 'field';
+  /** Leading glyph inside a `field` box, e.g. a mortarboard for a teacher. */
+  icon?: ReactNode;
+  'aria-describedby'?: string;
 }) {
   const [open, setOpen] = useState(false);
   const selected = options.find((option) => option.value === value);
@@ -74,10 +83,25 @@ export function EntityPicker({
             role="combobox"
             aria-expanded={open}
             aria-invalid={invalid || undefined}
+            aria-describedby={describedBy}
             disabled={disabled}
-            className="w-full justify-between font-normal"
+            className={cn(
+              appearance === 'field'
+                ? cn(fieldBoxClass, 'justify-between font-normal hover:bg-card')
+                : 'w-full justify-between font-normal',
+            )}
           >
-            <span className="flex min-w-0 items-center gap-2 truncate">
+            <span
+              className={cn(
+                'flex min-w-0 items-center truncate',
+                appearance === 'field' ? 'gap-2.5' : 'gap-2',
+              )}
+            >
+              {icon && !selected ? (
+                <span aria-hidden="true" className="flex text-muted-foreground [&_svg]:size-4.5">
+                  {icon}
+                </span>
+              ) : null}
               {selected ? (
                 <EntityAvatar avatarKey={selected.avatarKey} fullName={selected.label} size="xs" />
               ) : null}

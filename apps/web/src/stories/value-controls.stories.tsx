@@ -102,6 +102,15 @@ function ValueControlsContract() {
           <FieldLabel htmlFor="reference-weekdays">Weekdays</FieldLabel>
           <WeekdayPicker id="reference-weekdays" value={weekdays} onChange={setWeekdays} />
         </Field>
+        <Field>
+          <FieldLabel htmlFor="reference-weekday-pills">Weekdays (Studio pills)</FieldLabel>
+          <WeekdayPicker
+            id="reference-weekday-pills"
+            appearance="pills"
+            value={weekdays}
+            onChange={setWeekdays}
+          />
+        </Field>
       </FieldGroup>
     </div>
   );
