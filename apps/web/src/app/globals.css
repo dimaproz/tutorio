@@ -241,9 +241,9 @@
   --tint-indigo-meta: #2a2f55;
   --tile-indigo: #e6e8ff;
   --tile-indigo-foreground: #4b3fd0;
-  --chip-on-tint: rgb(255 255 255 / 0.6);
+  --chip-on-tint: color-mix(in oklab, #ffffff 60%, transparent);
   --chip-on-tint-foreground: #4b3fd0;
-  --stat-track-on-tint: rgb(27 31 59 / 0.12);
+  --stat-track-on-tint: color-mix(in oklab, #1b1f3b 12%, transparent);
   --feature: #1b1f3b;
   --feature-foreground: #ffffff;
   --feature-heading: #9ed8ff;
@@ -252,7 +252,7 @@
   --feature-line: #3a4070;
   --raised: #ffffff;
   --raised-line: transparent;
-  --scrim: rgb(27 31 59 / 0.46);
+  --scrim: color-mix(in oklab, #1b1f3b 46%, transparent);
 
   /* The current item of an in-page section nav: a white row on the panel. */
   --nav-selected: var(--card);
