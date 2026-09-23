@@ -1,6 +1,13 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
+import {
+  queryOptions,
+  useMutation,
+  usePrefetchQuery,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from '@tanstack/react-query';
 import type {
   AdjustBalanceDto,
   CreatePackageDto,
@@ -31,9 +38,22 @@ function invalidateFinanceGraph(queryClient: QueryClient) {
 // ---------------------------------------------------------------------------
 
 export function usePackagesQuery(filters: PackageListFilters, enabled = true) {
-  return useQuery<PackageListResponse, GatewayError>({
-    queryKey: queryKeys.packages.lists(filters),
+  return useQuery({
+    ...packagesQueryOptions(filters),
     enabled,
+    placeholderData: (previous) => previous,
+  });
+}
+
+/** Starts a package page read during render without subscribing the caller to it. */
+export function usePrefetchPackagesQuery(filters: PackageListFilters) {
+  usePrefetchQuery(packagesQueryOptions(filters));
+}
+
+/** The package page read, shared by the hook and by a screen that prefetches it. */
+export function packagesQueryOptions(filters: PackageListFilters) {
+  return queryOptions<PackageListResponse, GatewayError>({
+    queryKey: queryKeys.packages.lists(filters),
     queryFn: () =>
       gatewayFetch<PackageListResponse>(
         `/api/backend/packages${buildQueryString({
@@ -45,7 +65,6 @@ export function usePackagesQuery(filters: PackageListFilters, enabled = true) {
           state: filters.state,
         })}`,
       ),
-    placeholderData: (previous) => previous,
   });
 }
 

@@ -16,8 +16,12 @@ import { PackageFormDialog } from '@/features/packages';
 import { LessonFormDialog, StudentLessonsCard, studentLessonsRange } from '@/features/scheduling';
 import { studentLifecyclePolicy } from '@/features/students/model/lifecycle';
 import { deriveStudentProfileMetrics } from '@/features/students/model/profile-metrics';
-import { usePackagesQuery } from '@/lib/api/packages';
-import { useLessonsQuery } from '@/lib/api/scheduling';
+import {
+  studentPackagesFilters,
+  visibleStudentPackages,
+} from '@/features/students/model/student-packages';
+import { usePackagesQuery, usePrefetchPackagesQuery } from '@/lib/api/packages';
+import { useLessonsQuery, usePrefetchLessonsQuery } from '@/lib/api/scheduling';
 import { useStudentQuery } from '@/lib/api/students';
 import { StudentInformationCard } from './student-information-card';
 import { StudentLearningCard } from './student-learning-card';
@@ -33,7 +37,15 @@ import { useStudentStatusActions } from './student-status-control';
 
 export function StudentDetailView({ studentId }: { studentId: string }) {
   const t = useTranslations('students');
+  // One pinned clock for the whole profile, so the window started here is the
+  // one the profile reads.
+  const clock = useNow();
+  const [now] = useState(() => clock.getTime());
   const student = useStudentQuery(studentId);
+  // The lessons and packages need only the id, so they start with the record
+  // instead of after it. The keys are the ones the blocks below read.
+  usePrefetchLessonsQuery({ ...studentLessonsRange(now), studentId });
+  usePrefetchPackagesQuery(studentPackagesFilters(studentId));
   if (student.isPending) return <DetailFrame ratio="wide" loading={<LoadingPanel size="lg" />} />;
   // A failed background refresh keeps the profile on screen; only a first
   // load that never produced data is an error page.
@@ -50,7 +62,7 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
         }
       />
     );
-  return <StudentProfileContent student={student.data} />;
+  return <StudentProfileContent student={student.data} nowMs={now} />;
 }
 
 /**
@@ -83,28 +95,35 @@ export function StudentProfileContent({
   const clock = useNow();
   const [now] = useState(() => nowMs ?? clock.getTime());
   const lessons = useLessonsQuery({ ...studentLessonsRange(now), studentId: student.id });
-  const packages = usePackagesQuery({
-    page: 1,
-    pageSize: 100,
-    studentId: student.id,
-    state: archived ? 'all' : 'active',
-  });
+  const packages = usePackagesQuery(studentPackagesFilters(student.id));
   // A failed or partial read is reported as unknown, never as an empty record:
   // "0 credits" and "no payments" would be claims the page cannot back.
   const packagesUnavailable =
     packages.isError || Boolean(packages.data && packages.data.items.length < packages.data.total);
+  const packageItems = useMemo(
+    () => visibleStudentPackages(packages.data?.items ?? [], archived),
+    [packages.data, archived],
+  );
   const metrics = useMemo(
     () =>
       (lessons.data || lessons.isError) && (packages.data || packages.isError)
         ? deriveStudentProfileMetrics({
-            packages: packagesUnavailable ? [] : (packages.data?.items ?? []),
+            packages: packagesUnavailable ? [] : packageItems,
             lessons: lessons.data?.items ?? [],
             now,
             packagesUnavailable,
             lessonsUnavailable: lessons.isError,
           })
         : undefined,
-    [lessons.data, lessons.isError, packages.data, packages.isError, packagesUnavailable, now],
+    [
+      lessons.data,
+      lessons.isError,
+      packages.data,
+      packages.isError,
+      packageItems,
+      packagesUnavailable,
+      now,
+    ],
   );
 
   const dismissSetup = () => {

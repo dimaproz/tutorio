@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import Link from 'next/link';
 import { PackagePlusIcon, WalletCardsIcon } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
@@ -11,6 +12,10 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/u
 import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from '@/components/ui/item';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PackageFormDialog, PackagePaymentStatusBadge } from '@/features/packages';
+import {
+  studentPackagesFilters,
+  visibleStudentPackages,
+} from '@/features/students/model/student-packages';
 import { usePackagesQuery } from '@/lib/api/packages';
 import { formatMoneyDisplay } from '@/lib/money';
 
@@ -34,12 +39,13 @@ export function StudentPackagesCard({
 }) {
   const t = useTranslations('students.packages');
   const locale = useLocale();
-  const packages = usePackagesQuery({
-    page: 1,
-    pageSize: 100,
-    studentId,
-    state: readOnly ? 'all' : 'active',
-  });
+  // The profile's one package read; an archived (read-only) profile keeps the
+  // deleted packages of its history, a live one shows live packages only.
+  const packages = usePackagesQuery(studentPackagesFilters(studentId));
+  const items = useMemo(
+    () => visibleStudentPackages(packages.data?.items ?? [], readOnly),
+    [packages.data, readOnly],
+  );
   const body = (
     <>
       {packages.isPending ? (
@@ -49,7 +55,7 @@ export function StudentPackagesCard({
         </div>
       ) : packages.isError ? (
         <QueryErrorAlert title={t('error')} onRetry={() => void packages.refetch()} />
-      ) : packages.data.items.length === 0 ? (
+      ) : items.length === 0 ? (
         <Empty>
           <EmptyHeader>
             <EmptyTitle>{t('empty')}</EmptyTitle>
@@ -60,7 +66,7 @@ export function StudentPackagesCard({
         </Empty>
       ) : (
         <ul className="flex flex-col gap-2">
-          {packages.data.items.map((item) => (
+          {items.map((item) => (
             <li key={item.id}>
               <Item asChild variant="outline">
                 <Link href={`/app/packages/${item.id}`}>

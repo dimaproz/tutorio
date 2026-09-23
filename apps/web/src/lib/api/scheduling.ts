@@ -1,7 +1,9 @@
 'use client';
 
 import {
+  queryOptions,
   useMutation,
+  usePrefetchQuery,
   useQuery,
   useQueryClient,
   type QueryClient,
@@ -34,10 +36,10 @@ function invalidateSchedulingGraph(queryClient: QueryClient) {
 // Lessons
 // ---------------------------------------------------------------------------
 
-export function useLessonsQuery(filters: LessonListFilters, enabled = true) {
-  return useQuery<LessonListResponse, GatewayError>({
+/** The lesson read, shared by the hook and by a screen that prefetches it. */
+export function lessonsQueryOptions(filters: LessonListFilters) {
+  return queryOptions<LessonListResponse, GatewayError>({
     queryKey: queryKeys.lessons.lists(filters),
-    enabled,
     queryFn: () =>
       gatewayFetch<LessonListResponse>(
         `/api/backend/lessons${buildQueryString({
@@ -50,33 +52,37 @@ export function useLessonsQuery(filters: LessonListFilters, enabled = true) {
           status: filters.status,
         })}`,
       ),
+  });
+}
+
+export function useLessonsQuery(filters: LessonListFilters, enabled = true) {
+  return useQuery({
+    ...lessonsQueryOptions(filters),
+    enabled,
     placeholderData: (previous) => previous,
   });
 }
 
+/** Starts a lesson read during render without subscribing the caller to it. */
+export function usePrefetchLessonsQuery(filters: LessonListFilters) {
+  usePrefetchQuery(lessonsQueryOptions(filters));
+}
+
 export function useCreateLessonMutation() {
   const queryClient = useQueryClient();
-  return useMutation<
-    LessonListResponse,
-    GatewayError,
-    { dto: CreateLessonDto; force?: boolean }
-  >({
+  return useMutation<LessonListResponse, GatewayError, { dto: CreateLessonDto; force?: boolean }>({
     mutationFn: ({ dto, force }) =>
-      gatewayFetch<LessonListResponse>(
-        `/api/backend/lessons${force ? '?force=true' : ''}`,
-        { method: 'POST', body: JSON.stringify(dto) },
-      ),
+      gatewayFetch<LessonListResponse>(`/api/backend/lessons${force ? '?force=true' : ''}`, {
+        method: 'POST',
+        body: JSON.stringify(dto),
+      }),
     onSuccess: () => invalidateSchedulingGraph(queryClient),
   });
 }
 
 export function useUpdateLessonMutation() {
   const queryClient = useQueryClient();
-  return useMutation<
-    LessonResponse,
-    GatewayError,
-    { lessonId: string; dto: UpdateLessonDto }
-  >({
+  return useMutation<LessonResponse, GatewayError, { lessonId: string; dto: UpdateLessonDto }>({
     mutationFn: ({ lessonId, dto }) =>
       gatewayFetch<LessonResponse>(`/api/backend/lessons/${lessonId}`, {
         method: 'PATCH',
@@ -113,11 +119,7 @@ export function useRescheduleLessonMutation() {
 
 export function useTransitionLessonMutation() {
   const queryClient = useQueryClient();
-  return useMutation<
-    LessonResponse,
-    GatewayError,
-    { lessonId: string; dto: TransitionLessonDto }
-  >({
+  return useMutation<LessonResponse, GatewayError, { lessonId: string; dto: TransitionLessonDto }>({
     mutationFn: ({ lessonId, dto }) =>
       gatewayFetch<LessonResponse>(`/api/backend/lessons/${lessonId}/status`, {
         method: 'PATCH',
