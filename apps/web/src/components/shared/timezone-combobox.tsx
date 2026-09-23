@@ -25,19 +25,53 @@ export function detectTimezone(): string {
   }
 }
 
-function listTimezones(): string[] {
-  // supportedValuesOf is available in every browser we target; the fallback
-  // keeps the field usable in older runtimes and in tests.
-  const supported = (Intl as typeof Intl & { supportedValuesOf?: (key: string) => string[] })
-    .supportedValuesOf;
-  if (typeof supported === 'function') {
-    return supported('timeZone');
-  }
-  return [FALLBACK_TIMEZONE, 'Europe/Warsaw', 'Europe/London', 'Europe/Berlin', 'UTC'];
+/**
+ * The zones a tutor and their students actually live in, west to east. The
+ * full IANA database has ~400 entries, which buries the few that matter.
+ */
+export const MAIN_TIMEZONES = [
+  'America/Los_Angeles',
+  'America/Chicago',
+  'America/New_York',
+  'America/Toronto',
+  'UTC',
+  'Europe/London',
+  'Europe/Amsterdam',
+  'Europe/Berlin',
+  'Europe/Madrid',
+  'Europe/Paris',
+  'Europe/Prague',
+  'Europe/Rome',
+  'Europe/Vienna',
+  'Europe/Warsaw',
+  'Europe/Athens',
+  'Europe/Bucharest',
+  'Europe/Chisinau',
+  'Europe/Helsinki',
+  'Europe/Kyiv',
+  'Europe/Sofia',
+  'Europe/Istanbul',
+  'Asia/Dubai',
+  'Asia/Tbilisi',
+  'Asia/Tokyo',
+  'Australia/Sydney',
+] as const;
+
+/**
+ * The main zones, led by any zone outside them that must stay selectable: the
+ * saved value of an existing record and the browser's own zone.
+ */
+export function listTimezones(...keep: (string | undefined)[]): string[] {
+  const main: readonly string[] = MAIN_TIMEZONES;
+  const extra = keep.filter(
+    (zone, index): zone is string =>
+      Boolean(zone) && !main.includes(zone as string) && keep.indexOf(zone) === index,
+  );
+  return [...extra, ...main];
 }
 
-// Offsets are read once per zone per session: building a formatter for each
-// of ~400 zones on every render would stall the list as it opens.
+// Offsets are read once per zone per session: building a formatter for every
+// zone on every render would stall the list as it opens.
 const offsetCache = new Map<string, string>();
 
 /** The zone's current UTC offset as the browser names it, e.g. "GMT+3". */
@@ -86,7 +120,7 @@ export function TimezoneCombobox({
 }) {
   const [open, setOpen] = useState(false);
   const listId = useId();
-  const timezones = useMemo(() => listTimezones(), []);
+  const timezones = useMemo(() => listTimezones(value, detectTimezone()), [value]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
