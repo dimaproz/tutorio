@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { enrollmentFormSchema } from '@/features/enrollments/model/form';
-import { groupFormSchema } from '@/features/groups/model/form';
+import { emptyGroupForm, makeGroupFormSchema } from '@/features/groups/model/form';
 import {
   emptyPackageForm,
   packageFormSchema,
@@ -55,11 +55,10 @@ describe('feature form models', () => {
 
   it('rejects invalid money and policy values before a request is sent', () => {
     expect(
-      groupFormSchema.safeParse({
+      makeGroupFormSchema({ teacherRequired: false }).safeParse({
+        ...emptyGroupForm('EUR'),
         name: 'Morning group',
         pricePerLesson: '1.234',
-        currency: 'EUR',
-        notes: '',
       }).success,
     ).toBe(false);
     expect(

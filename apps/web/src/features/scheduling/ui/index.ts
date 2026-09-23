@@ -11,3 +11,4 @@ export {
   StudentLessonsCard,
   studentLessonsRange,
 } from '@/components/scheduling/student-lessons-card';
+export { LessonStatusBadge } from '@/components/scheduling/lesson-status';

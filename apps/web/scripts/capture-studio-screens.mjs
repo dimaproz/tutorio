@@ -42,6 +42,16 @@ const SCREENS = [
   { id: 'parents-screens-form--edit', file: 'ParentFormEdit' },
   { id: 'parents-screens-form--edit-owner', file: 'ParentDelete' },
   { id: 'parents-screens-profile--link-student', file: 'ParentStudentLink' },
+  { id: 'groups-screens-collection--playground', file: 'GroupsGrid' },
+  { id: 'groups-screens-collection--rows', file: 'GroupsRows' },
+  { id: 'groups-screens-collection--empty-workspace', file: 'GroupsEmpty' },
+  { id: 'groups-screens-collection--empty-search', file: 'GroupsEmptySearch' },
+  { id: 'groups-screens-page--playground', file: 'GroupPage' },
+  { id: 'groups-screens-page--just-created', file: 'GroupPageNew' },
+  { id: 'groups-screens-page--add-students', file: 'GroupStudentLink' },
+  { id: 'groups-screens-form--playground', file: 'GroupFormCreate' },
+  { id: 'groups-screens-form--edit-with-schedule', file: 'GroupFormEdit' },
+  { id: 'groups-screens-form--archive-dialog', file: 'GroupArchive' },
 ];
 
 function arg(name, fallback) {

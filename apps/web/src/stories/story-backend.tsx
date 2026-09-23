@@ -15,6 +15,7 @@ import { paginationQuerySchema } from '@tutorio/validation';
 import { SessionProvider } from '@/components/app/session-provider';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { SESSION_QUERY_KEY } from '@/lib/auth/client';
+import { createGroupRoutes, type GroupStoryOptions } from './group-story-backend';
 
 /**
  * A deterministic, in-memory backend for screen stories. It answers the same
@@ -47,6 +48,7 @@ export const storySession: AuthMe = {
     mode: 'SCHOOL',
     defaultCurrency: 'UAH',
     cancellationDeadlineHours: 12,
+    timezone: 'Europe/Kyiv',
   },
   role: 'OWNER',
 };
@@ -324,7 +326,7 @@ export const SAMPLE_LESSONS: LessonResponse[] = [
   lesson(10, anna, at(1, 18), 'SCHEDULED', TEACHER_B, 90, { id: 'g1', name: 'B1 English' }),
 ];
 
-export type StoryBackendOptions = {
+export type StoryBackendOptions = GroupStoryOptions & {
   students?: SampleStudent[];
   packages?: PackageResponse[];
   lessons?: LessonResponse[];
@@ -447,6 +449,7 @@ function createHandler(options: StoryBackendOptions) {
   const parents = (options.parents ?? SAMPLE_PARENTS).map((parent) => ({ ...parent }));
   let links = [...(options.parentLinks ?? SAMPLE_PARENT_LINKS)];
   const detailOf = (item: SampleStudent) => toDetail(item, parents, links);
+  const groupRoutes = createGroupRoutes(options);
   const settle = () =>
     options.saveDelayMs
       ? new Promise((resolve) => setTimeout(resolve, options.saveDelayMs))
@@ -470,6 +473,11 @@ function createHandler(options: StoryBackendOptions) {
       });
       if (!paging.success) return json({ code: 'VALIDATION_FAILED' }, 400);
     }
+
+    const groupResponse = await groupRoutes(path, method, query, () =>
+      JSON.parse(String(init?.body ?? '{}')),
+    );
+    if (groupResponse) return groupResponse;
 
     // Before the detail route: "summary" is not a student id.
     if (path === '/students/summary') {

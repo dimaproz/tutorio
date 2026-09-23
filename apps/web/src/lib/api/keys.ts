@@ -20,6 +20,10 @@ export interface GroupListFilters {
   state?: 'active' | 'deleted' | 'all';
   status?: string;
   studentId?: string;
+  teacherId?: string;
+  /** 0 = Sunday … 6 = Saturday. */
+  weekday?: number;
+  payment?: 'unpaid';
   sort?: string;
   order?: 'asc' | 'desc';
   pageSize?: number;
@@ -105,7 +109,12 @@ export const queryKeys = {
   groups: {
     all: ['groups'] as const,
     lists: (filters: GroupListFilters) => ['groups', 'list', filters] as const,
+    summary: ['groups', 'summary'] as const,
+    options: ['groups', 'options'] as const,
     detail: (groupId: string) => ['groups', 'detail', groupId] as const,
+    attendanceAll: ['groups', 'attendance'] as const,
+    attendance: (groupId: string, window: number) =>
+      ['groups', 'attendance', groupId, window] as const,
   },
   parents: {
     all: ['parents'] as const,
@@ -128,7 +137,9 @@ export const queryKeys = {
   },
   lessons: {
     all: ['lessons'] as const,
+    listsAll: ['lessons', 'list'] as const,
     lists: (filters: LessonListFilters) => ['lessons', 'list', filters] as const,
+    attendance: (lessonId: string) => ['lessons', 'attendance', lessonId] as const,
   },
   series: {
     all: ['series'] as const,
