@@ -1,6 +1,6 @@
 # Product Workflow Documentation
 
-Last verified: 2026-09-10.
+Last verified: 2026-09-23.
 
 These documents describe the tutor-facing jobs that cross multiple entities.
 They own user vocabulary, progressive disclosure, success/empty/error states,
@@ -9,12 +9,13 @@ and acceptance criteria. Domain invariants remain authoritative in
 
 ## Pilot-critical workflows
 
-| Workflow                          | Current assessment                                                                           | Target document                                |
-| --------------------------------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| Sign in and create a workspace    | Functional; presentation is inconsistent with the approved shadcn baseline                   | [Authentication workflow](./authentication.md) |
-| Create and onboard a student      | Audited; WP6 collection, quick-create, detail, lifecycle, and component brief is approved    | [Student workflow](./students.md)              |
-| Keep and link parent contacts     | WP6.1 collection, profile, full-page form and two-sided linking implemented                  | [Parent workflow](./parents.md)                |
-| Sell and operate a lesson package | Functional but combines plan, schedule, and payment; financial invariants need stabilization | [Package workflow](./packages.md)              |
+| Workflow                          | Current assessment                                                                              | Target document                                |
+| --------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| Sign in and create a workspace    | Functional; presentation is inconsistent with the approved shadcn baseline                      | [Authentication workflow](./authentication.md) |
+| Create and onboard a student      | Audited; WP6 collection, quick-create, detail, lifecycle, and component brief is approved       | [Student workflow](./students.md)              |
+| Keep and link parent contacts     | WP6.1 collection, profile, full-page form and two-sided linking implemented                     | [Parent workflow](./parents.md)                |
+| Run a group and its attendance    | WP6.3 collection, group page, full-page form, roster and interim attendance marking implemented | [Group workflow](./groups.md)                  |
+| Sell and operate a lesson package | Functional but combines plan, schedule, and payment; financial invariants need stabilization    | [Package workflow](./packages.md)              |
 
 ## Workflow documentation template
 

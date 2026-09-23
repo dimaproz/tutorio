@@ -1,6 +1,6 @@
 # Tutorio Current State
 
-Last verified: 2026-09-23 after the Work Packet 6.1 (Parents) gate.
+Last verified: 2026-09-23 after the Work Packet 6.3 (Groups) gate.
 
 This is the first project document to read before planning or implementing
 work. It reports the repository as it exists; [`mvp-plan.md`](./mvp-plan.md)
@@ -172,6 +172,45 @@ import paths plus the reviewed session-context/root-layout exceptions. Root
 lint, typecheck, test, build, Storybook browser tests (112 across 22 files),
 Storybook static build, and `git diff --check` pass. Work Packet 6 is the next
 planned work.
+
+### Work Packet 6.3 evidence
+
+Groups follow the Studio handoff; see [`product/groups.md`](./product/groups.md)
+and [ADR 0006](./decisions/0006-group-teacher-capacity-and-attendance.md). The
+collection (cards and rows, four metrics, status tabs, teacher, weekday and
+unpaid filters, sort — all answered by the API), the group page led by the
+schedule, and full-page create and edit with a neutral archive are built on
+two new shared components, `LessonList` and `AttendanceList`; the student
+profile's lessons now scroll inside `LessonList`. The schema gained a group
+teacher, seats and per-student attendance (migration
+`20260924120000_group_teacher_capacity_attendance`).
+
+Backend audit (students, teachers, parents, groups), fixed in the same pass:
+roster reconciliation no longer revives or duplicates student-archived
+enrollments and writes in batches; the solo single-teacher rule holds on every
+activation path; enrollment changes are guarded against archived students;
+archived students are listable; `PATCH /parents/:id` answers with the detail;
+list page and count reads run concurrently; restore conflict checks and
+advisory locks are batched; a schedule set on an empty group is clash-checked
+at once and materialized when the first student joins; the rate limiter keys
+on the session and on a gateway-forwarded client address trusted only with
+`GATEWAY_SHARED_SECRET`; a rotated refresh token's successor is shared during
+a short grace window, and the web gateway single-flights refreshes, so
+parallel requests after expiry no longer log the user out.
+
+Performance ("every action loads many routes"): the causes were per-row
+`Link` prefetching of dynamic routes, mutations invalidating whole query
+families, search and filters pushed through the router on every keystroke,
+whole-form `watch()` re-rendering forms per keystroke, client-side session
+bootstrapping on hard reloads, lesson windows keyed to the millisecond,
+serial reads, and retries of 4xx answers. Now: row links do not prefetch;
+each mutation invalidates only what it outdates and cancelled reads abort;
+search is debounced and filters are written with native history; forms watch
+only the fields a section needs; the session is read on the server; lesson
+windows round to whole days; package pages, profile reads and group page
+reads start in parallel; student counts and profile enrollments come in one
+request; 4xx answers are not retried; the calendar loads on demand and unused
+barrel exports drop from bundles.
 
 ### Work Packet 6.1 evidence
 

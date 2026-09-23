@@ -33,6 +33,7 @@ the form or action sequence:
 
 - students: `../../docs/product/students.md`;
 - parents: `../../docs/product/parents.md`;
+- groups: `../../docs/product/groups.md`;
 - packages and payments: `../../docs/product/packages.md`.
 
 The workflow document owns required fields, progressive disclosure, next
@@ -82,6 +83,14 @@ multi-select relationship, not a field value: use `LinkPicker` /
 `LinkPickerDialog` for the picking, `LinkedCard` for the linked list on a
 profile, and `useLinkedSet` to save the whole set. Both sides of one
 relationship must use the same components.
+
+A list of lessons is `LessonList` (fixed height, inner scroll, "show more"
+into the same box) and a per-student attendance grid is `AttendanceList`; do
+not build another lesson or attendance list inside a feature.
+
+A zod rule in a feature schema reports its translation key through
+`params: { key }` and never sets `message`: a set message bypasses the
+localized error map and shows the same English text in every locale.
 
 ## UI and Styling
 

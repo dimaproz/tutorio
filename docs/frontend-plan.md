@@ -429,8 +429,10 @@ Expected reference composition:
    [`product/parents.md`](./product/parents.md).
 2. **Work Packet 6.2 — Teachers:** reuse proven person patterns and retain
    teacher-specific workspace and scheduling behavior.
-3. **Work Packet 6.3 — Groups and Enrollments:** migrate collection, roster,
-   relationship, lesson-summary, and lifecycle surfaces.
+3. **Work Packet 6.3 — Groups and Enrollments:** implemented 2026-09-23 —
+   collection, group page, full-page form, roster, archive/restore, and the
+   shared `LessonList` and `AttendanceList`; see
+   [`product/groups.md`](./product/groups.md).
 4. **Work Packet 6.4 — Scheduling:** migrate Calendar, lesson overlays, and
    Recurring Patterns while preserving conflict and recurrence semantics.
 5. **Work Packet 6.5 — Package Read Surfaces:** migrate package collection,

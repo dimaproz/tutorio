@@ -1,6 +1,6 @@
 # Learning Operations Aggregate
 
-Last verified: 2026-08-27.
+Last verified: 2026-09-23.
 
 This aggregate connects the roster to the calendar. Lifecycle actions must not
 silently erase historical finance or scheduling relationships.
@@ -9,11 +9,11 @@ silently erase historical finance or scheduling relationships.
 
 | Concern              | Contract                                                                                                                                                                                                                                                   |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Purpose              | Teaching cohort with optional default price and roster.                                                                                                                                                                                                    |
+| Purpose              | Teaching cohort with optional default price, optional teacher, optional seat count (1–500, informational) and roster.                                                                                                                                     |
 | Ownership            | Workspace-scoped.                                                                                                                                                                                                                                          |
-| Relationships        | Enrollments, lessons, series, and group packages.                                                                                                                                                                                                          |
-| Create/update        | Roster reconciliation creates or archives enrollments; price fallback is group, then student, then free. Writes are audited.                                                                                                                               |
-| Archive              | Owner-only and idempotent. It preserves roster, all finance, audit history, completed/non-scheduled lessons, and every foreign key. It archives group series and only future `SCHEDULED` group lessons.                                                    |
+| Relationships        | Optional teacher (`teacherId`, `SET NULL`), enrollments, lessons, series, and group packages.                                                                                                                                                             |
+| Create/update        | Roster reconciliation creates, reactivates or archives enrollments in batches (student-archived rows are left alone); price fallback is group, then student, then free. A school must name a teacher before students or a schedule (`GROUP_TEACHER_REQUIRED`); a solo workspace uses its only teacher. Create/update may add the **first** schedule only (`409 GROUP_SCHEDULE_EXISTS` otherwise), conflict-checked and materialized at once. Changing the teacher moves live enrollments, live/roster-suspended series and future `SCHEDULED` lessons after one batched conflict check; held lessons keep their teacher. Writes are audited. |
+| Archive              | Owner-only and idempotent. An archived group stays readable (`GET /groups/:id`). It preserves roster, all finance, audit history, completed/non-scheduled lessons, and every foreign key. It archives group series and only future `SCHEDULED` group lessons.                                                    |
 | Restore              | Owner-only and idempotent. It restores only series/lessons marked by the matching group archive timestamp, after checking every restored lesson against live teacher conflicts.                                                                            |
 | Active/paused roster | The default operational roster/counts include only `ACTIVE`/`PAUSED` enrollments whose student is not archived. Student archive preserves `groupId`, temporarily archives its enrollment, and restore returns its exact preceding `ACTIVE`/`PAUSED` state. |
 
@@ -25,6 +25,17 @@ A group recurring series materializes only while it has at least one active,
 non-archived participant. The roster-empty transition token-suspends future
 scheduled work; the first active participant restores only that marked work
 after checking teacher conflicts.
+
+## LessonAttendance
+
+| Concern       | Contract                                                                                                                                                                                                                                  |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Purpose       | One per-student mark for one lesson: `PRESENT`, `ABSENT` or `EXCUSED`, with `markedAt` and `markedById` ([ADR 0006](../decisions/0006-group-teacher-capacity-and-attendance.md)).                                                        |
+| Ownership     | Workspace-scoped; unique per (lesson, enrollment).                                                                                                                                                                                        |
+| Relationships | Lesson and enrollment (both cascade on hard delete, which the pilot never does).                                                                                                                                                         |
+| Write         | `PUT /lessons/:id/attendance` upserts marks for participants: the live group roster, anyone already marked, or the individual lesson's enrollment. The lesson must have started and not be cancelled (`409 ATTENDANCE_NOT_MARKABLE`). Audited on the lesson. |
+| Read          | `GET /groups/:id/attendance` summarizes the current roster over the last N held lessons with `summarizeAttendance` from `@tutorio/domain`: cancelled lessons count for nobody, excused is neutral, on-hold participants stay out of group figures, risk is a trailing streak of two or more absences. |
+| Current gap   | Marking lives in a dialog on the group page until the lesson screen owns it (Work Packet 6.4). Attendance does not drive credits.                                                                                                          |
 
 ## Enrollment
 

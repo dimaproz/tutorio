@@ -1,6 +1,6 @@
 # Tutorio Deployment and Operations Runbook
 
-Last verified from repository configuration: 2026-08-24. Actual Railway,
+Last verified from repository configuration: 2026-09-23. Actual Railway,
 Vercel, Sentry, backup, and restore state has not been externally verified.
 
 ## Environment policy
@@ -151,13 +151,31 @@ Do not clear tombstones or reconstruct `groupId` by guesswork. Preserve the
 query output and repair each group from verified backups or a reviewed manual
 mapping.
 
+### Group teacher and attendance migration
+
+`20260924120000_group_teacher_capacity_attendance` is additive: two nullable
+`groups` columns (`teacherId`, `capacity` with a CHECK), the `AttendanceStatus`
+enum and the `lesson_attendance` table. It backfills `groups.teacherId` from
+each group's newest live series, else its most common live enrollment teacher.
+After it runs, list the live groups that still have no teacher; in a school
+they need one before the form can add students or a schedule:
+
+```sql
+SELECT g."id", g."workspaceId", g."name"
+FROM "groups" AS g
+WHERE g."deletedAt" IS NULL AND g."teacherId" IS NULL;
+```
+
+Deploy the API before the web: the new web reads `/groups/summary`,
+`/groups/options` and the attendance routes.
+
 ## Deployment order
 
 1. Deploy backward-compatible database/API changes.
 2. Verify migration completion, readiness, auth, and one read-only API query.
 3. Deploy the web application.
-4. Run smoke journeys: login, student list/detail, calendar load, package
-   list/detail, and a non-mutating audit/settings read.
+4. Run smoke journeys: login, student list/detail, group list/page, calendar
+   load, package list/detail, and a non-mutating audit/settings read.
 5. Perform a controlled mutation only in staging: create/archive a fixture and
    reconcile its audit event.
 6. Observe logs, error rate, latency, and database connections before declaring

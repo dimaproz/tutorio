@@ -86,7 +86,9 @@ Approved implementation order:
 1. Work Packet 6 — Student Experience and Quick Create.
 2. Work Packet 6.1 — Parents (closed 2026-09-23).
 3. Work Packet 6.2 — Teachers.
-4. Work Packet 6.3 — Groups and Enrollments.
+4. Work Packet 6.3 — Groups and Enrollments (groups implemented 2026-09-23,
+   ahead of 6.2 at the product owner's request; see
+   [`product/groups.md`](./product/groups.md)).
 5. Work Packet 6.4 — Scheduling: Calendar and Recurring Patterns.
 6. Work Packet 6.5 — Package list, detail, ledger, and payment-history surfaces;
    the package sale flow remains reserved for Work Packet 7.

@@ -252,17 +252,48 @@ and are ready for Teachers. Details are in the brief's review section.
 Open product decisions: a stored relation (mother, guardian) and a payer flag;
 a student schedule view for the parent-side row menu.
 
+### Work Packet 6.3 — Groups (implemented 2026-09-23, ahead of 6.2)
+
+Implements the Studio groups handoff; the brief is
+[`product/groups.md`](./product/groups.md) and the schema decisions are
+[ADR 0006](./decisions/0006-group-teacher-capacity-and-attendance.md). The
+collection (cards and rows, four metrics, status tabs with the owner-only
+archive, teacher/weekday/unpaid filters and the sort, all answered by the
+API), the group page (hero, schedule card, metrics, lessons, attendance,
+roster, package and notes), and full-page create and edit with the neutral
+archive are on the new shared `LessonList` and `AttendanceList`; the student
+profile's lessons moved onto `LessonList`. `components/groups` and
+`StudentQuickCreateDialog` are removed.
+
+The API gained `Group.teacherId` and `capacity`, per-student
+`LessonAttendance` with `GET`/`PUT /lessons/:id/attendance`,
+`GET /groups/summary`, `/groups/options` and `/groups/:id/attendance`, the
+first-schedule path in the group form, and teacher reassignment (migration
+`20260924120000_group_teacher_capacity_attendance`). The same pass audited the
+students, teachers, parents and groups services and cut the web's request
+volume; see [`current-state.md`](./current-state.md#work-packet-63-evidence).
+
+Follow-ups, in the order they unblock the pilot:
+
+1. The schedule-change confirmation (how many booked lessons a change
+   rebuilds) — design with the product owner; until then the form shows an
+   existing schedule read-only with a link to recurring lessons.
+2. Attendance marking on the lesson screen (Work Packet 6.4); remove the
+   group page's interim dialog once it lands.
+3. A teacher filter on the students list and the per-student attendance
+   series on the student profile, both now possible on the new data.
+4. Persist the collection view choice (cards/rows) for groups and students
+   together, or keep both unpersisted — one decision for both.
+5. Enrollment surfaces outside a group (individual enrollments) still live on
+   the student profile; there is no standalone enrollment screen.
+
 ### Work Packet 6.2 — Teachers (next)
 
 Migrate teacher collection, detail, form, status, assignment, and workspace-mode
 states. Reuse proven person components where their contracts match; keep
-teacher scheduling and availability behavior feature-owned.
-
-### Work Packet 6.3 — Groups and Enrollments
-
-Migrate group collection/detail, roster, enrollment, lesson summary, and
-archive/restore flows. Preserve lifecycle and suspension semantics while making
-participant and scheduling consequences explicit.
+teacher scheduling and availability behavior feature-owned. A teacher's groups
+can now be read from `Group.teacherId` (`GET /groups?teacherId=`), and
+`LessonList` is ready for the teacher's lessons.
 
 ### Work Packet 6.4 — Scheduling
 
@@ -348,7 +379,8 @@ optional prop, so wiring one up is a single argument.
 2. Collection aggregates: the weekly lesson trend series, the running-low
    count, and the outstanding total.
 3. Profile metrics: credits left, paid this term, and an attendance series.
-   Attendance has no data model at all.
+   Attendance is now stored per lesson (`LessonAttendance`, ADR 0006); the
+   student-side series still needs a read endpoint.
 4. Notes authorship: who last edited a student's notes and when.
 5. Navigation counters and the workspace teacher count.
 
@@ -364,7 +396,9 @@ disabled or as a named empty state rather than pretending.
    in [`design-system.md`](./design-system.md#theme-contract). Open design
    questions: the white 6px avatar ring on the dark profile hero, and the
    canvas discrepancies listed in the dark-theme PR.
-2. Migrate the remaining `MetricCard` callers in groups to `StatBlock`.
+2. ~~Migrate the remaining `MetricCard` callers in groups to `StatBlock`.~~
+   Done in Work Packet 6.3; only the dashboard's `StatTile` still uses
+   `MetricCard`.
 3. Input and Select are still 36px while buttons are 44px. The handoff does not
    cover forms, so they were left alone; they need one reviewed pass.
 4. The mobile layout for both screens is a proposal, not an approved design.
