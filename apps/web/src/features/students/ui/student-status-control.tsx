@@ -94,7 +94,9 @@ export function useStudentStatusActions(student: StatusControlStudent) {
     },
     dialog === 'hold',
   );
-  const individual = scheduled.data?.items.filter((lesson) => lesson.groupId === null);
+  const individual = scheduled.isPlaceholderData
+    ? undefined
+    : scheduled.data?.items.filter((lesson) => lesson.groupId === null);
   const firstName = student.fullName.split(/\s+/)[0] || student.fullName;
   const fail = (error: unknown) => toast.error(tErrors(errorMessageKey(error as GatewayError)));
 
@@ -165,8 +167,14 @@ export function useStudentStatusActions(student: StatusControlStudent) {
         open={dialog === 'hold'}
         onOpenChange={(open) => setDialog(open ? 'hold' : null)}
         fullName={student.fullName}
+        // A new hold window is a new query key, and the previous opening's list
+        // is served as placeholder until it answers: that list is not a count.
         scheduledLessons={
-          scheduled.isSuccess ? (individual?.length ?? 0) : scheduled.isError ? 0 : undefined
+          scheduled.isSuccess && !scheduled.isPlaceholderData
+            ? (individual?.length ?? 0)
+            : scheduled.isError
+              ? 0
+              : undefined
         }
         pending={cancelling || update.isPending}
         onConfirm={(options) => void confirmHold(options)}

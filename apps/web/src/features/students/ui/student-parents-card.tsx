@@ -6,9 +6,9 @@ import Link from 'next/link';
 import { PhoneIcon, PlusIcon, SearchIcon, XIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { ParentListItem, StudentDetail } from '@tutorio/validation';
-// Direct import on purpose: the Parents barrel re-exports screens that import
-// this feature, so routing through it would make the two barrels a cycle.
-// Parents migrates in Work Packet 6.1 and then exports the dialog cleanly.
+// Direct import until Parents migrates in Work Packet 6.1: its barrel does not
+// export the dialog yet. The parent form imports this feature back, a cycle
+// that is harmless because both sides use each other only inside JSX.
 import { ParentFormDialog } from '@/components/parents/parent-form-dialog';
 import { EntityAvatar } from '@/components/shared/entity-avatar';
 import { EntityPicker } from '@/components/shared/entity-picker';
@@ -53,8 +53,9 @@ export function StudentParentsCard({
   // until the refreshed profile has arrived.
   const serverIds = useMemo(() => student.parents.map((parent) => parent.id), [student.parents]);
   const [sentIds, setSentIds] = useState<string[] | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const linkedIds = sentIds ?? serverIds;
-  const busy = update.isPending || sentIds !== null;
+  const busy = update.isPending || refreshing;
   const available = useMemo(() => {
     const byId = new Map<string, ParentListItem>();
     for (const parent of [...(parents.data?.items ?? []), ...extraParents])
@@ -65,14 +66,22 @@ export function StudentParentsCard({
   const saveLinks = async (parentIds: string[]) => {
     setRetryParentIds(null);
     setSentIds(parentIds);
+    setRefreshing(true);
     try {
       await update.mutateAsync({ parentIds });
-      await queryClient.refetchQueries({ queryKey: queryKeys.students.detail(student.id) });
     } catch {
-      setRetryParentIds(parentIds);
-    } finally {
       setSentIds(null);
+      setRetryParentIds(parentIds);
+      setRefreshing(false);
+      return;
     }
+    // The save succeeded. The sent set stays authoritative until a refreshed
+    // profile confirms it; a failed refresh must not hand the next edit a
+    // stale set to build on.
+    const key = queryKeys.students.detail(student.id);
+    await queryClient.refetchQueries({ queryKey: key });
+    if (queryClient.getQueryState(key)?.status === 'success') setSentIds(null);
+    setRefreshing(false);
   };
 
   const created = async (parent: { id: string; fullName: string }) => {
@@ -232,6 +241,7 @@ export function StudentParentsCard({
                 type="button"
                 variant="ghost"
                 size="xs"
+                disabled={busy}
                 onClick={() => onCreateOpenChange(true)}
               >
                 <PlusIcon data-icon="inline-start" />

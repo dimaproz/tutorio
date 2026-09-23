@@ -23,16 +23,12 @@ import {
 } from '@/features/students/model/form';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { errorMessageKey } from '@/lib/api/error-message';
-import {
-  useRestoreStudentMutation,
-  useStudentQuery,
-  useUpdateStudentMutation,
-} from '@/lib/api/students';
+import { useStudentQuery, useUpdateStudentMutation } from '@/lib/api/students';
 import { scrollToFirstError } from '@/lib/forms/focus-error';
 import { StudentFormLayout, useStudentFormNavItems } from './student-form-layout';
 import { StudentFormSections } from './student-form-sections';
 import { useLeaveGuard, useStudentForm, useStudentFormState } from './student-form-state';
-import { StudentStatusControl } from './student-status-control';
+import { StudentStatusControl, useStudentStatusActions } from './student-status-control';
 
 /**
  * Edit a saved student on a full page. The record loads first; a failed load
@@ -103,7 +99,10 @@ function StudentEditForm({ student }: { student: StudentDetail }) {
   const router = useRouter();
   const mobile = useIsMobile();
   const update = useUpdateStudentMutation(student.id);
-  const restore = useRestoreStudentMutation();
+  // The notice and the status pill restore through one set of status actions,
+  // so neither can fire a second restore while the first is running.
+  const statusActions = useStudentStatusActions(student);
+  const restoring = student.status === 'ARCHIVED' && statusActions.pending;
   const [discardOpen, setDiscardOpen] = useState(false);
   // Where the tutor was heading when the discard prompt stopped them, if a
   // link was the reason; the Discard button leaves the tutor on the page.
@@ -207,15 +206,10 @@ function StudentEditForm({ student }: { student: StudentDetail }) {
           type="button"
           variant="white"
           size="xs"
-          disabled={restore.isPending}
-          onClick={() =>
-            restore.mutate(student.id, {
-              onSuccess: () => toast.success(tStudents('toasts.restored')),
-              onError: (error) => toast.error(tErrors(errorMessageKey(error))),
-            })
-          }
+          disabled={restoring}
+          onClick={() => statusActions.choose('ACTIVE')}
         >
-          {restore.isPending ? (
+          {restoring ? (
             <Spinner data-icon="inline-start" />
           ) : (
             <RotateCcwIcon data-icon="inline-start" />
@@ -245,7 +239,12 @@ function StudentEditForm({ student }: { student: StudentDetail }) {
           title={student.fullName}
           subtitle={archived ? t('archivedSubtitle') : t('editSubtitle')}
           headerAction={
-            <StudentStatusControl student={student} size="md" note={t('statusIndependent')} />
+            <StudentStatusControl
+              student={student}
+              size="md"
+              note={t('statusIndependent')}
+              actions={statusActions}
+            />
           }
           navItems={navItems}
           activeSection={state.activeSection}
@@ -265,6 +264,7 @@ function StudentEditForm({ student }: { student: StudentDetail }) {
         confirmLabel={t('discardAction')}
         onConfirm={discard}
       />
+      {statusActions.dialogs}
     </FormProvider>
   );
 }

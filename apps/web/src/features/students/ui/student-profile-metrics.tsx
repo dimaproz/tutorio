@@ -45,7 +45,9 @@ export function StudentProfileMetrics({
     locale,
   );
   // Unknown or not summable: a zero here would read as "nothing paid".
-  const unknownPaid = Boolean(metrics && !paid && (metrics.packagesUnavailable || metrics.mixedCurrency));
+  const unknownPaid = Boolean(
+    metrics && !paid && (metrics.packagesUnavailable || metrics.mixedCurrency),
+  );
   const shortDate = (iso: string) =>
     format.dateTime(new Date(iso), { day: 'numeric', month: 'short' });
 

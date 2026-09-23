@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ChevronDownIcon, LogOutIcon, MoreVerticalIcon, SettingsIcon } from 'lucide-react';
+import { LogOutIcon, MoreVerticalIcon, SettingsIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { AuthMe } from '@tutorio/validation';
@@ -65,8 +65,8 @@ function SidebarNavigationLink({ item, pathname }: { item: NavigationItem; pathn
 /**
  * The workspace context row. A school shows its name and scale; a solo tutor
  * shows their own identity. Switching workspaces is not built yet, so the row
- * is information, not a control: a button with nothing behind it would be a
- * dead tab stop.
+ * is information, not a control — no chevron, no tab stop — until a real
+ * switcher exists.
  */
 function WorkspaceSwitcher({ session, isSolo }: { session: AuthMe; isSolo: boolean }) {
   const t = useTranslations('app.workspace');
@@ -94,7 +94,6 @@ function WorkspaceSwitcher({ session, isSolo }: { session: AuthMe; isSolo: boole
           {isSolo ? t('soloTutor') : t('school')}
         </span>
       </span>
-      <ChevronDownIcon aria-hidden="true" className="size-4 shrink-0" />
     </div>
   );
 }
