@@ -13,7 +13,8 @@ import {
 import { useTranslations } from 'next-intl';
 import { useSidebar } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
-import { isNavigationActive, type NavigationKey } from './app-navigation';
+import { canUseBusinessRoutes, isNavigationActive, type NavigationKey } from './app-navigation';
+import { useSession } from './session-provider';
 
 const TABS: { key: NavigationKey; href: string; icon: LucideIcon; exact?: boolean }[] = [
   { key: 'dashboard', href: '/app', icon: HomeIcon, exact: true },
@@ -81,5 +82,9 @@ export function MobileTabBarContent({
 
 export function MobileTabBar() {
   const { setOpenMobile } = useSidebar();
-  return <MobileTabBarContent pathname={usePathname()} onMore={() => setOpenMobile(true)} />;
+  const pathname = usePathname();
+  const session = useSession();
+  // A non-owner has no destinations; the no-access screen carries sign-out.
+  if (!canUseBusinessRoutes(session.role)) return null;
+  return <MobileTabBarContent pathname={pathname} onMore={() => setOpenMobile(true)} />;
 }

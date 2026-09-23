@@ -19,7 +19,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { BackButton } from '@/components/shared/back-button';
 import { usePageCrumb } from '@/components/shared/page-crumb';
 import { SearchField } from '@/components/shared/search-field';
-import { getRouteContext } from './app-navigation';
+import { canUseBusinessRoutes, getRouteContext } from './app-navigation';
 import { useSession } from './session-provider';
 import { ThemeToggle } from './theme-toggle';
 
@@ -27,6 +27,7 @@ export function AppHeaderContent({
   pathname,
   workspaceName,
   crumb,
+  businessAccess = true,
   localeControl = (
     <LocaleSwitcher className="size-11 border border-border bg-card hover:border-line-hover" />
   ),
@@ -38,12 +39,17 @@ export function AppHeaderContent({
   workspaceName?: string;
   /** The page's own name for itself, e.g. "Anna Shevchenko › Edit". */
   crumb?: string | null;
+  /**
+   * False for a membership without business access: the bar then names only
+   * the workspace, with no section trail, search or notifications.
+   */
+  businessAccess?: boolean;
   localeControl?: React.ReactNode;
   themeControl?: React.ReactNode;
 }) {
   const t = useTranslations('app.nav');
   const tHeader = useTranslations('app.header');
-  const context = getRouteContext(pathname);
+  const context = businessAccess ? getRouteContext(pathname) : [];
   const parentHref = context.length === 2 ? context[0].href : undefined;
   const parent = parentHref ? { key: context[0].key, href: parentHref } : null;
 
@@ -68,7 +74,7 @@ export function AppHeaderContent({
                   <BreadcrumbItem className="min-w-0">
                     <span className="truncate">{workspaceName}</span>
                   </BreadcrumbItem>
-                  <BreadcrumbSeparator />
+                  {context.length > 0 ? <BreadcrumbSeparator /> : null}
                 </>
               ) : null}
               {context.map((item, index) => (
@@ -92,7 +98,7 @@ export function AppHeaderContent({
         )}
       </div>
       <div className="flex shrink-0 items-center gap-2.5">
-        <div className="hidden w-85 lg:block">
+        <div className={businessAccess ? 'hidden w-85 lg:block' : 'hidden'}>
           <SearchField
             label={tHeader('search')}
             placeholder={tHeader('searchPlaceholder')}
@@ -101,18 +107,22 @@ export function AppHeaderContent({
         </div>
         {localeControl}
         {themeControl}
-        <IconButton border icon={<BellIcon />} label={tHeader('notifications')} indicator />
+        {businessAccess ? (
+          <IconButton border icon={<BellIcon />} label={tHeader('notifications')} indicator />
+        ) : null}
       </div>
     </header>
   );
 }
 
 export function AppHeader() {
+  const session = useSession();
   return (
     <AppHeaderContent
       pathname={usePathname()}
-      workspaceName={useSession().workspace.name}
+      workspaceName={session.workspace.name}
       crumb={usePageCrumb()}
+      businessAccess={canUseBusinessRoutes(session.role)}
     />
   );
 }

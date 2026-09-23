@@ -36,17 +36,34 @@ export type NavigationAccess = {
   isSolo: boolean;
 };
 
+/**
+ * The pilot is owner-operated (ADR 0004): every business read and command is
+ * owner-only in the API, and a legacy TEACHER membership can only see who it
+ * is. The shell mirrors that exactly: a non-owner gets no destinations and a
+ * single "no access yet" screen, never pages built from 403s.
+ */
+export function canUseBusinessRoutes(role: string): boolean {
+  return role === 'OWNER';
+}
+
 // One flat list, in the order the design reads it. Grouping headings were
 // dropped with the Studio shell: eight destinations do not need three labels.
+// Every destination reads business data, so every one is owner-only.
 const navigationItems: NavigationItem[] = [
-  { key: 'dashboard', href: '/app', icon: HomeIcon, exact: true },
-  { key: 'calendar', href: '/app/calendar', icon: CalendarIcon },
-  { key: 'students', href: '/app/students', icon: UsersIcon },
-  { key: 'groups', href: '/app/groups', icon: LayersIcon },
-  { key: 'parents', href: '/app/parents', icon: HeartIcon },
-  { key: 'teachers', href: '/app/teachers', icon: GraduationCapIcon, schoolOnly: true },
-  { key: 'packages', href: '/app/packages', icon: BoxIcon },
-  { key: 'patterns', href: '/app/lessons/patterns', icon: RepeatIcon },
+  { key: 'dashboard', href: '/app', icon: HomeIcon, exact: true, ownerOnly: true },
+  { key: 'calendar', href: '/app/calendar', icon: CalendarIcon, ownerOnly: true },
+  { key: 'students', href: '/app/students', icon: UsersIcon, ownerOnly: true },
+  { key: 'groups', href: '/app/groups', icon: LayersIcon, ownerOnly: true },
+  { key: 'parents', href: '/app/parents', icon: HeartIcon, ownerOnly: true },
+  {
+    key: 'teachers',
+    href: '/app/teachers',
+    icon: GraduationCapIcon,
+    ownerOnly: true,
+    schoolOnly: true,
+  },
+  { key: 'packages', href: '/app/packages', icon: BoxIcon, ownerOnly: true },
+  { key: 'patterns', href: '/app/lessons/patterns', icon: RepeatIcon, ownerOnly: true },
 ];
 
 const settingsItem: NavigationItem = {

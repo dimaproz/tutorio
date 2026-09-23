@@ -8,6 +8,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { NarrowStoryContainer } from '@/stories/story-helpers';
 import { AppHeaderContent } from './app-header';
 import { AppSidebarContent } from './app-sidebar';
+import { NoBusinessAccessView } from './owner-access-gate';
 
 const ownerSession = {
   user: {
@@ -63,6 +64,7 @@ function AppShellContract({
           <AppHeaderContent
             pathname={pathname}
             workspaceName={current.workspace.name}
+            businessAccess={role === 'OWNER'}
             localeControl={
               <Button variant="outline" size="icon" aria-label="Language">
                 EN
@@ -75,7 +77,11 @@ function AppShellContract({
             }
           />
           <div className="flex flex-1 flex-col gap-6">
-            <h1 className="text-lg font-medium">Feature content</h1>
+            {role === 'OWNER' ? (
+              <h1 className="text-lg font-medium">Feature content</h1>
+            ) : (
+              <NoBusinessAccessView onSignOut={() => undefined} />
+            )}
           </div>
         </SidebarInset>
       </SidebarProvider>
@@ -148,15 +154,21 @@ export const DesktopExpanded: Story = {
   },
 };
 
-/** A solo tutor as a teacher: Teachers and Settings both disappear. */
-export const SoloTeacher: Story = {
+/**
+ * A teacher membership in the owner-operated pilot: no destinations at all,
+ * and the no-access screen in place of every page.
+ */
+export const Teacher: Story = {
   args: { workspace: 'solo', role: 'TEACHER' },
   play: async ({ canvas, canvasElement }) => {
     const workspace = canvasElement.querySelector('[data-slot="workspace-context"]');
     await expect(workspace).not.toBeNull();
     await expect(within(workspace as HTMLElement).getByText('Individual tutor')).toBeVisible();
-    await expect(canvas.queryByRole('link', { name: 'Teachers' })).toBeNull();
-    await expect(canvas.queryByRole('link', { name: 'Settings' })).toBeNull();
+    for (const name of ['Today', 'Students', 'Calendar', 'Teachers', 'Settings']) {
+      await expect(canvas.queryByRole('link', { name })).toBeNull();
+    }
+    await expect(canvas.getByRole('heading', { level: 1 })).toHaveTextContent(/Access/);
+    await expect(canvas.getByRole('button', { name: 'Sign out' })).toBeEnabled();
   },
 };
 

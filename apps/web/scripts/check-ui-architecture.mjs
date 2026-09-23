@@ -73,6 +73,7 @@ const appShellFiles = new Set([
   'app-sidebar.tsx',
   'mobile-app-bar.tsx',
   'mobile-tab-bar.tsx',
+  'owner-access-gate.tsx',
   'session-provider.tsx',
   'theme-toggle.tsx',
 ]);

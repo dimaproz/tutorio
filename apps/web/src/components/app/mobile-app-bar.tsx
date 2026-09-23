@@ -6,7 +6,8 @@ import { ArrowLeftIcon, BellIcon, SearchIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { IconButton } from '@/components/shared/icon-button';
 import { usePageCrumb } from '@/components/shared/page-crumb';
-import { getRouteContext } from './app-navigation';
+import { canUseBusinessRoutes, getRouteContext } from './app-navigation';
+import { useSession } from './session-provider';
 
 /**
  * The phone top bar. A section root shows the logo with search and
@@ -15,13 +16,16 @@ import { getRouteContext } from './app-navigation';
 export function MobileAppBarContent({
   pathname,
   crumb,
+  businessAccess = true,
 }: {
   pathname: string;
   crumb?: string | null;
+  /** False for a membership without business access: logo only, no actions. */
+  businessAccess?: boolean;
 }) {
   const t = useTranslations('app.nav');
   const tHeader = useTranslations('app.header');
-  const context = getRouteContext(pathname);
+  const context = businessAccess ? getRouteContext(pathname) : [];
   const parent = context.length === 2 && context[0].href ? context[0] : null;
 
   if (parent?.href) {
@@ -53,14 +57,23 @@ export function MobileAppBarContent({
         </span>
         <span className="text-xl font-semibold tracking-[-0.02em]">tutorio</span>
       </Link>
-      <div className="flex items-center gap-1">
-        <IconButton tone="ghost" icon={<SearchIcon />} label={tHeader('search')} />
-        <IconButton tone="ghost" icon={<BellIcon />} label={tHeader('notifications')} indicator />
-      </div>
+      {businessAccess ? (
+        <div className="flex items-center gap-1">
+          <IconButton tone="ghost" icon={<SearchIcon />} label={tHeader('search')} />
+          <IconButton tone="ghost" icon={<BellIcon />} label={tHeader('notifications')} indicator />
+        </div>
+      ) : null}
     </header>
   );
 }
 
 export function MobileAppBar() {
-  return <MobileAppBarContent pathname={usePathname()} crumb={usePageCrumb()} />;
+  const session = useSession();
+  return (
+    <MobileAppBarContent
+      pathname={usePathname()}
+      crumb={usePageCrumb()}
+      businessAccess={canUseBusinessRoutes(session.role)}
+    />
+  );
 }

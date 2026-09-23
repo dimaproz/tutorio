@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  canUseBusinessRoutes,
   closeMobileNavigation,
   getNavigationItems,
   getRouteContext,
@@ -28,14 +29,20 @@ describe('application navigation', () => {
     expect(isNavigationActive('/app/students', items[0]!)).toBe(false);
   });
 
-  it('hides teachers for SOLO workspaces and settings for non-owners', () => {
+  it('hides teachers for SOLO workspaces', () => {
     const soloItems = getNavigationItems({ isOwner: true, isSolo: true });
-    const schoolItems = getNavigationItems({ isOwner: false, isSolo: false });
+    const schoolItems = getNavigationItems({ isOwner: true, isSolo: false });
 
     expect(soloItems.map((item) => item.key)).not.toContain('teachers');
     expect(schoolItems.map((item) => item.key)).toContain('teachers');
     expect(getSettingsNavigation({ isOwner: true, isSolo: true })?.key).toBe('settings');
+  });
+
+  it('gives a non-owner no destinations at all, matching the owner-only API', () => {
+    expect(getNavigationItems({ isOwner: false, isSolo: false })).toEqual([]);
     expect(getSettingsNavigation({ isOwner: false, isSolo: false })).toBeNull();
+    expect(canUseBusinessRoutes('OWNER')).toBe(true);
+    expect(canUseBusinessRoutes('TEACHER')).toBe(false);
   });
 
   it('uses a neutral detail label instead of an identifier in route context', () => {

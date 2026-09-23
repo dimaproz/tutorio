@@ -2,6 +2,7 @@ import { AppHeader } from '@/components/app/app-header';
 import { AppSidebar } from '@/components/app/app-sidebar';
 import { MobileAppBar } from '@/components/app/mobile-app-bar';
 import { MobileTabBar } from '@/components/app/mobile-tab-bar';
+import { OwnerAccessGate } from '@/components/app/owner-access-gate';
 import { PageCrumbProvider } from '@/components/shared/page-crumb';
 import { SessionProvider } from '@/components/app/session-provider';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
@@ -35,7 +36,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <div className="hidden md:block">
               <AppHeader />
             </div>
-            <div className="flex flex-1 flex-col gap-4 md:gap-6">{children}</div>
+            <div className="flex flex-1 flex-col gap-4 md:gap-6">
+              <OwnerAccessGate>{children}</OwnerAccessGate>
+            </div>
           </SidebarInset>
           <MobileTabBar />
         </SidebarProvider>

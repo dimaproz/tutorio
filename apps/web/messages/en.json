@@ -349,6 +349,10 @@
       "switch": "Switch workspace",
       "school": "School",
       "soloTutor": "Individual tutor"
+    },
+    "noAccess": {
+      "title": "Access isn’t available yet",
+      "text": "During the pilot this workspace is run by its owner. Teacher accounts can’t view or change students, lessons or payments yet — ask the owner if you need something."
     }
   },
   "students": {
