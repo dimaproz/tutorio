@@ -113,17 +113,6 @@ export function StudentsListFilters({
   return (
     <div className="flex flex-col gap-2.5 md:flex-row md:flex-wrap md:items-center md:justify-between">
       <div className="flex min-w-0 flex-col gap-2.5 md:flex-row md:flex-wrap md:items-center">
-        <SearchField
-          ref={searchRef}
-          label={t('searchLabel')}
-          placeholder={t('searchPlaceholder')}
-          value={text}
-          onChange={(event) => {
-            setText(event.currentTarget.value);
-            onSearchChange(event.currentTarget.value);
-          }}
-          className="md:w-72"
-        />
         {/* A facet filter, not a tab set: it switches the query, not a panel.
             Four segments do not fit a phone, so the row scrolls rather than
             shrinking the touch targets. */}
@@ -139,6 +128,18 @@ export function StudentsListFilters({
             }))}
           />
         </div>
+        <SearchField
+          ref={searchRef}
+          label={t('searchLabel')}
+          placeholder={t('searchPlaceholder')}
+          value={text}
+          onChange={(event) => {
+            setText(event.currentTarget.value);
+            onSearchChange(event.currentTarget.value);
+          }}
+          // Phones search first: the list below is what the search narrows.
+          className="max-md:order-first md:w-72"
+        />
         <div className="flex flex-wrap items-center gap-2.5">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
