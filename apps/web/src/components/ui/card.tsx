@@ -1,14 +1,16 @@
 import * as React from 'react';
 import { cn } from 'cn';
 
-// Painted card surfaces. Each tone carries its own foreground so it reads the
-// same in both themes; `ink` and the tints are deliberately theme-independent.
+// Painted card surfaces. Each tone carries its own foreground pair, and every
+// pair is redefined by the dark theme. `feature` is the one highlight card on
+// a page: ink in light, the saturated indigo in dark.
 const CARD_TONE = {
   surface: 'bg-card text-card-foreground',
-  info: 'bg-tint-info text-ink',
-  warning: 'bg-tint-warning text-ink',
-  indigo: 'bg-tint-indigo text-ink',
+  info: 'bg-tint-info text-tint-foreground',
+  warning: 'bg-tint-warning text-tint-foreground',
+  indigo: 'bg-tint-indigo text-tint-foreground',
   ink: 'bg-ink text-ink-foreground',
+  feature: 'bg-feature text-feature-foreground',
 } as const;
 
 const CARD_RADIUS = {

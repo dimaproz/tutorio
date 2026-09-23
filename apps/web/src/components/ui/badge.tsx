@@ -22,7 +22,7 @@ const badgeVariants = cva(
         neutral: 'bg-background text-muted-foreground',
         brand: 'bg-brand-soft text-brand-soft-foreground',
         surface: 'bg-card text-foreground',
-        'on-ink': 'bg-ink-soft text-ink-foreground',
+        'on-ink': 'bg-feature-soft text-feature-foreground',
         'on-tint': 'bg-white/60 text-tint-indigo-foreground',
         /** Success on a tinted card, where the green tint would sink into the ground. */
         'success-inverse': 'bg-card text-tint-success-foreground',

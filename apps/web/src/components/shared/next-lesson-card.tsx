@@ -10,7 +10,7 @@ const ART = { empty: EmptyArt, pause: PauseArt, archive: ArchiveArt } as const;
 export type NextLessonArt = keyof typeof ART;
 
 /**
- * The ink "next lesson" ticket. Shows the next scheduled lesson with its two
+ * The "next lesson" highlight ticket. Shows the next scheduled lesson with its two
  * commands, or an empty state. The empty state either offers an action or,
  * where the action already lives elsewhere on the page, shows an illustration
  * of why nothing is planned: a fresh calendar, a pause, or the archive.
@@ -54,13 +54,13 @@ export function NextLessonCard({
 
   return (
     <Card
-      tone="ink"
+      tone="feature"
       radius="hero"
       data-slot="next-lesson-card"
       className={cn('gap-4.5 p-6.5 md:h-80', className)}
     >
       <div className="flex items-center justify-between gap-3">
-        <span className="text-[13px] font-semibold tracking-[0.06em] text-brand-soft uppercase">
+        <span className="text-[13px] font-semibold tracking-[0.06em] text-feature-heading uppercase">
           {heading}
         </span>
         {!loading && date && relative ? <Badge variant="on-ink">{relative}</Badge> : null}
@@ -69,10 +69,10 @@ export function NextLessonCard({
       {loading ? (
         <div className="flex grow flex-col gap-4.5">
           <div className="flex flex-col gap-2">
-            <Skeleton className="h-10 w-48 bg-ink-soft" />
-            <Skeleton className="h-5 w-56 bg-ink-soft" />
+            <Skeleton className="h-10 w-48 bg-feature-soft" />
+            <Skeleton className="h-5 w-56 bg-feature-soft" />
           </div>
-          <Skeleton className="h-14 w-full rounded-tile bg-ink-soft" />
+          <Skeleton className="h-14 w-full rounded-tile bg-feature-soft" />
         </div>
       ) : date ? (
         <>
@@ -80,7 +80,7 @@ export function NextLessonCard({
             <span className="text-[40px] leading-[44px] font-semibold tracking-[-0.03em]">
               {date}
             </span>
-            {time ? <span className="font-mono text-[15px] text-ink-muted">{time}</span> : null}
+            {time ? <span className="font-mono text-[15px] text-feature-muted">{time}</span> : null}
           </div>
           {teacher}
         </>
@@ -90,7 +90,7 @@ export function NextLessonCard({
             {emptyTitle}
           </span>
           {emptyDescription ? (
-            <span className="text-sm leading-5 text-ink-muted">{emptyDescription}</span>
+            <span className="text-sm leading-5 text-feature-muted">{emptyDescription}</span>
           ) : null}
         </div>
       )}

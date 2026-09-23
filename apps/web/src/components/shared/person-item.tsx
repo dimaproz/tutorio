@@ -1,16 +1,17 @@
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
+// `ink` is the row inside the highlight card, so it reads the feature pair.
 const TONE_CLASS = {
   surface: 'text-foreground',
   soft: 'bg-secondary p-2.5 text-foreground',
-  ink: 'bg-ink-soft p-2.5 text-ink-foreground',
+  ink: 'bg-feature-soft p-2.5 text-feature-foreground',
 } as const;
 
 const SUBTITLE_TONE_CLASS = {
   surface: 'text-muted-foreground',
   soft: 'text-muted-foreground',
-  ink: 'text-ink-muted',
+  ink: 'text-feature-muted',
 } as const;
 
 export type PersonItemTone = keyof typeof TONE_CLASS;
@@ -85,7 +86,7 @@ export function PersonItem({
           aria-hidden="true"
           className={cn(
             'flex size-8 shrink-0 items-center justify-center rounded-[10px]',
-            tone === 'ink' ? 'text-ink-muted' : 'text-muted-foreground',
+            tone === 'ink' ? 'text-feature-muted' : 'text-muted-foreground',
           )}
         >
           {trail}
@@ -100,7 +101,7 @@ export function PersonItemTile({ initials }: { initials: string }) {
   return (
     <span
       aria-hidden="true"
-      className="flex size-6.5 shrink-0 items-center justify-center rounded-lg bg-tint-indigo text-xs font-bold text-tint-indigo-foreground"
+      className="flex size-6.5 shrink-0 items-center justify-center rounded-lg bg-tile-indigo text-xs font-bold text-tile-indigo-foreground"
     >
       {initials}
     </span>
