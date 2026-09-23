@@ -1,9 +1,4 @@
-import {
-  effectiveDeadlineHours,
-  findConflicts,
-  resolveDefaultPrice,
-  toInterval,
-} from '@tutorio/domain';
+import { effectiveDeadlineHours, resolveDefaultPrice } from '@tutorio/domain';
 import { Prisma } from '@prisma/client';
 import type { CurrencyCode } from '@tutorio/domain';
 import type { LessonResponse, LessonSeriesResponse } from '@tutorio/validation';
@@ -18,9 +13,10 @@ import {
 // conflict queries so an earlier lesson that runs long is still considered.
 export const MAX_DURATION_MIN = 720;
 
-// Statuses that occupy the teacher's time. A cancelled lesson frees its slot.
+// Statuses that occupy the time. A cancelled lesson frees its slot; a no-show
+// still took the teacher's time.
 export const BUSY_STATUSES: Prisma.LessonWhereInput['status'] = {
-  in: ['SCHEDULED', 'COMPLETED'],
+  in: ['SCHEDULED', 'COMPLETED', 'NO_SHOW'],
 };
 
 export const lessonInclude = {
@@ -38,6 +34,7 @@ export const lessonInclude = {
   workspace: { select: { cancellationDeadlineHours: true } },
   // Only the statuses: a lesson row reports "5 of 6 came", not who.
   attendance: { select: { status: true } },
+  makeup: { select: { id: true } },
 } satisfies Prisma.LessonInclude;
 
 export type LessonRow = Prisma.LessonGetPayload<{
@@ -70,6 +67,10 @@ export function toLessonResponse(row: LessonRow): LessonResponse {
     priceMinor: row.priceMinor,
     currency: row.currency as LessonResponse['currency'],
     status: row.status,
+    kind: row.kind,
+    originalLessonId: row.originalLessonId,
+    makeupLessonId: row.makeup?.id ?? null,
+    topic: row.topic,
     isDetached: row.isDetached,
     rescheduledCount: row.rescheduledCount,
     rescheduledAt: row.rescheduledAt?.toISOString() ?? null,
@@ -327,45 +328,6 @@ export async function resolveStudentTarget(
     currency: resolvedPrice.currency,
     createdEnrollment: true,
   };
-}
-
-/**
- * Returns the ids of busy lessons overlapping [start, start+duration) for the
- * teacher. Empty means the slot is free. `excludeLessonId` skips the lesson
- * being rescheduled so it does not conflict with itself.
- */
-export async function findLessonConflicts(
-  tx: Prisma.TransactionClient,
-  params: {
-    workspaceId: string;
-    teacherId: string;
-    start: Date;
-    durationMin: number;
-    excludeLessonId?: string;
-  },
-): Promise<string[]> {
-  const candidate = toInterval(params.start, params.durationMin);
-  const rows = await tx.lesson.findMany({
-    where: {
-      workspaceId: params.workspaceId,
-      teacherId: params.teacherId,
-      deletedAt: null,
-      status: BUSY_STATUSES,
-      ...(params.excludeLessonId
-        ? { id: { not: params.excludeLessonId } }
-        : {}),
-      startsAtUtc: {
-        gte: new Date(params.start.getTime() - MAX_DURATION_MIN * 60_000),
-        lt: candidate.end,
-      },
-    },
-    select: { id: true, startsAtUtc: true, durationMin: true },
-  });
-  const busy = rows.map((row) => ({
-    ...toInterval(row.startsAtUtc, row.durationMin),
-    id: row.id,
-  }));
-  return findConflicts(candidate, busy).map((conflict) => conflict.id);
 }
 
 /** The local wall-clock "HH:mm" of a UTC instant in `timezone`, using Intl only. */

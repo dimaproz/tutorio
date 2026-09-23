@@ -160,12 +160,15 @@ describe('Stage 3: scheduling — series, lessons, reschedule, cancel (e2e)', ()
     expect(cancelled.body.cancelledBy).toBe('STUDENT');
     expect(cancelled.body.cancelledAt).not.toBeNull();
 
-    // An illegal transition (completed → charged) is rejected.
-    await server()
+    // A correction between final statuses is allowed (product/scheduling.md
+    // L-53): it was held after all. Both are charged, so nothing moves.
+    const corrected = await server()
       .patch(`/api/lessons/${lesson.id}/status`)
       .set('Authorization', auth(owner))
       .send({ targetStatus: 'COMPLETED' })
-      .expect(409);
+      .expect(200);
+    expect(corrected.body.status).toBe('COMPLETED');
+    expect(corrected.body.cancelledBy).toBeNull();
   });
 
   it('shifts the pattern on "this and following" and counts the move', async () => {

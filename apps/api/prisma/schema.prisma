@@ -70,8 +70,20 @@ enum LessonStatus {
   COMPLETED
   CANCELLED_CHARGED
   CANCELLED_UNCHARGED
+  // The student did not come without notice (individual lessons). Charged
+  // like a held lesson; shown as a miss.
+  NO_SHOW
 
   @@map("lesson_status")
+}
+
+// A makeup is an individual lesson given in place of a cancelled or no-show
+// one; exactly one of the pair is charged.
+enum LessonKind {
+  REGULAR
+  MAKEUP
+
+  @@map("lesson_kind")
 }
 
 enum CancelledBy {
@@ -104,8 +116,8 @@ model User {
   authSessions AuthSession[]
   auditLogs    AuditLog[]
 
-  creditEntries LessonCreditEntry[]
-  payments      Payment[]
+  creditEntries   LessonCreditEntry[]
+  payments        Payment[]
   attendanceMarks LessonAttendance[]
 
   @@map("users")
@@ -275,24 +287,24 @@ model StudentParent {
 }
 
 model Group {
-  id             String    @id @default(uuid())
-  workspaceId    String
-  name           String
-  notes          String?
+  id                    String    @id @default(uuid())
+  workspaceId           String
+  name                  String
+  notes                 String?
   // Group-level default price/currency; Enrollment.priceMinor is the
   // per-enrollment override, non-negative (DB CHECK below).
-  pricePerLesson Int?
-  currency       String?
+  pricePerLesson        Int?
+  currency              String?
   // The teacher who runs the group: the default for new roster enrollments and
   // for the group's recurring schedule. Null only for a group created before
   // this column existed and never given a roster or a schedule.
-  teacherId      String?
+  teacherId             String?
   // How many seats the group has; null means the tutor did not set a limit.
   // Informational only — the roster is never refused for being full.
-  capacity       Int?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  deletedAt      DateTime?
+  capacity              Int?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  deletedAt             DateTime?
   // Correlates only work suspended because this group temporarily had no
   // eligible participants. It is deliberately separate from deletedAt.
   rosterSuspensionToken String?
@@ -315,30 +327,30 @@ model Group {
 // teacher (groupId null). All financial entities in later stages hang off the
 // enrollment, never off the group.
 model Enrollment {
-  id                        String           @id @default(uuid())
-  workspaceId               String
-  studentId                 String
-  groupId                   String?
+  id                         String            @id @default(uuid())
+  workspaceId                String
+  studentId                  String
+  groupId                    String?
   // The teacher is a workspace member, not a bare user: authorization and
   // teacher identity are workspace-scoped.
-  teacherId                 String
-  status                    EnrollmentStatus @default(ACTIVE)
-  billingType               BillingType      @default(PACKAGE)
+  teacherId                  String
+  status                     EnrollmentStatus  @default(ACTIVE)
+  billingType                BillingType       @default(PACKAGE)
   // Price per lesson in minor units of `currency`; non-negative (DB CHECK).
-  priceMinor                Int
-  currency                  String
+  priceMinor                 Int
+  currency                   String
   // Overrides Workspace.cancellationDeadlineHours; null = inherit the default.
-  cancellationDeadlineHours Int?
-  createdAt                 DateTime         @default(now())
-  updatedAt                 DateTime         @updatedAt
-  deletedAt                 DateTime?
+  cancellationDeadlineHours  Int?
+  createdAt                  DateTime          @default(now())
+  updatedAt                  DateTime          @updatedAt
+  deletedAt                  DateTime?
   // Set only while a student's archive operation temporarily suspends a group
   // membership. These markers make restore precise without clearing groupId.
-  studentArchivedAt         DateTime?
+  studentArchivedAt          DateTime?
   statusBeforeStudentArchive EnrollmentStatus?
   // Correlates operational schedule suspension with the lifecycle command
   // (pause, archive, or soft deletion) that caused it.
-  scheduleSuspensionToken String?
+  scheduleSuspensionToken    String?
 
   workspace    Workspace      @relation(fields: [workspaceId], references: [id])
   student      Student        @relation(fields: [studentId], references: [id])
@@ -450,7 +462,7 @@ model LessonSeries {
   updatedAt                DateTime  @updatedAt
   deletedAt                DateTime?
   // Set only when an enrollment or an empty group roster suspends this rule.
-  scheduleSuspensionToken String?
+  scheduleSuspensionToken  String?
 
   workspace  Workspace   @relation(fields: [workspaceId], references: [id])
   enrollment Enrollment? @relation(fields: [enrollmentId], references: [id])
@@ -470,40 +482,45 @@ model LessonSeries {
 // rescheduled/cancelled individually and must not be regenerated. packageId is
 // immutable once a credit effect pins the lesson to a purchase snapshot.
 model Lesson {
-  id               String       @id @default(uuid())
-  workspaceId      String
-  enrollmentId     String?
-  groupId          String?
-  seriesId         String?
-  packageId        String?
-  teacherId        String
-  startsAtUtc      DateTime
-  durationMin      Int
-  priceMinor       Int
-  currency         String
-  status           LessonStatus @default(SCHEDULED)
+  id                      String       @id @default(uuid())
+  workspaceId             String
+  enrollmentId            String?
+  groupId                 String?
+  seriesId                String?
+  packageId               String?
+  teacherId               String
+  startsAtUtc             DateTime
+  durationMin             Int
+  priceMinor              Int
+  currency                String
+  status                  LessonStatus @default(SCHEDULED)
+  kind                    LessonKind   @default(REGULAR)
+  // The lesson a makeup replaces; one makeup per original.
+  originalLessonId        String?      @unique
+  // A short title shown in the calendar and lists; notes hold the rest.
+  topic                   String?      @db.VarChar(200)
   // Incremented by each status transition. Combined with a conditional update,
   // this is the durable identity of a financial transition.
-  statusVersion    Int          @default(0)
-  isDetached       Boolean      @default(false)
+  statusVersion           Int          @default(0)
+  isDetached              Boolean      @default(false)
   // Reschedule history, kept as counters because no LessonStatus expresses
   // "moved": a rescheduled lesson stays SCHEDULED, and isDetached is also set
   // when a single lesson leaves its series for any other reason. Stage 5
   // analytics buckets lessons by these instead of parsing AuditLog.diff.
-  rescheduledCount Int          @default(0)
-  rescheduledAt    DateTime?
-  cancelledBy      CancelledBy?
-  cancelledReason  String?
-  cancelledAt      DateTime?
-  completedAt      DateTime?
+  rescheduledCount        Int          @default(0)
+  rescheduledAt           DateTime?
+  cancelledBy             CancelledBy?
+  cancelledReason         String?
+  cancelledAt             DateTime?
+  completedAt             DateTime?
   // When the money for this lesson arrived. Only meaningful for lessons billed
   // one by one — package lessons are paid through the package's own Payment
   // rows. Null on a completed lesson reads as "paid on the day".
-  paidAt           DateTime?
-  notes            String?
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
-  deletedAt        DateTime?
+  paidAt                  DateTime?
+  notes                   String?
+  createdAt               DateTime     @default(now())
+  updatedAt               DateTime     @updatedAt
+  deletedAt               DateTime?
   // Set only when an enrollment or an empty group roster suspends this
   // otherwise-live scheduled occurrence. It makes restoration precise.
   scheduleSuspensionToken String?
@@ -513,6 +530,8 @@ model Lesson {
   group      Group?        @relation(fields: [groupId], references: [id])
   series     LessonSeries? @relation(fields: [seriesId], references: [id])
   teacher    Teacher       @relation("LessonTeacher", fields: [teacherId], references: [id])
+  original   Lesson?       @relation("LessonMakeup", fields: [originalLessonId], references: [id], onDelete: SetNull)
+  makeup     Lesson?       @relation("LessonMakeup")
 
   creditEntries LessonCreditEntry[]
   attendance    LessonAttendance[]
@@ -594,6 +613,7 @@ enum CreditEntryType {
   purchase
   lesson_completed
   late_cancellation
+  no_show
   teacher_cancellation_refund
   manual_adjustment
 

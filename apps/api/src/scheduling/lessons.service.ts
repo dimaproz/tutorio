@@ -1,8 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { canTransition, findConflicts, toInterval } from '@tutorio/domain';
+import {
+  canHaveMakeup,
+  canTransition,
+  isCancelledStatus,
+  makeupIsFree,
+} from '@tutorio/domain';
 import { Prisma } from '@prisma/client';
 import type {
   CreateLessonDto,
+  CreateMakeupDto,
   LessonListResponse,
   LessonResponse,
   ListLessonsQueryDto,
@@ -14,14 +20,19 @@ import { AuditService } from '../audit/audit.service';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import {
   invalidLessonTransition,
+  lessonEnded,
   lessonFinancialHistoryImmutable,
   lessonTransitionReplayConflict,
   lessonCreditMustBeReversed,
   lessonNotFound,
-  scheduleConflict,
+  makeupExists,
+  makeupNotAllowed,
+  noShowIndividualOnly,
+  teacherNotFound,
 } from '../common/business.errors';
 import { LedgerService } from '../packages/ledger.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { assertNoScheduleConflicts } from './conflicts';
 import { MaterializerService } from './materializer.service';
 import {
   lockGroupSchedule,
@@ -30,7 +41,6 @@ import {
 } from './lifecycle-suspension';
 import {
   assertTargetAndTeacher,
-  findLessonConflicts,
   lessonInclude,
   localHourMinute,
   localWeekday,
@@ -152,38 +162,32 @@ export class LessonsService {
         teacherId,
       });
 
-      if (!force) {
-        const accepted: { start: Date; end: Date; id: string }[] = [];
-        for (const start of starts) {
-          const dbConflicts = await findLessonConflicts(tx, {
-            workspaceId: auth.workspaceId,
-            teacherId,
-            start,
+      // The teacher and the student(s), against booked lessons and against
+      // each other's requested dates (L-110); `force` saves anyway (L-111).
+      // A lesson recorded after the fact as cancelled frees its slot.
+      if (!force && !isCancelledStatus(dto.status)) {
+        await assertNoScheduleConflicts(
+          tx,
+          auth.workspaceId,
+          starts.map((startsAtUtc, index) => ({
+            id: `new:${index}`,
+            startsAtUtc,
             durationMin: dto.durationMin,
-          });
-          // Also reject two requested dates that overlap each other.
-          const selfConflicts = findConflicts(
-            toInterval(start, dto.durationMin),
-            accepted,
-          ).map((c) => c.id);
-          const all = [...dbConflicts, ...selfConflicts];
-          if (all.length > 0) {
-            throw scheduleConflict(all);
-          }
-          accepted.push({
-            ...toInterval(start, dto.durationMin),
-            id: start.toISOString(),
-          });
-        }
+            teacherId,
+            enrollmentId,
+            groupId,
+          })),
+        );
       }
 
       // A lesson booked straight into a finished state still has to walk the
       // status machine: the ledger, not the row, is the source of truth for
       // credits, and it only learns about a lesson through a transition.
       const now = new Date();
-      const isCancel =
-        dto.status === 'CANCELLED_CHARGED' ||
-        dto.status === 'CANCELLED_UNCHARGED';
+      const isCancel = isCancelledStatus(dto.status);
+      if (dto.status === 'NO_SHOW' && groupId) {
+        throw noShowIndividualOnly();
+      }
 
       const created: string[] = [];
       for (const startsAtUtc of starts) {
@@ -214,6 +218,7 @@ export class LessonsService {
             packageId: dto.packageId ?? null,
             status: 'SCHEDULED',
             paidAt: dto.paidAt ? new Date(dto.paidAt) : null,
+            topic: dto.topic?.trim() || null,
             notes: dto.notes ?? null,
           },
         });
@@ -267,6 +272,7 @@ export class LessonsService {
               currency,
               status: dto.status,
               paidAt: dto.paidAt ?? null,
+              topic: dto.topic?.trim() || null,
             },
           ),
         });
@@ -282,21 +288,94 @@ export class LessonsService {
     return { items: rows.map(toLessonResponse) };
   }
 
-  /** Per-lesson notes, price and payment date. Status and timing have their own
-   * dedicated endpoints. */
+  /**
+   * Changes one lesson (product/scheduling.md L-40): topic, notes, duration,
+   * teacher (a substitute for this lesson only), price and payment date. A new
+   * duration or teacher on an upcoming lesson is conflict-checked unless the
+   * tutor saves anyway (`force`), and takes a schedule lesson out of its
+   * schedule's regeneration so the change survives it.
+   */
   async update(
     auth: AuthenticatedUser,
     lessonId: string,
     dto: UpdateLessonDto,
+    force = false,
   ): Promise<LessonResponse> {
     const row = await this.prisma.$transaction(async (tx) => {
-      const lesson = await tx.lesson.findFirst({
+      let lesson = await tx.lesson.findFirst({
         where: { id: lessonId, workspaceId: auth.workspaceId, deletedAt: null },
         include: lessonInclude,
       });
       if (!lesson) {
         throw lessonNotFound();
       }
+      const newTeacher =
+        dto.teacherId != null && dto.teacherId !== lesson.teacherId
+          ? dto.teacherId
+          : null;
+      const newDuration =
+        dto.durationMin != null && dto.durationMin !== lesson.durationMin
+          ? dto.durationMin
+          : null;
+      if (newTeacher || newDuration) {
+        if (lesson.groupId) {
+          await lockGroupSchedule(tx, auth.workspaceId, lesson.groupId);
+        }
+        await lockTeacherSchedules(
+          tx,
+          auth.workspaceId,
+          [lesson.teacherId, newTeacher].filter(
+            (id): id is string => id != null,
+          ),
+        );
+        // Read again under the locks: the lesson may have moved meanwhile.
+        lesson = await tx.lesson.findFirst({
+          where: {
+            id: lessonId,
+            workspaceId: auth.workspaceId,
+            deletedAt: null,
+          },
+          include: lessonInclude,
+        });
+        if (!lesson) {
+          throw lessonNotFound();
+        }
+      }
+      if (newTeacher) {
+        const teacher = await tx.teacher.findFirst({
+          where: {
+            id: newTeacher,
+            workspaceId: auth.workspaceId,
+            deletedAt: null,
+          },
+          select: { id: true },
+        });
+        if (!teacher) {
+          throw teacherNotFound();
+        }
+      }
+      if (
+        (newTeacher || newDuration) &&
+        !force &&
+        lesson.status === 'SCHEDULED'
+      ) {
+        await assertNoScheduleConflicts(
+          tx,
+          auth.workspaceId,
+          [
+            {
+              id: lesson.id,
+              startsAtUtc: lesson.startsAtUtc,
+              durationMin: newDuration ?? lesson.durationMin,
+              teacherId: newTeacher ?? lesson.teacherId,
+              enrollmentId: lesson.enrollmentId,
+              groupId: lesson.groupId,
+            },
+          ],
+          { excludeIds: [lesson.id] },
+        );
+      }
+
       // PATCH semantics: an omitted field is unchanged; `notes: null` clears it.
       const changesFinancialSnapshot =
         dto.priceMinor != null &&
@@ -323,8 +402,15 @@ export class LessonsService {
           );
         }
       }
-      const data: Prisma.LessonUpdateInput = {
+      const data: Prisma.LessonUncheckedUpdateInput = {
+        ...('topic' in dto ? { topic: dto.topic?.trim() || null } : {}),
         ...('notes' in dto ? { notes: dto.notes ?? null } : {}),
+        ...(newDuration ? { durationMin: newDuration } : {}),
+        ...(newTeacher ? { teacherId: newTeacher } : {}),
+        // A schedule regenerating its lessons must not undo this change.
+        ...((newDuration || newTeacher) && lesson.seriesId
+          ? { isDetached: true }
+          : {}),
         ...(dto.priceMinor != null && dto.currency != null
           ? { priceMinor: dto.priceMinor, currency: dto.currency }
           : {}),
@@ -352,6 +438,93 @@ export class LessonsService {
       return updated;
     });
 
+    return toLessonResponse(row);
+  }
+
+  /**
+   * Assigns a makeup for a cancelled or no-show individual lesson (L-60): a
+   * new individual lesson for the same student, linked to the original, with
+   * the original's teacher and duration unless others are named. Exactly one
+   * of the pair is charged (L-61); the status change decides it.
+   */
+  async createMakeup(
+    auth: AuthenticatedUser,
+    lessonId: string,
+    dto: CreateMakeupDto,
+    force = false,
+  ): Promise<LessonResponse> {
+    const row = await this.prisma.$transaction(async (tx) => {
+      const original = await tx.lesson.findFirst({
+        where: { id: lessonId, workspaceId: auth.workspaceId, deletedAt: null },
+        select: {
+          id: true,
+          enrollmentId: true,
+          teacherId: true,
+          durationMin: true,
+          priceMinor: true,
+          currency: true,
+          status: true,
+          makeup: { select: { id: true } },
+          enrollment: { select: { studentId: true } },
+        },
+      });
+      if (!original) {
+        throw lessonNotFound();
+      }
+      if (!original.enrollment || !canHaveMakeup(original.status)) {
+        throw makeupNotAllowed();
+      }
+      if (original.makeup) {
+        throw makeupExists();
+      }
+      await lockStudentLifecycles(tx, auth.workspaceId, [
+        original.enrollment.studentId,
+      ]);
+      const teacherId = dto.teacherId ?? original.teacherId;
+      await lockTeacherSchedules(tx, auth.workspaceId, [teacherId]);
+      await assertTargetAndTeacher(tx, auth.workspaceId, {
+        enrollmentId: original.enrollmentId,
+        groupId: null,
+        teacherId,
+      });
+      const startsAtUtc = new Date(dto.startsAtUtc);
+      const durationMin = dto.durationMin ?? original.durationMin;
+      if (!force) {
+        await assertNoScheduleConflicts(tx, auth.workspaceId, [
+          {
+            id: 'makeup',
+            startsAtUtc,
+            durationMin,
+            teacherId,
+            enrollmentId: original.enrollmentId,
+          },
+        ]);
+      }
+
+      const data = {
+        workspaceId: auth.workspaceId,
+        enrollmentId: original.enrollmentId,
+        teacherId,
+        startsAtUtc,
+        durationMin,
+        priceMinor: original.priceMinor,
+        currency: original.currency,
+        kind: 'MAKEUP' as const,
+        originalLessonId: original.id,
+        topic: dto.topic?.trim() || null,
+        notes: dto.notes ?? null,
+      };
+      const created = await tx.lesson.create({ data, include: lessonInclude });
+      await this.audit.record(tx, {
+        workspaceId: auth.workspaceId,
+        actorId: auth.userId,
+        action: 'CREATE',
+        entity: 'LESSON',
+        entityId: created.id,
+        changes: this.audit.buildChanges({}, data),
+      });
+      return created;
+    });
     return toLessonResponse(row);
   }
 
@@ -419,16 +592,21 @@ export class LessonsService {
       await lockTeacherSchedules(tx, auth.workspaceId, [lesson.teacherId]);
 
       if (!force && !(dto.scope === 'this_and_following' && lesson.seriesId)) {
-        const conflicts = await findLessonConflicts(tx, {
-          workspaceId: auth.workspaceId,
-          teacherId: lesson.teacherId,
-          start: newStart,
-          durationMin,
-          excludeLessonId: lesson.id,
-        });
-        if (conflicts.length > 0) {
-          throw scheduleConflict(conflicts);
-        }
+        await assertNoScheduleConflicts(
+          tx,
+          auth.workspaceId,
+          [
+            {
+              id: lesson.id,
+              startsAtUtc: newStart,
+              durationMin,
+              teacherId: lesson.teacherId,
+              enrollmentId: lesson.enrollmentId,
+              groupId: lesson.groupId,
+            },
+          ],
+          { excludeIds: [lesson.id] },
+        );
       }
 
       // A following edit creates a new rule boundary. The original series
@@ -570,11 +748,27 @@ export class LessonsService {
       if (!canTransition(lesson.status, dto.targetStatus)) {
         throw invalidLessonTransition();
       }
-
       const now = new Date();
-      const isCancel =
-        dto.targetStatus === 'CANCELLED_CHARGED' ||
-        dto.targetStatus === 'CANCELLED_UNCHARGED';
+      if (dto.targetStatus === 'NO_SHOW' && lesson.groupId) {
+        throw noShowIndividualOnly();
+      }
+      // An ended lesson is corrected between final statuses; it never goes
+      // back to "scheduled", which the end-of-lesson completion would undo
+      // (product/scheduling.md L-53).
+      const endsAt = lesson.startsAtUtc.getTime() + lesson.durationMin * 60_000;
+      if (dto.targetStatus === 'SCHEDULED' && endsAt <= now.getTime()) {
+        throw lessonEnded();
+      }
+      // Exactly one of a lesson and its makeup is charged (L-61).
+      const original = lesson.originalLessonId
+        ? await tx.lesson.findUnique({
+            where: { id: lesson.originalLessonId },
+            select: { status: true },
+          })
+        : null;
+      const free = original ? makeupIsFree(original.status) : false;
+
+      const isCancel = isCancelledStatus(dto.targetStatus);
       const data: Prisma.LessonUpdateInput = {
         status: dto.targetStatus,
         statusVersion: { increment: 1 },
@@ -625,6 +819,7 @@ export class LessonsService {
         },
         targetStatus: dto.targetStatus,
         transitionVersion: lesson.statusVersion + 1,
+        free,
       });
 
       await this.audit.record(tx, {

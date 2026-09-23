@@ -1,5 +1,6 @@
 import {
   createLessonSchema,
+  createMakeupSchema,
   createLessonSeriesSchema,
   forceQuerySchema,
   lessonListResponseSchema,
@@ -18,6 +19,7 @@ import { createZodDto } from 'nestjs-zod';
 // Request DTOs — validation rules live in @tutorio/validation only.
 export class CreateLessonDto extends createZodDto(createLessonSchema) {}
 export class UpdateLessonDto extends createZodDto(updateLessonSchema) {}
+export class CreateMakeupDto extends createZodDto(createMakeupSchema) {}
 export class RescheduleLessonDto extends createZodDto(rescheduleLessonSchema) {}
 export class TransitionLessonDto extends createZodDto(transitionLessonSchema) {}
 export class ListLessonsQueryDto extends createZodDto(listLessonsQuerySchema) {}

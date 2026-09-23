@@ -204,6 +204,8 @@ export class LedgerService {
       };
       targetStatus: LessonStatus;
       transitionVersion: number;
+      /** The lesson costs nothing (a makeup whose original was charged, L-61). */
+      free?: boolean;
     },
   ): Promise<{ wrote: boolean; packageId: string | null }> {
     const plan = planTransition(
@@ -212,6 +214,9 @@ export class LedgerService {
       params.lesson.id,
       params.transitionVersion,
     );
+    if (plan.entry && plan.entry.delta < 0 && params.free) {
+      return { wrote: false, packageId: params.lesson.packageId };
+    }
     if (!plan.entry)
       return { wrote: false, packageId: params.lesson.packageId };
 
@@ -255,9 +260,10 @@ export class LedgerService {
         data: { packageId },
       });
     } else {
-      // Never infer a package for compensation; ambiguous legacy history must
-      // be repaired explicitly rather than refunded into a newer package.
-      throw noActivePackage();
+      // Every debit pins its package, so a lesson without one was never
+      // debited (no package at the time, or a free makeup): there is nothing
+      // to refund. A package is never inferred for a refund.
+      return { wrote: false, packageId: null };
     }
 
     const wrote = await this.append(tx, {

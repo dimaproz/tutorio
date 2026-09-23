@@ -643,10 +643,30 @@ export interface paths {
         options?: never;
         head?: never;
         /**
-         * Correct a booked lesson
-         * @description Notes and price. Sending notes:null clears the note; price and currency travel together. Moving a lesson uses /reschedule.
+         * Change a lesson
+         * @description Topic, notes, duration, teacher (a substitute for this lesson only), price and payment date. Sending null clears topic or notes; price and currency travel together. A new duration or teacher on an upcoming lesson is checked for teacher and student conflicts unless force=true. Moving a lesson in time uses /reschedule.
          */
         patch: operations["LessonsController_update"];
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/makeup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Assign a makeup for a cancelled or no-show lesson
+         * @description Creates a linked individual lesson for the same student, with the original teacher and duration unless others are given. Exactly one of the pair is charged. 409 MAKEUP_NOT_ALLOWED for a group lesson or one that was not cancelled or missed, MAKEUP_EXISTS for a second makeup, SCHEDULE_CONFLICT unless force=true.
+         */
+        post: operations["LessonsController_createMakeup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/lessons/{lessonId}/reschedule": {
@@ -903,6 +923,7 @@ export interface components {
                 mode: "SOLO" | "SCHOOL";
                 defaultCurrency: string;
                 cancellationDeadlineHours: number;
+                timezone: string;
             };
             /** @enum {string} */
             role: "OWNER" | "TEACHER";
@@ -941,6 +962,7 @@ export interface components {
                 mode: "SOLO" | "SCHOOL";
                 defaultCurrency: string;
                 cancellationDeadlineHours: number;
+                timezone: string;
             };
             /** @enum {string} */
             role: "OWNER" | "TEACHER";
@@ -956,6 +978,7 @@ export interface components {
                 mode: "SOLO" | "SCHOOL";
                 defaultCurrency: string;
                 cancellationDeadlineHours: number;
+                timezone: string;
             };
             /** @enum {string} */
             role: "OWNER" | "TEACHER";
@@ -1620,7 +1643,7 @@ export interface components {
                 durationMin: number;
                 notes: string | null;
                 /** @enum {string} */
-                status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED";
+                status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED" | "NO_SHOW";
             } | null;
             lessonCounts: {
                 completed: number;
@@ -1635,7 +1658,7 @@ export interface components {
                 /** Format: date-time */
                 startsAtUtc: string;
                 /** @enum {string} */
-                status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED";
+                status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED" | "NO_SHOW";
             }[];
             stats: {
                 lessons: number;
@@ -1830,7 +1853,14 @@ export interface components {
                 /** @enum {string} */
                 currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
                 /** @enum {string} */
-                status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED";
+                status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED" | "NO_SHOW";
+                /** @enum {string} */
+                kind: "REGULAR" | "MAKEUP";
+                /** Format: uuid */
+                originalLessonId: string | null;
+                /** Format: uuid */
+                makeupLessonId: string | null;
+                topic: string | null;
                 isDetached: boolean;
                 rescheduledCount: number;
                 /** Format: date-time */
@@ -1894,16 +1924,21 @@ export interface components {
              * @default SCHEDULED
              * @enum {string}
              */
-            status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED";
+            status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED" | "NO_SHOW";
             /** @enum {string} */
             cancelledBy?: "TEACHER" | "STUDENT" | "GROUP";
             cancelledReason?: string | null;
             /** Format: date-time */
             paidAt?: string | null;
+            topic?: string | null;
             notes?: string | null;
         };
         UpdateLessonDto: {
+            topic?: string | null;
             notes?: string | null;
+            durationMin?: number;
+            /** Format: uuid */
+            teacherId?: string;
             priceMinor?: number;
             /** @enum {string} */
             currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
@@ -1932,7 +1967,14 @@ export interface components {
             /** @enum {string} */
             currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
             /** @enum {string} */
-            status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED";
+            status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED" | "NO_SHOW";
+            /** @enum {string} */
+            kind: "REGULAR" | "MAKEUP";
+            /** Format: uuid */
+            originalLessonId: string | null;
+            /** Format: uuid */
+            makeupLessonId: string | null;
+            topic: string | null;
             isDetached: boolean;
             rescheduledCount: number;
             /** Format: date-time */
@@ -1975,6 +2017,15 @@ export interface components {
             /** Format: date-time */
             deletedAt: string | null;
         };
+        CreateMakeupDto: {
+            /** Format: date-time */
+            startsAtUtc: string;
+            durationMin?: number;
+            /** Format: uuid */
+            teacherId?: string;
+            topic?: string | null;
+            notes?: string | null;
+        };
         RescheduleLessonDto: {
             /** Format: date-time */
             startsAtUtc: string;
@@ -1987,7 +2038,7 @@ export interface components {
         };
         TransitionLessonDto: {
             /** @enum {string} */
-            targetStatus: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED";
+            targetStatus: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED" | "NO_SHOW";
             /** @enum {string} */
             cancelledBy?: "TEACHER" | "STUDENT" | "GROUP";
             cancelledReason?: string | null;
@@ -1998,7 +2049,7 @@ export interface components {
             /** Format: date-time */
             startsAtUtc: string;
             /** @enum {string} */
-            status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED";
+            status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED" | "NO_SHOW";
             markable: boolean;
             participants: {
                 /** Format: uuid */
@@ -2304,7 +2355,7 @@ export interface components {
                 lessonId: string | null;
                 delta: number;
                 /** @enum {string} */
-                type: "purchase" | "lesson_completed" | "late_cancellation" | "teacher_cancellation_refund" | "manual_adjustment";
+                type: "purchase" | "lesson_completed" | "late_cancellation" | "no_show" | "teacher_cancellation_refund" | "manual_adjustment";
                 note: string | null;
                 /** Format: date-time */
                 createdAt: string;
@@ -4064,7 +4115,7 @@ export interface operations {
                 enrollmentId?: string;
                 studentId?: string;
                 groupId?: string;
-                status?: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED";
+                status?: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED" | "NO_SHOW";
             };
             header?: never;
             path?: never;
@@ -4163,7 +4214,9 @@ export interface operations {
     };
     LessonsController_update: {
         parameters: {
-            query?: never;
+            query?: {
+                force?: boolean | "true" | "false";
+            };
             header?: never;
             path: {
                 lessonId: string;
@@ -4194,6 +4247,66 @@ export interface operations {
                 };
             };
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    LessonsController_createMakeup: {
+        parameters: {
+            query?: {
+                force?: boolean | "true" | "false";
+            };
+            header?: never;
+            path: {
+                lessonId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateMakeupDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

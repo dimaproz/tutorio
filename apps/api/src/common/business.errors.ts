@@ -180,6 +180,38 @@ export const invalidLessonTransition = () =>
     HttpStatus.CONFLICT,
   );
 
+// A lesson that has ended cannot go back to "scheduled": it is corrected by
+// moving between final statuses instead (product/scheduling.md L-53).
+export const lessonEnded = () =>
+  new BusinessApiException(
+    'LESSON_ENDED',
+    'A lesson that has ended cannot be scheduled again; change its status instead',
+    HttpStatus.CONFLICT,
+  );
+
+// Group lessons record an absence through attendance (L-52).
+export const noShowIndividualOnly = () =>
+  new BusinessApiException(
+    'NO_SHOW_INDIVIDUAL_ONLY',
+    'Only an individual lesson can be marked as a no-show',
+    HttpStatus.BAD_REQUEST,
+  );
+
+// A makeup replaces a cancelled or no-show individual lesson (L-60).
+export const makeupNotAllowed = () =>
+  new BusinessApiException(
+    'MAKEUP_NOT_ALLOWED',
+    'A makeup can replace only a cancelled or no-show individual lesson',
+    HttpStatus.CONFLICT,
+  );
+
+export const makeupExists = () =>
+  new BusinessApiException(
+    'MAKEUP_EXISTS',
+    'This lesson already has a makeup',
+    HttpStatus.CONFLICT,
+  );
+
 export const lessonCreditMustBeReversed = (netCreditDelta: number) =>
   new BusinessApiException(
     'LESSON_CREDIT_MUST_BE_REVERSED',

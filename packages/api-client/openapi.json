@@ -2812,7 +2812,8 @@
                 "SCHEDULED",
                 "COMPLETED",
                 "CANCELLED_CHARGED",
-                "CANCELLED_UNCHARGED"
+                "CANCELLED_UNCHARGED",
+                "NO_SHOW"
               ]
             }
           }
@@ -2934,7 +2935,7 @@
     },
     "/api/lessons/{lessonId}": {
       "patch": {
-        "description": "Notes and price. Sending notes:null clears the note; price and currency travel together. Moving a lesson uses /reschedule.",
+        "description": "Topic, notes, duration, teacher (a substitute for this lesson only), price and payment date. Sending null clears topic or notes; price and currency travel together. A new duration or teacher on an upcoming lesson is checked for teacher and student conflicts unless force=true. Moving a lesson in time uses /reschedule.",
         "operationId": "LessonsController_update",
         "parameters": [
           {
@@ -2943,6 +2944,31 @@
             "in": "path",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "force",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": false,
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "false"
+                  ]
+                }
+              ]
             }
           }
         ],
@@ -2986,6 +3012,16 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2993,7 +3029,7 @@
             "bearer": []
           }
         ],
-        "summary": "Correct a booked lesson",
+        "summary": "Change a lesson",
         "tags": [
           "scheduling"
         ]
@@ -3032,6 +3068,108 @@
           }
         ],
         "summary": "Soft-delete a lesson",
+        "tags": [
+          "scheduling"
+        ]
+      }
+    },
+    "/api/lessons/{lessonId}/makeup": {
+      "post": {
+        "description": "Creates a linked individual lesson for the same student, with the original teacher and duration unless others are given. Exactly one of the pair is charged. 409 MAKEUP_NOT_ALLOWED for a group lesson or one that was not cancelled or missed, MAKEUP_EXISTS for a second makeup, SCHEDULE_CONFLICT unless force=true.",
+        "operationId": "LessonsController_createMakeup",
+        "parameters": [
+          {
+            "name": "lessonId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "force",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": false,
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "false"
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMakeupDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LessonDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Assign a makeup for a cancelled or no-show lesson",
         "tags": [
           "scheduling"
         ]
@@ -4425,6 +4563,9 @@
               },
               "cancellationDeadlineHours": {
                 "type": "integer"
+              },
+              "timezone": {
+                "type": "string"
               }
             },
             "required": [
@@ -4433,7 +4574,8 @@
               "plan",
               "mode",
               "defaultCurrency",
-              "cancellationDeadlineHours"
+              "cancellationDeadlineHours",
+              "timezone"
             ]
           },
           "role": {
@@ -4566,6 +4708,9 @@
               },
               "cancellationDeadlineHours": {
                 "type": "integer"
+              },
+              "timezone": {
+                "type": "string"
               }
             },
             "required": [
@@ -4574,7 +4719,8 @@
               "plan",
               "mode",
               "defaultCurrency",
-              "cancellationDeadlineHours"
+              "cancellationDeadlineHours",
+              "timezone"
             ]
           },
           "role": {
@@ -4623,6 +4769,9 @@
               },
               "cancellationDeadlineHours": {
                 "type": "integer"
+              },
+              "timezone": {
+                "type": "string"
               }
             },
             "required": [
@@ -4631,7 +4780,8 @@
               "plan",
               "mode",
               "defaultCurrency",
-              "cancellationDeadlineHours"
+              "cancellationDeadlineHours",
+              "timezone"
             ]
           },
           "role": {
@@ -7603,7 +7753,8 @@
                   "SCHEDULED",
                   "COMPLETED",
                   "CANCELLED_CHARGED",
-                  "CANCELLED_UNCHARGED"
+                  "CANCELLED_UNCHARGED",
+                  "NO_SHOW"
                 ]
               }
             },
@@ -7684,7 +7835,8 @@
                     "SCHEDULED",
                     "COMPLETED",
                     "CANCELLED_CHARGED",
-                    "CANCELLED_UNCHARGED"
+                    "CANCELLED_UNCHARGED",
+                    "NO_SHOW"
                   ]
                 }
               },
@@ -8492,8 +8644,30 @@
                     "SCHEDULED",
                     "COMPLETED",
                     "CANCELLED_CHARGED",
-                    "CANCELLED_UNCHARGED"
+                    "CANCELLED_UNCHARGED",
+                    "NO_SHOW"
                   ]
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "REGULAR",
+                    "MAKEUP"
+                  ]
+                },
+                "originalLessonId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "nullable": true
+                },
+                "makeupLessonId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "nullable": true
+                },
+                "topic": {
+                  "type": "string",
+                  "nullable": true
                 },
                 "isDetached": {
                   "type": "boolean"
@@ -8645,6 +8819,10 @@
                 "priceMinor",
                 "currency",
                 "status",
+                "kind",
+                "originalLessonId",
+                "makeupLessonId",
+                "topic",
                 "isDetached",
                 "rescheduledCount",
                 "rescheduledAt",
@@ -8735,7 +8913,8 @@
               "SCHEDULED",
               "COMPLETED",
               "CANCELLED_CHARGED",
-              "CANCELLED_UNCHARGED"
+              "CANCELLED_UNCHARGED",
+              "NO_SHOW"
             ],
             "default": "SCHEDULED"
           },
@@ -8757,6 +8936,11 @@
             "format": "date-time",
             "nullable": true
           },
+          "topic": {
+            "type": "string",
+            "maxLength": 200,
+            "nullable": true
+          },
           "notes": {
             "type": "string",
             "maxLength": 2000,
@@ -8771,10 +8955,26 @@
       "UpdateLessonDto": {
         "type": "object",
         "properties": {
+          "topic": {
+            "type": "string",
+            "maxLength": 200,
+            "nullable": true
+          },
           "notes": {
             "type": "string",
             "maxLength": 2000,
             "nullable": true
+          },
+          "durationMin": {
+            "type": "integer",
+            "minimum": 5,
+            "exclusiveMinimum": false,
+            "maximum": 720,
+            "exclusiveMaximum": false
+          },
+          "teacherId": {
+            "type": "string",
+            "format": "uuid"
           },
           "priceMinor": {
             "type": "integer",
@@ -8869,8 +9069,30 @@
               "SCHEDULED",
               "COMPLETED",
               "CANCELLED_CHARGED",
-              "CANCELLED_UNCHARGED"
+              "CANCELLED_UNCHARGED",
+              "NO_SHOW"
             ]
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "REGULAR",
+              "MAKEUP"
+            ]
+          },
+          "originalLessonId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "makeupLessonId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "topic": {
+            "type": "string",
+            "nullable": true
           },
           "isDetached": {
             "type": "boolean"
@@ -9022,6 +9244,10 @@
           "priceMinor",
           "currency",
           "status",
+          "kind",
+          "originalLessonId",
+          "makeupLessonId",
+          "topic",
           "isDetached",
           "rescheduledCount",
           "rescheduledAt",
@@ -9039,6 +9265,39 @@
           "createdAt",
           "updatedAt",
           "deletedAt"
+        ]
+      },
+      "CreateMakeupDto": {
+        "type": "object",
+        "properties": {
+          "startsAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "durationMin": {
+            "type": "integer",
+            "minimum": 5,
+            "exclusiveMinimum": false,
+            "maximum": 720,
+            "exclusiveMaximum": false
+          },
+          "teacherId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "topic": {
+            "type": "string",
+            "maxLength": 200,
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 2000,
+            "nullable": true
+          }
+        },
+        "required": [
+          "startsAtUtc"
         ]
       },
       "RescheduleLessonDto": {
@@ -9077,7 +9336,8 @@
               "SCHEDULED",
               "COMPLETED",
               "CANCELLED_CHARGED",
-              "CANCELLED_UNCHARGED"
+              "CANCELLED_UNCHARGED",
+              "NO_SHOW"
             ]
           },
           "cancelledBy": {
@@ -9115,7 +9375,8 @@
               "SCHEDULED",
               "COMPLETED",
               "CANCELLED_CHARGED",
-              "CANCELLED_UNCHARGED"
+              "CANCELLED_UNCHARGED",
+              "NO_SHOW"
             ]
           },
           "markable": {
@@ -10294,6 +10555,7 @@
                     "purchase",
                     "lesson_completed",
                     "late_cancellation",
+                    "no_show",
                     "teacher_cancellation_refund",
                     "manual_adjustment"
                   ]

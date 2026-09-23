@@ -1412,10 +1412,12 @@ describe('Stage 4: packages, credit ledger, payments (e2e)', () => {
       .expect(409)
       .expect(({ body }) => expect(body.code).toBe('NO_ACTIVE_PACKAGE'));
 
+    // An ended lesson is corrected between final statuses, never back to
+    // "scheduled" (L-53); a free cancellation refunds the pinned package.
     await server()
       .patch(`/api/lessons/${completedId}/status`)
       .set('Authorization', auth(owner))
-      .send({ targetStatus: 'SCHEDULED' })
+      .send({ targetStatus: 'CANCELLED_UNCHARGED', cancelledBy: 'TEACHER' })
       .expect(200);
     expect(
       await prisma.lessonCreditEntry.findMany({

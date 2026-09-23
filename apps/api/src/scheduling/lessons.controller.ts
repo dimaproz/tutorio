@@ -29,6 +29,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { ApiErrorDto } from '../auth/dto/auth.dto';
 import {
   CreateLessonDto,
+  CreateMakeupDto,
   ForceQueryDto,
   LessonDto,
   LessonListDto,
@@ -84,20 +85,49 @@ export class LessonsController {
   @Patch(':lessonId')
   @Roles('OWNER')
   @ApiOperation({
-    summary: 'Correct a booked lesson',
+    summary: 'Change a lesson',
     description:
-      'Notes and price. Sending notes:null clears the note; price and currency ' +
-      'travel together. Moving a lesson uses /reschedule.',
+      'Topic, notes, duration, teacher (a substitute for this lesson only), ' +
+      'price and payment date. Sending null clears topic or notes; price and ' +
+      'currency travel together. A new duration or teacher on an upcoming ' +
+      'lesson is checked for teacher and student conflicts unless force=true. ' +
+      'Moving a lesson in time uses /reschedule.',
   })
   @ApiOkResponse({ type: LessonDto })
   @ApiNotFoundResponse({ type: ApiErrorDto })
+  @ApiConflictResponse({ type: ApiErrorDto })
   @ZodSerializerDto(LessonDto)
   update(
     @CurrentUser() user: AuthenticatedUser,
     @Param('lessonId', ParseUUIDPipe) lessonId: string,
     @Body() dto: UpdateLessonDto,
+    @Query() query: ForceQueryDto,
   ): Promise<LessonDto> {
-    return this.lessons.update(user, lessonId, dto);
+    return this.lessons.update(user, lessonId, dto, query.force);
+  }
+
+  @Post(':lessonId/makeup')
+  @Roles('OWNER')
+  @ApiOperation({
+    summary: 'Assign a makeup for a cancelled or no-show lesson',
+    description:
+      'Creates a linked individual lesson for the same student, with the ' +
+      'original teacher and duration unless others are given. Exactly one of ' +
+      'the pair is charged. 409 MAKEUP_NOT_ALLOWED for a group lesson or one ' +
+      'that was not cancelled or missed, MAKEUP_EXISTS for a second makeup, ' +
+      'SCHEDULE_CONFLICT unless force=true.',
+  })
+  @ApiCreatedResponse({ type: LessonDto })
+  @ApiNotFoundResponse({ type: ApiErrorDto })
+  @ApiConflictResponse({ type: ApiErrorDto })
+  @ZodSerializerDto(LessonDto)
+  createMakeup(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('lessonId', ParseUUIDPipe) lessonId: string,
+    @Body() dto: CreateMakeupDto,
+    @Query() query: ForceQueryDto,
+  ): Promise<LessonDto> {
+    return this.lessons.createMakeup(user, lessonId, dto, query.force);
   }
 
   @Delete(':lessonId')

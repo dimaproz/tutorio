@@ -85,6 +85,7 @@ const ownerRoutes = new Set([
   'GroupsController.summary',
   'GroupsController.update',
   'LessonsController.create',
+  'LessonsController.createMakeup',
   'LessonsController.list',
   'LessonsController.remove',
   'LessonsController.reschedule',
