@@ -16,10 +16,10 @@ import {
 
 // Longest allowed lesson (durationMinSchema max) — the lookback window for
 // conflict queries so an earlier lesson that runs long is still considered.
-const MAX_DURATION_MIN = 720;
+export const MAX_DURATION_MIN = 720;
 
 // Statuses that occupy the teacher's time. A cancelled lesson frees its slot.
-const BUSY_STATUSES: Prisma.LessonWhereInput['status'] = {
+export const BUSY_STATUSES: Prisma.LessonWhereInput['status'] = {
   in: ['SCHEDULED', 'COMPLETED'],
 };
 
