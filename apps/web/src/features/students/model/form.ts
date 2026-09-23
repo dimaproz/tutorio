@@ -242,8 +242,17 @@ export function buildStudentCreateDto(values: StudentFormValues): CreateStudentD
   };
 }
 
-/** Local draft of an unfinished create form, kept in this browser only. */
-export const STUDENT_DRAFT_KEY = 'tutorio.student-create-draft';
+/**
+ * Local draft of an unfinished create form, kept in this browser only. The
+ * key is scoped to the account and the workspace: another person signing in
+ * on the same browser must never be offered someone else's student.
+ */
+export function studentDraftKey(userId: string, workspaceId: string): string {
+  return `tutorio.student-create-draft:${userId}:${workspaceId}`;
+}
+
+/** The unscoped key used before drafts were scoped; removed on sight. */
+export const LEGACY_STUDENT_DRAFT_KEY = 'tutorio.student-create-draft';
 
 export function parseStudentDraft(raw: string | null): Partial<StudentFormValues> | null {
   if (!raw) return null;

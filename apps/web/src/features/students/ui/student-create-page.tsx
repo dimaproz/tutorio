@@ -15,7 +15,8 @@ import { useSession } from '@/components/app/session-provider';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import {
-  STUDENT_DRAFT_KEY,
+  LEGACY_STUDENT_DRAFT_KEY,
+  studentDraftKey,
   buildStudentCreateDto,
   emptyStudentForm,
   parseStudentDraft,
@@ -29,18 +30,19 @@ import { StudentFormLayout } from './student-form-layout';
 import { StudentFormSections } from './student-form-sections';
 import { useLeaveGuard, useStudentForm, useStudentFormState } from './student-form-state';
 
-function readDraft(): Partial<StudentFormValues> | null {
+function readDraft(key: string): Partial<StudentFormValues> | null {
   try {
-    return parseStudentDraft(window.localStorage.getItem(STUDENT_DRAFT_KEY));
+    window.localStorage.removeItem(LEGACY_STUDENT_DRAFT_KEY);
+    return parseStudentDraft(window.localStorage.getItem(key));
   } catch {
     return null;
   }
 }
 
-function writeDraft(values: StudentFormValues | null) {
+function writeDraft(key: string, values: StudentFormValues | null) {
   try {
-    if (values) window.localStorage.setItem(STUDENT_DRAFT_KEY, JSON.stringify(values));
-    else window.localStorage.removeItem(STUDENT_DRAFT_KEY);
+    if (values) window.localStorage.setItem(key, JSON.stringify(values));
+    else window.localStorage.removeItem(key);
   } catch {
     // Private mode or a full quota: the draft is a convenience, never a requirement.
   }
@@ -57,6 +59,7 @@ export function StudentCreatePage() {
   const tCommon = useTranslations('common');
   const tErrors = useTranslations('errors');
   const session = useSession();
+  const draftKey = studentDraftKey(session.user.id, session.workspace.id);
   const router = useRouter();
   const mobile = useIsMobile();
   const createStudent = useCreateStudentMutation();
@@ -75,14 +78,14 @@ export function StudentCreatePage() {
   useEffect(() => {
     if (restored.current) return;
     restored.current = true;
-    const draft = readDraft();
+    const draft = readDraft(draftKey);
     if (draft) form.reset({ ...defaults, ...draft }, { keepDefaultValues: true });
-  }, [defaults, form]);
+  }, [defaults, draftKey, form]);
 
   useEffect(() => {
     if (!restored.current) return;
-    writeDraft(isDirty ? state.values : null);
-  }, [isDirty, state.values]);
+    writeDraft(draftKey, isDirty ? state.values : null);
+  }, [draftKey, isDirty, state.values]);
 
   useLeaveGuard(isDirty && !saving);
 
@@ -90,7 +93,7 @@ export function StudentCreatePage() {
     async (values) => {
       try {
         const student = await createStudent.mutateAsync(buildStudentCreateDto(values));
-        writeDraft(null);
+        writeDraft(draftKey, null);
         form.reset(values);
         toast.success(tStudents('toasts.created'));
         router.push(`/app/students/${student.id}?setup=1`);
@@ -102,7 +105,7 @@ export function StudentCreatePage() {
   );
 
   const leave = () => {
-    writeDraft(null);
+    writeDraft(draftKey, null);
     router.push('/app/students');
   };
   const cancel = () => (isDirty ? setDiscardOpen(true) : leave());
