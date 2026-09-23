@@ -234,10 +234,15 @@ describe('GroupsService roster reconciliation', () => {
     });
   });
 
-  it('reactivates a membership archived by hand instead of duplicating it', async () => {
+  it('reactivates a membership archived by hand with the group teacher instead of duplicating it', async () => {
     const { prisma, service } = buildService();
     prisma.enrollment.findMany.mockResolvedValue([
-      { id: 'enrollment-bob', studentId: BOB_ID, status: 'ARCHIVED' },
+      {
+        id: 'enrollment-bob',
+        studentId: BOB_ID,
+        status: 'ARCHIVED',
+        teacherId: OTHER_TEACHER_ID,
+      },
     ]);
     prisma.student.findMany.mockResolvedValue([
       { id: BOB_ID, hourlyRateMinor: null, currency: null },
@@ -249,7 +254,7 @@ describe('GroupsService roster reconciliation', () => {
 
     expect(prisma.enrollment.updateMany).toHaveBeenCalledWith({
       where: { id: { in: ['enrollment-bob'] } },
-      data: { status: 'ACTIVE' },
+      data: { status: 'ACTIVE', teacherId: TEACHER_ID },
     });
     expect(prisma.enrollment.createManyAndReturn).not.toHaveBeenCalled();
   });
@@ -518,7 +523,17 @@ describe('GroupsService reads and lifecycle', () => {
           },
         },
         { teacherId: TEACHER_ID },
-        { lessonSeries: { some: { deletedAt: null, weekdays: { has: 2 } } } },
+        {
+          lessonSeries: {
+            some: {
+              OR: [
+                { deletedAt: null },
+                { scheduleSuspensionToken: { not: null } },
+              ],
+              weekdays: { has: 2 },
+            },
+          },
+        },
       ]),
     );
   });

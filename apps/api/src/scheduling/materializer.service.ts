@@ -172,7 +172,8 @@ export class MaterializerService {
    * Regenerates future lessons after a series schedule change. Only SCHEDULED,
    * non-detached lessons at or after `pivot` are discarded and rebuilt from the
    * (already updated) series — completed, cancelled, and detached lessons keep
-   * their slots and history.
+   * their slots and history, and so does a started lesson whose attendance
+   * was already marked.
    */
   async regenerateFuture(
     tx: Prisma.TransactionClient,
@@ -187,6 +188,7 @@ export class MaterializerService {
         isDetached: false,
         deletedAt: null,
         startsAtUtc: { gte: pivot },
+        attendance: { none: {} },
       },
     });
     await this.materializeSeries(tx, series, this.horizonUntil(), pivot, force);

@@ -620,11 +620,27 @@ export class StudentsService {
           durationMin: true,
         },
       });
-      await lockTeacherSchedules(
-        tx,
-        auth.workspaceId,
-        suspendedLessons.map((lesson) => lesson.teacherId),
-      );
+      // The group reconciliation below may revive lessons an empty roster
+      // suspended; take their teachers' locks now, in the same sorted call,
+      // so a restore touching several groups never locks teachers out of
+      // order against a concurrent teacher change.
+      const groupLessonTeachers = groupIds.length
+        ? await tx.lesson.findMany({
+            where: {
+              workspaceId: auth.workspaceId,
+              groupId: { in: groupIds },
+              status: 'SCHEDULED',
+              scheduleSuspensionToken: { not: null },
+              startsAtUtc: { gte: now },
+            },
+            select: { teacherId: true },
+            distinct: ['teacherId'],
+          })
+        : [];
+      await lockTeacherSchedules(tx, auth.workspaceId, [
+        ...suspendedLessons.map((lesson) => lesson.teacherId),
+        ...groupLessonTeachers.map((lesson) => lesson.teacherId),
+      ]);
       await assertLessonsAreFree(tx, auth.workspaceId, suspendedLessons);
 
       await tx.lessonSeries.updateMany({

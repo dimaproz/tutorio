@@ -18,6 +18,15 @@ export const liveEnrollmentWhere = {
   student: { deletedAt: null, status: { not: 'ARCHIVED' } },
 } satisfies Prisma.EnrollmentWhereInput;
 
+/**
+ * The group's schedule: a live series, or one an empty roster suspended (it
+ * comes back with the first active student). Group archive clears the
+ * suspension token, so an archived group's series never match.
+ */
+export const groupScheduleWhere = {
+  OR: [{ deletedAt: null }, { scheduleSuspensionToken: { not: null } }],
+} satisfies Prisma.LessonSeriesWhereInput;
+
 /** A package whose money is not fully in: the "unpaid" filter and metric. */
 export const unpaidPackageWhere = {
   deletedAt: null,

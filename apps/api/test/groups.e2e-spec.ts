@@ -160,6 +160,9 @@ describe('Work Packet 6.3: groups — teacher, schedule, filters, attendance (e2
       })
       .expect(200);
     expect(await groupLessons(morning)).toHaveLength(0);
+    // Dormant, not gone: the page and the list still show the schedule.
+    const dormant = await get(`/groups/${morning}`).expect(200);
+    expect(dormant.body.schedules).toHaveLength(1);
 
     // The first student makes the schedule live right away, not overnight.
     await patch(`/groups/${morning}`)
@@ -344,10 +347,57 @@ describe('Work Packet 6.3: groups — teacher, schedule, filters, attendance (e2
     expect(withMarks?.attendance).toEqual({ present: 1, marked: 2 });
   });
 
+  it('keeps a started lesson with marks when the rule changes from it on', async () => {
+    const series = await prisma.lessonSeries.findFirstOrThrow({
+      where: { workspaceId, groupId: evening, deletedAt: null },
+    });
+    const enrollments = (await get(`/groups/${evening}`)).body.enrollments as {
+      id: string;
+    }[];
+    const started = await prisma.lesson.create({
+      data: {
+        workspaceId,
+        groupId: evening,
+        seriesId: series.id,
+        teacherId: series.teacherId,
+        startsAtUtc: new Date(Date.now() - 20 * 60 * 1000),
+        durationMin: 60,
+        priceMinor: 40000,
+        currency: 'UAH',
+        status: 'SCHEDULED',
+      },
+    });
+    await put(`/lessons/${started.id}/attendance`)
+      .send({ marks: [{ enrollmentId: enrollments[0].id, status: 'PRESENT' }] })
+      .expect(200);
+
+    const tomorrow = new Date(Date.now() + DAY_MS);
+    tomorrow.setUTCHours(18, 0, 0, 0);
+    await patch(`/lessons/${started.id}/reschedule`)
+      .send({
+        startsAtUtc: tomorrow.toISOString(),
+        scope: 'this_and_following',
+      })
+      .expect(200);
+
+    // The held lesson and its marks stay; the new rule starts tomorrow.
+    const kept = await prisma.lesson.findUnique({
+      where: { id: started.id },
+      include: { attendance: true },
+    });
+    expect(kept?.deletedAt).toBeNull();
+    expect(kept?.attendance).toHaveLength(1);
+  });
+
   it('keeps a student-archived membership through a roster save and restores it', async () => {
     await del(`/students/${students.Clara}`).expect(204);
     const emptied = await get(`/groups/${morning}`).expect(200);
     expect(emptied.body.enrollments).toHaveLength(0);
+    // The schedule the empty roster suspended is still the group's schedule.
+    expect(emptied.body.schedules).toHaveLength(1);
+
+    // Handed to another teacher meanwhile: Clara comes back to that teacher.
+    await patch(`/groups/${morning}`).send({ teacherId: teacherA }).expect(200);
 
     // Saving the (now empty) roster must not destroy Clara's suspended row.
     await patch(`/groups/${morning}`)
@@ -358,9 +408,44 @@ describe('Work Packet 6.3: groups — teacher, schedule, filters, attendance (e2
     const restored = await get(`/groups/${morning}`).expect(200);
     expect(
       restored.body.enrollments.map(
-        (row: { studentId: string }) => row.studentId,
+        (row: { studentId: string; teacherId: string }) => [
+          row.studentId,
+          row.teacherId,
+        ],
       ),
-    ).toEqual([students.Clara]);
+    ).toEqual([[students.Clara, teacherA]]);
+    expect(restored.body.teacherMismatch).toBe(false);
+  });
+
+  it('restores a group whose roster emptied while it was archived', async () => {
+    const empties = await post('/groups')
+      .send({
+        name: 'Empties later',
+        teacherId: teacherA,
+        students: { studentIds: [students.Denys] },
+        schedule: { weekdays: EVERY_DAY, localTime: '07:00', durationMin: 30 },
+      })
+      .expect(201);
+    const groupId = empties.body.id;
+    await del(`/groups/${groupId}`).expect(204);
+    await del(`/students/${students.Denys}`).expect(204);
+    // Teacher A's calendar takes the slot while the group is archived.
+    const taken = await post('/groups')
+      .send({
+        name: 'Takes the slot',
+        teacherId: teacherA,
+        students: { studentIds: [students.Bohdan] },
+        schedule: { weekdays: EVERY_DAY, localTime: '07:00', durationMin: 30 },
+      })
+      .expect(201);
+
+    // Nobody would attend the old slot, so the clash does not block restore.
+    await post(`/groups/${groupId}/restore`).expect(200);
+    expect(await groupLessons(groupId)).toHaveLength(0);
+
+    await del(`/groups/${taken.body.id}`).expect(204);
+    await del(`/groups/${groupId}`).expect(204);
+    await post(`/students/${students.Denys}/restore`).expect(200);
   });
 
   it('archives a group that stays readable and comes back on restore', async () => {

@@ -42,6 +42,7 @@ import { MaterializerService } from '../scheduling/materializer.service';
 import {
   compareNullable,
   firstScheduleKey,
+  groupScheduleWhere,
   liveEnrollmentWhere,
   resolveGroupTeacher,
   teacherRefSelect,
@@ -61,7 +62,7 @@ const listInclude = {
     orderBy: [{ student: { fullName: 'asc' } }, { id: 'asc' }],
   },
   lessonSeries: {
-    where: { deletedAt: null },
+    where: groupScheduleWhere,
     select: {
       weekdays: true,
       localTime: true,
@@ -114,7 +115,7 @@ export class GroupsService {
     if (query.weekday !== undefined) {
       and.push({
         lessonSeries: {
-          some: { deletedAt: null, weekdays: { has: query.weekday } },
+          some: { ...groupScheduleWhere, weekdays: { has: query.weekday } },
         },
       });
     }
@@ -168,7 +169,7 @@ export class GroupsService {
           name: true,
           _count: { select: { enrollments: { where: liveEnrollmentWhere } } },
           lessonSeries: {
-            where: { deletedAt: null },
+            where: groupScheduleWhere,
             select: { weekdays: true, localTime: true, timezone: true },
             orderBy: [{ localTime: 'asc' }, { id: 'asc' }],
             take: 1,
@@ -476,7 +477,7 @@ export class GroupsService {
             },
           },
           lessonSeries: {
-            where: { deletedAt: null },
+            where: groupScheduleWhere,
             select: {
               id: true,
               weekdays: true,
@@ -661,7 +662,7 @@ export class GroupsService {
         deletedAt: null,
         studentArchivedAt: null,
       },
-      select: { id: true, studentId: true, status: true },
+      select: { id: true, studentId: true, status: true, teacherId: true },
     });
     const live = memberships.filter((row) => row.status !== 'ARCHIVED');
     const archivedByHand = new Map(
@@ -697,9 +698,14 @@ export class GroupsService {
       .map((student) => archivedByHand.get(student.id))
       .filter((row): row is NonNullable<typeof row> => Boolean(row));
     if (reactivated.length > 0) {
+      // A returning student joins whoever teaches the group now.
+      const teacherId = dto.teacherId ?? group.teacherId;
+      if (dto.teacherId) {
+        await this.assertTeacher(tx, auth.workspaceId, dto.teacherId);
+      }
       await tx.enrollment.updateMany({
         where: { id: { in: reactivated.map((row) => row.id) } },
-        data: { status: 'ACTIVE' },
+        data: { status: 'ACTIVE', ...(teacherId ? { teacherId } : {}) },
       });
       for (const row of reactivated) {
         entries.push({
@@ -708,8 +714,8 @@ export class GroupsService {
           entity: 'ENROLLMENT',
           entityId: row.id,
           changes: this.audit.buildChanges(
-            { status: 'ARCHIVED' },
-            { status: 'ACTIVE' },
+            { status: 'ARCHIVED', teacherId: row.teacherId },
+            { status: 'ACTIVE', teacherId: teacherId ?? row.teacherId },
           ),
         });
       }
@@ -810,7 +816,7 @@ export class GroupsService {
       where: {
         workspaceId: auth.workspaceId,
         groupId: group.id,
-        OR: [{ deletedAt: null }, { scheduleSuspensionToken: { not: null } }],
+        ...groupScheduleWhere,
       },
     });
     if (existing > 0) {
@@ -857,10 +863,12 @@ export class GroupsService {
   }
 
   /**
-   * Hands the group to another teacher: its live memberships, its schedule
-   * (live or suspended by an empty roster) and every upcoming scheduled lesson
-   * move together, after a clash check against the new teacher's calendar.
-   * Taught and cancelled lessons keep the teacher who had them.
+   * Hands the group to another teacher: its memberships (live, paused, or
+   * suspended with an archived student, so a returning student comes back to
+   * the group's teacher), its schedule (live or suspended by an empty roster)
+   * and every upcoming scheduled lesson move together, after a clash check
+   * against the new teacher's calendar. Taught and cancelled lessons keep the
+   * teacher who had them.
    */
   private async reassignTeacher(
     tx: Prisma.TransactionClient,
@@ -893,7 +901,7 @@ export class GroupsService {
         where: {
           workspaceId,
           groupId,
-          OR: [{ deletedAt: null }, { scheduleSuspensionToken: { not: null } }],
+          ...groupScheduleWhere,
         },
         select: { id: true, teacherId: true },
       }),
@@ -918,7 +926,7 @@ export class GroupsService {
         where: {
           workspaceId,
           groupId,
-          ...liveEnrollmentWhere,
+          deletedAt: null,
           teacherId: { not: teacherId },
         },
         data: { teacherId },
@@ -1045,12 +1053,13 @@ export class GroupsService {
         // Against `updated`, so a price or teacher changed in the same
         // request applies to the students it enrolls.
         await this.reconcileStudents(tx, auth, updated, students, now);
+        await this.syncGroupSchedule(tx, auth.workspaceId, before.id, now);
       }
       if (schedule) {
+        // As on create: after the roster settled, so a schedule set on an
+        // empty group stays live and dormant instead of being suspended by
+        // the same request.
         await this.createSchedule(tx, auth, updated, schedule, now);
-      }
-      if (students || schedule) {
-        await this.syncGroupSchedule(tx, auth.workspaceId, before.id, now);
       }
       return updated;
     });
@@ -1190,8 +1199,22 @@ export class GroupsService {
       await lockTeacherSchedules(tx, auth.workspaceId, teacherIds);
 
       // Do this before changing any state. A group can be restored only when
-      // its explicitly suspended upcoming lessons still fit the calendar.
-      await assertLessonsAreFree(tx, auth.workspaceId, suspendedLessons);
+      // its explicitly suspended upcoming lessons still fit the calendar —
+      // unless its roster emptied while it was archived: then the roster
+      // reconciliation below suspends those lessons again at once, and a
+      // clash with a slot nobody will take must not block the restore.
+      const activeMembers = await tx.enrollment.count({
+        where: {
+          workspaceId: auth.workspaceId,
+          groupId: existing.id,
+          deletedAt: null,
+          status: 'ACTIVE',
+          student: { deletedAt: null, status: { not: 'ARCHIVED' } },
+        },
+      });
+      if (activeMembers > 0) {
+        await assertLessonsAreFree(tx, auth.workspaceId, suspendedLessons);
+      }
 
       const restored = await tx.group.update({
         where: { id: existing.id },
