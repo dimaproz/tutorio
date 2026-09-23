@@ -66,7 +66,7 @@ transaction; duplicate links are idempotent or rejected predictably.
 | Purpose           | Teaching profile and assignment target, independent from login access.                                                                                |
 | Ownership         | Workspace-scoped; may link to one `WorkspaceMember`.                                                                                                  |
 | Relationships     | Enrollments, lessons, recurring series, and optional login membership.                                                                                |
-| Create/update     | Solo mode permits one active profile. A linked membership must belong to the workspace and be unique.                                                 |
+| Create/update     | Solo mode permits one live `ACTIVE` profile; create, update to `ACTIVE` and restore of an `ACTIVE` profile check it under a per-workspace advisory lock. A linked membership must belong to the workspace and be unique. |
 | Lifecycle         | `ACTIVE`/`ARCHIVED` business status plus soft delete/restore.                                                                                         |
 | Pilot permissions | Owner-only CRUD. Teacher login is unsupported until ADR 0004’s future gate is complete.                                                               |
 | Current gaps      | Updating unrelated fields can erase `subjects`; mutations are not consistently owner-only; archive/delete does not define behavior for active series. |

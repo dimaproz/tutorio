@@ -154,6 +154,41 @@ export class TeachersService {
     }
   }
 
+  /**
+   * SOLO workspaces already own the caller's teaching profile and show no
+   * teacher controls: a second live ACTIVE profile would be invisible and
+   * unusable. A per-workspace advisory lock serializes every command that can
+   * produce an ACTIVE profile, so two concurrent requests cannot both pass
+   * the count.
+   */
+  private async assertSoloTeacherSlot(
+    tx: Prisma.TransactionClient,
+    workspaceId: string,
+    excludeTeacherId?: string,
+  ): Promise<void> {
+    const workspace = await tx.workspace.findFirstOrThrow({
+      where: { id: workspaceId },
+      select: { mode: true },
+    });
+    if (workspace.mode !== 'SOLO') {
+      return;
+    }
+    if (typeof tx.$executeRaw === 'function') {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`${workspaceId}:solo-teacher`}))`;
+    }
+    const existing = await tx.teacher.count({
+      where: {
+        workspaceId,
+        deletedAt: null,
+        status: 'ACTIVE',
+        ...(excludeTeacherId ? { id: { not: excludeTeacherId } } : {}),
+      },
+    });
+    if (existing > 0) {
+      throw soloModeSingleTeacher();
+    }
+  }
+
   async create(
     auth: AuthenticatedUser,
     dto: CreateTeacherDto,
@@ -166,23 +201,8 @@ export class TeachersService {
           dto.workspaceMemberId,
         );
       }
-      // SOLO workspaces already own the caller's teaching profile and show no
-      // teacher controls: a second one would be invisible and unusable.
-      const workspace = await tx.workspace.findFirstOrThrow({
-        where: { id: auth.workspaceId },
-        select: { mode: true },
-      });
-      if (workspace.mode === 'SOLO') {
-        const existing = await tx.teacher.count({
-          where: {
-            workspaceId: auth.workspaceId,
-            deletedAt: null,
-            status: 'ACTIVE',
-          },
-        });
-        if (existing > 0) {
-          throw soloModeSingleTeacher();
-        }
+      if (dto.status === 'ACTIVE') {
+        await this.assertSoloTeacherSlot(tx, auth.workspaceId);
       }
       const created = await tx.teacher.create({
         data: { workspaceId: auth.workspaceId, subjects: [], ...dto },
@@ -229,6 +249,9 @@ export class TeachersService {
           dto.workspaceMemberId,
           before.id,
         );
+      }
+      if (dto.status === 'ACTIVE' && before.status !== 'ACTIVE') {
+        await this.assertSoloTeacherSlot(tx, auth.workspaceId, before.id);
       }
       const updated = await tx.teacher.update({
         where: { id: before.id },
@@ -288,6 +311,9 @@ export class TeachersService {
       }
       if (!existing.deletedAt) {
         return existing;
+      }
+      if (existing.status === 'ACTIVE') {
+        await this.assertSoloTeacherSlot(tx, auth.workspaceId, existing.id);
       }
       const restored = await tx.teacher.update({
         where: { id: existing.id },
