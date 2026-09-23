@@ -1,15 +1,16 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { SentryModule } from '@sentry/nestjs/setup';
 import { ZodSerializerInterceptor, ZodValidationPipe } from 'nestjs-zod';
 import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
 import { AccessTokenGuard } from './auth/guards/access-token.guard';
+import { ClientThrottlerGuard } from './auth/guards/client-throttler.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
-import { validateEnv } from './config/env';
+import { type Env, validateEnv } from './config/env';
 import { EnrollmentsModule } from './enrollments/enrollments.module';
 import { GroupsModule } from './groups/groups.module';
 import { HealthModule } from './health/health.module';
@@ -26,8 +27,18 @@ import { WorkspacesModule } from './workspaces/workspaces.module';
     SentryModule.forRoot(),
     ConfigModule.forRoot({ isGlobal: true, validate: validateEnv }),
     ScheduleModule.forRoot(),
-    // Global safety-net limit; auth endpoints declare stricter @Throttle overrides.
-    ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 100 }]),
+    // Global per-session safety-net limit; public auth endpoints declare
+    // stricter per-client @Throttle overrides.
+    ThrottlerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService<Env, true>) => [
+        {
+          name: 'default',
+          ttl: 60_000,
+          limit: config.get('THROTTLE_DEFAULT_LIMIT', { infer: true }),
+        },
+      ],
+    }),
     PrismaModule,
     HealthModule,
     AuthModule,
@@ -44,9 +55,11 @@ import { WorkspacesModule } from './workspaces/workspaces.module';
   providers: [
     { provide: APP_PIPE, useClass: ZodValidationPipe },
     { provide: APP_INTERCEPTOR, useClass: ZodSerializerInterceptor },
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    // Order matters: the throttler keys authenticated traffic on the session
+    // that AccessTokenGuard attaches, so it must run after it.
     { provide: APP_GUARD, useClass: AccessTokenGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
+    { provide: APP_GUARD, useClass: ClientThrottlerGuard },
   ],
 })
 export class AppModule {}

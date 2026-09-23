@@ -26,8 +26,19 @@ const envSchema = z
     JWT_REFRESH_TTL: durationSchema.default('30d'),
     JWT_ISSUER: z.string().min(1).default('tutorio-api'),
     JWT_AUDIENCE: z.string().min(1).default('tutorio-clients'),
+    // Per-session business limit (requests per minute per route).
+    THROTTLE_DEFAULT_LIMIT: z.coerce.number().int().positive().default(600),
     THROTTLE_AUTH_LIMIT: z.coerce.number().int().positive().default(5),
     THROTTLE_REFRESH_LIMIT: z.coerce.number().int().positive().default(20),
+    // Shared with the web gateway; when set, only requests carrying it may
+    // name the client address used for per-client rate limits.
+    GATEWAY_SHARED_SECRET: z.preprocess(
+      (value) => (value === '' ? undefined : value),
+      z
+        .string()
+        .min(16, 'GATEWAY_SHARED_SECRET must be at least 16 characters')
+        .optional(),
+    ),
     SENTRY_DSN: z.string().optional(),
   })
   .refine((env) => env.JWT_ACCESS_SECRET !== env.JWT_REFRESH_SECRET, {

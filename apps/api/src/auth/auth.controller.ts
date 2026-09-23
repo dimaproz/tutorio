@@ -34,7 +34,8 @@ import {
 } from './dto/auth.dto';
 
 // Limits are env-tunable so e2e suites can raise them; production defaults
-// are 5 auth attempts and 20 refreshes per minute per client.
+// are 5 auth attempts and 20 refreshes per minute per client address (the
+// gateway forwards it — see ClientThrottlerGuard).
 const AUTH_THROTTLE = {
   default: { limit: Number(process.env.THROTTLE_AUTH_LIMIT ?? 5), ttl: 60_000 },
 };

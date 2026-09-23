@@ -29,6 +29,15 @@ docs, screenshots, or client bundles.
 - `WEB_ORIGIN` is an exact allowlist for the deployed web origin.
 - `SENTRY_DSN` is environment-specific.
 - `NODE_ENV=production` outside local/CI.
+- `GATEWAY_SHARED_SECRET` is a high-entropy value (min 16 chars) shared with
+  the web project. All browser traffic reaches the API through the web
+  gateway, so the API rate-limits authenticated requests per session
+  (`THROTTLE_DEFAULT_LIMIT`, default 600 per minute per route) and public auth
+  routes per client address (`THROTTLE_AUTH_LIMIT` 5 and
+  `THROTTLE_REFRESH_LIMIT` 20 per minute). The client address comes from the
+  gateway's `x-forwarded-for` and is trusted only when `x-gateway-secret`
+  matches; without the secret, production falls back to the gateway's own
+  address and every login shares one bucket.
 
 The configured pre-deploy command runs `prisma migrate deploy`. The API exposes
 Swagger under `/docs` and liveness under `/api/health`. Before pilot, health must
@@ -39,6 +48,9 @@ ready.
 
 - Vercel project rooted at `apps/web`.
 - `API_URL` points to the environment API `/api` base and remains server-only.
+- `GATEWAY_SHARED_SECRET` equals the API value and remains server-only. The
+  gateway forwards the first `x-forwarded-for` entry (set by Vercel's edge),
+  falling back to `x-real-ip`.
 - `NEXT_PUBLIC_SENTRY_DSN` is environment-specific.
 - The deployed web origin is reflected in API `WEB_ORIGIN` before acceptance.
 
