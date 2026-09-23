@@ -24,8 +24,10 @@ import { cn } from '@/lib/utils';
  * The 52px field box. Exported so a control that is not an input — a combobox
  * trigger, a date picker — can look exactly like its neighbours in a form.
  */
+// An invalid field keeps its red border when focused; the ring deepens so the
+// focus still shows once the error state has claimed the border.
 export const fieldBoxClass =
-  'flex h-13 w-full min-w-0 items-center gap-2.5 rounded-field border border-border bg-card px-4 text-left text-[15px] text-foreground transition-[border-color,box-shadow,background-color] duration-150 ease-out outline-none not-disabled:hover:border-line-hover focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/16 aria-expanded:border-ring aria-expanded:ring-3 aria-expanded:ring-ring/16 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/12 disabled:cursor-not-allowed disabled:bg-background disabled:opacity-55 data-placeholder:text-muted-foreground [&_svg]:shrink-0';
+  'flex h-13 w-full min-w-0 items-center gap-2.5 rounded-field border border-border bg-card px-4 text-left text-[15px] text-foreground transition-[border-color,box-shadow,background-color] duration-150 ease-out outline-none not-disabled:hover:border-line-hover focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/16 aria-expanded:border-ring aria-expanded:ring-3 aria-expanded:ring-ring/16 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/12 aria-invalid:focus-visible:ring-destructive/30 aria-invalid:aria-expanded:ring-destructive/30 disabled:cursor-not-allowed disabled:bg-background disabled:opacity-55 data-placeholder:text-muted-foreground [&_svg]:shrink-0';
 
 type Chrome = {
   label?: ReactNode;

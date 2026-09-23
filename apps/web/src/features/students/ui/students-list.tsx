@@ -381,6 +381,21 @@ export function StudentsList({ nowMs }: { nowMs?: number } = {}) {
             </div>
           ) : undefined
         }
+        // Desktop pages from the table card's footer; phones need the same
+        // control under the cards, or later pages are reachable only by search.
+        pagination={
+          items.length > 0 ? (
+            <div className="flex flex-col items-center gap-3 md:hidden">
+              <ListPagination page={page} totalPages={students.data?.totalPages ?? 1} />
+              <span className="text-[13px] text-muted-foreground">
+                {t('showing', {
+                  shown: items.length,
+                  total: students.data?.total ?? items.length,
+                })}
+              </span>
+            </div>
+          ) : undefined
+        }
       />
       <LessonFormDialog open={lessonOpen} onOpenChange={setLessonOpen} />
     </>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { PencilIcon, PlusIcon } from 'lucide-react';
 import { useFormatter, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
@@ -32,6 +32,15 @@ export function StudentNotesCard({
   const format = useFormatter();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(student.notes ?? '');
+  const titleRef = useRef<HTMLHeadingElement>(null);
+
+  // Save and Cancel disappear with the editor while one of them has focus; the
+  // card's title is the one element that is there in every state, so focus
+  // returns to it instead of falling to the page body.
+  const stopEditing = () => {
+    setEditing(false);
+    requestAnimationFrame(() => titleRef.current?.focus());
+  };
 
   const startEditing = () => {
     setDraft(student.notes ?? '');
@@ -44,7 +53,7 @@ export function StudentNotesCard({
       { notes: trimmed.length > 0 ? trimmed : null },
       {
         onSuccess: () => {
-          setEditing(false);
+          stopEditing();
           toast.success(t('saved'));
         },
         onError: (error) => toast.error(tErrors(errorMessageKey(error))),
@@ -59,7 +68,9 @@ export function StudentNotesCard({
   return (
     <Card tone="warning" className="gap-2.5 px-6 py-5.5">
       <div className="flex min-h-8 items-center justify-between gap-3">
-        <h2 className="text-base font-semibold">{t('title')}</h2>
+        <h2 ref={titleRef} tabIndex={-1} className="text-base font-semibold outline-none">
+          {t('title')}
+        </h2>
         {!readOnly && !editing && student.notes ? (
           <Button
             type="button"
@@ -95,7 +106,7 @@ export function StudentNotesCard({
               variant="white"
               size="sm"
               disabled={update.isPending}
-              onClick={() => setEditing(false)}
+              onClick={stopEditing}
             >
               {tCommon('cancel')}
             </Button>
