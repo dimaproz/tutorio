@@ -27,6 +27,7 @@ function toResponse(row: Parent): ParentResponse {
     id: row.id,
     workspaceId: row.workspaceId,
     fullName: row.fullName,
+    email: row.email,
     phone: row.phone,
     telegramUsername: row.telegramUsername,
     avatarKey: row.avatarKey as ParentResponse['avatarKey'],
@@ -49,6 +50,7 @@ const studentRosterInclude = {
           fullName: true,
           avatarKey: true,
           status: true,
+          languageLevel: true,
         },
       },
     },
@@ -65,6 +67,7 @@ function toRoster(
     avatarKey: link.student
       .avatarKey as ParentDetail['students'][number]['avatarKey'],
     status: link.student.status,
+    languageLevel: link.student.languageLevel,
   }));
 }
 
@@ -101,12 +104,14 @@ export class ParentsService {
 
     const search = query.search
       ? {
-          OR: ['fullName', 'phone', 'telegramUsername'].map((field) => ({
-            [field]: {
-              contains: query.search,
-              mode: 'insensitive' as const,
-            },
-          })),
+          OR: ['fullName', 'email', 'phone', 'telegramUsername'].map(
+            (field) => ({
+              [field]: {
+                contains: query.search,
+                mode: 'insensitive' as const,
+              },
+            }),
+          ),
         }
       : {};
 
@@ -114,15 +119,22 @@ export class ParentsService {
       workspaceId: auth.workspaceId,
       ...deletedAtFilter(query.state),
       ...search,
-      ...(query.studentId
-        ? { students: { some: { studentId: query.studentId } } }
-        : {}),
+      AND: [
+        query.studentId
+          ? { students: { some: { studentId: query.studentId } } }
+          : {},
+        // "No students" means no live link: a link to a deleted student does
+        // not count, exactly as the roster below does not show it.
+        query.linked === 'none'
+          ? { students: { none: { student: { deletedAt: null } } } }
+          : {},
+      ],
     };
 
     const [rows, total] = await this.prisma.$transaction([
       this.prisma.parent.findMany({
         where,
-        orderBy: [{ fullName: 'asc' }, { id: 'asc' }],
+        orderBy: [{ [query.sort]: query.order }, { id: 'asc' }],
         ...toSkipTake(query),
         include: studentRosterInclude,
       }),
@@ -133,6 +145,7 @@ export class ParentsService {
       rows.map((row) => ({
         id: row.id,
         fullName: row.fullName,
+        email: row.email,
         phone: row.phone,
         telegramUsername: row.telegramUsername,
         avatarKey:

@@ -9,7 +9,7 @@ import {
 import { createEnrollmentSchema, updateEnrollmentSchema } from './enrollments';
 import { createGroupSchema, listGroupsQuerySchema, updateGroupSchema } from './groups';
 import { paginatedResponseSchema, paginationQuerySchema } from './pagination';
-import { createParentSchema, updateParentSchema } from './parents';
+import { createParentSchema, listParentsQuerySchema, updateParentSchema } from './parents';
 import { z } from 'zod';
 import {
   createStudentSchema,
@@ -225,6 +225,30 @@ describe('parents', () => {
     expect(updateParentSchema.safeParse({ studentIds: [UUID], archived: true }).success).toBe(
       false,
     );
+  });
+
+  it('normalizes an optional email and clears it with null', () => {
+    expect(
+      createParentSchema.parse({ fullName: 'Olena', email: ' Olena@Example.TEST ' }).email,
+    ).toBe('olena@example.test');
+    expect(createParentSchema.parse({ fullName: 'Olena', email: '' }).email).toBeUndefined();
+    expect(createParentSchema.safeParse({ fullName: 'Olena', email: 'not-an-email' }).success).toBe(
+      false,
+    );
+    expect(updateParentSchema.parse({ email: null }).email).toBeNull();
+  });
+
+  it('defaults the list query and accepts the link filter and sort', () => {
+    expect(listParentsQuerySchema.parse({})).toMatchObject({
+      linked: 'any',
+      sort: 'fullName',
+      order: 'asc',
+    });
+    expect(
+      listParentsQuerySchema.parse({ linked: 'none', sort: 'createdAt', order: 'desc' }),
+    ).toMatchObject({ linked: 'none', sort: 'createdAt', order: 'desc' });
+    expect(listParentsQuerySchema.safeParse({ linked: 'some' }).success).toBe(false);
+    expect(listParentsQuerySchema.safeParse({ sort: 'phone' }).success).toBe(false);
   });
 });
 

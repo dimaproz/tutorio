@@ -235,6 +235,7 @@ model Parent {
   id               String    @id @default(uuid())
   workspaceId      String
   fullName         String
+  email            String?
   phone            String?
   telegramUsername String?
   // One of a curated set of bundled illustration keys — see Student.avatarKey.

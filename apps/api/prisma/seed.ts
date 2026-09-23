@@ -139,7 +139,9 @@ async function main() {
     const existing = await prisma.studentParent.findFirst({
       where: { studentId, parentId },
     });
-    return existing ?? prisma.studentParent.create({ data: { studentId, parentId } });
+    return (
+      existing ?? prisma.studentParent.create({ data: { studentId, parentId } })
+    );
   }
 
   // Varied optional fields: full academic profile + linked parent, minimal
@@ -163,6 +165,7 @@ async function main() {
   });
   const irynaParent = await ensureParent({
     fullName: 'Iryna Demo',
+    email: 'iryna.demo@example.test',
     phone: '+380 50 111 22 34',
     telegramUsername: '@iryna_demo',
     notes: 'Primary contact for billing questions.',
@@ -226,9 +229,20 @@ async function main() {
     'HISTORY',
     'IELTS_PREP',
   ] as const;
-  const SAMPLE_STATUSES = ['ACTIVE', 'ACTIVE', 'ACTIVE', 'ON_HOLD', 'ARCHIVED'] as const;
+  const SAMPLE_STATUSES = [
+    'ACTIVE',
+    'ACTIVE',
+    'ACTIVE',
+    'ON_HOLD',
+    'ARCHIVED',
+  ] as const;
   const SAMPLE_CURRENCIES = ['UAH', 'EUR', 'PLN', 'USD', 'GBP'] as const;
-  const SAMPLE_TIMEZONES = ['Europe/Kyiv', 'Europe/Warsaw', 'Europe/London', 'Europe/Berlin'] as const;
+  const SAMPLE_TIMEZONES = [
+    'Europe/Kyiv',
+    'Europe/Warsaw',
+    'Europe/London',
+    'Europe/Berlin',
+  ] as const;
   const SAMPLE_NAMES = [
     'Maryna',
     'Petro',
@@ -315,20 +329,30 @@ async function main() {
   }
 
   // Individual + group enrollments across statuses and currencies.
-  const aliceIndividual = await ensureEnrollment(alice.id, null, tarasTeacher.id, {
-    status: 'ACTIVE',
-    billingType: 'PACKAGE',
-    priceMinor: 45000, // 450.00 UAH per lesson
-    currency: 'UAH',
-    cancellationDeadlineHours: null,
-  });
-  const aliceGroup = await ensureEnrollment(alice.id, group.id, ownerTeacher.id, {
-    status: 'ACTIVE',
-    billingType: 'MONTHLY',
-    priceMinor: 120000, // 1200.00 EUR per month
-    currency: 'EUR',
-    cancellationDeadlineHours: 48,
-  });
+  const aliceIndividual = await ensureEnrollment(
+    alice.id,
+    null,
+    tarasTeacher.id,
+    {
+      status: 'ACTIVE',
+      billingType: 'PACKAGE',
+      priceMinor: 45000, // 450.00 UAH per lesson
+      currency: 'UAH',
+      cancellationDeadlineHours: null,
+    },
+  );
+  const aliceGroup = await ensureEnrollment(
+    alice.id,
+    group.id,
+    ownerTeacher.id,
+    {
+      status: 'ACTIVE',
+      billingType: 'MONTHLY',
+      priceMinor: 120000, // 1200.00 EUR per month
+      currency: 'EUR',
+      cancellationDeadlineHours: 48,
+    },
+  );
   await ensureEnrollment(bohdan.id, group.id, tarasTeacher.id, {
     status: 'PAUSED',
     billingType: 'PER_LESSON',
@@ -359,7 +383,11 @@ async function main() {
     status: 'SCHEDULED' | 'COMPLETED' = 'SCHEDULED',
   ) {
     const existing = await prisma.lesson.findFirst({
-      where: { workspaceId: workspace.id, enrollmentId: enrollment.id, startsAtUtc },
+      where: {
+        workspaceId: workspace.id,
+        enrollmentId: enrollment.id,
+        startsAtUtc,
+      },
     });
     if (existing) {
       return existing;

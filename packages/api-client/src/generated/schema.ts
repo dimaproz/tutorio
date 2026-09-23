@@ -1089,6 +1089,7 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 fullName: string;
+                email: string | null;
                 phone: string | null;
                 telegramUsername: string | null;
                 /** @enum {string|null} */
@@ -1103,6 +1104,7 @@ export interface components {
                     avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
                     /** @enum {string} */
                     status: "ACTIVE" | "ON_HOLD" | "ARCHIVED";
+                    languageLevel: string | null;
                 }[];
             }[];
             page: number;
@@ -1112,6 +1114,8 @@ export interface components {
         };
         CreateParentDto: {
             fullName: string;
+            /** Format: email */
+            email: string;
             phone: string;
             telegramUsername: string;
             /** @enum {string} */
@@ -1125,6 +1129,7 @@ export interface components {
             /** Format: uuid */
             workspaceId: string;
             fullName: string;
+            email: string | null;
             phone: string | null;
             telegramUsername: string | null;
             /** @enum {string|null} */
@@ -1143,6 +1148,7 @@ export interface components {
             /** Format: uuid */
             workspaceId: string;
             fullName: string;
+            email: string | null;
             phone: string | null;
             telegramUsername: string | null;
             /** @enum {string|null} */
@@ -1162,10 +1168,13 @@ export interface components {
                 avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
                 /** @enum {string} */
                 status: "ACTIVE" | "ON_HOLD" | "ARCHIVED";
+                languageLevel: string | null;
             }[];
         };
         UpdateParentDto: {
             fullName?: string;
+            /** Format: email */
+            email?: string | null;
             phone?: string | null;
             telegramUsername?: string | null;
             /** @enum {string|null} */
@@ -2687,6 +2696,9 @@ export interface operations {
                 search?: string;
                 state?: "active" | "deleted" | "all";
                 studentId?: string;
+                linked?: "any" | "none";
+                sort?: "fullName" | "createdAt";
+                order?: "asc" | "desc";
             };
             header?: never;
             path?: never;

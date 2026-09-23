@@ -982,6 +982,45 @@
               "format": "uuid",
               "type": "string"
             }
+          },
+          {
+            "name": "linked",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "any",
+              "type": "string",
+              "enum": [
+                "any",
+                "none"
+              ]
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "fullName",
+              "type": "string",
+              "enum": [
+                "fullName",
+                "createdAt"
+              ]
+            }
+          },
+          {
+            "name": "order",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "asc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
           }
         ],
         "responses": {
@@ -5315,6 +5354,10 @@
                 "fullName": {
                   "type": "string"
                 },
+                "email": {
+                  "type": "string",
+                  "nullable": true
+                },
                 "phone": {
                   "type": "string",
                   "nullable": true
@@ -5379,13 +5422,18 @@
                           "ON_HOLD",
                           "ARCHIVED"
                         ]
+                      },
+                      "languageLevel": {
+                        "type": "string",
+                        "nullable": true
                       }
                     },
                     "required": [
                       "id",
                       "fullName",
                       "avatarKey",
-                      "status"
+                      "status",
+                      "languageLevel"
                     ]
                   }
                 }
@@ -5393,6 +5441,7 @@
               "required": [
                 "id",
                 "fullName",
+                "email",
                 "phone",
                 "telegramUsername",
                 "avatarKey",
@@ -5438,6 +5487,11 @@
             "minLength": 1,
             "maxLength": 120
           },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 320
+          },
           "phone": {
             "type": "string",
             "minLength": 3,
@@ -5480,6 +5534,7 @@
         },
         "required": [
           "fullName",
+          "email",
           "phone",
           "telegramUsername",
           "avatarKey",
@@ -5499,6 +5554,10 @@
           },
           "fullName": {
             "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
           },
           "phone": {
             "type": "string",
@@ -5546,6 +5605,7 @@
           "id",
           "workspaceId",
           "fullName",
+          "email",
           "phone",
           "telegramUsername",
           "avatarKey",
@@ -5568,6 +5628,10 @@
           },
           "fullName": {
             "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
           },
           "phone": {
             "type": "string",
@@ -5645,13 +5709,18 @@
                     "ON_HOLD",
                     "ARCHIVED"
                   ]
+                },
+                "languageLevel": {
+                  "type": "string",
+                  "nullable": true
                 }
               },
               "required": [
                 "id",
                 "fullName",
                 "avatarKey",
-                "status"
+                "status",
+                "languageLevel"
               ]
             }
           }
@@ -5660,6 +5729,7 @@
           "id",
           "workspaceId",
           "fullName",
+          "email",
           "phone",
           "telegramUsername",
           "avatarKey",
@@ -5677,6 +5747,12 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 120
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 320,
+            "nullable": true
           },
           "phone": {
             "type": "string",

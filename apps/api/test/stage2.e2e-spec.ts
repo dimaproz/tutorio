@@ -1163,12 +1163,17 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
       const created = await server()
         .post('/api/parents')
         .set('Authorization', auth(ownerA))
-        .send({ fullName: 'Standalone Parent', phone: '+380671112233' })
+        .send({
+          fullName: 'Standalone Parent',
+          phone: '+380671112233',
+          email: ' Standalone.Parent@Example.TEST ',
+        })
         .expect(201);
       parentId = created.body.id;
 
       expect(created.body).toMatchObject({
         fullName: 'Standalone Parent',
+        email: 'standalone.parent@example.test',
         deletedAt: null,
       });
       expect(await auditCount('PARENT', parentId, 'CREATE')).toBe(1);
@@ -1203,17 +1208,65 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
           fullName: 'Roster Learner',
           avatarKey: null,
           status: 'ACTIVE',
+          languageLevel: null,
         },
       ]);
+    });
+
+    it('filters to parents with no linked student and sorts on the server', async () => {
+      const lonely = await server()
+        .post('/api/parents')
+        .set('Authorization', auth(ownerA))
+        .send({ fullName: 'Aaa Unlinked Parent' })
+        .expect(201);
+
+      const unlinked = await server()
+        .get('/api/parents')
+        .query({ linked: 'none', pageSize: 100 })
+        .set('Authorization', auth(ownerA))
+        .expect(200);
+      const unlinkedIds = unlinked.body.items.map(
+        (item: { id: string }) => item.id,
+      );
+      expect(unlinkedIds).toContain(lonely.body.id);
+      expect(unlinkedIds).not.toContain(parentId);
+      expect(
+        unlinked.body.items.every(
+          (item: { students: unknown[] }) => item.students.length === 0,
+        ),
+      ).toBe(true);
+
+      const newest = await server()
+        .get('/api/parents')
+        .query({ sort: 'createdAt', order: 'desc', pageSize: 1 })
+        .set('Authorization', auth(ownerA))
+        .expect(200);
+      expect(newest.body.items[0].id).toBe(lonely.body.id);
+
+      await server()
+        .get('/api/parents')
+        .query({ sort: 'phone' })
+        .set('Authorization', auth(ownerA))
+        .expect(400);
+
+      await server()
+        .delete(`/api/parents/${lonely.body.id}`)
+        .set('Authorization', auth(ownerA))
+        .expect(204);
     });
 
     it('updates with PATCH semantics and audits the diff; no-op adds nothing', async () => {
       await server()
         .patch(`/api/parents/${parentId}`)
         .set('Authorization', auth(ownerA))
-        .send({ phone: null, notes: 'Prefers Telegram' })
+        .send({ phone: null, email: null, notes: 'Prefers Telegram' })
         .expect(200);
       expect(await auditCount('PARENT', parentId, 'UPDATE')).toBe(1);
+      const cleared = await server()
+        .get(`/api/parents/${parentId}`)
+        .set('Authorization', auth(ownerA))
+        .expect(200);
+      expect(cleared.body).toMatchObject({ phone: null, email: null });
 
       await server()
         .patch(`/api/parents/${parentId}`)
@@ -1239,7 +1292,7 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
       ).toBe(true);
     });
 
-    it('finds parents by search', async () => {
+    it('finds parents by search, including their email', async () => {
       const found = await server()
         .get('/api/parents')
         .query({ search: 'Standalone Parent' })
@@ -1247,6 +1300,21 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
         .expect(200);
       expect(found.body.total).toBe(1);
       expect(found.body.items[0].id).toBe(parentId);
+
+      await server()
+        .patch(`/api/parents/${parentId}`)
+        .set('Authorization', auth(ownerA))
+        .send({ email: 'family.contact@example.test' })
+        .expect(200);
+      const byEmail = await server()
+        .get('/api/parents')
+        .query({ search: 'family.contact@' })
+        .set('Authorization', auth(ownerA))
+        .expect(200);
+      expect(byEmail.body.items.map((item: { id: string }) => item.id)).toEqual(
+        [parentId],
+      );
+      expect(byEmail.body.items[0].email).toBe('family.contact@example.test');
     });
 
     it('permanently deletes a parent and unlinks it from students (no restore)', async () => {
