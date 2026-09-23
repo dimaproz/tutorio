@@ -24,6 +24,30 @@ export function originAllowed(request: NextRequest): boolean {
   }
 }
 
+// The client's address as seen by the hosting edge. Vercel overwrites
+// x-forwarded-for with the real client address, so its first entry is safe
+// to forward; x-real-ip is the fallback for other proxies.
+export function clientAddress(request: NextRequest): string | undefined {
+  const forwarded = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+  return forwarded || request.headers.get('x-real-ip')?.trim() || undefined;
+}
+
+// Every server-to-server call carries the client's address and, when
+// configured, the shared secret that lets the API trust it. Without these
+// the API would rate-limit the whole product as one client (the gateway).
+export function upstreamHeaders(request?: NextRequest): Headers {
+  const headers = new Headers();
+  const address = request ? clientAddress(request) : undefined;
+  if (address) {
+    headers.set('x-forwarded-for', address);
+  }
+  const secret = process.env.GATEWAY_SHARED_SECRET;
+  if (secret) {
+    headers.set('x-gateway-secret', secret);
+  }
+  return headers;
+}
+
 export function forbiddenResponse(): NextResponse {
   return NextResponse.json(
     { statusCode: 403, code: 'FORBIDDEN', message: 'Cross-origin request rejected' },
@@ -34,10 +58,13 @@ export function forbiddenResponse(): NextResponse {
 export async function callAuthApi(
   path: string,
   body: Record<string, unknown>,
+  request?: NextRequest,
 ): Promise<{ status: number; data: unknown }> {
+  const headers = upstreamHeaders(request);
+  headers.set('content-type', 'application/json');
   const response = await fetch(apiUrl(path), {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers,
     body: JSON.stringify(body),
     cache: 'no-store',
   });
@@ -47,8 +74,11 @@ export async function callAuthApi(
 
 // Rotates the refresh token server-to-server. Returns the full session on
 // success, null when the session is gone (invalid, expired, revoked).
-export async function rotateRefreshToken(refreshToken: string): Promise<AuthSession | null> {
-  const { status, data } = await callAuthApi('/auth/refresh', { refreshToken });
+export async function rotateRefreshToken(
+  refreshToken: string,
+  request?: NextRequest,
+): Promise<AuthSession | null> {
+  const { status, data } = await callAuthApi('/auth/refresh', { refreshToken }, request);
   if (status !== 200) {
     return null;
   }

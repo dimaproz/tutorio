@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
   const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value;
   if (refreshToken) {
     // Best effort — cookies are cleared even if the API is unreachable.
-    await callAuthApi('/auth/logout', { refreshToken }).catch(() => undefined);
+    await callAuthApi('/auth/logout', { refreshToken }, request).catch(() => undefined);
   }
 
   const response = new NextResponse(null, { status: 204 });

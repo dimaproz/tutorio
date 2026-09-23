@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { status, data } = await callAuthApi('/auth/login', parsed.data);
+  const { status, data } = await callAuthApi('/auth/login', parsed.data, request);
   const session = authSessionSchema.safeParse(data);
   if (status !== 200 || !session.success) {
     return errorResponse(status === 200 ? 502 : status, data);

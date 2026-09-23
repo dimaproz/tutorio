@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { status, data } = await callAuthApi('/auth/register', parsed.data);
+  const { status, data } = await callAuthApi('/auth/register', parsed.data, request);
   const session = authSessionSchema.safeParse(data);
   if (status !== 201 || !session.success) {
     return errorResponse(status === 201 ? 502 : status, data);

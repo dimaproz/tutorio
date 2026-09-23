@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
   }
 
   const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value;
-  const session = refreshToken ? await rotateRefreshToken(refreshToken) : null;
+  const session = refreshToken ? await rotateRefreshToken(refreshToken, request) : null;
 
   if (!session) {
     const response = NextResponse.json(

@@ -135,6 +135,20 @@ describe('POST /api/auth/login', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it('forwards the client address and the gateway secret upstream', async () => {
+    vi.stubEnv('GATEWAY_SHARED_SECRET', 'gateway-shared-secret-0123456789');
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, SESSION_PAYLOAD));
+
+    const request = makeRequest('/api/auth/login', { body: credentials });
+    request.headers.set('x-forwarded-for', '203.0.113.7, 10.0.0.1');
+    await loginPost(request);
+
+    const headers = new Headers(fetchMock.mock.calls[0][1].headers);
+    expect(headers.get('x-forwarded-for')).toBe('203.0.113.7');
+    expect(headers.get('x-gateway-secret')).toBe('gateway-shared-secret-0123456789');
+    vi.unstubAllEnvs();
+  });
+
   it('rejects invalid payloads before contacting the API', async () => {
     const response = await loginPost(
       makeRequest('/api/auth/login', { body: { email: 'not-an-email', password: '' } }),
@@ -219,6 +233,21 @@ describe('GET /api/backend/[...path]', () => {
     const [target, init] = fetchMock.mock.calls[0];
     expect(String(target)).toContain('/auth/me');
     expect(new Headers(init.headers).get('authorization')).toBe('Bearer valid-access');
+  });
+
+  it('forwards the client address on proxied requests', async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, ME_PAYLOAD));
+    const request = makeRequest('/api/backend/auth/me', {
+      method: 'GET',
+      cookies: { [ACCESS_COOKIE]: 'valid-access' },
+    });
+    request.headers.set('x-real-ip', '198.51.100.4');
+
+    await backendGet(request, ctx);
+
+    const headers = new Headers(fetchMock.mock.calls[0][1].headers);
+    expect(headers.get('x-forwarded-for')).toBe('198.51.100.4');
+    expect(headers.get('x-gateway-secret')).toBeNull();
   });
 
   it('on 401 refreshes once, retries once and rotates cookies', async () => {

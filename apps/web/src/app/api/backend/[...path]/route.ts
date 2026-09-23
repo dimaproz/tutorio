@@ -5,7 +5,13 @@ import {
   REFRESH_COOKIE,
   setAuthCookies,
 } from '@/lib/auth/cookies';
-import { apiUrl, forbiddenResponse, originAllowed, rotateRefreshToken } from '@/lib/auth/gateway';
+import {
+  apiUrl,
+  forbiddenResponse,
+  originAllowed,
+  rotateRefreshToken,
+  upstreamHeaders,
+} from '@/lib/auth/gateway';
 import type { AuthTokens } from '@tutorio/validation';
 
 // Authenticated same-origin proxy to the Tutorio API. The upstream host is
@@ -27,7 +33,7 @@ async function callUpstream(
   accessToken: string,
   body: string | undefined,
 ): Promise<Response> {
-  const headers = new Headers();
+  const headers = upstreamHeaders(request);
   headers.set('authorization', `Bearer ${accessToken}`);
   const contentType = request.headers.get('content-type');
   if (contentType) {
@@ -96,7 +102,7 @@ async function handle(request: NextRequest, ctx: { params: Promise<{ path: strin
   if (!refreshToken) {
     return unauthorizedResponse();
   }
-  const session = await rotateRefreshToken(refreshToken);
+  const session = await rotateRefreshToken(refreshToken, request);
   if (!session) {
     return unauthorizedResponse();
   }
