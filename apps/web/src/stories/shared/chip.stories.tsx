@@ -26,7 +26,7 @@ type Args = {
 function ChipStory({ label, tone, size, dot }: Args) {
   const ground =
     tone === 'on-ink'
-      ? 'bg-ink'
+      ? 'bg-feature'
       : tone === 'on-tint' || tone === 'success-inverse' || tone === 'surface'
         ? 'bg-tint-indigo'
         : 'bg-card';

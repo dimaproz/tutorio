@@ -22,7 +22,7 @@ type Args = {
 };
 
 /**
- * The ink ticket. The empty state shows either a button (`emptyAction`) or,
+ * The highlight ticket: ink in light, the saturated indigo in dark. The empty state shows either a button (`emptyAction`) or,
  * with the action left blank, one of the three illustrations.
  */
 function NextLessonCardStory(args: Args) {

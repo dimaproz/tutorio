@@ -47,9 +47,9 @@ function ButtonStory({
     </Button>
   );
 
-  // The ink variants belong on an ink card, exactly as the next-lesson ticket uses them.
+  // These variants belong on the highlight card, exactly as the next-lesson ticket uses them.
   return variant === 'dark-outline' || (variant === 'soft' && size === 'default') ? (
-    <div className="w-fit rounded-block bg-ink p-5">{button}</div>
+    <div className="w-fit rounded-block bg-feature p-5">{button}</div>
   ) : (
     button
   );

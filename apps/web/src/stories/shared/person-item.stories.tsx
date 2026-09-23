@@ -25,7 +25,8 @@ function PersonItemStory({
   action,
   trail,
 }: Args) {
-  const ground = tone === 'ink' ? 'bg-ink' : 'bg-card';
+  // The ink row lives inside the highlight card, so it is shown on that ground.
+  const ground = tone === 'ink' ? 'bg-feature' : 'bg-card';
   return (
     <div className={`w-90 rounded-block p-4 ${ground}`}>
       <PersonItem

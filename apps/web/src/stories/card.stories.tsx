@@ -46,7 +46,7 @@ export const Compact: Story = {
   args: { size: 'sm' },
 };
 
-/** Painted card surfaces. Each tone carries its own foreground. */
+/** Painted card surfaces. Each tone carries its own foreground pair. */
 export const Tones: Story = {
   render: () => (
     <div className="grid gap-4 sm:grid-cols-2">
@@ -60,7 +60,10 @@ export const Tones: Story = {
       <Card tone="indigo" radius="hero" className="p-5">
         Profile hero
       </Card>
-      <Card tone="ink" radius="hero" className="p-5">
+      <Card tone="ink" className="p-5">
+        Deep stat block
+      </Card>
+      <Card tone="feature" radius="hero" className="p-5">
         Next lesson ticket
       </Card>
     </div>
