@@ -802,6 +802,10 @@
           "title": "No lessons are planned",
           "text": "The student is archived. Restore them to schedule lessons again."
         }
+      },
+      "unavailable": {
+        "title": "Lessons couldn’t be loaded",
+        "text": "Refresh the page to see what is planned."
       }
     },
     "subtitleShort": "{total, plural, one {# student} other {# students}} · {active} active"

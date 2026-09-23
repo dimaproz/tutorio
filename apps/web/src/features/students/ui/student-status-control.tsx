@@ -74,7 +74,9 @@ export function useStudentStatusActions(student: StatusControlStudent) {
   const tErrors = useTranslations('errors');
   const [dialog, setDialog] = useState<'hold' | 'archive' | null>(null);
   const clock = useNow();
-  const [now] = useState(() => clock.getTime());
+  // The cancellation window opens when the tutor asks for the hold, not when
+  // the page mounted: a lesson taught in between is history, not a plan.
+  const [holdFrom, setHoldFrom] = useState(() => clock.getTime());
   const update = useUpdateStudentMutation(student.id);
   const archive = useArchiveStudentMutation();
   const restore = useRestoreStudentMutation();
@@ -85,8 +87,8 @@ export function useStudentStatusActions(student: StatusControlStudent) {
   // group and keeps running for everyone else.
   const scheduled = useLessonsQuery(
     {
-      from: new Date(now).toISOString(),
-      to: new Date(now + YEAR_MS).toISOString(),
+      from: new Date(holdFrom).toISOString(),
+      to: new Date(holdFrom + YEAR_MS).toISOString(),
       studentId: student.id,
       status: 'SCHEDULED',
     },
@@ -98,7 +100,10 @@ export function useStudentStatusActions(student: StatusControlStudent) {
 
   const choose = (next: StudentStatusDto) => {
     const change = studentStatusTransition(student.status, next);
-    if (change.kind === 'hold') setDialog('hold');
+    if (change.kind === 'hold') {
+      setHoldFrom(Date.now());
+      setDialog('hold');
+    }
     if (change.kind === 'archive') setDialog('archive');
     if (change.kind === 'reactivate') {
       update.mutate(
@@ -119,11 +124,16 @@ export function useStudentStatusActions(student: StatusControlStudent) {
 
   const confirmHold = async ({ cancelLessons }: { cancelLessons: boolean }) => {
     try {
-      if (cancelLessons && individual?.length) {
+      // Re-checked at confirmation: the dialog may have stayed open past a start.
+      const confirmedAt = Date.now();
+      const upcoming = individual?.filter(
+        (lesson) => new Date(lesson.startsAtUtc).getTime() >= confirmedAt,
+      );
+      if (cancelLessons && upcoming?.length) {
         setCancelling(true);
         // Sequential on purpose: the server validates each transition against
         // the package ledger, and a partial failure must stop the batch.
-        for (const lesson of individual) {
+        for (const lesson of upcoming) {
           await transition.mutateAsync({
             lessonId: lesson.id,
             dto: { targetStatus: 'CANCELLED_UNCHARGED', cancelledBy: 'TEACHER' },

@@ -35,10 +35,13 @@ export function StudentNextLesson({
   status,
   lesson,
   loading = false,
+  unavailable = false,
 }: {
   status: StudentStatusDto;
   lesson: LessonResponse | null;
   loading?: boolean;
+  /** The lesson read failed: say so instead of claiming nothing is planned. */
+  unavailable?: boolean;
 }) {
   const t = useTranslations('students.nextLesson');
   const format = useFormatter();
@@ -49,7 +52,20 @@ export function StudentNextLesson({
     return <NextLessonCard heading={t('heading')} loading />;
   }
 
-  if (!lesson || status !== 'ACTIVE') {
+  if (unavailable) {
+    return (
+      <NextLessonCard
+        heading={t('heading')}
+        emptyTitle={t('unavailable.title')}
+        emptyDescription={t('unavailable.text')}
+        art="empty"
+      />
+    );
+  }
+
+  // A pause may keep lessons the tutor chose not to cancel, and group lessons
+  // always run; those still show. Only the archive hides the ticket.
+  if (!lesson || status === 'ARCHIVED') {
     const reason = EMPTY_BY_STATUS[status];
     return (
       <NextLessonCard

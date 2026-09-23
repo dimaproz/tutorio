@@ -161,7 +161,7 @@ export function StudentNextLessonCell({
   const format = useFormatter();
   const alignClass = align === 'end' ? 'items-end text-right' : 'items-start';
 
-  if (status === 'ON_HOLD') {
+  if (status === 'ON_HOLD' && !next) {
     return (
       <div className={cn('flex min-w-0 flex-col', alignClass)}>
         <span className="text-sm leading-5 font-medium">{t('paused')}</span>

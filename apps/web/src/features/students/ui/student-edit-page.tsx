@@ -63,7 +63,9 @@ export function StudentEditPage({ studentId }: { studentId: string }) {
     );
   }
 
-  if (student.isError) {
+  // A failed background refresh (after a status change, say) must not unmount
+  // the form and its unsaved edits; only a load that never succeeded is shown.
+  if (!student.data) {
     return (
       <StudentFormLayout title={t('editTitle')} subtitle={t('editSubtitle')} navItems={navItems}>
         <Notice

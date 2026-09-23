@@ -4,7 +4,6 @@ import { useMemo, useRef, useState } from 'react';
 import { PlayIcon, PlusIcon, RotateCcwIcon } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useNow, useTranslations } from 'next-intl';
-import { toast } from 'sonner';
 import type { StudentDetail } from '@tutorio/validation';
 import { PackageFormDialog } from '@/components/packages/package-form-dialog';
 import { LessonFormDialog } from '@/components/scheduling/lesson-form-dialog';
@@ -21,10 +20,9 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { studentLifecyclePolicy } from '@/features/students/model/lifecycle';
 import { deriveStudentProfileMetrics } from '@/features/students/model/profile-metrics';
-import { errorMessageKey } from '@/lib/api/error-message';
 import { usePackagesQuery } from '@/lib/api/packages';
 import { useLessonsQuery } from '@/lib/api/scheduling';
-import { useRestoreStudentMutation, useStudentQuery } from '@/lib/api/students';
+import { useStudentQuery } from '@/lib/api/students';
 import { StudentInformationCard } from './student-information-card';
 import { StudentLearningCard } from './student-learning-card';
 import { StudentNextLesson } from './student-next-lesson';
@@ -41,7 +39,9 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
   const t = useTranslations('students');
   const student = useStudentQuery(studentId);
   if (student.isPending) return <DetailFrame ratio="wide" loading={<LoadingPanel size="lg" />} />;
-  if (student.isError)
+  // A failed background refresh keeps the profile on screen; only a first
+  // load that never produced data is an error page.
+  if (!student.data)
     return (
       <DetailFrame
         ratio="wide"
@@ -70,7 +70,6 @@ export function StudentProfileContent({
   nowMs?: number;
 }) {
   const t = useTranslations('students');
-  const tErrors = useTranslations('errors');
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -79,7 +78,6 @@ export function StudentProfileContent({
   useSetPageCrumb(t('detail.pageLabel'));
   const setupVisible = searchParams.get('setup') === '1' && !archived;
   const statusActions = useStudentStatusActions(student);
-  const restoreStudent = useRestoreStudentMutation();
   const [lessonOpen, setLessonOpen] = useState(false);
   const [packageOpen, setPackageOpen] = useState(false);
   const [learningOpen, setLearningOpen] = useState(false);
@@ -120,11 +118,10 @@ export function StudentProfileContent({
     next.delete('setup');
     router.replace(next.size > 0 ? `${pathname}?${next}` : pathname, { scroll: false });
   };
-  const restore = () =>
-    restoreStudent.mutate(student.id, {
-      onSuccess: () => toast.success(t('toasts.restored')),
-      onError: (error) => toast.error(tErrors(errorMessageKey(error))),
-    });
+  // The banner, the hero and the status pill restore through one mutation,
+  // so none of them can fire a second restore while the first is running.
+  const restore = () => statusActions.choose('ACTIVE');
+  const restoring = archived && statusActions.pending;
   const focusParents = () => {
     parentsSectionRef.current?.scrollIntoView({ block: 'center' });
     parentsSectionRef.current?.querySelector<HTMLButtonElement>('#student-link-parent')?.focus();
@@ -164,10 +161,10 @@ export function StudentProfileContent({
             type="button"
             variant="white"
             size="xs"
-            disabled={restoreStudent.isPending}
+            disabled={restoring}
             onClick={restore}
           >
-            {restoreStudent.isPending ? (
+            {restoring ? (
               <Spinner data-icon="inline-start" />
             ) : (
               <RotateCcwIcon data-icon="inline-start" />
@@ -187,12 +184,13 @@ export function StudentProfileContent({
           statusActions={statusActions}
           onSchedule={schedule}
           onRestore={restore}
-          restoring={restoreStudent.isPending}
+          restoring={restoring}
         />
         <StudentNextLesson
           status={student.status}
           lesson={metrics?.next ?? null}
           loading={!metrics && !lessons.isError}
+          unavailable={lessons.isError}
         />
       </div>
     </div>
@@ -204,7 +202,7 @@ export function StudentProfileContent({
         <StudentSetupCard
           onDismiss={dismissSetup}
           onAction={(action) => {
-            if (action === 'lesson') setLessonOpen(true);
+            if (action === 'lesson' && policy.canSchedule) setLessonOpen(true);
             if (action === 'package') setPackageOpen(true);
             if (action === 'learning') setLearningOpen(true);
             if (action === 'parent') focusParents();
@@ -214,7 +212,7 @@ export function StudentProfileContent({
       ) : null}
       <StudentSectionsCard
         historyOnly={archived}
-        onAddLesson={archived ? undefined : schedule}
+        onAddLesson={policy.canSchedule ? schedule : undefined}
         onAddPackage={archived ? undefined : () => setPackageOpen(true)}
         lessons={
           <StudentLessonsCard
@@ -223,7 +221,7 @@ export function StudentProfileContent({
             historyOnly={archived}
             nowMs={now}
             emptyAction={
-              !archived ? (
+              policy.canSchedule ? (
                 <Button type="button" leading={<PlusIcon />} onClick={schedule}>
                   {t('detail.scheduleLesson')}
                 </Button>
@@ -241,14 +239,14 @@ export function StudentProfileContent({
           />
         }
       />
-      {archived ? null : (
-        <StudentLearningCard
-          student={student}
-          createOpen={learningOpen}
-          onCreateOpenChange={setLearningOpen}
-          readOnly={archived}
-        />
-      )}
+      {/* History stays readable: an archived profile shows its relationships
+          without the commands that would change them. */}
+      <StudentLearningCard
+        student={student}
+        createOpen={learningOpen}
+        onCreateOpenChange={setLearningOpen}
+        readOnly={archived}
+      />
     </>
   );
 
