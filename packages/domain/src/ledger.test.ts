@@ -69,10 +69,16 @@ describe('planTransition', () => {
     expect(plan.entry?.type).toBe('lesson_completed');
   });
 
-  it('rejects an illegal transition', () => {
-    expect(() => planTransition('COMPLETED', 'CANCELLED_CHARGED', LESSON)).toThrow(
-      InvalidTransitionError,
-    );
+  it('rejects a move to the same status', () => {
+    expect(() => planTransition('COMPLETED', 'COMPLETED', LESSON)).toThrow(InvalidTransitionError);
+  });
+
+  it('writes nothing for a correction that keeps the lesson charged', () => {
+    expect(planTransition('COMPLETED', 'NO_SHOW', LESSON, 2).entry).toBeNull();
+  });
+
+  it('counts a no-show as a consumed lesson', () => {
+    expect(consumedCredits([{ delta: -1, type: 'no_show' }])).toBe(1);
   });
 
   it('reuses the same idempotency key for a repeated transition', () => {

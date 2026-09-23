@@ -83,7 +83,12 @@ export function creditBalance(entries: readonly LedgerEntryLike[]): number {
  */
 export function consumedCredits(entries: readonly LedgerEntryLike[]): number {
   const lessonDelta = entries
-    .filter((entry) => entry.type === 'lesson_completed' || entry.type === 'late_cancellation')
+    .filter(
+      (entry) =>
+        entry.type === 'lesson_completed' ||
+        entry.type === 'late_cancellation' ||
+        entry.type === 'no_show',
+    )
     .reduce((sum, entry) => sum + entry.delta, 0);
   return Math.max(0, -lessonDelta);
 }

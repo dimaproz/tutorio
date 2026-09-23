@@ -11,7 +11,7 @@
 export type AttendanceMark = 'PRESENT' | 'ABSENT' | 'EXCUSED';
 
 export type AttendanceLessonStatus =
-  'SCHEDULED' | 'COMPLETED' | 'CANCELLED_CHARGED' | 'CANCELLED_UNCHARGED';
+  'SCHEDULED' | 'COMPLETED' | 'CANCELLED_CHARGED' | 'CANCELLED_UNCHARGED' | 'NO_SHOW';
 
 export type AttendanceCell = 'present' | 'absent' | 'excused' | 'cancelled' | 'unmarked';
 

@@ -1,76 +1,90 @@
 import { describe, expect, it } from 'vitest';
 import {
-  canTransition,
   InvalidTransitionError,
+  canHaveMakeup,
+  canTransition,
+  isChargedStatus,
+  makeupIsFree,
   transitionEffect,
   type LessonStatus,
 } from './lesson-state';
 
+const ALL: LessonStatus[] = [
+  'SCHEDULED',
+  'COMPLETED',
+  'CANCELLED_CHARGED',
+  'CANCELLED_UNCHARGED',
+  'NO_SHOW',
+];
+
+describe('isChargedStatus', () => {
+  it('charges a held lesson, a charged cancellation and a no-show (L-50…L-52)', () => {
+    expect(ALL.filter(isChargedStatus)).toEqual(['COMPLETED', 'CANCELLED_CHARGED', 'NO_SHOW']);
+  });
+});
+
 describe('canTransition', () => {
-  it('allows every terminal transition out of SCHEDULED', () => {
-    expect(canTransition('SCHEDULED', 'COMPLETED')).toBe(true);
-    expect(canTransition('SCHEDULED', 'CANCELLED_CHARGED')).toBe(true);
-    expect(canTransition('SCHEDULED', 'CANCELLED_UNCHARGED')).toBe(true);
-  });
-
-  it('allows a revert back to SCHEDULED (mistake correction)', () => {
-    expect(canTransition('COMPLETED', 'SCHEDULED')).toBe(true);
-    expect(canTransition('CANCELLED_CHARGED', 'SCHEDULED')).toBe(true);
-    expect(canTransition('CANCELLED_UNCHARGED', 'SCHEDULED')).toBe(true);
-  });
-
-  it('forbids jumping directly between terminal statuses', () => {
-    expect(canTransition('COMPLETED', 'CANCELLED_CHARGED')).toBe(false);
-    expect(canTransition('CANCELLED_CHARGED', 'COMPLETED')).toBe(false);
-  });
-
-  it('forbids a no-op transition', () => {
-    const statuses: LessonStatus[] = [
-      'SCHEDULED',
-      'COMPLETED',
-      'CANCELLED_CHARGED',
-      'CANCELLED_UNCHARGED',
-    ];
-    for (const s of statuses) {
-      expect(canTransition(s, s)).toBe(false);
+  it('allows every move except staying put', () => {
+    for (const from of ALL) {
+      for (const to of ALL) {
+        expect(canTransition(from, to)).toBe(from !== to);
+      }
     }
   });
 });
 
 describe('transitionEffect', () => {
-  it('consumes a credit on completion', () => {
+  it('debits one credit when a lesson becomes charged, typed by the new status', () => {
     expect(transitionEffect('SCHEDULED', 'COMPLETED')).toEqual({
       delta: -1,
       type: 'lesson_completed',
     });
-  });
-
-  it('consumes a credit on a charged cancellation', () => {
     expect(transitionEffect('SCHEDULED', 'CANCELLED_CHARGED')).toEqual({
       delta: -1,
       type: 'late_cancellation',
     });
+    expect(transitionEffect('SCHEDULED', 'NO_SHOW')).toEqual({ delta: -1, type: 'no_show' });
+    expect(transitionEffect('CANCELLED_UNCHARGED', 'NO_SHOW')).toEqual({
+      delta: -1,
+      type: 'no_show',
+    });
   });
 
-  it('consumes nothing on an uncharged cancellation', () => {
-    expect(transitionEffect('SCHEDULED', 'CANCELLED_UNCHARGED')).toBeNull();
-  });
-
-  it('emits the compensating (negated) effect on revert', () => {
+  it('refunds one credit when a lesson stops being charged, typed by the status left', () => {
     expect(transitionEffect('COMPLETED', 'SCHEDULED')).toEqual({
       delta: 1,
       type: 'lesson_completed',
     });
-    expect(transitionEffect('CANCELLED_CHARGED', 'SCHEDULED')).toEqual({
+    expect(transitionEffect('NO_SHOW', 'CANCELLED_UNCHARGED')).toEqual({
       delta: 1,
-      type: 'late_cancellation',
+      type: 'no_show',
     });
+  });
+
+  it('writes nothing when a correction keeps the lesson charged or free (L-53)', () => {
+    expect(transitionEffect('COMPLETED', 'NO_SHOW')).toBeNull();
+    expect(transitionEffect('CANCELLED_CHARGED', 'COMPLETED')).toBeNull();
+    expect(transitionEffect('SCHEDULED', 'CANCELLED_UNCHARGED')).toBeNull();
     expect(transitionEffect('CANCELLED_UNCHARGED', 'SCHEDULED')).toBeNull();
   });
 
-  it('throws on an illegal transition', () => {
-    expect(() => transitionEffect('COMPLETED', 'CANCELLED_CHARGED')).toThrow(
-      InvalidTransitionError,
-    );
+  it('rejects a move to the same status', () => {
+    expect(() => transitionEffect('COMPLETED', 'COMPLETED')).toThrow(InvalidTransitionError);
+  });
+});
+
+describe('makeups (L-60, L-61)', () => {
+  it('is offered only for a cancelled or missed lesson', () => {
+    expect(ALL.filter(canHaveMakeup)).toEqual([
+      'CANCELLED_CHARGED',
+      'CANCELLED_UNCHARGED',
+      'NO_SHOW',
+    ]);
+  });
+
+  it('charges exactly one of the pair', () => {
+    expect(makeupIsFree('CANCELLED_CHARGED')).toBe(true);
+    expect(makeupIsFree('NO_SHOW')).toBe(true);
+    expect(makeupIsFree('CANCELLED_UNCHARGED')).toBe(false);
   });
 });
