@@ -19,7 +19,6 @@ export function priceString({ required }: { required: boolean }) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           params: { key: 'priceRequired' },
-          message: 'Price is required',
         });
       }
       return;
@@ -28,7 +27,6 @@ export function priceString({ required }: { required: boolean }) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         params: { key: 'priceInvalid' },
-        message: 'Invalid price',
       });
     }
   });

@@ -22,7 +22,6 @@ export const registerFormSchema = registerSchema
         code: z.ZodIssueCode.custom,
         path: ['confirmPassword'],
         params: { key: 'confirmPasswordMismatch' },
-        message: 'Passwords do not match',
       });
     }
     const nameField = data.mode === 'SOLO' ? 'name' : 'workspaceName';
@@ -34,7 +33,6 @@ export const registerFormSchema = registerSchema
         minimum: 2,
         inclusive: true,
         path: [nameField],
-        message: 'Too short',
       });
     }
   });

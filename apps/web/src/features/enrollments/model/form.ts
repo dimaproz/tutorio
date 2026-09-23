@@ -25,7 +25,6 @@ export const enrollmentFormSchema = z
         code: z.ZodIssueCode.custom,
         path: ['price'],
         params: { key: 'priceInvalid' },
-        message: 'Invalid price',
       });
     }
     if (data.useCustomDeadline) {
@@ -39,7 +38,6 @@ export const enrollmentFormSchema = z
           code: z.ZodIssueCode.custom,
           path: ['cancellationDeadlineHours'],
           params: { key: 'deadlineRange' },
-          message: 'Invalid deadline',
         });
       }
     }

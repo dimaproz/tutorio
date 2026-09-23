@@ -60,7 +60,6 @@ export const packageFormSchema = z
         code: z.ZodIssueCode.custom,
         path: ['endDate'],
         params: { key: 'dateRequired' },
-        message: 'End date is required',
       });
     }
     if (
@@ -71,7 +70,7 @@ export const packageFormSchema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['endDate'],
-        message: 'End date cannot be before the schedule start',
+        params: { key: 'endDateBeforeStart' },
       });
     }
     if (
@@ -83,7 +82,7 @@ export const packageFormSchema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['endDate'],
-        message: 'The selected period contains no lessons',
+        params: { key: 'periodHasNoLessons' },
       });
     }
     if (needsSchedule && values.weekdays.length === 0) {
@@ -91,7 +90,6 @@ export const packageFormSchema = z
         code: z.ZodIssueCode.custom,
         path: ['weekdays'],
         params: { key: 'weekdaysRequired' },
-        message: 'Select at least one weekday',
       });
     }
     if (needsSchedule && values.startMode === 'MANUAL' && !values.manualStartDate) {
@@ -99,7 +97,6 @@ export const packageFormSchema = z
         code: z.ZodIssueCode.custom,
         path: ['manualStartDate'],
         params: { key: 'dateRequired' },
-        message: 'Start date is required',
       });
     }
     if (values.paymentStatus === 'PARTIAL') {
@@ -109,7 +106,7 @@ export const packageFormSchema = z
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['paymentStatus'],
-          message: 'Partial group payment is not supported',
+          params: { key: 'groupPartialPaymentUnsupported' },
         });
       }
       if (amount == null || amount <= 0 || total == null || amount >= total) {
@@ -117,7 +114,6 @@ export const packageFormSchema = z
           code: z.ZodIssueCode.custom,
           path: ['paidAmount'],
           params: { key: 'partialPaymentRange' },
-          message: 'Partial payment must be below the package total',
         });
       }
     }
@@ -127,7 +123,7 @@ export const packageFormSchema = z
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['paymentStatus'],
-          message: 'A paid package must have a positive total',
+          params: { key: 'paidTotalPositive' },
         });
       }
       if (!values.paidAt) {
@@ -135,13 +131,12 @@ export const packageFormSchema = z
           code: z.ZodIssueCode.custom,
           path: ['paidAt'],
           params: { key: 'dateRequired' },
-          message: 'Payment date is required',
         });
       } else if (values.paidAt > toLocalDateInput(new Date())) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['paidAt'],
-          message: 'Payment date cannot be in the future',
+          params: { key: 'paymentDateFuture' },
         });
       }
     }
