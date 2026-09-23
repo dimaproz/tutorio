@@ -6,7 +6,8 @@ import { useTranslations } from 'next-intl';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import { AvatarPicker } from '@/components/shared/avatar-picker';
 import { FormSectionCard, type FormSectionTag } from '@/components/shared/form-section';
-import { LinkPicker, type LinkPickerItem } from '@/components/shared/link-picker';
+import { LinkPicker } from '@/components/shared/link-picker';
+import type { StudentFormPicker } from '@/features/students';
 import { TextField } from '@/components/shared/text-field';
 import { FieldError } from '@/components/ui/field';
 import {
@@ -32,24 +33,6 @@ export function parentFormSectionId(id: ParentFormSectionId) {
   return `parent-form-${id}`;
 }
 
-/**
- * The student search behind the linked-students section. The orchestrator
- * owns the query; the section only renders what it is handed.
- */
-export type ParentStudentPicker = {
-  search: string;
-  onSearchChange: (value: string) => void;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  /** Search results, already without the linked students. */
-  results: LinkPickerItem[];
-  loading: boolean;
-  /** Every student the form knows by id, so linked rows show a name. */
-  known: Record<string, LinkPickerItem>;
-  /** Keeps a picked result known after it leaves the results. */
-  remember: (item: LinkPickerItem) => void;
-  onCreate?: () => void;
-};
 
 /**
  * The four sections of the parent form. Each is a card with its heading; the
@@ -61,7 +44,7 @@ export function ParentFormSections({
   picker,
 }: {
   status: Record<ParentFormSectionId, ParentFormSectionStatus>;
-  picker: ParentStudentPicker;
+  picker: StudentFormPicker;
 }) {
   const t = useTranslations('parents.form');
   const tLinks = useTranslations('links');

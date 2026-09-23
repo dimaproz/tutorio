@@ -3,7 +3,6 @@ export { StudentCard } from './student-card';
 export { StudentRowActions } from './student-row-actions';
 export { StudentStatusBadge } from './student-status';
 export { StudentsList } from './students-list';
-export { StudentQuickCreateDialog } from './student-quick-create-dialog';
 export { StudentCreatePage } from './student-create-page';
 export { StudentEditPage } from './student-edit-page';
 export { StudentStatusControl } from './student-status-control';
@@ -12,3 +11,9 @@ export { StudentPackagesCard } from './student-packages-card';
 export { StudentParentsCard } from './student-parents-card';
 export { StudentInformationCard } from './student-information-card';
 export { StudentLearningCard } from './student-learning-card';
+export {
+  useStudentFormPicker,
+  useStudentLinkResults,
+  useStudentLinkRow,
+  type StudentFormPicker,
+} from './use-student-link';

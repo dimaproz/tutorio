@@ -27,7 +27,7 @@ import { errorMessageKey } from '@/lib/api/error-message';
 import { queryKeys } from '@/lib/api/keys';
 import { useUpdateParentMutation } from '@/lib/api/parents';
 import type { GatewayError } from '@/lib/auth/client';
-import { useStudentLinkResults, useStudentLinkRow } from './use-link-results';
+import { useStudentLinkResults, useStudentLinkRow } from '@/features/students';
 
 const ADD_ID = 'parent-link-student';
 

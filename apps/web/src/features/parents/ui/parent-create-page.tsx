@@ -22,7 +22,7 @@ import { scrollToFirstError } from '@/lib/forms/focus-error';
 import { ParentFormLayout } from './parent-form-layout';
 import { ParentFormSections } from './parent-form-sections';
 import { useParentForm, useParentFormState } from './parent-form-state';
-import { useParentStudentPicker } from './use-parent-student-picker';
+import { useStudentFormPicker } from '@/features/students';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -70,7 +70,7 @@ export function ParentCreatePage() {
         : [],
     [prelinked.data],
   );
-  const picker = useParentStudentPicker({
+  const picker = useStudentFormPicker({
     linkedIds: studentIds,
     initial: prelinkedStudents,
     // Creating a student is its own page; leaving asks first if anything was typed.

@@ -26,7 +26,7 @@ import { useParentDelete } from './parent-delete';
 import { ParentFormLayout } from './parent-form-layout';
 import { ParentFormSections } from './parent-form-sections';
 import { useParentForm, useParentFormNavItems, useParentFormState } from './parent-form-state';
-import { useParentStudentPicker } from './use-parent-student-picker';
+import { useStudentFormPicker } from '@/features/students';
 
 /**
  * Edit a saved parent on a full page. The record loads first; a failed load
@@ -102,7 +102,7 @@ function ParentEditForm({ parent }: { parent: ParentDetail }) {
   const { isDirty, isSubmitting } = form.formState;
   const saving = isSubmitting || update.isPending;
   const studentIds = useWatch({ control: form.control, name: 'studentIds' });
-  const picker = useParentStudentPicker({
+  const picker = useStudentFormPicker({
     linkedIds: studentIds,
     initial: parent.students,
     // Creating a student is its own page; leaving asks first if anything changed.
