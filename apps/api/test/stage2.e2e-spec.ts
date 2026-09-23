@@ -1185,6 +1185,122 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
         statusBeforeStudentArchive: null,
       });
     });
+
+    it('keeps an archived student enrollment suspended until the student is restored', async () => {
+      const student = await server()
+        .post('/api/students')
+        .set('Authorization', auth(ownerA))
+        .send({ fullName: 'Archived enrollment learner', timezone: 'UTC' })
+        .expect(201);
+      const enrollment = await server()
+        .post('/api/enrollments')
+        .set('Authorization', auth(ownerA))
+        .send({
+          studentId: student.body.id,
+          teacherId: secondTeacherId,
+          priceMinor: 2500,
+          currency: 'EUR',
+        })
+        .expect(201);
+      const lesson = await prisma.lesson.create({
+        data: {
+          workspaceId: workspaceAId,
+          enrollmentId: enrollment.body.id,
+          teacherId: secondTeacherId,
+          startsAtUtc: new Date(Date.now() + 200 * 86_400_000),
+          durationMin: 60,
+          priceMinor: 2500,
+          currency: 'EUR',
+        },
+      });
+      // Pausing token-suspends the future lesson; archiving keeps it hidden.
+      await server()
+        .patch(`/api/enrollments/${enrollment.body.id}`)
+        .set('Authorization', auth(ownerA))
+        .send({ status: 'PAUSED' })
+        .expect(200);
+      await server()
+        .delete(`/api/students/${student.body.id}`)
+        .set('Authorization', auth(ownerA))
+        .expect(204);
+
+      // Resuming the enrollment would revive the lesson of an archived
+      // student, so it is refused until the student is restored.
+      const resumed = await server()
+        .patch(`/api/enrollments/${enrollment.body.id}`)
+        .set('Authorization', auth(ownerA))
+        .send({ status: 'ACTIVE' })
+        .expect(409);
+      expect(resumed.body.code).toBe('STUDENT_ARCHIVED_REQUIRES_RESTORE');
+      expect(
+        (
+          await prisma.lesson.findUniqueOrThrow({
+            where: { id: lesson.id },
+            select: { deletedAt: true },
+          })
+        ).deletedAt,
+      ).not.toBeNull();
+
+      await server()
+        .delete(`/api/enrollments/${enrollment.body.id}`)
+        .set('Authorization', auth(ownerA))
+        .expect(204);
+      const restoredEnrollment = await server()
+        .post(`/api/enrollments/${enrollment.body.id}/restore`)
+        .set('Authorization', auth(ownerA))
+        .expect(409);
+      expect(restoredEnrollment.body.code).toBe(
+        'STUDENT_ARCHIVED_REQUIRES_RESTORE',
+      );
+
+      // Once the student is back, the enrollment can be restored.
+      await server()
+        .post(`/api/students/${student.body.id}/restore`)
+        .set('Authorization', auth(ownerA))
+        .expect(200);
+      await server()
+        .post(`/api/enrollments/${enrollment.body.id}/restore`)
+        .set('Authorization', auth(ownerA))
+        .expect(201);
+    });
+
+    it('refuses to restore an enrollment into an archived group', async () => {
+      const student = await server()
+        .post('/api/students')
+        .set('Authorization', auth(ownerA))
+        .send({ fullName: 'Archived group learner', timezone: 'UTC' })
+        .expect(201);
+      const group = await server()
+        .post('/api/groups')
+        .set('Authorization', auth(ownerA))
+        .send({ name: `Archived restore group ${runId}` })
+        .expect(201);
+      const enrollment = await server()
+        .post('/api/enrollments')
+        .set('Authorization', auth(ownerA))
+        .send({
+          studentId: student.body.id,
+          groupId: group.body.id,
+          teacherId: ownerTeacherId,
+          priceMinor: 2500,
+          currency: 'EUR',
+        })
+        .expect(201);
+      await server()
+        .delete(`/api/enrollments/${enrollment.body.id}`)
+        .set('Authorization', auth(ownerA))
+        .expect(204);
+      await server()
+        .delete(`/api/groups/${group.body.id}`)
+        .set('Authorization', auth(ownerA))
+        .expect(204);
+
+      const restored = await server()
+        .post(`/api/enrollments/${enrollment.body.id}/restore`)
+        .set('Authorization', auth(ownerA))
+        .expect(404);
+      expect(restored.body.code).toBe('GROUP_NOT_FOUND');
+    });
   });
 
   describe('parents CRUD and links', () => {

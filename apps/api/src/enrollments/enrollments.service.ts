@@ -14,6 +14,7 @@ import {
   duplicateEnrollment,
   enrollmentNotFound,
   groupNotFound,
+  studentArchivedRequiresRestore,
   studentNotFound,
   teacherNotFound,
 } from '../common/business.errors';
@@ -24,6 +25,12 @@ import {
 } from '../common/pagination';
 import { PrismaService } from '../prisma/prisma.service';
 import {
+  enrollmentInclude,
+  enrollmentWithDeadlineInclude,
+  toEnrollmentResponse,
+  type EnrollmentWithDeadlineRow,
+} from './enrollment-response';
+import {
   reconcileGroupSchedule,
   restoreEnrollmentSchedule,
   suspendEnrollmentSchedule,
@@ -32,45 +39,19 @@ import {
   lockTeacherSchedules,
 } from '../scheduling/lifecycle-suspension';
 
-// Row shape shared by every enrollment query in this service.
-const enrollmentInclude = {
-  student: { select: { id: true, fullName: true } },
-  group: { select: { id: true, name: true } },
-  teacher: { select: { id: true, fullName: true, color: true } },
+// The row a mutation reads under its locks: the response shape plus what
+// the lifecycle rules check (student status, group and teacher liveness).
+const lockedEnrollmentInclude = {
+  student: { select: { id: true, fullName: true, status: true } },
+  group: { select: { id: true, name: true, deletedAt: true } },
+  teacher: {
+    select: { id: true, fullName: true, color: true, deletedAt: true },
+  },
+  workspace: { select: { cancellationDeadlineHours: true } },
 } satisfies Prisma.EnrollmentInclude;
 
-type EnrollmentRow = Prisma.EnrollmentGetPayload<{
-  include: typeof enrollmentInclude;
-}>;
-
-function toResponse(
-  row: EnrollmentRow,
-  workspaceDefaultDeadlineHours: number,
-): EnrollmentResponse {
-  return {
-    id: row.id,
-    workspaceId: row.workspaceId,
-    studentId: row.studentId,
-    groupId: row.groupId,
-    teacherId: row.teacherId,
-    student: row.student,
-    group: row.group,
-    teacher: {
-      id: row.teacher.id,
-      name: row.teacher.fullName,
-      color: row.teacher.color,
-    },
-    status: row.status,
-    billingType: row.billingType,
-    priceMinor: row.priceMinor,
-    currency: row.currency as EnrollmentResponse['currency'],
-    cancellationDeadlineHours: row.cancellationDeadlineHours,
-    effectiveCancellationDeadlineHours:
-      row.cancellationDeadlineHours ?? workspaceDefaultDeadlineHours,
-    createdAt: row.createdAt.toISOString(),
-    updatedAt: row.updatedAt.toISOString(),
-    deletedAt: row.deletedAt?.toISOString() ?? null,
-  };
+function toResponse(row: EnrollmentWithDeadlineRow): EnrollmentResponse {
+  return toEnrollmentResponse(row, row.workspace.cancellationDeadlineHours);
 }
 
 function isUniqueViolation(error: unknown): boolean {
@@ -86,17 +67,6 @@ export class EnrollmentsService {
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
   ) {}
-
-  private async getWorkspaceDefaultDeadline(
-    tx: Prisma.TransactionClient,
-    workspaceId: string,
-  ): Promise<number> {
-    const workspace = await tx.workspace.findUniqueOrThrow({
-      where: { id: workspaceId },
-      select: { cancellationDeadlineHours: true },
-    });
-    return workspace.cancellationDeadlineHours;
-  }
 
   /**
    * Throws DUPLICATE_ENROLLMENT when another live enrollment would be
@@ -158,7 +128,9 @@ export class EnrollmentsService {
     ]);
 
     return buildPaginatedResponse(
-      rows.map((row) => toResponse(row, workspace.cancellationDeadlineHours)),
+      rows.map((row) =>
+        toEnrollmentResponse(row, workspace.cancellationDeadlineHours),
+      ),
       total,
       query,
     );
@@ -170,7 +142,7 @@ export class EnrollmentsService {
   ): Promise<EnrollmentResponse> {
     const groupId = dto.groupId ?? null;
 
-    const { row, defaultDeadline } = await this.prisma
+    const row = await this.prisma
       .$transaction(async (tx) => {
         await lockStudentLifecycles(tx, auth.workspaceId, [dto.studentId]);
         if (groupId) {
@@ -236,7 +208,7 @@ export class EnrollmentsService {
             currency: dto.currency,
             cancellationDeadlineHours: dto.cancellationDeadlineHours ?? null,
           },
-          include: enrollmentInclude,
+          include: enrollmentWithDeadlineInclude,
         });
         if (groupId) {
           await reconcileGroupSchedule(
@@ -267,13 +239,7 @@ export class EnrollmentsService {
           ),
         });
 
-        return {
-          row: created,
-          defaultDeadline: await this.getWorkspaceDefaultDeadline(
-            tx,
-            auth.workspaceId,
-          ),
-        };
+        return created;
       })
       .catch((error: unknown) => {
         // The partial unique indexes are the last line of defense on races.
@@ -283,31 +249,51 @@ export class EnrollmentsService {
         throw error;
       });
 
-    return toResponse(row, defaultDeadline);
+    return toResponse(row);
   }
 
   async getDetail(
     auth: AuthenticatedUser,
     enrollmentId: string,
   ): Promise<EnrollmentResponse> {
-    const [row, workspace] = await Promise.all([
-      this.prisma.enrollment.findFirst({
-        where: {
-          id: enrollmentId,
-          workspaceId: auth.workspaceId,
-          deletedAt: null,
-        },
-        include: enrollmentInclude,
-      }),
-      this.prisma.workspace.findUniqueOrThrow({
-        where: { id: auth.workspaceId },
-        select: { cancellationDeadlineHours: true },
-      }),
-    ]);
+    const row = await this.prisma.enrollment.findFirst({
+      where: {
+        id: enrollmentId,
+        workspaceId: auth.workspaceId,
+        deletedAt: null,
+      },
+      include: enrollmentWithDeadlineInclude,
+    });
     if (!row) {
       throw enrollmentNotFound();
     }
-    return toResponse(row, workspace.cancellationDeadlineHours);
+    return toResponse(row);
+  }
+
+  /**
+   * Takes the locks every enrollment mutation needs, in the global order:
+   * student lifecycle, then the group or individual teacher schedule. The
+   * unlocked read only locates the lock keys; callers re-read after it.
+   */
+  private async lockEnrollment(
+    tx: Prisma.TransactionClient,
+    workspaceId: string,
+    enrollmentId: string,
+    where: Prisma.EnrollmentWhereInput,
+  ): Promise<void> {
+    const keys = await tx.enrollment.findFirst({
+      where: { id: enrollmentId, workspaceId, ...where },
+      select: { studentId: true, groupId: true, teacherId: true },
+    });
+    if (!keys) {
+      throw enrollmentNotFound();
+    }
+    await lockStudentLifecycles(tx, workspaceId, [keys.studentId]);
+    if (keys.groupId) {
+      await lockGroupSchedule(tx, workspaceId, keys.groupId);
+    } else {
+      await lockTeacherSchedules(tx, workspaceId, [keys.teacherId]);
+    }
   }
 
   async update(
@@ -315,100 +301,93 @@ export class EnrollmentsService {
     enrollmentId: string,
     dto: UpdateEnrollmentDto,
   ): Promise<EnrollmentResponse> {
-    const { row, defaultDeadline } = await this.prisma.$transaction(
-      async (tx) => {
-        let before = await tx.enrollment.findFirst({
-          where: {
-            id: enrollmentId,
-            workspaceId: auth.workspaceId,
-            deletedAt: null,
-          },
-          include: enrollmentInclude,
-        });
-        if (!before) {
-          throw enrollmentNotFound();
-        }
+    const row = await this.prisma.$transaction(async (tx) => {
+      await this.lockEnrollment(tx, auth.workspaceId, enrollmentId, {
+        deletedAt: null,
+      });
+      const before = await tx.enrollment.findFirst({
+        where: {
+          id: enrollmentId,
+          workspaceId: auth.workspaceId,
+          deletedAt: null,
+        },
+        include: lockedEnrollmentInclude,
+      });
+      if (!before) {
+        throw enrollmentNotFound();
+      }
+      const changes = this.audit.buildChanges(before, { ...dto });
+      if (!changes) {
+        // No-op PATCH: nothing to persist, no audit row.
+        return before;
+      }
 
-        const defaultDeadline = await this.getWorkspaceDefaultDeadline(
+      const statusChanges =
+        dto.status !== undefined && dto.status !== before.status;
+      // An archived student's roster and schedule stay suspended until the
+      // student itself is restored; reviving them here would bring back
+      // future lessons the archive took away.
+      if (
+        statusChanges &&
+        dto.status !== 'ARCHIVED' &&
+        before.student.status === 'ARCHIVED'
+      ) {
+        throw studentArchivedRequiresRestore();
+      }
+
+      const now = new Date();
+      const becomesInactive =
+        before.groupId === null &&
+        before.status === 'ACTIVE' &&
+        dto.status !== undefined &&
+        dto.status !== 'ACTIVE';
+      const becomesActive =
+        before.groupId === null &&
+        before.status !== 'ACTIVE' &&
+        dto.status === 'ACTIVE';
+      const suspensionToken = becomesInactive
+        ? await suspendEnrollmentSchedule(tx, before.id, now)
+        : before.scheduleSuspensionToken;
+      if (becomesActive && suspensionToken) {
+        await restoreEnrollmentSchedule(
           tx,
           auth.workspaceId,
+          before.id,
+          suspensionToken,
+          now,
         );
+      }
 
-        const now = new Date();
-        if (before.groupId) {
-          await lockGroupSchedule(tx, auth.workspaceId, before.groupId);
-        } else {
-          await lockTeacherSchedules(tx, auth.workspaceId, [before.teacherId]);
-        }
-        before = await tx.enrollment.findFirst({
-          where: {
-            id: enrollmentId,
-            workspaceId: auth.workspaceId,
-            deletedAt: null,
-          },
-          include: enrollmentInclude,
-        });
-        if (!before) {
-          throw enrollmentNotFound();
-        }
-        const changes = this.audit.buildChanges(before, { ...dto });
-        if (!changes) {
-          // No-op PATCH: nothing to persist, no audit row.
-          return { row: before, defaultDeadline };
-        }
-        const becomesInactive =
-          before.groupId === null &&
-          before.status === 'ACTIVE' &&
-          dto.status !== undefined &&
-          dto.status !== 'ACTIVE';
-        const becomesActive =
-          before.groupId === null &&
-          before.status !== 'ACTIVE' &&
-          dto.status === 'ACTIVE';
-        const suspensionToken = becomesInactive
-          ? await suspendEnrollmentSchedule(tx, before.id, now)
-          : before.scheduleSuspensionToken;
-        if (becomesActive && suspensionToken) {
-          await restoreEnrollmentSchedule(
-            tx,
-            auth.workspaceId,
-            before.id,
-            suspensionToken,
-            now,
-          );
-        }
-
-        const updated = await tx.enrollment.update({
-          where: { id: before.id },
-          data: {
-            ...dto,
-            ...(becomesInactive
-              ? { scheduleSuspensionToken: suspensionToken }
-              : {}),
-            ...(becomesActive ? { scheduleSuspensionToken: null } : {}),
-          },
-          include: enrollmentInclude,
-        });
-        if (before.groupId) {
-          await reconcileGroupSchedule(
-            tx,
-            auth.workspaceId,
-            before.groupId,
-            now,
-          );
-        }
-        await this.audit.record(tx, {
-          workspaceId: auth.workspaceId,
-          actorId: auth.userId,
-          action: 'UPDATE',
-          entity: 'ENROLLMENT',
-          entityId: before.id,
-          changes,
-        });
-        return { row: updated, defaultDeadline };
-      },
-    );
-    return toResponse(row, defaultDeadline);
+      const updated = await tx.enrollment.update({
+        where: { id: before.id },
+        data: {
+          ...dto,
+          ...(becomesInactive
+            ? { scheduleSuspensionToken: suspensionToken }
+            : {}),
+          ...(becomesActive ? { scheduleSuspensionToken: null } : {}),
+          // A manual status change supersedes a marker left by an earlier
+          // student archive; that archive must not revive this row later.
+          ...(statusChanges
+            ? { studentArchivedAt: null, statusBeforeStudentArchive: null }
+            : {}),
+        },
+        include: enrollmentWithDeadlineInclude,
+      });
+      if (before.groupId) {
+        await reconcileGroupSchedule(tx, auth.workspaceId, before.groupId, now);
+      }
+      await this.audit.record(tx, {
+        workspaceId: auth.workspaceId,
+        actorId: auth.userId,
+        action: 'UPDATE',
+        entity: 'ENROLLMENT',
+        entityId: before.id,
+        changes,
+      });
+      return updated;
+    });
+    return toResponse(row);
   }
 
   async softDelete(
@@ -416,21 +395,20 @@ export class EnrollmentsService {
     enrollmentId: string,
   ): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
-      let enrollment = await tx.enrollment.findFirst({
+      const keys = await tx.enrollment.findFirst({
         where: { id: enrollmentId, workspaceId: auth.workspaceId },
+        select: { groupId: true, teacherId: true },
       });
-      if (!enrollment) {
+      if (!keys) {
         throw enrollmentNotFound();
       }
       const now = new Date();
-      if (enrollment.groupId) {
-        await lockGroupSchedule(tx, auth.workspaceId, enrollment.groupId);
+      if (keys.groupId) {
+        await lockGroupSchedule(tx, auth.workspaceId, keys.groupId);
       } else {
-        await lockTeacherSchedules(tx, auth.workspaceId, [
-          enrollment.teacherId,
-        ]);
+        await lockTeacherSchedules(tx, auth.workspaceId, [keys.teacherId]);
       }
-      enrollment = await tx.enrollment.findFirst({
+      const enrollment = await tx.enrollment.findFirst({
         where: { id: enrollmentId, workspaceId: auth.workspaceId },
       });
       if (!enrollment) {
@@ -470,38 +448,30 @@ export class EnrollmentsService {
     auth: AuthenticatedUser,
     enrollmentId: string,
   ): Promise<EnrollmentResponse> {
-    const { row, defaultDeadline } = await this.prisma
+    const row = await this.prisma
       .$transaction(async (tx) => {
-        let existing = await tx.enrollment.findFirst({
+        await this.lockEnrollment(tx, auth.workspaceId, enrollmentId, {});
+        const existing = await tx.enrollment.findFirst({
           where: { id: enrollmentId, workspaceId: auth.workspaceId },
-          include: enrollmentInclude,
-        });
-        if (!existing) {
-          throw enrollmentNotFound();
-        }
-
-        const defaultDeadline = await this.getWorkspaceDefaultDeadline(
-          tx,
-          auth.workspaceId,
-        );
-
-        if (existing.groupId) {
-          await lockGroupSchedule(tx, auth.workspaceId, existing.groupId);
-        } else {
-          await lockTeacherSchedules(tx, auth.workspaceId, [
-            existing.teacherId,
-          ]);
-        }
-        existing = await tx.enrollment.findFirst({
-          where: { id: enrollmentId, workspaceId: auth.workspaceId },
-          include: enrollmentInclude,
+          include: lockedEnrollmentInclude,
         });
         if (!existing) {
           throw enrollmentNotFound();
         }
         if (!existing.deletedAt) {
           // Recheck after the lock: a concurrent restore is a no-op.
-          return { row: existing, defaultDeadline };
+          return existing;
+        }
+        // A restored enrollment must point at live records only, and an
+        // archived student's relationships return with the student.
+        if (existing.student.status === 'ARCHIVED') {
+          throw studentArchivedRequiresRestore();
+        }
+        if (existing.group?.deletedAt) {
+          throw groupNotFound();
+        }
+        if (existing.teacher.deletedAt) {
+          throw teacherNotFound();
         }
 
         // Restoring must not resurrect a duplicate of a now-live enrollment.
@@ -535,8 +505,13 @@ export class EnrollmentsService {
             ...(existing.groupId === null && existing.status === 'ACTIVE'
               ? { scheduleSuspensionToken: null }
               : {}),
+            // The student is live, so a marker from an earlier student
+            // archive is stale: no student restore will ever consume it.
+            ...(existing.studentArchivedAt
+              ? { studentArchivedAt: null, statusBeforeStudentArchive: null }
+              : {}),
           },
-          include: enrollmentInclude,
+          include: enrollmentWithDeadlineInclude,
         });
         if (existing.groupId) {
           await reconcileGroupSchedule(
@@ -553,7 +528,7 @@ export class EnrollmentsService {
           entity: 'ENROLLMENT',
           entityId: existing.id,
         });
-        return { row: restored, defaultDeadline };
+        return restored;
       })
       .catch((error: unknown) => {
         if (isUniqueViolation(error)) {
@@ -561,6 +536,6 @@ export class EnrollmentsService {
         }
         throw error;
       });
-    return toResponse(row, defaultDeadline);
+    return toResponse(row);
   }
 }

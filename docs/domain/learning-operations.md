@@ -34,7 +34,7 @@ after checking teacher conflicts.
 | Ownership             | Workspace-scoped.                                                                                                                                              |
 | Relationships         | Student, teacher, optional group; lessons, series, payments, package shares, and credit entries.                                                               |
 | Create/update         | Relationship identity is immutable after create; status, billing, price, and deadline are editable. Partial unique indexes prevent equivalent live duplicates. |
-| Lifecycle             | `ACTIVE`, `PAUSED`, `ARCHIVED`; technical soft delete/restore is separate and restore rechecks uniqueness.                                                     |
+| Lifecycle             | `ACTIVE`, `PAUSED`, `ARCHIVED`; technical soft delete/restore is separate and restore rechecks uniqueness. Update and restore take the student lifecycle lock first; while the student is `ARCHIVED`, a move to `ACTIVE`/`PAUSED` and any restore return `409 STUDENT_ARCHIVED_REQUIRES_RESTORE`. Restore also requires a live group (`GROUP_NOT_FOUND`) and teacher (`TEACHER_NOT_FOUND`). A manual status change or a restore clears a stale student-archive marker. |
 | Required side effects | Pause/archive/delete token-suspends only future `SCHEDULED` individual work. Resume/restore rechecks conflicts and restores only rows marked by that action.   |
 | Current gap           | No known Work Packet 4 lifecycle gap.                                                                                                                          |
 

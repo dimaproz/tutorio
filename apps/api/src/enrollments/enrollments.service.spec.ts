@@ -32,9 +32,13 @@ const enrollmentRow = {
   createdAt: NOW,
   updatedAt: NOW,
   deletedAt: null,
-  student: { id: STUDENT_ID, fullName: 'Alice Example' },
+  studentArchivedAt: null,
+  statusBeforeStudentArchive: null,
+  scheduleSuspensionToken: null,
+  student: { id: STUDENT_ID, fullName: 'Alice Example', status: 'ACTIVE' },
   group: null,
-  teacher: { id: TEACHER_ID, fullName: 'Olena', color: null },
+  teacher: { id: TEACHER_ID, fullName: 'Olena', color: null, deletedAt: null },
+  workspace: { cancellationDeadlineHours: 24 },
 };
 
 const createDto = {
@@ -281,5 +285,157 @@ describe('EnrollmentsService.restore', () => {
     });
     expect(prisma.auditLog.create.mock.calls[0][0].data.action).toBe('RESTORE');
     expect(result.deletedAt).toBeNull();
+  });
+});
+
+describe('EnrollmentsService lifecycle guards', () => {
+  const archivedStudent = {
+    ...enrollmentRow.student,
+    status: 'ARCHIVED' as const,
+  };
+
+  it('locks the student before the schedule and reads the deadline once', async () => {
+    const { prisma, service } = buildService();
+    const executeRaw = jest.fn().mockResolvedValue(1);
+    Object.assign(prisma, { $executeRaw: executeRaw });
+    prisma.enrollment.findFirst.mockResolvedValue(enrollmentRow);
+    prisma.enrollment.update.mockResolvedValue({
+      ...enrollmentRow,
+      priceMinor: 3000,
+    });
+
+    const result = await service.update(owner, ENROLLMENT_ID, {
+      priceMinor: 3000,
+    });
+
+    // The unlocked read only locates the lock keys.
+    expect(prisma.enrollment.findFirst.mock.calls[0][0].select).toEqual({
+      studentId: true,
+      groupId: true,
+      teacherId: true,
+    });
+    expect(executeRaw.mock.calls.map((call) => call[1])).toEqual([
+      `${WORKSPACE_ID}:student:${STUDENT_ID}`,
+      `${WORKSPACE_ID}:teacher:${TEACHER_ID}`,
+    ]);
+    expect(prisma.workspace.findUniqueOrThrow).not.toHaveBeenCalled();
+    expect(result.effectiveCancellationDeadlineHours).toBe(24);
+  });
+
+  it.each(['ACTIVE', 'PAUSED'] as const)(
+    'refuses to move an archived student enrollment to %s',
+    async (status) => {
+      const { prisma, service } = buildService();
+      prisma.enrollment.findFirst.mockResolvedValue({
+        ...enrollmentRow,
+        status: status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE',
+        student: archivedStudent,
+      });
+
+      await expectBusinessError(
+        service.update(owner, ENROLLMENT_ID, { status }),
+        'STUDENT_ARCHIVED_REQUIRES_RESTORE',
+        409,
+      );
+      expect(prisma.enrollment.update).not.toHaveBeenCalled();
+    },
+  );
+
+  it('still lets billing change on an archived student enrollment', async () => {
+    const { prisma, service } = buildService();
+    prisma.enrollment.findFirst.mockResolvedValue({
+      ...enrollmentRow,
+      student: archivedStudent,
+    });
+    prisma.enrollment.update.mockResolvedValue(enrollmentRow);
+
+    await service.update(owner, ENROLLMENT_ID, { priceMinor: 3000 });
+
+    expect(prisma.enrollment.update).toHaveBeenCalledTimes(1);
+  });
+
+  it('clears a student-archive marker on a manual status change', async () => {
+    const { prisma, service } = buildService();
+    prisma.enrollment.findFirst.mockResolvedValue({
+      ...enrollmentRow,
+      groupId: GROUP_ID,
+      group: { id: GROUP_ID, name: 'B1', deletedAt: null },
+      status: 'ARCHIVED',
+      studentArchivedAt: NOW,
+      statusBeforeStudentArchive: 'ACTIVE',
+    });
+    prisma.enrollment.update.mockResolvedValue(enrollmentRow);
+
+    await service.update(owner, ENROLLMENT_ID, { status: 'PAUSED' });
+
+    expect(prisma.enrollment.update.mock.calls[0][0].data).toMatchObject({
+      status: 'PAUSED',
+      studentArchivedAt: null,
+      statusBeforeStudentArchive: null,
+    });
+  });
+
+  it.each([
+    [
+      'an archived student',
+      { student: archivedStudent },
+      'STUDENT_ARCHIVED_REQUIRES_RESTORE',
+      409,
+    ],
+    [
+      'an archived group',
+      {
+        groupId: GROUP_ID,
+        group: { id: GROUP_ID, name: 'B1', deletedAt: NOW },
+      },
+      'GROUP_NOT_FOUND',
+      404,
+    ],
+    [
+      'an archived teacher',
+      { teacher: { ...enrollmentRow.teacher, deletedAt: NOW } },
+      'TEACHER_NOT_FOUND',
+      404,
+    ],
+  ])('refuses to restore into %s', async (_label, overrides, code, status) => {
+    const { prisma, service } = buildService();
+    prisma.enrollment.findFirst.mockResolvedValue({
+      ...enrollmentRow,
+      deletedAt: NOW,
+      ...overrides,
+    });
+
+    await expectBusinessError(
+      service.restore(owner, ENROLLMENT_ID),
+      code,
+      status,
+    );
+    expect(prisma.enrollment.update).not.toHaveBeenCalled();
+  });
+
+  it('clears a stale student-archive marker on restore', async () => {
+    const { prisma, service } = buildService();
+    const deleted = {
+      ...enrollmentRow,
+      groupId: GROUP_ID,
+      group: { id: GROUP_ID, name: 'B1', deletedAt: null },
+      status: 'ARCHIVED' as const,
+      deletedAt: NOW,
+      studentArchivedAt: NOW,
+      statusBeforeStudentArchive: 'ACTIVE' as const,
+    };
+    prisma.enrollment.findFirst
+      .mockResolvedValueOnce(deleted)
+      .mockResolvedValueOnce(deleted)
+      .mockResolvedValueOnce(null);
+    prisma.enrollment.update.mockResolvedValue(enrollmentRow);
+
+    await service.restore(owner, ENROLLMENT_ID);
+
+    expect(prisma.enrollment.update.mock.calls[0][0].data).toEqual({
+      deletedAt: null,
+      studentArchivedAt: null,
+      statusBeforeStudentArchive: null,
+    });
   });
 });

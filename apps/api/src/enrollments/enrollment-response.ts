@@ -13,6 +13,17 @@ export type EnrollmentRow = Prisma.EnrollmentGetPayload<{
   include: typeof enrollmentInclude;
 }>;
 
+// The same row plus the workspace default deadline, so a mutation can answer
+// without a separate workspace query.
+export const enrollmentWithDeadlineInclude = {
+  ...enrollmentInclude,
+  workspace: { select: { cancellationDeadlineHours: true } },
+} satisfies Prisma.EnrollmentInclude;
+
+export type EnrollmentWithDeadlineRow = Prisma.EnrollmentGetPayload<{
+  include: typeof enrollmentWithDeadlineInclude;
+}>;
+
 export function toEnrollmentResponse(
   row: EnrollmentRow,
   workspaceDefaultDeadlineHours: number,
@@ -23,8 +34,8 @@ export function toEnrollmentResponse(
     studentId: row.studentId,
     groupId: row.groupId,
     teacherId: row.teacherId,
-    student: row.student,
-    group: row.group,
+    student: { id: row.student.id, fullName: row.student.fullName },
+    group: row.group ? { id: row.group.id, name: row.group.name } : null,
     teacher: {
       id: row.teacher.id,
       name: row.teacher.fullName,
