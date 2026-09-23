@@ -2,8 +2,10 @@ import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
 /**
- * How much of a form is filled in: a bold label, a caption and one segment
- * per section. The label and caption are the caller's localized copy.
+ * How much of a form is filled in: a bold label, one segment per section and
+ * an optional caption on its own line under the bars. The caption never sits
+ * beside the label, so a narrow column cannot wrap the counter itself.
+ * The label and caption are the caller's localized copy.
  */
 export function ProgressMeter({
   value,
@@ -26,10 +28,7 @@ export function ProgressMeter({
       data-slot="progress-meter"
       className={cn('flex flex-col gap-2.5 rounded-block bg-card px-5 py-4.5', className)}
     >
-      <div className="flex justify-between gap-2 text-[13px]">
-        <span className="font-semibold">{label}</span>
-        {caption ? <span className="text-muted-foreground">{caption}</span> : null}
-      </div>
+      <span className="text-[13px] font-semibold">{label}</span>
       <div
         role="meter"
         aria-valuemin={0}
@@ -45,6 +44,7 @@ export function ProgressMeter({
           />
         ))}
       </div>
+      {caption ? <span className="text-[13px] text-muted-foreground">{caption}</span> : null}
     </div>
   );
 }

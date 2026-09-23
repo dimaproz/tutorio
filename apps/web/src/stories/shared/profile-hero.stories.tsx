@@ -1,6 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
-import { MailIcon, PencilIcon, PhoneIcon, PlusIcon, RotateCcwIcon, SendIcon } from 'lucide-react';
+import {
+  MailIcon,
+  MoreVerticalIcon,
+  PencilIcon,
+  PhoneIcon,
+  PlusIcon,
+  RotateCcwIcon,
+  SendIcon,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { EntityAvatar } from '@/components/shared/entity-avatar';
@@ -15,6 +23,7 @@ type Args = {
   glyph: string;
   withImage: boolean;
   email: boolean;
+  menu: boolean;
 };
 
 const STATUS_LABEL: Record<LifecycleTone, string> = {
@@ -28,7 +37,7 @@ const STATUS_LABEL: Record<LifecycleTone, string> = {
  * profile: active schedules and edits, on a break only edits, archived only
  * restores. Resize the canvas below 768px for the phone layout.
  */
-function ProfileHeroStory({ name, status, dateLabel, meta, glyph, withImage, email }: Args) {
+function ProfileHeroStory({ name, status, dateLabel, meta, glyph, withImage, email, menu }: Args) {
   const contact = (label: string, icon: ReactNode) => (
     <Button variant="white" size="icon" aria-label={label}>
       {icon}
@@ -89,6 +98,13 @@ function ProfileHeroStory({ name, status, dateLabel, meta, glyph, withImage, ema
           status === 'active' ? <Button leading={<PlusIcon />}>Schedule lesson</Button> : undefined
         }
         actions={status === 'archived' ? restore : edit}
+        menu={
+          menu ? (
+            <Button variant="translucent" size="icon-sm" aria-label="Record actions">
+              <MoreVerticalIcon />
+            </Button>
+          ) : undefined
+        }
       />
     </div>
   );
@@ -105,12 +121,14 @@ const meta = {
     glyph: 'B2',
     withImage: true,
     email: true,
+    menu: false,
   },
   argTypes: {
     status: { control: 'inline-radio', options: ['active', 'hold', 'archived'] },
     meta: { description: 'Comma-separated meta values.' },
     glyph: { description: 'Decorative background letters; empty hides them.' },
     email: { description: 'E-mail is shown only when known.' },
+    menu: { description: 'The record overflow trigger in the top-right corner.' },
   },
 } satisfies Meta<typeof ProfileHeroStory>;
 

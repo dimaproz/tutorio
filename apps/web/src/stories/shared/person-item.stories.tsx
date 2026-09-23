@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { ChevronDownIcon, PhoneIcon } from 'lucide-react';
+import { ChevronDownIcon, MoreVerticalIcon, PhoneIcon } from 'lucide-react';
+import { expect } from 'storybook/test';
 import { EntityAvatar } from '@/components/shared/entity-avatar';
 import { IconButton } from '@/components/shared/icon-button';
 import { PersonItem } from '@/components/shared/person-item';
@@ -13,6 +14,8 @@ type Args = {
   withAvatarImage: boolean;
   action: boolean;
   trail: boolean;
+  href: boolean;
+  menu: boolean;
 };
 
 function PersonItemStory({
@@ -24,6 +27,8 @@ function PersonItemStory({
   withAvatarImage,
   action,
   trail,
+  href,
+  menu,
 }: Args) {
   // The ink row lives inside the highlight card, so it is shown on that ground.
   const ground = tone === 'ink' ? 'bg-feature' : 'bg-card';
@@ -48,6 +53,12 @@ function PersonItemStory({
           ) : undefined
         }
         trail={trail ? <ChevronDownIcon className="size-4" /> : undefined}
+        href={href ? '/app/parents/iryna' : undefined}
+        menu={
+          menu ? (
+            <IconButton size={32} tone="ghost" icon={<MoreVerticalIcon />} label="Record actions" />
+          ) : undefined
+        }
       />
     </div>
   );
@@ -65,11 +76,15 @@ const meta = {
     withAvatarImage: false,
     action: true,
     trail: false,
+    href: false,
+    menu: false,
   },
   argTypes: {
     tone: { control: 'inline-radio', options: ['surface', 'soft', 'ink'] },
     size: { control: 'inline-radio', options: ['md', 'sm'] },
     avatarTint: { control: 'inline-radio', options: ['paper', 'warning', 'indigo'] },
+    href: { description: 'The whole row links to the record, with the row hover.' },
+    menu: { description: 'A trailing `…` overflow trigger beside the action.' },
   },
 } satisfies Meta<typeof PersonItemStory>;
 
@@ -86,5 +101,17 @@ export const TeacherOnInk: Story = {
     size: 'sm',
     withAvatarImage: true,
     action: false,
+  },
+};
+
+/** A linked row: the name is the row link, and its controls stay outside it. */
+export const LinkedRow: Story = {
+  args: { href: true, menu: true, action: false },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('link', { name: 'Iryna Shevchenko' })).toHaveAttribute(
+      'href',
+      '/app/parents/iryna',
+    );
+    await expect(canvas.getByRole('button', { name: 'Record actions' })).toBeVisible();
   },
 };

@@ -3,7 +3,8 @@ import { cn } from 'cn';
 
 // Painted card surfaces. Each tone carries its own foreground pair, and every
 // pair is redefined by the dark theme. `feature` is the one highlight card on
-// a page: ink in light, the saturated indigo in dark.
+// a page: ink in light, the saturated indigo in dark. `danger` is reserved for
+// the destructive block at the end of an edit form.
 const CARD_TONE = {
   surface: 'bg-card text-card-foreground',
   info: 'bg-tint-info text-tint-foreground',
@@ -11,6 +12,8 @@ const CARD_TONE = {
   indigo: 'bg-tint-indigo text-tint-foreground',
   ink: 'bg-ink text-ink-foreground',
   feature: 'bg-feature text-feature-foreground',
+  // The destructive block of an edit form: its text reads the danger pair.
+  danger: 'bg-tint-danger text-tint-danger-foreground',
 } as const;
 
 const CARD_RADIUS = {

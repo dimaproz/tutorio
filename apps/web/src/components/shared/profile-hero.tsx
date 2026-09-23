@@ -17,6 +17,7 @@ export function ProfileHero({
   contacts,
   primaryAction,
   actions,
+  menu,
   glyph,
   dim = false,
   className,
@@ -33,6 +34,11 @@ export function ProfileHero({
   primaryAction?: ReactNode;
   /** Secondary commands after the primary one. */
   actions?: ReactNode;
+  /**
+   * The record's `…` overflow trigger, pinned to the top-right corner on
+   * desktop and after the actions on phones.
+   */
+  menu?: ReactNode;
   /** Decorative level mark, clipped to the card. Never announced. */
   glyph?: string;
   /** Quiets the hero for a record that is archived. */
@@ -40,7 +46,7 @@ export function ProfileHero({
   className?: string;
 }) {
   const metaItems = (meta ?? []).filter(Boolean);
-  const hasRow = Boolean(contacts || primaryAction || actions);
+  const hasRow = Boolean(contacts || primaryAction || actions || menu);
 
   return (
     <Card
@@ -111,9 +117,14 @@ export function ProfileHero({
             <span aria-hidden="true" className="mx-1.5 h-7 w-px bg-tint-indigo-foreground/20" />
           ) : null}
           {primaryAction ? <div className="hidden md:contents">{primaryAction}</div> : null}
-          <div className="ml-auto flex gap-2 md:ml-0">{actions}</div>
+          <div className="ml-auto flex gap-2 md:ml-0">
+            {actions}
+            {menu ? <div className="md:hidden">{menu}</div> : null}
+          </div>
         </div>
       ) : null}
+
+      {menu ? <div className="absolute top-5 right-5 hidden md:block">{menu}</div> : null}
     </Card>
   );
 }

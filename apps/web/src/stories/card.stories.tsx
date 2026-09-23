@@ -66,6 +66,9 @@ export const Tones: Story = {
       <Card tone="feature" radius="hero" className="p-5">
         Next lesson ticket
       </Card>
+      <Card tone="danger" className="p-5">
+        Danger zone
+      </Card>
     </div>
   ),
 };
