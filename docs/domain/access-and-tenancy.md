@@ -46,6 +46,7 @@ forbidden result, never another tenant’s record.
 | Create/update     | Only the owner membership is created during registration. Roster is currently read-only.                                                                    |
 | Delete/restore    | No invitation, role-change, removal, or restore workflow exists.                                                                                            |
 | Pilot permissions | Owner-only operation. A legacy `TEACHER` can use only `GET /auth/me` and `GET /workspaces/current`; all business data and mutations return `403 FORBIDDEN`. |
+| Web behavior      | The shell mirrors the policy: a non-owner gets no navigation destinations, no section trail, search or notifications, and every `/app` route shows a localized no-access screen with sign-out. |
 | Known gaps        | Login selects the oldest membership; no invitation, multi-workspace selection, or own-teacher scope exists.                                                 |
 
 Acceptance before staff login: replace the owner-only policy with a complete

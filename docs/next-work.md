@@ -300,8 +300,9 @@ actions, lifecycle/detail states, and interaction tests.
 
 Found by the closure review and deliberately left out of the remediation:
 
-- Product decisions: whether non-owner roles see Students controls (the API is
-  owner-only today); what the hold dialog does when counting lessons fails.
+- Product decision pending: what the hold dialog does when counting lessons
+  fails. (Resolved 2026-09-23: non-owner memberships get no business UI at
+  all, mirroring the owner-only API.)
 - Focus return after dismissing the setup checklist, unlinking a parent, or a
   status change; the browser Back button is not covered by the leave guard.
 - Completing or cancelling a lesson does not refresh package credits until the
