@@ -1,10 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  findConflicts,
-  toInterval,
-  zonedDayRange,
-  zonedWeekRange,
-} from '@tutorio/domain';
+import { zonedDayRange, zonedWeekRange } from '@tutorio/domain';
 import type { Group, Prisma } from '@prisma/client';
 import type {
   CreateGroupDto,
@@ -27,7 +22,6 @@ import {
   groupNotFound,
   groupScheduleExists,
   groupTeacherRequired,
-  scheduleConflict,
   studentNotFound,
   teacherNotFound,
 } from '../common/business.errors';
@@ -38,6 +32,7 @@ import {
 } from '../common/pagination';
 import { PrismaService } from '../prisma/prisma.service';
 import {
+  assertLessonsAreFree,
   lockGroupSchedule,
   lockStudentLifecycles,
   lockTeacherSchedules,
@@ -54,9 +49,6 @@ import {
   toTeacherRef,
   unpaidPackageWhere,
 } from './groups.shared';
-
-// Longest allowed lesson: the lookback for "an earlier lesson that runs long".
-const MAX_DURATION_MIN = 720;
 
 const listInclude = {
   teacher: { select: teacherRefSelect },
@@ -82,11 +74,7 @@ const listInclude = {
 
 type ListRow = Prisma.GroupGetPayload<{ include: typeof listInclude }>;
 
-type LessonSlot = {
-  id: string;
-  startsAtUtc: Date;
-  durationMin: number;
-};
+type LessonSlot = { id: string; startsAtUtc: Date; durationMin: number };
 
 @Injectable()
 export class GroupsService {
@@ -136,8 +124,25 @@ export class GroupsService {
     return {
       workspaceId: auth.workspaceId,
       ...deletedAtFilter(query.state),
+      // The search matches the group name or the name of its teacher.
       ...(query.search
-        ? { name: { contains: query.search, mode: 'insensitive' as const } }
+        ? {
+            OR: [
+              {
+                name: { contains: query.search, mode: 'insensitive' as const },
+              },
+              {
+                teacher: {
+                  is: {
+                    fullName: {
+                      contains: query.search,
+                      mode: 'insensitive' as const,
+                    },
+                  },
+                },
+              },
+            ],
+          }
         : {}),
       ...(and.length > 0 ? { AND: and } : {}),
     };
@@ -852,54 +857,6 @@ export class GroupsService {
   }
 
   /**
-   * Refuses when any of `lessons` would overlap work the teacher already has.
-   * One read covers every candidate; `excludeIds` are the lessons being moved.
-   */
-  private async assertTeacherFree(
-    tx: Prisma.TransactionClient,
-    workspaceId: string,
-    teacherId: string,
-    lessons: readonly LessonSlot[],
-    excludeIds: readonly string[],
-  ): Promise<void> {
-    if (lessons.length === 0) return;
-    const starts = lessons.map((lesson) => lesson.startsAtUtc.getTime());
-    const ends = lessons.map(
-      (lesson) => lesson.startsAtUtc.getTime() + lesson.durationMin * 60_000,
-    );
-    const busy = await tx.lesson.findMany({
-      where: {
-        workspaceId,
-        teacherId,
-        deletedAt: null,
-        status: { in: ['SCHEDULED', 'COMPLETED'] },
-        id: { notIn: [...excludeIds] },
-        startsAtUtc: {
-          gte: new Date(Math.min(...starts) - MAX_DURATION_MIN * 60_000),
-          lt: new Date(Math.max(...ends)),
-        },
-      },
-      select: { id: true, startsAtUtc: true, durationMin: true },
-    });
-    const intervals = busy.map((row) => ({
-      ...toInterval(row.startsAtUtc, row.durationMin),
-      id: row.id,
-    }));
-    const conflicts = new Set<string>();
-    for (const lesson of lessons) {
-      for (const hit of findConflicts(
-        toInterval(lesson.startsAtUtc, lesson.durationMin),
-        intervals,
-      )) {
-        conflicts.add(hit.id);
-      }
-    }
-    if (conflicts.size > 0) {
-      throw scheduleConflict([...conflicts]);
-    }
-  }
-
-  /**
    * Hands the group to another teacher: its live memberships, its schedule
    * (live or suspended by an empty roster) and every upcoming scheduled lesson
    * move together, after a clash check against the new teacher's calendar.
@@ -947,12 +904,13 @@ export class GroupsService {
       ...series.map((row) => row.teacherId),
     ]);
     const moving = lessons.filter((lesson) => lesson.teacherId !== teacherId);
-    await this.assertTeacherFree(
+    await assertLessonsAreFree(
       tx,
       workspaceId,
-      teacherId,
-      moving.filter((lesson) => lesson.deletedAt === null),
-      lessons.map((lesson) => lesson.id),
+      moving
+        .filter((lesson) => lesson.deletedAt === null)
+        .map((lesson) => ({ ...lesson, teacherId })),
+      { excludeIds: lessons.map((lesson) => lesson.id) },
     );
 
     const [enrollments, seriesMoved, lessonsMoved] = await Promise.all([
@@ -1233,15 +1191,7 @@ export class GroupsService {
 
       // Do this before changing any state. A group can be restored only when
       // its explicitly suspended upcoming lessons still fit the calendar.
-      for (const teacherId of teacherIds) {
-        await this.assertTeacherFree(
-          tx,
-          auth.workspaceId,
-          teacherId,
-          suspendedLessons.filter((lesson) => lesson.teacherId === teacherId),
-          suspendedLessons.map((lesson) => lesson.id),
-        );
-      }
+      await assertLessonsAreFree(tx, auth.workspaceId, suspendedLessons);
 
       const restored = await tx.group.update({
         where: { id: existing.id },

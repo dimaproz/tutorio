@@ -117,6 +117,7 @@ export type GroupSortField = z.infer<typeof groupSortFieldSchema>;
 
 export const listGroupsQuerySchema = paginationQuerySchema
   .extend({
+    /** Matches the group name or its teacher's name. */
     search: z.string().trim().min(1).max(120).optional(),
     // deleted/all are OWNER-only (enforced by the service).
     state: recordStateSchema.default('active'),

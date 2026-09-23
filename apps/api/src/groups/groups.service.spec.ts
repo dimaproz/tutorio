@@ -479,6 +479,7 @@ describe('GroupsService teacher and schedule', () => {
         : [
             {
               id: 'busy-1',
+              teacherId: OTHER_TEACHER_ID,
               startsAtUtc: new Date('2026-07-21T14:30:00.000Z'),
               durationMin: 60,
             },
