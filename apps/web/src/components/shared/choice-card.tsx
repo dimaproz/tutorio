@@ -75,7 +75,7 @@ function ChoiceCard<T extends string>({
         className={cn(
           'flex size-10 shrink-0 items-center justify-center rounded-control [&_svg]:size-5',
           selected
-            ? 'bg-tint-indigo text-tint-indigo-foreground'
+            ? 'bg-tile-indigo text-tile-indigo-foreground'
             : 'bg-background text-muted-foreground',
         )}
       >

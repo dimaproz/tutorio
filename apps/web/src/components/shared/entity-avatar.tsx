@@ -30,7 +30,7 @@ const INITIALS_CLASS = {
 const TINT_CLASS = {
   paper: 'bg-background text-muted-foreground',
   warning: 'bg-tint-warning text-tint-warning-foreground',
-  indigo: 'bg-tint-indigo text-tint-indigo-foreground',
+  indigo: 'bg-tile-indigo text-tile-indigo-foreground',
   // For a person sitting on an indigo surface, where the indigo tint would
   // paint the avatar the same colour as the card behind it.
   surface: 'bg-card text-tint-indigo-foreground',

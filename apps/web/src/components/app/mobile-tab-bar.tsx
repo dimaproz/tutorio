@@ -31,7 +31,7 @@ function TabIcon({ icon: Icon, active }: { icon: LucideIcon; active: boolean }) 
       aria-hidden="true"
       className={cn(
         'flex h-8 w-13 items-center justify-center rounded-pill transition-colors duration-150 [&_svg]:size-5',
-        active && 'bg-tint-indigo text-tint-indigo-foreground',
+        active && 'bg-tile-indigo text-tile-indigo-foreground',
       )}
     >
       <Icon />

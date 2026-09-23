@@ -65,7 +65,7 @@ export function SetupChecklist({
           >
             <span
               aria-hidden="true"
-              className="flex size-10 shrink-0 items-center justify-center rounded-control bg-tint-indigo text-tint-indigo-foreground [&_svg]:size-5"
+              className="flex size-10 shrink-0 items-center justify-center rounded-control bg-tile-indigo text-tile-indigo-foreground [&_svg]:size-5"
             >
               {item.icon}
             </span>

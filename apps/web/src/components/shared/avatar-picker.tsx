@@ -95,7 +95,7 @@ export function AvatarPicker({
                   OPTION_CLASS,
                   option
                     ? 'bg-background'
-                    : 'flex items-center justify-center bg-tint-indigo text-sm font-semibold text-tint-indigo-foreground',
+                    : 'flex items-center justify-center bg-tile-indigo text-sm font-semibold text-tile-indigo-foreground',
                   checked
                     ? 'ring-2 ring-brand ring-offset-2 ring-offset-card'
                     : 'not-disabled:hover:-translate-y-0.5 not-disabled:hover:ring-2 not-disabled:hover:ring-line-hover not-disabled:hover:ring-offset-2 not-disabled:hover:ring-offset-card',

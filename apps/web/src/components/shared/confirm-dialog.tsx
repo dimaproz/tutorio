@@ -23,7 +23,7 @@ const TONE = {
     Icon: AlertCircleIcon,
   },
   neutral: {
-    tile: 'bg-tint-indigo text-tint-indigo-foreground',
+    tile: 'bg-tile-indigo text-tile-indigo-foreground',
     action: 'primary',
     Icon: FileTextIcon,
   },

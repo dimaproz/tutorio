@@ -43,7 +43,7 @@ export function EmptyState({
       {media ?? (
         <span
           aria-hidden="true"
-          className="flex size-14 items-center justify-center rounded-tile bg-tint-indigo text-tint-indigo-foreground [&_svg]:size-6"
+          className="flex size-14 items-center justify-center rounded-tile bg-tile-indigo text-tile-indigo-foreground [&_svg]:size-6"
         >
           {icon}
         </span>
