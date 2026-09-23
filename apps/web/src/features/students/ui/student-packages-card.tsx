@@ -3,8 +3,6 @@
 import Link from 'next/link';
 import { PackagePlusIcon, WalletCardsIcon } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { PackagePaymentStatusBadge } from '@/components/packages/package-status';
-import { PackageFormDialog } from '@/components/packages/package-form-dialog';
 import { QueryErrorAlert } from '@/components/shared/page-shell';
 import { SectionTitle } from '@/components/shared/detail-view';
 import { Button } from '@/components/ui/button';
@@ -12,6 +10,7 @@ import { Card, CardAction, CardContent, CardHeader } from '@/components/ui/card'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
 import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from '@/components/ui/item';
 import { Skeleton } from '@/components/ui/skeleton';
+import { PackageFormDialog, PackagePaymentStatusBadge } from '@/features/packages';
 import { usePackagesQuery } from '@/lib/api/packages';
 import { formatMoneyDisplay } from '@/lib/money';
 

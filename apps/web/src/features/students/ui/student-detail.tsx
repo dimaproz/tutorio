@@ -5,12 +5,6 @@ import { PlayIcon, PlusIcon, RotateCcwIcon } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useNow, useTranslations } from 'next-intl';
 import type { StudentDetail } from '@tutorio/validation';
-import { PackageFormDialog } from '@/components/packages/package-form-dialog';
-import { LessonFormDialog } from '@/components/scheduling/lesson-form-dialog';
-import {
-  StudentLessonsCard,
-  studentLessonsRange,
-} from '@/components/scheduling/student-lessons-card';
 import { DetailFrame } from '@/components/shared/detail-frame';
 import { LoadingPanel } from '@/components/shared/loading';
 import { Notice } from '@/components/shared/notice';
@@ -18,6 +12,8 @@ import { useSetPageCrumb } from '@/components/shared/page-crumb';
 import { QueryErrorAlert } from '@/components/shared/page-shell';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { PackageFormDialog } from '@/features/packages';
+import { LessonFormDialog, StudentLessonsCard, studentLessonsRange } from '@/features/scheduling';
 import { studentLifecyclePolicy } from '@/features/students/model/lifecycle';
 import { deriveStudentProfileMetrics } from '@/features/students/model/profile-metrics';
 import { usePackagesQuery } from '@/lib/api/packages';

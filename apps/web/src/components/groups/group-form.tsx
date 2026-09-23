@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
-import { StudentQuickCreateDialog } from '@/features/students/ui/student-quick-create-dialog';
+import { StudentQuickCreateDialog } from '@/features/students';
 import { errorMessageKey } from '@/lib/api/error-message';
 import { useCreateGroupMutation, useUpdateGroupMutation } from '@/lib/api/groups';
 import { GroupStudentsField } from './group-students-field';

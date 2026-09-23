@@ -6,6 +6,9 @@ import Link from 'next/link';
 import { PhoneIcon, PlusIcon, SearchIcon, XIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { ParentListItem, StudentDetail } from '@tutorio/validation';
+// Direct import on purpose: the Parents barrel re-exports screens that import
+// this feature, so routing through it would make the two barrels a cycle.
+// Parents migrates in Work Packet 6.1 and then exports the dialog cleanly.
 import { ParentFormDialog } from '@/components/parents/parent-form-dialog';
 import { EntityAvatar } from '@/components/shared/entity-avatar';
 import { EntityPicker } from '@/components/shared/entity-picker';

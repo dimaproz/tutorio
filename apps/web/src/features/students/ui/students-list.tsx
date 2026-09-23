@@ -8,7 +8,7 @@ import type { ColumnDef } from '@tanstack/react-table';
 import { CalendarIcon, PlusIcon } from 'lucide-react';
 import { useFormatter, useNow, useTranslations } from 'next-intl';
 import type { StudentListItem } from '@tutorio/validation';
-import { LessonFormDialog } from '@/components/scheduling/lesson-form-dialog';
+import { LessonFormDialog } from '@/features/scheduling';
 import { CollectionFrame } from '@/components/shared/collection-frame';
 import { DataTable } from '@/components/shared/data-table';
 import {

@@ -3,14 +3,11 @@
 import { useState } from 'react';
 import { useFormatter, useNow, useTranslations } from 'next-intl';
 import type { LessonResponse, StudentStatusDto } from '@tutorio/validation';
-import {
-  LessonActionsDialog,
-  type LessonDialogMode,
-} from '@/components/scheduling/lesson-actions-dialog';
 import { EntityAvatar } from '@/components/shared/entity-avatar';
 import { NextLessonCard, type NextLessonArt } from '@/components/shared/next-lesson-card';
 import { PersonItem } from '@/components/shared/person-item';
 import { Button } from '@/components/ui/button';
+import { LessonActionsDialog, type LessonDialogMode } from '@/features/scheduling';
 import { capitalizeFirst } from '@/lib/utils';
 
 const EMPTY_BY_STATUS: Record<StudentStatusDto, 'fresh' | 'hold' | 'archived'> = {

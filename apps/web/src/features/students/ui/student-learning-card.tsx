@@ -8,9 +8,6 @@ import type {
   StudentDetail,
   StudentEnrollmentSummary,
 } from '@tutorio/validation';
-import { EnrollmentDialog } from '@/components/enrollments/enrollment-dialog';
-import { EnrollmentStatusBadge } from '@/components/enrollments/enrollment-status';
-import { BillingTypeBadge } from '@/components/packages/package-status';
 import { SectionTitle } from '@/components/shared/detail-view';
 import { QueryErrorAlert } from '@/components/shared/page-shell';
 import { Button } from '@/components/ui/button';
@@ -18,6 +15,8 @@ import { Card, CardAction, CardContent, CardHeader } from '@/components/ui/card'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
 import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from '@/components/ui/item';
 import { Spinner } from '@/components/ui/spinner';
+import { EnrollmentDialog, EnrollmentStatusBadge } from '@/features/enrollments';
+import { BillingTypeBadge } from '@/features/packages';
 import { useEnrollmentQuery } from '@/lib/api/enrollments';
 import { formatMoneyDisplay } from '@/lib/money';
 
