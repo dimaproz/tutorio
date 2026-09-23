@@ -73,7 +73,7 @@ function WorkspaceSwitcher({ session, isSolo }: { session: AuthMe; isSolo: boole
     <button
       type="button"
       aria-label={t('switch')}
-      className="flex h-16 w-full items-center gap-3 rounded-row bg-secondary pr-3.5 pl-2.5 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
+      className="flex h-16 w-full items-center gap-3 rounded-row bg-sidebar-accent pr-3.5 pl-2.5 text-left text-sidebar-accent-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
     >
       {isSolo ? (
         <EntityAvatar fullName={session.user.name} size="md" />
@@ -119,7 +119,7 @@ export function SidebarUserMenu({
         <button
           type="button"
           aria-label={t('label')}
-          className="w-full rounded-tile bg-secondary p-2.5 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
+          className="w-full rounded-tile bg-sidebar-accent p-2.5 text-left text-sidebar-accent-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
         >
           <PersonItem
             size="sm"
@@ -127,6 +127,7 @@ export function SidebarUserMenu({
             name={session.user.name}
             subtitle={t(`roles.${session.role}`)}
             trail={<MoreVerticalIcon className="size-4.5" />}
+            className="text-sidebar-accent-foreground"
           />
         </button>
       </DropdownMenuTrigger>
