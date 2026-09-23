@@ -47,21 +47,26 @@ export function useParentFormNavItems(
 
 const SECTION_IDS = PARENT_FORM_SECTIONS.map(({ id }) => parentFormSectionId(id));
 
+/** Which sections hold a value, errors aside. */
+const sectionFill = (values: ParentFormValues) => parentFormSectionStatus(values, []);
+
 /**
  * Everything the frame derives from the form: section status for the
  * navigation and progress, the section in view, and the counts the save bar
  * reports.
  */
 export function useParentFormState(form: UseFormReturn<ParentFormValues>) {
-  const values = useWatch({ control: form.control }) as ParentFormValues;
+  // Re-render when a section flips between filled and empty, not on every
+  // keystroke; errors re-render through formState. The status cannot change
+  // in between, so the current values read below are always up to date.
+  useWatch({ control: form.control, compute: sectionFill });
   const { errors, dirtyFields } = form.formState;
   const errorFields = Object.keys(errors);
-  const status = parentFormSectionStatus(values, errorFields);
+  const status = parentFormSectionStatus(form.getValues(), errorFields);
   const navItems = useParentFormNavItems(status);
   const [activeSection, setActiveSection] = useActiveSection(SECTION_IDS);
 
   return {
-    values,
     status,
     navItems,
     activeSection,

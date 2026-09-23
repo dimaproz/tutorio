@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { RotateCcwIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { FormProvider } from 'react-hook-form';
+import { FormProvider, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
 import { ActionBar } from '@/components/shared/action-bar';
 import { ConfirmDialog } from '@/components/shared/confirm-dialog';
@@ -83,10 +83,18 @@ export function StudentCreatePage() {
     if (draft) form.reset({ ...defaults, ...draft }, { keepDefaultValues: true });
   }, [defaults, draftKey, form]);
 
-  useEffect(() => {
-    if (!restored.current) return;
-    writeDraft(draftKey, isDirty ? state.values : null);
-  }, [draftKey, isDirty, state.values]);
+  // The draft follows every change without re-rendering the page for it.
+  useEffect(
+    () =>
+      form.subscribe({
+        formState: { values: true, isDirty: true },
+        callback: ({ values, isDirty: dirty }) => {
+          if (restored.current) writeDraft(draftKey, dirty ? values : null);
+        },
+      }),
+    [draftKey, form],
+  );
+  const timezone = useWatch({ control: form.control, name: 'timezone' });
 
   useLeaveGuard(isDirty && !saving);
 
@@ -177,7 +185,7 @@ export function StudentCreatePage() {
         >
           <StudentFormSections
             status={state.status}
-            timezoneFromBrowser={state.values.timezone === defaults.timezone}
+            timezoneFromBrowser={timezone === defaults.timezone}
           />
         </StudentFormLayout>
       </form>

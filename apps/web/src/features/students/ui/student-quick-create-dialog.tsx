@@ -82,7 +82,16 @@ export function StudentQuickCreateDialog({
       timezone: initialTimezone ?? detectTimezone(),
     }),
   });
-  const values = useWatch({ control: form.control }) as StudentQuickCreateValues;
+  // Only the fields the dialog shows elsewhere: typing a name or a contact
+  // does not re-render the whole dialog, and the price only when it empties
+  // or fills.
+  const hasPrice = useWatch({
+    control: form.control,
+    name: 'pricePerLesson',
+    compute: (price: string) => price.trim() !== '',
+  });
+  const currency = useWatch({ control: form.control, name: 'currency' });
+  const timezone = useWatch({ control: form.control, name: 'timezone' });
   const { errors, isDirty, isSubmitting } = form.formState;
   const pending = isSubmitting || createStudent.isPending;
 
@@ -241,11 +250,11 @@ export function StudentQuickCreateDialog({
                 />
                 <FieldError id="student-quick-price-error" errors={[errors.pricePerLesson]} />
               </Field>
-              {values.pricePerLesson.trim() ? (
+              {hasPrice ? (
                 <Field>
                   <FieldLabel htmlFor="student-quick-currency">{t('currency')}</FieldLabel>
                   <Select
-                    value={values.currency}
+                    value={currency}
                     onValueChange={(currency) =>
                       form.setValue('currency', currency as StudentQuickCreateValues['currency'], {
                         shouldDirty: true,
@@ -296,7 +305,7 @@ export function StudentQuickCreateDialog({
                     <FieldLabel htmlFor="student-quick-timezone">{t('timezone')}</FieldLabel>
                     <TimezoneCombobox
                       id="student-quick-timezone"
-                      value={values.timezone}
+                      value={timezone}
                       onChange={(timezone) =>
                         form.setValue('timezone', timezone, {
                           shouldDirty: true,

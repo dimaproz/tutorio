@@ -32,22 +32,28 @@ export function useStudentForm(defaultValues: StudentFormValues) {
 
 const SECTION_IDS = STUDENT_FORM_SECTIONS.map(({ id }) => studentFormSectionId(id));
 
+/** Which sections hold a value, errors aside. */
+const sectionFill = (values: StudentFormValues) => studentFormSectionStatus(values, []);
+
 /**
  * Everything the frame derives from the form: section status for the
  * navigation and progress, the section in view, and the counts the save bar
  * reports.
  */
 export function useStudentFormState(form: UseFormReturn<StudentFormValues>) {
-  const values = useWatch({ control: form.control }) as StudentFormValues;
+  // A whole-form watch here re-rendered every section on every keystroke. The
+  // page re-renders when a section flips between filled and empty, and on
+  // error changes through formState; the status cannot change in between, so
+  // the current values read below are always up to date.
+  useWatch({ control: form.control, compute: sectionFill });
   const { errors, dirtyFields } = form.formState;
   const errorFields = Object.keys(errors);
-  const status = studentFormSectionStatus(values, errorFields);
+  const status = studentFormSectionStatus(form.getValues(), errorFields);
   const navItems = useStudentFormNavItems(status);
   const [activeSection, setActiveSection] = useActiveSection(SECTION_IDS);
   const dirtyCount = Object.keys(dirtyFields).length;
 
   return {
-    values,
     status,
     navItems,
     activeSection,

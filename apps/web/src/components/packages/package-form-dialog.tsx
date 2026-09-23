@@ -139,8 +139,10 @@ export function PackageFormDialog({
     defaultValues: defaults,
   });
   const { errors } = form.formState;
-  const values = useWatch({ control: form.control }) as PackageFormValues;
-  const summary = packageScheduleSummary(values);
+  // Only what the dialog shows re-renders it: typing a name, a note or a paid
+  // amount does not repaint every section.
+  const values = useWatch({ control: form.control, compute: packageFormView });
+  const { summary } = values;
   const isGroup = values.targetKind === 'group';
   const hasSchedule = values.sizingMode === 'BY_PERIOD' || values.scheduleEnabled;
   const targetLocked = Boolean(lockedStudentId || lockedGroupId);
@@ -609,6 +611,21 @@ export function PackageFormDialog({
   );
 }
 
+/** The part of the form the dialog derives its layout and summary from. */
+function packageFormView(values: PackageFormValues) {
+  return {
+    targetKind: values.targetKind,
+    sizingMode: values.sizingMode,
+    scheduleEnabled: values.scheduleEnabled,
+    timezone: values.timezone,
+    currency: values.currency,
+    paymentStatus: values.paymentStatus,
+    weekdays: values.weekdays,
+    startMode: values.startMode,
+    summary: packageScheduleSummary(values),
+  };
+}
+
 function ScheduleFields({
   form,
   values,
@@ -616,7 +633,7 @@ function ScheduleFields({
   summary,
 }: {
   form: ReturnType<typeof useForm<PackageFormValues>>;
-  values: PackageFormValues;
+  values: ReturnType<typeof packageFormView>;
   errors: ReturnType<typeof useForm<PackageFormValues>>['formState']['errors'];
   summary: ReturnType<typeof packageScheduleSummary>;
 }) {
