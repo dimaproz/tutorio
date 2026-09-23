@@ -96,6 +96,11 @@
   --color-raised: var(--raised);
   --color-raised-line: var(--raised-line);
   --color-scrim: var(--scrim);
+  --color-nav-selected: var(--nav-selected);
+  --color-nav-selected-foreground: var(--nav-selected-foreground);
+  --color-nav-selected-muted: var(--nav-selected-muted);
+  --color-nav-selected-tile: var(--nav-selected-tile);
+  --color-nav-selected-tile-foreground: var(--nav-selected-tile-foreground);
 
   /* Studio interaction colours: the hover and pressed values the handoff
      specifies for each painted surface. */
@@ -116,6 +121,7 @@
   --shadow-lift-danger: 0 8px 18px -10px rgb(178 60 22 / 0.6);
   --shadow-raise: 0 6px 16px -8px rgb(var(--shadow-ink) / calc(0.35 + var(--shadow-boost)));
   --shadow-hairline: 0 1px 0 var(--border);
+  --shadow-nav-selected: 0 1px 0 var(--nav-selected-line);
   --shadow-popover: 0 24px 48px -16px rgb(var(--shadow-ink) / calc(0.28 + var(--shadow-boost)));
   --shadow-menu: 0 28px 56px -18px rgb(var(--shadow-ink) / calc(0.35 + var(--shadow-boost)));
   --shadow-bar: 0 24px 48px -20px rgb(var(--shadow-ink) / calc(0.35 + var(--shadow-boost)));
@@ -247,6 +253,14 @@
   --raised: #ffffff;
   --raised-line: transparent;
   --scrim: rgb(27 31 59 / 0.46);
+
+  /* The current item of an in-page section nav: a white row on the panel. */
+  --nav-selected: var(--card);
+  --nav-selected-foreground: var(--foreground);
+  --nav-selected-muted: var(--muted-foreground);
+  --nav-selected-line: var(--border);
+  --nav-selected-tile: var(--tint-indigo);
+  --nav-selected-tile-foreground: var(--tint-indigo-foreground);
 
   --shadow-ink: 27 31 59;
   --shadow-boost: 0;
@@ -387,7 +401,7 @@
 
   /* Charts inside stat blocks --------------------------------------------- */
   --stat-track: rgb(255 255 255 / 0.14);
-  --stat-divider: rgb(255 255 255 / 0.10);
+  --stat-divider: rgb(255 255 255 / 0.1);
   --stat-track-on-tint: rgb(255 255 255 / 0.14);
 
   /* Raised paper: the white button on a tint lifts off it with a hairline. */
@@ -397,6 +411,15 @@
   /* Modal scrim: near-black, since the ink would lighten a dark page. */
   --scrim: rgb(2 4 12 / 0.6);
 
+  /* Section nav: a card-coloured row vanishes into the panel, so the current
+     item is painted, and its tile takes the sky pair of the primary action. */
+  --nav-selected: var(--tile-indigo);
+  --nav-selected-foreground: var(--foreground);
+  --nav-selected-muted: #c7cce6;
+  --nav-selected-line: transparent;
+  --nav-selected-tile: var(--brand-soft);
+  --nav-selected-tile-foreground: var(--brand-soft-foreground);
+
   /* Elevation -------------------------------------------------------------
      Shadows are mixed from --shadow-ink. On a dark ground a navy shadow is
      invisible, so it goes to near-black and each alpha is raised one step. */
@@ -405,12 +428,35 @@
 }
 
 @layer base {
-  * { @apply border-border outline-ring/50; }
-  body { @apply bg-background text-foreground; }
-  button, a, input, select, textarea, [role='button'], [role='menuitem'], [role='tab'] { touch-action: manipulation; }
-  .tabular, .numeral { font-variant-numeric: tabular-nums; }
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  button,
+  a,
+  input,
+  select,
+  textarea,
+  [role='button'],
+  [role='menuitem'],
+  [role='tab'] {
+    touch-action: manipulation;
+  }
+  .tabular,
+  .numeral {
+    font-variant-numeric: tabular-nums;
+  }
   @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
   html {
     @apply font-sans;

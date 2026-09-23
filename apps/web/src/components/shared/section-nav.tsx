@@ -83,7 +83,7 @@ export function SectionNav({
             className={cn(
               'flex items-center gap-3 rounded-field px-3 py-2.5 no-underline transition-[background-color,color,box-shadow] duration-150 ease-out outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
               current
-                ? 'bg-card text-foreground shadow-hairline'
+                ? 'bg-nav-selected text-nav-selected-foreground shadow-nav-selected'
                 : 'text-muted-foreground hover:bg-card/65 hover:text-foreground',
             )}
           >
@@ -92,7 +92,7 @@ export function SectionNav({
               className={cn(
                 'flex size-8 shrink-0 items-center justify-center rounded-[10px] [&_svg]:size-4',
                 current
-                  ? 'bg-tint-indigo text-tint-indigo-foreground'
+                  ? 'bg-nav-selected-tile text-nav-selected-tile-foreground'
                   : 'bg-secondary text-muted-foreground',
               )}
             >
@@ -105,7 +105,12 @@ export function SectionNav({
                 {item.title}
               </span>
               {item.description ? (
-                <span className="truncate text-xs leading-4 text-muted-foreground">
+                <span
+                  className={cn(
+                    'truncate text-xs leading-4',
+                    current ? 'text-nav-selected-muted' : 'text-muted-foreground',
+                  )}
+                >
                   {item.description}
                 </span>
               ) : null}
