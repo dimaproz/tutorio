@@ -61,8 +61,9 @@ negative cross-teacher cases.
 | Ownership      | Belongs to one user; indirectly constrained by the active membership encoded in access context. |
 | Create/update  | Created on login; refresh atomically rotates the stored token HMAC.                             |
 | Delete/restore | Logout idempotently revokes. Sessions are retained as security history; no restore.             |
-| Invariants     | Refresh replay revokes the session; raw refresh tokens are not stored.                          |
+| Invariants     | Refresh replay revokes the session; raw refresh tokens are not stored. The immediately previous token is honoured for 30 s after a rotation and returns the already-issued successor (its jti is derived from the predecessor's HMAC and its iat from `lastUsedAt`, so it is re-derivable without storing it). |
 | Known gaps     | No session list, device label, revoke-all action, or expired-row cleanup policy.                |
 
 Acceptance: concurrent refresh and replay tests prove one valid successor token
-and no reusable previous token.
+shared by parallel callers, and no previous token reusable after the grace
+window or more than one rotation back.

@@ -52,19 +52,25 @@ export class TokenService {
     });
   }
 
+  // With an explicit `issuedAt` the token is deterministic: the same input
+  // always signs to the same string (iat and exp are derived from it).
   signRefreshToken(input: {
     userId: string;
     sessionId: string;
     workspaceId: string;
     jti: string;
+    issuedAt?: Date;
   }): string {
-    const payload: RefreshTokenPayload = {
+    const payload: RefreshTokenPayload & { iat?: number } = {
       sub: input.userId,
       sid: input.sessionId,
       workspaceId: input.workspaceId,
       type: 'refresh',
       jti: input.jti,
     };
+    if (input.issuedAt) {
+      payload.iat = Math.floor(input.issuedAt.getTime() / 1000);
+    }
     return this.jwt.sign(payload, {
       secret: this.refreshSecret,
       expiresIn: this.refreshTtl as JwtSignOptions['expiresIn'],
@@ -96,6 +102,17 @@ export class TokenService {
       throw new Error('Not a refresh token');
     }
     return payload;
+  }
+
+  // The jti of the token that replaces the one with `previousHash`. Because
+  // it is derived (not random), the successor can be re-derived from its
+  // predecessor to prove "this is the token rotated a moment ago" without
+  // storing the previous hash or any raw token.
+  successorJti(previousHash: string): string {
+    return createHmac('sha256', this.refreshSecret)
+      .update(`successor:${previousHash}`)
+      .digest('hex')
+      .slice(0, 32);
   }
 
   // Only this HMAC is persisted — a database leak does not leak usable tokens.

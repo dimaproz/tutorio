@@ -181,7 +181,7 @@ describe('Auth + Workspace (e2e)', () => {
   });
 
   describe('refresh rotation', () => {
-    it('rotates tokens, rejects the rotated-away token and revokes on reuse', async () => {
+    it('rotates tokens, shares the successor inside the grace window and revokes on later reuse', async () => {
       const login = await server()
         .post('/api/auth/login')
         .send({
@@ -198,7 +198,25 @@ describe('Auth + Workspace (e2e)', () => {
       const secondRefreshToken = rotated.body.tokens.refreshToken;
       expect(secondRefreshToken).not.toBe(firstRefreshToken);
 
-      // Replaying the rotated-away token revokes the whole session…
+      // A parallel request that lost the race presents the rotated-away token
+      // a moment later: it receives the same successor, not a revocation.
+      const straggler = await server()
+        .post('/api/auth/refresh')
+        .send({ refreshToken: firstRefreshToken })
+        .expect(200);
+      expect(straggler.body.tokens.refreshToken).toBe(secondRefreshToken);
+
+      // Once the grace window has passed, replaying it revokes the session…
+      const sessionId = JSON.parse(
+        Buffer.from(secondRefreshToken.split('.')[1], 'base64url').toString(),
+      ).sid as string;
+      const rotatedAt = await prisma.authSession.findUniqueOrThrow({
+        where: { id: sessionId },
+      });
+      await prisma.authSession.update({
+        where: { id: sessionId },
+        data: { lastUsedAt: new Date(rotatedAt.lastUsedAt.getTime() - 60_000) },
+      });
       const reuse = await server()
         .post('/api/auth/refresh')
         .send({ refreshToken: firstRefreshToken })
@@ -209,6 +227,66 @@ describe('Auth + Workspace (e2e)', () => {
       await server()
         .post('/api/auth/refresh')
         .send({ refreshToken: secondRefreshToken })
+        .expect(401);
+    });
+
+    it('lets parallel refreshes of one token share a single rotation', async () => {
+      const login = await server()
+        .post('/api/auth/login')
+        .send({
+          email: ownerRegistration.email,
+          password: ownerRegistration.password,
+        })
+        .expect(200);
+      const { refreshToken } = login.body.tokens;
+
+      const results = await Promise.all(
+        Array.from({ length: 4 }, () =>
+          server().post('/api/auth/refresh').send({ refreshToken }),
+        ),
+      );
+      expect(results.map((r) => r.status)).toEqual([200, 200, 200, 200]);
+      const successors = new Set(
+        results.map((r) => r.body.tokens.refreshToken as string),
+      );
+      expect(successors.size).toBe(1);
+
+      // The shared successor keeps working.
+      await server()
+        .post('/api/auth/refresh')
+        .send({ refreshToken: [...successors][0] })
+        .expect(200);
+    });
+
+    it('revokes the session when a token two rotations old is replayed', async () => {
+      const login = await server()
+        .post('/api/auth/login')
+        .send({
+          email: ownerRegistration.email,
+          password: ownerRegistration.password,
+        })
+        .expect(200);
+      const first = login.body.tokens.refreshToken;
+      const second = (
+        await server()
+          .post('/api/auth/refresh')
+          .send({ refreshToken: first })
+          .expect(200)
+      ).body.tokens.refreshToken;
+      const third = (
+        await server()
+          .post('/api/auth/refresh')
+          .send({ refreshToken: second })
+          .expect(200)
+      ).body.tokens.refreshToken;
+
+      await server()
+        .post('/api/auth/refresh')
+        .send({ refreshToken: first })
+        .expect(401);
+      await server()
+        .post('/api/auth/refresh')
+        .send({ refreshToken: third })
         .expect(401);
     });
   });

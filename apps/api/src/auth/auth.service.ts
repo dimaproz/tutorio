@@ -23,6 +23,18 @@ import type { AuthenticatedUser } from './auth.types';
 import { PasswordService } from './password.service';
 import { TokenService } from './token.service';
 
+// Parallel requests that hit an expired access token each try to rotate the
+// same refresh token. The losers present the token that was rotated away a
+// moment ago; within this window they receive the already-issued successor
+// instead of being treated as a replay. Older tokens, or the previous token
+// after the window, still revoke the session.
+export const REFRESH_REUSE_GRACE_MS = 30_000;
+
+type AuthSessionRow = Prisma.AuthSessionGetPayload<object>;
+type LiveMembership = Prisma.WorkspaceMemberGetPayload<{
+  include: { user: true; workspace: true };
+}>;
+
 @Injectable()
 export class AuthService {
   // Verified against when the email is unknown so both branches cost one
@@ -137,11 +149,120 @@ export class AuthService {
 
     const presentedHash = this.tokens.hashRefreshToken(refreshToken);
     if (presentedHash !== session.refreshTokenHash) {
+      const successor = this.graceSuccessor(session, presentedHash);
+      if (successor) {
+        return this.issueSession(session, successor);
+      }
       // A previously rotated token is being replayed — revoke the session.
       await this.revokeSession(session.id);
       throw invalidRefreshToken();
     }
 
+    const membership = await this.findLiveMembership(session);
+    if (!membership) {
+      await this.revokeSession(session.id);
+      throw invalidRefreshToken();
+    }
+
+    const rotatedAt = new Date();
+    const newRefreshToken = this.tokens.signRefreshToken({
+      userId: session.userId,
+      sessionId: session.id,
+      workspaceId: session.workspaceId,
+      jti: this.tokens.successorJti(presentedHash),
+      issuedAt: rotatedAt,
+    });
+
+    // Guarded update: rotation only succeeds if the stored hash still matches
+    // the presented token, so concurrent rotations cannot both win.
+    const rotated = await this.prisma.authSession.updateMany({
+      where: {
+        id: session.id,
+        refreshTokenHash: presentedHash,
+        revokedAt: null,
+      },
+      data: {
+        refreshTokenHash: this.tokens.hashRefreshToken(newRefreshToken),
+        lastUsedAt: rotatedAt,
+        expiresAt: new Date(rotatedAt.getTime() + this.tokens.refreshTtlMs),
+      },
+    });
+    if (rotated.count === 0) {
+      // A concurrent request rotated this token first: share its successor.
+      const current = await this.prisma.authSession.findUnique({
+        where: { id: session.id },
+      });
+      const successor =
+        current && !current.revokedAt
+          ? this.graceSuccessor(current, presentedHash)
+          : null;
+      if (current && successor) {
+        return this.issueSession(current, successor, membership);
+      }
+      await this.revokeSession(session.id);
+      throw invalidRefreshToken();
+    }
+
+    return this.toAuthSession(
+      membership.user,
+      membership.workspace,
+      membership.role,
+      {
+        accessToken: this.signAccessTokenFor(session, membership.role),
+        refreshToken: newRefreshToken,
+      },
+    );
+  }
+
+  // Re-derives the token that replaced `presentedHash` at the session's last
+  // rotation. It matches the stored hash only when the presented token is the
+  // immediate predecessor, and it is honoured only inside the grace window.
+  private graceSuccessor(
+    session: AuthSessionRow,
+    presentedHash: string,
+  ): string | null {
+    if (Date.now() - session.lastUsedAt.getTime() > REFRESH_REUSE_GRACE_MS) {
+      return null;
+    }
+    const candidate = this.tokens.signRefreshToken({
+      userId: session.userId,
+      sessionId: session.id,
+      workspaceId: session.workspaceId,
+      jti: this.tokens.successorJti(presentedHash),
+      issuedAt: session.lastUsedAt,
+    });
+    return this.tokens.hashRefreshToken(candidate) === session.refreshTokenHash
+      ? candidate
+      : null;
+  }
+
+  // Answers with the session's current refresh token and a fresh access
+  // token, without rotating again.
+  private async issueSession(
+    session: AuthSessionRow,
+    refreshToken: string,
+    knownMembership?: LiveMembership,
+  ): Promise<AuthSession> {
+    const membership =
+      knownMembership ?? (await this.findLiveMembership(session));
+    if (!membership) {
+      await this.revokeSession(session.id);
+      throw invalidRefreshToken();
+    }
+    return this.toAuthSession(
+      membership.user,
+      membership.workspace,
+      membership.role,
+      {
+        accessToken: this.signAccessTokenFor(session, membership.role),
+        refreshToken,
+      },
+    );
+  }
+
+  private async findLiveMembership(
+    session: AuthSessionRow,
+  ): Promise<LiveMembership | null> {
     const membership = await this.prisma.workspaceMember.findUnique({
       where: {
         workspaceId_userId: {
@@ -156,51 +277,21 @@ export class AuthService {
       membership.user.deletedAt ||
       membership.workspace.deletedAt
     ) {
-      await this.revokeSession(session.id);
-      throw invalidRefreshToken();
+      return null;
     }
+    return membership;
+  }
 
-    const newRefreshToken = this.tokens.signRefreshToken({
+  private signAccessTokenFor(
+    session: AuthSessionRow,
+    role: WorkspaceRole,
+  ): string {
+    return this.tokens.signAccessToken({
       userId: session.userId,
       sessionId: session.id,
       workspaceId: session.workspaceId,
-      jti: randomUUID(),
+      role,
     });
-    const newAccessToken = this.tokens.signAccessToken({
-      userId: session.userId,
-      sessionId: session.id,
-      workspaceId: session.workspaceId,
-      role: membership.role,
-    });
-
-    // Guarded update: rotation only succeeds if the stored hash still matches
-    // the presented token, so concurrent rotations cannot both win.
-    const rotated = await this.prisma.authSession.updateMany({
-      where: {
-        id: session.id,
-        refreshTokenHash: presentedHash,
-        revokedAt: null,
-      },
-      data: {
-        refreshTokenHash: this.tokens.hashRefreshToken(newRefreshToken),
-        lastUsedAt: new Date(),
-        expiresAt: new Date(Date.now() + this.tokens.refreshTtlMs),
-      },
-    });
-    if (rotated.count === 0) {
-      await this.revokeSession(session.id);
-      throw invalidRefreshToken();
-    }
-
-    return this.toAuthSession(
-      membership.user,
-      membership.workspace,
-      membership.role,
-      {
-        accessToken: newAccessToken,
-        refreshToken: newRefreshToken,
-      },
-    );
   }
 
   // Idempotent: revoking an unknown or already revoked session is a no-op.

@@ -2,7 +2,7 @@ import { Prisma } from '@prisma/client';
 import type { RegisterDto } from '@tutorio/validation';
 import type { PrismaService } from '../prisma/prisma.service';
 import { AuthApiException } from './auth.errors';
-import { AuthService } from './auth.service';
+import { AuthService, REFRESH_REUSE_GRACE_MS } from './auth.service';
 import { PasswordService } from './password.service';
 import { createTestTokenService } from './testing/token-service.factory';
 
@@ -354,6 +354,141 @@ describe('AuthService', () => {
       expect(failure.getResponse()).toMatchObject({
         code: 'INVALID_REFRESH_TOKEN',
       });
+    });
+  });
+
+  describe('refresh grace window', () => {
+    const sessionId = '55555555-5555-4555-8555-555555555555';
+
+    function baseSession() {
+      return {
+        id: sessionId,
+        userId: userRow.id,
+        workspaceId: workspaceRow.id,
+        expiresAt: new Date(Date.now() + 86_400_000),
+        revokedAt: null,
+        createdAt: new Date(NOW),
+        updatedAt: new Date(NOW),
+      };
+    }
+
+    // Rotates `token` through the service and returns the session row as the
+    // database would hold it afterwards.
+    async function rotate(token: string) {
+      prisma.authSession.findUnique.mockResolvedValueOnce({
+        ...baseSession(),
+        refreshTokenHash: tokens.hashRefreshToken(token),
+        lastUsedAt: new Date(NOW - 60_000),
+      });
+      prisma.authSession.updateMany.mockResolvedValueOnce({ count: 1 });
+      const result = await service.refresh(token);
+      const data = prisma.authSession.updateMany.mock.calls.at(-1)![0].data as {
+        refreshTokenHash: string;
+        lastUsedAt: Date;
+      };
+      return {
+        successor: result.tokens.refreshToken,
+        row: {
+          ...baseSession(),
+          refreshTokenHash: data.refreshTokenHash,
+          lastUsedAt: data.lastUsedAt,
+        },
+      };
+    }
+
+    const firstToken = () =>
+      tokens.signRefreshToken({
+        userId: userRow.id,
+        sessionId,
+        workspaceId: workspaceRow.id,
+        jti: 'first-jti',
+      });
+
+    beforeEach(() => {
+      prisma.workspaceMember.findUnique.mockResolvedValue({
+        ...membershipRow,
+        user: userRow,
+        workspace: workspaceRow,
+      });
+    });
+
+    it('answers the just-rotated token with the already-issued successor', async () => {
+      const first = firstToken();
+      const { successor, row } = await rotate(first);
+      prisma.authSession.updateMany.mockClear();
+      prisma.authSession.findUnique.mockResolvedValueOnce(row);
+
+      const result = await service.refresh(first);
+
+      expect(result.tokens.refreshToken).toBe(successor);
+      await expect(
+        tokens.verifyAccessToken(result.tokens.accessToken),
+      ).resolves.toMatchObject({ sid: sessionId });
+      // Neither a second rotation nor a revocation.
+      expect(prisma.authSession.updateMany).not.toHaveBeenCalled();
+    });
+
+    it('revokes when the rotated token is replayed after the window', async () => {
+      const first = firstToken();
+      const { row } = await rotate(first);
+      prisma.authSession.updateMany.mockClear();
+      prisma.authSession.findUnique.mockResolvedValueOnce({
+        ...row,
+        lastUsedAt: new Date(
+          row.lastUsedAt.getTime() - REFRESH_REUSE_GRACE_MS - 1,
+        ),
+      });
+      prisma.authSession.updateMany.mockResolvedValue({ count: 1 });
+
+      const failure = await captureAuthError(service.refresh(first));
+
+      expect(failure.getResponse()).toMatchObject({
+        code: 'INVALID_REFRESH_TOKEN',
+      });
+      expect(prisma.authSession.updateMany).toHaveBeenCalledWith({
+        where: { id: sessionId, revokedAt: null },
+        data: { revokedAt: expect.any(Date) },
+      });
+    });
+
+    it('revokes when a token two rotations old is replayed', async () => {
+      const first = firstToken();
+      const second = await rotate(first);
+      const third = await rotate(second.successor);
+      prisma.authSession.updateMany.mockClear();
+      prisma.authSession.findUnique.mockResolvedValueOnce(third.row);
+      prisma.authSession.updateMany.mockResolvedValue({ count: 1 });
+
+      const failure = await captureAuthError(service.refresh(first));
+
+      expect(failure.getResponse()).toMatchObject({
+        code: 'INVALID_REFRESH_TOKEN',
+      });
+      expect(prisma.authSession.updateMany).toHaveBeenCalledWith({
+        where: { id: sessionId, revokedAt: null },
+        data: { revokedAt: expect.any(Date) },
+      });
+    });
+
+    it('shares the winner successor when it loses a concurrent rotation', async () => {
+      const first = firstToken();
+      const { successor, row } = await rotate(first);
+      prisma.authSession.updateMany.mockClear();
+      // The loser read the session before the winner committed…
+      prisma.authSession.findUnique
+        .mockResolvedValueOnce({
+          ...baseSession(),
+          refreshTokenHash: tokens.hashRefreshToken(first),
+          lastUsedAt: new Date(NOW - 60_000),
+        })
+        // …and re-reads it after its guarded update matched nothing.
+        .mockResolvedValueOnce(row);
+      prisma.authSession.updateMany.mockResolvedValueOnce({ count: 0 });
+
+      const result = await service.refresh(first);
+
+      expect(result.tokens.refreshToken).toBe(successor);
+      expect(prisma.authSession.updateMany).toHaveBeenCalledTimes(1);
     });
   });
 

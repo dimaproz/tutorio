@@ -94,7 +94,7 @@ export class AuthController {
   @ApiOperation({
     summary: 'Rotate the refresh token',
     description:
-      'Returns a new token pair. Replaying a previously rotated token revokes the session.',
+      'Returns a new token pair. The token rotated away within the last 30 seconds returns the already-issued successor (parallel requests share one rotation); any other replay of a rotated token revokes the session.',
   })
   @ApiOkResponse({ type: AuthSessionDto })
   @ApiUnauthorizedResponse({
