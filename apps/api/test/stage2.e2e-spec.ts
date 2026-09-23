@@ -880,6 +880,24 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
         .set('Authorization', auth(ownerA))
         .send({ name: `Conflicting lifecycle group ${runId}` })
         .expect(201);
+      // An active member: restoring an empty group does not check the
+      // calendar, because its lessons are suspended again at once.
+      const member = await server()
+        .post('/api/students')
+        .set('Authorization', auth(ownerA))
+        .send({ fullName: `Conflict member ${runId}`, timezone: 'UTC' })
+        .expect(201);
+      await prisma.enrollment.create({
+        data: {
+          workspaceId: workspaceAId,
+          studentId: member.body.id,
+          groupId: group.body.id,
+          teacherId: ownerTeacherId,
+          billingType: 'PACKAGE',
+          priceMinor: 0,
+          currency: 'EUR',
+        },
+      });
       const startsAtUtc = new Date(Date.now() + 3 * 86_400_000);
       const series = await prisma.lessonSeries.create({
         data: {
