@@ -16,6 +16,8 @@ import { queryKeys, type StudentListFilters } from './keys';
 // so hooks do not need to know the current role.
 function invalidateStudentGraph(queryClient: QueryClient, studentId?: string) {
   void queryClient.invalidateQueries({ queryKey: queryKeys.students.all });
+  // A student's parent links are the other side of each parent's roster.
+  void queryClient.invalidateQueries({ queryKey: queryKeys.parents.all });
   void queryClient.invalidateQueries({ queryKey: queryKeys.enrollments.all });
   void queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
   void queryClient.invalidateQueries({ queryKey: queryKeys.audit.all });

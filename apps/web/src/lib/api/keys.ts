@@ -30,6 +30,10 @@ export interface ParentListFilters {
   search?: string;
   state?: 'active' | 'deleted' | 'all';
   studentId?: string;
+  /** `none` keeps only parents with no linked student. */
+  linked?: 'any' | 'none';
+  sort?: 'fullName' | 'createdAt';
+  order?: 'asc' | 'desc';
   pageSize?: number;
 }
 

@@ -643,18 +643,16 @@
     },
     "parents": {
       "title": "Батьки",
-      "create": "Створити контакт",
+      "pickerTitle": "Прив’язати батьків",
+      "createContact": "Створити новий контакт",
       "empty": "Батьків ще не прив’язано.",
       "emptyArchived": "Зв’язків із батьками немає.",
-      "link": "Прив’язати наявний",
-      "search": "Пошук батьків…",
-      "noResults": "Батьків не знайдено",
-      "unlink": "Відв’язати {name}",
-      "retryLink": "Повторити прив’язування",
-      "loadError": "Не вдалося завантажити батьків",
-      "call": "Зателефонувати {name}",
-      "linkShort": "Прив’язати",
-      "createShort": "Створити"
+      "call": "Зателефонувати",
+      "editContact": "Редагувати контакт",
+      "unlink": "Відв’язати від учня",
+      "unlinkTitle": "Відв’язати контакт?",
+      "unlinkText": "{name} залишиться в розділі «Батьки» — зникне лише зв’язок з учнем. Прив’язати знову можна будь-коли.",
+      "loadError": "Не вдалося завантажити батьків"
     },
     "toasts": {
       "created": "Учня створено",
@@ -994,70 +992,174 @@
   },
   "parents": {
     "title": "Батьки",
-    "subtitle": "Батьки та опікуни, пов'язані з вашими учнями.",
+    "subtitle": "Батьки та опікуни, пов’язані з вашими учнями.",
+    "subtitleCounts": "{total, plural, one {# запис} few {# записи} many {# записів} other {# запису}} — {linked} із них прив’язані хоча б до одного учня.",
+    "subtitleFiltered": "Показано лише пов’язаних з учнем: {name}.",
+    "subtitleUnlinked": "Показано лише записи без жодного учня.",
+    "subtitleNoMatch": "{total, plural, one {# запис} few {# записи} many {# записів} other {# запису}} — жоден не відповідає пошуку.",
+    "subtitleEmpty": "Записів ще немає.",
     "add": "Додати батьків",
+    "addShort": "Додати",
     "searchLabel": "Пошук батьків",
-    "searchPlaceholder": "Ім'я, телефон або Telegram…",
-    "deletedBadge": "У кошику",
+    "searchPlaceholder": "Ім’я, телефон або Telegram…",
     "filters": {
-      "byStudent": "Учень",
+      "student": "Учень",
+      "studentValue": "Учень: {name}",
       "allStudents": "Усі учні",
       "studentSearch": "Пошук учнів…",
-      "studentEmpty": "Учня не знайдено"
+      "studentEmpty": "Учня не знайдено",
+      "noStudents": "Без учнів",
+      "reset": "Скинути",
+      "clearSearch": "Очистити пошук"
+    },
+    "sort": {
+      "label": "Сортування",
+      "fullName": "За ім’я",
+      "createdAt": "Спершу нові"
     },
     "columns": {
       "parent": "Батьки",
-      "students": "Учні",
-      "actions": "Дії",
       "phone": "Телефон",
-      "telegram": "Telegram"
+      "telegram": "Telegram",
+      "students": "Учні",
+      "actions": "Дії"
     },
-    "tableCaption": "Батьки простору з пов'язаними учнями",
+    "tableCaption": "Батьки простору з пов’язаними учнями",
+    "showing": "Показано {from}–{to} з {total}",
+    "records": "{count, plural, one {# запис} few {# записи} many {# записів} other {# запису}}",
+    "roleLine": "Батьки: {names}",
+    "noStudents": "Без учнів",
+    "studentsCount": "{count, plural, one {# учень} few {# учні} many {# учнів} other {# учня}}",
+    "rowActions": "Дії із записом {name}",
+    "openProfile": "Відкрити профіль",
+    "call": "Зателефонувати",
+    "callName": "Зателефонувати: {name}",
+    "messageName": "Написати в Telegram: {name}",
+    "emailName": "Написати листа: {name}",
     "empty": {
       "title": "Батьків поки немає",
-      "description": "Додайте батьків, щоб пов'язати їх з одним або кількома учнями.",
+      "description": "Додайте батьків, щоб прив’язати їх до одного або кількох учнів.",
       "action": "Додати батьків"
     },
     "emptySearch": {
       "title": "Нічого не знайдено",
-      "description": "Жоден запис не відповідає запиту. Спробуйте інше ім'я або контакт."
+      "description": "Жоден запис не відповідає запиту «{query}». Спробуйте інше ім’я або контакт."
     },
-    "emptyDeleted": {
-      "title": "Кошик порожній",
-      "description": "Видалені записи з'являються тут, і їх можна відновити."
+    "emptyFiltered": {
+      "title": "Нічого не знайдено",
+      "description": "Жоден запис не відповідає обраним фільтрам.",
+      "action": "Скинути фільтри"
     },
     "error": {
-      "title": "Не вдалося завантажити батьків"
+      "title": "Не вдалося завантажити батьків",
+      "detailTitle": "Не вдалося завантажити запис"
     },
     "form": {
       "createTitle": "Нові батьки",
-      "createSubtitle": "Обов'язкове лише ім'я.",
+      "createSubtitle": "Обов’язкове лише ім’я — решту можна додати пізніше.",
       "editTitle": "Редагування запису",
-      "editSubtitle": "Оновіть контакти та нотатки.",
-      "avatarSection": "Аватар",
+      "editSubtitle": "Редагування запису батьків · зміни застосуються після збереження.",
+      "editCrumb": "{name} › Редагування",
+      "quickCreateTitle": "Новий контакт",
+      "quickCreateSubtitle": "Обов’язкове лише ім’я. Контакт одразу прив’яжеться до учня.",
+      "sections": {
+        "identity": {
+          "title": "Особисті дані",
+          "description": "Аватар та ім’я"
+        },
+        "contacts": {
+          "title": "Контактні дані",
+          "description": "Пошта, телефон, Telegram"
+        },
+        "students": {
+          "title": "Пов’язані учні",
+          "description": "Кого з учнів представляє"
+        },
+        "notes": {
+          "title": "Нотатки",
+          "description": "Що варто пам’ятати"
+        }
+      },
+      "sectionsLabel": "Розділи форми",
+      "sectionsNote": "Прокрутка підсвічує поточний розділ. Обов’язкове лише ім’я.",
+      "sectionDone": "Заповнено",
+      "sectionHasError": "Є помилка",
+      "tagRequired": "обов’язково",
+      "tagOptional": "необов’язково",
+      "progress": "Заповнено {done} з {total}",
+      "progressReady": "можна створювати",
+      "progressSaved": "збережено",
+      "avatar": "Аватар",
       "avatarInitials": "Ініціали",
-      "basicSection": "Основна інформація",
-      "fullName": "Повне ім'я",
-      "contactsSection": "Контактні дані",
+      "fullName": "Повне ім’я",
+      "fullNamePlaceholder": "Напр., Ірина Шевченко",
+      "email": "Ел. пошта",
+      "emailPlaceholder": "name@example.com",
       "phone": "Телефон",
       "phonePlaceholder": "+380 XX XXX XX XX",
       "telegramUsername": "Юзернейм у Telegram",
       "telegramPlaceholder": "username",
+      "addStudent": "Додати учня",
       "notes": "Нотатки",
-      "notesSection": "Нотатки",
-      "notesPlaceholder": "Усе важливе про цих батьків",
+      "notesPlaceholder": "Напр., дзвонити після 18:00",
+      "requiredNote": "Обов’язкове лише ім’я",
       "submitCreate": "Створити запис",
-      "submitEdit": "Зберегти зміни"
+      "creating": "Створюємо…",
+      "submitEdit": "Зберегти зміни",
+      "savingNote": "Зберігаємо…",
+      "fixFields": "{count, plural, one {Виправте # поле, щоб зберегти} few {Виправте # поля, щоб зберегти} many {Виправте # полів, щоб зберегти} other {Виправте # поля, щоб зберегти}}",
+      "unsaved": "{count, plural, one {# незбережена зміна} few {# незбережені зміни} many {# незбережених змін} other {# незбереженої зміни}}",
+      "noChanges": "Змін немає",
+      "discard": "Відхилити",
+      "discardTitle": "Відхилити зміни?",
+      "discardDescription": "Незбережені зміни буде втрачено.",
+      "discardAction": "Відхилити зміни",
+      "leaveTitle": "Вийти без збереження?",
+      "leaveDescription": "Запис ще не створено. Введене буде втрачено — чернетка не зберігається.",
+      "leaveAction": "Вийти",
+      "requestErrorTitle": "Не вдалося зберегти запис",
+      "loadErrorTitle": "Не вдалося завантажити запис",
+      "loadErrorDescription": "Спробуйте ще раз перед редагуванням.",
+      "unavailableTitle": "Запис недоступний",
+      "unavailableDescription": "Дані з’являться тут, щойно завантажаться. Нічого не буде змінено.",
+      "danger": {
+        "title": "Видалити запис",
+        "text": "{name} та прив’язки до учнів буде стерто назавжди. Історія занять і оплат учнів не зміниться.",
+        "action": "Видалити"
+      }
     },
     "detail": {
+      "pageLabel": "Профіль",
       "addedOn": "Додано {date}",
+      "linkStudent": "Прив’язати учня",
+      "edit": "Редагувати",
+      "recordActions": "Дії із записом",
+      "delete": "Видалити запис",
       "contactsTitle": "Контактні дані",
-      "notesTitle": "Нотатки",
-      "studentsTitle": "Пов'язані учні",
-      "noStudents": "Учнів поки не прив'язано",
-      "noStudentsDescription": "Знайдіть і прив'яжіть одного або кількох учнів.",
-      "deletedTitle": "Цей запис у кошику",
-      "deletedDescription": "Відновіть запис, щоб знову його редагувати."
+      "editContacts": "Редагувати контакти",
+      "addPhone": "Додати телефон",
+      "addTelegram": "Додати Telegram",
+      "addEmail": "Додати пошту"
+    },
+    "notes": {
+      "title": "Нотатки",
+      "edit": "Редагувати нотатки",
+      "add": "Додати нотатку",
+      "empty": "Нотаток ще немає.",
+      "placeholder": "Напр., дзвонити після 18:00",
+      "saved": "Нотатки збережено",
+      "updated": "Оновлено {date}"
+    },
+    "links": {
+      "title": "Пов’язані учні",
+      "pickerTitle": "Прив’язати учнів",
+      "createStudent": "Створити нового учня",
+      "empty": "Учнів ще не прив’язано.",
+      "schedule": "Запланувати урок",
+      "unlink": "Відв’язати від батьків",
+      "unlinkTitle": "Відв’язати учня?",
+      "unlinkText": "{name} залишиться в розділі «Учні» — зникне лише зв’язок із цим контактом. Прив’язати знову можна будь-коли.",
+      "loadError": "Не вдалося завантажити учнів"
     },
     "toasts": {
       "created": "Запис створено",
@@ -1066,9 +1168,33 @@
     },
     "deleteDialog": {
       "title": "Видалити запис батьків?",
-      "description": "{name} та всі прив'язки до учнів буде стерто назавжди, без можливості відновлення.",
+      "description": "{name} та всі прив’язки до учнів буде стерто назавжди, без можливості відновлення.",
       "confirm": "Видалити назавжди"
     }
+  },
+  "links": {
+    "link": "Прив’язати",
+    "linkCount": "Прив’язати · {count}",
+    "doneCount": "Готово · {count}",
+    "close": "Закрити",
+    "searchLabel": "Пошук для прив’язки",
+    "searchPlaceholder": "Ім’я, телефон або Telegram",
+    "listLabel": "Результати пошуку",
+    "noResultsTitle": "Нічого не знайдено",
+    "noResultsHint": "Перевірте написання або створіть новий запис.",
+    "choose": "Оберіть зі списку",
+    "selected": "Обрано {count}",
+    "linkedCount": "Прив’язано · {count}",
+    "nothingLinked": "Ще нічого не прив’язано",
+    "openProfile": "Відкрити профіль",
+    "openProfileOf": "Відкрити профіль · {name}",
+    "rowActions": "Дії із записом {name}",
+    "remove": "Прибрати {name}",
+    "unlink": "Відв’язати",
+    "saveError": "Не вдалося зберегти прив’язки",
+    "retry": "Повторити",
+    "saved": "Прив’язки збережено",
+    "unlinked": "Зв’язок прибрано"
   },
   "enrollments": {
     "editor": {

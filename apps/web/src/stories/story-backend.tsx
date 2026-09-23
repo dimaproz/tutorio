@@ -6,6 +6,8 @@ import type {
   AuthMe,
   LessonResponse,
   PackageResponse,
+  ParentDetail,
+  ParentListItem,
   StudentDetail,
   StudentListItem,
 } from '@tutorio/validation';
@@ -142,6 +144,81 @@ export const FRESH_STUDENT = student(9, {
   createdAt: '2026-09-09T10:00:00.000Z',
 });
 
+type SampleParent = Omit<ParentDetail, 'workspaceId' | 'students'>;
+
+const parentId = (n: number) => `33333333-3333-4333-8333-${String(n).padStart(12, '0')}`;
+
+const sampleParent = (
+  n: number,
+  fields: Partial<SampleParent> & Pick<SampleParent, 'fullName'>,
+): SampleParent => ({
+  id: parentId(n),
+  email: null,
+  phone: null,
+  telegramUsername: null,
+  avatarKey: null,
+  notes: null,
+  createdAt: '2026-08-12T09:00:00.000Z',
+  updatedAt: '2026-09-09T09:00:00.000Z',
+  deletedAt: null,
+  ...fields,
+});
+
+/** The parents of the design boards; their links to students are below. */
+export const SAMPLE_PARENTS: SampleParent[] = [
+  sampleParent(1, {
+    fullName: 'Iryna Shevchenko',
+    phone: '+380 50 111 22 33',
+    telegramUsername: 'iryna_s',
+    email: 'iryna.sh@example.test',
+    avatarKey: 'user-9',
+    notes: 'Payment questions by Telegram only, calls after 6 pm.',
+  }),
+  sampleParent(2, {
+    fullName: 'Oleh Lysenko',
+    phone: '+380 63 900 11 22',
+    avatarKey: 'user-8',
+    createdAt: '2026-08-20T09:00:00.000Z',
+  }),
+  sampleParent(3, {
+    fullName: 'Nataliia Melnyk',
+    phone: '+380 97 145 62 30',
+    telegramUsername: 'nat_m',
+    createdAt: '2026-08-25T09:00:00.000Z',
+  }),
+  sampleParent(4, {
+    fullName: 'Tetiana Shevchuk',
+    phone: '+380 50 332 90 14',
+    avatarKey: 'user-10',
+    createdAt: '2026-08-28T09:00:00.000Z',
+  }),
+  sampleParent(5, {
+    fullName: 'Andrii Bondar',
+    phone: '+380 67 800 22 41',
+    telegramUsername: 'a_bondar',
+    createdAt: '2026-09-01T09:00:00.000Z',
+  }),
+  sampleParent(6, {
+    fullName: 'Mariia Koval',
+    telegramUsername: 'm_koval',
+    createdAt: '2026-09-05T09:00:00.000Z',
+  }),
+];
+
+export type ParentLink = { parentId: string; studentId: string };
+
+export const SAMPLE_PARENT_LINKS: ParentLink[] = [
+  { parentId: parentId(1), studentId: id(1) },
+  { parentId: parentId(1), studentId: id(3) },
+  { parentId: parentId(1), studentId: id(8) },
+  { parentId: parentId(2), studentId: id(5) },
+  { parentId: parentId(3), studentId: id(2) },
+  { parentId: parentId(4), studentId: id(4) },
+  { parentId: parentId(5), studentId: id(6) },
+];
+
+export const storyParentId = (index: number) => SAMPLE_PARENTS[index].id;
+
 function pkg(
   n: number,
   studentId: string,
@@ -257,6 +334,18 @@ export type StoryBackendOptions = {
   list?: 'ready' | 'pending' | 'error';
   /** Makes student create and update requests fail. */
   saveFails?: boolean;
+  parents?: SampleParent[];
+  parentLinks?: ParentLink[];
+  /** Holds the parent list request open, or fails it. */
+  parentList?: 'ready' | 'pending' | 'error';
+  /** Holds the parent detail request open, or fails it. */
+  parentDetail?: 'ready' | 'pending' | 'error';
+  /** Makes parent create, update and link requests fail. */
+  parentSaveFails?: boolean;
+  /** Delays every save, so a story can act while one is in flight. */
+  saveDelayMs?: number;
+  /** The signed-in role; delete is owner-only. */
+  role?: AuthMe['role'];
 };
 
 const page = <T,>(items: T[], pageSize = 20) => ({
@@ -286,26 +375,61 @@ function toListItem(item: SampleStudent): StudentListItem {
   };
 }
 
-function toDetail(item: SampleStudent): StudentDetail {
+function toDetail(item: SampleStudent, parents: SampleParent[], links: ParentLink[]): StudentDetail {
   const { groupNames: _groups, ...rest } = item;
   void _groups;
   return {
     ...rest,
     workspaceId: WORKSPACE,
     updatedAt: '2026-09-09T09:00:00.000Z',
-    parents:
-      item.id === id(1) || item.id === id(8)
-        ? [
-            {
-              id: '33333333-3333-4333-8333-333333333333',
-              fullName: 'Iryna Shevchenko',
-              avatarKey: null,
-              phone: '+380501234567',
-              telegramUsername: null,
-            },
-          ]
-        : [],
+    parents: parents
+      .filter((parent) =>
+        links.some((link) => link.parentId === parent.id && link.studentId === item.id),
+      )
+      .sort((a, b) => a.fullName.localeCompare(b.fullName))
+      .map((parent) => ({
+        id: parent.id,
+        fullName: parent.fullName,
+        avatarKey: parent.avatarKey,
+        phone: parent.phone,
+        telegramUsername: parent.telegramUsername,
+      })),
     enrollments: [],
+  };
+}
+
+/** A parent's roster, as the API builds it: live linked students by name. */
+function rosterOf(parent: SampleParent, students: SampleStudent[], links: ParentLink[]) {
+  return students
+    .filter(
+      (item) =>
+        item.deletedAt === null &&
+        links.some((link) => link.parentId === parent.id && link.studentId === item.id),
+    )
+    .sort((a, b) => a.fullName.localeCompare(b.fullName))
+    .map((item) => ({
+      id: item.id,
+      fullName: item.fullName,
+      avatarKey: item.avatarKey,
+      status: item.status,
+      languageLevel: item.languageLevel,
+    }));
+}
+
+function toParentListItem(
+  parent: SampleParent,
+  students: SampleStudent[],
+  links: ParentLink[],
+): ParentListItem {
+  return {
+    id: parent.id,
+    fullName: parent.fullName,
+    email: parent.email,
+    phone: parent.phone,
+    telegramUsername: parent.telegramUsername,
+    avatarKey: parent.avatarKey,
+    deletedAt: parent.deletedAt,
+    students: rosterOf(parent, students, links),
   };
 }
 
@@ -316,6 +440,13 @@ function createHandler(options: StoryBackendOptions) {
   const students = [...(options.students ?? SAMPLE_STUDENTS)];
   const packages = options.packages ?? SAMPLE_PACKAGES;
   const lessons = options.lessons ?? SAMPLE_LESSONS;
+  const parents = (options.parents ?? SAMPLE_PARENTS).map((parent) => ({ ...parent }));
+  let links = [...(options.parentLinks ?? SAMPLE_PARENT_LINKS)];
+  const detailOf = (item: SampleStudent) => toDetail(item, parents, links);
+  const settle = () =>
+    options.saveDelayMs
+      ? new Promise((resolve) => setTimeout(resolve, options.saveDelayMs))
+      : Promise.resolve();
 
   return async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     const url = new URL(typeof input === 'string' ? input : input.toString(), 'http://story.local');
@@ -324,7 +455,7 @@ function createHandler(options: StoryBackendOptions) {
     const query = url.searchParams;
     const never = () => new Promise<Response>(() => undefined);
 
-    if (path === '/auth/me') return json(storySession);
+    if (path === '/auth/me') return json({ ...storySession, role: options.role ?? 'OWNER' });
 
     // The API validates every list query; so does the story backend, or a
     // screen that asks for more than the API allows looks fine only here.
@@ -342,10 +473,22 @@ function createHandler(options: StoryBackendOptions) {
       if (method === 'GET') {
         if (options.detail === 'pending') return never();
         if (options.detail === 'error' || !found) return json({ code: 'UNEXPECTED' }, 500);
-        return json(toDetail(found));
+        return json(detailOf(found));
       }
+      await settle();
       if (options.saveFails) return json({ code: 'UNEXPECTED' }, 500);
-      if (found && method === 'PATCH') Object.assign(found, JSON.parse(String(init?.body ?? '{}')));
+      if (found && method === 'PATCH') {
+        const { parentIds, ...fields } = JSON.parse(String(init?.body ?? '{}')) as Partial<
+          SampleStudent & { parentIds: string[] }
+        >;
+        Object.assign(found, fields);
+        if (parentIds) {
+          links = [
+            ...links.filter((link) => link.studentId !== found.id),
+            ...parentIds.map((linked) => ({ parentId: linked, studentId: found.id })),
+          ];
+        }
+      }
       if (found && method === 'DELETE')
         Object.assign(found, {
           status: 'ARCHIVED',
@@ -354,13 +497,16 @@ function createHandler(options: StoryBackendOptions) {
       if (found && detailMatch[2]) Object.assign(found, { status: 'ACTIVE', deletedAt: null });
       return method === 'DELETE'
         ? new Response(null, { status: 204 })
-        : json(found ? toDetail(found) : {});
+        : json(found ? detailOf(found) : {});
     }
 
     if (path === '/students') {
       if (method === 'POST') {
         if (options.saveFails) return json({ code: 'UNEXPECTED' }, 500);
-        return json({ ...toDetail(FRESH_STUDENT), ...JSON.parse(String(init?.body ?? '{}')) });
+        return json({
+          ...toDetail(FRESH_STUDENT, parents, links),
+          ...JSON.parse(String(init?.body ?? '{}')),
+        });
       }
       const pageSize = Number(query.get('pageSize') ?? 20);
       if (options.list === 'pending' && pageSize > 1) return never();
@@ -407,8 +553,92 @@ function createHandler(options: StoryBackendOptions) {
       return json(page(rows, Number(query.get('pageSize') ?? 20)));
     }
 
-    // Everything else the screens touch (groups, parents, teachers,
-    // enrollments, series) is an empty collection in these stories.
+    const parentMatch = path.match(/^\/parents\/([^/]+)$/);
+    if (parentMatch) {
+      const found = parents.find((item) => item.id === parentMatch[1]);
+      if (method === 'GET') {
+        if (options.parentDetail === 'pending') return never();
+        if (!found) return json({ code: 'PARENT_NOT_FOUND' }, 404);
+        if (options.parentDetail === 'error') return json({ code: 'UNEXPECTED' }, 500);
+        return json({
+          ...found,
+          workspaceId: WORKSPACE,
+          students: rosterOf(found, students, links),
+        } satisfies ParentDetail);
+      }
+      await settle();
+      if (options.parentSaveFails) return json({ code: 'UNEXPECTED' }, 500);
+      if (!found) return json({ code: 'PARENT_NOT_FOUND' }, 404);
+      if (method === 'DELETE') {
+        parents.splice(parents.indexOf(found), 1);
+        links = links.filter((link) => link.parentId !== found.id);
+        return new Response(null, { status: 204 });
+      }
+      const { studentIds, ...fields } = JSON.parse(String(init?.body ?? '{}')) as Partial<
+        SampleParent & { studentIds: string[] }
+      >;
+      Object.assign(found, fields);
+      if (studentIds) {
+        links = [
+          ...links.filter((link) => link.parentId !== found.id),
+          ...studentIds.map((studentId) => ({ parentId: found.id, studentId })),
+        ];
+      }
+      return json({ ...found, workspaceId: WORKSPACE });
+    }
+
+    if (path === '/parents') {
+      if (method === 'POST') {
+        await settle();
+        if (options.parentSaveFails) return json({ code: 'UNEXPECTED' }, 500);
+        const { studentIds = [], ...fields } = JSON.parse(String(init?.body ?? '{}')) as Partial<
+          SampleParent & { studentIds: string[] }
+        > & { fullName: string };
+        const created = sampleParent(90 + parents.length, {
+          ...fields,
+          createdAt: new Date(STORY_CLOCK).toISOString(),
+        });
+        parents.push(created);
+        links = [...links, ...studentIds.map((studentId) => ({ parentId: created.id, studentId }))];
+        return json({ ...created, workspaceId: WORKSPACE }, 201);
+      }
+      const pageSize = Number(query.get('pageSize') ?? 20);
+      const pageNumber = Number(query.get('page') ?? 1);
+      if (options.parentList === 'pending' && pageSize > 1) return never();
+      if (options.parentList === 'error' && pageSize > 1) return json({ code: 'UNEXPECTED' }, 500);
+      const search = query.get('search')?.toLowerCase();
+      const studentId = query.get('studentId');
+      const unlinked = query.get('linked') === 'none';
+      const createdAt = (row: ParentListItem) =>
+        parents.find((parent) => parent.id === row.id)?.createdAt ?? '';
+      const rows = parents
+        .map((parent) => toParentListItem(parent, students, links))
+        .filter(
+          (item) =>
+            (!search ||
+              [item.fullName, item.phone, item.telegramUsername, item.email].some((value) =>
+                value?.toLowerCase().includes(search),
+              )) &&
+            (!studentId || item.students.some((child) => child.id === studentId)) &&
+            (!unlinked || item.students.length === 0),
+        )
+        .sort((a, b) =>
+          query.get('sort') === 'createdAt'
+            ? createdAt(b).localeCompare(createdAt(a))
+            : a.fullName.localeCompare(b.fullName),
+        );
+      const start = (pageNumber - 1) * pageSize;
+      return json({
+        items: rows.slice(start, start + pageSize),
+        page: pageNumber,
+        pageSize,
+        total: rows.length,
+        totalPages: Math.max(1, Math.ceil(rows.length / pageSize)),
+      });
+    }
+
+    // Everything else the screens touch (groups, teachers, enrollments,
+    // series) is an empty collection in these stories.
     return json(page([]));
   };
 }
@@ -432,7 +662,10 @@ export function StoryBackend({
         mutations: { retry: false },
       },
     });
-    queryClient.setQueryData(SESSION_QUERY_KEY, storySession);
+    queryClient.setQueryData(SESSION_QUERY_KEY, {
+      ...storySession,
+      role: options.role ?? storySession.role,
+    });
     return queryClient;
   });
 

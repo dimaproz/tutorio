@@ -8,7 +8,7 @@ import { TeacherForm } from './teacher-form';
 /**
  * Create/edit as a Dialog. `teacherId` absent means create; present means edit
  * — the record is fetched on demand (react-query dedupes against the detail
- * page's query). Mirrors ParentFormDialog.
+ * page's query).
  */
 export function TeacherFormDialog({
   open,

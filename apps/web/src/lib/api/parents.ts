@@ -35,6 +35,9 @@ export function useParentsQuery(filters: ParentListFilters, enabled = true) {
           search: filters.search,
           state: filters.state,
           studentId: filters.studentId,
+          linked: filters.linked,
+          sort: filters.sort,
+          order: filters.order,
         })}`,
       ),
     placeholderData: (previous) => previous,
@@ -84,19 +87,6 @@ export function useDeleteParentMutation() {
       gatewayFetch<void>(`/api/backend/parents/${parentId}`, { method: 'DELETE' }),
     onSuccess: (_result, parentId) => {
       invalidateParentGraph(queryClient, parentId);
-    },
-  });
-}
-
-export function useRestoreParentMutation() {
-  const queryClient = useQueryClient();
-  return useMutation<ParentResponse, GatewayError, string>({
-    mutationFn: (parentId) =>
-      gatewayFetch<ParentResponse>(`/api/backend/parents/${parentId}/restore`, {
-        method: 'POST',
-      }),
-    onSuccess: (parent) => {
-      invalidateParentGraph(queryClient, parent.id);
     },
   });
 }

@@ -2,7 +2,11 @@ import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 import ukMessages from '../../messages/uk.json';
-import { EntityMultiSelect, EntityPicker, type EntityPickerOption } from '@/components/shared/entity-picker';
+import {
+  EntityMultiSelect,
+  EntityPicker,
+  type EntityPickerOption,
+} from '@/components/shared/entity-picker';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 
 const options: EntityPickerOption[] = [
@@ -11,7 +15,17 @@ const options: EntityPickerOption[] = [
   { value: 'maria', label: 'Maria Bondarenko', description: 'Teacher' },
 ];
 
-function EntityPickerContract({ disabled = false, invalid = false, isLoading = false, longCopy = false }: { disabled?: boolean; invalid?: boolean; isLoading?: boolean; longCopy?: boolean }) {
+function EntityPickerContract({
+  disabled = false,
+  invalid = false,
+  isLoading = false,
+  longCopy = false,
+}: {
+  disabled?: boolean;
+  invalid?: boolean;
+  isLoading?: boolean;
+  longCopy?: boolean;
+}) {
   const [value, setValue] = useState<string | undefined>();
 
   return (
@@ -24,9 +38,9 @@ function EntityPickerContract({ disabled = false, invalid = false, isLoading = f
           value={value}
           options={options}
           onChange={setValue}
-          placeholder={longCopy ? ukMessages.students.parents.link : 'Link an existing parent'}
-          searchPlaceholder={longCopy ? ukMessages.students.parents.search : 'Search parents'}
-          emptyLabel={longCopy ? ukMessages.students.parents.noResults : 'No parent found'}
+          placeholder={longCopy ? ukMessages.links.searchLabel : 'Link an existing parent'}
+          searchPlaceholder={longCopy ? ukMessages.links.searchPlaceholder : 'Search parents'}
+          emptyLabel={longCopy ? ukMessages.links.noResultsTitle : 'No parent found'}
           clearLabel="Clear selection"
           disabled={disabled}
           invalid={invalid}
@@ -87,14 +101,20 @@ export const KeyboardSelectChangeAndClear: Story = {
     const trigger = canvas.getByRole('combobox', { name: 'Parent' });
     await userEvent.click(trigger);
     await userEvent.keyboard('Maria{ArrowDown}{Enter}');
-    await expect(canvas.getByRole('combobox', { name: 'Parent' })).toHaveTextContent('Maria Bondarenko');
+    await expect(canvas.getByRole('combobox', { name: 'Parent' })).toHaveTextContent(
+      'Maria Bondarenko',
+    );
     const selectedTrigger = canvas.getByRole('combobox', { name: 'Parent' });
     await waitFor(() => expect(selectedTrigger).toHaveAttribute('aria-expanded', 'false'));
     await userEvent.click(selectedTrigger);
     await waitFor(() => expect(selectedTrigger).toHaveAttribute('aria-expanded', 'true'));
     await userEvent.clear(await within(document.body).findByPlaceholderText('Search parents'));
-    await userEvent.click(await within(document.body).findByRole('option', { name: 'Clear selection' }));
-    await expect(canvas.getByRole('combobox', { name: 'Parent' })).toHaveTextContent('Link an existing parent');
+    await userEvent.click(
+      await within(document.body).findByRole('option', { name: 'Clear selection' }),
+    );
+    await expect(canvas.getByRole('combobox', { name: 'Parent' })).toHaveTextContent(
+      'Link an existing parent',
+    );
   },
 };
 
@@ -105,6 +125,8 @@ export const MultipleSelectionCanBeChanged: Story = {
     await userEvent.click(within(document.body).getByText('Oleh Kovalenko'));
     await expect(canvas.getByRole('button', { name: 'Remove Oleh Kovalenko' })).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: 'Remove Anna Shevchenko' }));
-    await expect(canvas.queryByRole('button', { name: 'Remove Anna Shevchenko' })).not.toBeInTheDocument();
+    await expect(
+      canvas.queryByRole('button', { name: 'Remove Anna Shevchenko' }),
+    ).not.toBeInTheDocument();
   },
 };

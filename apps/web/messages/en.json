@@ -643,18 +643,16 @@
     },
     "parents": {
       "title": "Parents",
-      "create": "Create parent",
+      "pickerTitle": "Link parents",
+      "createContact": "Create a new contact",
       "empty": "No parents linked yet.",
       "emptyArchived": "No parent relationship is recorded.",
-      "link": "Link existing",
-      "search": "Search parents…",
-      "noResults": "No parent found",
-      "unlink": "Unlink {name}",
-      "retryLink": "Retry linking",
-      "loadError": "Could not load parents",
-      "call": "Call {name}",
-      "linkShort": "Link",
-      "createShort": "New"
+      "call": "Call",
+      "editContact": "Edit contact",
+      "unlink": "Unlink from student",
+      "unlinkTitle": "Unlink this contact?",
+      "unlinkText": "{name} stays in Parents — only the link to the student goes. You can link them again at any time.",
+      "loadError": "Could not load parents"
     },
     "toasts": {
       "created": "Student created",
@@ -995,24 +993,49 @@
   "parents": {
     "title": "Parents",
     "subtitle": "Parents and guardians linked to your students.",
+    "subtitleCounts": "{total, plural, one {# record} other {# records}} — {linked} linked to at least one student.",
+    "subtitleFiltered": "Showing only those linked to {name}.",
+    "subtitleUnlinked": "Showing only records with no linked student.",
+    "subtitleNoMatch": "{total, plural, one {# record} other {# records}} — none match the search.",
+    "subtitleEmpty": "No records yet.",
     "add": "Add parent",
+    "addShort": "Add",
     "searchLabel": "Search parents",
     "searchPlaceholder": "Name, phone or Telegram…",
-    "deletedBadge": "In trash",
     "filters": {
-      "byStudent": "Student",
+      "student": "Student",
+      "studentValue": "Student: {name}",
       "allStudents": "All students",
       "studentSearch": "Search students…",
-      "studentEmpty": "No student found"
+      "studentEmpty": "No student found",
+      "noStudents": "No students",
+      "reset": "Reset",
+      "clearSearch": "Clear search"
+    },
+    "sort": {
+      "label": "Sort",
+      "fullName": "By name",
+      "createdAt": "Newest first"
     },
     "columns": {
       "parent": "Parent",
-      "students": "Students",
-      "actions": "Actions",
       "phone": "Phone",
-      "telegram": "Telegram"
+      "telegram": "Telegram",
+      "students": "Students",
+      "actions": "Actions"
     },
     "tableCaption": "Workspace parents with their linked students",
+    "showing": "Showing {from}–{to} of {total}",
+    "records": "{count, plural, one {# record} other {# records}}",
+    "roleLine": "Parent of {names}",
+    "noStudents": "No students",
+    "studentsCount": "{count, plural, one {# student} other {# students}}",
+    "rowActions": "Actions for {name}",
+    "openProfile": "Open profile",
+    "call": "Call",
+    "callName": "Call {name}",
+    "messageName": "Message {name} on Telegram",
+    "emailName": "Email {name}",
     "empty": {
       "title": "No parents yet",
       "description": "Add a parent to link them to one or more students.",
@@ -1020,55 +1043,158 @@
     },
     "emptySearch": {
       "title": "Nothing found",
-      "description": "No parents match your search. Try a different name or contact."
+      "description": "No record matches “{query}”. Try a different name or contact."
     },
-    "emptyDeleted": {
-      "title": "Trash is empty",
-      "description": "Deleted parents appear here and can be restored."
+    "emptyFiltered": {
+      "title": "Nothing found",
+      "description": "No record matches the selected filters.",
+      "action": "Reset filters"
     },
     "error": {
-      "title": "Could not load parents"
+      "title": "Could not load parents",
+      "detailTitle": "Could not load this record"
     },
     "form": {
       "createTitle": "New parent",
-      "createSubtitle": "Only the name is required.",
-      "editTitle": "Edit parent",
-      "editSubtitle": "Update contact details and notes.",
-      "avatarSection": "Avatar",
+      "createSubtitle": "Only the name is required — add the rest later.",
+      "editTitle": "Edit record",
+      "editSubtitle": "Editing a parent record · changes apply when you save.",
+      "editCrumb": "{name} › Edit",
+      "quickCreateTitle": "New contact",
+      "quickCreateSubtitle": "Only the name is required. The contact is linked to the student straight away.",
+      "sections": {
+        "identity": {
+          "title": "Personal details",
+          "description": "Avatar and name"
+        },
+        "contacts": {
+          "title": "Contact details",
+          "description": "Email, phone, Telegram"
+        },
+        "students": {
+          "title": "Linked students",
+          "description": "Which students they represent"
+        },
+        "notes": {
+          "title": "Notes",
+          "description": "Worth remembering"
+        }
+      },
+      "sectionsLabel": "Form sections",
+      "sectionsNote": "Scrolling highlights the current section. Only the name is required.",
+      "sectionDone": "Complete",
+      "sectionHasError": "Has an error",
+      "tagRequired": "required",
+      "tagOptional": "optional",
+      "progress": "{done} of {total} filled",
+      "progressReady": "ready to create",
+      "progressSaved": "saved",
+      "avatar": "Avatar",
       "avatarInitials": "Initials",
-      "basicSection": "Basic information",
       "fullName": "Full name",
-      "contactsSection": "Contact details",
+      "fullNamePlaceholder": "e.g. Iryna Shevchenko",
+      "email": "Email",
+      "emailPlaceholder": "name@example.com",
       "phone": "Phone",
       "phonePlaceholder": "+380 XX XXX XX XX",
       "telegramUsername": "Telegram username",
       "telegramPlaceholder": "username",
+      "addStudent": "Add a student",
       "notes": "Notes",
-      "notesSection": "Notes",
-      "notesPlaceholder": "Anything worth remembering about this parent",
-      "submitCreate": "Create parent",
-      "submitEdit": "Save changes"
+      "notesPlaceholder": "e.g. call after 6 pm",
+      "requiredNote": "Only the name is required",
+      "submitCreate": "Create record",
+      "creating": "Creating…",
+      "submitEdit": "Save changes",
+      "savingNote": "Saving…",
+      "fixFields": "{count, plural, one {Fix # field to save} other {Fix # fields to save}}",
+      "unsaved": "{count, plural, one {# unsaved change} other {# unsaved changes}}",
+      "noChanges": "No changes",
+      "discard": "Discard",
+      "discardTitle": "Discard changes?",
+      "discardDescription": "Your unsaved changes will be lost.",
+      "discardAction": "Discard changes",
+      "leaveTitle": "Leave without saving?",
+      "leaveDescription": "The record has not been created. What you entered will be lost — no draft is kept.",
+      "leaveAction": "Leave",
+      "requestErrorTitle": "Couldn’t save the record",
+      "loadErrorTitle": "Couldn’t load the record",
+      "loadErrorDescription": "Try again before editing.",
+      "unavailableTitle": "Record unavailable",
+      "unavailableDescription": "The details appear here once they load. Nothing will be changed.",
+      "danger": {
+        "title": "Delete record",
+        "text": "{name} and their links to students will be erased permanently. The students’ lesson and payment history does not change.",
+        "action": "Delete"
+      }
     },
     "detail": {
+      "pageLabel": "Profile",
       "addedOn": "Added {date}",
+      "linkStudent": "Link a student",
+      "edit": "Edit",
+      "recordActions": "Record actions",
+      "delete": "Delete record",
       "contactsTitle": "Contact details",
-      "notesTitle": "Notes",
-      "studentsTitle": "Linked students",
-      "noStudents": "No students linked yet",
-      "noStudentsDescription": "Search for and link one or more students.",
-      "deletedTitle": "This parent is in the trash",
-      "deletedDescription": "Restore the parent to edit them again."
+      "editContacts": "Edit contact details",
+      "addPhone": "Add a phone",
+      "addTelegram": "Add Telegram",
+      "addEmail": "Add an email"
+    },
+    "notes": {
+      "title": "Notes",
+      "edit": "Edit notes",
+      "add": "Add a note",
+      "empty": "No notes yet.",
+      "placeholder": "e.g. call after 6 pm",
+      "saved": "Notes saved",
+      "updated": "Updated {date}"
+    },
+    "links": {
+      "title": "Linked students",
+      "pickerTitle": "Link students",
+      "createStudent": "Create a new student",
+      "empty": "No students linked yet.",
+      "schedule": "Schedule a lesson",
+      "unlink": "Unlink from parent",
+      "unlinkTitle": "Unlink this student?",
+      "unlinkText": "{name} stays in Students — only the link to this contact goes. You can link them again at any time.",
+      "loadError": "Could not load students"
     },
     "toasts": {
-      "created": "Parent created",
+      "created": "Record created",
       "updated": "Changes saved",
-      "deleted": "Parent permanently deleted"
+      "deleted": "Parent record permanently deleted"
     },
     "deleteDialog": {
-      "title": "Delete this parent?",
+      "title": "Delete this parent record?",
       "description": "{name} and all their links to students will be erased permanently, with no way to restore them.",
       "confirm": "Delete permanently"
     }
+  },
+  "links": {
+    "link": "Link",
+    "linkCount": "Link · {count}",
+    "doneCount": "Done · {count}",
+    "close": "Close",
+    "searchLabel": "Search to link",
+    "searchPlaceholder": "Name, phone or Telegram",
+    "listLabel": "Search results",
+    "noResultsTitle": "Nothing found",
+    "noResultsHint": "Check the spelling or create a new record.",
+    "choose": "Pick from the list",
+    "selected": "{count} selected",
+    "linkedCount": "Linked · {count}",
+    "nothingLinked": "Nothing linked yet",
+    "openProfile": "Open profile",
+    "openProfileOf": "Open profile · {name}",
+    "rowActions": "Actions for {name}",
+    "remove": "Remove {name}",
+    "unlink": "Unlink",
+    "saveError": "Couldn’t save the links",
+    "retry": "Retry",
+    "saved": "Links saved",
+    "unlinked": "Link removed"
   },
   "enrollments": {
     "editor": {

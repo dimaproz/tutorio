@@ -1,31 +1,47 @@
 'use client';
 
-import { useMemo, useState, type ReactNode, type Ref } from 'react';
+import { useCallback, useMemo, useState, type Ref } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
-import { PhoneIcon, PlusIcon, SearchIcon, XIcon } from 'lucide-react';
+import { PencilIcon, PhoneIcon, UserIcon, XIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { ParentListItem, StudentDetail } from '@tutorio/validation';
-// Direct import until Parents migrates in Work Packet 6.1: its barrel does not
-// export the dialog yet. The parent form imports this feature back, a cycle
-// that is harmless because both sides use each other only inside JSX.
-import { ParentFormDialog } from '@/components/parents/parent-form-dialog';
-import { EntityAvatar } from '@/components/shared/entity-avatar';
-import { EntityPicker } from '@/components/shared/entity-picker';
-import { InfoCard } from '@/components/shared/info-card';
-import { PersonItem } from '@/components/shared/person-item';
-import { QueryErrorAlert } from '@/components/shared/page-shell';
+import { toast } from 'sonner';
+import type { StudentDetail } from '@tutorio/validation';
+// Parents imports this feature back (the student quick create); the cycle is
+// harmless because both sides use each other only inside JSX.
+import { ParentQuickCreateDialog } from '@/features/parents';
+import { ConfirmDialog } from '@/components/shared/confirm-dialog';
+import { LinkedCard } from '@/components/shared/linked-card';
+import { LinkPickerDialog } from '@/components/shared/link-picker-dialog';
+import { RowActionsTrigger } from '@/components/shared/row-actions-trigger';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useLinkedSet } from '@/hooks/use-linked-set';
 import { errorMessageKey } from '@/lib/api/error-message';
 import { queryKeys } from '@/lib/api/keys';
 import { useParentsQuery } from '@/lib/api/parents';
 import { useUpdateStudentMutation } from '@/lib/api/students';
+import type { GatewayError } from '@/lib/auth/client';
+
+function contactLine(parent: { phone: string | null; telegramUsername: string | null }) {
+  const telegram = parent.telegramUsername?.replace(/^@+/, '');
+  return parent.phone ?? (telegram ? `@${telegram}` : undefined);
+}
 
 /**
- * The family block: each parent as a person row with their contact one tap
- * away, plus the two ways to add one — link an existing contact, or create a
- * new one from the card's own action.
+ * The family block — the student's side of the relationship whose parent
+ * side is the parent profile's linked-students card. Both are one
+ * `LinkedCard` with one `LinkPickerDialog`, and both save the whole set
+ * through `useLinkedSet`, so two quick edits never undo each other. Creating
+ * a contact happens only on a saved student and links it straight after.
  */
 export function StudentParentsCard({
   student,
@@ -41,223 +57,215 @@ export function StudentParentsCard({
   sectionRef?: Ref<HTMLDivElement>;
 }) {
   const t = useTranslations('students.parents');
+  const tLinks = useTranslations('links');
+  const tParents = useTranslations('parents');
+  const tCommon = useTranslations('common');
   const tErrors = useTranslations('errors');
-  const parents = useParentsQuery({ page: 1, pageSize: 100 }, !readOnly);
-  const update = useUpdateStudentMutation(student.id);
-  const [extraParents, setExtraParents] = useState<ParentListItem[]>([]);
-  const [retryParentIds, setRetryParentIds] = useState<string[] | null>(null);
+  const mobile = useIsMobile();
   const queryClient = useQueryClient();
-  // Each save sends the whole parent set, so the next one must start from what
-  // was last sent, not from a profile that has not refetched yet — otherwise
-  // two quick edits undo each other. Controls stay disabled from the send
-  // until the refreshed profile has arrived.
-  const serverIds = useMemo(() => student.parents.map((parent) => parent.id), [student.parents]);
-  const [sentIds, setSentIds] = useState<string[] | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
-  const linkedIds = sentIds ?? serverIds;
-  const busy = update.isPending || refreshing;
-  const available = useMemo(() => {
-    const byId = new Map<string, ParentListItem>();
-    for (const parent of [...(parents.data?.items ?? []), ...extraParents])
-      byId.set(parent.id, parent);
-    return [...byId.values()].filter((parent) => !linkedIds.includes(parent.id));
-  }, [parents.data, extraParents, linkedIds]);
+  const { mutateAsync: updateStudent } = useUpdateStudentMutation(student.id);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [selected, setSelected] = useState<string[]>([]);
+  const [unlinking, setUnlinking] = useState<{ id: string; name: string } | null>(null);
 
-  const saveLinks = async (parentIds: string[]) => {
-    setRetryParentIds(null);
-    setSentIds(parentIds);
-    setRefreshing(true);
-    try {
-      await update.mutateAsync({ parentIds });
-    } catch {
-      setSentIds(null);
-      setRetryParentIds(parentIds);
-      setRefreshing(false);
-      return;
-    }
-    // The save succeeded. The sent set stays authoritative until a refreshed
-    // profile confirms it; a failed refresh must not hand the next edit a
-    // stale set to build on.
+  const serverIds = useMemo(() => student.parents.map((parent) => parent.id), [student.parents]);
+  const save = useCallback((parentIds: string[]) => updateStudent({ parentIds }), [updateStudent]);
+  const confirm = useCallback(async () => {
     const key = queryKeys.students.detail(student.id);
     await queryClient.refetchQueries({ queryKey: key });
-    if (queryClient.getQueryState(key)?.status === 'success') setSentIds(null);
-    setRefreshing(false);
-  };
+    return queryClient.getQueryState(key)?.status === 'success';
+  }, [student.id, queryClient]);
+  const links = useLinkedSet({ serverIds, save, confirm });
 
-  const created = async (parent: { id: string; fullName: string }) => {
-    const selectable: ParentListItem = {
-      id: parent.id,
-      fullName: parent.fullName,
-      phone: null,
-      telegramUsername: null,
-      avatarKey: null,
-      deletedAt: null,
-      students: [],
-    };
-    setExtraParents((current) =>
-      current.some((item) => item.id === parent.id) ? current : [...current, selectable],
-    );
-    await saveLinks([...linkedIds, parent.id]);
-  };
-
-  const picker = (trigger: ReactNode) => (
-    <EntityPicker
-      id="student-link-parent"
-      aria-label={t('link')}
-      trigger={trigger}
-      options={available.map((parent) => ({
-        value: parent.id,
-        label: parent.fullName,
-        avatarKey: parent.avatarKey,
-      }))}
-      onChange={(parentId) => (parentId ? void saveLinks([...linkedIds, parentId]) : undefined)}
-      placeholder={t('link')}
-      searchPlaceholder={t('search')}
-      emptyLabel={t('noResults')}
-      disabled={parents.isPending || busy}
-      isLoading={parents.isPending}
-    />
+  const parents = useParentsQuery(
+    { page: 1, pageSize: 20, search: search.trim() || undefined },
+    pickerOpen && !readOnly,
   );
+  const results = (parents.data?.items ?? [])
+    .filter((parent) => !links.linkedIds.includes(parent.id))
+    .map((parent) => ({
+      id: parent.id,
+      name: parent.fullName,
+      avatarKey: parent.avatarKey,
+      meta: [
+        contactLine(parent),
+        parent.students.length > 0
+          ? tParents('roleLine', {
+              names: parent.students.map((child) => child.fullName.split(' ')[0]).join(', '),
+            })
+          : null,
+      ]
+        .filter(Boolean)
+        .join(' · '),
+    }));
+
+  const closePicker = () => {
+    setPickerOpen(false);
+    setSearch('');
+    setSelected([]);
+  };
+  const report = (saved: boolean, message: string) =>
+    saved ? toast.success(message) : toast.error(tLinks('saveError'));
+
+  const items = student.parents.map((parent) => ({
+    id: parent.id,
+    name: parent.fullName,
+    avatarKey: parent.avatarKey,
+    meta: contactLine(parent),
+    href: `/app/parents/${parent.id}`,
+    hrefLabel: tLinks('openProfileOf', { name: parent.fullName }),
+    menu: (
+      <DropdownMenu>
+        <RowActionsTrigger
+          label={tLinks('rowActions', { name: parent.fullName })}
+          className="md:size-8"
+        />
+        <DropdownMenuContent align="end">
+          <DropdownMenuGroup>
+            <DropdownMenuItem asChild>
+              <Link href={`/app/parents/${parent.id}`}>
+                <UserIcon data-icon />
+                {tLinks('openProfile')}
+              </Link>
+            </DropdownMenuItem>
+            {parent.phone ? (
+              <DropdownMenuItem asChild>
+                <a href={`tel:${parent.phone}`}>
+                  <PhoneIcon data-icon />
+                  {t('call')}
+                </a>
+              </DropdownMenuItem>
+            ) : null}
+            {!readOnly ? (
+              <DropdownMenuItem asChild>
+                <Link href={`/app/parents/${parent.id}/edit`}>
+                  <PencilIcon data-icon />
+                  {t('editContact')}
+                </Link>
+              </DropdownMenuItem>
+            ) : null}
+          </DropdownMenuGroup>
+          {!readOnly ? (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuItem
+                  variant="destructive"
+                  disabled={links.busy}
+                  onSelect={() => setUnlinking({ id: parent.id, name: parent.fullName })}
+                >
+                  <XIcon data-icon />
+                  {t('unlink')}
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </>
+          ) : null}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ),
+  }));
 
   return (
     <>
       <div ref={sectionRef}>
-        <InfoCard
+        <LinkedCard
           title={t('title')}
-          action={
-            !readOnly && student.parents.length > 0 ? (
-              <div className="flex items-center gap-3">
-                {picker(
-                  <Button
-                    id="student-link-parent"
-                    type="button"
-                    variant="link"
-                    size="xs"
-                    className="px-0 font-semibold"
-                  >
-                    <SearchIcon data-icon="inline-start" />
-                    {t('linkShort')}
-                  </Button>,
-                )}
-                <Button
-                  type="button"
-                  variant="link"
-                  size="xs"
-                  className="px-0 font-semibold"
-                  disabled={busy}
-                  onClick={() => onCreateOpenChange(true)}
-                >
-                  <PlusIcon data-icon="inline-start" />
-                  {t('createShort')}
-                </Button>
-              </div>
-            ) : undefined
-          }
+          items={items}
+          addLabel={readOnly ? undefined : tLinks('link')}
+          addId="student-link-parent"
+          onAdd={() => setPickerOpen(true)}
+          addDisabled={links.busy}
+          emptyText={readOnly ? t('emptyArchived') : t('empty')}
+          avatarTint="warning"
+          size={mobile ? 'sm' : 'md'}
         >
-          {update.error && retryParentIds ? (
+          {links.error ? (
             <Alert variant="destructive" role="alert">
               <AlertDescription className="flex flex-col items-start gap-2">
-                <span>{tErrors(errorMessageKey(update.error))}</span>
+                <span>{tErrors(errorMessageKey(links.error as GatewayError))}</span>
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
-                  onClick={() => void saveLinks(retryParentIds)}
+                  size="xs"
+                  onClick={() => void links.retry?.()}
                 >
-                  {t('retryLink')}
+                  {tLinks('retry')}
                 </Button>
               </AlertDescription>
             </Alert>
           ) : null}
-
-          {student.parents.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              {readOnly ? t('emptyArchived') : t('empty')}
-            </p>
-          ) : (
-            student.parents.map((parent) => (
-              <PersonItem
-                key={parent.id}
-                media={
-                  <EntityAvatar
-                    avatarKey={parent.avatarKey}
-                    fullName={parent.fullName}
-                    tint="warning"
-                  />
-                }
-                name={
-                  <Link href={`/app/parents/${parent.id}`} className="hover:underline">
-                    {parent.fullName}
-                  </Link>
-                }
-                subtitle={parent.phone ?? parent.telegramUsername ?? undefined}
-                // Both controls go in the action slot: `trail` is decorative
-                // and hidden from assistive tech, so a button cannot live there.
-                action={
-                  <>
-                    {parent.phone ? (
-                      <Button
-                        asChild
-                        variant="white"
-                        size="icon-md"
-                        aria-label={t('call', { name: parent.fullName })}
-                      >
-                        <a href={`tel:${parent.phone}`}>
-                          <PhoneIcon />
-                        </a>
-                      </Button>
-                    ) : null}
-                    {!readOnly ? (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        aria-label={t('unlink', { name: parent.fullName })}
-                        disabled={busy}
-                        onClick={() => void saveLinks(linkedIds.filter((id) => id !== parent.id))}
-                      >
-                        <XIcon />
-                      </Button>
-                    ) : null}
-                  </>
-                }
-              />
-            ))
-          )}
-
-          {!readOnly && parents.isError ? (
-            <QueryErrorAlert title={t('loadError')} onRetry={() => void parents.refetch()} />
-          ) : null}
-
-          {!readOnly && student.parents.length === 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {picker(
-                <Button id="student-link-parent" type="button" variant="outline" size="xs">
-                  <SearchIcon data-icon="inline-start" />
-                  {t('link')}
-                </Button>,
-              )}
-              <Button
-                type="button"
-                variant="ghost"
-                size="xs"
-                disabled={busy}
-                onClick={() => onCreateOpenChange(true)}
-              >
-                <PlusIcon data-icon="inline-start" />
-                {t('create')}
-              </Button>
-            </div>
-          ) : null}
-        </InfoCard>
+        </LinkedCard>
       </div>
+
       {!readOnly ? (
-        <ParentFormDialog
-          open={createOpen}
-          onOpenChange={onCreateOpenChange}
-          onSuccess={(parent) => void created(parent)}
-          hideStudentLinks
-        />
+        <>
+          <LinkPickerDialog
+            open={pickerOpen}
+            onOpenChange={(open) => (open ? setPickerOpen(true) : closePicker())}
+            title={t('pickerTitle')}
+            subtitle={student.fullName}
+            searchLabel={tLinks('searchLabel')}
+            placeholder={tLinks('searchPlaceholder')}
+            search={search}
+            onSearchChange={setSearch}
+            results={results}
+            loading={parents.isPending}
+            selected={selected}
+            onToggle={(id) =>
+              setSelected((current) =>
+                current.includes(id) ? current.filter((item) => item !== id) : [...current, id],
+              )
+            }
+            listLabel={tLinks('listLabel')}
+            emptyTitle={tLinks('noResultsTitle')}
+            emptyHint={tLinks('noResultsHint')}
+            chooseText={tLinks('choose')}
+            selectedText={(count) => tLinks('selected', { count })}
+            createLabel={t('createContact')}
+            onCreate={() => onCreateOpenChange(true)}
+            confirmLabel={
+              mobile
+                ? tLinks('doneCount', { count: selected.length })
+                : tLinks('linkCount', { count: selected.length })
+            }
+            cancelLabel={tCommon('cancel')}
+            closeLabel={tLinks('close')}
+            busy={links.busy}
+            onConfirm={(ids) =>
+              void links.link(ids).then((saved) => {
+                report(saved, tLinks('saved'));
+                if (saved) closePicker();
+              })
+            }
+          />
+
+          <ConfirmDialog
+            open={unlinking !== null}
+            onOpenChange={(open) => (open || links.busy ? undefined : setUnlinking(null))}
+            tone="neutral"
+            title={t('unlinkTitle')}
+            description={t('unlinkText', { name: unlinking?.name ?? '' })}
+            confirmLabel={tLinks('unlink')}
+            pending={links.busy}
+            onConfirm={() => {
+              if (!unlinking) return;
+              void links.unlink(unlinking.id).then((saved) => {
+                report(saved, tLinks('unlinked'));
+                setUnlinking(null);
+              });
+            }}
+          />
+
+          <ParentQuickCreateDialog
+            open={createOpen}
+            onOpenChange={onCreateOpenChange}
+            onSuccess={(parent) => {
+              closePicker();
+              void links.link([parent.id]).then((saved) => report(saved, tLinks('saved')));
+            }}
+          />
+        </>
       ) : null}
     </>
   );
