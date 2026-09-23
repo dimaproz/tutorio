@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState, type ReactNode, type Ref } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { PhoneIcon, PlusIcon, SearchIcon, XIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -14,6 +15,7 @@ import { QueryErrorAlert } from '@/components/shared/page-shell';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { errorMessageKey } from '@/lib/api/error-message';
+import { queryKeys } from '@/lib/api/keys';
 import { useParentsQuery } from '@/lib/api/parents';
 import { useUpdateStudentMutation } from '@/lib/api/students';
 
@@ -41,7 +43,15 @@ export function StudentParentsCard({
   const update = useUpdateStudentMutation(student.id);
   const [extraParents, setExtraParents] = useState<ParentListItem[]>([]);
   const [retryParentIds, setRetryParentIds] = useState<string[] | null>(null);
-  const linkedIds = student.parents.map((parent) => parent.id);
+  const queryClient = useQueryClient();
+  // Each save sends the whole parent set, so the next one must start from what
+  // was last sent, not from a profile that has not refetched yet — otherwise
+  // two quick edits undo each other. Controls stay disabled from the send
+  // until the refreshed profile has arrived.
+  const serverIds = useMemo(() => student.parents.map((parent) => parent.id), [student.parents]);
+  const [sentIds, setSentIds] = useState<string[] | null>(null);
+  const linkedIds = sentIds ?? serverIds;
+  const busy = update.isPending || sentIds !== null;
   const available = useMemo(() => {
     const byId = new Map<string, ParentListItem>();
     for (const parent of [...(parents.data?.items ?? []), ...extraParents])
@@ -51,10 +61,14 @@ export function StudentParentsCard({
 
   const saveLinks = async (parentIds: string[]) => {
     setRetryParentIds(null);
+    setSentIds(parentIds);
     try {
       await update.mutateAsync({ parentIds });
+      await queryClient.refetchQueries({ queryKey: queryKeys.students.detail(student.id) });
     } catch {
       setRetryParentIds(parentIds);
+    } finally {
+      setSentIds(null);
     }
   };
 
@@ -88,7 +102,7 @@ export function StudentParentsCard({
       placeholder={t('link')}
       searchPlaceholder={t('search')}
       emptyLabel={t('noResults')}
-      disabled={parents.isPending || update.isPending}
+      disabled={parents.isPending || busy}
       isLoading={parents.isPending}
     />
   );
@@ -99,8 +113,9 @@ export function StudentParentsCard({
         <InfoCard
           title={t('title')}
           action={
-            !readOnly && student.parents.length > 0
-              ? picker(
+            !readOnly && student.parents.length > 0 ? (
+              <div className="flex items-center gap-3">
+                {picker(
                   <Button
                     id="student-link-parent"
                     type="button"
@@ -108,11 +123,23 @@ export function StudentParentsCard({
                     size="xs"
                     className="px-0 font-semibold"
                   >
-                    <PlusIcon data-icon="inline-start" />
+                    <SearchIcon data-icon="inline-start" />
                     {t('linkShort')}
                   </Button>,
-                )
-              : undefined
+                )}
+                <Button
+                  type="button"
+                  variant="link"
+                  size="xs"
+                  className="px-0 font-semibold"
+                  disabled={busy}
+                  onClick={() => onCreateOpenChange(true)}
+                >
+                  <PlusIcon data-icon="inline-start" />
+                  {t('createShort')}
+                </Button>
+              </div>
+            ) : undefined
           }
         >
           {update.error && retryParentIds ? (
@@ -174,6 +201,7 @@ export function StudentParentsCard({
                         variant="ghost"
                         size="icon-sm"
                         aria-label={t('unlink', { name: parent.fullName })}
+                        disabled={busy}
                         onClick={() => void saveLinks(linkedIds.filter((id) => id !== parent.id))}
                       >
                         <XIcon />

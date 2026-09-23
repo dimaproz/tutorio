@@ -649,7 +649,8 @@
       "retryLink": "Retry linking",
       "loadError": "Could not load parents",
       "call": "Call {name}",
-      "linkShort": "Link"
+      "linkShort": "Link",
+      "createShort": "New"
     },
     "toasts": {
       "created": "Student created",
