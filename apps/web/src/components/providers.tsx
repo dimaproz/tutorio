@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { shouldRetryQuery } from '@/lib/api/query-retry';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -11,7 +12,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            retry: 1,
+            retry: shouldRetryQuery,
             refetchOnWindowFocus: false,
             staleTime: 30_000,
           },

@@ -2,12 +2,10 @@
 
 import * as React from 'react';
 
-type CrumbStore = {
-  crumb: string | null;
-  setCrumb: (crumb: string | null) => void;
-};
-
-const PageCrumbContext = React.createContext<CrumbStore | null>(null);
+// Two contexts: the pages that set the crumb consume only the stable setter,
+// so a crumb change re-renders the shell bars that read it, never the pages.
+const PageCrumbContext = React.createContext<string | null>(null);
+const SetPageCrumbContext = React.createContext<((crumb: string | null) => void) | null>(null);
 
 /**
  * Lets a page name itself in the shell's top bar ("Anna Shevchenko › Edit")
@@ -16,18 +14,21 @@ const PageCrumbContext = React.createContext<CrumbStore | null>(null);
  */
 export function PageCrumbProvider({ children }: { children: React.ReactNode }) {
   const [crumb, setCrumb] = React.useState<string | null>(null);
-  const value = React.useMemo(() => ({ crumb, setCrumb }), [crumb]);
-  return <PageCrumbContext.Provider value={value}>{children}</PageCrumbContext.Provider>;
+  return (
+    <SetPageCrumbContext.Provider value={setCrumb}>
+      <PageCrumbContext.Provider value={crumb}>{children}</PageCrumbContext.Provider>
+    </SetPageCrumbContext.Provider>
+  );
 }
 
 /** The crumb the current page supplied, if any. */
 export function usePageCrumb(): string | null {
-  return React.useContext(PageCrumbContext)?.crumb ?? null;
+  return React.useContext(PageCrumbContext);
 }
 
 /** Names the current page in the top bar for as long as it is mounted. */
 export function useSetPageCrumb(crumb: string | null | undefined) {
-  const setCrumb = React.useContext(PageCrumbContext)?.setCrumb;
+  const setCrumb = React.useContext(SetPageCrumbContext);
   React.useEffect(() => {
     if (!setCrumb) return;
     setCrumb(crumb ?? null);
