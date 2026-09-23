@@ -8,8 +8,10 @@ import { cn, nameInitials } from '@/lib/utils';
 
 type AvatarValue = AvatarKeyDto | null;
 
+// The checked option already wears a 2px ring 2px out, the same colour as the
+// focus outline; the outline sits beyond it so focus is always visible.
 const OPTION_CLASS =
-  'size-10 shrink-0 overflow-hidden rounded-pill outline-none transition-[translate,box-shadow] duration-150 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-55';
+  'size-10 shrink-0 overflow-hidden rounded-pill outline-none transition-[translate,box-shadow] duration-150 ease-out focus-visible:outline-2 focus-visible:outline-offset-6 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-55';
 
 /**
  * The avatar choice: a 72px preview of the current pick beside a radio row of

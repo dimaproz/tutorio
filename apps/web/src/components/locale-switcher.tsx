@@ -82,7 +82,8 @@ export function LocaleSegmented({ className }: { className?: string }) {
         .map((entry) => ({
           value: entry,
           label: LOCALE_CODE[entry] ?? entry.toUpperCase(),
-          ariaLabel: t(entry),
+          // The name starts with the visible code, so "click UA" works by voice.
+          ariaLabel: `${LOCALE_CODE[entry] ?? entry.toUpperCase()} · ${t(entry)}`,
           disabled: isPending,
         }))}
     />

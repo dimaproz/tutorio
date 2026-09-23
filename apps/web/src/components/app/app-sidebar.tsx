@@ -64,16 +64,17 @@ function SidebarNavigationLink({ item, pathname }: { item: NavigationItem; pathn
 
 /**
  * The workspace context row. A school shows its name and scale; a solo tutor
- * shows their own identity. It is hidden when there is nothing to disambiguate.
+ * shows their own identity. Switching workspaces is not built yet, so the row
+ * is information, not a control: a button with nothing behind it would be a
+ * dead tab stop.
  */
 function WorkspaceSwitcher({ session, isSolo }: { session: AuthMe; isSolo: boolean }) {
   const t = useTranslations('app.workspace');
 
   return (
-    <button
-      type="button"
-      aria-label={t('switch')}
-      className="flex h-16 w-full items-center gap-3 rounded-row bg-sidebar-accent pr-3.5 pl-2.5 text-left text-sidebar-accent-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
+    <div
+      data-slot="workspace-context"
+      className="flex h-16 w-full items-center gap-3 rounded-row bg-sidebar-accent pr-3.5 pl-2.5 text-left text-sidebar-accent-foreground"
     >
       {isSolo ? (
         <EntityAvatar fullName={session.user.name} size="md" />
@@ -94,7 +95,7 @@ function WorkspaceSwitcher({ session, isSolo }: { session: AuthMe; isSolo: boole
         </span>
       </span>
       <ChevronDownIcon aria-hidden="true" className="size-4 shrink-0" />
-    </button>
+    </div>
   );
 }
 
@@ -118,7 +119,8 @@ export function SidebarUserMenu({
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          aria-label={t('label')}
+          // Named by its visible content (the name and role), so voice control
+          // can reach it; the trigger itself announces the menu popup.
           className="w-full rounded-tile bg-sidebar-accent p-2.5 text-left text-sidebar-accent-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
         >
           <PersonItem

@@ -151,9 +151,10 @@ export const DesktopExpanded: Story = {
 /** A solo tutor as a teacher: Teachers and Settings both disappear. */
 export const SoloTeacher: Story = {
   args: { workspace: 'solo', role: 'TEACHER' },
-  play: async ({ canvas }) => {
-    const workspace = canvas.getByRole('button', { name: 'Switch workspace' });
-    await expect(within(workspace).getByText('Individual tutor')).toBeVisible();
+  play: async ({ canvas, canvasElement }) => {
+    const workspace = canvasElement.querySelector('[data-slot="workspace-context"]');
+    await expect(workspace).not.toBeNull();
+    await expect(within(workspace as HTMLElement).getByText('Individual tutor')).toBeVisible();
     await expect(canvas.queryByRole('link', { name: 'Teachers' })).toBeNull();
     await expect(canvas.queryByRole('link', { name: 'Settings' })).toBeNull();
   },
@@ -170,7 +171,7 @@ export const ActiveDetailRoute: Story = {
 export const UserMenuAndLogoutPending: Story = {
   args: { isLogoutPending: true },
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Account menu' }));
+    await userEvent.click(canvas.getByRole('button', { name: /Olena Kovalenko/ }));
     const menu = within(document.body);
     await waitFor(() => expect(menu.getByRole('menuitem', { name: 'Settings' })).toBeVisible());
     await expect(menu.getByRole('menuitem', { name: 'Sign out' })).toHaveAttribute('data-disabled');
