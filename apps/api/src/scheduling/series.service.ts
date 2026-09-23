@@ -63,7 +63,7 @@ export class SeriesService {
       ...(query.teacherId ? { teacherId: query.teacherId } : {}),
     };
 
-    const [rows, total] = await this.prisma.$transaction([
+    const [rows, total] = await Promise.all([
       this.prisma.lessonSeries.findMany({
         where,
         orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],

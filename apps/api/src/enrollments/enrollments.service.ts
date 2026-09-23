@@ -143,7 +143,7 @@ export class EnrollmentsService {
       ...(query.status ? { status: query.status } : {}),
     };
 
-    const [rows, total, workspace] = await this.prisma.$transaction([
+    const [rows, total, workspace] = await Promise.all([
       this.prisma.enrollment.findMany({
         where,
         orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
@@ -290,7 +290,7 @@ export class EnrollmentsService {
     auth: AuthenticatedUser,
     enrollmentId: string,
   ): Promise<EnrollmentResponse> {
-    const [row, workspace] = await this.prisma.$transaction([
+    const [row, workspace] = await Promise.all([
       this.prisma.enrollment.findFirst({
         where: {
           id: enrollmentId,

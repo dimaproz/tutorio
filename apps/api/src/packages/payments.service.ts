@@ -54,7 +54,7 @@ export class PaymentsService {
         : {}),
     };
 
-    const [rows, total] = await this.prisma.$transaction([
+    const [rows, total] = await Promise.all([
       this.prisma.payment.findMany({
         where,
         orderBy: [{ paidAt: 'desc' }, { id: 'desc' }],

@@ -155,7 +155,7 @@ export class AuditService {
         : {}),
     };
 
-    const [rows, total] = await this.prisma.$transaction([
+    const [rows, total] = await Promise.all([
       this.prisma.auditLog.findMany({
         where,
         // `id` as a tiebreaker keeps pagination stable for same-instant rows.

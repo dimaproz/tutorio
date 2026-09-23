@@ -87,7 +87,7 @@ export class PackagesService {
       ...(query.paymentStatus ? { paymentStatus: query.paymentStatus } : {}),
     };
 
-    const [rows, total] = await this.prisma.$transaction([
+    const [rows, total] = await Promise.all([
       this.prisma.lessonPackage.findMany({
         where,
         orderBy: [{ purchasedAt: 'desc' }, { id: 'desc' }],

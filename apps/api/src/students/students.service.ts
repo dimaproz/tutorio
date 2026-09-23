@@ -149,7 +149,7 @@ export class StudentsService {
         : {}),
     };
 
-    const [rows, total] = await this.prisma.$transaction([
+    const [rows, total] = await Promise.all([
       this.prisma.student.findMany({
         where,
         orderBy: buildStudentOrderBy(query),

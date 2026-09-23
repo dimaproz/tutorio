@@ -140,7 +140,7 @@ export class ParentsService {
       ],
     };
 
-    const [rows, total] = await this.prisma.$transaction([
+    const [rows, total] = await Promise.all([
       this.prisma.parent.findMany({
         where,
         orderBy: [{ [query.sort]: query.order }, { id: 'asc' }],

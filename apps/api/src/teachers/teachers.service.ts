@@ -87,7 +87,7 @@ export class TeachersService {
       ...(query.status ? { status: query.status } : {}),
     };
 
-    const [rows, total] = await this.prisma.$transaction([
+    const [rows, total] = await Promise.all([
       this.prisma.teacher.findMany({
         where,
         orderBy: [{ fullName: 'asc' }, { id: 'asc' }],
