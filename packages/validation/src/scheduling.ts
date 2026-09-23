@@ -19,8 +19,16 @@ export const lessonStatusSchema = z.enum([
   'COMPLETED',
   'CANCELLED_CHARGED',
   'CANCELLED_UNCHARGED',
+  // The student did not come without notice; individual lessons only.
+  'NO_SHOW',
 ]);
 export type LessonStatusDto = z.infer<typeof lessonStatusSchema>;
+
+export const lessonKindSchema = z.enum(['REGULAR', 'MAKEUP']);
+export type LessonKindDto = z.infer<typeof lessonKindSchema>;
+
+/** A short lesson title shown in the calendar and lists. */
+export const lessonTopicSchema = z.string().trim().max(200);
 
 export const cancelledBySchema = z.enum(['TEACHER', 'STUDENT', 'GROUP']);
 export type CancelledByDto = z.infer<typeof cancelledBySchema>;
@@ -204,12 +212,20 @@ export const createLessonSchema = z
     cancelledReason: notesSchema.nullable().optional(),
     // When the money arrived. Null on a completed lesson means "paid on the day".
     paidAt: isoDateTimeSchema.nullable().optional(),
+    topic: lessonTopicSchema.nullable().optional(),
     notes: notesSchema.nullable().optional(),
   })
   .strict()
   .superRefine((value, ctx) => {
     requireExactlyOneLessonTarget(value, ctx);
     requireCancellationAuthor(value.status, value.cancelledBy, ctx);
+    if (value.status === 'NO_SHOW' && value.groupId != null) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'A group lesson records absences through attendance',
+        path: ['status'],
+      });
+    }
     // Only the studentId path may omit the teacher and the price.
     if (value.studentId == null) {
       if (value.teacherId == null) {
@@ -239,12 +255,17 @@ export const createLessonSchema = z
 
 export type CreateLessonDto = z.infer<typeof createLessonSchema>;
 
-// The fields a tutor can correct on a booked lesson. Time is not here: moving a
-// lesson goes through /reschedule, which also handles the series scope and the
-// conflict check.
+// The fields a tutor can change on a booked lesson (product/scheduling.md
+// L-40). Moving it in time goes through /reschedule, which also handles the
+// schedule scope. A new duration or teacher is conflict-checked (`?force`)
+// and takes a schedule lesson out of its schedule's regeneration.
 export const updateLessonSchema = z
   .object({
+    topic: lessonTopicSchema.nullable(),
     notes: notesSchema.nullable(),
+    durationMin: durationMinSchema,
+    // A substitute for this lesson only; the schedule keeps its teacher.
+    teacherId: uuidSchema,
     priceMinor: priceMinorSchema,
     currency: currencyCodeSchema,
     paidAt: isoDateTimeSchema.nullable(),
@@ -257,6 +278,20 @@ export const updateLessonSchema = z
   });
 
 export type UpdateLessonDto = z.infer<typeof updateLessonSchema>;
+
+// A makeup for a cancelled or no-show individual lesson (L-60): the same
+// student and, unless named, the same teacher and duration.
+export const createMakeupSchema = z
+  .object({
+    startsAtUtc: isoDateTimeSchema,
+    durationMin: durationMinSchema.optional(),
+    teacherId: uuidSchema.optional(),
+    topic: lessonTopicSchema.nullable().optional(),
+    notes: notesSchema.nullable().optional(),
+  })
+  .strict();
+
+export type CreateMakeupDto = z.infer<typeof createMakeupSchema>;
 
 export const rescheduleScopeSchema = z.enum(['this', 'this_and_following']);
 export type RescheduleScopeDto = z.infer<typeof rescheduleScopeSchema>;
@@ -344,6 +379,11 @@ export const lessonResponseSchema = z.object({
   priceMinor: priceMinorSchema,
   currency: currencyCodeSchema,
   status: lessonStatusSchema,
+  kind: lessonKindSchema,
+  // The lesson this makeup replaces, and the makeup given for this lesson.
+  originalLessonId: uuidSchema.nullable(),
+  makeupLessonId: uuidSchema.nullable(),
+  topic: z.string().nullable(),
   isDetached: z.boolean(),
   // How many times this lesson has been moved, and when it was moved last.
   // No lesson status expresses "rescheduled" — these carry that history.
@@ -376,6 +416,27 @@ export const lessonResponseSchema = z.object({
 });
 
 export type LessonResponse = z.infer<typeof lessonResponseSchema>;
+
+/**
+ * One overlap in a 409 SCHEDULE_CONFLICT (`details.conflicts`, L-110): the
+ * proposed time, the booked lesson it overlaps, and whether the teacher or a
+ * student is double-booked. The caller may repeat the request with
+ * `?force=true` to save anyway (L-111).
+ */
+export const scheduleConflictSchema = z.object({
+  candidateStartsAtUtc: isoDateTimeSchema,
+  lessonId: uuidSchema,
+  startsAtUtc: isoDateTimeSchema,
+  durationMin: durationMinSchema,
+  reason: z.enum(['TEACHER', 'STUDENT']),
+  teacher: z.object({ id: uuidSchema, name: z.string() }),
+  student: studentRefSchema.nullable(),
+  group: groupRefSchema.nullable(),
+  // The students double-booked, when the reason is STUDENT.
+  students: z.array(studentRefSchema),
+});
+
+export type ScheduleConflict = z.infer<typeof scheduleConflictSchema>;
 
 // The calendar window returns a flat list (already bounded by the query).
 export const lessonListResponseSchema = z.object({

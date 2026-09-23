@@ -27,6 +27,7 @@ export const creditEntryTypeSchema = z.enum([
   'purchase',
   'lesson_completed',
   'late_cancellation',
+  'no_show',
   'teacher_cancellation_refund',
   'manual_adjustment',
 ]);
