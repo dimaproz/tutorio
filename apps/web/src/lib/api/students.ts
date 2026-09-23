@@ -6,6 +6,7 @@ import type {
   StudentDetail,
   StudentListResponse,
   StudentResponse,
+  StudentsSummary,
   UpdateStudentDto,
 } from '@tutorio/validation';
 import { gatewayFetch, type GatewayError } from '@/lib/auth/client';
@@ -32,6 +33,19 @@ export function useStudentsQuery(filters: StudentListFilters, enabled = true) {
         { signal },
       ),
     placeholderData: (previous) => previous,
+  });
+}
+
+// Nested under ['students'], so every student mutation's invalidation of
+// queryKeys.students.all refreshes the counts too.
+const STUDENTS_SUMMARY_KEY = ['students', 'summary'] as const;
+
+/** Per-status counts for the collection tabs and header, from one request. */
+export function useStudentsSummaryQuery(enabled = true) {
+  return useQuery<StudentsSummary, GatewayError>({
+    queryKey: STUDENTS_SUMMARY_KEY,
+    enabled,
+    queryFn: () => gatewayFetch<StudentsSummary>('/api/backend/students/summary'),
   });
 }
 

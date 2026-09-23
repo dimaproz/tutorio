@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CalendarIcon, PlusIcon } from 'lucide-react';
 import { useNow, useTranslations } from 'next-intl';
-import { LessonFormDialog } from '@/features/scheduling';
+// Imported directly: the scheduling barrel also pulls in the calendar.
+import { LessonFormDialog } from '@/components/scheduling/lesson-form-dialog';
 import { CollectionFrame } from '@/components/shared/collection-frame';
 import { DataTable } from '@/components/shared/data-table';
 import {
@@ -17,7 +18,7 @@ import { PageHeader, QueryErrorAlert } from '@/components/shared/page-shell';
 import { Button } from '@/components/ui/button';
 import { parsePageParam } from '@/lib/api/filters';
 import { useGroupsQuery } from '@/lib/api/groups';
-import { useStudentsQuery } from '@/lib/api/students';
+import { useStudentsQuery, useStudentsSummaryQuery } from '@/lib/api/students';
 import { StudentCard } from './student-card';
 import { STUDENTS_ROW_LAYOUT, useStudentsListColumns } from './students-list-columns';
 import { useStudentsCollectionInsights } from './students-list-insights';
@@ -60,27 +61,17 @@ export function StudentsList({ nowMs }: { nowMs?: number } = {}) {
   });
   const groups = useGroupsQuery({ page: 1, pageSize: 100 });
 
-  // Facet counts are their own one-row queries: a collection page can never
-  // derive a total from the rows it happens to be showing.
-  const totalMetric = useStudentsQuery({ page: 1, pageSize: 1, state: 'active' });
-  const activeMetric = useStudentsQuery({
-    page: 1,
-    pageSize: 1,
-    state: 'active',
-    status: 'ACTIVE',
+  // Facet counts come from the server's per-status summary: a collection page
+  // can never derive a total from the rows it happens to be showing.
+  const summary = useStudentsSummaryQuery();
+  const counts = summary.data;
+  const countMetric = (total: number | undefined) => ({
+    data: total === undefined ? undefined : { total },
+    isPending: summary.isPending,
+    isError: summary.isError,
   });
-  const onHoldMetric = useStudentsQuery({
-    page: 1,
-    pageSize: 1,
-    state: 'active',
-    status: 'ON_HOLD',
-  });
-  const archivedMetric = useStudentsQuery({
-    page: 1,
-    pageSize: 1,
-    state: 'deleted',
-    status: 'ARCHIVED',
-  });
+  const totalMetric = countMetric(counts?.all);
+  const activeMetric = countMetric(counts?.ACTIVE);
 
   const { rollups, packagesState, packageMetrics, lessonsThisWeek, studentsThisWeek } =
     useStudentsCollectionInsights(now);
@@ -90,8 +81,8 @@ export function StudentsList({ nowMs }: { nowMs?: number } = {}) {
   const items = students.data?.items ?? [];
   const showEmpty = students.isSuccess && items.length === 0;
   const filtersActive = Boolean(search || status || groupId);
-  const total = totalMetric.data?.total;
-  const workspaceEmpty = total === 0 && archivedMetric.data?.total === 0;
+  const total = counts?.all;
+  const workspaceEmpty = total === 0 && counts?.ARCHIVED === 0;
   const searchRef = useRef<HTMLInputElement>(null);
   // Both commands remove the control that ran them, so focus goes to search.
   const clearFilters = () => {
@@ -114,7 +105,7 @@ export function StudentsList({ nowMs }: { nowMs?: number } = {}) {
               total && studentsThisWeek !== undefined ? (
                 <>
                   <span className="md:hidden">
-                    {t('subtitleShort', { total, active: activeMetric.data?.total ?? 0 })}
+                    {t('subtitleShort', { total, active: counts?.ACTIVE ?? 0 })}
                   </span>
                   <span className="hidden md:inline">
                     {t('subtitleCounts', { total, week: studentsThisWeek })}
@@ -161,10 +152,10 @@ export function StudentsList({ nowMs }: { nowMs?: number } = {}) {
             <StudentsListFilters
               status={(status ?? 'all') as StudentStatusTab}
               counts={{
-                all: totalMetric.data?.total,
-                ACTIVE: activeMetric.data?.total,
-                ON_HOLD: onHoldMetric.data?.total,
-                ARCHIVED: archivedMetric.data?.total,
+                all: counts?.all,
+                ACTIVE: counts?.ACTIVE,
+                ON_HOLD: counts?.ON_HOLD,
+                ARCHIVED: counts?.ARCHIVED,
               }}
               groupId={groupId}
               groupOptions={(groups.data?.items ?? []).map((group) => ({

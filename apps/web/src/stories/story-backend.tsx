@@ -375,7 +375,11 @@ function toListItem(item: SampleStudent): StudentListItem {
   };
 }
 
-function toDetail(item: SampleStudent, parents: SampleParent[], links: ParentLink[]): StudentDetail {
+function toDetail(
+  item: SampleStudent,
+  parents: SampleParent[],
+  links: ParentLink[],
+): StudentDetail {
   const { groupNames: _groups, ...rest } = item;
   void _groups;
   return {
@@ -467,6 +471,18 @@ function createHandler(options: StoryBackendOptions) {
       if (!paging.success) return json({ code: 'VALIDATION_FAILED' }, 400);
     }
 
+    // Before the detail route: "summary" is not a student id.
+    if (path === '/students/summary') {
+      const count = (status: SampleStudent['status']) =>
+        students.filter((item) => item.status === status).length;
+      return json({
+        all: count('ACTIVE') + count('ON_HOLD'),
+        ACTIVE: count('ACTIVE'),
+        ON_HOLD: count('ON_HOLD'),
+        ARCHIVED: count('ARCHIVED'),
+      });
+    }
+
     const detailMatch = path.match(/^\/students\/([^/]+)(\/restore)?$/);
     if (detailMatch) {
       const found = students.find((item) => item.id === detailMatch[1]);
@@ -489,12 +505,9 @@ function createHandler(options: StoryBackendOptions) {
           ];
         }
       }
-      if (found && method === 'DELETE')
-        Object.assign(found, {
-          status: 'ARCHIVED',
-          deletedAt: new Date(STORY_CLOCK).toISOString(),
-        });
-      if (found && detailMatch[2]) Object.assign(found, { status: 'ACTIVE', deletedAt: null });
+      // Like the API: archiving changes the status and never sets deletedAt.
+      if (found && method === 'DELETE') Object.assign(found, { status: 'ARCHIVED' });
+      if (found && detailMatch[2]) Object.assign(found, { status: 'ACTIVE' });
       return method === 'DELETE'
         ? new Response(null, { status: 204 })
         : json(found ? detailOf(found) : {});
@@ -511,6 +524,8 @@ function createHandler(options: StoryBackendOptions) {
       const pageSize = Number(query.get('pageSize') ?? 20);
       if (options.list === 'pending' && pageSize > 1) return never();
       if (options.list === 'error' && pageSize > 1) return json({ code: 'UNEXPECTED' }, 500);
+      // The API's student semantics: `state` selects by status (archived
+      // students are never soft-deleted) and an explicit `status` wins.
       const status = query.get('status');
       const state = query.get('state') ?? 'active';
       const search = query.get('search')?.toLowerCase();
@@ -520,7 +535,7 @@ function createHandler(options: StoryBackendOptions) {
             ? item.status === status
             : state === 'deleted'
               ? item.status === 'ARCHIVED'
-              : item.status !== 'ARCHIVED') &&
+              : state === 'all' || item.status !== 'ARCHIVED') &&
           (!search || item.fullName.toLowerCase().includes(search)),
       );
       return json(page(rows.map(toListItem), pageSize));

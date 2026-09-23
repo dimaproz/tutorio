@@ -9,15 +9,12 @@ import type {
   StudentEnrollmentSummary,
 } from '@tutorio/validation';
 import { SectionTitle } from '@/components/shared/detail-view';
-import { QueryErrorAlert } from '@/components/shared/page-shell';
 import { Button } from '@/components/ui/button';
 import { Card, CardAction, CardContent, CardHeader } from '@/components/ui/card';
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
 import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from '@/components/ui/item';
-import { Spinner } from '@/components/ui/spinner';
 import { EnrollmentDialog, EnrollmentStatusBadge } from '@/features/enrollments';
 import { BillingTypeBadge } from '@/features/packages';
-import { useEnrollmentQuery } from '@/lib/api/enrollments';
 import { formatMoneyDisplay } from '@/lib/money';
 
 export function StudentLearningCard({
@@ -122,8 +119,9 @@ function StudentEnrollmentItem({
   onEdit: (enrollment: EnrollmentResponse) => void;
 }) {
   const t = useTranslations('students.learning');
-  const details = useEnrollmentQuery(enrollment.id, !readOnly);
 
+  // The profile's enrollment is the full enrollment response, so the editor
+  // opens straight from it without fetching each enrollment again.
   return (
     <li className="flex flex-col gap-2">
       <Item variant="outline">
@@ -142,26 +140,12 @@ function StudentEnrollmentItem({
         </ItemContent>
         {!readOnly ? (
           <ItemActions>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => details.data && onEdit(details.data)}
-              disabled={!details.data || details.isFetching}
-            >
-              {details.isFetching ? <Spinner data-icon="inline-start" /> : null}
+            <Button type="button" variant="outline" size="sm" onClick={() => onEdit(enrollment)}>
               {t('edit')}
             </Button>
           </ItemActions>
         ) : null}
       </Item>
-      {!readOnly && details.isError ? (
-        <QueryErrorAlert
-          error={details.error}
-          title={t('loadError')}
-          onRetry={() => void details.refetch()}
-        />
-      ) : null}
     </li>
   );
 }

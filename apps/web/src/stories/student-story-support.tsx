@@ -36,6 +36,11 @@ export const storyStudent: StudentDetail = {
   }],
   enrollments: [{
     id: '44444444-4444-4444-8444-444444444444',
+    workspaceId: '11111111-1111-4111-8111-111111111111',
+    studentId: STORY_STUDENT_ID,
+    groupId: null,
+    teacherId: '55555555-5555-4555-8555-555555555555',
+    student: { id: STORY_STUDENT_ID, fullName: 'Anna Shevchenko' },
     status: 'ACTIVE',
     billingType: 'PACKAGE',
     priceMinor: 50000,
@@ -44,6 +49,9 @@ export const storyStudent: StudentDetail = {
     effectiveCancellationDeadlineHours: 12,
     group: null,
     teacher: { id: '55555555-5555-4555-8555-555555555555', name: 'Dmytro Tutor', color: null },
+    createdAt: '2026-09-01T10:00:00.000Z',
+    updatedAt: '2026-09-01T10:00:00.000Z',
+    deletedAt: null,
   }],
   notes: 'Preparing for the B2 exam.',
   createdAt: '2026-08-20T09:00:00.000Z',
@@ -51,25 +59,8 @@ export const storyStudent: StudentDetail = {
   deletedAt: null,
 };
 
-export const storyEnrollment: EnrollmentResponse = {
-  id: storyStudent.enrollments[0].id,
-  workspaceId: storyStudent.workspaceId,
-  studentId: storyStudent.id,
-  groupId: null,
-  teacherId: storyStudent.enrollments[0].teacher.id,
-  student: { id: storyStudent.id, fullName: storyStudent.fullName },
-  group: null,
-  teacher: storyStudent.enrollments[0].teacher,
-  status: storyStudent.enrollments[0].status,
-  billingType: storyStudent.enrollments[0].billingType,
-  priceMinor: storyStudent.enrollments[0].priceMinor,
-  currency: 'UAH',
-  cancellationDeadlineHours: null,
-  effectiveCancellationDeadlineHours: 12,
-  createdAt: '2026-09-01T10:00:00.000Z',
-  updatedAt: '2026-09-01T10:00:00.000Z',
-  deletedAt: null,
-};
+// The profile carries the full enrollment, so the editor story uses it as is.
+export const storyEnrollment: EnrollmentResponse = storyStudent.enrollments[0];
 
 const session: AuthMe = {
   user: { id: '66666666-6666-4666-8666-666666666666', email: 'owner@example.test', name: 'Owner' },
