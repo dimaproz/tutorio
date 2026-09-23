@@ -236,3 +236,8 @@ Tracked in [`next-work.md`](../next-work.md): (1) lesson core and conflicts,
 (2) schedule model, (3) billing core, (4) automation and bulk cancel,
 (5) package kinds and operations, (6) pause, (7) read APIs; the screens
 follow the owner's mockups.
+
+| Phase                         | State                                             | Rules in force                                                                                                                                            |
+| ----------------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 — Lesson core and conflicts | Implemented 2026-09-23 (API; interim web actions) | L-1 (makeup kind), L-31, L-40, L-52, L-53, L-60, L-61 (decided when the makeup's status changes), L-110 and L-111 on lesson create, move, edit and makeup |
+| 2–7                           | Not started                                       | —                                                                                                                                                         |

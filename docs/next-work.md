@@ -310,9 +310,12 @@ phase ships one migration (test data only: the dev database is reseeded),
 pure domain rules with unit tests, API E2E on the isolated PostgreSQL, and a
 green gate.
 
-1. **Lesson core and conflicts** — topic, makeup kind and link, no-show,
-   per-lesson price override; edit time, duration, teacher, price; one
-   conflict check for teacher and student with "save anyway" everywhere.
+1. **Lesson core and conflicts** — done 2026-09-23: topic, makeup kind and
+   link (`POST /lessons/:id/makeup`), no-show, corrections between final
+   statuses (no return to "scheduled" after the end), per-lesson duration,
+   teacher and price edits, and one teacher-and-student conflict check with
+   "save anyway" on lesson create, move, edit and makeup. Schedules adopt
+   the student check in phase 2; the price override moves to phase 3.
 2. **Schedule model** — per-weekday times, one duration, versions by
    effective date, rolling horizon (studio default 4 weeks) with a daily
    top-up, optional end date, stop, change preview and apply that moves
