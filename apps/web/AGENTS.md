@@ -109,9 +109,11 @@ when its entity collection outgrows the picker page.
   `FormProvider`; visual sections consume form context and do not call APIs.
 - Use `useWatch` for the specific fields a section needs; do not call
   `form.watch()` for the entire form.
-- A JSX component has one role and stays below 300 lines. Split larger files
-  into sections, hooks, and model modules. A documented exception is required
-  for generated shadcn components or a justified technical boundary.
+- A JSX component has one role. Keep queries, derived data, and business
+  transformations in hooks and `model` modules; the component composes. Around
+  300 lines is a review signal to check for a second role, not a limit: a long
+  form, generated art, or an upstream shadcn file is fine when it does one
+  thing. Never shorten a file by packing code onto long lines.
 
 ## Definition of Done
 
