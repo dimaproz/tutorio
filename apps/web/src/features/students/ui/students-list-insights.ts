@@ -1,17 +1,16 @@
 'use client';
 
 import { useMemo } from 'react';
-import { endOfWeek, startOfWeek } from 'date-fns';
 import { useFormatter } from 'next-intl';
 import { deriveCollectionMetrics } from '@/features/students/model/collection-metrics';
+import {
+  collectionLessonWindow,
+  splitCollectionLessons,
+} from '@/features/students/model/lesson-window';
 import { deriveStudentRollups } from '@/features/students/model/rollups';
 import { useAllPackagesQuery } from '@/lib/api/packages';
 import { useLessonsQuery } from '@/lib/api/scheduling';
 import type { PackagesReadState } from './student-row-cells';
-
-const DAY_MS = 24 * 60 * 60 * 1000;
-/** How far ahead the collection looks for each student's next lesson. */
-const UPCOMING_DAYS = 60;
 
 /**
  * What the collection knows beyond the student rows: this week's lessons,
@@ -21,23 +20,15 @@ const UPCOMING_DAYS = 60;
 export function useStudentsCollectionInsights(now: number) {
   const format = useFormatter();
 
-  // The lesson window is a flat, complete list, so the weekly count is exact.
-  const week = useMemo(
-    () => ({
-      from: startOfWeek(now, { weekStartsOn: 1 }),
-      to: endOfWeek(now, { weekStartsOn: 1 }),
-    }),
-    [now],
+  // One lesson read covers both the week and the upcoming horizon. It is a
+  // flat, complete list, so the weekly count is exact.
+  const lessonWindow = useMemo(() => collectionLessonWindow(now), [now]);
+  const lessons = useLessonsQuery(lessonWindow.query);
+  const split = useMemo(
+    () =>
+      lessons.data ? splitCollectionLessons(lessons.data.items, lessonWindow, now) : undefined,
+    [lessons.data, lessonWindow, now],
   );
-  const weekLessons = useLessonsQuery({
-    from: week.from.toISOString(),
-    to: week.to.toISOString(),
-  });
-  const upcomingLessons = useLessonsQuery({
-    from: new Date(now).toISOString(),
-    to: new Date(now + UPCOMING_DAYS * DAY_MS).toISOString(),
-    status: 'SCHEDULED',
-  });
 
   // Package metrics are derived client-side, so the read has to cover every
   // package for the aggregate to be true; the model rejects a partial set.
@@ -60,18 +51,18 @@ export function useStudentsCollectionInsights(now: number) {
       deriveStudentRollups({
         packages: packages.data?.items ?? [],
         packagesComplete,
-        lessons: upcomingLessons.data?.items ?? [],
+        lessons: split?.upcoming ?? [],
         now,
       }),
-    [packages.data, packagesComplete, upcomingLessons.data, now],
+    [packages.data, packagesComplete, split, now],
   );
 
   // Lessons this week are the ones that take place: planned or taught. A
   // cancellation, charged or not, is not a lesson on the calendar.
-  const weekItems = weekLessons.data?.items.filter(
+  const weekItems = split?.week.filter(
     (lesson) => lesson.status === 'SCHEDULED' || lesson.status === 'COMPLETED',
   );
-  const lessonsThisWeek = weekLessons.isPending
+  const lessonsThisWeek = lessons.isPending
     ? undefined
     : !weekItems
       ? null
@@ -79,7 +70,10 @@ export function useStudentsCollectionInsights(now: number) {
           total: weekItems.length,
           individual: weekItems.filter((lesson) => lesson.groupId === null).length,
           group: weekItems.filter((lesson) => lesson.groupId !== null).length,
-          range: format.dateTimeRange(week.from, week.to, { day: 'numeric', month: 'short' }),
+          range: format.dateTimeRange(lessonWindow.week.from, lessonWindow.week.to, {
+            day: 'numeric',
+            month: 'short',
+          }),
         };
   const studentsThisWeek = weekItems
     ? new Set(weekItems.flatMap((lesson) => (lesson.student ? [lesson.student.id] : []))).size

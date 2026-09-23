@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { addDays, startOfDay, subDays } from 'date-fns';
 import { CalendarIcon, MoreHorizontalIcon } from 'lucide-react';
 import { useFormatter, useTranslations } from 'next-intl';
 import type { LessonResponse } from '@tutorio/validation';
@@ -16,13 +17,18 @@ import { LessonStatusBadge } from './lesson-status';
 // How far back and forward a student's schedule is read on their profile.
 const PAST_DAYS = 120;
 const FUTURE_DAYS = 120;
-const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** The profile's lesson window; sharing it lets every block reuse one query. */
+/**
+ * The profile's lesson window; sharing it lets every block reuse one query.
+ * Both ends are whole days, so the query key stays the same all day rather
+ * than changing with each mount's clock. The upcoming/past split still uses
+ * the precise `now`.
+ */
 export function studentLessonsRange(now: number) {
+  const today = startOfDay(now);
   return {
-    from: new Date(now - PAST_DAYS * DAY_MS).toISOString(),
-    to: new Date(now + FUTURE_DAYS * DAY_MS).toISOString(),
+    from: subDays(today, PAST_DAYS).toISOString(),
+    to: addDays(today, FUTURE_DAYS + 1).toISOString(),
   };
 }
 
