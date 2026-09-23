@@ -17,13 +17,14 @@ function invalidateEnrollmentGraph(queryClient: QueryClient) {
   void queryClient.invalidateQueries({ queryKey: queryKeys.enrollments.all });
   void queryClient.invalidateQueries({ queryKey: queryKeys.students.all });
   void queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
-  void queryClient.invalidateQueries({ queryKey: queryKeys.audit.all });
+  // The audit log lives on the settings page: mark it stale, read it when shown.
+  void queryClient.invalidateQueries({ queryKey: queryKeys.audit.all, refetchType: 'none' });
 }
 
 export function useEnrollmentsQuery(filters: EnrollmentListFilters, enabled = true) {
   return useQuery<EnrollmentListResponse, GatewayError>({
     queryKey: queryKeys.enrollments.lists(filters),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       gatewayFetch<EnrollmentListResponse>(
         `/api/backend/enrollments${buildQueryString({
           page: filters.page,
@@ -32,6 +33,7 @@ export function useEnrollmentsQuery(filters: EnrollmentListFilters, enabled = tr
           teacherId: filters.teacherId,
           status: filters.status,
         })}`,
+        { signal },
       ),
     enabled,
   });
@@ -40,7 +42,8 @@ export function useEnrollmentsQuery(filters: EnrollmentListFilters, enabled = tr
 export function useEnrollmentQuery(enrollmentId: string, enabled = true) {
   return useQuery<EnrollmentResponse, GatewayError>({
     queryKey: queryKeys.enrollments.detail(enrollmentId),
-    queryFn: () => gatewayFetch<EnrollmentResponse>(`/api/backend/enrollments/${enrollmentId}`),
+    queryFn: ({ signal }) =>
+      gatewayFetch<EnrollmentResponse>(`/api/backend/enrollments/${enrollmentId}`, { signal }),
     enabled: enabled && Boolean(enrollmentId),
   });
 }

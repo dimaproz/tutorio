@@ -1,6 +1,6 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   CreateParentDto,
   ParentDetail,
@@ -10,24 +10,14 @@ import type {
 } from '@tutorio/validation';
 import { gatewayFetch, type GatewayError } from '@/lib/auth/client';
 import { buildQueryString } from './filters';
+import { applyInvalidations, parentInvalidations } from './invalidation';
 import { queryKeys, type ParentListFilters } from './keys';
-
-// Parents affect the student roster (linked-student refs and vice versa), so
-// mutations invalidate both graphs.
-function invalidateParentGraph(queryClient: QueryClient, parentId?: string) {
-  void queryClient.invalidateQueries({ queryKey: queryKeys.parents.all });
-  void queryClient.invalidateQueries({ queryKey: queryKeys.students.all });
-  void queryClient.invalidateQueries({ queryKey: queryKeys.audit.all });
-  if (parentId) {
-    void queryClient.invalidateQueries({ queryKey: queryKeys.parents.detail(parentId) });
-  }
-}
 
 export function useParentsQuery(filters: ParentListFilters, enabled = true) {
   return useQuery<ParentListResponse, GatewayError>({
     queryKey: queryKeys.parents.lists(filters),
     enabled,
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       gatewayFetch<ParentListResponse>(
         `/api/backend/parents${buildQueryString({
           page: filters.page,
@@ -39,6 +29,7 @@ export function useParentsQuery(filters: ParentListFilters, enabled = true) {
           sort: filters.sort,
           order: filters.order,
         })}`,
+        { signal },
       ),
     placeholderData: (previous) => previous,
   });
@@ -48,7 +39,8 @@ export function useParentQuery(parentId: string, enabled = true) {
   return useQuery<ParentDetail, GatewayError>({
     queryKey: queryKeys.parents.detail(parentId),
     enabled: enabled && Boolean(parentId),
-    queryFn: () => gatewayFetch<ParentDetail>(`/api/backend/parents/${parentId}`),
+    queryFn: ({ signal }) =>
+      gatewayFetch<ParentDetail>(`/api/backend/parents/${parentId}`, { signal }),
   });
 }
 
@@ -60,8 +52,8 @@ export function useCreateParentMutation() {
         method: 'POST',
         body: JSON.stringify(dto),
       }),
-    onSuccess: (parent) => {
-      invalidateParentGraph(queryClient, parent.id);
+    onSuccess: (_parent, dto) => {
+      applyInvalidations(queryClient, parentInvalidations({ kind: 'create', dto }));
     },
   });
 }
@@ -76,8 +68,8 @@ export function useUpdateParentMutation(parentId: string) {
         method: 'PATCH',
         body: JSON.stringify(dto),
       }),
-    onSuccess: () => {
-      invalidateParentGraph(queryClient, parentId);
+    onSuccess: (_parent, dto) => {
+      applyInvalidations(queryClient, parentInvalidations({ kind: 'update', dto }));
     },
   });
 }
@@ -87,8 +79,8 @@ export function useDeleteParentMutation() {
   return useMutation<void, GatewayError, string>({
     mutationFn: (parentId) =>
       gatewayFetch<void>(`/api/backend/parents/${parentId}`, { method: 'DELETE' }),
-    onSuccess: (_result, parentId) => {
-      invalidateParentGraph(queryClient, parentId);
+    onSuccess: () => {
+      applyInvalidations(queryClient, parentInvalidations({ kind: 'delete' }));
     },
   });
 }

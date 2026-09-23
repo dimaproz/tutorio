@@ -6,7 +6,8 @@ import type {
   UpdateWorkspaceSettingsDto,
   WorkspaceMemberListResponse,
 } from '@tutorio/validation';
-import { gatewayFetch, SESSION_QUERY_KEY, type GatewayError } from '@/lib/auth/client';
+import { gatewayFetch, type GatewayError } from '@/lib/auth/client';
+import { applyInvalidations, workspaceSettingsInvalidations } from './invalidation';
 import { queryKeys } from './keys';
 
 // Read-only roster powering the teacher selector.
@@ -14,8 +15,10 @@ export function useWorkspaceMembersQuery(enabled = true) {
   return useQuery<WorkspaceMemberListResponse, GatewayError>({
     queryKey: queryKeys.workspace.members,
     enabled,
-    queryFn: () =>
-      gatewayFetch<WorkspaceMemberListResponse>('/api/backend/workspaces/current/members'),
+    queryFn: ({ signal }) =>
+      gatewayFetch<WorkspaceMemberListResponse>('/api/backend/workspaces/current/members', {
+        signal,
+      }),
     staleTime: 5 * 60 * 1000,
   });
 }
@@ -28,14 +31,8 @@ export function useUpdateWorkspaceSettingsMutation() {
         method: 'PATCH',
         body: JSON.stringify(dto),
       }),
-    onSuccess: () => {
-      // The session carries workspace defaults, and enrollments without an
-      // override display the new effective deadline.
-      void queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEY });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.workspace.current });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.enrollments.all });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.students.all });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.audit.all });
+    onSuccess: (_workspace, dto) => {
+      applyInvalidations(queryClient, workspaceSettingsInvalidations(dto));
     },
   });
 }

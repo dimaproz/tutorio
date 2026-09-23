@@ -1,6 +1,6 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   CreateStudentDto,
   StudentDetail,
@@ -10,27 +10,14 @@ import type {
 } from '@tutorio/validation';
 import { gatewayFetch, type GatewayError } from '@/lib/auth/client';
 import { buildQueryString } from './filters';
+import { applyInvalidations, studentInvalidations } from './invalidation';
 import { queryKeys, type StudentListFilters } from './keys';
-
-// Invalidating the audit list is a no-op for teachers (they never mount it),
-// so hooks do not need to know the current role.
-function invalidateStudentGraph(queryClient: QueryClient, studentId?: string) {
-  void queryClient.invalidateQueries({ queryKey: queryKeys.students.all });
-  // A student's parent links are the other side of each parent's roster.
-  void queryClient.invalidateQueries({ queryKey: queryKeys.parents.all });
-  void queryClient.invalidateQueries({ queryKey: queryKeys.enrollments.all });
-  void queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
-  void queryClient.invalidateQueries({ queryKey: queryKeys.audit.all });
-  if (studentId) {
-    void queryClient.invalidateQueries({ queryKey: queryKeys.students.detail(studentId) });
-  }
-}
 
 export function useStudentsQuery(filters: StudentListFilters, enabled = true) {
   return useQuery<StudentListResponse, GatewayError>({
     queryKey: queryKeys.students.lists(filters),
     enabled,
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       gatewayFetch<StudentListResponse>(
         `/api/backend/students${buildQueryString({
           page: filters.page,
@@ -42,6 +29,7 @@ export function useStudentsQuery(filters: StudentListFilters, enabled = true) {
           sort: filters.sort,
           order: filters.order,
         })}`,
+        { signal },
       ),
     placeholderData: (previous) => previous,
   });
@@ -51,7 +39,8 @@ export function useStudentQuery(studentId: string, enabled = true) {
   return useQuery<StudentDetail, GatewayError>({
     queryKey: queryKeys.students.detail(studentId),
     enabled: enabled && Boolean(studentId),
-    queryFn: () => gatewayFetch<StudentDetail>(`/api/backend/students/${studentId}`),
+    queryFn: ({ signal }) =>
+      gatewayFetch<StudentDetail>(`/api/backend/students/${studentId}`, { signal }),
   });
 }
 
@@ -63,8 +52,8 @@ export function useCreateStudentMutation() {
         method: 'POST',
         body: JSON.stringify(dto),
       }),
-    onSuccess: (student) => {
-      invalidateStudentGraph(queryClient, student.id);
+    onSuccess: (_student, dto) => {
+      applyInvalidations(queryClient, studentInvalidations({ kind: 'create', dto }));
     },
   });
 }
@@ -77,8 +66,8 @@ export function useUpdateStudentMutation(studentId: string) {
         method: 'PATCH',
         body: JSON.stringify(dto),
       }),
-    onSuccess: () => {
-      invalidateStudentGraph(queryClient, studentId);
+    onSuccess: (_student, dto) => {
+      applyInvalidations(queryClient, studentInvalidations({ kind: 'update', dto }));
     },
   });
 }
@@ -90,8 +79,8 @@ export function useArchiveStudentMutation() {
   return useMutation<void, GatewayError, string>({
     mutationFn: (studentId) =>
       gatewayFetch<void>(`/api/backend/students/${studentId}`, { method: 'DELETE' }),
-    onSuccess: (_result, studentId) => {
-      invalidateStudentGraph(queryClient, studentId);
+    onSuccess: () => {
+      applyInvalidations(queryClient, studentInvalidations({ kind: 'archive' }));
     },
   });
 }
@@ -103,8 +92,8 @@ export function useRestoreStudentMutation() {
       gatewayFetch<StudentResponse>(`/api/backend/students/${studentId}/restore`, {
         method: 'POST',
       }),
-    onSuccess: (student) => {
-      invalidateStudentGraph(queryClient, student.id);
+    onSuccess: () => {
+      applyInvalidations(queryClient, studentInvalidations({ kind: 'restore' }));
     },
   });
 }

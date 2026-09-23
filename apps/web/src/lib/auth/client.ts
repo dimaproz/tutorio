@@ -46,7 +46,7 @@ export const SESSION_QUERY_KEY = ['session'] as const;
 export function useSessionQuery(initialSession?: AuthMe) {
   return useQuery<AuthMe, GatewayError>({
     queryKey: SESSION_QUERY_KEY,
-    queryFn: () => gatewayFetch<AuthMe>('/api/backend/auth/me'),
+    queryFn: ({ signal }) => gatewayFetch<AuthMe>('/api/backend/auth/me', { signal }),
     retry: (failureCount, error) => error.status !== 401 && failureCount < 2,
     initialData: initialSession,
   });

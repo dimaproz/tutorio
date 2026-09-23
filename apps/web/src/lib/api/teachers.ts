@@ -1,11 +1,6 @@
 'use client';
 
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-  type QueryClient,
-} from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   CreateTeacherDto,
   TeacherListResponse,
@@ -14,25 +9,14 @@ import type {
 } from '@tutorio/validation';
 import { gatewayFetch, type GatewayError } from '@/lib/auth/client';
 import { buildQueryString } from './filters';
+import { applyInvalidations, teacherInvalidations } from './invalidation';
 import { queryKeys, type TeacherListFilters } from './keys';
-
-function invalidateTeacherGraph(queryClient: QueryClient, teacherId?: string) {
-  void queryClient.invalidateQueries({ queryKey: queryKeys.teachers.all });
-  // Teacher names/colors surface on enrollments, groups and the calendar.
-  void queryClient.invalidateQueries({ queryKey: queryKeys.enrollments.all });
-  void queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
-  void queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all });
-  void queryClient.invalidateQueries({ queryKey: queryKeys.audit.all });
-  if (teacherId) {
-    void queryClient.invalidateQueries({ queryKey: queryKeys.teachers.detail(teacherId) });
-  }
-}
 
 export function useTeachersQuery(filters: TeacherListFilters, enabled = true) {
   return useQuery<TeacherListResponse, GatewayError>({
     queryKey: queryKeys.teachers.lists(filters),
     enabled,
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       gatewayFetch<TeacherListResponse>(
         `/api/backend/teachers${buildQueryString({
           page: filters.page,
@@ -41,6 +25,7 @@ export function useTeachersQuery(filters: TeacherListFilters, enabled = true) {
           state: filters.state,
           status: filters.status,
         })}`,
+        { signal },
       ),
     placeholderData: (previous) => previous,
   });
@@ -50,7 +35,8 @@ export function useTeacherQuery(teacherId: string, enabled = true) {
   return useQuery<TeacherResponse, GatewayError>({
     queryKey: queryKeys.teachers.detail(teacherId),
     enabled: enabled && Boolean(teacherId),
-    queryFn: () => gatewayFetch<TeacherResponse>(`/api/backend/teachers/${teacherId}`),
+    queryFn: ({ signal }) =>
+      gatewayFetch<TeacherResponse>(`/api/backend/teachers/${teacherId}`, { signal }),
   });
 }
 
@@ -62,7 +48,7 @@ export function useCreateTeacherMutation() {
         method: 'POST',
         body: JSON.stringify(dto),
       }),
-    onSuccess: (teacher) => invalidateTeacherGraph(queryClient, teacher.id),
+    onSuccess: () => applyInvalidations(queryClient, teacherInvalidations({ kind: 'create' })),
   });
 }
 
@@ -74,7 +60,8 @@ export function useUpdateTeacherMutation(teacherId: string) {
         method: 'PATCH',
         body: JSON.stringify(dto),
       }),
-    onSuccess: () => invalidateTeacherGraph(queryClient, teacherId),
+    onSuccess: (_teacher, dto) =>
+      applyInvalidations(queryClient, teacherInvalidations({ kind: 'update', dto })),
   });
 }
 
@@ -83,6 +70,6 @@ export function useDeleteTeacherMutation() {
   return useMutation<void, GatewayError, string>({
     mutationFn: (teacherId) =>
       gatewayFetch<void>(`/api/backend/teachers/${teacherId}`, { method: 'DELETE' }),
-    onSuccess: (_result, teacherId) => invalidateTeacherGraph(queryClient, teacherId),
+    onSuccess: () => applyInvalidations(queryClient, teacherInvalidations({ kind: 'delete' })),
   });
 }

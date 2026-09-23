@@ -27,7 +27,8 @@ import { queryKeys, type PackageListFilters, type PaymentListFilters } from './k
 function invalidateFinanceGraph(queryClient: QueryClient) {
   void queryClient.invalidateQueries({ queryKey: queryKeys.packages.all });
   void queryClient.invalidateQueries({ queryKey: queryKeys.payments.all });
-  void queryClient.invalidateQueries({ queryKey: queryKeys.audit.all });
+  // The audit log lives on the settings page: mark it stale, read it when shown.
+  void queryClient.invalidateQueries({ queryKey: queryKeys.audit.all, refetchType: 'none' });
   // Booking a package provisions lessons.
   void queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all });
   void queryClient.invalidateQueries({ queryKey: queryKeys.series.all });
@@ -54,7 +55,7 @@ export function usePrefetchPackagesQuery(filters: PackageListFilters) {
 export function packagesQueryOptions(filters: PackageListFilters) {
   return queryOptions<PackageListResponse, GatewayError>({
     queryKey: queryKeys.packages.lists(filters),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       gatewayFetch<PackageListResponse>(
         `/api/backend/packages${buildQueryString({
           page: filters.page,
@@ -64,6 +65,7 @@ export function packagesQueryOptions(filters: PackageListFilters) {
           paymentStatus: filters.paymentStatus,
           state: filters.state,
         })}`,
+        { signal },
       ),
   });
 }
@@ -85,7 +87,7 @@ export function useAllPackagesQuery(
   return useQuery<PackageListResponse, GatewayError>({
     queryKey: queryKeys.packages.everything(filters),
     enabled,
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const fetchPage = (page: number) =>
         gatewayFetch<PackageListResponse>(
           `/api/backend/packages${buildQueryString({
@@ -96,6 +98,7 @@ export function useAllPackagesQuery(
             paymentStatus: filters.paymentStatus,
             state: filters.state,
           })}`,
+          { signal },
         );
       // The first page says how many there are; the rest are read at once.
       const first = await fetchPage(1);
@@ -114,7 +117,8 @@ export function usePackageQuery(packageId: string, enabled = true) {
   return useQuery<PackageResponse, GatewayError>({
     queryKey: queryKeys.packages.detail(packageId),
     enabled: enabled && Boolean(packageId),
-    queryFn: () => gatewayFetch<PackageResponse>(`/api/backend/packages/${packageId}`),
+    queryFn: ({ signal }) =>
+      gatewayFetch<PackageResponse>(`/api/backend/packages/${packageId}`, { signal }),
   });
 }
 
@@ -123,7 +127,8 @@ export function usePackageLedgerQuery(packageId: string, enabled = true) {
   return useQuery<CreditLedgerResponse, GatewayError>({
     queryKey: queryKeys.packages.ledger(packageId),
     enabled: enabled && Boolean(packageId),
-    queryFn: () => gatewayFetch<CreditLedgerResponse>(`/api/backend/packages/${packageId}/ledger`),
+    queryFn: ({ signal }) =>
+      gatewayFetch<CreditLedgerResponse>(`/api/backend/packages/${packageId}/ledger`, { signal }),
   });
 }
 
@@ -170,7 +175,7 @@ export function usePaymentsQuery(filters: PaymentListFilters, enabled = true) {
   return useQuery<PaymentListResponse, GatewayError>({
     queryKey: queryKeys.payments.lists(filters),
     enabled,
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       gatewayFetch<PaymentListResponse>(
         `/api/backend/payments${buildQueryString({
           page: filters.page,
@@ -179,6 +184,7 @@ export function usePaymentsQuery(filters: PaymentListFilters, enabled = true) {
           packageId: filters.packageId,
           studentId: filters.studentId,
         })}`,
+        { signal },
       ),
     placeholderData: (previous) => previous,
   });

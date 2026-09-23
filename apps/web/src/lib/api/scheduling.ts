@@ -29,7 +29,8 @@ import { queryKeys, type LessonListFilters, type SeriesListFilters } from './key
 function invalidateSchedulingGraph(queryClient: QueryClient) {
   void queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all });
   void queryClient.invalidateQueries({ queryKey: queryKeys.series.all });
-  void queryClient.invalidateQueries({ queryKey: queryKeys.audit.all });
+  // The audit log lives on the settings page: mark it stale, read it when shown.
+  void queryClient.invalidateQueries({ queryKey: queryKeys.audit.all, refetchType: 'none' });
 }
 
 // ---------------------------------------------------------------------------
@@ -40,7 +41,7 @@ function invalidateSchedulingGraph(queryClient: QueryClient) {
 export function lessonsQueryOptions(filters: LessonListFilters) {
   return queryOptions<LessonListResponse, GatewayError>({
     queryKey: queryKeys.lessons.lists(filters),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       gatewayFetch<LessonListResponse>(
         `/api/backend/lessons${buildQueryString({
           from: filters.from,
@@ -51,6 +52,7 @@ export function lessonsQueryOptions(filters: LessonListFilters) {
           groupId: filters.groupId,
           status: filters.status,
         })}`,
+        { signal },
       ),
   });
 }
@@ -137,7 +139,7 @@ export function useSeriesListQuery(filters: SeriesListFilters, enabled = true) {
   return useQuery<LessonSeriesListResponse, GatewayError>({
     queryKey: queryKeys.series.lists(filters),
     enabled,
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       gatewayFetch<LessonSeriesListResponse>(
         `/api/backend/lesson-series${buildQueryString({
           page: filters.page,
@@ -146,6 +148,7 @@ export function useSeriesListQuery(filters: SeriesListFilters, enabled = true) {
           groupId: filters.groupId,
           teacherId: filters.teacherId,
         })}`,
+        { signal },
       ),
     placeholderData: (previous) => previous,
   });
