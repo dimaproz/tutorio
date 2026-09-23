@@ -72,9 +72,31 @@ export async function callAuthApi(
   return { status: response.status, data };
 }
 
+// In-flight rotations keyed by the presented refresh token. When several
+// proxied requests find the access token expired at once, they share one
+// rotation instead of each rotating the same token (which the API would
+// otherwise treat as replay). Entries live only until the rotation settles.
+const inflightRotations = new Map<string, Promise<AuthSession | null>>();
+
 // Rotates the refresh token server-to-server. Returns the full session on
 // success, null when the session is gone (invalid, expired, revoked).
-export async function rotateRefreshToken(
+// Concurrent calls with the same token within this process share one call.
+export function rotateRefreshToken(
+  refreshToken: string,
+  request?: NextRequest,
+): Promise<AuthSession | null> {
+  const pending = inflightRotations.get(refreshToken);
+  if (pending) {
+    return pending;
+  }
+  const rotation = requestRotation(refreshToken, request).finally(() => {
+    inflightRotations.delete(refreshToken);
+  });
+  inflightRotations.set(refreshToken, rotation);
+  return rotation;
+}
+
+async function requestRotation(
   refreshToken: string,
   request?: NextRequest,
 ): Promise<AuthSession | null> {

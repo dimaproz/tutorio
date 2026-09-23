@@ -272,6 +272,51 @@ describe('GET /api/backend/[...path]', () => {
     expect(response.cookies.get(REFRESH_COOKIE)).toMatchObject({ value: 'new-refresh-token' });
   });
 
+  it('shares one refresh rotation across parallel requests', async () => {
+    let releaseRefresh: (response: Response) => void = () => undefined;
+    fetchMock.mockImplementation((target: string, init: RequestInit) => {
+      if (String(target).endsWith('/auth/refresh')) {
+        return new Promise<Response>((resolve) => {
+          releaseRefresh = resolve;
+        });
+      }
+      const authorization = new Headers(init.headers).get('authorization');
+      return Promise.resolve(
+        authorization === 'Bearer new-access-token'
+          ? jsonResponse(200, ME_PAYLOAD)
+          : jsonResponse(401, { code: 'SESSION_EXPIRED' }),
+      );
+    });
+    const call = () =>
+      backendGet(
+        makeRequest('/api/backend/auth/me', {
+          method: 'GET',
+          cookies: { [ACCESS_COOKIE]: 'expired-access', [REFRESH_COOKIE]: 'shared-refresh' },
+        }),
+        ctx,
+      );
+
+    const pending = [call(), call(), call()];
+    await vi.waitFor(() => {
+      const refreshCalls = fetchMock.mock.calls.filter(([target]) =>
+        String(target).endsWith('/auth/refresh'),
+      );
+      expect(refreshCalls).toHaveLength(1);
+      expect(fetchMock).toHaveBeenCalledTimes(4);
+    });
+    releaseRefresh(jsonResponse(200, SESSION_PAYLOAD));
+    const responses = await Promise.all(pending);
+
+    for (const response of responses) {
+      expect(response.status).toBe(200);
+      expect(response.cookies.get(REFRESH_COOKIE)).toMatchObject({ value: 'new-refresh-token' });
+    }
+    const refreshCalls = fetchMock.mock.calls.filter(([target]) =>
+      String(target).endsWith('/auth/refresh'),
+    );
+    expect(refreshCalls).toHaveLength(1);
+  });
+
   it('never retries more than once even if the retry also fails', async () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse(401, { code: 'SESSION_EXPIRED' }))
