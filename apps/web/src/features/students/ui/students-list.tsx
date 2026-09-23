@@ -149,7 +149,11 @@ export function StudentsList({ nowMs }: { nowMs?: number } = {}) {
     status: 'ARCHIVED',
   });
 
-  const weekItems = weekLessons.data?.items;
+  // Lessons this week are the ones that take place: planned or taught. A
+  // cancellation, charged or not, is not a lesson on the calendar.
+  const weekItems = weekLessons.data?.items.filter(
+    (lesson) => lesson.status === 'SCHEDULED' || lesson.status === 'COMPLETED',
+  );
   const lessonsThisWeek = weekLessons.isPending
     ? undefined
     : !weekItems
