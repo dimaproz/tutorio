@@ -4,6 +4,7 @@ import {
   studentDetailSchema,
   studentListResponseSchema,
   studentResponseSchema,
+  studentsSummarySchema,
   updateStudentSchema,
 } from '@tutorio/validation';
 import { createZodDto } from 'nestjs-zod';
@@ -19,3 +20,4 @@ export class ListStudentsQueryDto extends createZodDto(
 export class StudentDto extends createZodDto(studentResponseSchema) {}
 export class StudentDetailDto extends createZodDto(studentDetailSchema) {}
 export class StudentListDto extends createZodDto(studentListResponseSchema) {}
+export class StudentsSummaryDto extends createZodDto(studentsSummarySchema) {}

@@ -63,6 +63,7 @@ function buildPrismaMock() {
       findMany: jest.fn().mockResolvedValue([]),
       findFirst: jest.fn(),
       count: jest.fn().mockResolvedValue(0),
+      groupBy: jest.fn().mockResolvedValue([]),
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
@@ -186,7 +187,7 @@ describe('StudentsService.list', () => {
     ]);
   });
 
-  it('summarizes active enrollments and group names', async () => {
+  it('summarizes active enrollments and live group names', async () => {
     const { prisma, service } = buildService();
     prisma.student.findMany.mockResolvedValue([
       {
@@ -195,7 +196,6 @@ describe('StudentsService.list', () => {
           { status: 'ACTIVE', group: { name: 'B1 English' } },
           { status: 'ACTIVE', group: null },
           { status: 'PAUSED', group: { name: 'B1 English' } },
-          { status: 'ARCHIVED', group: { name: 'Old group' } },
         ],
       },
     ]);
@@ -205,8 +205,88 @@ describe('StudentsService.list', () => {
 
     expect(result.items[0]).toMatchObject({
       activeEnrollmentCount: 2,
-      groupNames: ['B1 English', 'Old group'],
+      groupNames: ['B1 English'],
       createdAt: NOW.toISOString(),
+    });
+    // Only live memberships feed the row: ACTIVE/PAUSED, not deleted, and
+    // never in an archived group.
+    expect(
+      prisma.student.findMany.mock.calls[0][0].include.enrollments.where,
+    ).toEqual({
+      deletedAt: null,
+      status: { in: ['ACTIVE', 'PAUSED'] },
+      OR: [{ groupId: null }, { group: { deletedAt: null } }],
+    });
+  });
+
+  it.each([
+    ['active', { status: { not: 'ARCHIVED' } }],
+    ['deleted', { status: 'ARCHIVED' }],
+  ] as const)(
+    'maps state=%s to a status filter on live rows',
+    async (state, filter) => {
+      const { prisma, service } = buildService();
+
+      await service.list(owner, listQuery({ state }));
+
+      const where = prisma.student.findMany.mock.calls[0][0].where;
+      expect(where).toMatchObject({ deletedAt: null, ...filter });
+      expect(prisma.student.count.mock.calls[0][0].where).toEqual(where);
+    },
+  );
+
+  it('lists every status for state=all and lets an explicit status win', async () => {
+    const { prisma, service } = buildService();
+
+    await service.list(owner, listQuery({ state: 'all' }));
+    await service.list(
+      owner,
+      listQuery({ state: 'active', status: 'ARCHIVED' }),
+    );
+
+    const [all, explicit] = prisma.student.findMany.mock.calls.map(
+      (call: [{ where: Record<string, unknown> }]) => call[0].where,
+    );
+    expect(all).toMatchObject({ deletedAt: null });
+    expect(all).not.toHaveProperty('status');
+    expect(explicit).toMatchObject({ deletedAt: null, status: 'ARCHIVED' });
+  });
+
+  it('filters by group through live memberships only', async () => {
+    const { prisma, service } = buildService();
+    const groupId = '66666666-6666-4666-8666-666666666666';
+
+    await service.list(owner, listQuery({ groupId }));
+
+    expect(prisma.student.findMany.mock.calls[0][0].where.enrollments).toEqual({
+      some: {
+        deletedAt: null,
+        status: { in: ['ACTIVE', 'PAUSED'] },
+        group: { deletedAt: null },
+        groupId,
+      },
+    });
+  });
+});
+
+describe('StudentsService.summary', () => {
+  it('counts every status with one grouped query', async () => {
+    const { prisma, service } = buildService();
+    prisma.student.groupBy.mockResolvedValue([
+      { status: 'ACTIVE', _count: { _all: 5 } },
+      { status: 'ARCHIVED', _count: { _all: 2 } },
+    ]);
+
+    await expect(service.summary(owner)).resolves.toEqual({
+      all: 5,
+      ACTIVE: 5,
+      ON_HOLD: 0,
+      ARCHIVED: 2,
+    });
+    expect(prisma.student.groupBy).toHaveBeenCalledTimes(1);
+    expect(prisma.student.groupBy.mock.calls[0][0]).toMatchObject({
+      by: ['status'],
+      where: { workspaceId: WORKSPACE_ID, deletedAt: null },
     });
   });
 });
@@ -228,32 +308,44 @@ describe('StudentsService.getDetail', () => {
     });
   });
 
-  it('resolves the effective cancellation deadline from the workspace', async () => {
+  it('returns full enrollment responses with the effective deadline', async () => {
     const { prisma, service } = buildService();
+    const created = new Date('2026-09-01T10:00:00.000Z');
+    const enrollmentRow = (overrides: Record<string, unknown>) => ({
+      workspaceId: WORKSPACE_ID,
+      studentId: STUDENT_ID,
+      teacherId: 't1',
+      student: { id: STUDENT_ID, fullName: 'Alice Example' },
+      teacher: { id: 't1', fullName: 'Olena', color: null },
+      createdAt: created,
+      updatedAt: created,
+      deletedAt: null,
+      ...overrides,
+    });
     prisma.student.findFirst.mockResolvedValue({
       ...studentRow,
       workspace: { cancellationDeadlineHours: 24 },
       enrollments: [
-        {
+        enrollmentRow({
           id: 'e1',
+          groupId: null,
           status: 'ACTIVE',
           billingType: 'PACKAGE',
           priceMinor: 2500,
           currency: 'EUR',
           cancellationDeadlineHours: 48,
           group: null,
-          teacher: { id: 't1', user: { name: 'Olena' } },
-        },
-        {
+        }),
+        enrollmentRow({
           id: 'e2',
+          groupId: 'g1',
           status: 'ACTIVE',
           billingType: 'MONTHLY',
           priceMinor: 10000,
           currency: 'EUR',
           cancellationDeadlineHours: null,
           group: { id: 'g1', name: 'B1' },
-          teacher: { id: 't1', user: { name: 'Olena' } },
-        },
+        }),
       ],
     });
 
@@ -261,6 +353,17 @@ describe('StudentsService.getDetail', () => {
 
     expect(detail.enrollments[0].effectiveCancellationDeadlineHours).toBe(48);
     expect(detail.enrollments[1].effectiveCancellationDeadlineHours).toBe(24);
+    // The profile edits enrollments without refetching each one.
+    expect(detail.enrollments[1]).toMatchObject({
+      workspaceId: WORKSPACE_ID,
+      studentId: STUDENT_ID,
+      groupId: 'g1',
+      teacherId: 't1',
+      student: { id: STUDENT_ID, fullName: 'Alice Example' },
+      teacher: { id: 't1', name: 'Olena', color: null },
+      createdAt: created.toISOString(),
+      deletedAt: null,
+    });
   });
 });
 
@@ -357,6 +460,80 @@ describe('StudentsService.update', () => {
   });
 });
 
+describe('StudentsService.restore', () => {
+  it('revives marked work with one read each and one update per prior status', async () => {
+    const { prisma, service } = buildService();
+    const archivedAt = new Date('2026-07-19T10:00:00.000Z');
+    prisma.student.findFirst.mockResolvedValue({
+      ...studentRow,
+      status: 'ARCHIVED',
+      archivedAt,
+    });
+    prisma.student.update.mockResolvedValue(studentRow);
+    prisma.enrollment.findMany.mockResolvedValue([
+      { id: 'e1', groupId: null, statusBeforeStudentArchive: 'ACTIVE' },
+      { id: 'e2', groupId: null, statusBeforeStudentArchive: 'PAUSED' },
+      { id: 'e3', groupId: null, statusBeforeStudentArchive: 'ACTIVE' },
+    ]);
+    prisma.lesson.findMany
+      // The suspended lessons to revive…
+      .mockResolvedValueOnce([
+        {
+          id: 'l1',
+          teacherId: 't1',
+          startsAtUtc: new Date(Date.now() + 86_400_000),
+          durationMin: 60,
+        },
+      ])
+      // …and the teacher's busy lessons, read once for the whole batch.
+      .mockResolvedValueOnce([]);
+
+    await service.restore(owner, STUDENT_ID);
+
+    expect(prisma.enrollment.findMany).toHaveBeenCalledTimes(1);
+    expect(prisma.lesson.findMany).toHaveBeenCalledTimes(2);
+    expect(prisma.lesson.updateMany.mock.calls[0][0].where).toEqual({
+      id: { in: ['l1'] },
+    });
+    expect(
+      prisma.enrollment.updateMany.mock.calls.map(
+        (call: [{ where: unknown; data: { status: string } }]) => [
+          call[0].where,
+          call[0].data.status,
+        ],
+      ),
+    ).toEqual([
+      [{ id: { in: ['e1', 'e3'] } }, 'ACTIVE'],
+      [{ id: { in: ['e2'] } }, 'PAUSED'],
+    ]);
+    expect(prisma.enrollment.update).not.toHaveBeenCalled();
+  });
+
+  it('refuses to revive a lesson that now overlaps the teacher calendar', async () => {
+    const { prisma, service } = buildService();
+    const start = new Date(Date.now() + 86_400_000);
+    prisma.student.findFirst.mockResolvedValue({
+      ...studentRow,
+      status: 'ARCHIVED',
+      archivedAt: new Date('2026-07-19T10:00:00.000Z'),
+    });
+    prisma.lesson.findMany
+      .mockResolvedValueOnce([
+        { id: 'l1', teacherId: 't1', startsAtUtc: start, durationMin: 60 },
+      ])
+      .mockResolvedValueOnce([
+        { id: 'busy', teacherId: 't1', startsAtUtc: start, durationMin: 30 },
+      ]);
+
+    await expectBusinessError(
+      service.restore(owner, STUDENT_ID),
+      'SCHEDULE_CONFLICT',
+      409,
+    );
+    expect(prisma.student.update).not.toHaveBeenCalled();
+  });
+});
+
 describe('StudentsService.remove', () => {
   it('hard-deletes an unused student but never cascades enrollments', async () => {
     const { prisma, service } = buildService();
@@ -387,6 +564,22 @@ describe('StudentsService.remove', () => {
     );
     expect(prisma.student.delete).not.toHaveBeenCalled();
     expect(prisma.auditLog.create).not.toHaveBeenCalled();
+  });
+
+  it('takes the student lifecycle lock before counting history', async () => {
+    const { prisma, service } = buildService();
+    const executeRaw = jest.fn().mockResolvedValue(1);
+    Object.assign(prisma, { $executeRaw: executeRaw });
+    prisma.student.findFirst.mockResolvedValue(studentRow);
+
+    await service.remove(owner, STUDENT_ID);
+
+    expect(executeRaw.mock.calls[0][1]).toBe(
+      `${WORKSPACE_ID}:student:${STUDENT_ID}`,
+    );
+    expect(executeRaw.mock.invocationCallOrder[0]).toBeLessThan(
+      prisma.student.findFirst.mock.invocationCallOrder[0],
+    );
   });
 
   it('throws STUDENT_NOT_FOUND for a missing student', async () => {

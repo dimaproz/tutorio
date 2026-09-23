@@ -54,6 +54,17 @@ export async function lockGroupSchedule(
   await lockKeys(tx, [`${workspaceId}:group:${groupId}`]);
 }
 
+export async function lockGroupSchedules(
+  tx: Prisma.TransactionClient,
+  workspaceId: string,
+  groupIds: Iterable<string>,
+): Promise<void> {
+  await lockKeys(
+    tx,
+    [...groupIds].map((groupId) => `${workspaceId}:group:${groupId}`),
+  );
+}
+
 /**
  * Student lifecycle changes are ordered before group and teacher schedule
  * locks. Enrollment creation takes the same lock, so an archive cannot miss a

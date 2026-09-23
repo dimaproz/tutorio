@@ -114,6 +114,7 @@ const ownerRoutes = new Set([
   'StudentsController.remove',
   'StudentsController.removePermanently',
   'StudentsController.restore',
+  'StudentsController.summary',
   'StudentsController.update',
   'TeachersController.create',
   'TeachersController.getDetail',

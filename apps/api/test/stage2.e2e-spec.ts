@@ -396,6 +396,38 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
         .set('Authorization', auth(ownerA))
         .expect(200);
       expect(defaultList.body.total).toBe(0);
+      // The Archived tab asks state=deleted&status=ARCHIVED. Archive never sets
+      // deletedAt, so for students `state` selects by status.
+      for (const query of [
+        { state: 'deleted', status: 'ARCHIVED' },
+        { state: 'deleted' },
+        { status: 'ARCHIVED' },
+      ]) {
+        const archivedList = await server()
+          .get('/api/students')
+          .query(query)
+          .set('Authorization', auth(ownerA))
+          .expect(200);
+        expect(
+          archivedList.body.items.map((row: { id: string }) => row.id),
+        ).toEqual([studentId]);
+      }
+      const everyStatus = await server()
+        .get('/api/students')
+        .query({ state: 'all' })
+        .set('Authorization', auth(ownerA))
+        .expect(200);
+      expect(everyStatus.body.total).toBe(1);
+      const summary = await server()
+        .get('/api/students/summary')
+        .set('Authorization', auth(ownerA))
+        .expect(200);
+      expect(summary.body).toEqual({
+        all: 0,
+        ACTIVE: 0,
+        ON_HOLD: 0,
+        ARCHIVED: 1,
+      });
       const restored = await server()
         .post(`/api/students/${studentId}/restore`)
         .set('Authorization', auth(ownerA))

@@ -33,6 +33,7 @@ import {
   StudentDetailDto,
   StudentDto,
   StudentListDto,
+  StudentsSummaryDto,
   UpdateStudentDto,
 } from './dto/students.dto';
 import { StudentsService } from './students.service';
@@ -51,6 +52,10 @@ export class StudentsController {
     description:
       'Paginated summaries with active enrollment counts and group names. ' +
       'Search covers full name, contacts and Telegram username. ' +
+      'Students are archived, never soft-deleted: state=active lists every ' +
+      'student that is not ARCHIVED, state=deleted the ARCHIVED ones and ' +
+      'state=all every status; an explicit status wins. groupId matches ' +
+      'live memberships (ACTIVE or PAUSED, group not archived). ' +
       'state=deleted|all is owner-only.',
   })
   @ApiOkResponse({ type: StudentListDto })
@@ -61,6 +66,22 @@ export class StudentsController {
     @Query() query: ListStudentsQueryDto,
   ): Promise<StudentListDto> {
     return this.students.list(user, query);
+  }
+
+  // Declared before :studentId so "summary" is never parsed as an id.
+  @Get('summary')
+  @Roles('OWNER')
+  @ApiOperation({
+    summary: 'Count workspace students by status',
+    description:
+      'One grouped query for the collection tabs and header: `all` counts ' +
+      'every student that is not ARCHIVED; ACTIVE, ON_HOLD and ARCHIVED ' +
+      'count each status.',
+  })
+  @ApiOkResponse({ type: StudentsSummaryDto })
+  @ZodSerializerDto(StudentsSummaryDto)
+  summary(@CurrentUser() user: AuthenticatedUser): Promise<StudentsSummaryDto> {
+    return this.students.summary(user);
   }
 
   @Post()
