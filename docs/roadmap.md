@@ -89,7 +89,9 @@ Approved implementation order:
 4. Work Packet 6.3 — Groups and Enrollments (groups implemented 2026-09-23,
    ahead of 6.2 at the product owner's request; see
    [`product/groups.md`](./product/groups.md)).
-5. Work Packet 6.4 — Scheduling: Calendar and Recurring Patterns.
+5. Work Packet 6.4 — Lessons, schedules and charging: contract accepted
+   2026-09-23 ([`product/scheduling.md`](./product/scheduling.md), ADR 0007);
+   backend phases first, screens from the owner's mockups.
 6. Work Packet 6.5 — Package list, detail, ledger, and payment-history surfaces;
    the package sale flow remains reserved for Work Packet 7.
 7. Work Packet 6.6 — Dashboard and Settings.

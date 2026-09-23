@@ -279,10 +279,10 @@ blocker; its fifteen confirmed findings are fixed and the full gate is green
 
 Follow-ups, in the order they unblock the pilot:
 
-1. The schedule-change confirmation (how many booked lessons a change
-   rebuilds) — design with the product owner; until then the form shows an
-   existing schedule read-only with a link to recurring lessons.
-2. Attendance marking on the lesson screen (Work Packet 6.4); remove the
+1. The schedule-change confirmation — specified in
+   [`product/scheduling.md`](./product/scheduling.md) `L-25`; the owner is
+   designing it. Until then the form shows an existing schedule read-only.
+2. Attendance marking in the lesson side panel (Work Packet 6.4); remove the
    group page's interim dialog once it lands.
 3. A teacher filter on the students list and the per-student attendance
    series on the student profile, both now possible on the new data.
@@ -300,12 +300,41 @@ teacher scheduling and availability behavior feature-owned. A teacher's groups
 can now be read from `Group.teacherId` (`GET /groups?teacherId=`), and
 `LessonList` is ready for the teacher's lessons.
 
-### Work Packet 6.4 — Scheduling
+### Work Packet 6.4 — Lessons, Schedules and Charging (contract accepted 2026-09-23)
 
-Migrate Calendar, lesson actions, lesson creation/editing, and Recurring
-Patterns. Preserve time-zone, conflict, recurrence-scope, cancellation, credit,
-and pause semantics. Prefer shadcn overlays, fields, tabs, tables, toggles, and
-feedback components; scheduling-specific visualization remains feature-owned.
+The owner re-decided the whole lesson model; the contract is
+[`product/scheduling.md`](./product/scheduling.md) (rules `L-1`…`L-121`) and
+the model change is [ADR 0007](./decisions/0007-schedules-per-student-charging-package-credits.md).
+The backend is built in phases while the owner designs the screens; each
+phase ships one migration (test data only: the dev database is reseeded),
+pure domain rules with unit tests, API E2E on the isolated PostgreSQL, and a
+green gate.
+
+1. **Lesson core and conflicts** — topic, makeup kind and link, no-show,
+   per-lesson price override; edit time, duration, teacher, price; one
+   conflict check for teacher and student with "save anyway" everywhere.
+2. **Schedule model** — per-weekday times, one duration, versions by
+   effective date, rolling horizon (studio default 4 weeks) with a daily
+   top-up, optional end date, stop, change preview and apply that moves
+   lessons instead of deleting them, one schedule per student–teacher and
+   per group; packages stop creating schedules.
+3. **Billing core** — direction billing mode (package or pay-per-lesson) and
+   rate; per-participant lesson charges; oldest-package-first, debt and debt
+   cover, oldest-first payment allocation; group lessons charged per member
+   by attendance; group packages and participant shares removed.
+4. **Automation** — auto-complete at lesson end, bulk cancel with preview,
+   cancellation suggestion.
+5. **Package kinds and operations** — by count, by period from the schedule,
+   by period flexible; extend, transfer, refund, sell to group members.
+6. **Pause** — whole student or one direction, optional end, package
+   extension, automatic return.
+7. **Read APIs** — lessons list with filters, lesson side panel, schedules
+   list, student billing summary, low-credit warnings.
+
+Then the screens from the owner's mockups: Calendar, Lessons (List ·
+Schedules), the lesson side panel, schedule form and change confirmation,
+student profile blocks, group page changes, package sale form, pause and bulk
+cancel dialogs, settings.
 
 ### Work Packet 6.5 — Package Read Surfaces
 
@@ -323,9 +352,10 @@ patterns without introducing theme customization.
 
 ## Work Packet 7 — Lesson Pack Sale
 
-Implement [`product/packages.md`](./product/packages.md) after finance behavior is
-stable: fixed-pack primary path, no default schedule/payment, explicit next
-actions, lifecycle/detail states, and interaction tests.
+Implement the package sale from [`product/scheduling.md`](./product/scheduling.md)
+(`L-80`…`L-87`) and the flow in [`product/packages.md`](./product/packages.md):
+the three package kinds, no schedule or payment created by the sale, explicit
+next actions, lifecycle/detail states, and interaction tests.
 
 ## Work Packet 8 — Pilot Operations
 

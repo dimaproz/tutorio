@@ -15,6 +15,7 @@ and acceptance criteria. Domain invariants remain authoritative in
 | Create and onboard a student      | Audited; WP6 collection, quick-create, detail, lifecycle, and component brief is approved       | [Student workflow](./students.md)              |
 | Keep and link parent contacts     | WP6.1 collection, profile, full-page form and two-sided linking implemented                     | [Parent workflow](./parents.md)                |
 | Run a group and its attendance    | WP6.3 collection, group page, full-page form, roster and interim attendance marking implemented | [Group workflow](./groups.md)                  |
+| Schedule, hold and charge lessons | Contract accepted 2026-09-23 (rules L-1…L-121); implementation in Work Packet 6.4 phases        | [Lessons and schedules](./scheduling.md)       |
 | Sell and operate a lesson package | Functional but combines plan, schedule, and payment; financial invariants need stabilization    | [Package workflow](./packages.md)              |
 
 ## Workflow documentation template

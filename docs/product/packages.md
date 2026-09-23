@@ -1,5 +1,10 @@
 # Lesson Package Workflow
 
+> **Superseded in part (2026-09-23).** Package kinds, which package a lesson
+> uses, debt, group payment and schedules are now defined by
+> [`scheduling.md`](./scheduling.md) (`L-10`…`L-91`) and ADR 0007. Where this
+> document disagrees, `scheduling.md` wins.
+
 Last verified: 2026-08-24 through source inspection and a local authenticated
 visual audit of `/app/packages` and the create dialog at a desktop viewport.
 
