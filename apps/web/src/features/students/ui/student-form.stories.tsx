@@ -104,6 +104,21 @@ export const Edit: Story = {
   },
 };
 
+/** An in-app link away from unsaved edits asks first instead of dropping them. */
+export const EditLeaveGuard: Story = {
+  args: { mode: 'edit' },
+  play: async ({ canvas, canvasElement }) => {
+    const name = await canvas.findByRole('textbox', { name: /Full name/ });
+    await expect(name).toHaveValue('Anna Shevchenko');
+    await userEvent.type(name, ' K');
+    await userEvent.click(canvas.getByRole('link', { name: 'Calendar' }));
+    const dialog = within(canvasElement.ownerDocument.body);
+    await expect(await dialog.findByText('Discard changes?')).toBeVisible();
+    await userEvent.click(dialog.getByRole('button', { name: 'Cancel' }));
+    await expect(name).toHaveValue('Anna Shevchenko K');
+  },
+};
+
 export const EditArchived: Story = {
   args: { mode: 'edit', student: 'archived' },
   play: async ({ canvas }) => {

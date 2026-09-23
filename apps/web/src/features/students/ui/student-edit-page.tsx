@@ -103,6 +103,9 @@ function StudentEditForm({ student }: { student: StudentDetail }) {
   const update = useUpdateStudentMutation(student.id);
   const restore = useRestoreStudentMutation();
   const [discardOpen, setDiscardOpen] = useState(false);
+  // Where the tutor was heading when the discard prompt stopped them, if a
+  // link was the reason; the Discard button leaves the tutor on the page.
+  const [leavingTo, setLeavingTo] = useState<string | null>(null);
   const [defaults] = useState(() =>
     studentEditDefaults(student, session.workspace.defaultCurrency),
   );
@@ -113,7 +116,10 @@ function StudentEditForm({ student }: { student: StudentDetail }) {
   const archived = student.status === 'ARCHIVED';
   const profileHref = `/app/students/${student.id}`;
 
-  useLeaveGuard(isDirty && !saving && !archived);
+  useLeaveGuard(isDirty && !saving && !archived, (href) => {
+    setLeavingTo(href);
+    setDiscardOpen(true);
+  });
   // An archived record is shown as saved: every section reads as complete.
   const status = archived ? studentFormSectionStatus(defaults, []) : state.status;
   const navItems = useStudentFormNavItems(status);
@@ -138,6 +144,7 @@ function StudentEditForm({ student }: { student: StudentDetail }) {
   const discard = () => {
     form.reset(defaults);
     setDiscardOpen(false);
+    if (leavingTo) router.push(leavingTo);
   };
 
   const note = saving
@@ -174,7 +181,11 @@ function StudentEditForm({ student }: { student: StudentDetail }) {
           type="button"
           variant="outline"
           disabled={saving}
-          onClick={() => (isDirty ? setDiscardOpen(true) : router.push(profileHref))}
+          onClick={() => {
+            if (!isDirty) return router.push(profileHref);
+            setLeavingTo(null);
+            setDiscardOpen(true);
+          }}
         >
           {isDirty ? t('discard') : tCommon('cancel')}
         </Button>
