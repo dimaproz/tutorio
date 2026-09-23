@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { LessonFormDialog } from '@/features/scheduling';
+import { useStoredChoice } from '@/hooks/use-stored-choice';
 import { parsePageParam } from '@/lib/api/filters';
 import { useGroupsQuery, useGroupsSummaryQuery } from '@/lib/api/groups';
 import { useTeachersQuery } from '@/lib/api/teachers';
@@ -27,6 +28,7 @@ import {
   GroupsListFilters,
   type GroupSortField,
   type GroupTab,
+  GROUPS_VIEWS,
   type GroupsView,
 } from './groups-list-filters';
 import { GroupsListMetrics } from './groups-list-metrics';
@@ -62,7 +64,8 @@ export function GroupsList() {
   const searchParams = useSearchParams();
   const updateParams = useUpdateSearchParams();
   const searchRef = useRef<HTMLInputElement>(null);
-  const [view, setView] = useState<GroupsView>('grid');
+  // Cards or rows is this browser's choice, kept across visits.
+  const [view, setView] = useStoredChoice<GroupsView>('tutorio.groups.view', GROUPS_VIEWS, 'grid');
   const [scheduleFor, setScheduleFor] = useState<string | null>(null);
   const isOwner = session.role === 'OWNER';
   const school = session.workspace.mode === 'SCHOOL';

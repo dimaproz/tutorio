@@ -41,6 +41,10 @@ const meta = {
   title: 'Groups/Screens/Collection',
   component: GroupsCollectionScreen,
   parameters: { layout: 'fullscreen', fullBleed: true },
+  // The cards/rows choice is remembered per browser: every story starts on cards.
+  beforeEach: () => {
+    window.localStorage.removeItem('tutorio.groups.view');
+  },
   args: { state: 'populated', role: 'OWNER' },
   argTypes: {
     state: { control: 'inline-radio', options: ['populated', 'empty', 'loading', 'error'] },
@@ -161,5 +165,14 @@ export const EmptyWorkspace: Story = {
     await expect(await canvas.findByText('No groups yet')).toBeVisible();
     await expect(canvas.getByText('No groups yet.')).toBeVisible();
     await expect(canvas.queryByRole('searchbox', { name: 'Search groups' })).toBeNull();
+  },
+};
+
+/** The rows view is remembered: a reload opens the list as rows again. */
+export const RemembersView: Story = {
+  play: async ({ canvas }) => {
+    await userEvent.click(await canvas.findByRole('radio', { name: 'Rows' }));
+    await expect(window.localStorage.getItem('tutorio.groups.view')).toBe('rows');
+    await expect(await canvas.findByRole('table')).toBeVisible();
   },
 };

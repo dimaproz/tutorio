@@ -29,10 +29,16 @@ import { cn } from '@/lib/utils';
 export const GROUP_TABS = ['all', 'ACTIVE', 'EMPTY', 'archived'] as const;
 export type GroupTab = (typeof GROUP_TABS)[number];
 
-export const GROUP_SORT_FIELDS = ['name', 'activeStudentCount', 'pricePerLesson', 'createdAt'] as const;
+export const GROUP_SORT_FIELDS = [
+  'name',
+  'activeStudentCount',
+  'pricePerLesson',
+  'createdAt',
+] as const;
 export type GroupSortField = (typeof GROUP_SORT_FIELDS)[number];
 
-export type GroupsView = 'rows' | 'grid';
+export const GROUPS_VIEWS = ['grid', 'rows'] as const;
+export type GroupsView = (typeof GROUPS_VIEWS)[number];
 
 /** Monday first, the way the schedule pills read. */
 const WEEK = [1, 2, 3, 4, 5, 6, 0];

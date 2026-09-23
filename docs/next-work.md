@@ -286,8 +286,9 @@ Follow-ups, in the order they unblock the pilot:
    group page's interim dialog once it lands.
 3. A teacher filter on the students list and the per-student attendance
    series on the student profile, both now possible on the new data.
-4. Persist the collection view choice (cards/rows) for groups and students
-   together, or keep both unpersisted — one decision for both.
+4. ~~Persist the collection view choice.~~ Decided 2026-09-23: remembered
+   per browser in `localStorage` through `useStoredChoice`; groups use it,
+   and the students card view adopts it when it is built.
 5. Enrollment surfaces outside a group (individual enrollments) still live on
    the student profile; there is no standalone enrollment screen.
 

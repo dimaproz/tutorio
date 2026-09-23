@@ -79,8 +79,10 @@ The metrics are active groups (with an "N empty" badge), students in groups
 payment", the only one with an action: "View" sets `payment=unpaid`.
 
 Every filter lives in the URL; search is debounced and written with native
-history, so typing does not re-render the route. The view choice is not
-persisted, matching the students grid. Phones always get cards.
+history, so typing does not re-render the route. The cards/rows choice is
+remembered per browser (`useStoredChoice`, key `tutorio.groups.view`); the
+server render starts on cards and the stored choice applies on hydration.
+Phones always get cards.
 
 States: loading skeleton; query error with retry; true empty (`GroupsEmpty`,
 no toolbar, one "Create group"); search with no hits (toolbar and metrics
@@ -229,6 +231,5 @@ the same one Students and Parents use; changing it belongs to a shared pass.
 - The schedule-change confirmation dialog (how many lessons are rebuilt).
 - Marking attendance on the lesson screen (Work Packet 6.4); the group page
   dialog is the interim path.
-- Persisting the cards/rows choice — not persisted, like the students grid.
 - Whether a full group should refuse a student; today capacity is
   informational.
