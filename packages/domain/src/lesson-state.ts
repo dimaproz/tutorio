@@ -21,11 +21,7 @@ export class InvalidTransitionError extends Error {
   }
 }
 
-const CHARGED: ReadonlySet<LessonStatus> = new Set([
-  'COMPLETED',
-  'CANCELLED_CHARGED',
-  'NO_SHOW',
-]);
+const CHARGED: ReadonlySet<LessonStatus> = new Set(['COMPLETED', 'CANCELLED_CHARGED', 'NO_SHOW']);
 
 /** Whether a lesson in this status costs the participant a lesson. */
 export function isChargedStatus(status: LessonStatus): boolean {
@@ -57,4 +53,20 @@ export function makeupIsFree(originalStatus: LessonStatus): boolean {
 /** Whether a lesson may receive a makeup: it was cancelled or missed (L-60). */
 export function canHaveMakeup(status: LessonStatus): boolean {
   return isCancelledStatus(status) || status === 'NO_SHOW';
+}
+
+/** When a lesson ends: its start plus its duration. */
+export function lessonEndsAt(lesson: { startsAtUtc: Date; durationMin: number }): Date {
+  return new Date(lesson.startsAtUtc.getTime() + lesson.durationMin * 60_000);
+}
+
+/**
+ * Whether a lesson becomes held on its own now (L-50): it is still scheduled
+ * and its end has passed. A cancelled or already marked lesson is left alone.
+ */
+export function isDueForCompletion(
+  lesson: { status: LessonStatus; startsAtUtc: Date; durationMin: number },
+  now: Date,
+): boolean {
+  return lesson.status === 'SCHEDULED' && lessonEndsAt(lesson).getTime() <= now.getTime();
 }

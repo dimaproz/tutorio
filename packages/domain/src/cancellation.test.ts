@@ -7,8 +7,7 @@ import {
 } from './cancellation';
 
 const NOW = new Date('2026-08-01T10:00:00.000Z');
-const inHours = (hours: number) =>
-  new Date(NOW.getTime() + hours * 3_600_000);
+const inHours = (hours: number) => new Date(NOW.getTime() + hours * 3_600_000);
 
 describe('effectiveDeadlineHours', () => {
   it("uses the enrollment's own deadline when set", () => {
@@ -65,5 +64,11 @@ describe('suggestedCancellationStatus', () => {
   it('charges a late cancellation and spares an on-time one', () => {
     expect(suggestedCancellationStatus('late')).toBe('CANCELLED_CHARGED');
     expect(suggestedCancellationStatus('on_time')).toBe('CANCELLED_UNCHARGED');
+  });
+
+  it('never suggests charging when the teacher or the group cancels (L-51)', () => {
+    expect(suggestedCancellationStatus('late', 'TEACHER')).toBe('CANCELLED_UNCHARGED');
+    expect(suggestedCancellationStatus('late', 'GROUP')).toBe('CANCELLED_UNCHARGED');
+    expect(suggestedCancellationStatus('late', 'STUDENT')).toBe('CANCELLED_CHARGED');
   });
 });

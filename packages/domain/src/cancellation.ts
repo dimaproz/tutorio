@@ -36,13 +36,19 @@ export function cancellationTiming(
   return hoursUntil(startsAt, now) >= deadlineHours ? 'on_time' : 'late';
 }
 
+export type CancellationAuthor = 'STUDENT' | 'TEACHER' | 'GROUP';
+
 /**
- * The status a cancellation should default to. Late cancellations consume the
- * credit; on-time ones keep the slot paid but unconsumed. The tutor can still
- * choose otherwise — this is the suggestion, not the rule.
+ * The status a cancellation should default to (product/scheduling.md L-51): a
+ * student cancelling after the deadline is charged; an on-time cancellation,
+ * or one by the teacher or the group, is free. The tutor can still choose
+ * otherwise — this is the suggestion, not the rule.
  */
 export function suggestedCancellationStatus(
   timing: CancellationTiming,
+  cancelledBy: CancellationAuthor = 'STUDENT',
 ): 'CANCELLED_CHARGED' | 'CANCELLED_UNCHARGED' {
-  return timing === 'late' ? 'CANCELLED_CHARGED' : 'CANCELLED_UNCHARGED';
+  return cancelledBy === 'STUDENT' && timing === 'late'
+    ? 'CANCELLED_CHARGED'
+    : 'CANCELLED_UNCHARGED';
 }
