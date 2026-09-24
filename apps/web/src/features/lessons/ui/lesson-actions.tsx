@@ -25,7 +25,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { IconButton } from '@/components/shared/icon-button';
-import { cn } from '@/lib/utils';
 import type { FooterAction, MenuAction, PanelActions } from '../model/panel-actions';
 
 const ICON: Record<FooterAction | MenuAction, ReactNode> = {
@@ -52,7 +51,7 @@ function LessonMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <IconButton icon={<EllipsisIcon />} label={t('panel.more')} size={38} tone="paper" />
+        <IconButton icon={<EllipsisIcon />} label={t('panel.more')} size={38} tone="surface" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-64">
         {items.map((item) => (
@@ -97,57 +96,59 @@ function MenuEntry({
 }
 
 /**
- * The panel's top bar. Desktop: close on the left, edit and «⋯» on the right.
- * Phone: back, the centred title, edit and «⋯».
+ * The round actions of the lesson window's band (layout A): white 38px discs.
+ * Desktop: edit, «⋯» and close, close last. Phone: back on the left of the
+ * band's first row, edit and «⋯» on the right (`side`).
  */
-export function LessonTopBar({
+export function LessonBandActions({
   mobile,
+  side,
   menu,
   onClose,
   onEdit,
   onAction,
-  title,
 }: {
   mobile: boolean;
+  /** Phone only: which end of the first row to render. */
+  side?: 'start' | 'end';
   menu: PanelActions['menu'] | null;
   onClose: () => void;
   onEdit?: () => void;
   onAction: (action: MenuAction) => void;
-  /** The phone title, e.g. "Заняття" or "Редагування заняття". */
-  title?: ReactNode;
 }) {
   const t = useTranslations('lessons.panel');
-  return (
-    <div className="flex items-center gap-2">
+  if (mobile && side === 'start') {
+    return (
       <IconButton
-        icon={mobile ? <ChevronLeftIcon /> : <XIcon />}
-        label={mobile ? t('back') : t('close')}
+        icon={<ChevronLeftIcon />}
+        label={t('back')}
         size={38}
-        tone="paper"
+        tone="surface"
         onClick={onClose}
       />
-      {title ? (
-        <span
-          className={cn(
-            'min-w-0 grow truncate text-base font-semibold',
-            mobile && (onEdit || menu) ? 'text-center' : 'pl-1 text-left',
-          )}
-        >
-          {title}
-        </span>
-      ) : (
-        <span className="grow" />
-      )}
+    );
+  }
+  return (
+    <div className="flex shrink-0 items-center gap-2">
       {onEdit ? (
         <IconButton
           icon={<PencilIcon />}
           label={t('edit')}
           size={38}
-          tone="paper"
+          tone="surface"
           onClick={onEdit}
         />
       ) : null}
       {menu ? <LessonMenu items={menu} onAction={onAction} /> : null}
+      {mobile ? null : (
+        <IconButton
+          icon={<XIcon />}
+          label={t('close')}
+          size={38}
+          tone="surface"
+          onClick={onClose}
+        />
+      )}
     </div>
   );
 }

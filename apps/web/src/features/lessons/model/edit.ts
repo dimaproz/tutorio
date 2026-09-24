@@ -6,22 +6,15 @@ import {
   type UpdateLessonDto,
 } from '@tutorio/validation';
 import { z } from 'zod';
+import { optionalText } from '@/lib/forms/helpers';
 import {
-  durationMinString,
-  localTimeString,
-  optionalText,
-  priceString,
-  requiredDateString,
-} from '@/lib/forms/helpers';
+  lessonDateString,
+  lessonDurationString,
+  lessonPriceString,
+  lessonTimeString,
+} from './fields';
 import { localInputToIso, splitDateTimeInput, toLocalDateTimeInput } from '@/lib/datetime';
 import { formatPriceInput, parsePriceInput } from '@/lib/money';
-
-/** Lesson lengths offered in the duration select; the lesson's own is added when missing. */
-export const DURATION_CHOICES = [30, 45, 60, 75, 90, 120] as const;
-
-export function durationOptions(current: number): number[] {
-  return [...new Set([...DURATION_CHOICES, current])].sort((a, b) => a - b);
-}
 
 /**
  * The panel's edit form (L-40): date, start and length, the teacher (a
@@ -29,11 +22,11 @@ export function durationOptions(current: number): number[] {
  * the topic and the notes. The price stays blank when it is locked.
  */
 export const editFormSchema = z.object({
-  date: requiredDateString,
-  time: localTimeString,
-  durationMin: durationMinString,
+  date: lessonDateString,
+  time: lessonTimeString,
+  durationMin: lessonDurationString,
   teacherId: z.string().uuid(),
-  price: priceString({ required: false }),
+  price: lessonPriceString({ required: false }),
   topic: optionalText(lessonTopicSchema),
   notes: optionalText(notesSchema),
 });

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { DialogTitle } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { IconButton } from '@/components/shared/icon-button';
+import { TintBand } from '@/components/shared/tint-band';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useStudentQuery } from '@/lib/api/students';
 import { capitalizeFirst } from '@/lib/utils';
@@ -28,15 +29,22 @@ import type { ChargeContext } from './dialogs/charge-context';
 import { DeleteDialog } from './dialogs/delete-dialog';
 import { MakeupDialog } from './dialogs/makeup-dialog';
 import { StatusFixDialog } from './dialogs/status-fix-dialog';
-import { LessonFooterActions, LessonTopBar } from './lesson-actions';
+import { LessonBandActions, LessonFooterActions } from './lesson-actions';
 import { LessonEdit } from './lesson-edit';
+import { useSlotsLabel } from './field-labels';
 import { useLessonDates, useMoney } from './lesson-format';
 import { useErrorToast, useTeacherOptions } from './lesson-form-parts';
 import { LessonAttendanceSummary, LessonMembers, useGroupMembers } from './lesson-group';
 import { LessonHistory } from './lesson-history';
-import { LessonPanelLayout, LessonPanelWindow } from './lesson-panel-window';
+import { LessonPanelWindow, LessonWindowLayout } from './lesson-panel-window';
 import { LessonPayment, useLessonPayment } from './lesson-payment';
-import { LessonSummary, useScheduleLabel } from './lesson-summary';
+import {
+  LessonBand,
+  LessonCancellation,
+  LessonFacts,
+  LessonTeacherRow,
+  useScheduleLabel,
+} from './lesson-summary';
 import type { LessonPanelIntent } from './use-lesson-panel';
 
 type DialogKind = 'cancel' | 'fixStatus' | 'makeup' | 'attendance' | 'delete';
@@ -50,37 +58,33 @@ export type LessonPanelLinks = {
 
 function PanelSkeleton({ mobile }: { mobile: boolean }) {
   const t = useTranslations('lessons.panel');
-  const left = (
-    <div role="status" aria-label={t('loading')} className="flex flex-col gap-4">
-      <div className="flex justify-between">
-        <Skeleton className="size-9.5 rounded-pill" />
+  const band = (
+    <TintBand className={mobile ? 'px-4 pt-4' : undefined}>
+      <div role="status" aria-label={t('loading')} className="flex items-start justify-between">
+        <div className="flex flex-col gap-2.5">
+          <Skeleton className="h-3 w-40 bg-card/70" />
+          <Skeleton className="h-9 w-64 bg-card/70" />
+          <Skeleton className="h-4.5 w-52 bg-card/70" />
+        </div>
         <div className="flex gap-2">
-          <Skeleton className="size-9.5 rounded-pill" />
-          <Skeleton className="size-9.5 rounded-pill" />
+          <Skeleton className="size-9.5 rounded-pill bg-card/70" />
+          <Skeleton className="size-9.5 rounded-pill bg-card/70" />
         </div>
       </div>
-      <Skeleton className="h-3 w-30" />
-      <Skeleton className="h-8.5 w-60" />
-      <Skeleton className="h-4.5 w-50" />
-      <Skeleton className="h-33 w-full rounded-tile" />
-      <Skeleton className="h-3.5 w-4/5" />
-      <Skeleton className="h-3.5 w-full" />
-      <Skeleton className="h-3.5 w-3/5" />
-    </div>
-  );
-  const right = (
-    <div className="flex flex-col gap-4">
-      <Skeleton className="h-42.5 w-full rounded-block" />
-      <Skeleton className="h-3 w-1/3" />
-      <Skeleton className="h-11 w-full rounded-control" />
-      <Skeleton className="h-11 w-full rounded-control" />
-      <Skeleton className="h-11 w-full rounded-control" />
-    </div>
+      <Skeleton className="h-22 w-full rounded-row bg-card/70" />
+    </TintBand>
   );
   return (
     <>
       <DialogTitle className="sr-only">{t('loading')}</DialogTitle>
-      <LessonPanelLayout mobile={mobile} topBar={null} main={left} aside={mobile ? null : right} />
+      <LessonWindowLayout mobile={mobile} band={band}>
+        <Skeleton className="h-17 w-full rounded-tile" />
+        <div className="flex flex-col gap-3">
+          <Skeleton className="h-4 w-4/5" />
+          <Skeleton className="h-4 w-3/5" />
+        </div>
+        <Skeleton className="h-42.5 w-full rounded-block" />
+      </LessonWindowLayout>
     </>
   );
 }
@@ -101,7 +105,14 @@ function PanelMessage({
   const t = useTranslations('lessons.panel');
   return (
     <div className="flex flex-1 flex-col p-1">
-      <IconButton icon={<XIcon />} label={t('close')} size={38} tone="paper" onClick={onClose} />
+      <IconButton
+        icon={<XIcon />}
+        label={t('close')}
+        size={38}
+        tone="paper"
+        className="self-end"
+        onClick={onClose}
+      />
       <div className="flex flex-1 flex-col items-center justify-center gap-3.5 px-6 py-14 text-center">
         <span
           aria-hidden="true"
@@ -246,6 +257,7 @@ function LessonPanelContent({
   const members = useGroupMembers(lesson);
   const transition = useTransitionLessonMutation(lesson.id);
   const scheduleLabel = useScheduleLabel(schedule.data);
+  const slotsLabel = useSlotsLabel();
 
   const events = useMemo(() => lessonHistory(lesson), [lesson]);
   const actions = panelActions(lesson, now);
@@ -342,77 +354,107 @@ function LessonPanelContent({
     </>
   );
 
+  const studentLevel = student.data?.languageLevel ? tLevel(student.data.languageLevel) : null;
+  const hasFooter = actions.primary !== null || actions.secondary !== null;
+  const direction = student.data?.enrollments.find((item) => item.id === lesson.enrollmentId);
+  // Taught by someone other than the direction's or the group's teacher.
+  const regularTeacher = group ? members.group?.teacherId : direction?.teacherId;
+  const substitute = regularTeacher !== undefined && regularTeacher !== lesson.teacherId;
+
   if (mode === 'edit') {
     return (
       <LessonEdit
         lesson={lesson}
         schedule={schedule.data}
         priceMode={priceEditability(lesson, payment.billing)}
+        entity={{
+          studentLevel,
+          studentAvatar: student.data?.avatarKey ?? null,
+          directionTeacher: direction?.teacher.name ?? null,
+          credits:
+            payment.view.kind === 'package'
+              ? {
+                  left: payment.pkg?.remainingCredits ?? payment.view.left,
+                  total: payment.view.package.lessonsTotal,
+                }
+              : null,
+          schedule: slotsLabel(schedule.data?.slots, { short: true }),
+          groupMembers: members.rows.map((row) => row.student),
+          pausedMembers: members.rows.filter((row) => row.paused).length,
+        }}
         mobile={mobile}
         onDone={() => setMode('view')}
       />
     );
   }
 
-  const aside = group ? (
-    <>
-      <LessonAttendanceSummary
-        lesson={lesson}
-        rows={members.rows}
-        history={events}
-        now={now}
-        onMark={() => setDialog('attendance')}
-      />
-      <LessonMembers rows={members.rows} loading={members.loading} mobile={mobile} />
-      <LessonHistory lesson={lesson} events={events} teacherNames={teachers.names} fill={false} />
-    </>
-  ) : (
-    <>
-      <LessonPayment view={payment.view} lesson={lesson} pkg={payment.pkg} />
-      <LessonHistory lesson={lesson} events={events} teacherNames={teachers.names} fill={!mobile} />
-    </>
+  const menuActions = (
+    <LessonBandActions
+      mobile={mobile}
+      side="end"
+      menu={actions.menu}
+      onClose={onClose}
+      onEdit={() => setMode('edit')}
+      onAction={runAction}
+    />
   );
-
-  const studentLevel = student.data?.languageLevel ? tLevel(student.data.languageLevel) : null;
-  const hasFooter = actions.primary !== null || actions.secondary !== null;
 
   return (
     <>
-      <LessonPanelLayout
+      <LessonWindowLayout
         mobile={mobile}
-        topBar={
-          <LessonTopBar
-            mobile={mobile}
-            menu={actions.menu}
-            title={mobile ? t('panel.title') : undefined}
-            onClose={onClose}
-            onEdit={() => setMode('edit')}
-            onAction={runAction}
-          />
-        }
-        main={
-          <LessonSummary
+        band={
+          <LessonBand
             lesson={lesson}
             running={running}
-            cancelActor={cancellationActor(events)}
+            mobile={mobile}
+            actionsStart={
+              <LessonBandActions
+                mobile={mobile}
+                side="start"
+                menu={null}
+                onClose={onClose}
+                onAction={runAction}
+              />
+            }
+            actionsEnd={menuActions}
             studentHref={
               lesson.student && links.studentHref ? links.studentHref(lesson.student.id) : null
             }
             groupHref={lesson.groupId && links.groupHref ? links.groupHref(lesson.groupId) : null}
             studentLevel={studentLevel}
             studentAvatar={student.data?.avatarKey ?? null}
-            teacherAvatar={teachers.avatars.get(lesson.teacherId) ?? null}
             groupMembers={members.rows.map((row) => row.student)}
-            scheduleLabel={scheduleLabel}
-            onOpenLesson={onOpenLesson}
+            pausedMembers={members.rows.filter((row) => row.paused).length}
           />
         }
-        aside={aside}
-        asideScrolls={group}
         footer={
           hasFooter ? <LessonFooterActions actions={actions} onAction={runAction} /> : undefined
         }
-      />
+      >
+        <LessonCancellation lesson={lesson} actor={cancellationActor(events)} />
+        <LessonTeacherRow
+          lesson={lesson}
+          avatar={teachers.avatars.get(lesson.teacherId) ?? null}
+          substitute={substitute}
+        />
+        <LessonFacts lesson={lesson} scheduleLabel={scheduleLabel} onOpenLesson={onOpenLesson} />
+        {group ? (
+          <>
+            <LessonAttendanceSummary
+              lesson={lesson}
+              rows={members.rows}
+              history={events}
+              now={now}
+              onMark={() => setDialog('attendance')}
+            />
+            <LessonMembers rows={members.rows} loading={members.loading} mobile={mobile} />
+          </>
+        ) : (
+          <LessonPayment view={payment.view} lesson={lesson} pkg={payment.pkg} />
+        )}
+        <LessonHistory lesson={lesson} events={events} teacherNames={teachers.names} fill={false} />
+      </LessonWindowLayout>
       {dialogs}
     </>
   );

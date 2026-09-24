@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { GatewayError } from '@/lib/auth/client';
 import { cancelAdvice, cancelDto, cancelFormDefaults } from './cancel';
-import { durationOptions, editFormDefaults, editPlan, rescheduleDto } from './edit';
+import { editFormDefaults, editPlan, rescheduleDto } from './edit';
 import { makeupDto, makeupFormDefaults, makeupWillBeFree } from './makeup';
 import { localSlotOf, moveChange, scheduleConflicts } from './move';
 import { defaultFixTarget, fixDto, fixImpact, fixTargets } from './status-fix';
@@ -88,10 +88,6 @@ describe('edit form', () => {
       move: null,
       update: { durationMin: 45 },
     });
-  });
-
-  it('offers the lesson length among the duration choices', () => {
-    expect(durationOptions(50)).toEqual([30, 45, 50, 60, 75, 90, 120]);
   });
 });
 

@@ -1,16 +1,18 @@
 'use client';
 
-import { BanknoteIcon, CalendarPlusIcon, GiftIcon, GraduationCapIcon } from 'lucide-react';
+import { BanknoteIcon, CalendarPlusIcon, GiftIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { Controller } from 'react-hook-form';
+import { Controller, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
 import type { LessonDetailResponse } from '@tutorio/validation';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { AdaptiveDialog } from '@/components/shared/adaptive-dialog';
-import { EntityPicker } from '@/components/shared/entity-picker';
+import { DateRowsField } from '@/components/shared/date-rows-field';
+import { DurationField } from '@/components/shared/duration-field';
 import { Notice } from '@/components/shared/notice';
-import { TextField } from '@/components/shared/text-field';
+import { FieldFrame, TextField } from '@/components/shared/text-field';
+import { timeSteps } from '@/components/shared/time-field';
 import { localInputToIso } from '@/lib/datetime';
 import { useCreateMakeupMutation } from '../../api';
 import {
@@ -20,14 +22,16 @@ import {
   makeupWillBeFree,
   type MakeupFormValues,
 } from '../../model/makeup';
-import { useLessonDates } from '../lesson-format';
+import { busySlots, localInstant } from '../../model/busy';
 import {
-  FieldSlot,
-  LessonDateField,
-  useDurationOptions,
-  useLessonForm,
-  useTeacherOptions,
-} from '../lesson-form-parts';
+  useDateRowsLabels,
+  useDurationHint,
+  useDurationLabels,
+  useFormDates,
+} from '../field-labels';
+import { TeacherField, useDayLessons } from '../lesson-form-kit';
+import { useLessonDates } from '../lesson-format';
+import { useLessonForm, useTeacherOptions } from '../lesson-form-parts';
 import { useConflictGuard } from './use-conflict-guard';
 
 /**
@@ -52,13 +56,28 @@ export function MakeupDialog({
   const t = useTranslations('lessons.makeup');
   const tEdit = useTranslations('lessons.edit');
   const tPanel = useTranslations('lessons.panel');
+  const tFields = useTranslations('lessons.fields');
   const dates = useLessonDates();
   const teachers = useTeacherOptions();
-  const durations = useDurationOptions(lesson.durationMin);
+  const formDates = useFormDates();
+  const durationLabels = useDurationLabels();
+  const durationHint = useDurationHint();
   const create = useCreateMakeupMutation(lesson.id);
   const guard = useConflictGuard();
   const defaults = makeupFormDefaults(lesson, now);
   const form = useLessonForm<MakeupFormValues>(makeupFormSchema, defaults);
+  const [date, time, durationMin, teacherId] = useWatch({
+    control: form.control,
+    name: ['date', 'time', 'durationMin', 'teacherId'],
+  });
+  const dateLabels = useDateRowsLabels([date]);
+  const dayLessons = useDayLessons([date]);
+  const minutes = Number(durationMin);
+  const scope = { teacherId, studentId: lesson.student?.id ?? null };
+  const start =
+    /^\d{4}-\d{2}-\d{2}$/.test(date) && /^\d{2}:\d{2}$/.test(time)
+      ? localInstant(date, time)
+      : null;
   const free = makeupWillBeFree(lesson);
   const original = dates.longDay(lesson.startsAtUtc);
 
@@ -118,79 +137,72 @@ export function MakeupDialog({
           title={free ? t('freeTitle') : t('chargedTitle')}
           text={free ? t('freeText', { date: original }) : t('chargedText', { date: original })}
         />
-        <div className="grid grid-cols-2 gap-3">
-          <Controller
-            control={form.control}
-            name="date"
-            render={({ field, fieldState }) => (
-              <FieldSlot label={tEdit('date')} error={fieldState.error?.message}>
-                {(a11y) => (
-                  <LessonDateField
-                    id={a11y.id}
-                    describedBy={a11y.describedBy}
-                    invalid={a11y.invalid}
-                    value={field.value}
-                    onChange={field.onChange}
-                    onBlur={field.onBlur}
-                  />
-                )}
-              </FieldSlot>
-            )}
-          />
-          <Controller
-            control={form.control}
-            name="time"
-            render={({ field, fieldState }) => (
-              <TextField
-                type="time"
-                label={tEdit('start')}
-                error={fieldState.error?.message}
-                {...field}
-              />
-            )}
-          />
-        </div>
+        <DateRowsField
+          fixed
+          rows={[{ key: 'makeup', date, time }]}
+          labels={dateLabels}
+          formatDate={formDates.field}
+          locale={formDates.locale}
+          onDateChange={(_, value) =>
+            form.setValue('date', value, {
+              shouldDirty: true,
+              shouldValidate: form.formState.isSubmitted,
+            })
+          }
+          onTimeChange={(_, value) =>
+            form.setValue('time', value, {
+              shouldDirty: true,
+              shouldValidate: form.formState.isSubmitted,
+            })
+          }
+          busy={[busySlots(dayLessons, scope, date, minutes, timeSteps(15))]}
+          errors={[
+            {
+              date: form.formState.errors.date?.message,
+              time: form.formState.errors.time?.message,
+            },
+          ]}
+        />
         <Controller
           control={form.control}
           name="durationMin"
           render={({ field, fieldState }) => (
-            <TextField
-              type="select"
-              label={tEdit('duration')}
-              options={durations}
-              value={field.value}
-              onValueChange={field.onChange}
-              onBlur={field.onBlur}
+            <FieldFrame
+              label={tFields('duration')}
+              hint={durationHint(Number(field.value), time)}
               error={fieldState.error?.message}
-            />
+            >
+              {(a11y) => (
+                <DurationField
+                  id={a11y.id}
+                  aria-describedby={a11y.describedBy}
+                  invalid={Boolean(a11y.invalid)}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  labels={durationLabels}
+                  usual={lesson.durationMin}
+                />
+              )}
+            </FieldFrame>
           )}
         />
         <Controller
           control={form.control}
           name="teacherId"
           render={({ field, fieldState }) => (
-            <FieldSlot
-              label={tEdit('teacher')}
+            <TeacherField
+              value={field.value}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              regularTeacherId={lesson.teacherId}
               hint={t('teacherHint')}
+              substitution={false}
+              lessons={dayLessons}
+              start={start}
+              durationMin={minutes}
               error={fieldState.error?.message}
-            >
-              {(a11y) => (
-                <EntityPicker
-                  id={a11y.id}
-                  aria-describedby={a11y.describedBy}
-                  invalid={a11y.invalid}
-                  appearance="field"
-                  icon={<GraduationCapIcon />}
-                  value={field.value}
-                  options={teachers.options}
-                  isLoading={teachers.loading}
-                  onChange={(value) => field.onChange(value ?? field.value)}
-                  placeholder={tEdit('teacherPlaceholder')}
-                  searchPlaceholder={tEdit('teacherSearch')}
-                  emptyLabel={tEdit('teacherEmpty')}
-                />
-              )}
-            </FieldSlot>
+            />
           )}
         />
         <Controller

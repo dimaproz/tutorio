@@ -29,11 +29,12 @@ type Args = {
 };
 
 /**
- * The lesson panel of S01 over the page that opened it: the student profile
- * for an individual lesson, the group page for a group lesson. `state` picks
- * every state of boards 01 (individual) and 02 (group); the dialogs and the
- * edit mode are reached by the named stories. Writes run against the
- * in-memory backend; a move answers with a conflict until it is forced.
+ * The lesson window of S01 (layout A: one 640px column under the indigo
+ * band) over the page that opened it: the student profile for an individual
+ * lesson, the group page for a group lesson. `state` picks every state of
+ * boards 01 (individual) and 02 (group); the dialogs and the edit mode are
+ * reached by the named stories. Writes run against the in-memory backend; a
+ * move answers with a conflict until it is forced.
  */
 function LessonPanelScreen({ state, clock, onClose, onOpenLesson }: Args) {
   const group = state.startsWith('group');
@@ -122,6 +123,19 @@ export const Edit: Story = {
     await visible(await view.findByRole('heading', { name: 'Edit lesson' }));
     await expect(view.getByLabelText('Price')).toBeDisabled();
     await visible(view.getByText('The lesson is paid — its price can no longer change'));
+  },
+};
+
+/** Edit a group lesson (board 03, the group state): the group card is locked; no price (S01). */
+export const EditGroup: Story = {
+  args: { state: 'groupScheduled' },
+  play: async ({ canvasElement }) => {
+    const view = await panel(canvasElement);
+    await userEvent.click(await view.findByRole('button', { name: 'Edit' }));
+    await visible(await view.findByRole('heading', { name: 'Edit lesson' }));
+    await visible(view.getByRole('img', { name: "The lesson's group can't change" }));
+    await expect(view.queryByLabelText('Price')).toBeNull();
+    await expect(view.getByRole('combobox', { name: 'Length' })).toHaveValue('90');
   },
 };
 

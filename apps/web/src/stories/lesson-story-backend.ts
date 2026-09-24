@@ -808,6 +808,20 @@ export function createLessonRoutes(options: LessonStoryOptions) {
       return json(item);
     }
 
+    // The forms' day read (busy slots, busy teachers): every lesson in the window.
+    const filtered = ['enrollmentId', 'studentId', 'teacherId', 'groupId'].some((key) =>
+      query.has(key),
+    );
+    if (path === '/lessons' && method === 'GET' && !filtered && query.has('from')) {
+      const from = Date.parse(query.get('from')!);
+      const to = Date.parse(query.get('to') ?? '');
+      const items = [...lessons.values()].filter((item) => {
+        const start = Date.parse(item.startsAtUtc);
+        return start >= from && start < to;
+      });
+      return json({ items: items.sort((a, b) => a.startsAtUtc.localeCompare(b.startsAtUtc)) });
+    }
+
     if (path === '/lessons' && query.get('enrollmentId')) {
       const items = [...lessons.values()].filter(
         (item) => item.enrollmentId === query.get('enrollmentId'),

@@ -6,19 +6,15 @@ import {
 } from '@tutorio/validation';
 import { addDays } from 'date-fns';
 import { z } from 'zod';
-import {
-  durationMinString,
-  localTimeString,
-  optionalText,
-  requiredDateString,
-} from '@/lib/forms/helpers';
+import { optionalText } from '@/lib/forms/helpers';
+import { lessonDateString, lessonDurationString, lessonTimeString } from './fields';
 import { localInputToIso, splitDateTimeInput, toLocalDateTimeInput } from '@/lib/datetime';
 
 /** A makeup (L-60): when, optionally another teacher and length, and a topic. */
 export const makeupFormSchema = z.object({
-  date: requiredDateString,
-  time: localTimeString,
-  durationMin: durationMinString,
+  date: lessonDateString,
+  time: lessonTimeString,
+  durationMin: lessonDurationString,
   teacherId: z.string().uuid(),
   topic: optionalText(lessonTopicSchema),
 });
