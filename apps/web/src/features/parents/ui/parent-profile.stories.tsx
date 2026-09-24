@@ -78,7 +78,10 @@ export const OwnerMenu: Story = {
     await expect(menu.getAllByRole('menuitem')).toHaveLength(1);
     await userEvent.click(menu.getByRole('menuitem', { name: 'Delete record' }));
     const dialog = within(await within(document.body).findByRole('alertdialog'));
-    await expect(dialog.getByRole('button', { name: 'Delete permanently' })).toBeVisible();
+    // The dialog fades in: wait until it is fully shown.
+    await waitFor(() =>
+      expect(dialog.getByRole('button', { name: 'Delete permanently' })).toBeVisible(),
+    );
   },
 };
 
@@ -98,7 +101,8 @@ export const LinkStudent: Story = {
   play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole('button', { name: 'Link a student' }));
     const dialog = within(await within(document.body).findByRole('dialog'));
-    await expect(dialog.getByText('Oleh Lysenko')).toBeVisible();
+    // The dialog fades in: wait until it is fully shown.
+    await waitFor(() => expect(dialog.getByText('Oleh Lysenko')).toBeVisible());
     await expect(dialog.queryByRole('option', { name: /Artem Lysenko/ })).toBeNull();
     await userEvent.click(await dialog.findByRole('option', { name: /Sofiia Melnyk/ }));
     await userEvent.click(dialog.getByRole('button', { name: 'Link · 1' }));
@@ -117,7 +121,8 @@ export const UnlinkStudent: Story = {
     const menu = within(await within(document.body).findByRole('menu'));
     await userEvent.click(menu.getByRole('menuitem', { name: 'Unlink from parent' }));
     const dialog = within(await within(document.body).findByRole('alertdialog'));
-    await expect(dialog.getByText('Unlink this student?')).toBeVisible();
+    // The dialog fades in: wait until it is fully shown.
+    await waitFor(() => expect(dialog.getByText('Unlink this student?')).toBeVisible());
     await expect(dialog.getByText(/stays in Students/)).toBeVisible();
     await userEvent.click(dialog.getByRole('button', { name: 'Unlink' }));
     await waitFor(() =>

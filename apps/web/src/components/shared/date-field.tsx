@@ -38,9 +38,12 @@ export function DateField({
   disabled = false,
   invalid = false,
   'aria-describedby': describedBy,
+  'aria-label': ariaLabel,
   onBlur,
 }: {
   id?: string;
+  /** Names the calendar popover; defaults to the placeholder. */
+  'aria-label'?: string;
   value: string;
   onValueChange: (value: string) => void;
   /** Shows the picked date, e.g. with next-intl's formatter. */
@@ -79,7 +82,8 @@ export function DateField({
           <CalendarIcon data-icon className="text-muted-foreground" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
+      {/* The popover is a dialog: it needs a name, the field's own or its placeholder. */}
+      <PopoverContent aria-label={ariaLabel ?? placeholder} className="w-auto p-0" align="start">
         <Calendar
           mode="single"
           selected={selected}

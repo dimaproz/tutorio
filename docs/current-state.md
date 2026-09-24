@@ -33,10 +33,11 @@ paused member (API). Brief, decisions and open questions:
 [`screens/s01-lesson-panel.md`](./screens/s01-lesson-panel.md).
 
 Gate on 2026-09-24: web lint, typecheck, 222 unit tests, build, the Storybook
-browser tests (77 files; one pre-existing timing flake in
-`Students/Screens/Form › DiscardChanges` passes on re-run) and the Storybook
-static build; API lint, 240 unit tests, and the pauses, groups and billing
-E2E suites (27 tests) on an isolated PostgreSQL 17.
+browser tests (209 tests in 77 files, with accessibility checks) and the
+Storybook static build; domain 126 and validation 60 unit tests; API lint,
+240 unit tests, and the pauses, groups and billing E2E suites (27 tests) on an
+isolated PostgreSQL 17. Four older stories asserted a dialog visible during
+its fade-in and failed now and then; they now wait for it.
 
 ## Executive status
 

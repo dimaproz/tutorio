@@ -76,7 +76,8 @@ export const DiscardChanges: Story = {
     await userEvent.type(await canvas.findByRole('textbox', { name: /Full name/ }), 'Sofiia');
     await userEvent.click(canvas.getByRole('button', { name: 'Cancel' }));
     const dialog = within(await within(document.body).findByRole('alertdialog'));
-    await expect(dialog.getByText('Discard changes?')).toBeVisible();
+    // The dialog fades in: wait until it is fully shown.
+    await waitFor(() => expect(dialog.getByText('Discard changes?')).toBeVisible());
   },
 };
 
