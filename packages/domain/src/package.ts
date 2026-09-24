@@ -1,13 +1,11 @@
 /**
- * Lesson-package math: how many lessons a package holds, what it really costs
- * once uncharged cancellations are taken into account, and how a group package
- * splits across its members.
+ * Lesson-package math: how many lessons a package holds, its price, and how
+ * much of it may still be paid.
  *
  * Every amount here is in **minor units**; nothing in this module touches
  * floating point, and no function ever mixes currencies.
  */
 
-import { creditBalance, type LedgerEntryLike } from './ledger';
 import { expandSeries, type RecurrenceRule } from './recurrence';
 
 export type PackageSizingMode = 'FIXED_COUNT' | 'BY_PERIOD';
@@ -91,57 +89,6 @@ export function expandPackageSchedule(
     }
   }
   return [...unique.values()].sort((a, b) => a.getTime() - b.getTime());
-}
-
-/**
- * Compatibility field for API consumers. A package's agreed total is its
- * immutable purchase-time snapshot; lesson-credit entries never change money.
- */
-export function effectiveTotalMinor(
-  totalPriceMinorSnapshot: number,
-  pricePerLessonMinorSnapshot?: number,
-  unchargedCancellations?: number,
-): number {
-  // Keep the deprecated call shape source-compatible without deriving money
-  // from credit events.
-  void pricePerLessonMinorSnapshot;
-  void unchargedCancellations;
-  return totalPriceMinorSnapshot;
-}
-
-/** Credits still available on a package. */
-export function remainingCredits(entries: readonly LedgerEntryLike[]): number {
-  return creditBalance(entries);
-}
-
-export interface ParticipantShare<TId extends string = string> {
-  enrollmentId: TId;
-  oweMinor: number;
-}
-
-/**
- * Splits a group package's price across its members. The division is exact:
- * the remainder from an uneven split is absorbed by the last share, so the
- * shares always sum back to the total — a group must never owe more or less
- * than the package costs.
- */
-export function splitShares<TId extends string>(
-  totalMinor: number,
-  enrollmentIds: readonly TId[],
-): ParticipantShare<TId>[] {
-  if (!Number.isSafeInteger(totalMinor) || totalMinor < 0) {
-    throw new InvalidPackagePlanError('totalMinor must be a non-negative integer');
-  }
-  if (enrollmentIds.length === 0) {
-    return [];
-  }
-  const base = Math.floor(totalMinor / enrollmentIds.length);
-  const remainder = totalMinor - base * enrollmentIds.length;
-
-  return enrollmentIds.map((enrollmentId, index) => ({
-    enrollmentId,
-    oweMinor: index === enrollmentIds.length - 1 ? base + remainder : base,
-  }));
 }
 
 export type PaymentStatus = 'PAID' | 'PENDING' | 'PARTIAL';

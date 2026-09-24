@@ -1,13 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   assertPaymentWithinOutstanding,
-  effectiveTotalMinor,
   InvalidPackagePlanError,
   OverpaymentError,
   paymentStatusOf,
   planPackage,
-  remainingCredits,
-  splitShares,
 } from './package';
 
 describe('planPackage — fixed count', () => {
@@ -113,43 +110,6 @@ describe('planPackage - multiple slots', () => {
   });
 });
 
-describe('effectiveTotalMinor', () => {
-  it('keeps the purchase-time total despite legacy zero-delta entries', () => {
-    expect(effectiveTotalMinor(1000000, 50000, 1)).toBe(1000000);
-  });
-
-  it('leaves the total untouched when nothing was cancelled free', () => {
-    expect(effectiveTotalMinor(1000000, 50000, 0)).toBe(1000000);
-  });
-
-  it('never derives money from cancellation counts', () => {
-    expect(effectiveTotalMinor(100000, 50000, 5)).toBe(100000);
-  });
-});
-
-describe('splitShares', () => {
-  it('splits a group package evenly', () => {
-    expect(splitShares(950000, ['e1', 'e2'])).toEqual([
-      { enrollmentId: 'e1', oweMinor: 475000 },
-      { enrollmentId: 'e2', oweMinor: 475000 },
-    ]);
-  });
-
-  it('gives the rounding remainder to the last share so the sum is exact', () => {
-    const shares = splitShares(1000, ['a', 'b', 'c']);
-    expect(shares.map((share) => share.oweMinor)).toEqual([333, 333, 334]);
-    expect(shares.reduce((sum, share) => sum + share.oweMinor, 0)).toBe(1000);
-  });
-
-  it('returns nothing for an empty group', () => {
-    expect(splitShares(1000, [])).toEqual([]);
-  });
-
-  it('rejects a negative total', () => {
-    expect(() => splitShares(-1, ['a'])).toThrow(InvalidPackagePlanError);
-  });
-});
-
 describe('paymentStatusOf', () => {
   it('is pending before any money arrives', () => {
     expect(paymentStatusOf(500, 0)).toBe('PENDING');
@@ -173,14 +133,3 @@ describe('assertPaymentWithinOutstanding', () => {
   });
 });
 
-describe('remainingCredits', () => {
-  it('reads the balance straight off the ledger', () => {
-    expect(
-      remainingCredits([
-        { delta: 10, type: 'purchase' },
-        { delta: -1, type: 'lesson_completed' },
-        { delta: -1, type: 'lesson_completed' },
-      ]),
-    ).toBe(8);
-  });
-});

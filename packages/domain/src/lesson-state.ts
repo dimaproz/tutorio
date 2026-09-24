@@ -1,11 +1,10 @@
 /**
- * Lesson status state machine and its credit effect (product/scheduling.md
- * L-50…L-53). A lesson is either still SCHEDULED or in a final status; a final
+ * Lesson status state machine (product/scheduling.md L-50…L-53). A lesson is either still SCHEDULED or in a final status; a final
  * status is either charged (held, charged cancellation, no-show) or free.
  *
  * - SCHEDULED → any final status.
  * - A final status → another final status: a correction ("it was actually a
- *   no-show"). Only a change in whether the lesson is charged moves credits.
+ *   no-show"). The billing service re-evaluates the charges after it.
  * - A final status → SCHEDULED: undoing a mistake, for a lesson that has not
  *   ended yet (the service enforces the time rule; L-53).
  */
@@ -15,16 +14,6 @@ export type LessonStatus =
 
 export type FinalLessonStatus = Exclude<LessonStatus, 'SCHEDULED'>;
 
-export type CreditEntryType =
-  'lesson_completed' | 'late_cancellation' | 'no_show' | 'teacher_cancellation_refund';
-
-export interface CreditEffectDescriptor {
-  /** Change to the lesson-credit balance, in lesson units (e.g. -1 or +1). */
-  delta: number;
-  /** The ledger entry type recorded for this transition. */
-  type: CreditEntryType;
-}
-
 export class InvalidTransitionError extends Error {
   constructor(from: LessonStatus, to: LessonStatus) {
     super(`Invalid lesson status transition: ${from} → ${to}`);
@@ -32,16 +21,15 @@ export class InvalidTransitionError extends Error {
   }
 }
 
-/** The ledger entry a charged final status writes when it is entered. */
-const DEBIT_TYPE: Partial<Record<FinalLessonStatus, CreditEntryType>> = {
-  COMPLETED: 'lesson_completed',
-  CANCELLED_CHARGED: 'late_cancellation',
-  NO_SHOW: 'no_show',
-};
+const CHARGED: ReadonlySet<LessonStatus> = new Set([
+  'COMPLETED',
+  'CANCELLED_CHARGED',
+  'NO_SHOW',
+]);
 
 /** Whether a lesson in this status costs the participant a lesson. */
 export function isChargedStatus(status: LessonStatus): boolean {
-  return status in DEBIT_TYPE;
+  return CHARGED.has(status);
 }
 
 export function isFinalStatus(status: LessonStatus): status is FinalLessonStatus {
@@ -55,32 +43,6 @@ export function isCancelledStatus(status: LessonStatus): boolean {
 
 export function canTransition(from: LessonStatus, to: LessonStatus): boolean {
   return from !== to;
-}
-
-/**
- * The credit-ledger effect of a transition, or `null` when whether the lesson
- * is charged does not change. Throws `InvalidTransitionError` for a no-op.
- *
- * - Becoming charged debits one credit, typed by the status entered.
- * - Stopping being charged refunds one credit, typed by the status left, so
- *   the compensation mirrors the entry it reverses.
- */
-export function transitionEffect(
-  from: LessonStatus,
-  to: LessonStatus,
-): CreditEffectDescriptor | null {
-  if (!canTransition(from, to)) {
-    throw new InvalidTransitionError(from, to);
-  }
-  const wasCharged = isChargedStatus(from);
-  const willBeCharged = isChargedStatus(to);
-  if (wasCharged === willBeCharged) {
-    return null;
-  }
-  if (willBeCharged) {
-    return { delta: -1, type: DEBIT_TYPE[to as FinalLessonStatus]! };
-  }
-  return { delta: 1, type: DEBIT_TYPE[from as FinalLessonStatus]! };
 }
 
 /**

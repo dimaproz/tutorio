@@ -1,11 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
-  InvalidTransitionError,
   canHaveMakeup,
   canTransition,
   isChargedStatus,
   makeupIsFree,
-  transitionEffect,
   type LessonStatus,
 } from './lesson-state';
 
@@ -30,46 +28,6 @@ describe('canTransition', () => {
         expect(canTransition(from, to)).toBe(from !== to);
       }
     }
-  });
-});
-
-describe('transitionEffect', () => {
-  it('debits one credit when a lesson becomes charged, typed by the new status', () => {
-    expect(transitionEffect('SCHEDULED', 'COMPLETED')).toEqual({
-      delta: -1,
-      type: 'lesson_completed',
-    });
-    expect(transitionEffect('SCHEDULED', 'CANCELLED_CHARGED')).toEqual({
-      delta: -1,
-      type: 'late_cancellation',
-    });
-    expect(transitionEffect('SCHEDULED', 'NO_SHOW')).toEqual({ delta: -1, type: 'no_show' });
-    expect(transitionEffect('CANCELLED_UNCHARGED', 'NO_SHOW')).toEqual({
-      delta: -1,
-      type: 'no_show',
-    });
-  });
-
-  it('refunds one credit when a lesson stops being charged, typed by the status left', () => {
-    expect(transitionEffect('COMPLETED', 'SCHEDULED')).toEqual({
-      delta: 1,
-      type: 'lesson_completed',
-    });
-    expect(transitionEffect('NO_SHOW', 'CANCELLED_UNCHARGED')).toEqual({
-      delta: 1,
-      type: 'no_show',
-    });
-  });
-
-  it('writes nothing when a correction keeps the lesson charged or free (L-53)', () => {
-    expect(transitionEffect('COMPLETED', 'NO_SHOW')).toBeNull();
-    expect(transitionEffect('CANCELLED_CHARGED', 'COMPLETED')).toBeNull();
-    expect(transitionEffect('SCHEDULED', 'CANCELLED_UNCHARGED')).toBeNull();
-    expect(transitionEffect('CANCELLED_UNCHARGED', 'SCHEDULED')).toBeNull();
-  });
-
-  it('rejects a move to the same status', () => {
-    expect(() => transitionEffect('COMPLETED', 'COMPLETED')).toThrow(InvalidTransitionError);
   });
 });
 
