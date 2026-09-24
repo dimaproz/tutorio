@@ -141,6 +141,7 @@ export class AttendanceService {
         },
         status: null,
         markedAt: null,
+        paused: false,
       });
     }
     for (const mark of marks) {
@@ -153,7 +154,22 @@ export class AttendanceService {
         },
         status: mark.status,
         markedAt: mark.markedAt.toISOString(),
+        paused: false,
       });
+    }
+    // A member paused at the lesson takes no part in it (L-73); the sheet
+    // still lists them so the tutor sees why they are not marked.
+    const paused = await pausedDirectionIds(
+      tx,
+      [...byEnrollment.values()].map((participant) => ({
+        id: participant.enrollmentId,
+        studentId: participant.student.id,
+      })),
+      lesson.startsAtUtc,
+    );
+    for (const id of paused) {
+      const participant = byEnrollment.get(id);
+      if (participant) participant.paused = true;
     }
     return [...byEnrollment.values()].sort(
       (a, b) =>

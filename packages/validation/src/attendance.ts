@@ -45,6 +45,8 @@ export const lessonAttendanceResponseSchema = z.object({
       student: participantStudentSchema,
       status: attendanceStatusSchema.nullable(),
       markedAt: isoDateTimeSchema.nullable(),
+      /** Paused at the lesson's time: takes no part, is not marked or charged (L-73). */
+      paused: z.boolean(),
     }),
   ),
 });

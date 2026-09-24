@@ -2992,6 +2992,7 @@ export interface components {
                 status: "PRESENT" | "ABSENT" | "EXCUSED" | null;
                 /** Format: date-time */
                 markedAt: string | null;
+                paused: boolean;
             }[];
         };
         SetLessonAttendanceDto: {

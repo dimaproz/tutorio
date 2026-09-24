@@ -13210,13 +13210,17 @@
                   "type": "string",
                   "format": "date-time",
                   "nullable": true
+                },
+                "paused": {
+                  "type": "boolean"
                 }
               },
               "required": [
                 "enrollmentId",
                 "student",
                 "status",
-                "markedAt"
+                "markedAt",
+                "paused"
               ]
             }
           }

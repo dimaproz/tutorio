@@ -308,6 +308,22 @@ describe('Work Packet 6.4 phase 6: pauses (e2e)', () => {
       select: { enrollmentId: true },
     });
     expect(charges.map((charge) => charge.enrollmentId)).toEqual([member(ann)]);
+    // The attendance sheet lists the paused member, flagged and unmarked.
+    const sheet = await get(`/lessons/${lesson.id}/attendance`).expect(200);
+    expect(
+      sheet.body.participants.map(
+        (row: {
+          enrollmentId: string;
+          paused: boolean;
+          status: string | null;
+        }) => [row.enrollmentId, row.paused, row.status],
+      ),
+    ).toEqual(
+      expect.arrayContaining([
+        [member(ann), false, 'PRESENT'],
+        [member(bob), true, null],
+      ]),
+    );
   });
 
   it('extends packages by the length an open pause actually ran (L-102)', async () => {

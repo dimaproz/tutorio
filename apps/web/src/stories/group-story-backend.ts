@@ -630,6 +630,7 @@ export function createGroupRoutes(options: GroupStoryOptions) {
           student: { id: studentId(n), fullName: member(n).fullName, avatarKey: member(n).avatarKey },
           status: saved[enrollmentId(1, n)] ?? null,
           markedAt: saved[enrollmentId(1, n)] ? lesson.startsAtUtc : null,
+          paused: false,
         })),
       };
       return json(sheet);
