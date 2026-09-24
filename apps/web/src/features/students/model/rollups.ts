@@ -77,24 +77,14 @@ export function deriveStudentRollups({
       rollupOf(studentId).credits = credits;
     }
 
+    // Every package belongs to one student's direction (ADR 0007).
     for (const pkg of packages) {
-      if (pkg.studentId) {
-        addMoney(
-          pkg.studentId,
-          pkg.effectiveTotalMinor - pkg.paidMinor,
-          pkg.paidMinor,
-          pkg.currency,
-        );
-      } else {
-        for (const share of pkg.shares) {
-          addMoney(
-            share.student.id,
-            share.oweMinor - share.paidMinor,
-            share.paidMinor,
-            pkg.currency,
-          );
-        }
-      }
+      addMoney(
+        pkg.studentId,
+        pkg.totalPriceMinorSnapshot - pkg.paidMinor,
+        pkg.paidMinor,
+        pkg.currency,
+      );
     }
 
     for (const [studentId, sum] of money) {

@@ -310,7 +310,6 @@ function b2Lessons(): LessonResponse[] {
       enrollmentId: null,
       groupId: storyGroupId(1),
       seriesId: null,
-      packageId: null,
       teacherId: TEACHERS.dmytro.id,
       startsAtUtc,
       durationMin: 60,
@@ -332,6 +331,7 @@ function b2Lessons(): LessonResponse[] {
       notes: TOPICS[index % TOPICS.length]!,
       cancellationDeadlineHours: 12,
       attendance: status === 'COMPLETED' ? { present: index % 3 === 0 ? 5 : 6, marked: 6 } : null,
+      charges: [],
       student: null,
       group: { id: storyGroupId(1), name: group.name },
       teacher: { id: TEACHERS.dmytro.id, name: TEACHERS.dmytro.name, color: null },
@@ -398,42 +398,40 @@ function b2Attendance(lessons: LessonResponse[]): GroupAttendanceResponse {
   };
 }
 
-function b2Package(): PackageResponse {
-  const share = (n: number, paid: number): PackageResponse['shares'][number] => ({
-    id: `13131313-1313-4131-8131-${String(n).padStart(12, '0')}`,
-    enrollmentId: enrollmentId(1, n),
-    student: { id: studentId(n), fullName: member(n).fullName, avatarKey: member(n).avatarKey },
-    oweMinor: 240000,
-    paidMinor: paid,
-    paymentStatus: paid >= 240000 ? 'PAID' : paid > 0 ? 'PARTIAL' : 'PENDING',
-  });
-  return {
-    id: '77777777-7777-4777-8777-000000000100',
+/** Each member's own package for the group (ADR 0007); one has not paid. */
+function b2Packages(): PackageResponse[] {
+  const memberPackage = (n: number, left: number, paid: number): PackageResponse => ({
+    id: `77777777-7777-4777-8777-${String(100 + n).padStart(12, '0')}`,
     workspaceId: WORKSPACE,
-    studentId: null,
+    enrollmentId: enrollmentId(1, n),
+    studentId: studentId(n),
     groupId: storyGroupId(1),
     name: 'Autumn 2026',
     sizingMode: 'FIXED_COUNT',
-    lessonsTotal: 32,
+    lessonsTotal: 8,
     endDate: null,
-    pricePerLessonMinorSnapshot: 40000,
-    totalPriceMinorSnapshot: 1440000,
-    effectiveTotalMinor: 1440000,
-    remainingCredits: 8,
-    consumedCredits: 24,
-    paidMinor: 1200000,
+    pricePerLessonMinorSnapshot: 30000,
+    totalPriceMinorSnapshot: 240000,
+    remainingCredits: left,
+    consumedCredits: 8 - left,
+    paidMinor: paid,
     currency: 'UAH',
-    paymentStatus: 'PARTIAL',
+    paymentStatus: paid >= 240000 ? 'PAID' : paid > 0 ? 'PARTIAL' : 'PENDING',
     purchasedAt: '2026-09-01T10:00:00.000Z',
     expiresAt: '2026-12-20T10:00:00.000Z',
     notes: null,
-    student: null,
+    student: { id: studentId(n), fullName: member(n).fullName },
     group: { id: storyGroupId(1), name: 'B2 prep · evening' },
-    shares: [share(1, 240000), share(11, 240000), share(7, 0), share(5, 240000), share(2, 240000), share(10, 240000)],
     createdAt: '2026-09-01T10:00:00.000Z',
     updatedAt: '2026-09-01T10:00:00.000Z',
     deletedAt: null,
-  };
+  });
+  return [
+    memberPackage(1, 2, 240000),
+    memberPackage(11, 2, 240000),
+    memberPackage(7, 3, 0),
+    memberPackage(5, 2, 240000),
+  ];
 }
 
 // ---------------------------------------------------------------------------
@@ -603,7 +601,7 @@ export function createGroupRoutes(options: GroupStoryOptions) {
       return json({ items: query.get('groupId') === storyGroupId(1) ? lessons : [] });
     }
     if (path === '/packages' && query.get('groupId')) {
-      const items = query.get('groupId') === storyGroupId(1) ? [b2Package()] : [];
+      const items = query.get('groupId') === storyGroupId(1) ? b2Packages() : [];
       return json({ items, page: 1, pageSize: 20, total: items.length, totalPages: 1 });
     }
 

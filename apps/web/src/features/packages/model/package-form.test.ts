@@ -9,11 +9,10 @@ import {
 } from './package-form';
 
 const STUDENT_ID = '11111111-1111-4111-8111-111111111111';
-const GROUP_ID = '33333333-3333-4333-8333-333333333333';
 
 const base: PackageFormValues = {
   ...emptyPackageForm({ currency: 'UAH', timezone: 'Europe/Kyiv' }),
-  targetId: STUDENT_ID,
+  studentId: STUDENT_ID,
   price: '450',
 };
 
@@ -22,8 +21,8 @@ describe('packageFormSchema', () => {
     expect(packageFormSchema.safeParse(base).success).toBe(true);
   });
 
-  it('requires a target and a price', () => {
-    expect(packageFormSchema.safeParse({ ...base, targetId: '' }).success).toBe(false);
+  it('requires a student and a price', () => {
+    expect(packageFormSchema.safeParse({ ...base, studentId: '' }).success).toBe(false);
     expect(packageFormSchema.safeParse({ ...base, price: '' }).success).toBe(false);
   });
 
@@ -73,16 +72,6 @@ describe('buildCreatePackageDto', () => {
       durationMin: 60,
     });
     expect(dto).toHaveProperty('expiresAt');
-  });
-
-  it('targets a group instead of a student', () => {
-    const dto = buildCreatePackageDto({
-      ...base,
-      targetKind: 'group',
-      targetId: GROUP_ID,
-    });
-    expect(dto).toMatchObject({ groupId: GROUP_ID });
-    expect(dto).not.toHaveProperty('studentId');
   });
 
   it('sends the end date instead of a count for a by-period package', () => {

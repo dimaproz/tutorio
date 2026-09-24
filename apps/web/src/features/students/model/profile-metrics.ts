@@ -67,7 +67,7 @@ export function deriveStudentProfileMetrics({
       ? {
           paidMinor: packages.reduce((sum, pkg) => sum + pkg.paidMinor, 0),
           owedMinor: packages.reduce(
-            (sum, pkg) => sum + Math.max(pkg.effectiveTotalMinor - pkg.paidMinor, 0),
+            (sum, pkg) => sum + Math.max(pkg.totalPriceMinorSnapshot - pkg.paidMinor, 0),
             0,
           ),
           currency: packages[0].currency,

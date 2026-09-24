@@ -31,7 +31,9 @@ function PackageCard({ item }: { item: PackageResponse }) {
   const t = useTranslations('packages.card');
   const locale = useLocale();
 
-  const owner = item.student?.fullName ?? item.group?.name ?? '—';
+  const owner = item.group
+    ? `${item.student.fullName} · ${item.group.name}`
+    : item.student.fullName;
   const consumedRatio =
     item.lessonsTotal > 0
       ? Math.min(100, Math.max(0, (item.remainingCredits / item.lessonsTotal) * 100))

@@ -12,7 +12,7 @@ const pkg = (overrides: Partial<PackageResponse>) =>
     remainingCredits: 6,
     consumedCredits: 2,
     paidMinor: 400000,
-    effectiveTotalMinor: 400000,
+    totalPriceMinorSnapshot: 400000,
     currency: 'UAH',
     purchasedAt: '2026-09-01T10:00:00.000Z',
     ...overrides,

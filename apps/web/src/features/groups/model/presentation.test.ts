@@ -3,7 +3,8 @@ import type { GroupAttendanceResponse, LessonResponse, PackageResponse } from '@
 import {
   attendanceSegments,
   lessonBuckets,
-  pickGroupPackage,
+  memberPackages,
+  memberPackagesPaid,
   scheduleSlots,
   shortName,
   timeRange,
@@ -60,30 +61,42 @@ describe('group lesson buckets', () => {
 function pkg(patch: Partial<PackageResponse>): PackageResponse {
   return {
     id: 'p',
+    studentId: 'ann',
+    student: { id: 'ann', fullName: 'Ann' },
     deletedAt: null,
     remainingCredits: 5,
     expiresAt: null,
     purchasedAt: '2026-09-01T00:00:00.000Z',
+    paymentStatus: 'PENDING',
+    paidMinor: 0,
+    totalPriceMinorSnapshot: 1000,
     ...patch,
   } as PackageResponse;
 }
 
-describe('group package', () => {
-  it('prefers the newest running package over a newer used-up one', () => {
-    const picked = pickGroupPackage(
+describe('member packages', () => {
+  it("shows each member's newest running package over a newer used-up one", () => {
+    const bob = { studentId: 'bob', student: { id: 'bob', fullName: 'Bob' } };
+    const picked = memberPackages(
       [
         pkg({ id: 'used', remainingCredits: 0, purchasedAt: '2026-09-20T00:00:00.000Z' }),
         pkg({ id: 'running', purchasedAt: '2026-09-10T00:00:00.000Z' }),
         pkg({ id: 'expired', expiresAt: '2026-09-01T00:00:00.000Z' }),
+        pkg({ id: 'bob-used', remainingCredits: 0, ...bob }),
       ],
       NOW,
     );
-    expect(picked?.id).toBe('running');
+    expect(picked.map((row) => row.id)).toEqual(['running', 'bob-used']);
+    expect(memberPackages([], NOW)).toEqual([]);
   });
 
-  it('falls back to the newest live package, and to none', () => {
-    expect(pickGroupPackage([pkg({ id: 'used', remainingCredits: 0 })], NOW)?.id).toBe('used');
-    expect(pickGroupPackage([], NOW)).toBeNull();
+  it('counts the packages paid and the money in', () => {
+    expect(
+      memberPackagesPaid([
+        pkg({ paymentStatus: 'PAID', paidMinor: 1000 }),
+        pkg({ paymentStatus: 'PARTIAL', paidMinor: 400 }),
+      ]),
+    ).toEqual({ paid: 1, total: 2, paidMinor: 1400, totalMinor: 2000 });
   });
 });
 

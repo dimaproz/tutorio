@@ -1,169 +1,97 @@
 'use client';
 
 import Link from 'next/link';
-import { EllipsisVerticalIcon, ExternalLinkIcon, PlusIcon } from 'lucide-react';
-import { useFormatter, useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import type { PackageResponse } from '@tutorio/validation';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CreditMeter } from '@/components/shared/credit-meter';
 import { EntityAvatar } from '@/components/shared/entity-avatar';
-import { SectionDivider } from '@/components/shared/section-divider';
-import { formatMoneyCompact } from '@/lib/money';
+import { memberPackagesPaid } from '@/features/groups/model/presentation';
 import { cn } from '@/lib/utils';
 
-const SHARE_BADGE = { PAID: 'success', PENDING: 'warning', PARTIAL: 'warning' } as const;
-const SHARE_LABEL = { PAID: 'paid', PENDING: 'pending', PARTIAL: 'partial' } as const;
+const PAYMENT_BADGE = { PAID: 'success', PENDING: 'warning', PARTIAL: 'warning' } as const;
+const PAYMENT_LABEL = { PAID: 'paid', PENDING: 'pending', PARTIAL: 'partial' } as const;
 
 /**
- * The group's package: lessons left of the total, its name, end date and
- * price, the credit meter, and each member's share with its payment state.
- * Package sale itself is its own flow; this card only shows the live one
- * and offers to create one when there is none.
+ * The members' packages for this group: every member pays with their own
+ * package (ADR 0007), so each row is one member, the lessons left on their
+ * package and whether it is paid. Selling a package to members is its own
+ * flow; a member without a package pays each lesson from their balance.
  */
 export function GroupPackageCard({
-  pkg,
+  packages,
   loading,
   compact,
-  readOnly,
-  onCreate,
 }: {
-  pkg: PackageResponse | null;
+  /** One package per member: `memberPackages`. */
+  packages: readonly PackageResponse[];
   loading: boolean;
-  /** Phones show one line for the shares instead of the rows. */
+  /** Phones show one line instead of the rows. */
   compact: boolean;
-  readOnly: boolean;
-  onCreate: () => void;
 }) {
   const t = useTranslations('groups.package');
-  const locale = useLocale();
-  const format = useFormatter();
-
-  const header = (
-    <div className="flex min-h-8 items-center justify-between gap-3">
-      <h2 className="text-base font-semibold">{t('title')}</h2>
-      {pkg ? (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button type="button" variant="paper" size="icon-sm" aria-label={t('menu')}>
-              <EllipsisVerticalIcon />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild>
-              <Link prefetch={false} href={`/app/packages/${pkg.id}`}>
-                <ExternalLinkIcon data-icon />
-                {t('open')}
-              </Link>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ) : null}
-    </div>
-  );
+  const header = <h2 className="min-h-8 text-base leading-8 font-semibold">{t('title')}</h2>;
 
   if (loading) {
     return (
       <Card className="gap-3 px-6 py-5.5">
         {header}
-        <Skeleton className="h-7 w-40" />
-        <Skeleton className="h-3 w-full" />
+        <Skeleton className="h-9 w-full" />
+        <Skeleton className="h-9 w-full" />
       </Card>
     );
   }
 
-  if (!pkg) {
+  if (packages.length === 0) {
     return (
       <Card className="gap-3 px-6 py-5.5">
         {header}
         <p className="text-sm leading-5 text-muted-foreground">{t('emptyText')}</p>
-        {readOnly ? null : (
-          <Button
-            type="button"
-            variant="outline"
-            size="xs"
-            className="self-start max-md:h-11"
-            onClick={onCreate}
-          >
-            <PlusIcon data-icon="inline-start" />
-            {t('create')}
-          </Button>
-        )}
       </Card>
     );
   }
 
-  const paid = pkg.shares.filter((share) => share.paymentStatus === 'PAID').length;
-  const meta = [
-    pkg.name ? t('packageName', { name: pkg.name }) : null,
-    pkg.expiresAt
-      ? t('until', {
-          date: format.dateTime(new Date(pkg.expiresAt), { day: 'numeric', month: 'short' }),
-        })
-      : null,
-    t('perLesson', {
-      price: formatMoneyCompact(pkg.pricePerLessonMinorSnapshot, pkg.currency, locale).text,
-    }),
-  ]
-    .filter(Boolean)
-    .join(' · ');
-
+  const { paid, total } = memberPackagesPaid(packages);
   return (
     <Card className="gap-3 px-6 py-5.5">
       {header}
-      <div className="flex flex-col gap-1">
-        <span className="text-xl leading-7 font-semibold tracking-[-0.01em]">
-          {t('lessonsLeft', { left: pkg.remainingCredits, total: pkg.lessonsTotal })}
+      {compact ? (
+        <span
+          className={cn(
+            'text-[13px]',
+            paid < total ? 'text-tint-warning-foreground' : 'text-muted-foreground',
+          )}
+        >
+          {t('paidCount', { paid, total })}
         </span>
-        <span className="text-[13px] text-muted-foreground">{meta}</span>
-      </div>
-      <CreditMeter
-        size="lg"
-        left={pkg.remainingCredits}
-        total={pkg.lessonsTotal}
-        usedLabel={t('used', { count: pkg.consumedCredits })}
-        leftLabel={t('left', { count: pkg.remainingCredits })}
-      />
-      {pkg.shares.length > 0 ? (
-        compact ? (
-          <span
-            className={cn(
-              'text-[13px]',
-              paid < pkg.shares.length ? 'text-tint-warning-foreground' : 'text-muted-foreground',
-            )}
-          >
-            {t('sharesShort', { paid, total: pkg.shares.length })}
-          </span>
-        ) : (
-          <div className="flex flex-col gap-2 border-t border-border pt-3">
-            <SectionDivider label={t('shares', { paid, total: pkg.shares.length })} />
-            <ul className="flex flex-col gap-1">
-              {pkg.shares.map((share) => (
-                <li key={share.id} className="flex min-h-9 items-center gap-2.5">
-                  <EntityAvatar
-                    avatarKey={share.student.avatarKey}
-                    fullName={share.student.fullName}
-                    size="xs"
-                    tint="indigo"
-                  />
-                  <span className="min-w-0 grow truncate text-sm">{share.student.fullName}</span>
-                  <Badge variant={SHARE_BADGE[share.paymentStatus]}>
-                    {t(SHARE_LABEL[share.paymentStatus])}
-                  </Badge>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )
-      ) : null}
+      ) : (
+        <ul className="flex flex-col gap-1">
+          {packages.map((pkg) => (
+            <li key={pkg.id}>
+              <Link
+                prefetch={false}
+                href={`/app/packages/${pkg.id}`}
+                className="flex min-h-9 items-center gap-2.5 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <EntityAvatar
+                  avatarKey={null}
+                  fullName={pkg.student.fullName}
+                  size="xs"
+                  tint="indigo"
+                />
+                <span className="min-w-0 grow truncate text-sm">{pkg.student.fullName}</span>
+                <span className="shrink-0 text-[13px] text-muted-foreground tabular-nums">
+                  {t('lessonsLeft', { left: pkg.remainingCredits, total: pkg.lessonsTotal })}
+                </span>
+                <Badge variant={PAYMENT_BADGE[pkg.paymentStatus]}>
+                  {t(PAYMENT_LABEL[pkg.paymentStatus])}
+                </Badge>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
     </Card>
   );
 }

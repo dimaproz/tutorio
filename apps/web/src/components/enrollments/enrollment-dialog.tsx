@@ -39,7 +39,7 @@ import { makeZodErrorMap } from '@/lib/forms/error-map';
 import { enrollmentFormSchema, type EnrollmentFormValues } from '@/features/enrollments/model/form';
 import { formatPriceInput, parsePriceInput } from '@/lib/money';
 
-const BILLING_TYPES = ['PACKAGE', 'MONTHLY', 'PER_LESSON'] as const;
+const BILLING_TYPES = ['PER_LESSON', 'PACKAGE'] as const;
 
 // Sentinel for "no group" — Radix Select cannot hold an empty string value.
 const INDIVIDUAL = 'individual';
@@ -115,7 +115,7 @@ export function EnrollmentDialog({
       groupId: lockedGroupId ?? INDIVIDUAL,
       teacherId: '',
       status: 'ACTIVE',
-      billingType: 'PACKAGE',
+      billingType: 'PER_LESSON',
       price: '',
       currency: 'EUR',
       useCustomDeadline: false,
@@ -153,7 +153,7 @@ export function EnrollmentDialog({
       groupId: lockedGroupId ?? INDIVIDUAL,
       teacherId: '',
       status: 'ACTIVE',
-      billingType: 'PACKAGE',
+      billingType: 'PER_LESSON',
       price: '',
       currency: session.workspace.defaultCurrency as EnrollmentFormValues['currency'],
       useCustomDeadline: false,

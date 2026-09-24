@@ -2,13 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  BanknoteIcon,
-  HistoryIcon,
-  SlidersHorizontalIcon,
-  Trash2Icon,
-  UsersRoundIcon,
-} from 'lucide-react';
+import { BanknoteIcon, HistoryIcon, SlidersHorizontalIcon, Trash2Icon } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/shared/confirm-dialog';
@@ -63,8 +57,11 @@ export function PackageDetailView({ packageId }: { packageId: string }) {
   }
 
   const data = pkg.data;
-  const owner = data.student?.fullName ?? data.group?.name ?? '—';
-  const isGroup = Boolean(data.groupId);
+  // A package pays for one student's direction: their lessons with a
+  // teacher, or their place in a group.
+  const owner = data.group
+    ? `${data.student.fullName} · ${data.group.name}`
+    : data.student.fullName;
   const remainingRatio =
     data.lessonsTotal > 0
       ? Math.min(100, Math.max(0, (data.remainingCredits / data.lessonsTotal) * 100))
@@ -115,24 +112,20 @@ export function PackageDetailView({ packageId }: { packageId: string }) {
           <Card>
             <CardHeader>
               <SectionTitle icon={BanknoteIcon}>{tCard('remaining')}</SectionTitle>
-              {!isGroup ? (
-                <CardAction>
-                  <Button
-                    size="sm"
-                    onClick={() =>
-                      openPaymentFor(
-                        // An individual package books money against the single
-                        // enrollment behind its purchase entry.
-                        ledger.data?.items.find((entry) => entry.enrollmentId)?.enrollmentId ?? '',
-                        owner,
-                        Math.max(0, data.totalPriceMinorSnapshot - data.paidMinor),
-                      )
-                    }
-                  >
-                    {tDetail('recordPayment')}
-                  </Button>
-                </CardAction>
-              ) : null}
+              <CardAction>
+                <Button
+                  size="sm"
+                  onClick={() =>
+                    openPaymentFor(
+                      data.enrollmentId,
+                      data.student.fullName,
+                      Math.max(0, data.totalPriceMinorSnapshot - data.paidMinor),
+                    )
+                  }
+                >
+                  {tDetail('recordPayment')}
+                </Button>
+              </CardAction>
             </CardHeader>
             <CardContent className="flex flex-col gap-5">
               <div className="flex flex-col gap-2">
@@ -165,49 +158,6 @@ export function PackageDetailView({ packageId }: { packageId: string }) {
               </div>
             </CardContent>
           </Card>
-
-          {isGroup ? (
-            <Card>
-              <CardHeader>
-                <SectionTitle icon={UsersRoundIcon}>{tDetail('sharesTitle')}</SectionTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="flex flex-col gap-3">
-                  {data.shares.map((share) => (
-                    <li
-                      key={share.id}
-                      className="flex flex-col gap-2 rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between"
-                    >
-                      <div className="flex min-w-0 flex-col gap-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-medium">{share.student.fullName}</span>
-                          <PackagePaymentStatusBadge status={share.paymentStatus} />
-                        </div>
-                        <span className="tabular text-muted-foreground text-sm">
-                          {formatMoneyDisplay(share.paidMinor, data.currency, locale)}
-                          {' / '}
-                          {formatMoneyDisplay(share.oweMinor, data.currency, locale)}
-                        </span>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() =>
-                          openPaymentFor(
-                            share.enrollmentId,
-                            share.student.fullName,
-                            Math.max(0, share.oweMinor - share.paidMinor),
-                          )
-                        }
-                      >
-                        {tDetail('recordPayment')}
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          ) : null}
         </div>
 
         <div className="flex flex-col gap-6">

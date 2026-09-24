@@ -53,7 +53,6 @@ import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   buildCreatePackageDto,
   emptyPackageForm,
@@ -62,7 +61,6 @@ import {
   type PackageFormValues,
 } from '@/features/packages/model/package-form';
 import { errorMessageKey } from '@/lib/api/error-message';
-import { useGroupsQuery } from '@/lib/api/groups';
 import { useCreatePackageMutation } from '@/lib/api/packages';
 import { useStudentsQuery } from '@/lib/api/students';
 import type { GatewayError } from '@/lib/auth/client';
@@ -99,12 +97,10 @@ export function PackageFormDialog({
   open,
   onOpenChange,
   lockedStudentId,
-  lockedGroupId,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   lockedStudentId?: string;
-  lockedGroupId?: string;
 }) {
   const t = useTranslations('packages.form');
   const tPackages = useTranslations('packages');
@@ -114,7 +110,6 @@ export function PackageFormDialog({
   const locale = useLocale();
   const session = useSession();
   const students = useStudentsQuery({ page: 1, pageSize: 100 }, open);
-  const groups = useGroupsQuery({ page: 1, pageSize: 100 }, open);
   const createPackage = useCreatePackageMutation();
   const [conflicts, setConflicts] = useState<ScheduleConflictDetails | null>(null);
   const [pendingDto, setPendingDto] = useState<CreatePackageDto | null>(null);
@@ -124,10 +119,9 @@ export function PackageFormDialog({
       emptyPackageForm({
         currency: session.workspace.defaultCurrency,
         timezone: detectTimezone(),
-        targetKind: lockedGroupId ? 'group' : 'student',
-        targetId: lockedGroupId ?? lockedStudentId,
+        studentId: lockedStudentId,
       }),
-    [session.workspace.defaultCurrency, lockedGroupId, lockedStudentId],
+    [session.workspace.defaultCurrency, lockedStudentId],
   );
 
   const form = useForm<PackageFormValues>({
@@ -143,9 +137,8 @@ export function PackageFormDialog({
   // amount does not repaint every section.
   const values = useWatch({ control: form.control, compute: packageFormView });
   const { summary } = values;
-  const isGroup = values.targetKind === 'group';
   const hasSchedule = values.sizingMode === 'BY_PERIOD' || values.scheduleEnabled;
-  const targetLocked = Boolean(lockedStudentId || lockedGroupId);
+  const targetLocked = Boolean(lockedStudentId);
 
   useEffect(() => {
     if (!open) return;
@@ -166,7 +159,7 @@ export function PackageFormDialog({
 
   const pickStudent = (id?: string) => {
     const value = id ?? '';
-    form.setValue('targetId', value, { shouldValidate: true });
+    form.setValue('studentId', value, { shouldValidate: true });
     const student = students.data?.items.find((item) => item.id === value);
     form.setValue(
       'price',
@@ -178,26 +171,12 @@ export function PackageFormDialog({
     );
   };
 
-  const pickGroup = (id: string) => {
-    form.setValue('targetId', id, { shouldValidate: true });
-    const group = groups.data?.items.find((item) => item.id === id);
-    form.setValue(
-      'price',
-      group?.pricePerLesson != null ? formatPriceInput(group.pricePerLesson) : '',
-    );
-    form.setValue(
-      'currency',
-      (group?.currency ?? session.workspace.defaultCurrency) as PackageFormValues['currency'],
-    );
-  };
-
   useEffect(() => {
     if (!open || form.getValues('price')) return;
     if (lockedStudentId && students.data) pickStudent(lockedStudentId);
-    if (lockedGroupId && groups.data) pickGroup(lockedGroupId);
-    // Prefill a locked target once its list query arrives.
+    // Prefill a locked student once the list query arrives.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, lockedStudentId, lockedGroupId, students.data, groups.data]);
+  }, [open, lockedStudentId, students.data]);
 
   const submitDto = async (dto: CreatePackageDto, force = false) => {
     try {
@@ -259,78 +238,27 @@ export function PackageFormDialog({
           description={t('targetDescription')}
         >
           {!targetLocked ? (
-            <>
-              <Controller
-                control={form.control}
-                name="targetKind"
-                render={({ field }) => (
-                  <Tabs
+            <Controller
+              control={form.control}
+              name="studentId"
+              render={({ field }) => (
+                <Field data-invalid={Boolean(errors.studentId) || undefined}>
+                  <FieldLabel htmlFor="package-student">{t('student')}</FieldLabel>
+                  <EntityPicker
+                    id="package-student"
                     value={field.value}
-                    onValueChange={(next) => {
-                      field.onChange(next);
-                      form.setValue('targetId', '');
-                      form.setValue('price', '');
-                      form.setValue(
-                        'currency',
-                        session.workspace.defaultCurrency as PackageFormValues['currency'],
-                      );
-                      if (next === 'group' && form.getValues('paymentStatus') === 'PARTIAL') {
-                        form.setValue('paymentStatus', 'PENDING');
-                        form.setValue('paidAmount', '');
-                        form.setValue('paidAt', toLocalDateInput(new Date()));
-                      }
-                    }}
-                  >
-                    <TabsList className="w-full">
-                      <TabsTrigger value="student">{t('targetStudent')}</TabsTrigger>
-                      <TabsTrigger value="group">{t('targetGroup')}</TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-                )}
-              />
-              <Controller
-                control={form.control}
-                name="targetId"
-                render={({ field }) =>
-                  isGroup ? (
-                    <Field data-invalid={Boolean(errors.targetId) || undefined}>
-                      <FieldLabel htmlFor="package-group">{t('group')}</FieldLabel>
-                      <Select value={field.value} onValueChange={pickGroup}>
-                        <SelectTrigger id="package-group" className="w-full">
-                          <SelectValue placeholder={t('groupPlaceholder')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectGroup>
-                            {(groups.data?.items ?? []).map((group) => (
-                              <SelectItem key={group.id} value={group.id}>
-                                {group.name}
-                              </SelectItem>
-                            ))}
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                      <FieldError errors={[errors.targetId]} />
-                    </Field>
-                  ) : (
-                    <Field data-invalid={Boolean(errors.targetId) || undefined}>
-                      <FieldLabel htmlFor="package-student">{t('student')}</FieldLabel>
-                      <EntityPicker
-                        id="package-student"
-                        value={field.value}
-                        options={studentOptions}
-                        onChange={pickStudent}
-                        placeholder={t('studentPlaceholder')}
-                        searchPlaceholder={t('studentSearch')}
-                        emptyLabel={t('studentEmpty')}
-                        invalid={Boolean(errors.targetId)}
-                        isLoading={students.isPending}
-                      />
-                      <FieldError errors={[errors.targetId]} />
-                    </Field>
-                  )
-                }
-              />
-            </>
+                    options={studentOptions}
+                    onChange={pickStudent}
+                    placeholder={t('studentPlaceholder')}
+                    searchPlaceholder={t('studentSearch')}
+                    emptyLabel={t('studentEmpty')}
+                    invalid={Boolean(errors.studentId)}
+                    isLoading={students.isPending}
+                  />
+                  <FieldError errors={[errors.studentId]} />
+                </Field>
+              )}
+            />
           ) : null}
           <Field data-invalid={Boolean(errors.name) || undefined}>
             <FieldLabel htmlFor="package-name">{t('name')}</FieldLabel>
@@ -498,16 +426,7 @@ export function PackageFormDialog({
               <Tabs value={field.value} onValueChange={field.onChange}>
                 <TabsList className="w-full">
                   <TabsTrigger value="PENDING">{t('paymentPending')}</TabsTrigger>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="flex flex-1">
-                        <TabsTrigger value="PARTIAL" disabled={isGroup} className="w-full">
-                          {t('paymentPartial')}
-                        </TabsTrigger>
-                      </span>
-                    </TooltipTrigger>
-                    {isGroup ? <TooltipContent>{t('groupPartialHint')}</TooltipContent> : null}
-                  </Tooltip>
+                  <TabsTrigger value="PARTIAL">{t('paymentPartial')}</TabsTrigger>
                   <TabsTrigger value="PAID">{t('paymentPaid')}</TabsTrigger>
                 </TabsList>
               </Tabs>
@@ -614,7 +533,6 @@ export function PackageFormDialog({
 /** The part of the form the dialog derives its layout and summary from. */
 function packageFormView(values: PackageFormValues) {
   return {
-    targetKind: values.targetKind,
     sizingMode: values.sizingMode,
     scheduleEnabled: values.scheduleEnabled,
     timezone: values.timezone,

@@ -17,9 +17,8 @@ import { LoadingPanel } from '@/components/shared/loading';
 import { Notice } from '@/components/shared/notice';
 import { useSetPageCrumb } from '@/components/shared/page-crumb';
 import { QueryErrorAlert } from '@/components/shared/page-shell';
-import { PackageFormDialog } from '@/features/packages';
 import { LessonActionsDialog, LessonFormDialog } from '@/features/scheduling';
-import { pickGroupPackage } from '@/features/groups/model/presentation';
+import { memberPackages } from '@/features/groups/model/presentation';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useGroupAttendanceQuery, useGroupQuery } from '@/lib/api/groups';
 import { usePackagesQuery } from '@/lib/api/packages';
@@ -63,7 +62,7 @@ export function GroupDetailView({ groupId }: { groupId: string }) {
   const group = useGroupQuery(groupId);
   const window = useMemo(() => lessonWindow(now), [now]);
   const lessons = useLessonsQuery({ ...window, groupId });
-  const packages = usePackagesQuery({ page: 1, pageSize: 20, groupId, state: 'active' });
+  const packages = usePackagesQuery({ page: 1, pageSize: 100, groupId, state: 'active' });
   const attendance = useGroupAttendanceQuery(groupId, ATTENDANCE_WINDOW);
 
   if (group.isPending) return <DetailFrame loading={<LoadingPanel size="lg" />} />;
@@ -136,11 +135,10 @@ export function GroupPageContent({
   const justCreated = searchParams.get('created') === '1';
 
   const [scheduleOpen, setScheduleOpen] = useState(false);
-  const [packageOpen, setPackageOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [openLesson, setOpenLesson] = useState<LessonResponse | null>(null);
   const [markLesson, setMarkLesson] = useState<LessonResponse | null>(null);
-  const pkg = useMemo(() => pickGroupPackage(packages.items, now), [packages.items, now]);
+  const members = useMemo(() => memberPackages(packages.items, now), [packages.items, now]);
   const archiving = useGroupArchive({ onArchived: () => router.push('/app/groups') });
   const [restoring, setRestoring] = useState(false);
   const restore = () => {
@@ -202,7 +200,7 @@ export function GroupPageContent({
         metrics={
           <GroupPageMetrics
             group={group}
-            pkg={{ data: pkg, loading: packages.loading }}
+            packages={{ data: members, loading: packages.loading }}
             attendance={{ data: attendance.data, loading: attendance.loading }}
           />
         }
@@ -239,13 +237,7 @@ export function GroupPageContent({
               pickerOpen={pickerOpen}
               onPickerOpenChange={setPickerOpen}
             />
-            <GroupPackageCard
-              pkg={pkg}
-              loading={packages.loading}
-              compact={mobile}
-              readOnly={archived}
-              onCreate={() => setPackageOpen(true)}
-            />
+            <GroupPackageCard packages={members} loading={packages.loading} compact={mobile} />
             <GroupNotesCard group={group} readOnly={archived} />
           </>
         }
@@ -256,11 +248,6 @@ export function GroupPageContent({
           <LessonFormDialog
             open={scheduleOpen}
             onOpenChange={setScheduleOpen}
-            lockedGroupId={group.id}
-          />
-          <PackageFormDialog
-            open={packageOpen}
-            onOpenChange={setPackageOpen}
             lockedGroupId={group.id}
           />
           <LessonActionsDialog

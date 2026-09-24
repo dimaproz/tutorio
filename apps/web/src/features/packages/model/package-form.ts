@@ -19,8 +19,6 @@ import {
 } from '@/lib/forms/helpers';
 import { parsePriceInput } from '@/lib/money';
 
-export type PackageTargetKind = 'student' | 'group';
-
 const lessonsTotalString = checkedString(
   (value) => lessonsTotalSchema.safeParse(Number(value)).success,
   'lessonsTotalRange',
@@ -32,8 +30,9 @@ const validityDaysString = checkedString(
 
 export const packageFormSchema = z
   .object({
-    targetKind: z.enum(['student', 'group']),
-    targetId: uuidSchema,
+    // A package pays for a student's lessons (selling to a group's members
+    // is its own flow, product/scheduling.md L-86).
+    studentId: uuidSchema,
     name: optionalText(z.string().trim().min(1).max(120)),
     sizingMode: z.enum(['FIXED_COUNT', 'BY_PERIOD']),
     lessonsTotal: lessonsTotalString,
@@ -102,13 +101,6 @@ export const packageFormSchema = z
     if (values.paymentStatus === 'PARTIAL') {
       const amount = parsePriceInput(values.paidAmount);
       const total = packageScheduleSummary(values).totalMinor;
-      if (values.targetKind === 'group') {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['paymentStatus'],
-          params: { key: 'groupPartialPaymentUnsupported' },
-        });
-      }
       if (amount == null || amount <= 0 || total == null || amount >= total) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -147,12 +139,10 @@ export type PackageFormValues = z.infer<typeof packageFormSchema>;
 export function emptyPackageForm(input: {
   currency: string;
   timezone: string;
-  targetKind?: PackageTargetKind;
-  targetId?: string;
+  studentId?: string;
 }): PackageFormValues {
   return {
-    targetKind: input.targetKind ?? 'student',
-    targetId: input.targetId ?? '',
+    studentId: input.studentId ?? '',
     name: '',
     sizingMode: 'FIXED_COUNT',
     lessonsTotal: '8',
@@ -257,9 +247,7 @@ export function buildCreatePackageDto(values: PackageFormValues): CreatePackageD
     values.paymentStatus === 'PAID' ? totalMinor : (parsePriceInput(values.paidAmount) ?? 0);
 
   return {
-    ...(values.targetKind === 'student'
-      ? { studentId: values.targetId }
-      : { groupId: values.targetId }),
+    studentId: values.studentId,
     ...(values.name.trim() ? { name: values.name.trim() } : {}),
     sizingMode: values.sizingMode,
     ...(values.sizingMode === 'FIXED_COUNT'

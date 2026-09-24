@@ -8,8 +8,7 @@ function pkg(overrides: Partial<PackageResponse>): PackageResponse {
     remainingCredits: 8,
     lessonsTotal: 8,
     purchasedAt: '2026-09-01T00:00:00.000Z',
-    shares: [],
-    effectiveTotalMinor: 100_000,
+    totalPriceMinorSnapshot: 100_000,
     paidMinor: 100_000,
     currency: 'UAH',
     ...overrides,
@@ -46,9 +45,9 @@ describe('collection metrics', () => {
   it('sums only what is still owed', () => {
     const metrics = deriveCollectionMetrics(
       [
-        pkg({ effectiveTotalMinor: 100_000, paidMinor: 40_000 }),
-        pkg({ effectiveTotalMinor: 50_000, paidMinor: 50_000 }),
-        pkg({ effectiveTotalMinor: 30_000, paidMinor: 0 }),
+        pkg({ totalPriceMinorSnapshot: 100_000, paidMinor: 40_000 }),
+        pkg({ totalPriceMinorSnapshot: 50_000, paidMinor: 50_000 }),
+        pkg({ totalPriceMinorSnapshot: 30_000, paidMinor: 0 }),
       ],
       3,
     );
@@ -61,8 +60,8 @@ describe('collection metrics', () => {
   it('refuses to add minor units of different currencies', () => {
     const metrics = deriveCollectionMetrics(
       [
-        pkg({ effectiveTotalMinor: 100_000, paidMinor: 0, currency: 'UAH' }),
-        pkg({ effectiveTotalMinor: 100_000, paidMinor: 0, currency: 'EUR' }),
+        pkg({ totalPriceMinorSnapshot: 100_000, paidMinor: 0, currency: 'UAH' }),
+        pkg({ totalPriceMinorSnapshot: 100_000, paidMinor: 0, currency: 'EUR' }),
       ],
       2,
     );

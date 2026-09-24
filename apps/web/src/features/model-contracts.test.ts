@@ -117,7 +117,7 @@ describe('feature form models', () => {
     expect(
       packageFormSchema.safeParse({
         ...emptyPackageForm({ currency: 'EUR', timezone: 'Europe/Kyiv' }),
-        targetId: '11111111-1111-4111-8111-111111111111',
+        studentId: '11111111-1111-4111-8111-111111111111',
         price: '20',
       }).success,
     ).toBe(true);

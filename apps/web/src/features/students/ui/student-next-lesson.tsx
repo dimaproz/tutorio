@@ -93,7 +93,7 @@ export function StudentNextLesson({
             size="sm"
             media={<EntityAvatar fullName={lesson.teacher.name} size="sm" />}
             name={lesson.teacher.name}
-            subtitle={lesson.packageId ? t('usesCredit') : t('teacher')}
+            subtitle={t('teacher')}
           />
         }
         primaryAction={

@@ -10,7 +10,7 @@ const lesson: LessonResponse = {
   enrollmentId: '33333333-3333-4333-8333-333333333333',
   groupId: null,
   seriesId: null,
-  packageId: null,
+  charges: [],
   teacherId: '44444444-4444-4444-8444-444444444444',
   startsAtUtc: '2026-09-10T14:00:00.000Z',
   durationMin: 60,

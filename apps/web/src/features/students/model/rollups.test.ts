@@ -8,6 +8,7 @@ function pkg(overrides: Partial<PackageResponse>): PackageResponse {
   return {
     id: 'p1',
     workspaceId: 'w1',
+    enrollmentId: 'e1',
     studentId: 's1',
     groupId: null,
     name: null,
@@ -16,7 +17,6 @@ function pkg(overrides: Partial<PackageResponse>): PackageResponse {
     endDate: null,
     pricePerLessonMinorSnapshot: 50000,
     totalPriceMinorSnapshot: 400000,
-    effectiveTotalMinor: 400000,
     remainingCredits: 6,
     consumedCredits: 2,
     paidMinor: 400000,
@@ -27,7 +27,6 @@ function pkg(overrides: Partial<PackageResponse>): PackageResponse {
     notes: null,
     student: { id: 's1', fullName: 'Anna' },
     group: null,
-    shares: [],
     createdAt: '2026-09-01T10:00:00.000Z',
     updatedAt: '2026-09-01T10:00:00.000Z',
     deletedAt: null,
@@ -106,24 +105,16 @@ describe('deriveStudentRollups', () => {
     expect(rollups.get('s1')?.credits).toEqual({ left: 3, total: 8 });
   });
 
-  it('gives every participant of a group package its shared credits and own share', () => {
+  it("counts a member's own package for a group like any other package", () => {
     const rollups = deriveStudentRollups({
       packages: [
         pkg({
-          studentId: null,
+          studentId: 's3',
           groupId: 'g1',
           remainingCredits: 5,
           lessonsTotal: 10,
-          shares: [
-            {
-              id: 'sh1',
-              enrollmentId: 'e1',
-              student: { id: 's3', fullName: 'Maksym', avatarKey: null },
-              oweMinor: 200000,
-              paidMinor: 200000,
-              paymentStatus: 'PAID',
-            },
-          ],
+          totalPriceMinorSnapshot: 200000,
+          paidMinor: 200000,
         }),
       ],
       packagesComplete: true,

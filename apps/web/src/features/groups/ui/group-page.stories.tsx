@@ -62,17 +62,16 @@ export const Playground: Story = {
     await expect(canvas.getByText('Showing 7 of 36')).toBeVisible();
     // Attendance: the student with two absences in a row is first.
     await expect(await canvas.findByText(/2 absences in a row/)).toBeVisible();
-    // The package card lists each member's share.
-    await expect(await canvas.findByText(/Shares · 5 of 6 paid/)).toBeVisible();
+    // Every member pays with their own package; the metric counts the paid ones.
+    await expect(await canvas.findByText("Members' packages")).toBeVisible();
+    await expect((await canvas.findAllByText('3 of 4'))[0]).toBeVisible();
   },
 };
 
 /** Removing a student asks in the neutral tone and saves the whole roster. */
 export const RemoveFromRoster: Story = {
   play: async ({ canvas }) => {
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Actions for Denys Koval' }),
-    );
+    await userEvent.click(await canvas.findByRole('button', { name: 'Actions for Denys Koval' }));
     const menu = within(await within(document.body).findByRole('menu'));
     await userEvent.click(menu.getByRole('menuitem', { name: 'Remove from group' }));
     const dialog = within(await within(document.body).findByRole('alertdialog'));

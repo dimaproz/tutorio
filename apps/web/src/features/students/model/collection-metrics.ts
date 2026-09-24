@@ -8,19 +8,15 @@ export type StudentCredits = { left: number; total: number };
 /**
  * The credits of the package each student is using now: the newest purchase
  * that still has credits, or the newest one when every package is used up.
- * Group packages count for every student holding a share.
  */
 export function currentCreditsByStudent(packages: PackageResponse[]): Map<string, StudentCredits> {
   const current = new Map<string, StudentCredits>();
   const byPurchase = [...packages].sort((a, b) => b.purchasedAt.localeCompare(a.purchasedAt));
   for (const pkg of byPurchase) {
-    const holders = pkg.studentId ? [pkg.studentId] : pkg.shares.map((share) => share.student.id);
     const credits = { left: Math.max(pkg.remainingCredits, 0), total: pkg.lessonsTotal };
-    for (const studentId of holders) {
-      const existing = current.get(studentId);
-      if (!existing || (existing.left === 0 && credits.left > 0)) {
-        current.set(studentId, credits);
-      }
+    const existing = current.get(pkg.studentId);
+    if (!existing || (existing.left === 0 && credits.left > 0)) {
+      current.set(pkg.studentId, credits);
     }
   }
   return current;
@@ -61,7 +57,7 @@ export function deriveCollectionMetrics(
   let outstandingMinor = 0;
 
   for (const item of items) {
-    const owed = item.effectiveTotalMinor - item.paidMinor;
+    const owed = item.totalPriceMinorSnapshot - item.paidMinor;
     if (owed > 0) {
       unpaidPackages += 1;
       outstandingMinor += owed;

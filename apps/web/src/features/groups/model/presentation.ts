@@ -62,21 +62,41 @@ export function onHoldCount(enrollments: GroupDetail['enrollments']): number {
 }
 
 /**
- * The package the group page shows: the newest live one that still has
- * lessons and has not expired, else the newest live one, else none.
+ * The package each member pays the group with (ADR 0007: every member has
+ * their own): per student, the newest live one that still has lessons and has
+ * not expired, else their newest live one. Sorted by the student's name.
  */
-export function pickGroupPackage(
+export function memberPackages(
   packages: readonly PackageResponse[],
   now: number,
-): PackageResponse | null {
+): PackageResponse[] {
   const live = packages
     .filter((pkg) => pkg.deletedAt === null)
     .sort((a, b) => b.purchasedAt.localeCompare(a.purchasedAt));
-  const running = live.find(
-    (pkg) =>
-      pkg.remainingCredits > 0 && (pkg.expiresAt === null || Date.parse(pkg.expiresAt) > now),
+  const byStudent = new Map<string, PackageResponse>();
+  for (const pkg of live) {
+    const current = byStudent.get(pkg.studentId);
+    const running =
+      pkg.remainingCredits > 0 && (pkg.expiresAt === null || Date.parse(pkg.expiresAt) > now);
+    const currentRunning =
+      current !== undefined &&
+      current.remainingCredits > 0 &&
+      (current.expiresAt === null || Date.parse(current.expiresAt) > now);
+    if (!current || (running && !currentRunning)) byStudent.set(pkg.studentId, pkg);
+  }
+  return [...byStudent.values()].sort((a, b) =>
+    a.student.fullName.localeCompare(b.student.fullName),
   );
-  return running ?? live[0] ?? null;
+}
+
+/** How many member packages are paid, and the money paid of their total. */
+export function memberPackagesPaid(packages: readonly PackageResponse[]) {
+  return {
+    paid: packages.filter((pkg) => pkg.paymentStatus === 'PAID').length,
+    total: packages.length,
+    paidMinor: packages.reduce((sum, pkg) => sum + pkg.paidMinor, 0),
+    totalMinor: packages.reduce((sum, pkg) => sum + pkg.totalPriceMinorSnapshot, 0),
+  };
 }
 
 export type LessonBuckets = {
