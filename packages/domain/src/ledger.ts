@@ -2,14 +2,17 @@
  * The package credit ledger (ADR 0007): what a package was granted.
  *
  * Entries are **append-only and expressed in lesson units**, never in money —
- * money lives in `Payment`. A purchase grants the package's credits and a
- * manual adjustment corrects them; a correction is a new entry, never an
- * edit. What a package has paid for is not an entry: it is the lesson
- * charges assigned to it (see `billing.ts`), so a package's remaining credits
+ * money lives in `Payment`. A purchase grants the package's credits, a
+ * manual adjustment corrects them, a transfer moves unused credits to another
+ * direction (out of one package, into a new one) and a refund takes unused
+ * credits back (L-85); a correction is a new entry, never an edit. What a
+ * package has paid for is not an entry: it is the lesson charges assigned to
+ * it (see `billing.ts`), so a package's remaining credits
  * are its granted credits minus its active charges.
  */
 
-export type LedgerEntryType = 'purchase' | 'manual_adjustment';
+export type LedgerEntryType =
+  'purchase' | 'manual_adjustment' | 'transfer_out' | 'transfer_in' | 'refund';
 
 export interface LedgerEntryLike {
   delta: number;
@@ -22,9 +25,6 @@ export function creditBalance(entries: readonly LedgerEntryLike[]): number {
 }
 
 /** Credits a package still has after the charges it pays for. */
-export function remainingCredits(
-  entries: readonly LedgerEntryLike[],
-  chargesPaid: number,
-): number {
+export function remainingCredits(entries: readonly LedgerEntryLike[], chargesPaid: number): number {
   return creditBalance(entries) - chargesPaid;
 }

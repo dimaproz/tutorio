@@ -53,15 +53,21 @@ export function initialSource(mode: BillingMode): ChargeSource {
 export interface CreditPackage {
   id: string;
   purchasedAt: Date;
+  /** First instant a period package pays for; null for a count package. */
+  validFrom: Date | null;
   /** Exclusive end of validity; null when the package does not expire. */
   expiresAt: Date | null;
   /** Credits granted and adjusted, minus the charges it already pays. */
   remaining: number;
 }
 
-/** A package pays only for lessons before it expires (L-84). */
-export function isPackageValidAt(pkg: Pick<CreditPackage, 'expiresAt'>, at: Date): boolean {
-  return pkg.expiresAt === null || pkg.expiresAt.getTime() > at.getTime();
+/** A package pays only for lessons inside its window: from its start, before it expires (L-80, L-84). */
+export function isPackageValidAt(
+  pkg: Pick<CreditPackage, 'expiresAt'> & { validFrom?: Date | null },
+  at: Date,
+): boolean {
+  const started = pkg.validFrom == null || pkg.validFrom.getTime() <= at.getTime();
+  return started && (pkg.expiresAt === null || pkg.expiresAt.getTime() > at.getTime());
 }
 
 function oldestFirst<T extends { purchasedAt: Date; id: string }>(packages: readonly T[]): T[] {

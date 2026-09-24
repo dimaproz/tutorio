@@ -5,6 +5,8 @@ import {
   OverpaymentError,
   paymentStatusOf,
   planPackage,
+  transferCredits,
+  weeksInPeriod,
 } from './package';
 
 describe('planPackage — fixed count', () => {
@@ -133,3 +135,81 @@ describe('assertPaymentWithinOutstanding', () => {
   });
 });
 
+describe('planPackage — period kinds and prices (L-80)', () => {
+  const start = new Date('2026-10-01T00:00:00.000Z');
+  const end = new Date('2026-10-28T23:59:59.999Z');
+
+  it('sizes a weekly package as lessons a week times the weeks in the window', () => {
+    expect(
+      planPackage({
+        sizingMode: 'BY_PERIOD_WEEKLY',
+        lessonsPerWeek: 2,
+        startsAt: start,
+        endDate: end,
+        pricePerLessonMinor: 40000,
+      }),
+    ).toEqual({ lessonsTotal: 8, pricePerLessonMinor: 40000, totalPriceMinor: 320000 });
+  });
+
+  it("takes the tutor's count over the schedule's", () => {
+    expect(
+      planPackage({
+        sizingMode: 'BY_PERIOD',
+        lessonsTotal: 7,
+        startsAt: start,
+        endDate: end,
+        pricePerLessonMinor: 100,
+      }).lessonsTotal,
+    ).toBe(7);
+  });
+
+  it('refuses a period package without a schedule or a count', () => {
+    expect(() =>
+      planPackage({
+        sizingMode: 'BY_PERIOD',
+        startsAt: start,
+        endDate: end,
+        pricePerLessonMinor: 1,
+      }),
+    ).toThrow(InvalidPackagePlanError);
+  });
+
+  it('prices a package by its total and derives the per-lesson price', () => {
+    expect(
+      planPackage({ sizingMode: 'FIXED_COUNT', lessonsTotal: 3, totalPriceMinor: 100000 }),
+    ).toEqual({ lessonsTotal: 3, pricePerLessonMinor: 33333, totalPriceMinor: 100000 });
+  });
+
+  it('counts at least one week', () => {
+    expect(weeksInPeriod(start, new Date('2026-10-02T00:00:00.000Z'))).toBe(1);
+    expect(weeksInPeriod(start, new Date('2026-11-01T00:00:00.000Z'))).toBe(4);
+  });
+});
+
+describe('transferCredits (L-85)', () => {
+  it('recalculates by price, rounds down and shows the remainder', () => {
+    expect(transferCredits(3, 40000, 50000)).toEqual({
+      valueMinor: 120000,
+      lessons: 2,
+      remainderMinor: 20000,
+    });
+  });
+
+  it('moves credits one for one to a free direction', () => {
+    expect(transferCredits(2, 40000, 0)).toEqual({
+      valueMinor: 80000,
+      lessons: 2,
+      remainderMinor: 0,
+    });
+  });
+
+  it('moves at least one credit', () => {
+    expect(() => transferCredits(0, 100, 100)).toThrow(InvalidPackagePlanError);
+  });
+});
+
+describe('paymentStatusOf — nothing owed', () => {
+  it('reports a package that costs nothing as paid', () => {
+    expect(paymentStatusOf(0, 0)).toBe('PAID');
+  });
+});

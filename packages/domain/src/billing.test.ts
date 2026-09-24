@@ -51,9 +51,9 @@ describe('initialSource', () => {
 
 describe('pickPackage', () => {
   const packages: CreditPackage[] = [
-    { id: 'new', purchasedAt: day(5), expiresAt: null, remaining: 3 },
-    { id: 'old', purchasedAt: day(1), expiresAt: day(20), remaining: 1 },
-    { id: 'empty', purchasedAt: day(0), expiresAt: null, remaining: 0 },
+    { id: 'new', validFrom: null, purchasedAt: day(5), expiresAt: null, remaining: 3 },
+    { id: 'old', validFrom: null, purchasedAt: day(1), expiresAt: day(20), remaining: 1 },
+    { id: 'empty', validFrom: null, purchasedAt: day(0), expiresAt: null, remaining: 0 },
   ];
 
   it('uses the oldest valid package with a credit left (L-81)', () => {
@@ -62,6 +62,18 @@ describe('pickPackage', () => {
 
   it('skips a package that expired before the lesson (L-84)', () => {
     expect(pickPackage(packages, day(21))).toBe('new');
+  });
+
+  it('skips a period package for a lesson before its window starts (L-80)', () => {
+    const period: CreditPackage = {
+      id: 'period',
+      validFrom: day(15),
+      purchasedAt: day(0),
+      expiresAt: day(30),
+      remaining: 8,
+    };
+    expect(pickPackage([period], day(10))).toBeNull();
+    expect(pickPackage([period], day(16))).toBe('period');
   });
 
   it('returns null when nothing can pay: the lesson goes on debt (L-82)', () => {
@@ -78,8 +90,8 @@ describe('coverDebts', () => {
         { id: 'd2', lessonAt: day(2) },
       ],
       [
-        { id: 'b', purchasedAt: day(9), expiresAt: null, remaining: 5 },
-        { id: 'a', purchasedAt: day(8), expiresAt: null, remaining: 2 },
+        { id: 'b', validFrom: null, purchasedAt: day(9), expiresAt: null, remaining: 5 },
+        { id: 'a', validFrom: null, purchasedAt: day(8), expiresAt: null, remaining: 2 },
       ],
     );
     expect(covers).toEqual([
@@ -93,7 +105,7 @@ describe('coverDebts', () => {
     expect(
       coverDebts(
         [{ id: 'late', lessonAt: day(15) }],
-        [{ id: 'p', purchasedAt: day(1), expiresAt: day(10), remaining: 4 }],
+        [{ id: 'p', validFrom: null, purchasedAt: day(1), expiresAt: day(10), remaining: 4 }],
       ),
     ).toEqual([]);
   });
