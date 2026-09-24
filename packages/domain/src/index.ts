@@ -11,3 +11,4 @@ export * from './attendance';
 export * from './calendar-range';
 export * from './schedule';
 export * from './billing';
+export * from './pause';
