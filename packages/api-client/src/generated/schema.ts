@@ -297,6 +297,67 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/pauses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List pauses
+         * @description Current (scheduled or running) pauses by default.
+         */
+        get: operations["PausesController_list"];
+        put?: never;
+        /**
+         * Pause a student or one direction
+         * @description Takes the individual lessons in the window out, keeps the student out of group lessons and charges, and pushes the packages valid at its start by its length (an open pause does that when it ends).
+         */
+        post: operations["PausesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pauses/{pauseId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a pause */
+        get: operations["PausesController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pauses/{pauseId}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * End a pause now, or cancel one that has not begun
+         * @description Brings its lessons from now on back (checked for teacher conflicts unless force) and keeps only the package extension it used.
+         */
+        post: operations["PausesController_end"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/parents": {
         parameters: {
             query?: never;
@@ -1291,7 +1352,7 @@ export interface components {
                     email: string;
                 } | null;
                 /** @enum {string} */
-                entity: "STUDENT" | "PARENT" | "GROUP" | "TEACHER" | "ENROLLMENT" | "WORKSPACE" | "LESSON" | "LESSON_SERIES" | "SCHEDULE" | "LESSON_PACKAGE" | "PAYMENT";
+                entity: "STUDENT" | "PARENT" | "GROUP" | "TEACHER" | "ENROLLMENT" | "WORKSPACE" | "LESSON" | "LESSON_SERIES" | "SCHEDULE" | "PAUSE" | "LESSON_PACKAGE" | "PAYMENT";
                 entityId: string;
                 /** @enum {string} */
                 action: "CREATE" | "UPDATE" | "DELETE" | "RESTORE";
@@ -1516,6 +1577,91 @@ export interface components {
             avatarKey?: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
             parentIds?: string[];
             notes?: string | null;
+        };
+        PauseListDto: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                workspaceId: string;
+                /** Format: uuid */
+                studentId: string;
+                /** Format: uuid */
+                enrollmentId: string | null;
+                /** Format: date-time */
+                startsAt: string;
+                /** Format: date-time */
+                endsAt: string | null;
+                /** Format: date-time */
+                endedAt: string | null;
+                /** @enum {string} */
+                state: "SCHEDULED" | "ACTIVE" | "ENDED" | "CANCELLED";
+                reason: string | null;
+                removedLessons: number;
+                extensions: {
+                    /** Format: uuid */
+                    packageId: string;
+                    extendedBySeconds: number;
+                }[];
+                student: {
+                    /** Format: uuid */
+                    id: string;
+                    fullName: string;
+                };
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+            }[];
+            page: number;
+            pageSize: number;
+            total: number;
+            totalPages: number;
+        };
+        CreatePauseDto: {
+            /** Format: uuid */
+            studentId: string;
+            /** Format: uuid */
+            enrollmentId?: string | null;
+            /** Format: date-time */
+            startsAt?: string;
+            /** Format: date-time */
+            endsAt?: string | null;
+            reason?: string | null;
+        };
+        PauseDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            workspaceId: string;
+            /** Format: uuid */
+            studentId: string;
+            /** Format: uuid */
+            enrollmentId: string | null;
+            /** Format: date-time */
+            startsAt: string;
+            /** Format: date-time */
+            endsAt: string | null;
+            /** Format: date-time */
+            endedAt: string | null;
+            /** @enum {string} */
+            state: "SCHEDULED" | "ACTIVE" | "ENDED" | "CANCELLED";
+            reason: string | null;
+            removedLessons: number;
+            extensions: {
+                /** Format: uuid */
+                packageId: string;
+                extendedBySeconds: number;
+            }[];
+            student: {
+                /** Format: uuid */
+                id: string;
+                fullName: string;
+            };
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
         };
         ParentListDto: {
             items: {
@@ -3661,7 +3807,7 @@ export interface operations {
             query?: {
                 page?: number;
                 pageSize?: number;
-                entity?: "STUDENT" | "PARENT" | "GROUP" | "TEACHER" | "ENROLLMENT" | "WORKSPACE" | "LESSON" | "LESSON_SERIES" | "SCHEDULE" | "LESSON_PACKAGE" | "PAYMENT";
+                entity?: "STUDENT" | "PARENT" | "GROUP" | "TEACHER" | "ENROLLMENT" | "WORKSPACE" | "LESSON" | "LESSON_SERIES" | "SCHEDULE" | "PAUSE" | "LESSON_PACKAGE" | "PAYMENT";
                 entityId?: string;
                 actorId?: string;
                 action?: "CREATE" | "UPDATE" | "DELETE" | "RESTORE";
@@ -3978,6 +4124,175 @@ export interface operations {
                 };
             };
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    PausesController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                studentId?: string;
+                state?: "current" | "all";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PauseListDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    PausesController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePauseDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PauseDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description PAUSE_OVERLAP */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    PausesController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pauseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PauseDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    PausesController_end: {
+        parameters: {
+            query?: {
+                force?: boolean | "true" | "false";
+            };
+            header?: never;
+            path: {
+                pauseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PauseDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            /** @description PAUSE_ENDED or SCHEDULE_CONFLICT */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -367,6 +367,7 @@
                 "LESSON",
                 "LESSON_SERIES",
                 "SCHEDULE",
+                "PAUSE",
                 "LESSON_PACKAGE",
                 "PAYMENT"
               ]
@@ -958,6 +959,305 @@
         "summary": "Permanently delete an unused student (owner only)",
         "tags": [
           "students"
+        ]
+      }
+    },
+    "/api/pauses": {
+      "get": {
+        "description": "Current (scheduled or running) pauses by default.",
+        "operationId": "PausesController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "exclusiveMinimum": false,
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "exclusiveMaximum": false,
+              "exclusiveMinimum": false,
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "studentId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "state",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "current",
+              "type": "string",
+              "enum": [
+                "current",
+                "all"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PauseListDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List pauses",
+        "tags": [
+          "pauses"
+        ]
+      },
+      "post": {
+        "description": "Takes the individual lessons in the window out, keeps the student out of group lessons and charges, and pushes the packages valid at its start by its length (an open pause does that when it ends).",
+        "operationId": "PausesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePauseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PauseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "PAUSE_OVERLAP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Pause a student or one direction",
+        "tags": [
+          "pauses"
+        ]
+      }
+    },
+    "/api/pauses/{pauseId}": {
+      "get": {
+        "operationId": "PausesController_get",
+        "parameters": [
+          {
+            "name": "pauseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PauseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a pause",
+        "tags": [
+          "pauses"
+        ]
+      }
+    },
+    "/api/pauses/{pauseId}/end": {
+      "post": {
+        "description": "Brings its lessons from now on back (checked for teacher conflicts unless force) and keeps only the package extension it used.",
+        "operationId": "PausesController_end",
+        "parameters": [
+          {
+            "name": "pauseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "force",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": false,
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ]
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "false"
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PauseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "PAUSE_ENDED or SCHEDULE_CONFLICT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "End a pause now, or cancel one that has not begun",
+        "tags": [
+          "pauses"
         ]
       }
     },
@@ -6029,6 +6329,7 @@
                     "LESSON",
                     "LESSON_SERIES",
                     "SCHEDULE",
+                    "PAUSE",
                     "LESSON_PACKAGE",
                     "PAYMENT"
                   ]
@@ -7079,6 +7380,302 @@
             "nullable": true
           }
         }
+      },
+      "PauseListDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "workspaceId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "studentId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "enrollmentId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "nullable": true
+                },
+                "startsAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "endsAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                },
+                "endedAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                },
+                "state": {
+                  "type": "string",
+                  "enum": [
+                    "SCHEDULED",
+                    "ACTIVE",
+                    "ENDED",
+                    "CANCELLED"
+                  ]
+                },
+                "reason": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "removedLessons": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                },
+                "extensions": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "packageId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "extendedBySeconds": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "exclusiveMinimum": false
+                      }
+                    },
+                    "required": [
+                      "packageId",
+                      "extendedBySeconds"
+                    ]
+                  }
+                },
+                "student": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "fullName": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "fullName"
+                  ]
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "id",
+                "workspaceId",
+                "studentId",
+                "enrollmentId",
+                "startsAt",
+                "endsAt",
+                "endedAt",
+                "state",
+                "reason",
+                "removedLessons",
+                "extensions",
+                "student",
+                "createdAt",
+                "updatedAt"
+              ]
+            }
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1,
+            "exclusiveMinimum": false
+          },
+          "pageSize": {
+            "type": "integer",
+            "minimum": 1,
+            "exclusiveMinimum": false
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "totalPages": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "total",
+          "totalPages"
+        ]
+      },
+      "CreatePauseDto": {
+        "type": "object",
+        "properties": {
+          "studentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "enrollmentId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 2000,
+            "nullable": true
+          }
+        },
+        "required": [
+          "studentId"
+        ]
+      },
+      "PauseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "studentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "enrollmentId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "endedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "SCHEDULED",
+              "ACTIVE",
+              "ENDED",
+              "CANCELLED"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          },
+          "removedLessons": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "extensions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "packageId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "extendedBySeconds": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                }
+              },
+              "required": [
+                "packageId",
+                "extendedBySeconds"
+              ]
+            }
+          },
+          "student": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "fullName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "fullName"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "workspaceId",
+          "studentId",
+          "enrollmentId",
+          "startsAt",
+          "endsAt",
+          "endedAt",
+          "state",
+          "reason",
+          "removedLessons",
+          "extensions",
+          "student",
+          "createdAt",
+          "updatedAt"
+        ]
       },
       "ParentListDto": {
         "type": "object",
