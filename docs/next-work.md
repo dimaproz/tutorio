@@ -354,8 +354,19 @@ green gate.
    rounded down, remainder reported) and `/packages/:id/refund` (credits and a
    `REFUNDED` payment). The current package form still sends a schedule and a
    first payment until the new sale form (L-87) replaces it.
-6. **Pause** — whole student or one direction, optional end, package
-   extension, automatic return.
+6. **Pause** — done 2026-09-24: `Pause` for the whole student or one
+   direction, from now or a later date, with an optional end. It takes the
+   individual lessons in its window off the calendar (and the schedule skips
+   them), keeps the student out of group lessons and their charges, and
+   extends every package valid at its start by its length (an open pause on
+   return). `POST /pauses/:id/end` ends it now or cancels one that has not
+   begun: lessons from then on come back (teacher conflicts unless `force`)
+   and the extension keeps only what was used. "On a break" is a
+   whole-student pause: `PATCH /students/:id` with `ON_HOLD` opens one and
+   `ACTIVE` ends it; a job every 10 minutes syncs the status at pause
+   boundaries. The hold dialog now says how many lessons come off instead of
+   cancelling them. Enrollment `PAUSED` stays as the legacy direction status
+   until the direction screens replace it.
 7. **Read APIs** — lessons list with filters, lesson side panel, schedules
    list, student billing summary, low-credit warnings.
 

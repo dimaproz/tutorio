@@ -46,8 +46,9 @@ matrix's public, self/session, or owner-only policy.
 | Schedules        | `GET`, `POST /schedules`; `GET`, `PATCH /schedules/:scheduleId`; `POST /schedules/:scheduleId/changes/preview`; `POST /schedules/:scheduleId/changes`; `POST /schedules/:scheduleId/stop/preview`; `POST /schedules/:scheduleId/stop`                                                                                       |
 | Lesson series    | `GET`, `POST /lesson-series`; `GET`, `PATCH`, `DELETE /lesson-series/:seriesId`                                                                                                                                                                                                                                             |
 | Packages         | `GET`, `POST /packages`; `POST /packages/preview`; `POST /packages/members`; `GET /packages/:packageId`; `GET /packages/:packageId/ledger`; `POST /packages/:packageId/adjust`; `POST /packages/:packageId/extend`; `POST /packages/:packageId/transfer`; `POST /packages/:packageId/refund`; `DELETE /packages/:packageId` |
+| Pauses           | `GET`, `POST /pauses`; `GET /pauses/:pauseId`; `POST /pauses/:pauseId/end`                                                                                                                                                                                                                                                  |
 | Payments         | `GET`, `POST /payments`                                                                                                                                                                                                                                                                                                     |
 
-There are 82 routed handlers: 5 public, 2 self/session, and 75 owner-only.
+There are 86 routed handlers: 5 public, 2 self/session, and 79 owner-only.
 No invitation, role-management, workspace-switching, teacher self-service, or
 own-teacher scope is part of this policy.

@@ -156,6 +156,11 @@ re-save lesson statuses, to rebuild them.
 kind, `transfer_out`/`transfer_in`/`refund` credit entries, and the package
 columns `validFrom`, `lessonsPerWeek` and `transferredFromPackageId`.
 
+`20260929120000_pauses` (phase 6) is additive: the `pauses` and
+`pause_package_extensions` tables with their checks. Students already
+`ON_HOLD` keep the label without a pause until they are set active; the demo
+seed gives each of them an open pause.
+
 ## Deployment order
 
 1. Deploy backward-compatible database/API changes.
