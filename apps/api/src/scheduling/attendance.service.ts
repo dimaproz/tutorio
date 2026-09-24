@@ -27,6 +27,42 @@ type AttendanceLesson = {
 
 type Participant = LessonAttendanceResponse['participants'][number];
 
+/**
+ * A group lesson becoming held counts every active member without a mark as
+ * present (product/scheduling.md L-72): the tutor marks only the exceptions.
+ * Written as ordinary marks (no author), so attendance and charges agree.
+ */
+export async function markRosterPresent(
+  tx: Prisma.TransactionClient,
+  lesson: { id: string; workspaceId: string; groupId: string | null },
+  now: Date,
+): Promise<number> {
+  if (!lesson.groupId) return 0;
+  const unmarked = await tx.enrollment.findMany({
+    where: {
+      workspaceId: lesson.workspaceId,
+      groupId: lesson.groupId,
+      deletedAt: null,
+      status: 'ACTIVE',
+      student: { deletedAt: null, status: { not: 'ARCHIVED' } },
+      attendance: { none: { lessonId: lesson.id } },
+    },
+    select: { id: true },
+  });
+  if (unmarked.length === 0) return 0;
+  const created = await tx.lessonAttendance.createMany({
+    data: unmarked.map((member) => ({
+      workspaceId: lesson.workspaceId,
+      lessonId: lesson.id,
+      enrollmentId: member.id,
+      status: 'PRESENT' as const,
+      markedAt: now,
+    })),
+    skipDuplicates: true,
+  });
+  return created.count;
+}
+
 /** Marks are accepted once a lesson has started, unless it was cancelled. */
 export function isMarkable(lesson: AttendanceLesson, now: Date): boolean {
   if (lesson.status === 'COMPLETED') return true;

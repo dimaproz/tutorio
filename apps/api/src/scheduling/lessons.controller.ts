@@ -27,7 +27,11 @@ import type { AuthenticatedUser } from '../auth/auth.types';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { ApiErrorDto } from '../auth/dto/auth.dto';
+import { BulkCancelService } from './bulk-cancel.service';
 import {
+  BulkCancelDto,
+  BulkCancelPreviewDto,
+  BulkCancelResultDto,
   CreateLessonDto,
   CreateMakeupDto,
   ForceQueryDto,
@@ -45,7 +49,10 @@ import { LessonsService } from './lessons.service';
 @ApiForbiddenResponse({ type: ApiErrorDto, description: 'OWNER role required' })
 @Controller('lessons')
 export class LessonsController {
-  constructor(private readonly lessons: LessonsService) {}
+  constructor(
+    private readonly lessons: LessonsService,
+    private readonly bulkCancel: BulkCancelService,
+  ) {}
 
   @Get()
   @Roles('OWNER')
@@ -61,6 +68,43 @@ export class LessonsController {
     @Query() query: ListLessonsQueryDto,
   ): Promise<LessonListDto> {
     return this.lessons.list(user, query);
+  }
+
+  @Post('bulk-cancel/preview')
+  @HttpCode(HttpStatus.OK)
+  @Roles('OWNER')
+  @ApiOperation({
+    summary: 'Preview cancelling every lesson of a period',
+    description:
+      'The scheduled lessons of one teacher (or of the whole studio) in ' +
+      '[from, to): how many, per teacher, and the first 200. Writes nothing.',
+  })
+  @ApiOkResponse({ type: BulkCancelPreviewDto })
+  @ZodSerializerDto(BulkCancelPreviewDto)
+  previewBulkCancel(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: BulkCancelDto,
+  ): Promise<BulkCancelPreviewDto> {
+    return this.bulkCancel.preview(user, dto);
+  }
+
+  @Post('bulk-cancel')
+  @Roles('OWNER')
+  @ApiOperation({
+    summary: 'Cancel every lesson of a period',
+    description:
+      'Holiday or illness: the scheduled lessons of one teacher (or of the ' +
+      'whole studio) in [from, to) become cancelled by the teacher, free, ' +
+      'with the reason. Held, cancelled and no-show lessons stay.',
+  })
+  @ApiCreatedResponse({ type: BulkCancelResultDto })
+  @ApiNotFoundResponse({ type: ApiErrorDto })
+  @ZodSerializerDto(BulkCancelResultDto)
+  applyBulkCancel(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: BulkCancelDto,
+  ): Promise<BulkCancelResultDto> {
+    return this.bulkCancel.apply(user, dto);
   }
 
   @Post()

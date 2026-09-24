@@ -1,4 +1,7 @@
 import {
+  bulkCancelPreviewSchema,
+  bulkCancelResultSchema,
+  bulkCancelSchema,
   createLessonSchema,
   createMakeupSchema,
   createScheduleSchema,
@@ -67,3 +70,10 @@ export class ScheduleChangePreviewDto extends createZodDto(
 export class ScheduleChangeResultDto extends createZodDto(
   scheduleChangeResultSchema,
 ) {}
+
+// Bulk cancel (product/scheduling.md L-54).
+export class BulkCancelDto extends createZodDto(bulkCancelSchema) {}
+export class BulkCancelPreviewDto extends createZodDto(
+  bulkCancelPreviewSchema,
+) {}
+export class BulkCancelResultDto extends createZodDto(bulkCancelResultSchema) {}

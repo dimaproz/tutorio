@@ -3,6 +3,8 @@ import { AuditModule } from '../audit/audit.module';
 import { BillingModule } from '../billing/billing.module';
 import { AttendanceController } from './attendance.controller';
 import { AttendanceService } from './attendance.service';
+import { BulkCancelService } from './bulk-cancel.service';
+import { LessonCompletionService } from './lesson-completion.service';
 import { LessonsController } from './lessons.controller';
 import { LessonsService } from './lessons.service';
 import { MaterializerModule } from './materializer.module';
@@ -19,6 +21,12 @@ import { SeriesService } from './series.service';
     SeriesController,
     SchedulesController,
   ],
-  providers: [LessonsService, AttendanceService, SeriesService],
+  providers: [
+    LessonsService,
+    AttendanceService,
+    SeriesService,
+    BulkCancelService,
+    LessonCompletionService,
+  ],
 })
 export class SchedulingModule {}

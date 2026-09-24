@@ -32,6 +32,7 @@ import {
 } from '../common/business.errors';
 import { BillingService } from '../billing/billing.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { markRosterPresent } from './attendance.service';
 import { assertNoScheduleConflicts } from './conflicts';
 import { SchedulesService, currentVersionRows } from './schedules.service';
 import {
@@ -219,6 +220,14 @@ export class LessonsService {
               cancelledAt: isCancel ? now : null,
             },
           });
+          // Held with no marks: every active member was there (L-72).
+          if (dto.status === 'COMPLETED') {
+            await markRosterPresent(
+              tx,
+              { id: lesson.id, workspaceId: auth.workspaceId, groupId },
+              now,
+            );
+          }
           await this.billing.syncLesson(
             tx,
             auth.workspaceId,
@@ -733,6 +742,10 @@ export class LessonsService {
         throw invalidLessonTransition();
       }
 
+      // Held with no marks: every active member was there (L-72).
+      if (dto.targetStatus === 'COMPLETED') {
+        await markRosterPresent(tx, lesson, now);
+      }
       // The charges follow the new status: one per participant, a makeup
       // paired with its original (L-61), whatever pays for it (L-81, L-90).
       await this.billing.syncLesson(
