@@ -179,9 +179,9 @@ the authenticated shell; reusable product compositions live in
 `components/shared`, while the dashboard and its dashboard-only `StatTile` live
 in `features/dashboard`. Generic status
 presentation is shared, with lifecycle DTO and localization adapters retained
-by each domain. `CollectionFrame`, `DetailFrame`, and `EntityFormDialog` are
-the documented Storybook reference compositions; their states cover loading,
-error, empty, mobile, and persistent form actions. The architecture check now
+by each domain. `CollectionFrame`, `DetailFrame`, and `EntityFormDialog` were first
+documented as Storybook reference compositions; since 2026-09-24 the frames
+are shown by the screen stories and the dialog shell by its own entry. The architecture check now
 enforces the documented layer direction, including static and literal dynamic
 import paths plus the reviewed session-context/root-layout exceptions. Root
 lint, typecheck, test, build, Storybook browser tests (112 across 22 files),
