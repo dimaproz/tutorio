@@ -208,17 +208,24 @@ describe('Work Packet 6.4 phase 2: schedules (e2e)', () => {
       ],
       durationMin: 60,
     };
+    // The horizon ends four weeks from now: a Thursday moved two hours later
+    // past that edge is removed, not moved (it depends on the time of day).
+    const horizonEnd = Date.now() + 4 * WEEK_MS;
     const preview = await post(`/schedules/${schedules.Anna}/changes/preview`)
       .send(change)
       .expect(200);
     const thursdays = before.filter(
       (lesson) => new Date(lesson.startsAtUtc).getUTCDay() === 4,
-    ).length;
+    );
+    const pastEdge = thursdays.filter(
+      (lesson) =>
+        new Date(lesson.startsAtUtc).getTime() + 2 * 60 * 60_000 >= horizonEnd,
+    );
     expect(preview.body).toMatchObject({
-      moved: thursdays,
-      unchanged: before.length - thursdays,
+      moved: thursdays.length - pastEdge.length,
+      unchanged: before.length - thursdays.length,
       created: 0,
-      removed: 0,
+      removed: pastEdge.length,
       kept: 0,
       notesLost: [],
       conflicts: [],
@@ -231,7 +238,10 @@ describe('Work Packet 6.4 phase 2: schedules (e2e)', () => {
 
     const after = await lessonsOf(students.Anna);
     expect(after.map((lesson) => lesson.id).sort()).toEqual(
-      before.map((lesson) => lesson.id).sort(),
+      before
+        .filter((lesson) => !pastEdge.includes(lesson))
+        .map((lesson) => lesson.id)
+        .sort(),
     );
     expect(after.find((lesson) => lesson.id === thursday.id)).toMatchObject({
       startsAtUtc: slotAt(0, 4, 12),
