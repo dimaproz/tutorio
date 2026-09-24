@@ -126,6 +126,7 @@ export const queryKeys = {
     all: ['enrollments'] as const,
     lists: (filters: EnrollmentListFilters) => ['enrollments', 'list', filters] as const,
     detail: (enrollmentId: string) => ['enrollments', 'detail', enrollmentId] as const,
+    billing: (enrollmentId: string) => ['enrollments', 'billing', enrollmentId] as const,
   },
   audit: {
     all: ['audit'] as const,
@@ -141,6 +142,13 @@ export const queryKeys = {
     listsAll: ['lessons', 'list'] as const,
     lists: (filters: LessonListFilters) => ['lessons', 'list', filters] as const,
     attendance: (lessonId: string) => ['lessons', 'attendance', lessonId] as const,
+    detail: (lessonId: string) => ['lessons', 'detail', lessonId] as const,
+  },
+  schedules: {
+    all: ['schedules'] as const,
+    detail: (scheduleId: string) => ['schedules', 'detail', scheduleId] as const,
+    preview: (scheduleId: string, change: unknown) =>
+      ['schedules', 'preview', scheduleId, change] as const,
   },
   series: {
     all: ['series'] as const,
