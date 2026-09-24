@@ -28,6 +28,7 @@ describe('createPackageSchema', () => {
     ).toBe(true);
     expect(
       createPackageSchema.safeParse({
+        studentId: STUDENT_ID,
         groupId: GROUP_ID,
         sizingMode: 'BY_PERIOD',
         endDate: '2026-10-01T00:00:00.000Z',
@@ -41,6 +42,7 @@ describe('createPackageSchema', () => {
   it('rejects duplicate weekdays and partial initial group payment', () => {
     expect(
       createPackageSchema.safeParse({
+        studentId: STUDENT_ID,
         groupId: GROUP_ID,
         sizingMode: 'FIXED_COUNT',
         lessonsTotal: 8,

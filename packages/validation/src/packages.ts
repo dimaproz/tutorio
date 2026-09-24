@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import {
-  avatarKeySchema,
   currencyCodeSchema,
   isoDateTimeSchema,
   notesSchema,
@@ -21,16 +20,9 @@ export type PackageSizingModeDto = z.infer<typeof packageSizingModeSchema>;
 export const packagePaymentStatusSchema = z.enum(['PENDING', 'PARTIAL', 'PAID']);
 export type PackagePaymentStatusDto = z.infer<typeof packagePaymentStatusSchema>;
 
-// Mirrors the domain LedgerEntryType; the ledger is append-only, so these are
-// the only ways a balance can ever move.
-export const creditEntryTypeSchema = z.enum([
-  'purchase',
-  'lesson_completed',
-  'late_cancellation',
-  'no_show',
-  'teacher_cancellation_refund',
-  'manual_adjustment',
-]);
+// How a package's credits move: granted by the purchase, corrected by hand,
+// or used by a lesson it pays for (one credit per charge, ADR 0007).
+export const creditEntryTypeSchema = z.enum(['purchase', 'manual_adjustment', 'lesson']);
 export type CreditEntryTypeDto = z.infer<typeof creditEntryTypeSchema>;
 
 // CARD is reserved for online acquiring; the MVP records the first three.
@@ -117,14 +109,17 @@ export const initialPackagePaymentSchema = z
 export type InitialPackagePaymentDto = z.infer<typeof initialPackagePaymentSchema>;
 
 /**
- * Buying a package. Exactly one target (student or group). FIXED_COUNT states
- * `lessonsTotal`; BY_PERIOD states `endDate` and needs a schedule to know how
- * many lessons fit in the window.
+ * Buying a package for one direction of a student (L-80): their lessons with
+ * one teacher (`teacherId`, needed only when they have several), or their
+ * membership of a group (`groupId`). FIXED_COUNT states `lessonsTotal`;
+ * BY_PERIOD states `endDate` and needs a schedule to know how many lessons fit
+ * in the window.
  */
 export const createPackageSchema = z
   .object({
-    studentId: uuidSchema.nullable().optional(),
+    studentId: uuidSchema,
     groupId: uuidSchema.nullable().optional(),
+    teacherId: uuidSchema.nullable().optional(),
     name: z.string().trim().min(1).max(120).nullable().optional(),
     sizingMode: packageSizingModeSchema.default('FIXED_COUNT'),
     lessonsTotal: lessonsTotalSchema.optional(),
@@ -140,13 +135,11 @@ export const createPackageSchema = z
   })
   .strict()
   .superRefine((value, ctx) => {
-    const hasStudent = value.studentId != null;
-    const hasGroup = value.groupId != null;
-    if (hasStudent === hasGroup) {
+    if (value.groupId != null && value.teacherId != null) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Provide exactly one of studentId or groupId',
-        path: ['studentId'],
+        message: 'A group package is taught by the group teacher',
+        path: ['teacherId'],
       });
     }
     if (value.sizingMode === 'FIXED_COUNT' && value.lessonsTotal == null) {
@@ -257,7 +250,7 @@ const groupRefSchema = z.object({ id: uuidSchema, name: z.string() });
 export const creditEntryResponseSchema = z.object({
   id: uuidSchema,
   packageId: uuidSchema,
-  enrollmentId: uuidSchema.nullable(),
+  // The lesson a `lesson` entry paid for.
   lessonId: uuidSchema.nullable(),
   delta: z.number().int(),
   type: creditEntryTypeSchema,
@@ -267,21 +260,13 @@ export const creditEntryResponseSchema = z.object({
 
 export type CreditEntryResponse = z.infer<typeof creditEntryResponseSchema>;
 
-export const participantShareResponseSchema = z.object({
-  id: uuidSchema,
-  enrollmentId: uuidSchema,
-  student: studentRefSchema.extend({ avatarKey: avatarKeySchema.nullable() }),
-  oweMinor: z.number().int(),
-  paidMinor: z.number().int(),
-  paymentStatus: packagePaymentStatusSchema,
-});
-
-export type ParticipantShareResponse = z.infer<typeof participantShareResponseSchema>;
-
 export const packageResponseSchema = z.object({
   id: uuidSchema,
   workspaceId: uuidSchema,
-  studentId: uuidSchema.nullable(),
+  // The direction the credits pay for, its student and (for a group
+  // membership) its group.
+  enrollmentId: uuidSchema,
+  studentId: uuidSchema,
   groupId: uuidSchema.nullable(),
   name: z.string().nullable(),
   sizingMode: packageSizingModeSchema,
@@ -289,8 +274,7 @@ export const packageResponseSchema = z.object({
   endDate: isoDateTimeSchema.nullable(),
   pricePerLessonMinorSnapshot: z.number().int(),
   totalPriceMinorSnapshot: z.number().int(),
-  // Derived at read time from the ledger — never a stored column.
-  effectiveTotalMinor: z.number().int(),
+  // Derived at read time: granted credits minus the lessons it pays for.
   remainingCredits: z.number().int(),
   consumedCredits: z.number().int(),
   paidMinor: z.number().int(),
@@ -299,9 +283,8 @@ export const packageResponseSchema = z.object({
   purchasedAt: isoDateTimeSchema,
   expiresAt: isoDateTimeSchema.nullable(),
   notes: z.string().nullable(),
-  student: studentRefSchema.nullable(),
+  student: studentRefSchema,
   group: groupRefSchema.nullable(),
-  shares: z.array(participantShareResponseSchema),
   createdAt: isoDateTimeSchema,
   updatedAt: isoDateTimeSchema,
   deletedAt: isoDateTimeSchema.nullable(),

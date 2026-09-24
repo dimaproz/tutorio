@@ -1,6 +1,7 @@
 export * from './attendance';
 export * from './audit';
 export * from './auth';
+export * from './billing';
 export * from './common';
 export * from './enrollments';
 export * from './groups';

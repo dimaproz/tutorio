@@ -11,7 +11,9 @@ import { paginatedResponseSchema, paginationQuerySchema } from './pagination';
 export const enrollmentStatusSchema = z.enum(['ACTIVE', 'PAUSED', 'ARCHIVED']);
 export type EnrollmentStatusDto = z.infer<typeof enrollmentStatusSchema>;
 
-export const billingTypeSchema = z.enum(['PACKAGE', 'MONTHLY', 'PER_LESSON']);
+// How a direction is paid (L-10): package credits, or each lesson's price on
+// its balance. A new direction pays per lesson until its first package.
+export const billingTypeSchema = z.enum(['PACKAGE', 'PER_LESSON']);
 export type BillingTypeDto = z.infer<typeof billingTypeSchema>;
 
 // PostgreSQL Int maximum — priceMinor is stored in an INTEGER column.
@@ -27,7 +29,7 @@ export const createEnrollmentSchema = z
     // null/omitted = individual (student + teacher) enrollment.
     groupId: uuidSchema.nullable().optional(),
     teacherId: uuidSchema,
-    billingType: billingTypeSchema.default('PACKAGE'),
+    billingType: billingTypeSchema.default('PER_LESSON'),
     priceMinor: priceMinorSchema,
     currency: currencyCodeSchema,
     // null/omitted = inherit the workspace default.

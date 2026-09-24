@@ -296,11 +296,11 @@ describe('enrollments', () => {
 
   it('accepts individual and group enrollments, defaulting billingType', () => {
     const parsed = createEnrollmentSchema.parse(base);
-    expect(parsed.billingType).toBe('PACKAGE');
+    expect(parsed.billingType).toBe('PER_LESSON');
     expect(createEnrollmentSchema.safeParse({ ...base, groupId: UUID }).success).toBe(true);
     expect(createEnrollmentSchema.safeParse({ ...base, groupId: null }).success).toBe(true);
     expect(
-      createEnrollmentSchema.safeParse({ ...base, billingType: 'PER_LESSON', status: 'ACTIVE' })
+      createEnrollmentSchema.safeParse({ ...base, billingType: 'PACKAGE', status: 'ACTIVE' })
         .success,
     ).toBe(false);
   });

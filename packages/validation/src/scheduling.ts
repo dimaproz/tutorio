@@ -7,6 +7,7 @@ import {
   timezoneSchema,
   uuidSchema,
 } from './common';
+import { lessonChargeResponseSchema } from './billing';
 import { priceMinorSchema } from './enrollments';
 import { paginatedResponseSchema, paginationQuerySchema } from './pagination';
 
@@ -195,9 +196,6 @@ export const createLessonSchema = z
     enrollmentId: uuidSchema.nullable().optional(),
     studentId: uuidSchema.nullable().optional(),
     groupId: uuidSchema.nullable().optional(),
-    // Explicit selection is optional. When omitted, the first non-zero debit
-    // may select a compatible active package once and persist that choice.
-    packageId: uuidSchema.optional(),
     teacherId: uuidSchema.optional(),
     startsAt: z.array(isoDateTimeSchema).min(1).max(50),
     durationMin: durationMinSchema,
@@ -205,8 +203,8 @@ export const createLessonSchema = z
     currency: currencyCodeSchema.optional(),
     // A lesson may be booked in a state other than SCHEDULED: tutors record
     // lessons after the fact ("this one already happened"). The server runs the
-    // very same transition the status endpoint would, so the credit ledger sees
-    // one code path whichever way a lesson reaches its status.
+    // very same transition the status endpoint would, so billing sees one
+    // code path whichever way a lesson reaches its status.
     status: lessonStatusSchema.default('SCHEDULED'),
     cancelledBy: cancelledBySchema.optional(),
     cancelledReason: notesSchema.nullable().optional(),
@@ -372,7 +370,6 @@ export const lessonResponseSchema = z.object({
   enrollmentId: uuidSchema.nullable(),
   groupId: uuidSchema.nullable(),
   seriesId: uuidSchema.nullable(),
-  packageId: uuidSchema.nullable(),
   teacherId: uuidSchema,
   startsAtUtc: isoDateTimeSchema,
   durationMin: durationMinSchema,
@@ -406,6 +403,9 @@ export const lessonResponseSchema = z.object({
       marked: z.number().int().nonnegative(),
     })
     .nullable(),
+  // What each participant owes for the lesson and what pays for it (L-70);
+  // empty until the lesson is held, charged-cancelled or a no-show.
+  charges: z.array(lessonChargeResponseSchema),
   // Compact refs for calendar event rendering (avoids request waterfalls).
   student: studentRefSchema.nullable(),
   group: groupRefSchema.nullable(),
@@ -452,7 +452,6 @@ export const lessonSeriesResponseSchema = z.object({
   scheduleId: uuidSchema,
   enrollmentId: uuidSchema.nullable(),
   groupId: uuidSchema.nullable(),
-  packageId: uuidSchema.nullable(),
   teacherId: uuidSchema,
   weekdays: z.array(weekdaySchema),
   localTime: localTimeSchema,
