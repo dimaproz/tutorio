@@ -336,8 +336,13 @@ green gate.
    `GET /enrollments/:id/billing`. The group page shows members' own
    packages and the package form sells to a student until the phase 5 flows
    and the owner's mockups replace them.
-4. **Automation** — auto-complete at lesson end, bulk cancel with preview,
-   cancellation suggestion.
+4. **Automation** — done 2026-09-24: a job every 10 minutes holds each
+   scheduled lesson whose end has passed (completed at its end, charged, a
+   group's unmarked active members marked present); `POST
+/lessons/bulk-cancel/preview` and `POST /lessons/bulk-cancel` cancel one
+   teacher's or the whole studio's scheduled lessons in a period, free, by the
+   teacher, with a reason; the cancellation suggestion treats a teacher or
+   group cancellation as free. The bulk cancel dialog comes with the screens.
 5. **Package kinds and operations** — by count, by period from the schedule,
    by period flexible; extend, transfer, refund, sell to group members.
 6. **Pause** — whole student or one direction, optional end, package

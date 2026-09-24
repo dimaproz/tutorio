@@ -198,7 +198,9 @@ A configured backup is not considered verified until a restore succeeds.
 
 - API and web errors are captured in separate Sentry projects.
 - Alerts cover sustained 5xx errors, authentication failures beyond baseline,
-  migration failure, database unavailability, and materialization failures.
+  migration failure, database unavailability, materialization failures, and
+  lesson auto-completion failures (`LessonCompletionService`, every 10
+  minutes; the nightly materializer tops up schedules).
 - Logs include request/correlation ID, workspace ID when safe, command name, and
   error class; they never include secrets or full sensitive payloads.
 - A named operator owns pilot incidents and knows how to disable risky mutations.
