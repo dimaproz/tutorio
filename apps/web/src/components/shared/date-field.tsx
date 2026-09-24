@@ -39,6 +39,7 @@ export function DateField({
   invalid = false,
   'aria-describedby': describedBy,
   'aria-label': ariaLabel,
+  'aria-labelledby': labelledBy,
   onBlur,
 }: {
   id?: string;
@@ -54,6 +55,8 @@ export function DateField({
   disabled?: boolean;
   invalid?: boolean;
   'aria-describedby'?: string;
+  /** Names the trigger from elsewhere, e.g. a column header of date rows. */
+  'aria-labelledby'?: string;
   onBlur?: () => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -75,6 +78,7 @@ export function DateField({
           disabled={disabled}
           aria-invalid={invalid || undefined}
           aria-describedby={describedBy}
+          aria-labelledby={labelledBy}
           data-placeholder={selected ? undefined : ''}
           className={cn(fieldBoxClass, 'justify-between font-normal hover:bg-card')}
         >

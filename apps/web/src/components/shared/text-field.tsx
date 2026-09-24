@@ -1,7 +1,7 @@
 'use client';
 
 import { useId, useState, type ComponentProps, type ReactNode } from 'react';
-import { AlertCircleIcon, EyeIcon, EyeOffIcon } from 'lucide-react';
+import { AlertCircleIcon, EyeIcon, EyeOffIcon, LockIcon } from 'lucide-react';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
 import {
   InputGroup,
@@ -29,12 +29,17 @@ import { cn } from '@/lib/utils';
 export const fieldBoxClass =
   'flex h-13 w-full min-w-0 items-center gap-2.5 rounded-field border border-border bg-card px-4 text-left text-[15px] text-foreground transition-[border-color,box-shadow,background-color] duration-150 ease-out outline-none not-disabled:hover:border-line-hover focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/16 aria-expanded:border-ring aria-expanded:ring-3 aria-expanded:ring-ring/16 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/12 aria-invalid:focus-visible:ring-destructive/30 aria-invalid:aria-expanded:ring-destructive/30 disabled:cursor-not-allowed disabled:bg-background disabled:opacity-55 data-placeholder:text-muted-foreground [&_svg]:shrink-0';
 
+/** What a control needs from its frame: its id, its message and whether it is invalid. */
+export type ControlA11y = { id: string; describedBy?: string; invalid?: true };
+
 type Chrome = {
   label?: ReactNode;
   /** Shows the red asterisk. The control itself still carries `required`. */
   required?: boolean;
   /** Right-aligned mono note beside the label, e.g. a character counter. */
   aside?: ReactNode;
+  /** Right-aligned control or badge on the label row, e.g. "Restore the rate". */
+  labelAction?: ReactNode;
   hint?: ReactNode;
   /** Replaces the hint, turns the box red and is announced with the control. */
   error?: ReactNode;
@@ -57,6 +62,8 @@ type InputProps = Chrome &
     revealLabels?: { show: string; hide: string };
     /** Starts a password field revealed. */
     defaultRevealed?: boolean;
+    /** A value that cannot change here: the disabled look with a lock at the end. */
+    locked?: boolean;
   };
 
 type TextareaProps = Chrome &
@@ -79,6 +86,7 @@ const CHROME_KEYS = [
   'label',
   'required',
   'aside',
+  'labelAction',
   'hint',
   'error',
   'id',
@@ -94,23 +102,36 @@ function controlProps<T extends Chrome>(props: T): Omit<T, (typeof CHROME_KEYS)[
 }
 
 /**
- * Label, control and hint or error as one unit. Every Tutorio form field is a
- * TextField, so labels, focus rings, errors and their ARIA wiring are identical
- * across the product. All copy is supplied by the caller.
+ * The chrome every Tutorio field shares: the label row (with an optional
+ * required mark, mono aside or label action), the control, and the hint or
+ * the error wired to the control through `aria-describedby`. `TextField`
+ * renders its inputs in it; a control that is not an input (a combobox, a
+ * date or time picker) renders itself through `children`.
  */
-export function TextField(props: TextFieldProps) {
+export function FieldFrame({
+  id: givenId,
+  label,
+  required,
+  aside,
+  labelAction,
+  hint,
+  error,
+  className,
+  children,
+}: Omit<Chrome, 'icon'> & {
+  children: (a11y: ControlA11y) => ReactNode;
+}) {
   const generatedId = useId();
-  const id = props.id ?? generatedId;
+  const id = givenId ?? generatedId;
   const messageId = `${id}-message`;
-  const { label, required, aside, hint, error, className } = props;
   const message = error ?? hint;
   const describedBy = message ? messageId : undefined;
   const invalid = error ? true : undefined;
 
   return (
     <Field data-slot="text-field" className={cn('gap-2', className)}>
-      {label || aside ? (
-        <div className="flex items-baseline justify-between gap-3">
+      {label || aside || labelAction ? (
+        <div className="flex min-h-5 items-center justify-between gap-3">
           {label ? (
             <FieldLabel htmlFor={id} className="text-sm leading-5 font-medium">
               <span>
@@ -128,10 +149,11 @@ export function TextField(props: TextFieldProps) {
           {aside ? (
             <span className="font-mono text-xs leading-[18px] text-muted-foreground">{aside}</span>
           ) : null}
+          {labelAction ? <span className="flex shrink-0 items-center">{labelAction}</span> : null}
         </div>
       ) : null}
 
-      <TextFieldControl field={props} a11y={{ id, describedBy, invalid }} />
+      {children({ id, describedBy, invalid })}
 
       {error ? (
         <FieldError
@@ -150,7 +172,28 @@ export function TextField(props: TextFieldProps) {
   );
 }
 
-type ControlA11y = { id: string; describedBy?: string; invalid?: true };
+/**
+ * Label, control and hint or error as one unit. Every Tutorio form field is a
+ * TextField, so labels, focus rings, errors and their ARIA wiring are identical
+ * across the product. All copy is supplied by the caller.
+ */
+export function TextField(props: TextFieldProps) {
+  const { id, label, required, aside, labelAction, hint, error, className } = props;
+  return (
+    <FieldFrame
+      id={id}
+      label={label}
+      required={required}
+      aside={aside}
+      labelAction={labelAction}
+      hint={hint}
+      error={error}
+      className={className}
+    >
+      {(a11y) => <TextFieldControl field={props} a11y={a11y} />}
+    </FieldFrame>
+  );
+}
 
 function TextFieldControl({ field, a11y }: { field: TextFieldProps; a11y: ControlA11y }) {
   const aria = {
@@ -228,6 +271,7 @@ function TextFieldInput({
     suffix,
     revealLabels,
     defaultRevealed = false,
+    locked = false,
     ...rest
   } = controlProps(field);
   const [revealed, setRevealed] = useState(defaultRevealed);
@@ -252,15 +296,27 @@ function TextFieldInput({
         {...rest}
         {...aria}
         type={password && revealed ? 'text' : type}
+        disabled={locked || rest.disabled}
         className={cn(
           'h-full text-[15px] md:text-[15px]',
           prefix ? 'pl-3.5' : icon ? 'pl-2.5' : 'pl-4',
-          password ? 'pr-1' : suffix ? 'pr-1.5' : 'pr-4',
+          password ? 'pr-1' : suffix || locked ? 'pr-1.5' : 'pr-4',
         )}
       />
       {suffix ? (
-        <InputGroupAddon align="inline-end" className="pr-4 text-[15px] text-muted-foreground">
+        <InputGroupAddon
+          align="inline-end"
+          className={cn('text-[15px] text-muted-foreground', locked ? 'pr-1.5' : 'pr-4')}
+        >
           {suffix}
+        </InputGroupAddon>
+      ) : null}
+      {locked ? (
+        <InputGroupAddon
+          align="inline-end"
+          className="pr-4 text-muted-foreground [&>svg]:size-3.75"
+        >
+          <LockIcon aria-hidden="true" />
         </InputGroupAddon>
       ) : null}
       {password && revealLabels ? (

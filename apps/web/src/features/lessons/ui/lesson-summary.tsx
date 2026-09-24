@@ -3,15 +3,15 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { ChevronRightIcon, CircleSlashIcon, CircleXIcon } from 'lucide-react';
-import { useFormatter, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import type { LessonDetailResponse, ScheduleResponse } from '@tutorio/validation';
 import { DialogTitle } from '@/components/ui/dialog';
 import { EntityAvatar } from '@/components/shared/entity-avatar';
 import { LessonCancellationCard } from '@/components/shared/lesson-cancellation-card';
 import { PersonItem } from '@/components/shared/person-item';
-import { useWeekdayLabels } from '@/lib/i18n/weekdays';
 import { capitalizeFirst } from '@/lib/utils';
 import { LessonRunningBadge, LessonStatusBadge } from './lesson-status-badge';
+import { useSlotsLabel } from './field-labels';
 import { useDurationLabel, useLessonDates } from './lesson-format';
 
 type Lesson = LessonDetailResponse;
@@ -238,23 +238,8 @@ function Facts({
 
 /** "Пн і Пт о 17:00": the schedule's days when they share a time, else each day with its time. */
 export function useScheduleLabel(schedule: ScheduleResponse | undefined): string | null {
-  const t = useTranslations('lessons.facts');
-  const format = useFormatter();
-  const days = useWeekdayLabels();
-  if (!schedule || schedule.slots.length === 0) return null;
-  // Monday first, Sunday last.
-  const slots = [...schedule.slots].sort((a, b) => ((a.weekday + 6) % 7) - ((b.weekday + 6) % 7));
-  const times = new Set(slots.map((slot) => slot.localTime));
-  if (times.size === 1) {
-    const names = format.list(
-      slots.map((slot) => capitalizeFirst(days[slot.weekday] ?? '')),
-      { type: 'conjunction' },
-    );
-    return t('slot', { days: names, time: slots[0]!.localTime });
-  }
-  return slots
-    .map((slot) => `${capitalizeFirst(days[slot.weekday] ?? '')} ${slot.localTime}`)
-    .join(' · ');
+  const label = useSlotsLabel();
+  return label(schedule?.slots);
 }
 
 /**
