@@ -1,12 +1,15 @@
 import { z } from 'zod';
 import { workspaceModeSchema, workspaceRoleSchema } from './auth';
 import { cancellationDeadlineHoursSchema, currencyCodeSchema, uuidSchema } from './common';
+import { scheduleHorizonWeeksSchema } from './schedules';
 
 // Workspace-level defaults inherited by enrollments unless overridden.
 export const updateWorkspaceSettingsSchema = z
   .object({
     defaultCurrency: currencyCodeSchema,
     cancellationDeadlineHours: cancellationDeadlineHoursSchema,
+    // How far ahead new schedules generate lessons (L-120).
+    scheduleHorizonWeeks: scheduleHorizonWeeksSchema,
     // Switching to SOLO is refused while a second active teacher exists.
     mode: workspaceModeSchema,
   })
@@ -21,6 +24,7 @@ export type UpdateWorkspaceSettingsDto = z.infer<typeof updateWorkspaceSettingsS
 export const workspaceSettingsResponseSchema = z.object({
   defaultCurrency: currencyCodeSchema,
   cancellationDeadlineHours: cancellationDeadlineHoursSchema,
+  scheduleHorizonWeeks: scheduleHorizonWeeksSchema,
   mode: workspaceModeSchema,
 });
 

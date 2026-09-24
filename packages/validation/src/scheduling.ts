@@ -448,6 +448,8 @@ export type LessonListResponse = z.infer<typeof lessonListResponseSchema>;
 export const lessonSeriesResponseSchema = z.object({
   id: uuidSchema,
   workspaceId: uuidSchema,
+  // The schedule this row is one weekday (and one version) of.
+  scheduleId: uuidSchema,
   enrollmentId: uuidSchema.nullable(),
   groupId: uuidSchema.nullable(),
   packageId: uuidSchema.nullable(),

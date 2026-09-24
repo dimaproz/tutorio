@@ -9,6 +9,7 @@ export * from './packages';
 export * from './pagination';
 export * from './parents';
 export * from './scheduling';
+export * from './schedules';
 export * from './teachers';
 export * from './students';
 export * from './workspace-settings';

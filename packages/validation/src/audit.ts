@@ -15,6 +15,7 @@ export const auditEntitySchema = z.enum([
   'WORKSPACE',
   'LESSON',
   'LESSON_SERIES',
+  'SCHEDULE',
   'LESSON_PACKAGE',
   'PAYMENT',
 ]);
