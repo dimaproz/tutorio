@@ -5,6 +5,8 @@
  */
 import { hash } from '@node-rs/argon2';
 import { PrismaClient, type Prisma } from '@prisma/client';
+import { AuditService } from '../src/audit/audit.service';
+import { BillingService } from '../src/billing/billing.service';
 
 const prisma = new PrismaClient();
 
@@ -494,6 +496,27 @@ async function main() {
       },
       update: {},
     });
+  }
+
+  // Lessons written above in a final status are charged the way the API
+  // charges them (ADR 0007), so the demo balances and packages add up.
+  const billing = new BillingService(
+    prisma as never,
+    new AuditService(prisma as never),
+  );
+  const charged = await prisma.lesson.findMany({
+    where: {
+      workspaceId: workspace.id,
+      deletedAt: null,
+      status: { in: ['COMPLETED', 'CANCELLED_CHARGED', 'NO_SHOW'] },
+    },
+    select: { id: true },
+    orderBy: { startsAtUtc: 'asc' },
+  });
+  for (const lesson of charged) {
+    await prisma.$transaction((tx) =>
+      billing.syncLesson(tx, workspace.id, lesson.id, owner.id),
+    );
   }
 
   console.log('Seed complete.');
