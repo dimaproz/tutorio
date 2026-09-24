@@ -1,0 +1,28 @@
+# Local development database. The API talks to it on localhost, so a query
+# costs a millisecond instead of a round trip to a hosted database.
+#   pnpm db:up     start it (data survives restarts in the named volume)
+#   pnpm db:sync   replace its contents with a copy of the source database
+#   pnpm db:down   stop it
+# The major version and the libc en_US.utf8 locale match the hosted database,
+# so pg_dump can read it and text sorts the same way.
+services:
+  postgres:
+    image: postgres:18
+    container_name: tutorio-dev-pg
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: tutorio
+    ports:
+      - '5432:5432'
+    volumes:
+      - tutorio-dev-pg:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d tutorio']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
+volumes:
+  tutorio-dev-pg:

@@ -60,9 +60,19 @@ ready.
 pnpm install
 cp apps/api/.env.example apps/api/.env
 cp apps/web/.env.example apps/web/.env.local
+pnpm db:up
 pnpm --filter @tutorio/api prisma:migrate
 pnpm dev
 ```
+
+The development database runs in Docker (`docker-compose.yml`: PostgreSQL 18,
+port 5432, the same major version and `en_US.utf8` collation as Railway).
+Develop against it, not a hosted database: the API makes 8–11 sequential
+queries per read, so a ~180 ms round trip to a hosted database turns a 15 ms
+route into 3 s. `pnpm db:sync` replaces the local database with a copy of the
+one named by `DEV_DB_SOURCE_URL` in `apps/api/.env` (schema, data and migration
+history; the source is only read). `pnpm db:down` stops the container; the
+data stays in its volume.
 
 Use a local disposable database for E2E:
 
