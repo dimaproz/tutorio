@@ -4847,6 +4847,321 @@
         ]
       }
     },
+    "/api/packages/preview": {
+      "post": {
+        "description": "The credits (from the direction schedule for a by-period package), price and window a sale would have. Writes nothing.",
+        "operationId": "PackagesController_preview",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePackageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackagePreviewDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Preview a package sale",
+        "tags": [
+          "packages"
+        ]
+      }
+    },
+    "/api/packages/members": {
+      "post": {
+        "description": "One package per member, for their membership of the group; each member pays separately.",
+        "operationId": "PackagesController_sellToMembers",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SellToMembersDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SoldPackagesDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Sell one package to each selected group member",
+        "tags": [
+          "packages"
+        ]
+      }
+    },
+    "/api/packages/{packageId}/extend": {
+      "post": {
+        "operationId": "PackagesController_extend",
+        "parameters": [
+          {
+            "name": "packageId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExtendPackageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackageDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Move the end of a package later",
+        "tags": [
+          "packages"
+        ]
+      }
+    },
+    "/api/packages/{packageId}/transfer": {
+      "post": {
+        "description": "Recalculated by price and rounded down; the remainder is reported.",
+        "operationId": "PackagesController_transfer",
+        "parameters": [
+          {
+            "name": "packageId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferPackageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackageTransferDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Move unused credits to another of the student's directions",
+        "tags": [
+          "packages"
+        ]
+      }
+    },
+    "/api/packages/{packageId}/refund": {
+      "post": {
+        "operationId": "PackagesController_refund",
+        "parameters": [
+          {
+            "name": "packageId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefundPackageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackageDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Take unused credits back and record the money returned",
+        "tags": [
+          "packages"
+        ]
+      }
+    },
     "/api/packages/{packageId}": {
       "get": {
         "description": "Balances, the effective total and payment status are derived from the credit ledger and recorded payments, never from a stored counter.",
@@ -12469,7 +12784,8 @@
                   "type": "string",
                   "enum": [
                     "FIXED_COUNT",
-                    "BY_PERIOD"
+                    "BY_PERIOD",
+                    "BY_PERIOD_WEEKLY"
                   ]
                 },
                 "lessonsTotal": {
@@ -12486,6 +12802,20 @@
                 "totalPriceMinorSnapshot": {
                   "type": "integer"
                 },
+                "lessonsPerWeek": {
+                  "type": "integer",
+                  "nullable": true
+                },
+                "validFrom": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                },
+                "transferredFromPackageId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "nullable": true
+                },
                 "remainingCredits": {
                   "type": "integer"
                 },
@@ -12494,6 +12824,11 @@
                 },
                 "paidMinor": {
                   "type": "integer"
+                },
+                "refundedMinor": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
                 },
                 "currency": {
                   "type": "string",
@@ -12585,9 +12920,13 @@
                 "endDate",
                 "pricePerLessonMinorSnapshot",
                 "totalPriceMinorSnapshot",
+                "lessonsPerWeek",
+                "validFrom",
+                "transferredFromPackageId",
                 "remainingCredits",
                 "consumedCredits",
                 "paidMinor",
+                "refundedMinor",
                 "currency",
                 "paymentStatus",
                 "purchasedAt",
@@ -12630,230 +12969,6 @@
           "totalPages"
         ]
       },
-      "PackageDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "workspaceId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "enrollmentId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "studentId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "groupId": {
-            "type": "string",
-            "format": "uuid",
-            "nullable": true
-          },
-          "name": {
-            "type": "string",
-            "nullable": true
-          },
-          "sizingMode": {
-            "type": "string",
-            "enum": [
-              "FIXED_COUNT",
-              "BY_PERIOD"
-            ]
-          },
-          "lessonsTotal": {
-            "type": "integer"
-          },
-          "endDate": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "pricePerLessonMinorSnapshot": {
-            "type": "integer"
-          },
-          "totalPriceMinorSnapshot": {
-            "type": "integer"
-          },
-          "remainingCredits": {
-            "type": "integer"
-          },
-          "consumedCredits": {
-            "type": "integer"
-          },
-          "paidMinor": {
-            "type": "integer"
-          },
-          "currency": {
-            "type": "string",
-            "enum": [
-              "EUR",
-              "UAH",
-              "PLN",
-              "USD",
-              "GBP"
-            ]
-          },
-          "paymentStatus": {
-            "type": "string",
-            "enum": [
-              "PENDING",
-              "PARTIAL",
-              "PAID"
-            ]
-          },
-          "purchasedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "expiresAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "notes": {
-            "type": "string",
-            "nullable": true
-          },
-          "student": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "format": "uuid"
-              },
-              "fullName": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "id",
-              "fullName"
-            ]
-          },
-          "group": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "format": "uuid"
-              },
-              "name": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "id",
-              "name"
-            ],
-            "nullable": true
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "deletedAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          }
-        },
-        "required": [
-          "id",
-          "workspaceId",
-          "enrollmentId",
-          "studentId",
-          "groupId",
-          "name",
-          "sizingMode",
-          "lessonsTotal",
-          "endDate",
-          "pricePerLessonMinorSnapshot",
-          "totalPriceMinorSnapshot",
-          "remainingCredits",
-          "consumedCredits",
-          "paidMinor",
-          "currency",
-          "paymentStatus",
-          "purchasedAt",
-          "expiresAt",
-          "notes",
-          "student",
-          "group",
-          "createdAt",
-          "updatedAt",
-          "deletedAt"
-        ]
-      },
-      "CreditLedgerDto": {
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "string",
-                  "format": "uuid"
-                },
-                "packageId": {
-                  "type": "string",
-                  "format": "uuid"
-                },
-                "lessonId": {
-                  "type": "string",
-                  "format": "uuid",
-                  "nullable": true
-                },
-                "delta": {
-                  "type": "integer"
-                },
-                "type": {
-                  "type": "string",
-                  "enum": [
-                    "purchase",
-                    "manual_adjustment",
-                    "lesson"
-                  ]
-                },
-                "note": {
-                  "type": "string",
-                  "nullable": true
-                },
-                "createdAt": {
-                  "type": "string",
-                  "format": "date-time"
-                }
-              },
-              "required": [
-                "id",
-                "packageId",
-                "lessonId",
-                "delta",
-                "type",
-                "note",
-                "createdAt"
-              ]
-            }
-          },
-          "balance": {
-            "type": "integer"
-          }
-        },
-        "required": [
-          "items",
-          "balance"
-        ]
-      },
       "CreatePackageDto": {
         "type": "object",
         "properties": {
@@ -12881,7 +12996,8 @@
             "type": "string",
             "enum": [
               "FIXED_COUNT",
-              "BY_PERIOD"
+              "BY_PERIOD",
+              "BY_PERIOD_WEEKLY"
             ],
             "default": "FIXED_COUNT"
           },
@@ -12892,11 +13008,29 @@
             "maximum": 500,
             "exclusiveMaximum": false
           },
+          "lessonsPerWeek": {
+            "type": "integer",
+            "minimum": 1,
+            "exclusiveMinimum": false,
+            "maximum": 14,
+            "exclusiveMaximum": false
+          },
+          "validFrom": {
+            "type": "string",
+            "format": "date-time"
+          },
           "endDate": {
             "type": "string",
             "format": "date-time"
           },
           "pricePerLessonMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "maximum": 2147483647,
+            "exclusiveMaximum": false
+          },
+          "totalPriceMinor": {
             "type": "integer",
             "minimum": 0,
             "exclusiveMinimum": false,
@@ -13003,8 +13137,1071 @@
         },
         "required": [
           "studentId",
-          "pricePerLessonMinor",
           "currency"
+        ]
+      },
+      "PackagePreviewDto": {
+        "type": "object",
+        "properties": {
+          "lessonsTotal": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "pricePerLessonMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "totalPriceMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "validFrom": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "scheduleLessons": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "nullable": true
+          }
+        },
+        "required": [
+          "lessonsTotal",
+          "pricePerLessonMinor",
+          "totalPriceMinor",
+          "validFrom",
+          "expiresAt",
+          "scheduleLessons"
+        ]
+      },
+      "SellToMembersDto": {
+        "type": "object",
+        "properties": {
+          "groupId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "studentIds": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 200,
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "nullable": true
+          },
+          "sizingMode": {
+            "type": "string",
+            "enum": [
+              "FIXED_COUNT",
+              "BY_PERIOD",
+              "BY_PERIOD_WEEKLY"
+            ],
+            "default": "FIXED_COUNT"
+          },
+          "lessonsTotal": {
+            "type": "integer",
+            "minimum": 1,
+            "exclusiveMinimum": false,
+            "maximum": 500,
+            "exclusiveMaximum": false
+          },
+          "lessonsPerWeek": {
+            "type": "integer",
+            "minimum": 1,
+            "exclusiveMinimum": false,
+            "maximum": 14,
+            "exclusiveMaximum": false
+          },
+          "validFrom": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "pricePerLessonMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "maximum": 2147483647,
+            "exclusiveMaximum": false
+          },
+          "totalPriceMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "maximum": 2147483647,
+            "exclusiveMaximum": false
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "EUR",
+              "UAH",
+              "PLN",
+              "USD",
+              "GBP"
+            ]
+          },
+          "purchasedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 2000,
+            "nullable": true
+          }
+        },
+        "required": [
+          "groupId",
+          "studentIds",
+          "currency"
+        ]
+      },
+      "SoldPackagesDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "workspaceId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "enrollmentId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "studentId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "groupId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "nullable": true
+                },
+                "name": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "sizingMode": {
+                  "type": "string",
+                  "enum": [
+                    "FIXED_COUNT",
+                    "BY_PERIOD",
+                    "BY_PERIOD_WEEKLY"
+                  ]
+                },
+                "lessonsTotal": {
+                  "type": "integer"
+                },
+                "endDate": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                },
+                "pricePerLessonMinorSnapshot": {
+                  "type": "integer"
+                },
+                "totalPriceMinorSnapshot": {
+                  "type": "integer"
+                },
+                "lessonsPerWeek": {
+                  "type": "integer",
+                  "nullable": true
+                },
+                "validFrom": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                },
+                "transferredFromPackageId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "nullable": true
+                },
+                "remainingCredits": {
+                  "type": "integer"
+                },
+                "consumedCredits": {
+                  "type": "integer"
+                },
+                "paidMinor": {
+                  "type": "integer"
+                },
+                "refundedMinor": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                },
+                "currency": {
+                  "type": "string",
+                  "enum": [
+                    "EUR",
+                    "UAH",
+                    "PLN",
+                    "USD",
+                    "GBP"
+                  ]
+                },
+                "paymentStatus": {
+                  "type": "string",
+                  "enum": [
+                    "PENDING",
+                    "PARTIAL",
+                    "PAID"
+                  ]
+                },
+                "purchasedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "expiresAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                },
+                "notes": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "student": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "fullName": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "fullName"
+                  ]
+                },
+                "group": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name"
+                  ],
+                  "nullable": true
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "deletedAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                }
+              },
+              "required": [
+                "id",
+                "workspaceId",
+                "enrollmentId",
+                "studentId",
+                "groupId",
+                "name",
+                "sizingMode",
+                "lessonsTotal",
+                "endDate",
+                "pricePerLessonMinorSnapshot",
+                "totalPriceMinorSnapshot",
+                "lessonsPerWeek",
+                "validFrom",
+                "transferredFromPackageId",
+                "remainingCredits",
+                "consumedCredits",
+                "paidMinor",
+                "refundedMinor",
+                "currency",
+                "paymentStatus",
+                "purchasedAt",
+                "expiresAt",
+                "notes",
+                "student",
+                "group",
+                "createdAt",
+                "updatedAt",
+                "deletedAt"
+              ]
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "ExtendPackageDto": {
+        "type": "object",
+        "properties": {
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "expiresAt"
+        ]
+      },
+      "PackageDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "enrollmentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "studentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "groupId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "sizingMode": {
+            "type": "string",
+            "enum": [
+              "FIXED_COUNT",
+              "BY_PERIOD",
+              "BY_PERIOD_WEEKLY"
+            ]
+          },
+          "lessonsTotal": {
+            "type": "integer"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "pricePerLessonMinorSnapshot": {
+            "type": "integer"
+          },
+          "totalPriceMinorSnapshot": {
+            "type": "integer"
+          },
+          "lessonsPerWeek": {
+            "type": "integer",
+            "nullable": true
+          },
+          "validFrom": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "transferredFromPackageId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "remainingCredits": {
+            "type": "integer"
+          },
+          "consumedCredits": {
+            "type": "integer"
+          },
+          "paidMinor": {
+            "type": "integer"
+          },
+          "refundedMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "EUR",
+              "UAH",
+              "PLN",
+              "USD",
+              "GBP"
+            ]
+          },
+          "paymentStatus": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "PARTIAL",
+              "PAID"
+            ]
+          },
+          "purchasedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "student": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "fullName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "fullName"
+            ]
+          },
+          "group": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "workspaceId",
+          "enrollmentId",
+          "studentId",
+          "groupId",
+          "name",
+          "sizingMode",
+          "lessonsTotal",
+          "endDate",
+          "pricePerLessonMinorSnapshot",
+          "totalPriceMinorSnapshot",
+          "lessonsPerWeek",
+          "validFrom",
+          "transferredFromPackageId",
+          "remainingCredits",
+          "consumedCredits",
+          "paidMinor",
+          "refundedMinor",
+          "currency",
+          "paymentStatus",
+          "purchasedAt",
+          "expiresAt",
+          "notes",
+          "student",
+          "group",
+          "createdAt",
+          "updatedAt",
+          "deletedAt"
+        ]
+      },
+      "TransferPackageDto": {
+        "type": "object",
+        "properties": {
+          "toEnrollmentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "credits": {
+            "type": "integer",
+            "minimum": 1,
+            "exclusiveMinimum": false,
+            "maximum": 500,
+            "exclusiveMaximum": false
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 2000,
+            "nullable": true
+          }
+        },
+        "required": [
+          "toEnrollmentId"
+        ]
+      },
+      "PackageTransferDto": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "workspaceId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "enrollmentId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "studentId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "groupId": {
+                "type": "string",
+                "format": "uuid",
+                "nullable": true
+              },
+              "name": {
+                "type": "string",
+                "nullable": true
+              },
+              "sizingMode": {
+                "type": "string",
+                "enum": [
+                  "FIXED_COUNT",
+                  "BY_PERIOD",
+                  "BY_PERIOD_WEEKLY"
+                ]
+              },
+              "lessonsTotal": {
+                "type": "integer"
+              },
+              "endDate": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "pricePerLessonMinorSnapshot": {
+                "type": "integer"
+              },
+              "totalPriceMinorSnapshot": {
+                "type": "integer"
+              },
+              "lessonsPerWeek": {
+                "type": "integer",
+                "nullable": true
+              },
+              "validFrom": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "transferredFromPackageId": {
+                "type": "string",
+                "format": "uuid",
+                "nullable": true
+              },
+              "remainingCredits": {
+                "type": "integer"
+              },
+              "consumedCredits": {
+                "type": "integer"
+              },
+              "paidMinor": {
+                "type": "integer"
+              },
+              "refundedMinor": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "currency": {
+                "type": "string",
+                "enum": [
+                  "EUR",
+                  "UAH",
+                  "PLN",
+                  "USD",
+                  "GBP"
+                ]
+              },
+              "paymentStatus": {
+                "type": "string",
+                "enum": [
+                  "PENDING",
+                  "PARTIAL",
+                  "PAID"
+                ]
+              },
+              "purchasedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "expiresAt": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "notes": {
+                "type": "string",
+                "nullable": true
+              },
+              "student": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "fullName": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "fullName"
+                ]
+              },
+              "group": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "name"
+                ],
+                "nullable": true
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "deletedAt": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              }
+            },
+            "required": [
+              "id",
+              "workspaceId",
+              "enrollmentId",
+              "studentId",
+              "groupId",
+              "name",
+              "sizingMode",
+              "lessonsTotal",
+              "endDate",
+              "pricePerLessonMinorSnapshot",
+              "totalPriceMinorSnapshot",
+              "lessonsPerWeek",
+              "validFrom",
+              "transferredFromPackageId",
+              "remainingCredits",
+              "consumedCredits",
+              "paidMinor",
+              "refundedMinor",
+              "currency",
+              "paymentStatus",
+              "purchasedAt",
+              "expiresAt",
+              "notes",
+              "student",
+              "group",
+              "createdAt",
+              "updatedAt",
+              "deletedAt"
+            ]
+          },
+          "target": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "workspaceId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "enrollmentId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "studentId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "groupId": {
+                "type": "string",
+                "format": "uuid",
+                "nullable": true
+              },
+              "name": {
+                "type": "string",
+                "nullable": true
+              },
+              "sizingMode": {
+                "type": "string",
+                "enum": [
+                  "FIXED_COUNT",
+                  "BY_PERIOD",
+                  "BY_PERIOD_WEEKLY"
+                ]
+              },
+              "lessonsTotal": {
+                "type": "integer"
+              },
+              "endDate": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "pricePerLessonMinorSnapshot": {
+                "type": "integer"
+              },
+              "totalPriceMinorSnapshot": {
+                "type": "integer"
+              },
+              "lessonsPerWeek": {
+                "type": "integer",
+                "nullable": true
+              },
+              "validFrom": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "transferredFromPackageId": {
+                "type": "string",
+                "format": "uuid",
+                "nullable": true
+              },
+              "remainingCredits": {
+                "type": "integer"
+              },
+              "consumedCredits": {
+                "type": "integer"
+              },
+              "paidMinor": {
+                "type": "integer"
+              },
+              "refundedMinor": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "currency": {
+                "type": "string",
+                "enum": [
+                  "EUR",
+                  "UAH",
+                  "PLN",
+                  "USD",
+                  "GBP"
+                ]
+              },
+              "paymentStatus": {
+                "type": "string",
+                "enum": [
+                  "PENDING",
+                  "PARTIAL",
+                  "PAID"
+                ]
+              },
+              "purchasedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "expiresAt": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "notes": {
+                "type": "string",
+                "nullable": true
+              },
+              "student": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "fullName": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "fullName"
+                ]
+              },
+              "group": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "name"
+                ],
+                "nullable": true
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "deletedAt": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              }
+            },
+            "required": [
+              "id",
+              "workspaceId",
+              "enrollmentId",
+              "studentId",
+              "groupId",
+              "name",
+              "sizingMode",
+              "lessonsTotal",
+              "endDate",
+              "pricePerLessonMinorSnapshot",
+              "totalPriceMinorSnapshot",
+              "lessonsPerWeek",
+              "validFrom",
+              "transferredFromPackageId",
+              "remainingCredits",
+              "consumedCredits",
+              "paidMinor",
+              "refundedMinor",
+              "currency",
+              "paymentStatus",
+              "purchasedAt",
+              "expiresAt",
+              "notes",
+              "student",
+              "group",
+              "createdAt",
+              "updatedAt",
+              "deletedAt"
+            ]
+          },
+          "valueMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "remainderMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          }
+        },
+        "required": [
+          "source",
+          "target",
+          "valueMinor",
+          "remainderMinor"
+        ]
+      },
+      "RefundPackageDto": {
+        "type": "object",
+        "properties": {
+          "credits": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "maximum": 500,
+            "exclusiveMaximum": false
+          },
+          "amountMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "maximum": 2147483647,
+            "exclusiveMaximum": false
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "CASH",
+              "BANK_TRANSFER",
+              "OTHER",
+              "CARD"
+            ],
+            "default": "CASH"
+          },
+          "paidAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "credits",
+          "amountMinor",
+          "note"
+        ]
+      },
+      "CreditLedgerDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "packageId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "lessonId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "nullable": true
+                },
+                "delta": {
+                  "type": "integer"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "purchase",
+                    "manual_adjustment",
+                    "transfer_out",
+                    "transfer_in",
+                    "refund",
+                    "lesson"
+                  ]
+                },
+                "note": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "id",
+                "packageId",
+                "lessonId",
+                "delta",
+                "type",
+                "note",
+                "createdAt"
+              ]
+            }
+          },
+          "balance": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "balance"
         ]
       },
       "AdjustBalanceDto": {
