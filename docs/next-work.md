@@ -384,7 +384,7 @@ their briefs and their status are in [`screens/`](./screens/README.md) (S01
 lesson panel … S11 dashboard), which also carries Work Packets 6.2 (S09), 6.5
 and 7 (S07) and 6.6 (S10, S11).
 
-- **S01 — lesson panel: done 2026-09-24** (`effab27`…`55ef58a`). The panel
+- **S01 — lesson panel: done 2026-09-24** (`effab27`…`1d5c771`). The panel
   opens over the student profile and the group page as `?lesson=<id>` and runs
   every action on one lesson: edit in place, move with "this / this and
   following" and the preview's numbers, cancel with the deadline suggestion,

@@ -1,6 +1,6 @@
 # S01 — Lesson Side Panel and Lesson Actions
 
-- Status: Done (2026-09-24, commits `effab27`…`55ef58a` and the brief update)
+- Status: Done (2026-09-24, commits `effab27`…`1d5c771`)
 - Work packet: 6.4 (screens)
 - Depends on: nothing; opened first from the lesson lists already on the
   student profile and the group page
