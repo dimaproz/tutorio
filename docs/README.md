@@ -30,6 +30,8 @@ override one above it.
 8. [`product/`](./product/README.md) documents user journeys and target UX.
 9. [`stages/`](./stages/README.md) contains implementation briefs. Stage files
    elaborate the roadmap; they do not expand the MVP on their own.
+   [`screens/`](./screens/README.md) holds one brief per screen step, built
+   one at a time from the owner's mockups.
 10. [`quality/pilot-acceptance.md`](./quality/pilot-acceptance.md),
     [`design-system.md`](./design-system.md), and [`deploy.md`](./deploy.md)
     define delivery, UI, and operational gates.

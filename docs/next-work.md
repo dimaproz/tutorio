@@ -379,10 +379,10 @@ green gate.
    its original can get a new one. `GET /schedules` already served the
    Schedules tab.
 
-Then the screens from the owner's mockups: Calendar, Lessons (List ·
-Schedules), the lesson side panel, schedule form and change confirmation,
-student profile blocks, group page changes, package sale form, pause and bulk
-cancel dialogs, settings.
+Then the screens from the owner's mockups, one step at a time: the steps,
+their briefs and their status are in [`screens/`](./screens/README.md) (S01
+lesson panel … S11 dashboard), which also carries Work Packets 6.2 (S09), 6.5
+and 7 (S07) and 6.6 (S10, S11).
 
 ### Work Packet 6.5 — Package Read Surfaces
 
