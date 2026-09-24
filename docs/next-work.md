@@ -343,8 +343,14 @@ green gate.
    teacher's or the whole studio's scheduled lessons in a period, free, by the
    teacher, with a reason; the cancellation suggestion treats a teacher or
    group cancellation as free. The bulk cancel dialog comes with the screens.
-5. **Package kinds and operations** — by count, by period from the schedule,
-   by period flexible; extend, transfer, refund, sell to group members.
+5. **Package kinds and operations** — done 2026-09-24: by count, by period
+   from the direction's schedule (editable count), by period X lessons a week;
+   per-lesson or total price; a period package pays only inside its window;
+   `POST /packages/preview`, `/packages/members` (sell to members),
+   `/packages/:id/extend`, `/packages/:id/transfer` (recalculated by price,
+   rounded down, remainder reported) and `/packages/:id/refund` (credits and a
+   `REFUNDED` payment). The current package form still sends a schedule and a
+   first payment until the new sale form (L-87) replaces it.
 6. **Pause** — whole student or one direction, optional end, package
    extension, automatic return.
 7. **Read APIs** — lessons list with filters, lesson side panel, schedules

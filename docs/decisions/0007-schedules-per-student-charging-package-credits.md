@@ -1,6 +1,6 @@
 # ADR 0007: Schedules, Per-Student Charging and Package Credits
 
-- Status: Accepted; phases 1–3 implemented (Work Packet 6.4), the rest pending
+- Status: Accepted; phases 1–5 implemented (Work Packet 6.4), the rest pending
 - Date: 2026-09-23
 - Supersedes: parts of [ADR 0003](./0003-cancellation-and-package-accounting.md)
   (which package a lesson debits; period plans; group packages and shares).
@@ -87,3 +87,7 @@ re-decided the model end to end; the full contract is
   payments reach it.
 - The pay-per-lesson balance is derived: payments without a package settle
   the oldest balance charges first; nothing is stored per lesson.
+- Phase 5 keeps packages as credits: a transfer creates a new count package on
+  the target direction that owes nothing (the money stays on the source), and
+  a refund is a `REFUNDED` payment plus a `refund` credit entry, so neither
+  history is edited.

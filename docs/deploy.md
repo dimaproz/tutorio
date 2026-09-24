@@ -152,6 +152,10 @@ shares (their payments stay, without a package) and drops the lesson and
 series package pins. Charges start empty — reseed the dev database, or
 re-save lesson statuses, to rebuild them.
 
+`20260928120000_package_kinds` (phase 5) is additive: the `BY_PERIOD_WEEKLY`
+kind, `transfer_out`/`transfer_in`/`refund` credit entries, and the package
+columns `validFrom`, `lessonsPerWeek` and `transferredFromPackageId`.
+
 ## Deployment order
 
 1. Deploy backward-compatible database/API changes.
