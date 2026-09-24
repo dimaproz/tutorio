@@ -192,8 +192,11 @@ contracts, and architecture checks govern the feature migrations below.
 
 ## Existing Surface Migration Track — active before Work Packet 7
 
-Migrate one domain at a time. The current page is behavior evidence, not a
-visual template. Each packet starts with an architect-approved screen brief,
+Migrate one domain at a time. Since the frontend reset of 2026-09-24 the
+pages still to migrate no longer exist in the web app: Teachers (6.2), the
+lesson screens (6.4), packages (6.5), dashboard and settings (6.6) and the
+package sale (7) are built new from the owner's mockups and the backend
+contracts; git history holds the old pages as behaviour evidence. Each packet starts with an architect-approved screen brief,
 builds owned components and states in Storybook, integrates existing behavior,
 passes its verification gate, and remains independently deployable. Do not
 start the next packet while the current one is under review.

@@ -1,11 +1,23 @@
 # Tutorio Current State
 
-Last verified: 2026-09-23 after the Work Packet 6.3 (Groups) gate.
+Last verified: 2026-09-24 after the frontend reset (see "Frontend reset").
 
 This is the first project document to read before planning or implementing
 work. It reports the repository as it exists; [`mvp-plan.md`](./mvp-plan.md)
 defines the pilot boundary and [`roadmap.md`](./roadmap.md) defines execution
 order.
+
+## Frontend reset (2026-09-24)
+
+At the owner's request the web app keeps only the rebuilt screens: sign-in and
+registration, the application shell (navigation: Students, Groups, Parents),
+and the Students, Parents and Groups screens. The dashboard, calendar, lesson
+patterns, packages and payments, teachers and settings pages, the old lesson,
+schedule, package, payment and enrollment dialogs, and the shared helpers only
+they used were deleted; `/app` opens the students. The rebuilt screens show
+lessons, packages and directions read-only — scheduling, lesson actions, sales
+and direction edits come back with the new screens (Work Packet 6.4 screens,
+6.2, 6.5, 6.6 and 7). Every backend route stays available.
 
 ## Executive status
 
