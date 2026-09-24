@@ -145,6 +145,9 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
     await prisma.lessonSeries.deleteMany({
       where: { workspaceId: { in: workspaceIds } },
     });
+    await prisma.schedule.deleteMany({
+      where: { workspaceId: { in: workspaceIds } },
+    });
     await prisma.lessonPackage.deleteMany({
       where: { workspaceId: { in: workspaceIds } },
     });
@@ -712,8 +715,19 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
         },
       });
       groupPackageId = pkg.id;
+      const seriesSchedule = await prisma.schedule.create({
+        data: {
+          workspaceId: workspaceAId,
+          groupId: historyGroupId,
+          teacherId: ownerTeacherId,
+          timezone: 'UTC',
+          durationMin: 60,
+          horizonWeeks: 12,
+        },
+      });
       const series = await prisma.lessonSeries.create({
         data: {
+          scheduleId: seriesSchedule.id,
           workspaceId: workspaceAId,
           groupId: historyGroupId,
           teacherId: ownerTeacherId,
@@ -899,8 +913,19 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
         },
       });
       const startsAtUtc = new Date(Date.now() + 3 * 86_400_000);
+      const seriesSchedule = await prisma.schedule.create({
+        data: {
+          workspaceId: workspaceAId,
+          groupId: group.body.id,
+          teacherId: ownerTeacherId,
+          timezone: 'UTC',
+          durationMin: 60,
+          horizonWeeks: 12,
+        },
+      });
       const series = await prisma.lessonSeries.create({
         data: {
+          scheduleId: seriesSchedule.id,
           workspaceId: workspaceAId,
           groupId: group.body.id,
           teacherId: ownerTeacherId,
@@ -977,8 +1002,19 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
         })
         .expect(201);
       const startsAtUtc = new Date(Date.now() + 4 * 86_400_000);
+      const seriesSchedule = await prisma.schedule.create({
+        data: {
+          workspaceId: workspaceAId,
+          enrollmentId: individual.body.id,
+          teacherId: secondTeacherId,
+          timezone: 'UTC',
+          durationMin: 60,
+          horizonWeeks: 12,
+        },
+      });
       const series = await prisma.lessonSeries.create({
         data: {
+          scheduleId: seriesSchedule.id,
           workspaceId: workspaceAId,
           enrollmentId: individual.body.id,
           teacherId: secondTeacherId,

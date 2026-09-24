@@ -3,7 +3,9 @@ import {
   canHaveMakeup,
   canTransition,
   isCancelledStatus,
+  localWeekdayOf,
   makeupIsFree,
+  replaceSlot,
 } from '@tutorio/domain';
 import { Prisma } from '@prisma/client';
 import type {
@@ -33,7 +35,7 @@ import {
 import { LedgerService } from '../packages/ledger.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { assertNoScheduleConflicts } from './conflicts';
-import { MaterializerService } from './materializer.service';
+import { SchedulesService, currentVersionRows } from './schedules.service';
 import {
   lockGroupSchedule,
   lockStudentLifecycles,
@@ -43,7 +45,6 @@ import {
   assertTargetAndTeacher,
   lessonInclude,
   localHourMinute,
-  localWeekday,
   resolveStudentTarget,
   toLessonResponse,
 } from './scheduling.shared';
@@ -53,7 +54,7 @@ export class LessonsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
-    private readonly materializer: MaterializerService,
+    private readonly schedules: SchedulesService,
     private readonly ledger: LedgerService,
   ) {}
 
@@ -609,84 +610,67 @@ export class LessonsService {
         );
       }
 
-      // A following edit creates a new rule boundary. The original series
-      // remains an honest record of the rule that produced prior occurrences.
+      // "This and following" changes that weekday's time in the schedule from
+      // this lesson on (product/scheduling.md L-41); the other weekdays stay.
+      // The schedule change moves the lessons instead of deleting them.
       if (dto.scope === 'this_and_following' && lesson.seriesId) {
         const series = await tx.lessonSeries.findUniqueOrThrow({
           where: { id: lesson.seriesId },
         });
-        const localTime = localHourMinute(newStart, series.timezone);
-        const weekdays = [localWeekday(newStart, series.timezone)];
-        const endedSeries = await tx.lessonSeries.update({
-          where: { id: series.id },
-          data: { endsAt: lesson.startsAtUtc },
+        const schedule = await tx.schedule.findUniqueOrThrow({
+          where: { id: series.scheduleId },
         });
-        await this.materializer.regenerateFuture(
-          tx,
-          endedSeries,
-          lesson.startsAtUtc,
-          force,
-        );
-        const followingSeries = await tx.lessonSeries.create({
-          data: {
-            workspaceId: series.workspaceId,
-            enrollmentId: series.enrollmentId,
-            groupId: series.groupId,
-            packageId: series.packageId,
-            teacherId: series.teacherId,
-            weekdays,
-            localTime,
-            timezone: series.timezone,
-            durationMin,
-            priceMinor: series.priceMinor,
-            currency: series.currency,
-            startDate: newStart,
-            endsAt: series.endsAt,
-            horizonMaterializedUntil: newStart,
+        const rows = await tx.lessonSeries.findMany({
+          where: {
+            scheduleId: schedule.id,
+            OR: [
+              { deletedAt: null },
+              { scheduleSuspensionToken: { not: null } },
+            ],
           },
         });
-        await this.materializer.materializeSeries(
+        const current = currentVersionRows(rows, lesson.startsAtUtc).flatMap(
+          (row) =>
+            row.weekdays.map((weekday) => ({
+              weekday,
+              localTime: row.localTime,
+            })),
+        );
+        const slots = replaceSlot(
+          current,
+          localWeekdayOf(lesson.startsAtUtc, schedule.timezone),
+          {
+            weekday: localWeekdayOf(newStart, schedule.timezone),
+            localTime: localHourMinute(newStart, schedule.timezone),
+          },
+        );
+        await this.schedules.changeInTx(
           tx,
-          followingSeries,
-          this.materializer.horizonUntil(),
-          newStart,
+          auth,
+          schedule.id,
+          {
+            effectiveFrom: lesson.startsAtUtc.toISOString(),
+            slots,
+            durationMin: dto.durationMin ?? schedule.durationMin,
+          },
           force,
         );
-        await this.audit.record(tx, {
-          workspaceId: auth.workspaceId,
-          actorId: auth.userId,
-          action: 'UPDATE',
-          entity: 'LESSON_SERIES',
-          entityId: series.id,
-          changes: this.audit.buildChanges(series, {
-            endsAt: lesson.startsAtUtc,
-          }),
-        });
-        await this.audit.record(tx, {
-          workspaceId: auth.workspaceId,
-          actorId: auth.userId,
-          action: 'CREATE',
-          entity: 'LESSON_SERIES',
-          entityId: followingSeries.id,
-          changes: this.audit.buildChanges(
-            {},
-            {
-              previousSeriesId: series.id,
-              localTime,
-              weekdays,
-              durationMin,
-              startDate: newStart,
-            },
-          ),
-        });
-        // Return the regenerated lesson now occupying the new slot, carrying
-        // this move in its reschedule history.
+        // The lesson keeps its id when it takes the new time; count the move.
         const moved = await tx.lesson.findFirst({
-          where: { seriesId: followingSeries.id, startsAtUtc: newStart },
+          where: {
+            workspaceId: auth.workspaceId,
+            deletedAt: null,
+            startsAtUtc: newStart,
+            series: { scheduleId: schedule.id },
+          },
+          orderBy: { createdAt: 'asc' },
           select: { id: true },
         });
         if (!moved) {
-          return lesson;
+          return tx.lesson.findUniqueOrThrow({
+            where: { id: lesson.id },
+            include: lessonInclude,
+          });
         }
         return tx.lesson.update({
           where: { id: moved.id },

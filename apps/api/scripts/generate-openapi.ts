@@ -11,7 +11,10 @@ async function main() {
   app.setGlobalPrefix('api');
 
   const document = buildOpenApiDocument(app);
-  const outPath = resolve(__dirname, '../../../packages/api-client/openapi.json');
+  const outPath = resolve(
+    __dirname,
+    '../../../packages/api-client/openapi.json',
+  );
   writeFileSync(outPath, JSON.stringify(document, null, 2));
 
   await app.close();

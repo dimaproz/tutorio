@@ -3,6 +3,7 @@ import type { AuthenticatedUser } from '../auth/auth.types';
 import { BusinessApiException } from '../common/business.errors';
 import type { PrismaService } from '../prisma/prisma.service';
 import type { MaterializerService } from '../scheduling/materializer.service';
+import type { SchedulesService } from '../scheduling/schedules.service';
 import { GroupsService } from './groups.service';
 
 const WORKSPACE_ID = '22222222-2222-4222-8222-222222222222';
@@ -91,10 +92,15 @@ function buildPrismaMock() {
       updateMany: jest.fn().mockResolvedValue({ count: 0 }),
     },
     lessonPackage: { findMany: jest.fn().mockResolvedValue([]) },
+    schedule: {
+      findFirst: jest.fn().mockResolvedValue(null),
+      updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+    },
     workspace: {
       findUniqueOrThrow: jest.fn().mockResolvedValue({
         defaultCurrency: 'EUR',
         timezone: 'Europe/Kyiv',
+        scheduleHorizonWeeks: 4,
       }),
     },
     auditLog: {
@@ -120,15 +126,21 @@ function buildService() {
     horizonUntil: jest
       .fn()
       .mockReturnValue(new Date('2026-10-12T00:00:00.000Z')),
+    horizonFor: jest
+      .fn()
+      .mockResolvedValue(new Date('2026-08-17T00:00:00.000Z')),
     materializeSeries: jest.fn().mockResolvedValue([]),
-    assertSeriesSlotsFree: jest.fn().mockResolvedValue(undefined),
+  };
+  const schedules = {
+    createInTx: jest.fn().mockResolvedValue({ id: 'schedule-1', series: [] }),
   };
   const service = new GroupsService(
     prisma as unknown as PrismaService,
     audit,
     materializer as unknown as MaterializerService,
+    schedules as unknown as SchedulesService,
   );
-  return { prisma, service, materializer };
+  return { prisma, service, materializer, schedules };
 }
 
 async function expectBusinessError(
@@ -369,7 +381,7 @@ describe('GroupsService roster reconciliation', () => {
 
 describe('GroupsService teacher and schedule', () => {
   it('creates a first schedule in the workspace timezone at the group price', async () => {
-    const { prisma, service, materializer } = buildService();
+    const { service, schedules } = buildService();
 
     await service.create(owner, {
       name: 'B1 English',
@@ -378,18 +390,26 @@ describe('GroupsService teacher and schedule', () => {
       schedule: { weekdays: [2, 4], localTime: '17:00', durationMin: 60 },
     });
 
-    expect(prisma.lessonSeries.create.mock.calls[0][0].data).toMatchObject({
-      groupId: GROUP_ID,
-      teacherId: TEACHER_ID,
-      weekdays: [2, 4],
-      localTime: '17:00',
-      timezone: 'Europe/Kyiv',
-      durationMin: 60,
-      priceMinor: 2500,
-      currency: 'EUR',
-    });
-    // Nothing generated yet (no students): the slots are still clash-checked.
-    expect(materializer.assertSeriesSlotsFree).toHaveBeenCalled();
+    // The schedule service checks conflicts and generates the lessons.
+    expect(schedules.createInTx).toHaveBeenCalledWith(
+      expect.anything(),
+      owner,
+      expect.objectContaining({
+        groupId: GROUP_ID,
+        enrollmentId: null,
+        teacherId: TEACHER_ID,
+        slots: [
+          { weekday: 2, localTime: '17:00' },
+          { weekday: 4, localTime: '17:00' },
+        ],
+        timezone: 'Europe/Kyiv',
+        durationMin: 60,
+        horizonWeeks: 4,
+        priceMinor: 2500,
+        currency: 'EUR',
+      }),
+      { force: false },
+    );
   });
 
   it('picks the only active teacher when none is named', async () => {
@@ -421,8 +441,8 @@ describe('GroupsService teacher and schedule', () => {
   });
 
   it('refuses a second schedule from the group form', async () => {
-    const { prisma, service } = buildService();
-    prisma.lessonSeries.count.mockResolvedValue(1);
+    const { prisma, service, schedules } = buildService();
+    prisma.schedule.findFirst.mockResolvedValue({ id: 'schedule-1' });
 
     await expectBusinessError(
       service.update(owner, GROUP_ID, {
@@ -431,7 +451,7 @@ describe('GroupsService teacher and schedule', () => {
       'GROUP_SCHEDULE_EXISTS',
       409,
     );
-    expect(prisma.lessonSeries.create).not.toHaveBeenCalled();
+    expect(schedules.createInTx).not.toHaveBeenCalled();
   });
 
   it('moves the roster, schedule and upcoming lessons to a new teacher', async () => {
@@ -526,9 +546,17 @@ describe('GroupsService reads and lifecycle', () => {
         {
           lessonSeries: {
             some: {
-              OR: [
-                { deletedAt: null },
-                { scheduleSuspensionToken: { not: null } },
+              // Live (or suspended) and not ended by a later change.
+              AND: [
+                {
+                  OR: [
+                    { deletedAt: null },
+                    { scheduleSuspensionToken: { not: null } },
+                  ],
+                },
+                {
+                  OR: [{ endsAt: null }, { endsAt: { gt: expect.any(Date) } }],
+                },
               ],
               weekdays: { has: 2 },
             },

@@ -205,6 +205,30 @@ export const makeupNotAllowed = () =>
     HttpStatus.CONFLICT,
   );
 
+// One active schedule per direction (product/scheduling.md L-20); the
+// existing one is changed instead. `details.scheduleId` names it.
+export const scheduleExists = (scheduleId: string) =>
+  new BusinessApiException(
+    'SCHEDULE_EXISTS',
+    'This student already has a schedule with this teacher; change it instead',
+    HttpStatus.CONFLICT,
+    { scheduleId },
+  );
+
+export const scheduleNotFound = () =>
+  new BusinessApiException(
+    'SCHEDULE_NOT_FOUND',
+    'Schedule not found',
+    HttpStatus.NOT_FOUND,
+  );
+
+export const scheduleEnded = () =>
+  new BusinessApiException(
+    'SCHEDULE_ENDED',
+    'This schedule has ended; create a new one instead',
+    HttpStatus.CONFLICT,
+  );
+
 export const makeupExists = () =>
   new BusinessApiException(
     'MAKEUP_EXISTS',

@@ -40,6 +40,10 @@ import {
 } from '../scheduling/lifecycle-suspension';
 import { MaterializerService } from '../scheduling/materializer.service';
 import {
+  SchedulesService,
+  currentVersionRows,
+} from '../scheduling/schedules.service';
+import {
   compareNullable,
   firstScheduleKey,
   groupScheduleWhere,
@@ -68,6 +72,8 @@ const listInclude = {
       localTime: true,
       durationMin: true,
       timezone: true,
+      startDate: true,
+      endsAt: true,
     },
     orderBy: [{ localTime: 'asc' }, { id: 'asc' }],
   },
@@ -77,12 +83,49 @@ type ListRow = Prisma.GroupGetPayload<{ include: typeof listInclude }>;
 
 type LessonSlot = { id: string; startsAtUtc: Date; durationMin: number };
 
+/**
+ * The rule in force now (a planned change shows only once it starts), as the
+ * group response has always carried it: one entry per start time, with the
+ * weekdays that share it. A schedule keeps one row per weekday.
+ */
+function scheduleRowsInForce<
+  T extends {
+    startDate: Date;
+    endsAt: Date | null;
+    weekdays: number[];
+    localTime: string;
+    durationMin: number;
+    timezone: string;
+  },
+>(rows: readonly T[]): Omit<T, 'startDate' | 'endsAt'>[] {
+  const merged = new Map<string, Omit<T, 'startDate' | 'endsAt'>>();
+  for (const row of currentVersionRows(rows, new Date())) {
+    const { startDate: _startDate, endsAt: _endsAt, ...rest } = row;
+    void _startDate;
+    void _endsAt;
+    const key = `${row.localTime}|${row.durationMin}|${row.timezone}`;
+    const entry = merged.get(key);
+    if (entry) {
+      entry.weekdays = [...new Set([...entry.weekdays, ...row.weekdays])].sort(
+        (a, b) => a - b,
+      );
+    } else {
+      merged.set(key, {
+        ...rest,
+        weekdays: [...row.weekdays].sort((a, b) => a - b),
+      });
+    }
+  }
+  return [...merged.values()];
+}
+
 @Injectable()
 export class GroupsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
     private readonly materializer: MaterializerService,
+    private readonly schedules: SchedulesService,
   ) {}
 
   // -------------------------------------------------------------------------
@@ -115,7 +158,13 @@ export class GroupsService {
     if (query.weekday !== undefined) {
       and.push({
         lessonSeries: {
-          some: { ...groupScheduleWhere, weekdays: { has: query.weekday } },
+          some: {
+            AND: [
+              groupScheduleWhere,
+              { OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }] },
+            ],
+            weekdays: { has: query.weekday },
+          },
         },
       });
     }
@@ -169,9 +218,18 @@ export class GroupsService {
           name: true,
           _count: { select: { enrollments: { where: liveEnrollmentWhere } } },
           lessonSeries: {
-            where: groupScheduleWhere,
+            where: {
+              AND: [
+                groupScheduleWhere,
+                { OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }] },
+              ],
+            },
             select: { weekdays: true, localTime: true, timezone: true },
-            orderBy: [{ localTime: 'asc' }, { id: 'asc' }],
+            orderBy: [
+              { startDate: 'asc' },
+              { localTime: 'asc' },
+              { id: 'asc' },
+            ],
             take: 1,
           },
         },
@@ -325,7 +383,7 @@ export class GroupsService {
         avatarKey:
           student.avatarKey as GroupListItem['students'][number]['avatarKey'],
       })),
-      schedules: row.lessonSeries,
+      schedules: scheduleRowsInForce(row.lessonSeries),
       nextLesson: next
         ? {
             id: next.id,
@@ -484,6 +542,8 @@ export class GroupsService {
               localTime: true,
               durationMin: true,
               timezone: true,
+              startDate: true,
+              endsAt: true,
             },
             orderBy: [{ localTime: 'asc' }, { id: 'asc' }],
           },
@@ -567,7 +627,7 @@ export class GroupsService {
           color: enrollment.teacher.color,
         },
       })),
-      schedules: group.lessonSeries,
+      schedules: scheduleRowsInForce(group.lessonSeries),
       nextLesson: nextLesson
         ? {
             id: nextLesson.id,
@@ -791,75 +851,82 @@ export class GroupsService {
   ): Promise<void> {
     await reconcileGroupSchedule(tx, workspaceId, groupId, now);
     const series = await tx.lessonSeries.findMany({
-      where: { workspaceId, groupId, deletedAt: null },
+      where: {
+        workspaceId,
+        groupId,
+        deletedAt: null,
+        OR: [{ endsAt: null }, { endsAt: { gt: now } }],
+      },
     });
-    const horizon = this.materializer.horizonUntil(now);
     for (const row of series) {
-      await this.materializer.materializeSeries(tx, row, horizon, now);
+      const horizon = await this.materializer.horizonFor(tx, row, now);
+      await this.materializer.materializeSeries(
+        tx,
+        row,
+        horizon,
+        row.startDate > now ? row.startDate : now,
+      );
     }
   }
 
-  /** Creates the group's first recurring schedule. */
+  /**
+   * Creates the group's first schedule (product/scheduling.md L-20): its
+   * weekdays at one start time, taught by the group's teacher at the group's
+   * price, generated in the studio's timezone. Conflicts with the teacher's
+   * or a member's lessons refuse it unless `force`.
+   */
   private async createSchedule(
     tx: Prisma.TransactionClient,
     auth: AuthenticatedUser,
     group: Pick<Group, 'id' | 'pricePerLesson' | 'currency' | 'teacherId'>,
     schedule: GroupScheduleInputDto,
     now: Date,
+    force: boolean,
   ): Promise<void> {
     if (!group.teacherId) {
       throw groupTeacherRequired();
     }
-    // A schedule suspended by an empty roster still exists and comes back
-    // with the first student; it is changed on the patterns screen too.
-    const existing = await tx.lessonSeries.count({
+    // One schedule per group; an existing one is changed, not replaced.
+    const existing = await tx.schedule.findFirst({
       where: {
         workspaceId: auth.workspaceId,
         groupId: group.id,
-        ...groupScheduleWhere,
+        state: 'ACTIVE',
       },
+      select: { id: true },
     });
-    if (existing > 0) {
+    if (existing) {
       throw groupScheduleExists();
     }
-    await lockTeacherSchedules(tx, auth.workspaceId, [group.teacherId]);
     const workspace = await tx.workspace.findUniqueOrThrow({
       where: { id: auth.workspaceId },
-      select: { timezone: true, defaultCurrency: true },
+      select: {
+        timezone: true,
+        defaultCurrency: true,
+        scheduleHorizonWeeks: true,
+      },
     });
-    const data = {
-      workspaceId: auth.workspaceId,
-      groupId: group.id,
-      teacherId: group.teacherId,
-      weekdays: schedule.weekdays,
-      localTime: schedule.localTime,
-      timezone: workspace.timezone,
-      durationMin: schedule.durationMin,
-      priceMinor: group.pricePerLesson ?? 0,
-      currency: group.currency ?? workspace.defaultCurrency,
-      startDate: now,
-    };
-    const created = await tx.lessonSeries.create({
-      data: { ...data, horizonMaterializedUntil: now },
-    });
-    const slots = await this.materializer.materializeSeries(
+    await this.schedules.createInTx(
       tx,
-      created,
-      this.materializer.horizonUntil(now),
-      now,
+      auth,
+      {
+        enrollmentId: null,
+        groupId: group.id,
+        teacherId: group.teacherId,
+        slots: schedule.weekdays.map((weekday) => ({
+          weekday,
+          localTime: schedule.localTime,
+        })),
+        durationMin: schedule.durationMin,
+        timezone: workspace.timezone,
+        startDate: now,
+        endsAt: null,
+        horizonWeeks: workspace.scheduleHorizonWeeks,
+        priceMinor: group.pricePerLesson ?? 0,
+        currency: group.currency ?? workspace.defaultCurrency,
+      },
+      { force },
     );
-    if (slots.length === 0) {
-      // Not generated yet (no active student): still refuse a double booking.
-      await this.materializer.assertSeriesSlotsFree(tx, created, now);
-    }
-    await this.audit.record(tx, {
-      workspaceId: auth.workspaceId,
-      actorId: auth.userId,
-      action: 'CREATE',
-      entity: 'LESSON_SERIES',
-      entityId: created.id,
-      changes: this.audit.buildChanges({}, data),
-    });
   }
 
   /**
@@ -938,6 +1005,10 @@ export class GroupsService {
         },
         data: { teacherId },
       }),
+      tx.schedule.updateMany({
+        where: { workspaceId, groupId, state: 'ACTIVE' },
+        data: { teacherId },
+      }),
       tx.lesson.updateMany({
         where: { id: { in: moving.map((lesson) => lesson.id) } },
         data: { teacherId },
@@ -953,6 +1024,7 @@ export class GroupsService {
   async create(
     auth: AuthenticatedUser,
     dto: CreateGroupDto,
+    force = false,
   ): Promise<GroupResponse> {
     const { students, schedule, teacherId: _teacherId, ...fields } = dto;
     void _teacherId;
@@ -980,7 +1052,7 @@ export class GroupsService {
         await this.syncGroupSchedule(tx, auth.workspaceId, created.id, now);
       }
       if (schedule) {
-        await this.createSchedule(tx, auth, created, schedule, now);
+        await this.createSchedule(tx, auth, created, schedule, now, force);
       }
       return created;
     });
@@ -991,6 +1063,7 @@ export class GroupsService {
     auth: AuthenticatedUser,
     groupId: string,
     dto: UpdateGroupDto,
+    force = false,
   ): Promise<GroupResponse> {
     const { students, schedule, ...scalarDto } = dto;
     const now = new Date();
@@ -1059,7 +1132,7 @@ export class GroupsService {
         // As on create: after the roster settled, so a schedule set on an
         // empty group stays live and dormant instead of being suspended by
         // the same request.
-        await this.createSchedule(tx, auth, updated, schedule, now);
+        await this.createSchedule(tx, auth, updated, schedule, now, force);
       }
       return updated;
     });

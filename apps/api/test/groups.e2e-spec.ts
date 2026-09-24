@@ -91,6 +91,7 @@ describe('Work Packet 6.3: groups — teacher, schedule, filters, attendance (e2
     await prisma.lessonAttendance.deleteMany({ where: { workspaceId } });
     await prisma.lesson.deleteMany({ where: { workspaceId } });
     await prisma.lessonSeries.deleteMany({ where: { workspaceId } });
+    await prisma.schedule.deleteMany({ where: { workspaceId } });
     await prisma.enrollment.deleteMany({ where: { workspaceId } });
     await prisma.group.deleteMany({ where: { workspaceId } });
     await prisma.teacher.deleteMany({ where: { workspaceId } });

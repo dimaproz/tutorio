@@ -9,6 +9,12 @@ import { PrismaService } from '../src/prisma/prisma.service';
 const runId = randomUUID().slice(0, 8);
 const emailFor = (label: string) => `e2e-${runId}-${label}@example.com`;
 const DAY_MS = 24 * 60 * 60 * 1000;
+/** `days` from today at a fixed 20:00 UTC, clear of the suite's schedules. */
+const inDaysAt20 = (days: number) => {
+  const date = new Date(Date.now() + days * DAY_MS);
+  date.setUTCHours(20, 0, 0, 0);
+  return date.toISOString();
+};
 
 describe('Stage 4: packages, credit ledger, payments (e2e)', () => {
   let app: INestApplication<App>;
@@ -90,6 +96,9 @@ describe('Stage 4: packages, credit ledger, payments (e2e)', () => {
       where: { workspaceId: { in: workspaceIds } },
     });
     await prisma.lessonSeries.deleteMany({
+      where: { workspaceId: { in: workspaceIds } },
+    });
+    await prisma.schedule.deleteMany({
       where: { workspaceId: { in: workspaceIds } },
     });
     await prisma.lessonPackage.deleteMany({
@@ -1048,7 +1057,7 @@ describe('Stage 4: packages, credit ledger, payments (e2e)', () => {
         teacherId,
         priceMinor: 50000,
         currency: 'UAH',
-        startsAt: [new Date(Date.now() + 12 * DAY_MS).toISOString()],
+        startsAt: [inDaysAt20(12)],
         durationMin: 60,
       })
       .expect(201);
@@ -1109,7 +1118,7 @@ describe('Stage 4: packages, credit ledger, payments (e2e)', () => {
         teacherId,
         priceMinor: 50000,
         currency: 'UAH',
-        startsAt: [new Date(Date.now() + 13 * DAY_MS).toISOString()],
+        startsAt: [inDaysAt20(13)],
         durationMin: 60,
       })
       .expect(201);

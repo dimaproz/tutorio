@@ -4,7 +4,7 @@ import { cpSync, mkdtempSync, mkdirSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import { AuditService } from '../src/audit/audit.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { StudentsService } from '../src/students/students.service';
@@ -175,6 +175,8 @@ async function main() {
       select: { id: true },
     });
     const series = await preMigration.lessonSeries.create({
+      // Written before the schedules migration added scheduleId; today's
+      // client type requires it, the pre-migration table has no such column.
       data: {
         workspaceId: workspace.id,
         enrollmentId: individualEnrollment.id,
@@ -187,7 +189,7 @@ async function main() {
         currency: 'EUR',
         startDate: archivedAt,
         horizonMaterializedUntil: futureAt,
-      },
+      } as unknown as Prisma.LessonSeriesUncheckedCreateInput,
       select: { id: true },
     });
     const lesson = await preMigration.lesson.create({

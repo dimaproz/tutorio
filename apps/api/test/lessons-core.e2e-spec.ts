@@ -87,6 +87,7 @@ describe('Work Packet 6.4 phase 1: lesson core and conflicts (e2e)', () => {
     });
     await prisma.lesson.deleteMany({ where: { workspaceId } });
     await prisma.lessonSeries.deleteMany({ where: { workspaceId } });
+    await prisma.schedule.deleteMany({ where: { workspaceId } });
     await prisma.enrollment.deleteMany({ where: { workspaceId } });
     await prisma.group.deleteMany({ where: { workspaceId } });
     await prisma.teacher.deleteMany({ where: { workspaceId } });

@@ -132,6 +132,8 @@ model Workspace {
   cancellationDeadlineHours Int           @default(24)
   // Default IANA timezone for new lesson series; Stage 8 adds the settings UI.
   timezone                  String        @default("Europe/Kyiv")
+  // How many weeks ahead new schedules generate lessons (product/scheduling.md L-120).
+  scheduleHorizonWeeks      Int           @default(4)
   createdAt                 DateTime      @default(now())
   updatedAt                 DateTime      @updatedAt
   deletedAt                 DateTime?
@@ -146,6 +148,7 @@ model Workspace {
   auditLogs    AuditLog[]
   lessons      Lesson[]
   lessonSeries LessonSeries[]
+  schedules    Schedule[]
 
   packages          LessonPackage[]
   creditEntries     LessonCreditEntry[]
@@ -314,6 +317,7 @@ model Group {
   enrollments  Enrollment[]
   lessons      Lesson[]
   lessonSeries LessonSeries[]
+  schedules    Schedule[]
   packages     LessonPackage[]
 
   @@index([workspaceId, deletedAt])
@@ -358,6 +362,7 @@ model Enrollment {
   teacher      Teacher        @relation("EnrollmentTeacher", fields: [teacherId], references: [id])
   lessons      Lesson[]
   lessonSeries LessonSeries[]
+  schedules    Schedule[]
 
   creditEntries     LessonCreditEntry[]
   participantShares PackageParticipantShare[]
@@ -428,6 +433,7 @@ model Teacher {
   groups          Group[]          @relation("GroupTeacher")
   lessons         Lesson[]         @relation("LessonTeacher")
   lessonSeries    LessonSeries[]   @relation("LessonSeriesTeacher")
+  schedules       Schedule[]       @relation("ScheduleTeacher")
 
   @@index([workspaceId, deletedAt])
   @@index([workspaceId, fullName])
@@ -463,18 +469,65 @@ model LessonSeries {
   deletedAt                DateTime?
   // Set only when an enrollment or an empty group roster suspends this rule.
   scheduleSuspensionToken  String?
+  // The schedule this row belongs to: one row per weekday and per version
+  // (a change ends the current rows and starts new ones from its date).
+  scheduleId               String
 
   workspace  Workspace   @relation(fields: [workspaceId], references: [id])
   enrollment Enrollment? @relation(fields: [enrollmentId], references: [id])
   group      Group?      @relation(fields: [groupId], references: [id])
   teacher    Teacher     @relation("LessonSeriesTeacher", fields: [teacherId], references: [id])
+  schedule   Schedule    @relation(fields: [scheduleId], references: [id])
   lessons    Lesson[]
 
+  @@index([scheduleId])
   @@index([workspaceId, deletedAt])
   @@index([enrollmentId])
   @@index([groupId])
   @@index([teacherId])
   @@map("lesson_series")
+}
+
+enum ScheduleState {
+  ACTIVE
+  // Stopped: its end date has passed. A direction may then get a new one.
+  ENDED
+
+  @@map("schedule_state")
+}
+
+// A recurring schedule of one direction (product/scheduling.md L-20…L-27): a
+// student with one teacher, or a group. Its rule lives in LessonSeries rows —
+// one per weekday, each with its own start time — and a change from a date
+// ends the current rows and starts new ones. One ACTIVE schedule per
+// enrollment and per group (partial unique indexes in the migration).
+model Schedule {
+  id           String        @id @default(uuid())
+  workspaceId  String
+  enrollmentId String?
+  groupId      String?
+  teacherId    String
+  timezone     String
+  durationMin  Int
+  // How many weeks ahead lessons are kept generated.
+  horizonWeeks Int
+  // Exclusive end instant ("until 31 May"); null runs until stopped.
+  endsAt       DateTime?
+  state        ScheduleState @default(ACTIVE)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  workspace  Workspace      @relation(fields: [workspaceId], references: [id])
+  enrollment Enrollment?    @relation(fields: [enrollmentId], references: [id], onDelete: Restrict)
+  group      Group?         @relation(fields: [groupId], references: [id], onDelete: Restrict)
+  teacher    Teacher        @relation("ScheduleTeacher", fields: [teacherId], references: [id])
+  series     LessonSeries[]
+
+  @@index([workspaceId, state])
+  @@index([enrollmentId])
+  @@index([groupId])
+  @@index([teacherId])
+  @@map("schedules")
 }
 
 // A concrete lesson at a UTC instant. Generated from a LessonSeries or created

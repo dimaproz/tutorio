@@ -1,6 +1,15 @@
 import {
   createLessonSchema,
   createMakeupSchema,
+  createScheduleSchema,
+  listSchedulesQuerySchema,
+  scheduleChangePreviewSchema,
+  scheduleChangeResultSchema,
+  scheduleChangeSchema,
+  scheduleListResponseSchema,
+  scheduleResponseSchema,
+  stopScheduleSchema,
+  updateScheduleSchema,
   createLessonSeriesSchema,
   forceQuerySchema,
   lessonListResponseSchema,
@@ -40,4 +49,21 @@ export class LessonListDto extends createZodDto(lessonListResponseSchema) {}
 export class LessonSeriesDto extends createZodDto(lessonSeriesResponseSchema) {}
 export class LessonSeriesListDto extends createZodDto(
   lessonSeriesListResponseSchema,
+) {}
+
+// Schedules (product/scheduling.md L-20…L-27).
+export class CreateScheduleDto extends createZodDto(createScheduleSchema) {}
+export class ScheduleChangeDto extends createZodDto(scheduleChangeSchema) {}
+export class StopScheduleDto extends createZodDto(stopScheduleSchema) {}
+export class UpdateScheduleDto extends createZodDto(updateScheduleSchema) {}
+export class ListSchedulesQueryDto extends createZodDto(
+  listSchedulesQuerySchema,
+) {}
+export class ScheduleDto extends createZodDto(scheduleResponseSchema) {}
+export class ScheduleListDto extends createZodDto(scheduleListResponseSchema) {}
+export class ScheduleChangePreviewDto extends createZodDto(
+  scheduleChangePreviewSchema,
+) {}
+export class ScheduleChangeResultDto extends createZodDto(
+  scheduleChangeResultSchema,
 ) {}

@@ -13,8 +13,9 @@ import {
   lockTeacherSchedules,
 } from './lifecycle-suspension';
 
-// How far ahead recurring lessons are kept materialized.
-export const HORIZON_WEEKS = 12;
+// The horizon of a schedule that names none (product/scheduling.md L-22:
+// each schedule keeps its own, defaulting to the studio setting).
+export const HORIZON_WEEKS = 4;
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 type SeriesForMaterialize = Pick<
@@ -34,6 +35,7 @@ type SeriesForMaterialize = Pick<
   | 'startDate'
   | 'endsAt'
   | 'horizonMaterializedUntil'
+  | 'scheduleId'
 >;
 
 @Injectable()
@@ -43,8 +45,21 @@ export class MaterializerService {
   constructor(private readonly prisma: PrismaService) {}
 
   /** The rolling horizon end from a reference instant (default: now). */
-  horizonUntil(now: Date = new Date()): Date {
-    return new Date(now.getTime() + HORIZON_WEEKS * WEEK_MS);
+  horizonUntil(now: Date = new Date(), weeks: number = HORIZON_WEEKS): Date {
+    return new Date(now.getTime() + weeks * WEEK_MS);
+  }
+
+  /** How far ahead the schedule a row belongs to keeps its lessons. */
+  async horizonFor(
+    tx: Prisma.TransactionClient,
+    series: Pick<SeriesForMaterialize, 'scheduleId'>,
+    now: Date = new Date(),
+  ): Promise<Date> {
+    const schedule = await tx.schedule.findUnique({
+      where: { id: series.scheduleId },
+      select: { horizonWeeks: true },
+    });
+    return this.horizonUntil(now, schedule?.horizonWeeks ?? HORIZON_WEEKS);
   }
 
   /**
@@ -131,67 +146,6 @@ export class MaterializerService {
     }
 
     return toCreate;
-  }
-
-  /**
-   * Checks that the occurrences a series would generate over the horizon are
-   * free, without writing them. A series created for a target that cannot
-   * materialize yet — a group with no students — is checked here, so a
-   * double-booking surfaces when the schedule is set rather than later, when
-   * the first student joins.
-   */
-  async assertSeriesSlotsFree(
-    tx: Prisma.TransactionClient,
-    series: SeriesForMaterialize,
-    from: Date,
-    horizonUntil: Date = this.horizonUntil(),
-  ): Promise<void> {
-    await lockTeacherSchedules(tx, series.workspaceId, [series.teacherId]);
-    const until =
-      series.endsAt && series.endsAt < horizonUntil
-        ? series.endsAt
-        : horizonUntil;
-    if (until <= from) return;
-    const { toCreate } = planMaterialization({
-      rule: {
-        weekdays: series.weekdays,
-        localTime: series.localTime,
-        timezone: series.timezone,
-        startDate: series.startDate,
-      },
-      from,
-      horizonUntil: until,
-      existingSlots: [],
-    });
-    if (toCreate.length > 0) {
-      await this.assertCandidatesAreFree(tx, series, toCreate);
-    }
-  }
-
-  /**
-   * Regenerates future lessons after a series schedule change. Only SCHEDULED,
-   * non-detached lessons at or after `pivot` are discarded and rebuilt from the
-   * (already updated) series — completed, cancelled, and detached lessons keep
-   * their slots and history, and so does a started lesson whose attendance
-   * was already marked.
-   */
-  async regenerateFuture(
-    tx: Prisma.TransactionClient,
-    series: SeriesForMaterialize,
-    pivot: Date,
-    force = false,
-  ): Promise<void> {
-    await tx.lesson.deleteMany({
-      where: {
-        seriesId: series.id,
-        status: 'SCHEDULED',
-        isDetached: false,
-        deletedAt: null,
-        startsAtUtc: { gte: pivot },
-        attendance: { none: {} },
-      },
-    });
-    await this.materializeSeries(tx, series, this.horizonUntil(), pivot, force);
   }
 
   private async isEligible(
@@ -302,42 +256,62 @@ export class MaterializerService {
    */
   @Cron(CronExpression.EVERY_DAY_AT_3AM)
   async materializeAll(): Promise<void> {
-    const horizonUntil = this.horizonUntil();
     const from = new Date();
+    // A schedule whose end date has passed is over: its direction may get a
+    // new one (L-20).
+    await this.prisma.schedule.updateMany({
+      where: { state: 'ACTIVE', endsAt: { lte: from } },
+      data: { state: 'ENDED' },
+    });
     const seriesList = await this.prisma.lessonSeries.findMany({
       where: {
         deletedAt: null,
-        OR: [
+        schedule: { state: 'ACTIVE' },
+        OR: [{ endsAt: null }, { endsAt: { gt: from } }],
+        AND: [
           {
-            group: {
-              is: {
-                deletedAt: null,
-                enrollments: {
-                  some: {
+            OR: [
+              {
+                group: {
+                  is: {
                     deletedAt: null,
-                    status: 'ACTIVE',
-                    student: { deletedAt: null, status: { not: 'ARCHIVED' } },
+                    enrollments: {
+                      some: {
+                        deletedAt: null,
+                        status: 'ACTIVE',
+                        student: {
+                          deletedAt: null,
+                          status: { not: 'ARCHIVED' },
+                        },
+                      },
+                    },
                   },
                 },
+                enrollmentId: null,
               },
-            },
-            enrollmentId: null,
-          },
-          {
-            enrollment: {
-              status: 'ACTIVE',
-              student: { deletedAt: null, status: { not: 'ARCHIVED' } },
-            },
+              {
+                enrollment: {
+                  status: 'ACTIVE',
+                  student: { deletedAt: null, status: { not: 'ARCHIVED' } },
+                },
+              },
+            ],
           },
         ],
       },
+      include: { schedule: { select: { horizonWeeks: true } } },
     });
 
     let created = 0;
     for (const series of seriesList) {
       try {
         const slots = await this.prisma.$transaction((tx) =>
-          this.materializeSeries(tx, series, horizonUntil, from),
+          this.materializeSeries(
+            tx,
+            series,
+            this.horizonUntil(from, series.schedule.horizonWeeks),
+            from,
+          ),
         );
         created += slots.length;
       } catch (error) {

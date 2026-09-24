@@ -78,6 +78,7 @@ describe('Stage 3: scheduling — series, lessons, reschedule, cancel (e2e)', ()
   afterAll(async () => {
     await prisma.lesson.deleteMany({ where: { workspaceId } });
     await prisma.lessonSeries.deleteMany({ where: { workspaceId } });
+    await prisma.schedule.deleteMany({ where: { workspaceId } });
     await prisma.enrollment.deleteMany({ where: { workspaceId } });
     await prisma.teacher.deleteMany({ where: { workspaceId } });
     await prisma.student.deleteMany({ where: { workspaceId } });
@@ -536,8 +537,26 @@ describe('Stage 3: scheduling — series, lessons, reschedule, cancel (e2e)', ()
       })
       .expect(201);
 
+    // A student without a schedule yet: the pattern creates a new one (the
+    // first enrollment's schedule would take the day into its own timezone).
+    const other = await server()
+      .post('/api/students')
+      .set('Authorization', auth(owner))
+      .send({ fullName: 'Candidate check student', timezone: 'UTC' })
+      .expect(201);
+    const otherEnrollment = await server()
+      .post('/api/enrollments')
+      .set('Authorization', auth(owner))
+      .send({
+        studentId: other.body.id,
+        teacherId: ownerTeacherId,
+        priceMinor: 50000,
+        currency: 'UAH',
+      })
+      .expect(201);
+
     const body = {
-      enrollmentId,
+      enrollmentId: otherEnrollment.body.id,
       teacherId: ownerTeacherId,
       weekdays: [start.getUTCDay()],
       localTime: '22:00',
@@ -825,8 +844,19 @@ describe('Stage 3: scheduling — series, lessons, reschedule, cancel (e2e)', ()
       .expect(201);
     const start = new Date(Date.now() + 65 * DAY_MS);
     start.setUTCHours(20, 0, 0, 0);
+    const seriesSchedule = await prisma.schedule.create({
+      data: {
+        workspaceId: workspaceId,
+        enrollmentId: enrollment.body.id,
+        teacherId: ownerTeacherId,
+        timezone: 'UTC',
+        durationMin: 60,
+        horizonWeeks: 12,
+      },
+    });
     const series = await prisma.lessonSeries.create({
       data: {
+        scheduleId: seriesSchedule.id,
         workspaceId,
         enrollmentId: enrollment.body.id,
         teacherId: ownerTeacherId,

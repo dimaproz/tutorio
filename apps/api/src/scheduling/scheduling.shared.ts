@@ -109,6 +109,7 @@ export function toSeriesResponse(row: SeriesRow): LessonSeriesResponse {
   return {
     id: row.id,
     workspaceId: row.workspaceId,
+    scheduleId: row.scheduleId,
     enrollmentId: row.enrollmentId,
     groupId: row.groupId,
     packageId: row.packageId,

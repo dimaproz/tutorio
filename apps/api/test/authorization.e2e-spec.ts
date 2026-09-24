@@ -119,6 +119,7 @@ describe('Pilot authorization: legacy TEACHER denial (e2e)', () => {
     await prisma.packageParticipantShare.deleteMany({ where: { workspaceId } });
     await prisma.lesson.deleteMany({ where: { workspaceId } });
     await prisma.lessonSeries.deleteMany({ where: { workspaceId } });
+    await prisma.schedule.deleteMany({ where: { workspaceId } });
     await prisma.lessonPackage.deleteMany({ where: { workspaceId } });
     await prisma.enrollment.deleteMany({ where: { workspaceId } });
     await prisma.teacher.deleteMany({ where: { workspaceId } });

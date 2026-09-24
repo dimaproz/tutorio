@@ -1,13 +1,16 @@
 import { Module } from '@nestjs/common';
+import { AuditModule } from '../audit/audit.module';
 import { MaterializerService } from './materializer.service';
+import { SchedulesService } from './schedules.service';
 
 /**
- * The series materializer stands alone so both scheduling and packages can use
- * it without importing each other: a package provisions a series and no
- * cancellation creates a fictional replacement occurrence.
+ * The materializer and the schedules it serves stand alone so scheduling,
+ * groups and packages can all create or change a schedule without importing
+ * each other.
  */
 @Module({
-  providers: [MaterializerService],
-  exports: [MaterializerService],
+  imports: [AuditModule],
+  providers: [MaterializerService, SchedulesService],
+  exports: [MaterializerService, SchedulesService],
 })
 export class MaterializerModule {}

@@ -42,6 +42,7 @@ import {
 } from './dto/groups.dto';
 import { GroupAttendanceService } from './group-attendance.service';
 import { GroupsService } from './groups.service';
+import { ForceQueryDto } from '../scheduling/dto/scheduling.dto';
 
 @ApiTags('groups')
 @ApiBearerAuth()
@@ -118,8 +119,9 @@ export class GroupsController {
   create(
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: CreateGroupDto,
+    @Query() query: ForceQueryDto,
   ): Promise<GroupDto> {
-    return this.groups.create(user, dto);
+    return this.groups.create(user, dto, query.force);
   }
 
   @Get(':groupId')
@@ -183,8 +185,9 @@ export class GroupsController {
     @CurrentUser() user: AuthenticatedUser,
     @Param('groupId', ParseUUIDPipe) groupId: string,
     @Body() dto: UpdateGroupDto,
+    @Query() query: ForceQueryDto,
   ): Promise<GroupDto> {
-    return this.groups.update(user, groupId, dto);
+    return this.groups.update(user, groupId, dto, query.force);
   }
 
   @Delete(':groupId')

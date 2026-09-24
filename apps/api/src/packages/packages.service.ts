@@ -35,6 +35,7 @@ import {
 } from '../common/pagination';
 import { PrismaService } from '../prisma/prisma.service';
 import { MaterializerService } from '../scheduling/materializer.service';
+import { SchedulesService } from '../scheduling/schedules.service';
 import {
   lockGroupSchedule,
   lockTeacherSchedules,
@@ -69,6 +70,7 @@ export class PackagesService {
     private readonly audit: AuditService,
     private readonly ledger: LedgerService,
     private readonly materializer: MaterializerService,
+    private readonly schedules: SchedulesService,
   ) {}
 
   async list(
@@ -358,34 +360,40 @@ export class PackagesService {
           });
         }
 
-        // The optional recurring schedule is what turns the package into lessons.
+        // The optional recurring schedule is what turns the package into
+        // lessons: the direction's schedule, ending with the package, and
+        // generated far enough ahead to cover it. The conflicts were checked
+        // above in the package's own terms.
         if (dto.schedule && scheduleStart && seriesEndsAt) {
-          for (const slot of dto.schedule.slots) {
-            const series = await tx.lessonSeries.create({
-              data: {
-                workspaceId: auth.workspaceId,
-                enrollmentId: groupId ? null : (enrollments[0]?.id ?? null),
-                groupId,
-                packageId: created.id,
-                teacherId: enrollments[0].teacherId,
-                weekdays: [slot.weekday],
-                localTime: slot.localTime,
-                timezone: dto.schedule.timezone,
-                durationMin: dto.schedule.durationMin,
-                priceMinor: plan.pricePerLessonMinor,
-                currency: dto.currency,
-                startDate: scheduleStart,
-                endsAt: seriesEndsAt,
-                horizonMaterializedUntil: scheduleStart,
-              },
-            });
-            await this.materializer.materializeSeries(
-              tx,
-              series,
-              this.materializer.horizonUntil(),
-              scheduleStart,
-            );
-          }
+          const weeksToEnd = Math.ceil(
+            (seriesEndsAt.getTime() - Date.now()) / (7 * DAY_MS),
+          );
+          const workspace = await tx.workspace.findUniqueOrThrow({
+            where: { id: auth.workspaceId },
+            select: { scheduleHorizonWeeks: true },
+          });
+          await this.schedules.createInTx(
+            tx,
+            auth,
+            {
+              enrollmentId: groupId ? null : (enrollments[0]?.id ?? null),
+              groupId,
+              packageId: created.id,
+              teacherId: enrollments[0].teacherId,
+              slots: dto.schedule.slots,
+              durationMin: dto.schedule.durationMin,
+              timezone: dto.schedule.timezone,
+              startDate: scheduleStart,
+              endsAt: seriesEndsAt,
+              horizonWeeks: Math.min(
+                26,
+                Math.max(workspace.scheduleHorizonWeeks, weeksToEnd),
+              ),
+              priceMinor: plan.pricePerLessonMinor,
+              currency: dto.currency,
+            },
+            { force: true },
+          );
         }
 
         await this.audit.record(tx, {
