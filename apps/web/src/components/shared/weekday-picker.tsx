@@ -18,6 +18,7 @@ export function WeekdayPicker({
   disabled = false,
   invalid = false,
   appearance = 'compact',
+  fill = false,
   'aria-labelledby': labelledBy,
 }: {
   id?: string;
@@ -36,6 +37,8 @@ export function WeekdayPicker({
    * 44px Studio chips: indigo when on, a soft indigo tile when off.
    */
   appearance?: 'compact' | 'cards' | 'pills';
+  /** `pills`: seven equal pills across the full width, in one row (the lesson form). */
+  fill?: boolean;
 }) {
   const labels = useWeekdayLabels();
   const longLabels = useWeekdayLabels('long');
@@ -57,7 +60,9 @@ export function WeekdayPicker({
         appearance === 'cards'
           ? 'grid w-full grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7'
           : appearance === 'pills'
-            ? 'flex-wrap gap-2'
+            ? fill
+              ? 'grid w-full grid-cols-7 gap-1.5 md:gap-2'
+              : 'flex-wrap gap-2'
             : 'flex-wrap',
       )}
     >
@@ -69,7 +74,10 @@ export function WeekdayPicker({
             appearance === 'cards'
               ? 'h-20 w-full min-w-0 flex-col gap-1 border-2 data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground'
               : appearance === 'pills'
-                ? 'h-11 min-w-15 rounded-control bg-tile-indigo px-3 text-[13px] font-semibold tracking-[0.04em] text-tile-indigo-foreground uppercase hover:bg-tile-indigo hover:text-tile-indigo-foreground data-[state=on]:bg-brand data-[state=on]:text-brand-foreground md:min-w-16'
+                ? cn(
+                    'h-11 rounded-control bg-tile-indigo px-3 text-[13px] font-semibold tracking-[0.04em] text-tile-indigo-foreground uppercase hover:bg-tile-indigo hover:text-tile-indigo-foreground data-[state=on]:bg-brand data-[state=on]:text-brand-foreground',
+                    fill ? 'w-full min-w-0 px-0' : 'min-w-15 md:min-w-16',
+                  )
                 : 'w-12',
           )}
         >

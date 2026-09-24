@@ -971,7 +971,8 @@
       "open": "Відкрити урок",
       "openOn": "Відкрити урок {date}",
       "and": "і",
-      "openLesson": "Відкрити заняття {date}"
+      "openLesson": "Відкрити заняття {date}",
+      "addLesson": "Додати заняття"
     },
     "attendance": {
       "title": "Відвідуваність",
@@ -1671,7 +1672,7 @@
       "teacherOfStudent": "викладач {name}",
       "teacherBusy": "Зайнятий о {time}",
       "teacherBusyNote": "О {time} веде «{name}» — перетин можна зберегти",
-      "teacherHintDirection": "Викладач {name} за напрямом",
+      "teacherHintDirection": "Веде напрям {name}",
       "teacherHintNew": "Перше заняття з цим викладачем відкриє напрям — оплата за заняття",
       "teacherHintGroup": "Викладач групи; інший — лише для цих занять",
       "teacherHintWeekly": "Для розкладу — постійний викладач",
@@ -1689,7 +1690,7 @@
       "pricePackageShort": "{count} з пакета",
       "pricePackageLeft": "Після цього заняття лишиться {left} з {total}",
       "pricePackageLeftMany": "{count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}} з пакета · лишиться {left} з {total}",
-      "pricePackagePartial": "{covered, plural, one {1-ше} other {Перші #}} — з пакета, решта — разово по {price}",
+      "pricePackagePartial": "{covered, plural, one {1-ше} other {Перші #}} — з пакета, решта — у борг пакета",
       "pricePackageDebt": "Кредитів у пакеті немає — заняття піде в борг пакета",
       "pricePackageWeekly": "Кожне заняття — з пакета «{name}»",
       "pricePackageWeeklyUnnamed": "Кожне заняття — з пакета",
@@ -1754,7 +1755,7 @@
       "chipMembers": "{count, plural, one {# учасник} few {# учасники} many {# учасників} other {# учасника}}",
       "chipPausedMembers": "{count} на паузі",
       "chipPerMember": "{price} з учасника",
-      "noteRunningOut": "Пакет покриє лише {covered, plural, one {перше заняття} other {перші # заняття}} — решта спишуться разово по {price}",
+      "noteRunningOut": "Пакет покриє лише {covered, plural, one {перше заняття} other {перші # заняття}} — решта підуть у борг пакета, їх покриє наступний пакет",
       "noteNoCredits": "У пакеті не лишилось занять — нові заняття підуть у борг пакета",
       "noteNoPackage": "Без пакета: кожне заняття спишеться разово після проведення",
       "notePaused": "{name} на паузі — заняття створимо, але вони не спишуться, доки пауза триває",
@@ -1801,7 +1802,7 @@
       "existingSame": "Ці дні вже в розкладі — оберіть інший день",
       "now": "Зараз",
       "becomes": "Стане",
-      "impactAdd": "Додамо {count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}} по {days}",
+      "impactAdd": "Додамо {count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}} · {days}",
       "impactAddText": "Далі — щодня разом з розкладом",
       "impactMoved": "Перебудуємо {count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}}",
       "impactNoConflicts": "Конфліктів немає",
@@ -1812,7 +1813,7 @@
       "footerPickGroup": "Оберіть групу й дату",
       "footerLessons": "{count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}}",
       "footerFromPackage": "з пакета",
-      "footerMixed": "{covered} з пакета + {rest} разово",
+      "footerMixed": "{covered} з пакета + {rest} у борг",
       "footerPerMember": "{price} з учасника",
       "footerSchedule": "Розклад · перші",
       "footerAdd": "До розкладу",
@@ -1825,7 +1826,11 @@
       "created": "{count, plural, one {Заняття створено} few {Створено # заняття} many {Створено # занять} other {Створено # заняття}}",
       "scheduleCreated": "Розклад створено",
       "scheduleUpdated": "Розклад оновлено",
-      "candidateMany": "{title} · +{count}"
+      "candidateMany": "{title} · +{count}",
+      "footerDebt": "у борг пакета",
+      "groupCancelledBy": "Група",
+      "badgeMembers": "{count}",
+      "pausedChipAria": "{name} на паузі"
     },
     "cancelDialog": {
       "title": "Скасувати заняття?",

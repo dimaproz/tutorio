@@ -971,7 +971,8 @@
       "open": "Open lesson",
       "openOn": "Open the lesson on {date}",
       "and": "and",
-      "openLesson": "Open the lesson of {date}"
+      "openLesson": "Open the lesson of {date}",
+      "addLesson": "Add a lesson"
     },
     "attendance": {
       "title": "Attendance",
@@ -1671,7 +1672,7 @@
       "teacherOfStudent": "{name}'s teacher",
       "teacherBusy": "Busy at {time}",
       "teacherBusyNote": "Teaches «{name}» at {time} — you can still save the overlap",
-      "teacherHintDirection": "{name}'s teacher for this direction",
+      "teacherHintDirection": "Teaches {name}'s direction",
       "teacherHintNew": "The first lesson with this teacher opens a direction, paid per lesson",
       "teacherHintGroup": "The group's teacher; another one only for these lessons",
       "teacherHintWeekly": "A schedule keeps one teacher",
@@ -1689,7 +1690,7 @@
       "pricePackageShort": "{count} from the package",
       "pricePackageLeft": "{left} of {total} left after this lesson",
       "pricePackageLeftMany": "{count, plural, one {# lesson} other {# lessons}} from the package · {left} of {total} left",
-      "pricePackagePartial": "{covered, plural, one {The 1st} other {The first #}} from the package, the rest one-off at {price}",
+      "pricePackagePartial": "{covered, plural, one {The 1st} other {The first #}} from the package, the rest on the package's debt",
       "pricePackageDebt": "The package has no credits left — the lesson goes on the package's debt",
       "pricePackageWeekly": "Every lesson from the package «{name}»",
       "pricePackageWeeklyUnnamed": "Every lesson from the package",
@@ -1754,7 +1755,7 @@
       "chipMembers": "{count, plural, one {# member} other {# members}}",
       "chipPausedMembers": "{count} on pause",
       "chipPerMember": "{price} per member",
-      "noteRunningOut": "The package covers only {covered, plural, one {the first lesson} other {the first # lessons}} — the rest are charged one-off at {price}",
+      "noteRunningOut": "The package covers only {covered, plural, one {the first lesson} other {the first # lessons}} — the rest go on the package's debt, covered by the next package",
       "noteNoCredits": "The package has no lessons left — new lessons go on the package's debt",
       "noteNoPackage": "No package: each lesson is charged one-off after it's held",
       "notePaused": "{name} is on pause — we'll create the lessons, but they won't be charged while the pause lasts",
@@ -1801,7 +1802,7 @@
       "existingSame": "These days are already in the schedule — pick another day",
       "now": "Now",
       "becomes": "Becomes",
-      "impactAdd": "We'll add {count, plural, one {# lesson} other {# lessons}} on {days}",
+      "impactAdd": "We'll add {count, plural, one {# lesson} other {# lessons}} · {days}",
       "impactAddText": "Then every day together with the schedule",
       "impactMoved": "{count, plural, one {# lesson is} other {# lessons are}} rebuilt",
       "impactNoConflicts": "No conflicts",
@@ -1812,7 +1813,7 @@
       "footerPickGroup": "Pick a group and a date",
       "footerLessons": "{count, plural, one {# lesson} other {# lessons}}",
       "footerFromPackage": "from the package",
-      "footerMixed": "{covered} from the package + {rest} one-off",
+      "footerMixed": "{covered} from the package + {rest} on debt",
       "footerPerMember": "{price} per member",
       "footerSchedule": "Schedule · the first",
       "footerAdd": "To the schedule",
@@ -1825,7 +1826,11 @@
       "created": "{count, plural, one {Lesson created} other {# lessons created}}",
       "scheduleCreated": "Schedule created",
       "scheduleUpdated": "Schedule updated",
-      "candidateMany": "{title} · +{count}"
+      "candidateMany": "{title} · +{count}",
+      "footerDebt": "on the package's debt",
+      "groupCancelledBy": "Group",
+      "badgeMembers": "{count}",
+      "pausedChipAria": "{name} is on pause"
     },
     "cancelDialog": {
       "title": "Cancel the lesson?",

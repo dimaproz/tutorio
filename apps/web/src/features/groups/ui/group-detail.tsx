@@ -22,7 +22,12 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useGroupAttendanceQuery, useGroupQuery } from '@/lib/api/groups';
 import { usePackagesQuery } from '@/lib/api/packages';
 import { useLessonsQuery } from '@/lib/api/scheduling';
-import { LessonPanel, useLessonPanel, type LessonPanelLinks } from '@/features/lessons';
+import {
+  LessonCreateDialog,
+  LessonPanel,
+  useLessonPanel,
+  type LessonPanelLinks,
+} from '@/features/lessons';
 import { useGroupArchive } from './group-archive';
 import { GroupAttendanceCard } from './group-attendance-card';
 import { GroupHero } from './group-hero';
@@ -139,6 +144,7 @@ export function GroupPageContent({
   const justCreated = searchParams.get('created') === '1';
 
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
   const lessonPanel = useLessonPanel();
   const members = useMemo(() => memberPackages(packages.items, now), [packages.items, now]);
   const archiving = useGroupArchive({ onArchived: () => router.push('/app/groups') });
@@ -214,6 +220,7 @@ export function GroupPageContent({
               now={now}
               archived={archived}
               onOpenLesson={lessonPanel.open}
+              onAddLesson={archived ? undefined : () => setCreating(true)}
             />
             {/* A group with no students and no lessons yet has nothing to count;
                 the design leaves the block out until it does. */}
@@ -242,6 +249,11 @@ export function GroupPageContent({
         }
       />
       {archiving.dialog}
+      <LessonCreateDialog
+        open={creating}
+        onOpenChange={setCreating}
+        initial={{ groupId: group.id }}
+      />
       <LessonPanel
         lessonId={lessonPanel.lessonId}
         onClose={lessonPanel.close}

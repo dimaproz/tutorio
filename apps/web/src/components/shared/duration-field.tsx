@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { ChevronDownIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Command, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
@@ -62,6 +62,7 @@ export function DurationField({
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(value);
   const anchorRef = useRef<HTMLDivElement>(null);
+  const listId = useId();
   const typed = Number(value);
   const custom =
     value.trim() !== '' &&
@@ -111,6 +112,7 @@ export function DurationField({
         aria-invalid={invalid || undefined}
         aria-describedby={describedBy}
         aria-expanded={mobile ? undefined : open}
+        aria-controls={!mobile && open ? listId : undefined}
         role={mobile ? undefined : 'combobox'}
         disabled={disabled}
         value={value}
@@ -210,19 +212,22 @@ export function DurationField({
           }}
           onMouseDown={(event) => event.preventDefault()}
         >
-          <CommandList label={labels.list}>
-            {custom ? (
-              <CommandGroup className="border-b border-border p-0 pb-1.5">
-                {row(custom)}
+          {/* cmdk sets its own list id, so the combobox points at this wrapper. */}
+          <div id={listId}>
+            <CommandList label={labels.list}>
+              {custom ? (
+                <CommandGroup className="border-b border-border p-0 pb-1.5">
+                  {row(custom)}
+                </CommandGroup>
+              ) : null}
+              <CommandGroup
+                heading={labels.popular}
+                className="p-0 pt-1 **:[[cmdk-group-heading]]:font-semibold **:[[cmdk-group-heading]]:tracking-[0.04em] **:[[cmdk-group-heading]]:uppercase"
+              >
+                {POPULAR_DURATIONS.map(row)}
               </CommandGroup>
-            ) : null}
-            <CommandGroup
-              heading={labels.popular}
-              className="p-0 pt-1 **:[[cmdk-group-heading]]:font-semibold **:[[cmdk-group-heading]]:tracking-[0.04em] **:[[cmdk-group-heading]]:uppercase"
-            >
-              {POPULAR_DURATIONS.map(row)}
-            </CommandGroup>
-          </CommandList>
+            </CommandList>
+          </div>
         </PopoverContent>
       </Popover>
     </Command>

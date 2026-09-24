@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useState, type ReactNode } from 'react';
+import { useId, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { Command as CommandPrimitive } from 'cmdk';
 import { ChevronDownIcon, LockIcon, SearchIcon, SearchXIcon, XIcon } from 'lucide-react';
@@ -231,6 +231,7 @@ export function WhoSearch({
   compact?: boolean;
 }) {
   const [active, setActive] = useState('');
+  const anchorRef = useRef<HTMLDivElement>(null);
   return (
     <Command
       shouldFilter={false}
@@ -241,7 +242,11 @@ export function WhoSearch({
     >
       <Popover open onOpenChange={(open) => (open ? undefined : onClose())} modal={false}>
         <PopoverAnchor asChild>
-          <InputGroup size="field" className="h-14 rounded-row border-ring ring-3 ring-ring/16">
+          <InputGroup
+            ref={anchorRef}
+            size="field"
+            className="h-14 rounded-row border-ring ring-3 ring-ring/16"
+          >
             <InputGroupAddon align="inline-start" className="pl-4 [&>svg]:size-4.5">
               <SearchIcon aria-hidden="true" />
             </InputGroupAddon>
@@ -285,8 +290,7 @@ export function WhoSearch({
           onCloseAutoFocus={(event) => event.preventDefault()}
           onInteractOutside={(event) => {
             // A press on the search field itself keeps the list open.
-            const target = event.target as HTMLElement | null;
-            if (target?.closest('[data-slot=input-group]')) event.preventDefault();
+            if (anchorRef.current?.contains(event.target as Node)) event.preventDefault();
           }}
         >
           {/* The wrapper scrolls and takes focus: cmdk pins its list at tabindex -1. */}

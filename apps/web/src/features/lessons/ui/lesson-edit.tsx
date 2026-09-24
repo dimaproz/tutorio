@@ -311,7 +311,7 @@ export function LessonEdit({
               shouldValidate: form.formState.isSubmitted,
             })
           }
-          busy={[busySlots(dayLessons, scope, date, minutes, timeSteps(15))]}
+          busy={[busySlots(dayLessons, scope, date, timeSteps(15))]}
           errors={[{ date: errors.date?.message, time: errors.time?.message }]}
           notes={[
             !scheduled ? (

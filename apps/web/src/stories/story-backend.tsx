@@ -16,6 +16,10 @@ import { SessionProvider } from '@/components/app/session-provider';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { SESSION_QUERY_KEY } from '@/lib/auth/client';
 import { createGroupRoutes, type GroupStoryOptions } from './group-story-backend';
+import {
+  createLessonCreateRoutes,
+  type LessonCreateStoryOptions,
+} from './lesson-create-story-backend';
 import { createLessonRoutes, type LessonStoryOptions } from './lesson-story-backend';
 
 /**
@@ -341,29 +345,41 @@ export const SAMPLE_LESSONS: LessonResponse[] = [
 ];
 
 export type StoryBackendOptions = GroupStoryOptions &
-  LessonStoryOptions & {
-  students?: SampleStudent[];
-  packages?: PackageResponse[];
-  lessons?: LessonResponse[];
-  /** Holds the student detail request open, or fails it. */
-  detail?: 'ready' | 'pending' | 'error';
-  /** Holds the student list request open, or fails it. */
-  list?: 'ready' | 'pending' | 'error';
-  /** Makes student create and update requests fail. */
-  saveFails?: boolean;
-  parents?: SampleParent[];
-  parentLinks?: ParentLink[];
-  /** Holds the parent list request open, or fails it. */
-  parentList?: 'ready' | 'pending' | 'error';
-  /** Holds the parent detail request open, or fails it. */
-  parentDetail?: 'ready' | 'pending' | 'error';
-  /** Makes parent create, update and link requests fail. */
-  parentSaveFails?: boolean;
-  /** Delays every save, so a story can act while one is in flight. */
-  saveDelayMs?: number;
-  /** The signed-in role; delete is owner-only. */
-  role?: AuthMe['role'];
-};
+  LessonStoryOptions &
+  LessonCreateStoryOptions & {
+    students?: SampleStudent[];
+    packages?: PackageResponse[];
+    lessons?: LessonResponse[];
+    /** Holds the student detail request open, or fails it. */
+    detail?: 'ready' | 'pending' | 'error';
+    /** Holds the student list request open, or fails it. */
+    list?: 'ready' | 'pending' | 'error';
+    /** Makes student create and update requests fail. */
+    saveFails?: boolean;
+    parents?: SampleParent[];
+    parentLinks?: ParentLink[];
+    /** Holds the parent list request open, or fails it. */
+    parentList?: 'ready' | 'pending' | 'error';
+    /** Holds the parent detail request open, or fails it. */
+    parentDetail?: 'ready' | 'pending' | 'error';
+    /** Makes parent create, update and link requests fail. */
+    parentSaveFails?: boolean;
+    /** Delays every save, so a story can act while one is in flight. */
+    saveDelayMs?: number;
+    /** The signed-in role; delete is owner-only. */
+    role?: AuthMe['role'];
+    /** The studio's mode; a solo studio hides every teacher control. */
+    mode?: AuthMe['workspace']['mode'];
+  };
+
+/** The signed-in session of a story: its role and the studio's mode. */
+function sessionFor(options: StoryBackendOptions): AuthMe {
+  return {
+    ...storySession,
+    role: options.role ?? storySession.role,
+    workspace: { ...storySession.workspace, mode: options.mode ?? storySession.workspace.mode },
+  };
+}
 
 const page = <T,>(items: T[], pageSize = 20) => ({
   items: items.slice(0, pageSize),
@@ -466,6 +482,7 @@ function createHandler(options: StoryBackendOptions) {
   const detailOf = (item: SampleStudent) => toDetail(item, parents, links);
   const groupRoutes = createGroupRoutes(options);
   const lessonRoutes = createLessonRoutes(options);
+  const lessonCreateRoutes = createLessonCreateRoutes(options);
   const settle = () =>
     options.saveDelayMs
       ? new Promise((resolve) => setTimeout(resolve, options.saveDelayMs))
@@ -478,7 +495,7 @@ function createHandler(options: StoryBackendOptions) {
     const query = url.searchParams;
     const never = () => new Promise<Response>(() => undefined);
 
-    if (path === '/auth/me') return json({ ...storySession, role: options.role ?? 'OWNER' });
+    if (path === '/auth/me') return json(sessionFor(options));
 
     // The API validates every list query; so does the story backend, or a
     // screen that asks for more than the API allows looks fine only here.
@@ -491,6 +508,8 @@ function createHandler(options: StoryBackendOptions) {
     }
 
     const readBody = () => JSON.parse(String(init?.body ?? '{}'));
+    const lessonCreateResponse = await lessonCreateRoutes(path, method, query);
+    if (lessonCreateResponse) return lessonCreateResponse;
     const lessonResponse = await lessonRoutes(path, method, query, readBody);
     if (lessonResponse) return lessonResponse;
     const groupResponse = await groupRoutes(path, method, query, readBody);
@@ -709,10 +728,7 @@ export function StoryBackend({
         mutations: { retry: false },
       },
     });
-    queryClient.setQueryData(SESSION_QUERY_KEY, {
-      ...storySession,
-      role: options.role ?? storySession.role,
-    });
+    queryClient.setQueryData(SESSION_QUERY_KEY, sessionFor(options));
     return queryClient;
   });
 

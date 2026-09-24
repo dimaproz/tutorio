@@ -12,7 +12,12 @@ import { useSetPageCrumb } from '@/components/shared/page-crumb';
 import { QueryErrorAlert } from '@/components/shared/page-shell';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
-import { LessonPanel, useLessonPanel, type LessonPanelLinks } from '@/features/lessons';
+import {
+  LessonCreateDialog,
+  LessonPanel,
+  useLessonPanel,
+  type LessonPanelLinks,
+} from '@/features/lessons';
 import { StudentLessonsCard, studentLessonsRange } from './student-lessons-card';
 import { studentLifecyclePolicy } from '@/features/students/model/lifecycle';
 import { deriveStudentProfileMetrics } from '@/features/students/model/profile-metrics';
@@ -88,6 +93,7 @@ export function StudentProfileContent({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const lessonPanel = useLessonPanel();
+  const [creating, setCreating] = useState(false);
   const policy = studentLifecyclePolicy(student.status);
   const archived = policy.readOnly;
   useSetPageCrumb(t('detail.pageLabel'));
@@ -220,6 +226,7 @@ export function StudentProfileContent({
       ) : null}
       <StudentSectionsCard
         historyOnly={archived}
+        onAddLesson={archived ? undefined : () => setCreating(true)}
         lessons={
           <StudentLessonsCard
             studentId={student.id}
@@ -258,6 +265,11 @@ export function StudentProfileContent({
         aside={aside}
       />
       {statusActions.dialogs}
+      <LessonCreateDialog
+        open={creating}
+        onOpenChange={setCreating}
+        initial={{ studentId: student.id }}
+      />
       <LessonPanel
         lessonId={lessonPanel.lessonId}
         intent={lessonPanel.intent}

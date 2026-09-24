@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { ChevronDownIcon, ClockIcon, KeyboardIcon, LockIcon, XIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Command, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
@@ -195,6 +195,7 @@ function TimeComboField({
   const [active, setActive] = useState(value);
   const listRef = useRef<HTMLDivElement>(null);
   const anchorRef = useRef<HTMLDivElement>(null);
+  const listId = useId();
   const text = draft ?? value;
   const typed = draft !== null ? parseTimeInput(draft) : null;
   const steps = timeSteps(15);
@@ -262,6 +263,7 @@ function TimeComboField({
               aria-labelledby={labelledBy}
               aria-label={ariaLabel}
               aria-expanded={open}
+              aria-controls={open ? listId : undefined}
               aria-autocomplete="list"
               aria-invalid={invalid || undefined}
               aria-describedby={describedBy}
@@ -341,6 +343,7 @@ function TimeComboField({
           {/* The wrapper scrolls and takes focus: cmdk pins its list at tabindex -1. */}
           <div
             ref={listRef}
+            id={listId}
             tabIndex={0}
             className="no-scrollbar relative max-h-73 overflow-y-auto outline-none [mask-image:linear-gradient(to_bottom,black_85%,transparent)]"
           >
@@ -425,7 +428,7 @@ function TimeSheetField({
         onClick={() => close(true)}
         className={cn(
           'flex h-13 w-full min-w-0 items-center gap-2.5 rounded-field border border-border bg-card px-4 text-left font-mono text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/16 data-invalid:border-destructive disabled:cursor-not-allowed disabled:bg-background disabled:text-muted-foreground data-placeholder:text-muted-foreground',
-          compact && 'justify-between px-3.5',
+          compact && 'justify-between gap-1 px-3',
         )}
       >
         {compact ? null : (

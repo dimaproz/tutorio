@@ -36,6 +36,7 @@ export function GroupLessonsCard({
   now,
   archived,
   onOpenLesson,
+  onAddLesson,
 }: {
   group: GroupDetail;
   lessons: LessonResponse[];
@@ -43,6 +44,8 @@ export function GroupLessonsCard({
   now: number;
   archived: boolean;
   onOpenLesson: (lessonId: string) => void;
+  /** Opens the lesson form for the group (S02); omitted for an archived group. */
+  onAddLesson?: () => void;
 }) {
   const t = useTranslations('groups.lessons');
   const format = useFormatter();
@@ -108,6 +111,7 @@ export function GroupLessonsCard({
 
   return (
     <LessonList
+      action={onAddLesson ? { label: t('addLesson'), onClick: onAddLesson } : undefined}
       header={{
         kind: 'title',
         title: t('title'),

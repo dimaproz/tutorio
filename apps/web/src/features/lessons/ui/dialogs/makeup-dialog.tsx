@@ -155,7 +155,7 @@ export function MakeupDialog({
               shouldValidate: form.formState.isSubmitted,
             })
           }
-          busy={[busySlots(dayLessons, scope, date, minutes, timeSteps(15))]}
+          busy={[busySlots(dayLessons, scope, date, timeSteps(15))]}
           errors={[
             {
               date: form.formState.errors.date?.message,
