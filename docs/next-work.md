@@ -1,6 +1,6 @@
 # Active Work Queue
 
-Last verified: 2026-09-23.
+Last verified: 2026-09-24 (S02).
 
 This is the short-lived execution queue for Stage 4.1. It answers “what should I
 work on next?” without requiring a developer to re-derive priorities from the
@@ -394,6 +394,21 @@ and 7 (S07) and 6.6 (S10, S11).
   interim attendance dialog is gone. Decisions and open questions (payment
   method, recording a payment and offering a package from the panel, the
   group makeup on board 02) are in the [brief](./screens/s01-lesson-panel.md).
+- **S02 — lesson create form: done 2026-09-24** (`6b9d8cd`…`6c237a3`).
+  «Додати заняття» on the student profile and the group page opens the form
+  (layout B): who in the indigo band with search, the teacher with the
+  substitute strip, one or several dates each with its own time, «Щотижня»
+  (a new schedule, or days added to the direction's schedule with what it
+  becomes), past dates with their outcome (L-31), the price from the pair's
+  rate, the package credit or the group price, and the result in the footer;
+  saves through the conflict dialog. The S01 panel moved to the same family
+  (layout A: one column under the indigo band, edit as the form in edit
+  mode, the makeup dialog on the new fields). New shared fields: time,
+  length, date rows, price, the band picker, field notes, the band; the
+  credit meter is recoloured everywhere. Contract decisions for the owner
+  (package debt instead of one-off, the locked group price, substitutes on
+  create) and the data left out are in the
+  [brief](./screens/s02-lesson-create.md).
 
 ### Work Packet 6.5 — Package Read Surfaces
 

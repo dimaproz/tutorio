@@ -1,6 +1,7 @@
 # S01 — Lesson Side Panel and Lesson Actions
 
-- Status: Done (2026-09-24, commits `effab27`…`1d5c771`)
+- Status: Done (2026-09-24, commits `effab27`…`1d5c771`); layout A with S02
+  (`fba9001`…`c9128f7`)
 - Work packet: 6.4 (screens)
 - Depends on: nothing; opened first from the lesson lists already on the
   student profile and the group page
@@ -211,6 +212,38 @@ Decided while building (for the owner's confirmation):
   defined effect on their charges.
 - **«До 18 грудня»** in the move preview: the preview does not say where the
   rebuilt range ends.
+
+## Layout A (with S02, 2026-09-24)
+
+The S02 handoff redrew the panel as the same family as the lesson form;
+only the layout changed, every decision and copy above stands.
+
+- **The window** is one 640px column (`LessonWindowLayout`), as tall as its
+  content up to the viewport less 48px, with the pinned footer (border-top,
+  actions on the right). On phones the band and the body scroll together.
+- **The indigo band** (`TintBand`) holds the kind, the date (32/38), the time
+  and length with the status and «Йде зараз», the white round edit, «⋯» and
+  close on the right (phones: back, then edit and «⋯»), and the student or
+  group card that opens the profile (`WhoCard` with a chevron; a group shows
+  four avatars, its size and who is paused).
+- **The body**: the cancellation card, the teacher as a paper block («Викладач
+  · заміна для цього заняття» when someone other than the direction's or the
+  group's teacher teaches it), the facts, the payment card or the attendance
+  and members, and the history — three entries and «Показати всю історію»,
+  with no inner scroll (this replaces decision 2's fixed payment card).
+- **Loading** is a skeleton in the band's shape; **not found** is the 520
+  window with close on the right.
+- **Edit** is the S02 form in edit mode: a `Pencil` tile with the date and
+  time, the locked card (a lock, no tiles, no «Змінити»), the teacher with
+  «Заміна лише для цього заняття — розклад не зміниться», one date row with
+  the new time field and the schedule line, length and price (`PriceField`),
+  topic and notes. The group edit state of board 03 keeps the price hidden
+  (the decision above). A held lesson's date and time are locked with «Час
+  минулого заняття не змінюється».
+- **The makeup dialog** uses the new date row, time, length and teacher
+  fields.
+- The time lists mark the slots another lesson of the teacher or the student
+  takes (`GET /lessons?from=&to=`).
 
 ## Known issue fixed
 

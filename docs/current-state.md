@@ -1,6 +1,6 @@
 # Tutorio Current State
 
-Last verified: 2026-09-24 after the frontend reset (see "Frontend reset").
+Last verified: 2026-09-24 after screen step S02 (see "Lesson create form").
 
 This is the first project document to read before planning or implementing
 work. It reports the repository as it exists; [`mvp-plan.md`](./mvp-plan.md)
@@ -19,6 +19,29 @@ lessons, packages and directions read-only — scheduling, lesson actions, sales
 and direction edits come back with the new screens (Work Packet 6.4 screens,
 6.2, 6.5, 6.6 and 7). Every backend route stays available.
 
+## Lesson create form — screen step S02 (2026-09-24)
+
+«Додати заняття» on the student profile and the group page opens the lesson
+form: a 640px window (a full-screen sheet on phones) with who the lesson is
+for in the indigo band — «Учень / Група» tiles, a search in place, the picked
+student with their package, schedule or pause, or the group with its size,
+paused members and price —, then the teacher (hidden in solo mode; another
+teacher is a substitute for these lessons), «Коли» as date rows with their own
+times or «Щотижня» (weekday pills, a time per day, from and until), length
+and price, a past date's outcome, the group's participants or what the
+schedule becomes, topic and notes, and the result in the footer. One-off
+dates book with `POST /lessons`; «Щотижня» creates a schedule or adds the days
+to the direction's schedule after its preview; every save goes through the S01
+conflict dialog. The time lists mark the slots other lessons take. The lesson
+panel moved to the same family (layout A) and its edit form and makeup dialog
+use the new fields. Brief, decisions for the owner and open questions:
+[`screens/s02-lesson-create.md`](./screens/s02-lesson-create.md).
+
+Gate on 2026-09-24: web lint, typecheck, 267 unit tests in 44 files, build,
+the Storybook browser tests (238 tests in 85 files, with accessibility checks)
+and the Storybook static build. The API, domain and validation packages are
+unchanged by this step.
+
 ## Lesson panel — screen step S01 (2026-09-24)
 
 The first screen step from the owner's mockups is done: a lesson row on the
@@ -30,7 +53,9 @@ lesson: edit in place, move (with "this / this and following" and the
 schedule preview's numbers), cancel, status fix, makeup, attendance, delete,
 and the conflict dialog with "save anyway". The attendance sheet now flags a
 paused member (API). Brief, decisions and open questions:
-[`screens/s01-lesson-panel.md`](./screens/s01-lesson-panel.md).
+[`screens/s01-lesson-panel.md`](./screens/s01-lesson-panel.md). Since S02 the
+panel is one 640px column under the indigo band (layout A) instead of the
+920×720 two-column window.
 
 Gate on 2026-09-24: web lint, typecheck, 222 unit tests, build, the Storybook
 browser tests (209 tests in 77 files, with accessibility checks) and the
