@@ -316,11 +316,15 @@ green gate.
    teacher and price edits, and one teacher-and-student conflict check with
    "save anyway" on lesson create, move, edit and makeup. Schedules adopt
    the student check in phase 2; the price override moves to phase 3.
-2. **Schedule model** — per-weekday times, one duration, versions by
-   effective date, rolling horizon (studio default 4 weeks) with a daily
-   top-up, optional end date, stop, change preview and apply that moves
-   lessons instead of deleting them, one schedule per student–teacher and
-   per group; packages stop creating schedules.
+2. **Schedule model** — done 2026-09-24: `Schedule` (one active per
+   student–teacher enrollment and per group) over versioned `LessonSeries`
+   rows, per-weekday times and one duration, a per-schedule horizon (studio
+   default 4 weeks) topped up nightly, optional end date, stop, and change
+   preview/apply that moves lessons 1:1 (topic and notes survive) instead of
+   deleting them; `/schedules` routes; "this and following" and the pattern
+   screen change the schedule instead of creating rows; packages create a
+   schedule for their direction. Existing rows keep the former 12-week
+   horizon; the legacy `/lesson-series` create does too.
 3. **Billing core** — direction billing mode (package or pay-per-lesson) and
    rate; per-participant lesson charges; oldest-package-first, debt and debt
    cover, oldest-first payment allocation; group lessons charged per member

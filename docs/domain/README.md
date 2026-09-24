@@ -17,7 +17,7 @@ User -- WorkspaceMember --> Workspace
                                 |       v
                                 +--> Enrollment <-- Group --> Teacher
                                          |
-                                         +--> LessonSeries --> Lesson
+                                         +--> Schedule --> LessonSeries --> Lesson
                                          |                       |
                                          +------------------> LessonAttendance
                                          |
@@ -47,7 +47,8 @@ snapshot. Lesson credits and money are separate histories.
 | `Teacher`                 | [People](./people.md#teacher)                                    | Profile status plus soft delete/restore                           |
 | `Group`                   | [Learning operations](./learning-operations.md#group)            | Optional teacher and seats; archive/restore preserves history     |
 | `Enrollment`              | [Learning operations](./learning-operations.md#enrollment)       | Active/paused/archived plus soft delete/restore                   |
-| `LessonSeries`            | [Learning operations](./learning-operations.md#lessonseries)     | Recurring rule; soft delete; no restore                           |
+| `Schedule`                | [Learning operations](./learning-operations.md#schedule)         | One active per direction; active until stopped or its end date    |
+| `LessonSeries`            | [Learning operations](./learning-operations.md#lessonseries)     | One start time of one schedule version; ended by a later version  |
 | `Lesson`                  | [Learning operations](./learning-operations.md#lesson)           | Scheduled occurrence; status machine plus soft delete             |
 | `LessonAttendance`        | [Learning operations](./learning-operations.md#lessonattendance) | Per-student mark per held lesson                                  |
 | `LessonPackage`           | [Finance](./finance.md#lessonpackage)                            | Purchase snapshot; soft delete; no restore/edit                   |

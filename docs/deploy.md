@@ -169,6 +169,17 @@ WHERE g."deletedAt" IS NULL AND g."teacherId" IS NULL;
 Deploy the API before the web: the new web reads `/groups/summary`,
 `/groups/options` and the attendance routes.
 
+### Lesson core and schedules migrations (Work Packet 6.4)
+
+`20260925120000_lesson_core` adds the lesson topic, kind and makeup link and
+the `NO_SHOW` status. `20260926120000_schedules` adds `schedules`,
+`workspaces.scheduleHorizonWeeks` (default 4) and `lesson_series.scheduleId`,
+and backfills one schedule per enrollment or group from its newest series
+row, with the former 12-week horizon; a direction with no live or suspended
+row gets an `ENDED` schedule. Partial unique indexes then allow one `ACTIVE`
+schedule per enrollment and per group. The dev database holds test data only
+and may be reseeded instead (ADR 0007).
+
 ## Deployment order
 
 1. Deploy backward-compatible database/API changes.
