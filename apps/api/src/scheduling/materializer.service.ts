@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import {
   findConflicts,
+  isPausedAt,
   planMaterialization,
   toInterval,
 } from '@tutorio/domain';
@@ -12,6 +13,7 @@ import {
   lockGroupSchedule,
   lockTeacherSchedules,
 } from './lifecycle-suspension';
+import { pauseWindowsOf } from './pause-windows';
 
 // The horizon of a schedule that names none (product/scheduling.md L-22:
 // each schedule keeps its own, defaulting to the studio setting).
@@ -102,7 +104,7 @@ export class MaterializerService {
       select: { startsAtUtc: true },
     });
 
-    const { toCreate } = planMaterialization({
+    const { toCreate: planned } = planMaterialization({
       rule: {
         weekdays: currentSeries.weekdays,
         localTime: currentSeries.localTime,
@@ -113,6 +115,22 @@ export class MaterializerService {
       horizonUntil: effectiveUntil,
       existingSlots: existing.map((row) => row.startsAtUtc),
     });
+    // A paused student gets no individual lessons inside the pause (L-101);
+    // group lessons run on and simply leave them out.
+    let toCreate = planned;
+    if (currentSeries.enrollmentId && planned.length > 0) {
+      const enrollment = await tx.enrollment.findUniqueOrThrow({
+        where: { id: currentSeries.enrollmentId },
+        select: { id: true, studentId: true },
+      });
+      const windows = await pauseWindowsOf(
+        tx,
+        enrollment,
+        from,
+        effectiveUntil,
+      );
+      toCreate = planned.filter((at) => !isPausedAt(windows, at));
+    }
 
     if (!force && toCreate.length > 0) {
       await this.assertCandidatesAreFree(tx, currentSeries, toCreate);

@@ -139,6 +139,12 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
     await prisma.lessonCharge.deleteMany({
       where: { workspaceId: { in: workspaceIds } },
     });
+    await prisma.pausePackageExtension.deleteMany({
+      where: { pause: { workspaceId: { in: workspaceIds } } },
+    });
+    await prisma.pause.deleteMany({
+      where: { workspaceId: { in: workspaceIds } },
+    });
     await prisma.lesson.deleteMany({
       where: { workspaceId: { in: workspaceIds } },
     });

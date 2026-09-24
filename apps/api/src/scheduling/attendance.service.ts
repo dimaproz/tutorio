@@ -7,6 +7,7 @@ import type {
 } from '@tutorio/validation';
 import { AuditService } from '../audit/audit.service';
 import { BillingService } from '../billing/billing.service';
+import { pausedDirectionIds } from './pause-windows';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import {
   attendanceNotMarkable,
@@ -34,11 +35,16 @@ type Participant = LessonAttendanceResponse['participants'][number];
  */
 export async function markRosterPresent(
   tx: Prisma.TransactionClient,
-  lesson: { id: string; workspaceId: string; groupId: string | null },
+  lesson: {
+    id: string;
+    workspaceId: string;
+    groupId: string | null;
+    startsAtUtc: Date;
+  },
   now: Date,
 ): Promise<number> {
   if (!lesson.groupId) return 0;
-  const unmarked = await tx.enrollment.findMany({
+  const roster = await tx.enrollment.findMany({
     where: {
       workspaceId: lesson.workspaceId,
       groupId: lesson.groupId,
@@ -47,8 +53,11 @@ export async function markRosterPresent(
       student: { deletedAt: null, status: { not: 'ARCHIVED' } },
       attendance: { none: { lessonId: lesson.id } },
     },
-    select: { id: true },
+    select: { id: true, studentId: true },
   });
+  // A member paused at the lesson takes no part in it (L-73).
+  const paused = await pausedDirectionIds(tx, roster, lesson.startsAtUtc);
+  const unmarked = roster.filter((member) => !paused.has(member.id));
   if (unmarked.length === 0) return 0;
   const created = await tx.lessonAttendance.createMany({
     data: unmarked.map((member) => ({

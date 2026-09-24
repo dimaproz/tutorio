@@ -3,6 +3,7 @@
  * intentionally NOT wired into prisma's `seed` hook, application startup or
  * any deployment step. Safe to rerun: everything is keyed by the demo emails.
  */
+import { randomUUID } from 'node:crypto';
 import { hash } from '@node-rs/argon2';
 import { PrismaClient, type Prisma } from '@prisma/client';
 import { AuditService } from '../src/audit/audit.service';
@@ -495,6 +496,28 @@ async function main() {
         status: lesson === pastEvenings[3] ? 'ABSENT' : 'PRESENT',
       },
       update: {},
+    });
+  }
+
+  // "On hold" is a running whole-student pause (L-104): each on-hold demo
+  // student gets an open one that began a week ago.
+  const onHold = await prisma.student.findMany({
+    where: {
+      workspaceId: workspace.id,
+      status: 'ON_HOLD',
+      pauses: { none: {} },
+    },
+    select: { id: true },
+  });
+  for (const student of onHold) {
+    await prisma.pause.create({
+      data: {
+        workspaceId: workspace.id,
+        studentId: student.id,
+        startsAt: at(-7, 0),
+        suspensionToken: randomUUID(),
+        createdById: owner.id,
+      },
     });
   }
 

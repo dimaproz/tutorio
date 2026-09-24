@@ -6,7 +6,9 @@ import { join, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { Prisma, PrismaClient } from '@prisma/client';
 import { AuditService } from '../src/audit/audit.service';
+import { PausesService } from '../src/pauses/pauses.service';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { MaterializerService } from '../src/scheduling/materializer.service';
 import { StudentsService } from '../src/students/students.service';
 
 const NEW_MIGRATION = '20260825120000_lifecycle_closure_and_legacy_repair';
@@ -262,7 +264,12 @@ async function main() {
       { deletedAt: archivedAt },
     );
 
-    const students = new StudentsService(prisma, new AuditService(prisma));
+    const audit = new AuditService(prisma);
+    const students = new StudentsService(
+      prisma,
+      audit,
+      new PausesService(prisma, audit, new MaterializerService(prisma)),
+    );
     await students.restore(
       {
         userId: user.id,

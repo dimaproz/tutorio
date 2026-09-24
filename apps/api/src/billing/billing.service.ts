@@ -17,6 +17,7 @@ import type { AuthenticatedUser } from '../auth/auth.types';
 import { enrollmentNotFound, lessonPaid } from '../common/business.errors';
 import { PrismaService } from '../prisma/prisma.service';
 import { lockEnrollmentBilling } from '../scheduling/lifecycle-suspension';
+import { pausedDirectionIds } from '../scheduling/pause-windows';
 
 type Db = Prisma.TransactionClient;
 
@@ -105,8 +106,16 @@ export class BillingService {
     await lockEnrollmentBilling(tx, workspaceId, enrollmentIds);
     const directions = await tx.enrollment.findMany({
       where: { id: { in: enrollmentIds } },
-      select: { id: true, billingType: true, priceMinor: true, currency: true },
+      select: {
+        id: true,
+        studentId: true,
+        billingType: true,
+        priceMinor: true,
+        currency: true,
+      },
     });
+    // A participant paused at the lesson takes no part in it (L-73, L-101).
+    const paused = await pausedDirectionIds(tx, directions, lesson.startsAtUtc);
 
     const now = new Date();
     const freed = new Set<string>();
@@ -120,6 +129,7 @@ export class BillingService {
       );
       const owed =
         !lesson.deletedAt &&
+        !paused.has(direction.id) &&
         participantIsCharged(
           {
             status: lesson.status,

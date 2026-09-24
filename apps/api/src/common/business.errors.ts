@@ -321,6 +321,28 @@ export const invalidTransferTarget = () =>
     HttpStatus.CONFLICT,
   );
 
+export const pauseNotFound = () =>
+  new BusinessApiException(
+    'PAUSE_NOT_FOUND',
+    'Pause not found',
+    HttpStatus.NOT_FOUND,
+  );
+
+// L-100: one pause at a time for the same lessons.
+export const pauseOverlap = () =>
+  new BusinessApiException(
+    'PAUSE_OVERLAP',
+    'The student already has a pause covering this time',
+    HttpStatus.CONFLICT,
+  );
+
+export const pauseEnded = () =>
+  new BusinessApiException(
+    'PAUSE_ENDED',
+    'The pause is already over',
+    HttpStatus.CONFLICT,
+  );
+
 export const overpayment = () =>
   new BusinessApiException(
     'OVERPAYMENT',

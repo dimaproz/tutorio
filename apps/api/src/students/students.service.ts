@@ -23,6 +23,7 @@ import {
   enrollmentInclude,
   toEnrollmentResponse,
 } from '../enrollments/enrollment-response';
+import { PausesService } from '../pauses/pauses.service';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   assertLessonsAreFree,
@@ -141,6 +142,7 @@ export class StudentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
+    private readonly pauses: PausesService,
   ) {}
 
   async list(
@@ -372,6 +374,17 @@ export class StudentsService {
       if (!changes) {
         // No-op PATCH: nothing to persist, no audit row.
         return before;
+      }
+
+      // "On hold" is a whole-student pause from now until the student is set
+      // active again (L-104): it takes their lessons out and freezes their
+      // packages, not just the label.
+      if (scalarDto.status === 'ON_HOLD' && before.status !== 'ON_HOLD') {
+        await this.pauses.createInTx(tx, auth, { studentId: before.id });
+      }
+      if (scalarDto.status === 'ACTIVE' && before.status === 'ON_HOLD') {
+        const pauseId = await this.pauses.activeWholePause(tx, before.id);
+        if (pauseId) await this.pauses.endInTx(tx, auth, pauseId, false);
       }
 
       if (parentIds !== undefined) {
@@ -673,14 +686,19 @@ export class StudentsService {
           });
         }
       }
-      const restored = await tx.student.update({
+      await tx.student.update({
         where: { id: existing.id },
         data: { status: 'ACTIVE', archivedAt: null },
-        include: parentLinksInclude,
       });
       for (const groupId of groupIds) {
         await reconcileGroupSchedule(tx, auth.workspaceId, groupId, now);
       }
+      // Back on hold if a whole-student pause is still running.
+      await this.pauses.syncStudentStatus(tx, existing.id, now);
+      const restored = await tx.student.findUniqueOrThrow({
+        where: { id: existing.id },
+        include: parentLinksInclude,
+      });
       await this.audit.record(tx, {
         workspaceId: auth.workspaceId,
         actorId: auth.userId,
@@ -748,6 +766,9 @@ export class StudentsService {
       }
 
       await tx.studentParent.deleteMany({ where: { studentId: student.id } });
+      // Without directions or packages a pause took nothing out and pushed
+      // nothing: it goes with the student.
+      await tx.pause.deleteMany({ where: { studentId: student.id } });
       await tx.student.delete({ where: { id: student.id } });
       await this.audit.record(tx, {
         workspaceId: auth.workspaceId,

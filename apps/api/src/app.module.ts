@@ -16,6 +16,7 @@ import { GroupsModule } from './groups/groups.module';
 import { HealthModule } from './health/health.module';
 import { PackagesModule } from './packages/packages.module';
 import { ParentsModule } from './parents/parents.module';
+import { PausesModule } from './pauses/pauses.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { SchedulingModule } from './scheduling/scheduling.module';
 import { StudentsModule } from './students/students.module';
@@ -51,6 +52,7 @@ import { WorkspacesModule } from './workspaces/workspaces.module';
     EnrollmentsModule,
     SchedulingModule,
     PackagesModule,
+    PausesModule,
   ],
   providers: [
     { provide: APP_PIPE, useClass: ZodValidationPipe },

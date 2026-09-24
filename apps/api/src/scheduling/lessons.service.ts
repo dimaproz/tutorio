@@ -224,7 +224,12 @@ export class LessonsService {
           if (dto.status === 'COMPLETED') {
             await markRosterPresent(
               tx,
-              { id: lesson.id, workspaceId: auth.workspaceId, groupId },
+              {
+                id: lesson.id,
+                workspaceId: auth.workspaceId,
+                groupId,
+                startsAtUtc,
+              },
               now,
             );
           }

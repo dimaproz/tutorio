@@ -3,6 +3,7 @@ import { AuditService } from '../audit/audit.service';
 import { AuthApiException } from '../auth/auth.errors';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { BusinessApiException } from '../common/business.errors';
+import type { PausesService } from '../pauses/pauses.service';
 import type { PrismaService } from '../prisma/prisma.service';
 import { StudentsService } from './students.service';
 
@@ -62,6 +63,7 @@ function buildPrismaMock() {
     student: {
       findMany: jest.fn().mockResolvedValue([]),
       findFirst: jest.fn(),
+      findUniqueOrThrow: jest.fn(),
       count: jest.fn().mockResolvedValue(0),
       groupBy: jest.fn().mockResolvedValue([]),
       create: jest.fn(),
@@ -69,6 +71,7 @@ function buildPrismaMock() {
       delete: jest.fn(),
     },
     studentParent: { deleteMany: jest.fn() },
+    pause: { deleteMany: jest.fn() },
     enrollment: {
       count: jest.fn().mockResolvedValue(0),
       deleteMany: jest.fn(),
@@ -100,9 +103,16 @@ function buildService() {
   const prisma = buildPrismaMock();
   const audit = new AuditService(prisma as unknown as PrismaService);
   const recordSpy = jest.spyOn(audit, 'record');
+  const pauses = {
+    createInTx: jest.fn(),
+    activeWholePause: jest.fn().mockResolvedValue(null),
+    endInTx: jest.fn(),
+    syncStudentStatus: jest.fn(),
+  };
   const service = new StudentsService(
     prisma as unknown as PrismaService,
     audit,
+    pauses as unknown as PausesService,
   );
   return { prisma, audit, recordSpy, service };
 }
@@ -470,6 +480,7 @@ describe('StudentsService.restore', () => {
       archivedAt,
     });
     prisma.student.update.mockResolvedValue(studentRow);
+    prisma.student.findUniqueOrThrow.mockResolvedValue(studentRow);
     prisma.enrollment.findMany.mockResolvedValue([
       { id: 'e1', groupId: null, statusBeforeStudentArchive: 'ACTIVE' },
       { id: 'e2', groupId: null, statusBeforeStudentArchive: 'PAUSED' },

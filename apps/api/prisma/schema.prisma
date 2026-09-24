@@ -156,6 +156,7 @@ model Workspace {
   charges       LessonCharge[]
   payments      Payment[]
   attendance    LessonAttendance[]
+  pauses        Pause[]
 
   @@map("workspaces")
 }
@@ -239,6 +240,7 @@ model Student {
   enrollments Enrollment[]
   parents     StudentParent[]
   packages    LessonPackage[]
+  pauses      Pause[]
 
   @@index([workspaceId, deletedAt])
   @@index([workspaceId, fullName])
@@ -369,6 +371,7 @@ model Enrollment {
   charges    LessonCharge[]
   payments   Payment[]
   attendance LessonAttendance[]
+  pauses     Pause[]
 
   // Uniqueness among non-deleted rows only (one active enrollment per
   // student+group, one active individual enrollment per student+teacher) is
@@ -731,14 +734,15 @@ model LessonPackage {
   updatedAt                   DateTime             @updatedAt
   deletedAt                   DateTime?
 
-  workspace       Workspace           @relation(fields: [workspaceId], references: [id])
-  enrollment      Enrollment          @relation(fields: [enrollmentId], references: [id])
-  transferredFrom LessonPackage?      @relation("PackageTransfer", fields: [transferredFromPackageId], references: [id])
-  transfers       LessonPackage[]     @relation("PackageTransfer")
-  student         Student             @relation(fields: [studentId], references: [id])
-  creditEntries   LessonCreditEntry[]
-  charges         LessonCharge[]
-  payments        Payment[]
+  workspace              Workspace               @relation(fields: [workspaceId], references: [id])
+  enrollment             Enrollment              @relation(fields: [enrollmentId], references: [id])
+  transferredFrom        LessonPackage?          @relation("PackageTransfer", fields: [transferredFromPackageId], references: [id])
+  transfers              LessonPackage[]         @relation("PackageTransfer")
+  student                Student                 @relation(fields: [studentId], references: [id])
+  creditEntries          LessonCreditEntry[]
+  charges                LessonCharge[]
+  payments               Payment[]
+  pausePackageExtensions PausePackageExtension[]
 
   @@index([workspaceId, deletedAt])
   // Revenue by period scans packages by purchase date (Stage 5 analytics).
@@ -852,4 +856,57 @@ model Payment {
   @@index([packageId])
   @@index([provider, externalId])
   @@map("payments")
+}
+
+// A pause (freeze) of the whole student or of one direction (product/
+// scheduling.md L-100…L-104). While it covers an instant the student takes no
+// part in the paused directions' lessons and nothing is charged; its
+// individual lessons in the window are taken out (soft-deleted with
+// `suspensionToken`), and every package valid at its start is extended by
+// its length. "On hold" and a paused direction are derived from it.
+model Pause {
+  id              String    @id @default(uuid())
+  workspaceId     String
+  studentId       String
+  // Null: the whole student; else one direction.
+  enrollmentId    String?
+  startsAt        DateTime
+  // Planned end, exclusive; null runs until ended.
+  endsAt          DateTime?
+  // When it actually ended (early, or on return from an open pause); equal to
+  // startsAt when it was cancelled before it began.
+  endedAt         DateTime?
+  reason          String?
+  // Marks the lessons this pause took out, so its end brings back exactly those.
+  suspensionToken String    @unique
+  createdById     String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  workspace  Workspace               @relation(fields: [workspaceId], references: [id])
+  student    Student                 @relation(fields: [studentId], references: [id])
+  enrollment Enrollment?             @relation(fields: [enrollmentId], references: [id], onDelete: Restrict)
+  extensions PausePackageExtension[]
+
+  @@index([workspaceId, studentId])
+  @@index([enrollmentId])
+  @@map("pauses")
+}
+
+// How far one pause pushed one package's end (L-102), so ending the pause
+// early can take back the difference.
+model PausePackageExtension {
+  id                String   @id @default(uuid())
+  pauseId           String
+  packageId         String
+  extendedBySeconds Int
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  pause   Pause         @relation(fields: [pauseId], references: [id])
+  package LessonPackage @relation(fields: [packageId], references: [id])
+
+  @@unique([pauseId, packageId])
+  @@index([packageId])
+  @@map("pause_package_extensions")
 }
