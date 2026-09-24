@@ -260,6 +260,26 @@ export interface paths {
         patch: operations["StudentsController_update"];
         trace?: never;
     };
+    "/api/students/{studentId}/billing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * How each of the student directions is paid
+         * @description Every direction with its mode, rate, packages and credits left, lessons on debt, the pay-per-lesson balance and the credit warning, plus what is owed and paid ahead per currency.
+         */
+        get: operations["StudentsController_getBilling"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/students/{studentId}/restore": {
         parameters: {
             query?: never;
@@ -292,6 +312,26 @@ export interface paths {
          * @description Irreversible. Returns STUDENT_HAS_BUSINESS_HISTORY when lessons, enrollments, packages, payments, charges, or credits exist.
          */
         delete: operations["StudentsController_removePermanently"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/billing/warnings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Directions that are running out of credits
+         * @description Every live direction paid by packages with lessons on debt, no credits left, or no more than the studio threshold left (L-82).
+         */
+        get: operations["BillingController_listWarnings"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -651,7 +691,7 @@ export interface paths {
         };
         /**
          * How a direction is paid now
-         * @description Billing mode and rate, the credits each package has left, lessons held on debt in package mode, and the pay-per-lesson balance with payments settling the oldest lessons first.
+         * @description Billing mode and rate, the credits each package has left, lessons held on debt in package mode, the pay-per-lesson balance with payments settling the oldest lessons first, and the credit warning.
          */
         get: operations["EnrollmentsController_getBilling"];
         put?: never;
@@ -706,6 +746,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lessons/list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The Lessons list: every lesson, paged, with quick filters
+         * @description Filters by period, teacher, student (their own lessons and their groups'), group and status; `filter` narrows to unpaid, cancelled, no-show or needs-a-makeup lessons, and `counts` says how many each quick filter would show.
+         */
+        get: operations["LessonsController_listPage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * One lesson for the side panel
+         * @description The lesson with its charges, the lesson its makeup replaces or the makeup given for it, its schedule and its history, newest first.
+         */
+        get: operations["LessonsController_getDetail"];
+        put?: never;
+        post?: never;
+        /**
+         * Soft-delete a lesson
+         * @description Idempotent. A series lesson is also detached so it is not regenerated.
+         */
+        delete: operations["LessonsController_remove"];
+        options?: never;
+        head?: never;
+        /**
+         * Change a lesson
+         * @description Topic, notes, duration, teacher (a substitute for this lesson only), price and payment date. Sending null clears topic or notes; price and currency travel together. A new duration or teacher on an upcoming lesson is checked for teacher and student conflicts unless force=true. Moving a lesson in time uses /reschedule.
+         */
+        patch: operations["LessonsController_update"];
+        trace?: never;
+    };
     "/api/lessons/bulk-cancel/preview": {
         parameters: {
             query?: never;
@@ -744,30 +832,6 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
-        trace?: never;
-    };
-    "/api/lessons/{lessonId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * Soft-delete a lesson
-         * @description Idempotent. A series lesson is also detached so it is not regenerated.
-         */
-        delete: operations["LessonsController_remove"];
-        options?: never;
-        head?: never;
-        /**
-         * Change a lesson
-         * @description Topic, notes, duration, teacher (a substitute for this lesson only), price and payment date. Sending null clears topic or notes; price and currency travel together. A new duration or teacher on an upcoming lesson is checked for teacher and student conflicts unless force=true. Moving a lesson in time uses /reschedule.
-         */
-        patch: operations["LessonsController_update"];
         trace?: never;
     };
     "/api/lessons/{lessonId}/makeup": {
@@ -1258,6 +1322,8 @@ export interface components {
                 defaultCurrency: string;
                 cancellationDeadlineHours: number;
                 timezone: string;
+                scheduleHorizonWeeks: number;
+                lowCreditThreshold: number;
             };
             /** @enum {string} */
             role: "OWNER" | "TEACHER";
@@ -1297,6 +1363,8 @@ export interface components {
                 defaultCurrency: string;
                 cancellationDeadlineHours: number;
                 timezone: string;
+                scheduleHorizonWeeks: number;
+                lowCreditThreshold: number;
             };
             /** @enum {string} */
             role: "OWNER" | "TEACHER";
@@ -1313,6 +1381,8 @@ export interface components {
                 defaultCurrency: string;
                 cancellationDeadlineHours: number;
                 timezone: string;
+                scheduleHorizonWeeks: number;
+                lowCreditThreshold: number;
             };
             /** @enum {string} */
             role: "OWNER" | "TEACHER";
@@ -1322,6 +1392,7 @@ export interface components {
             defaultCurrency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
             cancellationDeadlineHours?: number;
             scheduleHorizonWeeks?: number;
+            lowCreditThreshold?: number;
             /** @enum {string} */
             mode?: "SOLO" | "SCHOOL";
         };
@@ -1555,6 +1626,63 @@ export interface components {
                 deletedAt: string | null;
             }[];
         };
+        StudentBillingDto: {
+            /** Format: uuid */
+            studentId: string;
+            lowCreditThreshold: number;
+            directions: {
+                /** Format: uuid */
+                enrollmentId: string;
+                /** @enum {string} */
+                billingType: "PACKAGE" | "PER_LESSON";
+                rateMinor: number;
+                /** @enum {string} */
+                currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+                packages: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string | null;
+                    /** Format: date-time */
+                    purchasedAt: string;
+                    /** Format: date-time */
+                    expiresAt: string | null;
+                    remainingCredits: number;
+                    usable: boolean;
+                }[];
+                creditsLeft: number;
+                debtLessons: number;
+                balance: {
+                    chargedMinor: number;
+                    paidMinor: number;
+                    debtMinor: number;
+                    advanceMinor: number;
+                    unpaidLessons: number;
+                };
+                /** @enum {string|null} */
+                warning: "ON_DEBT" | "NO_CREDITS" | "LOW_CREDITS" | null;
+                /** @enum {string} */
+                status: "ACTIVE" | "PAUSED" | "ARCHIVED";
+                teacher: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                };
+                group: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                } | null;
+            }[];
+            totals: {
+                /** @enum {string} */
+                currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+                debtMinor: number;
+                advanceMinor: number;
+                unpaidLessons: number;
+                debtLessons: number;
+                creditsLeft: number;
+            }[];
+        };
         UpdateStudentDto: {
             fullName?: string;
             /** Format: email */
@@ -1577,6 +1705,32 @@ export interface components {
             avatarKey?: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
             parentIds?: string[];
             notes?: string | null;
+        };
+        CreditWarningListDto: {
+            lowCreditThreshold: number;
+            items: {
+                /** Format: uuid */
+                enrollmentId: string;
+                /** @enum {string} */
+                warning: "ON_DEBT" | "NO_CREDITS" | "LOW_CREDITS";
+                creditsLeft: number;
+                debtLessons: number;
+                student: {
+                    /** Format: uuid */
+                    id: string;
+                    fullName: string;
+                };
+                teacher: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                };
+                group: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                } | null;
+            }[];
         };
         PauseListDto: {
             items: {
@@ -2268,6 +2422,8 @@ export interface components {
                 advanceMinor: number;
                 unpaidLessons: number;
             };
+            /** @enum {string|null} */
+            warning: "ON_DEBT" | "NO_CREDITS" | "LOW_CREDITS" | null;
         };
         UpdateEnrollmentDto: {
             /** @enum {string} */
@@ -2339,6 +2495,7 @@ export interface components {
                     amountMinor: number;
                     /** @enum {string} */
                     currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+                    paid: boolean;
                     student: {
                         /** Format: uuid */
                         id: string;
@@ -2367,6 +2524,247 @@ export interface components {
                 updatedAt: string;
                 /** Format: date-time */
                 deletedAt: string | null;
+            }[];
+        };
+        LessonPageDto: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                workspaceId: string;
+                /** Format: uuid */
+                enrollmentId: string | null;
+                /** Format: uuid */
+                groupId: string | null;
+                /** Format: uuid */
+                seriesId: string | null;
+                /** Format: uuid */
+                teacherId: string;
+                /** Format: date-time */
+                startsAtUtc: string;
+                durationMin: number;
+                priceMinor: number;
+                /** @enum {string} */
+                currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+                /** @enum {string} */
+                status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED" | "NO_SHOW";
+                /** @enum {string} */
+                kind: "REGULAR" | "MAKEUP";
+                /** Format: uuid */
+                originalLessonId: string | null;
+                /** Format: uuid */
+                makeupLessonId: string | null;
+                topic: string | null;
+                isDetached: boolean;
+                rescheduledCount: number;
+                /** Format: date-time */
+                rescheduledAt: string | null;
+                /** @enum {string|null} */
+                cancelledBy: "TEACHER" | "STUDENT" | "GROUP" | null;
+                cancelledReason: string | null;
+                /** Format: date-time */
+                cancelledAt: string | null;
+                /** Format: date-time */
+                completedAt: string | null;
+                /** Format: date-time */
+                paidAt: string | null;
+                notes: string | null;
+                cancellationDeadlineHours: number;
+                attendance: {
+                    present: number;
+                    marked: number;
+                } | null;
+                charges: {
+                    /** Format: uuid */
+                    id: string;
+                    /** Format: uuid */
+                    enrollmentId: string;
+                    /** @enum {string} */
+                    source: "PACKAGE" | "DEBT" | "BALANCE";
+                    /** Format: uuid */
+                    packageId: string | null;
+                    amountMinor: number;
+                    /** @enum {string} */
+                    currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+                    paid: boolean;
+                    student: {
+                        /** Format: uuid */
+                        id: string;
+                        fullName: string;
+                    };
+                }[];
+                student: {
+                    /** Format: uuid */
+                    id: string;
+                    fullName: string;
+                } | null;
+                group: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                } | null;
+                teacher: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    color: string | null;
+                };
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+                /** Format: date-time */
+                deletedAt: string | null;
+            }[];
+            page: number;
+            pageSize: number;
+            total: number;
+            totalPages: number;
+            counts: {
+                unpaid: number;
+                cancelled: number;
+                noShow: number;
+                needsMakeup: number;
+            };
+        };
+        LessonDetailDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            workspaceId: string;
+            /** Format: uuid */
+            enrollmentId: string | null;
+            /** Format: uuid */
+            groupId: string | null;
+            /** Format: uuid */
+            seriesId: string | null;
+            /** Format: uuid */
+            teacherId: string;
+            /** Format: date-time */
+            startsAtUtc: string;
+            durationMin: number;
+            priceMinor: number;
+            /** @enum {string} */
+            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+            /** @enum {string} */
+            status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED" | "NO_SHOW";
+            /** @enum {string} */
+            kind: "REGULAR" | "MAKEUP";
+            /** Format: uuid */
+            originalLessonId: string | null;
+            /** Format: uuid */
+            makeupLessonId: string | null;
+            topic: string | null;
+            isDetached: boolean;
+            rescheduledCount: number;
+            /** Format: date-time */
+            rescheduledAt: string | null;
+            /** @enum {string|null} */
+            cancelledBy: "TEACHER" | "STUDENT" | "GROUP" | null;
+            cancelledReason: string | null;
+            /** Format: date-time */
+            cancelledAt: string | null;
+            /** Format: date-time */
+            completedAt: string | null;
+            /** Format: date-time */
+            paidAt: string | null;
+            notes: string | null;
+            cancellationDeadlineHours: number;
+            attendance: {
+                present: number;
+                marked: number;
+            } | null;
+            charges: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                enrollmentId: string;
+                /** @enum {string} */
+                source: "PACKAGE" | "DEBT" | "BALANCE";
+                /** Format: uuid */
+                packageId: string | null;
+                amountMinor: number;
+                /** @enum {string} */
+                currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+                paid: boolean;
+                student: {
+                    /** Format: uuid */
+                    id: string;
+                    fullName: string;
+                };
+            }[];
+            student: {
+                /** Format: uuid */
+                id: string;
+                fullName: string;
+            } | null;
+            group: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
+            teacher: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                color: string | null;
+            };
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            deletedAt: string | null;
+            original: {
+                /** Format: uuid */
+                id: string;
+                /** Format: date-time */
+                startsAtUtc: string;
+                /** @enum {string} */
+                status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED" | "NO_SHOW";
+            } | null;
+            makeup: {
+                /** Format: uuid */
+                id: string;
+                /** Format: date-time */
+                startsAtUtc: string;
+                /** @enum {string} */
+                status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED" | "NO_SHOW";
+            } | null;
+            schedule: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                state: "ACTIVE" | "ENDED";
+            } | null;
+            history: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                workspaceId: string;
+                /** Format: uuid */
+                actorId: string | null;
+                actor: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    email: string;
+                } | null;
+                /** @enum {string} */
+                entity: "STUDENT" | "PARENT" | "GROUP" | "TEACHER" | "ENROLLMENT" | "WORKSPACE" | "LESSON" | "LESSON_SERIES" | "SCHEDULE" | "PAUSE" | "LESSON_PACKAGE" | "PAYMENT";
+                entityId: string;
+                /** @enum {string} */
+                action: "CREATE" | "UPDATE" | "DELETE" | "RESTORE";
+                changes: {
+                    fields: {
+                        [key: string]: {
+                            before: unknown;
+                            after: unknown;
+                        };
+                    };
+                } | null;
+                /** Format: date-time */
+                createdAt: string;
             }[];
         };
         BulkCancelDto: {
@@ -2516,6 +2914,7 @@ export interface components {
                 amountMinor: number;
                 /** @enum {string} */
                 currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+                paid: boolean;
                 student: {
                     /** Format: uuid */
                     id: string;
@@ -4060,6 +4459,44 @@ export interface operations {
             };
         };
     };
+    StudentsController_getBilling: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                studentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentBillingDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
     StudentsController_restore: {
         parameters: {
             query?: never;
@@ -4124,6 +4561,34 @@ export interface operations {
                 };
             };
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    BillingController_listWarnings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreditWarningListDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -5438,25 +5903,32 @@ export interface operations {
             };
         };
     };
-    LessonsController_previewBulkCancel: {
+    LessonsController_listPage: {
         parameters: {
-            query?: never;
+            query?: {
+                page?: number;
+                pageSize?: number;
+                from?: string;
+                to?: string;
+                teacherId?: string;
+                studentId?: string;
+                groupId?: string;
+                status?: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED" | "NO_SHOW";
+                filter?: "unpaid" | "cancelled" | "no_show" | "needs_makeup";
+                order?: "asc" | "desc";
+            };
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BulkCancelDto"];
-            };
-        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BulkCancelPreviewDto"];
+                    "application/json": components["schemas"]["LessonPageDto"];
                 };
             };
             /** @description OWNER role required */
@@ -5470,25 +5942,23 @@ export interface operations {
             };
         };
     };
-    LessonsController_applyBulkCancel: {
+    LessonsController_getDetail: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                lessonId: string;
+            };
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BulkCancelDto"];
-            };
-        };
+        requestBody?: never;
         responses: {
-            201: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BulkCancelResultDto"];
+                    "application/json": components["schemas"]["LessonDetailDto"];
                 };
             };
             /** @description OWNER role required */
@@ -5581,6 +6051,78 @@ export interface operations {
                 };
             };
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    LessonsController_previewBulkCancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkCancelDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkCancelPreviewDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    LessonsController_applyBulkCancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkCancelDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkCancelResultDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

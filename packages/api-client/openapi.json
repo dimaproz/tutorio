@@ -856,6 +856,63 @@
         ]
       }
     },
+    "/api/students/{studentId}/billing": {
+      "get": {
+        "description": "Every direction with its mode, rate, packages and credits left, lessons on debt, the pay-per-lesson balance and the credit warning, plus what is owed and paid ahead per currency.",
+        "operationId": "StudentsController_getBilling",
+        "parameters": [
+          {
+            "name": "studentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudentBillingDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "How each of the student directions is paid",
+        "tags": [
+          "students"
+        ]
+      }
+    },
     "/api/students/{studentId}/restore": {
       "post": {
         "operationId": "StudentsController_restore",
@@ -959,6 +1016,44 @@
         "summary": "Permanently delete an unused student (owner only)",
         "tags": [
           "students"
+        ]
+      }
+    },
+    "/api/billing/warnings": {
+      "get": {
+        "description": "Every live direction paid by packages with lessons on debt, no credits left, or no more than the studio threshold left (L-82).",
+        "operationId": "BillingController_listWarnings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditWarningListDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Directions that are running out of credits",
+        "tags": [
+          "billing"
         ]
       }
     },
@@ -3030,7 +3125,7 @@
     },
     "/api/enrollments/{enrollmentId}/billing": {
       "get": {
-        "description": "Billing mode and rate, the credits each package has left, lessons held on debt in package mode, and the pay-per-lesson balance with payments settling the oldest lessons first.",
+        "description": "Billing mode and rate, the credits each package has left, lessons held on debt in package mode, the pay-per-lesson balance with payments settling the oldest lessons first, and the credit warning.",
         "operationId": "EnrollmentsController_getBilling",
         "parameters": [
           {
@@ -3342,28 +3437,130 @@
         ]
       }
     },
-    "/api/lessons/bulk-cancel/preview": {
-      "post": {
-        "description": "The scheduled lessons of one teacher (or of the whole studio) in [from, to): how many, per teacher, and the first 200. Writes nothing.",
-        "operationId": "LessonsController_previewBulkCancel",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BulkCancelDto"
-              }
+    "/api/lessons/list": {
+      "get": {
+        "description": "Filters by period, teacher, student (their own lessons and their groups'), group and status; `filter` narrows to unpaid, cancelled, no-show or needs-a-makeup lessons, and `counts` says how many each quick filter would show.",
+        "operationId": "LessonsController_listPage",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "exclusiveMinimum": false,
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "exclusiveMaximum": false,
+              "exclusiveMinimum": false,
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "teacherId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "studentId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "groupId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "SCHEDULED",
+                "COMPLETED",
+                "CANCELLED_CHARGED",
+                "CANCELLED_UNCHARGED",
+                "NO_SHOW"
+              ]
+            }
+          },
+          {
+            "name": "filter",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "unpaid",
+                "cancelled",
+                "no_show",
+                "needs_makeup"
+              ]
+            }
+          },
+          {
+            "name": "order",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
             }
           }
-        },
+        ],
         "responses": {
           "200": {
             "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BulkCancelPreviewDto"
+                  "$ref": "#/components/schemas/LessonPageDto"
                 }
               }
             }
@@ -3384,34 +3581,33 @@
             "bearer": []
           }
         ],
-        "summary": "Preview cancelling every lesson of a period",
+        "summary": "The Lessons list: every lesson, paged, with quick filters",
         "tags": [
           "scheduling"
         ]
       }
     },
-    "/api/lessons/bulk-cancel": {
-      "post": {
-        "description": "Holiday or illness: the scheduled lessons of one teacher (or of the whole studio) in [from, to) become cancelled by the teacher, free, with the reason. Held, cancelled and no-show lessons stay.",
-        "operationId": "LessonsController_applyBulkCancel",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BulkCancelDto"
-              }
+    "/api/lessons/{lessonId}": {
+      "get": {
+        "description": "The lesson with its charges, the lesson its makeup replaces or the makeup given for it, its schedule and its history, newest first.",
+        "operationId": "LessonsController_getDetail",
+        "parameters": [
+          {
+            "name": "lessonId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
             }
           }
-        },
+        ],
         "responses": {
-          "201": {
+          "200": {
             "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BulkCancelResultDto"
+                  "$ref": "#/components/schemas/LessonDetailDto"
                 }
               }
             }
@@ -3442,13 +3638,11 @@
             "bearer": []
           }
         ],
-        "summary": "Cancel every lesson of a period",
+        "summary": "One lesson for the side panel",
         "tags": [
           "scheduling"
         ]
-      }
-    },
-    "/api/lessons/{lessonId}": {
+      },
       "patch": {
         "description": "Topic, notes, duration, teacher (a substitute for this lesson only), price and payment date. Sending null clears topic or notes; price and currency travel together. A new duration or teacher on an upcoming lesson is checked for teacher and student conflicts unless force=true. Moving a lesson in time uses /reschedule.",
         "operationId": "LessonsController_update",
@@ -3583,6 +3777,112 @@
           }
         ],
         "summary": "Soft-delete a lesson",
+        "tags": [
+          "scheduling"
+        ]
+      }
+    },
+    "/api/lessons/bulk-cancel/preview": {
+      "post": {
+        "description": "The scheduled lessons of one teacher (or of the whole studio) in [from, to): how many, per teacher, and the first 200. Writes nothing.",
+        "operationId": "LessonsController_previewBulkCancel",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkCancelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkCancelPreviewDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Preview cancelling every lesson of a period",
+        "tags": [
+          "scheduling"
+        ]
+      }
+    },
+    "/api/lessons/bulk-cancel": {
+      "post": {
+        "description": "Holiday or illness: the scheduled lessons of one teacher (or of the whole studio) in [from, to) become cancelled by the teacher, free, with the reason. Held, cancelled and no-show lessons stay.",
+        "operationId": "LessonsController_applyBulkCancel",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkCancelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkCancelResultDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cancel every lesson of a period",
         "tags": [
           "scheduling"
         ]
@@ -5964,6 +6264,12 @@
               },
               "timezone": {
                 "type": "string"
+              },
+              "scheduleHorizonWeeks": {
+                "type": "integer"
+              },
+              "lowCreditThreshold": {
+                "type": "integer"
               }
             },
             "required": [
@@ -5973,7 +6279,9 @@
               "mode",
               "defaultCurrency",
               "cancellationDeadlineHours",
-              "timezone"
+              "timezone",
+              "scheduleHorizonWeeks",
+              "lowCreditThreshold"
             ]
           },
           "role": {
@@ -6109,6 +6417,12 @@
               },
               "timezone": {
                 "type": "string"
+              },
+              "scheduleHorizonWeeks": {
+                "type": "integer"
+              },
+              "lowCreditThreshold": {
+                "type": "integer"
               }
             },
             "required": [
@@ -6118,7 +6432,9 @@
               "mode",
               "defaultCurrency",
               "cancellationDeadlineHours",
-              "timezone"
+              "timezone",
+              "scheduleHorizonWeeks",
+              "lowCreditThreshold"
             ]
           },
           "role": {
@@ -6170,6 +6486,12 @@
               },
               "timezone": {
                 "type": "string"
+              },
+              "scheduleHorizonWeeks": {
+                "type": "integer"
+              },
+              "lowCreditThreshold": {
+                "type": "integer"
               }
             },
             "required": [
@@ -6179,7 +6501,9 @@
               "mode",
               "defaultCurrency",
               "cancellationDeadlineHours",
-              "timezone"
+              "timezone",
+              "scheduleHorizonWeeks",
+              "lowCreditThreshold"
             ]
           },
           "role": {
@@ -6220,6 +6544,13 @@
             "minimum": 1,
             "exclusiveMinimum": false,
             "maximum": 26,
+            "exclusiveMaximum": false
+          },
+          "lowCreditThreshold": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "maximum": 50,
             "exclusiveMaximum": false
           },
           "mode": {
@@ -7254,6 +7585,261 @@
           "enrollments"
         ]
       },
+      "StudentBillingDto": {
+        "type": "object",
+        "properties": {
+          "studentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lowCreditThreshold": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "maximum": 50,
+            "exclusiveMaximum": false
+          },
+          "directions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "enrollmentId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "billingType": {
+                  "type": "string",
+                  "enum": [
+                    "PACKAGE",
+                    "PER_LESSON"
+                  ]
+                },
+                "rateMinor": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                },
+                "currency": {
+                  "type": "string",
+                  "enum": [
+                    "EUR",
+                    "UAH",
+                    "PLN",
+                    "USD",
+                    "GBP"
+                  ]
+                },
+                "packages": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "name": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "purchasedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "expiresAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                      },
+                      "remainingCredits": {
+                        "type": "integer"
+                      },
+                      "usable": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name",
+                      "purchasedAt",
+                      "expiresAt",
+                      "remainingCredits",
+                      "usable"
+                    ]
+                  }
+                },
+                "creditsLeft": {
+                  "type": "integer"
+                },
+                "debtLessons": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                },
+                "balance": {
+                  "type": "object",
+                  "properties": {
+                    "chargedMinor": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": false
+                    },
+                    "paidMinor": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": false
+                    },
+                    "debtMinor": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": false
+                    },
+                    "advanceMinor": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": false
+                    },
+                    "unpaidLessons": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": false
+                    }
+                  },
+                  "required": [
+                    "chargedMinor",
+                    "paidMinor",
+                    "debtMinor",
+                    "advanceMinor",
+                    "unpaidLessons"
+                  ]
+                },
+                "warning": {
+                  "type": "string",
+                  "enum": [
+                    "ON_DEBT",
+                    "NO_CREDITS",
+                    "LOW_CREDITS"
+                  ],
+                  "nullable": true
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "ACTIVE",
+                    "PAUSED",
+                    "ARCHIVED"
+                  ]
+                },
+                "teacher": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name"
+                  ]
+                },
+                "group": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name"
+                  ],
+                  "nullable": true
+                }
+              },
+              "required": [
+                "enrollmentId",
+                "billingType",
+                "rateMinor",
+                "currency",
+                "packages",
+                "creditsLeft",
+                "debtLessons",
+                "balance",
+                "warning",
+                "status",
+                "teacher",
+                "group"
+              ]
+            }
+          },
+          "totals": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "currency": {
+                  "type": "string",
+                  "enum": [
+                    "EUR",
+                    "UAH",
+                    "PLN",
+                    "USD",
+                    "GBP"
+                  ]
+                },
+                "debtMinor": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                },
+                "advanceMinor": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                },
+                "unpaidLessons": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                },
+                "debtLessons": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                },
+                "creditsLeft": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                }
+              },
+              "required": [
+                "currency",
+                "debtMinor",
+                "advanceMinor",
+                "unpaidLessons",
+                "debtLessons",
+                "creditsLeft"
+              ]
+            }
+          }
+        },
+        "required": [
+          "studentId",
+          "lowCreditThreshold",
+          "directions",
+          "totals"
+        ]
+      },
       "UpdateStudentDto": {
         "type": "object",
         "properties": {
@@ -7380,6 +7966,110 @@
             "nullable": true
           }
         }
+      },
+      "CreditWarningListDto": {
+        "type": "object",
+        "properties": {
+          "lowCreditThreshold": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "maximum": 50,
+            "exclusiveMaximum": false
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "enrollmentId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "warning": {
+                  "type": "string",
+                  "enum": [
+                    "ON_DEBT",
+                    "NO_CREDITS",
+                    "LOW_CREDITS"
+                  ]
+                },
+                "creditsLeft": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                },
+                "debtLessons": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                },
+                "student": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "fullName": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "fullName"
+                  ]
+                },
+                "teacher": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name"
+                  ]
+                },
+                "group": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name"
+                  ],
+                  "nullable": true
+                }
+              },
+              "required": [
+                "enrollmentId",
+                "warning",
+                "creditsLeft",
+                "debtLessons",
+                "student",
+                "teacher",
+                "group"
+              ]
+            }
+          }
+        },
+        "required": [
+          "lowCreditThreshold",
+          "items"
+        ]
       },
       "PauseListDto": {
         "type": "object",
@@ -10334,6 +11024,15 @@
               "advanceMinor",
               "unpaidLessons"
             ]
+          },
+          "warning": {
+            "type": "string",
+            "enum": [
+              "ON_DEBT",
+              "NO_CREDITS",
+              "LOW_CREDITS"
+            ],
+            "nullable": true
           }
         },
         "required": [
@@ -10344,7 +11043,8 @@
           "packages",
           "creditsLeft",
           "debtLessons",
-          "balance"
+          "balance",
+          "warning"
         ]
       },
       "UpdateEnrollmentDto": {
@@ -10595,6 +11295,9 @@
                           "GBP"
                         ]
                       },
+                      "paid": {
+                        "type": "boolean"
+                      },
                       "student": {
                         "type": "object",
                         "properties": {
@@ -10619,6 +11322,7 @@
                       "packageId",
                       "amountMinor",
                       "currency",
+                      "paid",
                       "student"
                     ]
                   }
@@ -10732,6 +11436,935 @@
         },
         "required": [
           "items"
+        ]
+      },
+      "LessonPageDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "workspaceId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "enrollmentId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "nullable": true
+                },
+                "groupId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "nullable": true
+                },
+                "seriesId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "nullable": true
+                },
+                "teacherId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "startsAtUtc": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "durationMin": {
+                  "type": "integer",
+                  "minimum": 5,
+                  "exclusiveMinimum": false,
+                  "maximum": 720,
+                  "exclusiveMaximum": false
+                },
+                "priceMinor": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false,
+                  "maximum": 2147483647,
+                  "exclusiveMaximum": false
+                },
+                "currency": {
+                  "type": "string",
+                  "enum": [
+                    "EUR",
+                    "UAH",
+                    "PLN",
+                    "USD",
+                    "GBP"
+                  ]
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "SCHEDULED",
+                    "COMPLETED",
+                    "CANCELLED_CHARGED",
+                    "CANCELLED_UNCHARGED",
+                    "NO_SHOW"
+                  ]
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "REGULAR",
+                    "MAKEUP"
+                  ]
+                },
+                "originalLessonId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "nullable": true
+                },
+                "makeupLessonId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "nullable": true
+                },
+                "topic": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "isDetached": {
+                  "type": "boolean"
+                },
+                "rescheduledCount": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                },
+                "rescheduledAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                },
+                "cancelledBy": {
+                  "type": "string",
+                  "enum": [
+                    "TEACHER",
+                    "STUDENT",
+                    "GROUP"
+                  ],
+                  "nullable": true
+                },
+                "cancelledReason": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "cancelledAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                },
+                "completedAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                },
+                "paidAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                },
+                "notes": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "cancellationDeadlineHours": {
+                  "type": "integer"
+                },
+                "attendance": {
+                  "type": "object",
+                  "properties": {
+                    "present": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": false
+                    },
+                    "marked": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": false
+                    }
+                  },
+                  "required": [
+                    "present",
+                    "marked"
+                  ],
+                  "nullable": true
+                },
+                "charges": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "enrollmentId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "PACKAGE",
+                          "DEBT",
+                          "BALANCE"
+                        ]
+                      },
+                      "packageId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                      },
+                      "amountMinor": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "exclusiveMinimum": false
+                      },
+                      "currency": {
+                        "type": "string",
+                        "enum": [
+                          "EUR",
+                          "UAH",
+                          "PLN",
+                          "USD",
+                          "GBP"
+                        ]
+                      },
+                      "paid": {
+                        "type": "boolean"
+                      },
+                      "student": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "fullName": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "fullName"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "enrollmentId",
+                      "source",
+                      "packageId",
+                      "amountMinor",
+                      "currency",
+                      "paid",
+                      "student"
+                    ]
+                  }
+                },
+                "student": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "fullName": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "fullName"
+                  ],
+                  "nullable": true
+                },
+                "group": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name"
+                  ],
+                  "nullable": true
+                },
+                "teacher": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "color": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "color"
+                  ]
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "deletedAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                }
+              },
+              "required": [
+                "id",
+                "workspaceId",
+                "enrollmentId",
+                "groupId",
+                "seriesId",
+                "teacherId",
+                "startsAtUtc",
+                "durationMin",
+                "priceMinor",
+                "currency",
+                "status",
+                "kind",
+                "originalLessonId",
+                "makeupLessonId",
+                "topic",
+                "isDetached",
+                "rescheduledCount",
+                "rescheduledAt",
+                "cancelledBy",
+                "cancelledReason",
+                "cancelledAt",
+                "completedAt",
+                "paidAt",
+                "notes",
+                "cancellationDeadlineHours",
+                "attendance",
+                "charges",
+                "student",
+                "group",
+                "teacher",
+                "createdAt",
+                "updatedAt",
+                "deletedAt"
+              ]
+            }
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1,
+            "exclusiveMinimum": false
+          },
+          "pageSize": {
+            "type": "integer",
+            "minimum": 1,
+            "exclusiveMinimum": false
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "totalPages": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "counts": {
+            "type": "object",
+            "properties": {
+              "unpaid": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "cancelled": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "noShow": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "needsMakeup": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              }
+            },
+            "required": [
+              "unpaid",
+              "cancelled",
+              "noShow",
+              "needsMakeup"
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "total",
+          "totalPages",
+          "counts"
+        ]
+      },
+      "LessonDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "enrollmentId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "groupId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "seriesId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "teacherId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "startsAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "durationMin": {
+            "type": "integer",
+            "minimum": 5,
+            "exclusiveMinimum": false,
+            "maximum": 720,
+            "exclusiveMaximum": false
+          },
+          "priceMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "maximum": 2147483647,
+            "exclusiveMaximum": false
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "EUR",
+              "UAH",
+              "PLN",
+              "USD",
+              "GBP"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "SCHEDULED",
+              "COMPLETED",
+              "CANCELLED_CHARGED",
+              "CANCELLED_UNCHARGED",
+              "NO_SHOW"
+            ]
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "REGULAR",
+              "MAKEUP"
+            ]
+          },
+          "originalLessonId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "makeupLessonId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "topic": {
+            "type": "string",
+            "nullable": true
+          },
+          "isDetached": {
+            "type": "boolean"
+          },
+          "rescheduledCount": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "rescheduledAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "cancelledBy": {
+            "type": "string",
+            "enum": [
+              "TEACHER",
+              "STUDENT",
+              "GROUP"
+            ],
+            "nullable": true
+          },
+          "cancelledReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "cancelledAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "paidAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "cancellationDeadlineHours": {
+            "type": "integer"
+          },
+          "attendance": {
+            "type": "object",
+            "properties": {
+              "present": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "marked": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              }
+            },
+            "required": [
+              "present",
+              "marked"
+            ],
+            "nullable": true
+          },
+          "charges": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "enrollmentId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "source": {
+                  "type": "string",
+                  "enum": [
+                    "PACKAGE",
+                    "DEBT",
+                    "BALANCE"
+                  ]
+                },
+                "packageId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "nullable": true
+                },
+                "amountMinor": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                },
+                "currency": {
+                  "type": "string",
+                  "enum": [
+                    "EUR",
+                    "UAH",
+                    "PLN",
+                    "USD",
+                    "GBP"
+                  ]
+                },
+                "paid": {
+                  "type": "boolean"
+                },
+                "student": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "fullName": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "fullName"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "enrollmentId",
+                "source",
+                "packageId",
+                "amountMinor",
+                "currency",
+                "paid",
+                "student"
+              ]
+            }
+          },
+          "student": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "fullName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "fullName"
+            ],
+            "nullable": true
+          },
+          "group": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "nullable": true
+          },
+          "teacher": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "name": {
+                "type": "string"
+              },
+              "color": {
+                "type": "string",
+                "nullable": true
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "color"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "original": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "startsAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "SCHEDULED",
+                  "COMPLETED",
+                  "CANCELLED_CHARGED",
+                  "CANCELLED_UNCHARGED",
+                  "NO_SHOW"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "startsAtUtc",
+              "status"
+            ],
+            "nullable": true
+          },
+          "makeup": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "startsAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "SCHEDULED",
+                  "COMPLETED",
+                  "CANCELLED_CHARGED",
+                  "CANCELLED_UNCHARGED",
+                  "NO_SHOW"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "startsAtUtc",
+              "status"
+            ],
+            "nullable": true
+          },
+          "schedule": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "state": {
+                "type": "string",
+                "enum": [
+                  "ACTIVE",
+                  "ENDED"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "state"
+            ],
+            "nullable": true
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "workspaceId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "actorId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "nullable": true
+                },
+                "actor": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "email"
+                  ],
+                  "nullable": true
+                },
+                "entity": {
+                  "type": "string",
+                  "enum": [
+                    "STUDENT",
+                    "PARENT",
+                    "GROUP",
+                    "TEACHER",
+                    "ENROLLMENT",
+                    "WORKSPACE",
+                    "LESSON",
+                    "LESSON_SERIES",
+                    "SCHEDULE",
+                    "PAUSE",
+                    "LESSON_PACKAGE",
+                    "PAYMENT"
+                  ]
+                },
+                "entityId": {
+                  "type": "string"
+                },
+                "action": {
+                  "type": "string",
+                  "enum": [
+                    "CREATE",
+                    "UPDATE",
+                    "DELETE",
+                    "RESTORE"
+                  ]
+                },
+                "changes": {
+                  "type": "object",
+                  "properties": {
+                    "fields": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                          "before": {},
+                          "after": {}
+                        },
+                        "required": [
+                          "before",
+                          "after"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "fields"
+                  ],
+                  "nullable": true
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "id",
+                "workspaceId",
+                "actorId",
+                "actor",
+                "entity",
+                "entityId",
+                "action",
+                "changes",
+                "createdAt"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "workspaceId",
+          "enrollmentId",
+          "groupId",
+          "seriesId",
+          "teacherId",
+          "startsAtUtc",
+          "durationMin",
+          "priceMinor",
+          "currency",
+          "status",
+          "kind",
+          "originalLessonId",
+          "makeupLessonId",
+          "topic",
+          "isDetached",
+          "rescheduledCount",
+          "rescheduledAt",
+          "cancelledBy",
+          "cancelledReason",
+          "cancelledAt",
+          "completedAt",
+          "paidAt",
+          "notes",
+          "cancellationDeadlineHours",
+          "attendance",
+          "charges",
+          "student",
+          "group",
+          "teacher",
+          "createdAt",
+          "updatedAt",
+          "deletedAt",
+          "original",
+          "makeup",
+          "schedule",
+          "history"
         ]
       },
       "BulkCancelDto": {
@@ -11270,6 +12903,9 @@
                     "GBP"
                   ]
                 },
+                "paid": {
+                  "type": "boolean"
+                },
                 "student": {
                   "type": "object",
                   "properties": {
@@ -11294,6 +12930,7 @@
                 "packageId",
                 "amountMinor",
                 "currency",
+                "paid",
                 "student"
               ]
             }
