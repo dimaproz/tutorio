@@ -641,10 +641,12 @@ model LessonAttendance {
 // ---------------------------------------------------------------------------
 
 // FIXED_COUNT: the tutor states how many lessons the package holds.
-// BY_PERIOD: lessons are generated up to an end date from a recurring pattern.
+// BY_PERIOD: the lessons the direction's schedule has in the window.
+// BY_PERIOD_WEEKLY: X lessons a week times the weeks in the window (L-80).
 enum PackageSizingMode {
   FIXED_COUNT
   BY_PERIOD
+  BY_PERIOD_WEEKLY
 
   @@map("package_sizing_mode")
 }
@@ -663,6 +665,12 @@ enum PackagePaymentStatus {
 enum CreditEntryType {
   purchase
   manual_adjustment
+  // Unused credits moved to another direction (L-85): out of one package,
+  // into the new one.
+  transfer_out
+  transfer_in
+  // Unused credits taken back with a refund (L-85).
+  refund
 
   @@map("credit_entry_type")
 }
@@ -701,8 +709,15 @@ model LessonPackage {
   studentId                   String
   name                        String?
   sizingMode                  PackageSizingMode    @default(FIXED_COUNT)
-  // Set for FIXED_COUNT; for BY_PERIOD it holds the generated count.
+  // Set for FIXED_COUNT; for a period package it holds the computed count.
   lessonsTotal                Int
+  // BY_PERIOD_WEEKLY: lessons a week.
+  lessonsPerWeek              Int?
+  // A period package's first instant; it pays for lessons from here to
+  // expiresAt. Null for a count package (any time before expiresAt).
+  validFrom                   DateTime?
+  // The package whose unused credits became this one (L-85).
+  transferredFromPackageId    String?
   // Set for BY_PERIOD only.
   endDate                     DateTime?
   pricePerLessonMinorSnapshot Int
@@ -716,12 +731,14 @@ model LessonPackage {
   updatedAt                   DateTime             @updatedAt
   deletedAt                   DateTime?
 
-  workspace     Workspace           @relation(fields: [workspaceId], references: [id])
-  enrollment    Enrollment          @relation(fields: [enrollmentId], references: [id])
-  student       Student             @relation(fields: [studentId], references: [id])
-  creditEntries LessonCreditEntry[]
-  charges       LessonCharge[]
-  payments      Payment[]
+  workspace       Workspace           @relation(fields: [workspaceId], references: [id])
+  enrollment      Enrollment          @relation(fields: [enrollmentId], references: [id])
+  transferredFrom LessonPackage?      @relation("PackageTransfer", fields: [transferredFromPackageId], references: [id])
+  transfers       LessonPackage[]     @relation("PackageTransfer")
+  student         Student             @relation(fields: [studentId], references: [id])
+  creditEntries   LessonCreditEntry[]
+  charges         LessonCharge[]
+  payments        Payment[]
 
   @@index([workspaceId, deletedAt])
   // Revenue by period scans packages by purchase date (Stage 5 analytics).

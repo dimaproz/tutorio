@@ -211,6 +211,7 @@ export class BillingService {
       select: {
         id: true,
         purchasedAt: true,
+        validFrom: true,
         expiresAt: true,
         creditEntries: { select: { delta: true } },
         _count: { select: { charges: { where: { voidedAt: null } } } },
@@ -219,6 +220,7 @@ export class BillingService {
     return packages.map((pkg) => ({
       id: pkg.id,
       purchasedAt: pkg.purchasedAt,
+      validFrom: pkg.validFrom,
       expiresAt: pkg.expiresAt,
       remaining:
         pkg.creditEntries.reduce((sum, entry) => sum + entry.delta, 0) -

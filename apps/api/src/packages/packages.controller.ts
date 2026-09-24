@@ -32,9 +32,16 @@ import {
   AdjustBalanceDto,
   CreatePackageDto,
   CreditLedgerDto,
+  ExtendPackageDto,
   ListPackagesQueryDto,
   PackageDto,
   PackageListDto,
+  PackagePreviewDto,
+  PackageTransferDto,
+  RefundPackageDto,
+  SellToMembersDto,
+  SoldPackagesDto,
+  TransferPackageDto,
 } from './dto/packages.dto';
 import { ForceQueryDto } from '../scheduling/dto/scheduling.dto';
 import { PackagesService } from './packages.service';
@@ -56,6 +63,91 @@ export class PackagesController {
     @Query() query: ListPackagesQueryDto,
   ): Promise<PackageListDto> {
     return this.packages.list(user, query);
+  }
+
+  @Post('preview')
+  @HttpCode(HttpStatus.OK)
+  @Roles('OWNER')
+  @ApiOperation({
+    summary: 'Preview a package sale',
+    description:
+      'The credits (from the direction schedule for a by-period package), ' +
+      'price and window a sale would have. Writes nothing.',
+  })
+  @ApiOkResponse({ type: PackagePreviewDto })
+  @ApiBadRequestResponse({ type: ApiErrorDto })
+  @ZodSerializerDto(PackagePreviewDto)
+  preview(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: CreatePackageDto,
+  ): Promise<PackagePreviewDto> {
+    return this.packages.preview(user, dto);
+  }
+
+  @Post('members')
+  @Roles('OWNER')
+  @ApiOperation({
+    summary: 'Sell one package to each selected group member',
+    description:
+      'One package per member, for their membership of the group; each ' +
+      'member pays separately.',
+  })
+  @ApiCreatedResponse({ type: SoldPackagesDto })
+  @ApiNotFoundResponse({ type: ApiErrorDto })
+  @ZodSerializerDto(SoldPackagesDto)
+  sellToMembers(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: SellToMembersDto,
+  ): Promise<SoldPackagesDto> {
+    return this.packages.sellToMembers(user, dto);
+  }
+
+  @Post(':packageId/extend')
+  @Roles('OWNER')
+  @ApiOperation({ summary: 'Move the end of a package later' })
+  @ApiCreatedResponse({ type: PackageDto })
+  @ApiNotFoundResponse({ type: ApiErrorDto })
+  @ZodSerializerDto(PackageDto)
+  extend(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('packageId', ParseUUIDPipe) packageId: string,
+    @Body() dto: ExtendPackageDto,
+  ): Promise<PackageDto> {
+    return this.packages.extend(user, packageId, dto);
+  }
+
+  @Post(':packageId/transfer')
+  @Roles('OWNER')
+  @ApiOperation({
+    summary: "Move unused credits to another of the student's directions",
+    description:
+      'Recalculated by price and rounded down; the remainder is reported.',
+  })
+  @ApiCreatedResponse({ type: PackageTransferDto })
+  @ApiConflictResponse({ type: ApiErrorDto })
+  @ZodSerializerDto(PackageTransferDto)
+  transfer(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('packageId', ParseUUIDPipe) packageId: string,
+    @Body() dto: TransferPackageDto,
+  ): Promise<PackageTransferDto> {
+    return this.packages.transfer(user, packageId, dto);
+  }
+
+  @Post(':packageId/refund')
+  @Roles('OWNER')
+  @ApiOperation({
+    summary: 'Take unused credits back and record the money returned',
+  })
+  @ApiCreatedResponse({ type: PackageDto })
+  @ApiConflictResponse({ type: ApiErrorDto })
+  @ZodSerializerDto(PackageDto)
+  refund(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('packageId', ParseUUIDPipe) packageId: string,
+    @Body() dto: RefundPackageDto,
+  ): Promise<PackageDto> {
+    return this.packages.refund(user, packageId, dto);
   }
 
   @Get(':packageId')

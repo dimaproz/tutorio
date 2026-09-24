@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import {
   assertPaymentWithinOutstanding,
   OverpaymentError,
-  paymentStatusOf,
 } from '@tutorio/domain';
 import { Prisma } from '@prisma/client';
 import type {
@@ -27,7 +26,11 @@ import {
   ManualPaymentProvider,
   type PaymentProvider,
 } from './payment-provider';
-import { paymentInclude, toPaymentResponse } from './packages.shared';
+import {
+  paymentInclude,
+  refreshPaymentStatus,
+  toPaymentResponse,
+} from './packages.shared';
 
 @Injectable()
 export class PaymentsService {
@@ -265,31 +268,8 @@ export class PaymentsService {
     tx: Prisma.TransactionClient,
     payment: { packageId: string | null },
   ): Promise<void> {
-    const packageId = payment.packageId;
-    if (!packageId) {
-      return;
+    if (payment.packageId) {
+      await refreshPaymentStatus(tx, payment.packageId);
     }
-    const [pkg, paid] = await Promise.all([
-      tx.lessonPackage.findUniqueOrThrow({
-        where: { id: packageId },
-        select: { totalPriceMinorSnapshot: true },
-      }),
-      // Only settled money counts — a PENDING online payment must not make a
-      // package look paid before the provider confirms it.
-      tx.payment.aggregate({
-        where: { packageId, deletedAt: null, status: 'PAID' },
-        _sum: { amountMinor: true },
-      }),
-    ]);
-
-    await tx.lessonPackage.update({
-      where: { id: packageId },
-      data: {
-        paymentStatus: paymentStatusOf(
-          pkg.totalPriceMinorSnapshot,
-          paid._sum.amountMinor ?? 0,
-        ),
-      },
-    });
   }
 }

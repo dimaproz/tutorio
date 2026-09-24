@@ -295,6 +295,32 @@ export const invalidPackagePaymentRelation = () =>
     HttpStatus.CONFLICT,
   );
 
+// L-85: a transfer or refund takes more credits than the package has left.
+export const notEnoughCredits = (remaining: number) =>
+  new BusinessApiException(
+    'NOT_ENOUGH_CREDITS',
+    'The package does not have that many unused credits',
+    HttpStatus.CONFLICT,
+    { remaining },
+  );
+
+// L-85: a refund returns more money than the package received.
+export const refundTooLarge = (paidMinor: number) =>
+  new BusinessApiException(
+    'REFUND_TOO_LARGE',
+    'A refund cannot return more than the package received',
+    HttpStatus.CONFLICT,
+    { paidMinor },
+  );
+
+// L-85: credits move only to another direction of the same student.
+export const invalidTransferTarget = () =>
+  new BusinessApiException(
+    'INVALID_TRANSFER_TARGET',
+    'Credits move only to another direction of the same student',
+    HttpStatus.CONFLICT,
+  );
+
 export const overpayment = () =>
   new BusinessApiException(
     'OVERPAYMENT',
