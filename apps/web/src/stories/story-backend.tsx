@@ -49,6 +49,8 @@ export const storySession: AuthMe = {
     defaultCurrency: 'UAH',
     cancellationDeadlineHours: 12,
     timezone: 'Europe/Kyiv',
+    scheduleHorizonWeeks: 4,
+    lowCreditThreshold: 2,
   },
   role: 'OWNER',
 };

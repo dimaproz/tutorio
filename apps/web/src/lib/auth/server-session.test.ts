@@ -26,6 +26,8 @@ const SESSION = {
     defaultCurrency: 'EUR',
     cancellationDeadlineHours: 24,
     timezone: 'Europe/Kyiv',
+    scheduleHorizonWeeks: 4,
+    lowCreditThreshold: 2,
   },
   role: 'OWNER',
 };
