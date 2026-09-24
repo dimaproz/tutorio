@@ -176,7 +176,10 @@
     "MAKEUP_EXISTS": "This lesson already has a makeup.",
     "SCHEDULE_EXISTS": "This student already has a schedule with this teacher. Change it instead.",
     "SCHEDULE_NOT_FOUND": "Schedule not found.",
-    "SCHEDULE_ENDED": "This schedule has ended. Create a new one instead."
+    "SCHEDULE_ENDED": "This schedule has ended. Create a new one instead.",
+    "NOT_ENOUGH_CREDITS": "The package does not have that many unused lessons.",
+    "REFUND_TOO_LARGE": "A refund cannot return more than the package received.",
+    "INVALID_TRANSFER_TARGET": "Lessons can move only to another direction of the same student."
   },
   "validation": {
     "noShowIndividualOnly": "A group lesson records absences through attendance",
@@ -1902,7 +1905,10 @@
     "entryType": {
       "purchase": "Package purchased",
       "manual_adjustment": "Manual adjustment",
-      "lesson": "Lesson paid"
+      "lesson": "Lesson paid",
+      "transfer_out": "Moved to another direction",
+      "transfer_in": "Moved from another package",
+      "refund": "Refunded"
     },
     "columns": {
       "package": "Package",
