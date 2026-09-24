@@ -101,6 +101,9 @@ export function LessonActionsDialog({
       ? cancellationTiming(startsAt, new Date(), lesson.cancellationDeadlineHours)
       : 'on_time';
 
+  const suggestedCharge = (by: CancelledByDto) =>
+    suggestedCancellationStatus(timing, by) === 'CANCELLED_CHARGED' ? 'charged' : 'uncharged';
+
   // Reset on the transition into "open", at render time — the repo convention
   // for uncontrolled dialogs (an effect here trips the React Compiler's
   // set-state-in-effect rule).
@@ -114,9 +117,7 @@ export function LessonActionsDialog({
     setNewStart(toLocalDateTimeInput(new Date(lesson.startsAtUtc)));
     setScope('this');
     // Preselect what the deadline implies; the tutor can still override it.
-    setCharged(
-      suggestedCancellationStatus(timing) === 'CANCELLED_CHARGED' ? 'charged' : 'uncharged',
-    );
+    setCharged(suggestedCharge('STUDENT'));
   }
   if (!open && openedFor !== null) {
     setOpenedFor(null);
@@ -352,7 +353,12 @@ export function LessonActionsDialog({
                 <FieldLabel htmlFor="cancelled-by">{tCancel('by')}</FieldLabel>
                 <Select
                   value={cancelledBy}
-                  onValueChange={(value) => setCancelledBy(value as CancelledByDto)}
+                  onValueChange={(value) => {
+                    // Who cancels changes the suggestion (L-51): a teacher or
+                    // group cancellation is free.
+                    setCancelledBy(value as CancelledByDto);
+                    setCharged(suggestedCharge(value as CancelledByDto));
+                  }}
                 >
                   <SelectTrigger id="cancelled-by" className="w-full">
                     <SelectValue />
