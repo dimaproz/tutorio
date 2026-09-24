@@ -123,12 +123,10 @@ const meta = {
     pathname: {
       control: 'select',
       options: [
-        '/app',
-        '/app/calendar',
         '/app/students',
         '/app/students/new',
         '/app/groups',
-        '/app/settings',
+        '/app/parents',
       ],
     },
     workspace: { control: 'inline-radio', options: ['school', 'solo'] },
@@ -165,7 +163,7 @@ export const Teacher: Story = {
     const workspace = canvasElement.querySelector('[data-slot="workspace-context"]');
     await expect(workspace).not.toBeNull();
     await expect(within(workspace as HTMLElement).getByText('Individual tutor')).toBeVisible();
-    for (const name of ['Today', 'Students', 'Calendar', 'Teachers', 'Settings']) {
+    for (const name of ['Students', 'Groups', 'Parents']) {
       await expect(canvas.queryByRole('link', { name })).toBeNull();
     }
     await expect(canvas.getByRole('heading', { level: 1 })).toHaveTextContent(/Access/);
@@ -186,8 +184,9 @@ export const UserMenuAndLogoutPending: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: /Olena Kovalenko/ }));
     const menu = within(document.body);
-    await waitFor(() => expect(menu.getByRole('menuitem', { name: 'Settings' })).toBeVisible());
-    await expect(menu.getByRole('menuitem', { name: 'Sign out' })).toHaveAttribute('data-disabled');
+    await waitFor(() =>
+      expect(menu.getByRole('menuitem', { name: 'Sign out' })).toHaveAttribute('data-disabled'),
+    );
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(menu.queryByRole('menu')).not.toBeInTheDocument());
   },

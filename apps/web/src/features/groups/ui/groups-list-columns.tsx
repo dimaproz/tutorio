@@ -50,13 +50,11 @@ function GroupPriceCell({ group }: { group: GroupListItem }) {
 /** The rows view's columns. Sorting lives in the toolbar. */
 export function useGroupsListColumns({
   canArchive,
-  onSchedule,
   onArchive,
   onRestore,
   restoringId,
 }: {
   canArchive: boolean;
-  onSchedule: (group: GroupListItem) => void;
   onArchive: (group: GroupListItem) => void;
   onRestore: (group: GroupListItem) => void;
   restoringId?: string;
@@ -103,7 +101,6 @@ export function useGroupsListColumns({
               group={row.original}
               archived={Boolean(row.original.deletedAt)}
               canArchive={canArchive}
-              onSchedule={() => onSchedule(row.original)}
               onArchive={() => onArchive(row.original)}
               onRestore={() => onRestore(row.original)}
               busy={restoringId === row.original.id}
@@ -112,6 +109,6 @@ export function useGroupsListColumns({
         ),
       },
     ],
-    [t, canArchive, onSchedule, onArchive, onRestore, restoringId],
+    [t, canArchive, onArchive, onRestore, restoringId],
   );
 }

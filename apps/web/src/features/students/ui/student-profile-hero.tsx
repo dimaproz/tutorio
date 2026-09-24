@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { MailIcon, PencilIcon, PhoneIcon, PlusIcon, RotateCcwIcon, SendIcon } from 'lucide-react';
+import { MailIcon, PencilIcon, PhoneIcon, RotateCcwIcon, SendIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useFormatter, useTranslations } from 'next-intl';
 import type { StudentDetail } from '@tutorio/validation';
@@ -21,13 +21,11 @@ import { StudentStatusControl, type StudentStatusActions } from './student-statu
 export function StudentProfileHero({
   student,
   statusActions,
-  onSchedule,
   onRestore,
   restoring = false,
 }: {
   student: StudentDetail;
   statusActions: StudentStatusActions;
-  onSchedule: () => void;
   onRestore: () => void;
   restoring?: boolean;
 }) {
@@ -84,11 +82,7 @@ export function StudentProfileHero({
       </>
     ) : undefined;
 
-  const primary = policy.hero.includes('schedule') ? (
-    <Button type="button" leading={<PlusIcon />} onClick={onSchedule}>
-      {t('scheduleLesson')}
-    </Button>
-  ) : policy.hero.includes('restore') ? (
+  const primary = policy.hero.includes('restore') ? (
     <Button type="button" variant="white" onClick={onRestore} disabled={restoring}>
       {restoring ? (
         <Spinner data-icon="inline-start" />

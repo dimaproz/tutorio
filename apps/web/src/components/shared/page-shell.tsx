@@ -4,7 +4,6 @@ import { AlertCircleIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 
 const TITLE_SIZE = {
@@ -54,22 +53,6 @@ export function PageHeader({
       </div>
       {action ? <div className="flex shrink-0 flex-wrap items-center gap-2.5">{action}</div> : null}
     </div>
-  );
-}
-
-/** Visible but non-blocking feedback while cached query data is refreshing. */
-export function QueryRefreshIndicator({ isFetching }: { isFetching: boolean }) {
-  const t = useTranslations('common');
-
-  if (!isFetching) {
-    return null;
-  }
-
-  return (
-    <span role="status" className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-      <Spinner aria-hidden="true" />
-      {t('loading')}
-    </span>
   );
 }
 

@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import {
   ArchiveIcon,
-  CalendarPlusIcon,
   ExternalLinkIcon,
   PencilIcon,
   RotateCcwIcon,
@@ -26,7 +25,6 @@ export function GroupRowActions({
   group,
   archived,
   canArchive,
-  onSchedule,
   onArchive,
   onRestore,
   busy = false,
@@ -34,7 +32,6 @@ export function GroupRowActions({
   group: { id: string; name: string };
   archived: boolean;
   canArchive: boolean;
-  onSchedule: () => void;
   onArchive: () => void;
   onRestore: () => void;
   busy?: boolean;
@@ -59,10 +56,6 @@ export function GroupRowActions({
                   <PencilIcon data-icon />
                   {t('edit')}
                 </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={onSchedule}>
-                <CalendarPlusIcon data-icon />
-                {t('schedule')}
               </DropdownMenuItem>
             </>
           )}

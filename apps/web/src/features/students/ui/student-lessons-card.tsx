@@ -1,17 +1,15 @@
 'use client';
 
-import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useState } from 'react';
 import { addDays, startOfDay, subDays } from 'date-fns';
-import { CalendarIcon, MoreHorizontalIcon } from 'lucide-react';
+import { CalendarIcon } from 'lucide-react';
 import { useFormatter, useTranslations } from 'next-intl';
 import type { LessonResponse } from '@tutorio/validation';
-import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/shared/empty-state';
 import { LessonList, type LessonListItem } from '@/components/shared/lesson-list';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLessonsQuery } from '@/lib/api/scheduling';
-import { LessonActionsDialog, type LessonDialogMode } from './lesson-actions-dialog';
-import { LessonStatusBadge } from './lesson-status';
+import { LessonStatusBadge } from '@/features/lessons';
 
 // How far back and forward a student's schedule is read on their profile.
 const PAST_DAYS = 120;
@@ -47,7 +45,6 @@ export function StudentLessonsCard({
   readOnly = false,
   historyOnly = false,
   nowMs,
-  emptyAction,
 }: {
   studentId: string;
   readOnly?: boolean;
@@ -55,17 +52,12 @@ export function StudentLessonsCard({
   historyOnly?: boolean;
   nowMs?: number;
   /** The empty state's command, e.g. "Schedule lesson". */
-  emptyAction?: ReactNode;
 }) {
   const t = useTranslations('scheduling.studentLessons');
   const tCommon = useTranslations('common');
   const format = useFormatter();
   const mobile = useIsMobile();
   const [shown, setShown] = useState(FIRST_PAGE);
-
-  const [selected, setSelected] = useState<LessonResponse | null>(null);
-  const [actionsOpen, setActionsOpen] = useState(false);
-  const [actionsMode, setActionsMode] = useState<LessonDialogMode>('menu');
 
   // Pinned once per mount: the window and the upcoming/past split must not
   // shift underneath the tutor on an unrelated re-render.
@@ -82,13 +74,6 @@ export function StudentLessonsCard({
       past: items.filter((item) => new Date(item.startsAtUtc).getTime() < now).reverse(),
     };
   }, [lessons.data, now]);
-
-  // One dialog for the whole panel: the row menu only says which panel to show.
-  const openLesson = useCallback((lesson: LessonResponse, mode: LessonDialogMode = 'menu') => {
-    setSelected(lesson);
-    setActionsMode(mode);
-    setActionsOpen(true);
-  }, []);
 
   const ordered = historyOnly ? past : [...upcoming, ...past];
   const visible = ordered.slice(0, shown);
@@ -109,17 +94,6 @@ export function StudentLessonsCard({
       metaShort: [range, lesson.teacher.name.split(' ')[0]].join(' · '),
       state: lesson.id === nextId ? 'next' : past ? 'past' : 'default',
       status: <LessonStatusBadge status={lesson.status} />,
-      menu: readOnly ? undefined : (
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          aria-label={t('lessonActions')}
-          onClick={() => openLesson(lesson)}
-        >
-          <MoreHorizontalIcon />
-        </Button>
-      ),
     };
   };
 
@@ -159,19 +133,9 @@ export function StudentLessonsCard({
             icon={<CalendarIcon />}
             title={t('emptyTitle')}
             text={readOnly ? t('emptyArchived') : t('emptyDescription')}
-            action={readOnly ? undefined : emptyAction}
           />
         }
       />
-
-      {!readOnly ? (
-        <LessonActionsDialog
-          open={actionsOpen}
-          onOpenChange={setActionsOpen}
-          lesson={selected}
-          initialMode={actionsMode}
-        />
-      ) : null}
     </>
   );
 }

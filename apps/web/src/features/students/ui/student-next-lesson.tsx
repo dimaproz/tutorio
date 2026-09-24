@@ -1,13 +1,10 @@
 'use client';
 
-import { useState } from 'react';
 import { useFormatter, useNow, useTranslations } from 'next-intl';
 import type { LessonResponse, StudentStatusDto } from '@tutorio/validation';
 import { EntityAvatar } from '@/components/shared/entity-avatar';
 import { NextLessonCard, type NextLessonArt } from '@/components/shared/next-lesson-card';
 import { PersonItem } from '@/components/shared/person-item';
-import { Button } from '@/components/ui/button';
-import { LessonActionsDialog, type LessonDialogMode } from '@/features/scheduling';
 import { capitalizeFirst } from '@/lib/utils';
 
 const EMPTY_BY_STATUS: Record<StudentStatusDto, 'fresh' | 'hold' | 'archived'> = {
@@ -43,7 +40,6 @@ export function StudentNextLesson({
   const t = useTranslations('students.nextLesson');
   const format = useFormatter();
   const now = useNow();
-  const [mode, setMode] = useState<LessonDialogMode | null>(null);
 
   if (loading) {
     return <NextLessonCard heading={t('heading')} loading />;
@@ -96,22 +92,6 @@ export function StudentNextLesson({
             subtitle={t('teacher')}
           />
         }
-        primaryAction={
-          <Button type="button" variant="soft" onClick={() => setMode('menu')}>
-            {t('open')}
-          </Button>
-        }
-        secondaryAction={
-          <Button type="button" variant="dark-outline" onClick={() => setMode('reschedule')}>
-            {t('reschedule')}
-          </Button>
-        }
-      />
-      <LessonActionsDialog
-        open={mode !== null}
-        onOpenChange={(open) => (open ? undefined : setMode(null))}
-        lesson={lesson}
-        initialMode={mode ?? 'menu'}
       />
     </>
   );

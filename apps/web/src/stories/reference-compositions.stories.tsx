@@ -2,35 +2,24 @@ import { useState } from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
-import {
-  AlertCircleIcon,
-  CheckIcon,
-  MailIcon,
-  PlusIcon,
-  UsersIcon,
-  WalletIcon,
-} from 'lucide-react';
+import { AlertCircleIcon, CheckIcon, MailIcon, PlusIcon, UsersIcon } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { BackButton } from '@/components/shared/back-button';
-import { CollectionEmptyState } from '@/components/shared/collection-empty-state';
 import { CollectionFrame } from '@/components/shared/collection-frame';
-import { CollectionToolbar } from '@/components/shared/collection-toolbar';
 import { ConfirmDialog } from '@/components/shared/confirm-dialog';
 import { DataTable } from '@/components/shared/data-table';
-import { InfoRow, ProfileHeader, ProfileTag, SectionTitle } from '@/components/shared/detail-view';
+import { SectionTitle } from '@/components/shared/detail-view';
 import { DetailFrame } from '@/components/shared/detail-frame';
-import { ListPagination, ListSearchInput, type ListSort } from '@/components/shared/list-controls';
+import { EmptyState } from '@/components/shared/empty-state';
+import { ListPagination, type ListSort } from '@/components/shared/list-controls';
 import { LoadingPanel } from '@/components/shared/loading';
-import { MetricCard } from '@/components/shared/metric-card';
-import { PageHeader, QueryRefreshIndicator } from '@/components/shared/page-shell';
+import { PageHeader } from '@/components/shared/page-shell';
 import { PersonMiniCard } from '@/components/shared/person-mini-card';
 import { RowActionsTrigger } from '@/components/shared/row-actions-trigger';
 import { StatusBadge } from '@/components/shared/status-badges';
-import { StatusSelect } from '@/components/shared/status-select';
-import { PersonCell } from '@/components/shared/table-cells';
 
 interface StudentReferenceRow {
   name: string;
@@ -45,7 +34,7 @@ const studentRows: StudentReferenceRow[] = [
 function CollectionReference({
   state = 'ready',
 }: {
-  state?: 'ready' | 'refreshing' | 'loading' | 'error' | 'empty';
+  state?: 'ready' | 'loading' | 'error' | 'empty';
 }) {
   const [sortOrder, setSortOrder] = useState<ListSort['order']>('asc');
   const [page, setPage] = useState(1);
@@ -54,7 +43,12 @@ function CollectionReference({
       accessorKey: 'name',
       header: 'Student',
       meta: { sortField: 'name' },
-      cell: ({ row }) => <PersonCell fullName={row.original.name} subtitle={row.original.email} />,
+      cell: ({ row }) => (
+        <div className="flex flex-col">
+          <span className="font-medium">{row.original.name}</span>
+          <span className="text-muted-foreground">{row.original.email}</span>
+        </div>
+      ),
     },
     {
       accessorKey: 'status',
@@ -72,7 +66,7 @@ function CollectionReference({
     order: sortOrder,
     onSort: () => setSortOrder((current) => (current === 'asc' ? 'desc' : 'asc')),
   };
-  const hasRows = state === 'ready' || state === 'refreshing';
+  const hasRows = state === 'ready';
 
   return (
     <CollectionFrame
@@ -88,21 +82,6 @@ function CollectionReference({
           }
         />
       }
-      summary={
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <MetricCard label="Total students" value="12" />
-          <MetricCard label="Active" value="9" />
-          <MetricCard label="On hold" value="3" />
-          <MetricCard label="Archived" value="2" />
-        </div>
-      }
-      toolbar={
-        <CollectionToolbar>
-          <ListSearchInput label="Search students" placeholder="Search by name, email, or phone" />
-          <Button variant="outline">Active</Button>
-        </CollectionToolbar>
-      }
-      refresh={<QueryRefreshIndicator isFetching={state === 'refreshing'} />}
       loading={state === 'loading' ? <LoadingPanel /> : undefined}
       error={
         state === 'error' ? (
@@ -115,10 +94,10 @@ function CollectionReference({
       }
       empty={
         state === 'empty' ? (
-          <CollectionEmptyState
-            icon={UsersIcon}
+          <EmptyState
+            icon={<UsersIcon />}
             title="No students yet"
-            description="Create a student to schedule their first lesson."
+            text="Create a student to schedule their first lesson."
             action={<Button>Add student</Button>}
           />
         ) : undefined
@@ -148,12 +127,10 @@ function DetailReference({ state = 'ready' }: { state?: 'ready' | 'loading' | 'e
       back={<BackButton href="/app/students" label="Back to students" />}
       identity={
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <ProfileHeader
-            fullName="Anna Shevchenko"
-            badge={<StatusBadge label="Active" tone="success" icon={CheckIcon} />}
-            tags={<ProfileTag>English B2</ProfileTag>}
-            subtitle="Added 10 September 2026"
-          />
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl font-semibold tracking-tight">Anna Shevchenko</h1>
+            <StatusBadge label="Active" tone="success" icon={CheckIcon} />
+          </div>
           <Button>Edit</Button>
         </div>
       }
@@ -173,25 +150,13 @@ function DetailReference({ state = 'ready' }: { state?: 'ready' | 'loading' | 'e
             <CardHeader>
               <SectionTitle icon={MailIcon}>Contact details</SectionTitle>
             </CardHeader>
-            <CardContent>
-              <InfoRow icon={MailIcon} label="Email" href="mailto:anna@example.test">
-                anna@example.test
-              </InfoRow>
-            </CardContent>
+            <CardContent className="text-sm">anna@example.test</CardContent>
           </Card>
         ) : undefined
       }
       aside={
         state === 'ready' ? (
-          <div className="flex flex-col gap-4">
-            <MetricCard
-              icon={WalletIcon}
-              label="Hourly rate"
-              value="€30"
-              description="Default individual lesson rate"
-            />
-            <PersonMiniCard fullName="Olena Shevchenko" subtitle="Parent" />
-          </div>
+          <PersonMiniCard fullName="Olena Shevchenko" subtitle="Parent" />
         ) : undefined
       }
     />
@@ -199,29 +164,12 @@ function DetailReference({ state = 'ready' }: { state?: 'ready' | 'loading' | 'e
 }
 
 function StatusReference() {
-  const [value, setValue] = useState('active');
   return (
-    <div className="flex max-w-sm flex-col gap-4">
-      <div className="flex flex-wrap gap-2">
-        <StatusBadge label="Active" tone="success" icon={CheckIcon} />
-        <StatusBadge label="Awaiting a very long localized lifecycle decision" tone="warning" />
-        <StatusBadge label="Archived" tone="secondary" />
-        <StatusBadge label="Payment failed" tone="destructive" />
-      </div>
-      <StatusSelect
-        aria-label="Student lifecycle"
-        value={value}
-        onValueChange={setValue}
-        options={[
-          { value: 'active', label: 'Active', tone: 'success', icon: CheckIcon },
-          {
-            value: 'paused',
-            label: 'Awaiting a very long localized lifecycle decision',
-            tone: 'warning',
-            icon: AlertCircleIcon,
-          },
-        ]}
-      />
+    <div className="flex max-w-sm flex-wrap gap-2">
+      <StatusBadge label="Active" tone="success" icon={CheckIcon} />
+      <StatusBadge label="Awaiting a very long localized lifecycle decision" tone="warning" />
+      <StatusBadge label="Archived" tone="secondary" />
+      <StatusBadge label="Payment failed" tone="destructive" />
     </div>
   );
 }
@@ -263,9 +211,6 @@ export const Collection: Story = {
       ),
     );
   },
-};
-export const CollectionRefreshing: Story = {
-  render: () => <CollectionReference state="refreshing" />,
 };
 export const CollectionLoading: Story = {
   render: () => <CollectionReference state="loading" />,

@@ -1,38 +1,26 @@
 'use client';
 
-import { useState } from 'react';
-import { BookOpenIcon, PlusIcon } from 'lucide-react';
+import { BookOpenIcon } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import type {
-  EnrollmentResponse,
-  StudentDetail,
-  StudentEnrollmentSummary,
-} from '@tutorio/validation';
+import type { StudentDetail, StudentEnrollmentSummary } from '@tutorio/validation';
 import { SectionTitle } from '@/components/shared/detail-view';
-import { Button } from '@/components/ui/button';
-import { Card, CardAction, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
-import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from '@/components/ui/item';
-import { EnrollmentDialog, EnrollmentStatusBadge } from '@/features/enrollments';
-import { BillingTypeBadge } from '@/features/packages';
+import { Item, ItemContent, ItemDescription, ItemTitle } from '@/components/ui/item';
+import { EnrollmentStatusBadge } from './enrollment-status';
+import { BillingTypeBadge } from './package-status';
 import { formatMoneyDisplay } from '@/lib/money';
 
 export function StudentLearningCard({
   student,
-  createOpen,
-  onCreateOpenChange,
   readOnly = false,
 }: {
   student: StudentDetail;
-  createOpen: boolean;
-  onCreateOpenChange: (open: boolean) => void;
   readOnly?: boolean;
 }) {
   const t = useTranslations('students.learning');
   const locale = useLocale();
-  const [editing, setEditing] = useState<EnrollmentResponse | null>(null);
-  // Without relationships the profile keeps the section out of the way: the
-  // set-up checklist is where learning is started, and it opens this dialog.
+  // Without relationships the profile keeps the section out of the way.
   const visible = student.enrollments.length > 0;
 
   return (
@@ -41,14 +29,6 @@ export function StudentLearningCard({
         <Card>
           <CardHeader>
             <SectionTitle icon={BookOpenIcon}>{t('title')}</SectionTitle>
-            {!readOnly ? (
-              <CardAction>
-                <Button type="button" size="sm" onClick={() => onCreateOpenChange(true)}>
-                  <PlusIcon data-icon="inline-start" />
-                  {t('add')}
-                </Button>
-              </CardAction>
-            ) : null}
           </CardHeader>
           <CardContent>
             {student.enrollments.length === 0 ? (
@@ -67,41 +47,12 @@ export function StudentLearningCard({
                     key={enrollment.id}
                     enrollment={enrollment}
                     locale={locale}
-                    readOnly={readOnly}
-                    onEdit={setEditing}
                   />
                 ))}
               </ul>
             )}
           </CardContent>
         </Card>
-      ) : null}
-      {!readOnly ? (
-        <>
-          <EnrollmentDialog
-            open={createOpen}
-            onOpenChange={onCreateOpenChange}
-            lockedStudent={{
-              id: student.id,
-              fullName: student.fullName,
-              avatarKey: student.avatarKey,
-            }}
-          />
-          {editing ? (
-            <EnrollmentDialog
-              open
-              onOpenChange={(open) => {
-                if (!open) setEditing(null);
-              }}
-              enrollment={editing}
-              lockedStudent={{
-                id: student.id,
-                fullName: student.fullName,
-                avatarKey: student.avatarKey,
-              }}
-            />
-          ) : null}
-        </>
       ) : null}
     </>
   );
@@ -110,18 +61,12 @@ export function StudentLearningCard({
 function StudentEnrollmentItem({
   enrollment,
   locale,
-  readOnly,
-  onEdit,
 }: {
   enrollment: StudentEnrollmentSummary;
   locale: string;
-  readOnly: boolean;
-  onEdit: (enrollment: EnrollmentResponse) => void;
 }) {
   const t = useTranslations('students.learning');
 
-  // The profile's enrollment is the full enrollment response, so the editor
-  // opens straight from it without fetching each enrollment again.
   return (
     <li className="flex flex-col gap-2">
       <Item variant="outline">
@@ -138,13 +83,6 @@ function StudentEnrollmentItem({
             })}
           </ItemDescription>
         </ItemContent>
-        {!readOnly ? (
-          <ItemActions>
-            <Button type="button" variant="outline" size="sm" onClick={() => onEdit(enrollment)}>
-              {t('edit')}
-            </Button>
-          </ItemActions>
-        ) : null}
       </Item>
     </li>
   );

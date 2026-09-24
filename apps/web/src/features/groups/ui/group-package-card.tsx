@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import type { PackageResponse } from '@tutorio/validation';
 import { Badge } from '@/components/ui/badge';
@@ -68,26 +67,20 @@ export function GroupPackageCard({
       ) : (
         <ul className="flex flex-col gap-1">
           {packages.map((pkg) => (
-            <li key={pkg.id}>
-              <Link
-                prefetch={false}
-                href={`/app/packages/${pkg.id}`}
-                className="flex min-h-9 items-center gap-2.5 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <EntityAvatar
-                  avatarKey={null}
-                  fullName={pkg.student.fullName}
-                  size="xs"
-                  tint="indigo"
-                />
-                <span className="min-w-0 grow truncate text-sm">{pkg.student.fullName}</span>
-                <span className="shrink-0 text-[13px] text-muted-foreground tabular-nums">
-                  {t('lessonsLeft', { left: pkg.remainingCredits, total: pkg.lessonsTotal })}
-                </span>
-                <Badge variant={PAYMENT_BADGE[pkg.paymentStatus]}>
-                  {t(PAYMENT_LABEL[pkg.paymentStatus])}
-                </Badge>
-              </Link>
+            <li key={pkg.id} className="flex min-h-9 items-center gap-2.5">
+              <EntityAvatar
+                avatarKey={null}
+                fullName={pkg.student.fullName}
+                size="xs"
+                tint="indigo"
+              />
+              <span className="min-w-0 grow truncate text-sm">{pkg.student.fullName}</span>
+              <span className="shrink-0 text-[13px] text-muted-foreground tabular-nums">
+                {t('lessonsLeft', { left: pkg.remainingCredits, total: pkg.lessonsTotal })}
+              </span>
+              <Badge variant={PAYMENT_BADGE[pkg.paymentStatus]}>
+                {t(PAYMENT_LABEL[pkg.paymentStatus])}
+              </Badge>
             </li>
           ))}
         </ul>

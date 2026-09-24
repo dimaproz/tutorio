@@ -60,7 +60,6 @@ export const Playground: Story = {
     await expect(
       await canvas.findByRole('heading', { level: 1, name: 'Anna Shevchenko' }),
     ).toBeVisible();
-    await expect(await canvas.findByRole('button', { name: 'Schedule lesson' })).toBeVisible();
     // The next-lesson ticket and the ring metric read the student's own data.
     await expect(await canvas.findByText('6 of 8')).toBeVisible();
   },
@@ -77,9 +76,7 @@ export const Fresh: Story = {
   },
   play: async ({ canvas }) => {
     await expect(await canvas.findByText('Student created — choose the next step')).toBeVisible();
-    await expect(
-      (await canvas.findAllByRole('button', { name: 'Add package' })).length,
-    ).toBeGreaterThan(0);
+    await expect(await canvas.findByRole('button', { name: 'Add parent' })).toBeVisible();
   },
 };
 
@@ -87,7 +84,6 @@ export const OnHold: Story = {
   args: { profile: 'hold' },
   play: async ({ canvas }) => {
     await expect(await canvas.findByText('Student is on a break')).toBeVisible();
-    await expect(canvas.queryByRole('button', { name: 'Schedule lesson' })).toBeNull();
   },
 };
 

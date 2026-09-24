@@ -111,7 +111,7 @@ export const EditLeaveGuard: Story = {
     const name = await canvas.findByRole('textbox', { name: /Full name/ });
     await expect(name).toHaveValue('Anna Shevchenko');
     await userEvent.type(name, ' K');
-    await userEvent.click(canvas.getByRole('link', { name: 'Calendar' }));
+    await userEvent.click(canvas.getByRole('link', { name: 'Groups' }));
     const dialog = within(canvasElement.ownerDocument.body);
     // The dialog fades in; wait for it rather than sampling the first frame.
     await waitFor(() => expect(dialog.getByText('Discard changes?')).toBeVisible());

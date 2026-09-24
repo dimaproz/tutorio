@@ -1,17 +1,6 @@
-import type { Metadata } from 'next';
-import { getTranslations } from 'next-intl/server';
-import { DashboardToday, DashboardWelcome } from '@/features/dashboard';
+import { redirect } from 'next/navigation';
 
-export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations('app.nav');
-  return { title: t('dashboard') };
-}
-
-export default function DashboardPage() {
-  return (
-    <div className="flex flex-1 flex-col gap-6">
-      <DashboardWelcome />
-      <DashboardToday />
-    </div>
-  );
+// The studio opens on its students until the rebuilt home screen lands.
+export default function AppHomePage() {
+  redirect('/app/students');
 }

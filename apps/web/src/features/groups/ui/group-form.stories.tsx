@@ -78,7 +78,6 @@ export const EditWithSchedule: Story = {
     await expect(
       await canvas.findByText('The group already has a schedule'),
     ).toBeVisible();
-    await expect(canvas.getByRole('link', { name: 'Open recurring lessons' })).toBeVisible();
     await expect(canvas.getByDisplayValue('B2 prep · evening')).toBeVisible();
   },
 };

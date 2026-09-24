@@ -1,14 +1,12 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import Link from 'next/link';
 import {
   CalendarIcon,
   ClockIcon,
   FileTextIcon,
   GraduationCapIcon,
   LayersIcon,
-  RepeatIcon,
   UsersIcon,
   WalletIcon,
 } from 'lucide-react';
@@ -16,7 +14,6 @@ import { useTranslations } from 'next-intl';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import { SUPPORTED_CURRENCIES } from '@tutorio/domain';
 import type { GroupSchedule } from '@tutorio/validation';
-import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { EntityPicker, type EntityPickerOption } from '@/components/shared/entity-picker';
 import { FormSectionCard, type FormSectionTag } from '@/components/shared/form-section';
@@ -184,19 +181,7 @@ export function GroupFormSections({
         lockedSchedules && lockedSchedules.length > 0 ? (
           <div className="flex flex-col gap-3">
             <GroupSchedulePills schedules={lockedSchedules} />
-            <Notice
-              tone="info"
-              title={t('scheduleLocked')}
-              text={t('scheduleLockedHint')}
-              action={
-                <Button asChild variant="white" size="xs">
-                  <Link prefetch={false} href="/app/lessons/patterns">
-                    <RepeatIcon data-icon="inline-start" />
-                    {t('openPatterns')}
-                  </Link>
-                </Button>
-              }
-            />
+            <Notice tone="info" title={t('scheduleLocked')} text={t('scheduleLockedHint')} />
           </div>
         ) : (
           <>

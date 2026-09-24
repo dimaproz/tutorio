@@ -2,14 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LogOutIcon, MoreVerticalIcon, SettingsIcon } from 'lucide-react';
+import { LogOutIcon, MoreVerticalIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { AuthMe } from '@tutorio/validation';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -33,7 +32,6 @@ import { useLogoutMutation } from '@/lib/auth/client';
 import {
   closeMobileNavigation,
   getNavigationItems,
-  getSettingsNavigation,
   isNavigationActive,
   type NavigationItem,
 } from './app-navigation';
@@ -100,18 +98,15 @@ function WorkspaceSwitcher({ session, isSolo }: { session: AuthMe; isSolo: boole
 
 export function SidebarUserMenu({
   session,
-  canAccessSettings,
   isLogoutPending = false,
   onLogout,
 }: {
   session: AuthMe;
-  canAccessSettings: boolean;
   isLogoutPending?: boolean;
   onLogout: () => void;
 }) {
-  const { isMobile, setOpenMobile } = useSidebar();
+  const { isMobile } = useSidebar();
   const t = useTranslations('app.userMenu');
-  const tNav = useTranslations('app.nav');
 
   return (
     <DropdownMenu>
@@ -143,22 +138,6 @@ export function SidebarUserMenu({
             </div>
           </div>
         </DropdownMenuLabel>
-        {canAccessSettings ? (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem asChild>
-                <Link
-                  href="/app/settings"
-                  onClick={() => closeMobileNavigation(isMobile, setOpenMobile)}
-                >
-                  <SettingsIcon />
-                  {tNav('settings')}
-                </Link>
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-          </>
-        ) : null}
         <DropdownMenuSeparator />
         <DropdownMenuItem variant="destructive" disabled={isLogoutPending} onSelect={onLogout}>
           <LogOutIcon />
@@ -186,7 +165,6 @@ export function AppSidebarContent({
   const { isMobile, setOpenMobile } = useSidebar();
   const access = { isOwner: session.role === 'OWNER', isSolo };
   const items = getNavigationItems(access);
-  const settings = getSettingsNavigation(access);
 
   return (
     // `offcanvas` is the mobile behaviour: below md the sidebar is a sheet.
@@ -219,20 +197,10 @@ export function AppSidebarContent({
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        {settings ? (
-          <SidebarGroup className="mt-auto p-0 px-3.5">
-            <SidebarGroupContent>
-              <SidebarMenu className="gap-1">
-                <SidebarNavigationLink item={settings} pathname={pathname} />
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ) : null}
       </SidebarContent>
       <SidebarFooter className="p-0 px-3.5 pt-2 pb-5">
         <SidebarUserMenu
           session={session}
-          canAccessSettings={settings !== null}
           isLogoutPending={isLogoutPending}
           onLogout={onLogout}
         />

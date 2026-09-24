@@ -2,9 +2,8 @@
 
 import { useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { ArchiveIcon, CircleCheckIcon, LayersIcon, SearchIcon } from 'lucide-react';
+import { ArchiveIcon, CircleCheckIcon, LayersIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
 import { Label } from '@/components/ui/label';
 import {
   Pagination,
@@ -22,7 +21,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { StatusRow } from '@/components/shared/status-select';
-import { useUrlSearchText } from '@/hooks/use-url-search-text';
 import { buildPageSlots, PAGE_ELLIPSIS } from '@/lib/pagination';
 import type { StatusIcon, StatusTone } from '@/components/shared/status-meta';
 
@@ -97,39 +95,6 @@ export function buildUpdatedSearchParams(
     next.delete('page');
   }
   return next;
-}
-
-export function ListSearchInput({ label, placeholder }: { label: string; placeholder: string }) {
-  const searchParams = useSearchParams();
-  const updateParams = useUpdateSearchParams();
-  // The field follows the URL (back button, filter reset) and writes to it
-  // once typing pauses.
-  const [value, setValue] = useUrlSearchText(
-    searchParams.get('search')?.trim() || undefined,
-    (next) => updateParams({ search: next.trim() || undefined }, { resetPage: true }),
-  );
-
-  return (
-    <div className="flex-1 sm:max-w-xs">
-      <Label htmlFor="list-search" className="sr-only">
-        {label}
-      </Label>
-      {/* Comfortable ~44px touch target on phones, compact on desktop. */}
-      <InputGroup className="h-11 md:h-9">
-        <InputGroupAddon>
-          <SearchIcon aria-hidden="true" />
-        </InputGroupAddon>
-        <InputGroupInput
-          id="list-search"
-          type="search"
-          value={value}
-          onChange={(event) => setValue(event.target.value)}
-          placeholder={placeholder}
-          aria-label={label}
-        />
-      </InputGroup>
-    </div>
-  );
 }
 
 export function ListStateFilter({ value }: { value: 'active' | 'deleted' | 'all' }) {

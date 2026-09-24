@@ -55,7 +55,6 @@ export const Playground: Story = {
     ).toBeVisible();
     // The schedule card leads with the week and the next lesson.
     await expect(await canvas.findByText('Tuesday')).toBeVisible();
-    await expect(canvas.getByRole('button', { name: 'Open lesson' })).toBeVisible();
     // The lessons scroll inside their own box, with the counter under it.
     const region = await canvas.findByRole('region', { name: 'Group lessons' });
     await expect(region).toBeVisible();

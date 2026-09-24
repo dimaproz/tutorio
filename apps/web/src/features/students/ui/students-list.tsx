@@ -2,11 +2,10 @@
 
 import { useRef, useState } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { CalendarIcon, PlusIcon } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { PlusIcon } from 'lucide-react';
 import { useNow, useTranslations } from 'next-intl';
 // Imported directly: the scheduling barrel also pulls in the calendar.
-import { LessonFormDialog } from '@/components/scheduling/lesson-form-dialog';
 import { CollectionFrame } from '@/components/shared/collection-frame';
 import { DataTable } from '@/components/shared/data-table';
 import {
@@ -34,10 +33,8 @@ const SORT_FIELDS = ['fullName', 'status', 'createdAt'] as const;
 export function StudentsList({ nowMs }: { nowMs?: number } = {}) {
   const t = useTranslations('students');
   const tCommon = useTranslations('common');
-  const router = useRouter();
   const searchParams = useSearchParams();
   const updateParams = useUpdateSearchParams();
-  const [lessonOpen, setLessonOpen] = useState(false);
   // The page reads one pinned clock, so every window it queries lines up.
   const clock = useNow();
   const [now] = useState(() => nowMs ?? clock.getTime());
@@ -118,17 +115,6 @@ export function StudentsList({ nowMs }: { nowMs?: number } = {}) {
             }
             action={
               <>
-                {workspaceEmpty ? null : (
-                  <Button
-                    size="xl"
-                    variant="outline"
-                    className="hidden md:inline-flex"
-                    onClick={() => setLessonOpen(true)}
-                  >
-                    <CalendarIcon data-icon="inline-start" />
-                    {t('scheduleLesson')}
-                  </Button>
-                )}
                 <Button asChild size="xl" leading={<PlusIcon />} className="max-md:h-11">
                   <Link href="/app/students/new">
                     <span className="md:hidden">{t('newShort')}</span>
@@ -145,7 +131,6 @@ export function StudentsList({ nowMs }: { nowMs?: number } = {}) {
             totalQuery={totalMetric}
             lessonsThisWeek={lessonsThisWeek}
             metrics={packageMetrics}
-            onTopUp={() => router.push('/app/packages')}
           />
         }
         toolbar={
@@ -251,7 +236,6 @@ export function StudentsList({ nowMs }: { nowMs?: number } = {}) {
           ) : undefined
         }
       />
-      <LessonFormDialog open={lessonOpen} onOpenChange={setLessonOpen} />
     </>
   );
 }

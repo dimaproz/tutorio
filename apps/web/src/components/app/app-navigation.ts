@@ -1,26 +1,9 @@
 import type { LucideIcon } from 'lucide-react';
-import {
-  BoxIcon,
-  CalendarIcon,
-  GraduationCapIcon,
-  HeartIcon,
-  HomeIcon,
-  LayersIcon,
-  RepeatIcon,
-  SettingsIcon,
-  UsersIcon,
-} from 'lucide-react';
+import { HeartIcon, LayersIcon, UsersIcon } from 'lucide-react';
 
-export type NavigationKey =
-  | 'dashboard'
-  | 'calendar'
-  | 'students'
-  | 'groups'
-  | 'parents'
-  | 'teachers'
-  | 'patterns'
-  | 'packages'
-  | 'settings';
+// The rebuilt destinations only; the calendar, lessons, packages, teachers,
+// home and settings return with their new screens.
+export type NavigationKey = 'students' | 'groups' | 'parents';
 
 export type NavigationItem = {
   key: NavigationKey;
@@ -46,32 +29,13 @@ export function canUseBusinessRoutes(role: string): boolean {
   return role === 'OWNER';
 }
 
-// One flat list, in the order the design reads it. Grouping headings were
-// dropped with the Studio shell: eight destinations do not need three labels.
-// Every destination reads business data, so every one is owner-only.
+// One flat list, in the order the design reads it. Every destination reads
+// business data, so every one is owner-only.
 const navigationItems: NavigationItem[] = [
-  { key: 'dashboard', href: '/app', icon: HomeIcon, exact: true, ownerOnly: true },
-  { key: 'calendar', href: '/app/calendar', icon: CalendarIcon, ownerOnly: true },
   { key: 'students', href: '/app/students', icon: UsersIcon, ownerOnly: true },
   { key: 'groups', href: '/app/groups', icon: LayersIcon, ownerOnly: true },
   { key: 'parents', href: '/app/parents', icon: HeartIcon, ownerOnly: true },
-  {
-    key: 'teachers',
-    href: '/app/teachers',
-    icon: GraduationCapIcon,
-    ownerOnly: true,
-    schoolOnly: true,
-  },
-  { key: 'packages', href: '/app/packages', icon: BoxIcon, ownerOnly: true },
-  { key: 'patterns', href: '/app/lessons/patterns', icon: RepeatIcon, ownerOnly: true },
 ];
-
-const settingsItem: NavigationItem = {
-  key: 'settings',
-  href: '/app/settings',
-  icon: SettingsIcon,
-  ownerOnly: true,
-};
 
 function isVisible(item: NavigationItem, { isOwner, isSolo }: NavigationAccess): boolean {
   return (!item.ownerOnly || isOwner) && (!item.schoolOnly || !isSolo);
@@ -79,10 +43,6 @@ function isVisible(item: NavigationItem, { isOwner, isSolo }: NavigationAccess):
 
 export function getNavigationItems(access: NavigationAccess): NavigationItem[] {
   return navigationItems.filter((item) => isVisible(item, access));
-}
-
-export function getSettingsNavigation(access: NavigationAccess): NavigationItem | null {
-  return isVisible(settingsItem, access) ? settingsItem : null;
 }
 
 export function isNavigationActive(pathname: string, item: Pick<NavigationItem, 'href' | 'exact'>) {
@@ -96,7 +56,7 @@ export type RouteContext = {
   href?: string;
 };
 
-const routeContextItems = [...navigationItems, settingsItem].sort(
+const routeContextItems = [...navigationItems].sort(
   (left, right) => right.href.length - left.href.length,
 );
 
@@ -104,7 +64,7 @@ export function getRouteContext(pathname: string): RouteContext[] {
   const matchedItem = routeContextItems.find((item) => isNavigationActive(pathname, item));
 
   if (!matchedItem) {
-    return [{ key: 'dashboard', href: '/app' }];
+    return [{ key: 'students', href: '/app/students' }];
   }
 
   if (pathname === matchedItem.href) {

@@ -1,10 +1,10 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useIsFetching, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { CalendarPlusIcon, UserIcon, XIcon } from 'lucide-react';
+import { UserIcon, XIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { ParentDetail } from '@tutorio/validation';
 import { ConfirmDialog } from '@/components/shared/confirm-dialog';
@@ -20,7 +20,6 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { LessonFormDialog } from '@/features/scheduling';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useRelationshipLinks } from '@/hooks/use-relationship-links';
 import { errorMessageKey } from '@/lib/api/error-message';
@@ -55,15 +54,9 @@ export function ParentStudentsCard({
   const queryClient = useQueryClient();
   const refreshing = useIsFetching({ queryKey: queryKeys.parents.detail(parent.id) }) > 0;
   const { mutateAsync: updateParent } = useUpdateParentMutation(parent.id);
-  const [scheduleFor, setScheduleFor] = useState<string | null>(null);
   const toRow = useStudentLinkRow();
 
   const serverRows = useMemo(() => parent.students.map(toRow), [parent.students, toRow]);
-  const archived = useMemo(
-    () =>
-      new Set(parent.students.filter((student) => student.status === 'ARCHIVED').map((s) => s.id)),
-    [parent.students],
-  );
   const save = useCallback((studentIds: string[]) => updateParent({ studentIds }), [updateParent]);
   const refetch = useCallback(
     // Joins the read the save's invalidation already started instead of
@@ -104,12 +97,6 @@ export function ParentStudentsCard({
                 {tLinks('openProfile')}
               </Link>
             </DropdownMenuItem>
-            {!archived.has(row.id) ? (
-              <DropdownMenuItem onSelect={() => setScheduleFor(row.id)}>
-                <CalendarPlusIcon data-icon />
-                {t('schedule')}
-              </DropdownMenuItem>
-            ) : null}
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
@@ -177,12 +164,6 @@ export function ParentStudentsCard({
         pending={flow.unlink.pending}
         onConfirm={flow.unlink.confirm}
         returnFocus={addButton}
-      />
-
-      <LessonFormDialog
-        open={scheduleFor !== null}
-        onOpenChange={(open) => (open ? undefined : setScheduleFor(null))}
-        lockedStudentId={scheduleFor ?? undefined}
       />
     </>
   );

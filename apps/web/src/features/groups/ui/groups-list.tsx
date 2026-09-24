@@ -14,7 +14,6 @@ import { PageHeader, QueryErrorAlert } from '@/components/shared/page-shell';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { LessonFormDialog } from '@/features/scheduling';
 import { useStoredChoice } from '@/hooks/use-stored-choice';
 import { parsePageParam } from '@/lib/api/filters';
 import { useGroupsQuery, useGroupsSummaryQuery } from '@/lib/api/groups';
@@ -66,7 +65,6 @@ export function GroupsList() {
   const searchRef = useRef<HTMLInputElement>(null);
   // Cards or rows is this browser's choice, kept across visits.
   const [view, setView] = useStoredChoice<GroupsView>('tutorio.groups.view', GROUPS_VIEWS, 'grid');
-  const [scheduleFor, setScheduleFor] = useState<string | null>(null);
   const isOwner = session.role === 'OWNER';
   const school = session.workspace.mode === 'SCHOOL';
 
@@ -108,7 +106,6 @@ export function GroupsList() {
   };
   const columns = useGroupsListColumns({
     canArchive: archiving.canArchive,
-    onSchedule: (group) => setScheduleFor(group.id),
     onArchive: archiving.request,
     onRestore,
     restoringId,
@@ -334,11 +331,6 @@ export function GroupsList() {
         }
       />
       {archiving.dialog}
-      <LessonFormDialog
-        open={scheduleFor !== null}
-        onOpenChange={(open) => (open ? undefined : setScheduleFor(null))}
-        lockedGroupId={scheduleFor ?? undefined}
-      />
     </>
   );
 }

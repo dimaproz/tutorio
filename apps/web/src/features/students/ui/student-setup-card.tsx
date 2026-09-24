@@ -1,21 +1,11 @@
 'use client';
 
-import {
-  ArrowRightIcon,
-  CalendarIcon,
-  BoxIcon,
-  HeartIcon,
-  LayersIcon,
-  PencilIcon,
-} from 'lucide-react';
+import { ArrowRightIcon, HeartIcon, PencilIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { SetupChecklist } from '@/components/shared/setup-checklist';
 
 const actions = [
-  ['lesson', CalendarIcon],
-  ['package', BoxIcon],
-  ['learning', LayersIcon],
   ['parent', HeartIcon],
   ['profile', PencilIcon],
 ] as const;

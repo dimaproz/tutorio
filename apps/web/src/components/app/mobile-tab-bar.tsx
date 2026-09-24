@@ -3,10 +3,9 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  BoxIcon,
-  CalendarIcon,
   EllipsisVerticalIcon,
-  HomeIcon,
+  HeartIcon,
+  LayersIcon,
   UsersIcon,
   type LucideIcon,
 } from 'lucide-react';
@@ -17,10 +16,9 @@ import { canUseBusinessRoutes, isNavigationActive, type NavigationKey } from './
 import { useSession } from './session-provider';
 
 const TABS: { key: NavigationKey; href: string; icon: LucideIcon; exact?: boolean }[] = [
-  { key: 'dashboard', href: '/app', icon: HomeIcon, exact: true },
-  { key: 'calendar', href: '/app/calendar', icon: CalendarIcon },
   { key: 'students', href: '/app/students', icon: UsersIcon },
-  { key: 'packages', href: '/app/packages', icon: BoxIcon },
+  { key: 'groups', href: '/app/groups', icon: LayersIcon },
+  { key: 'parents', href: '/app/parents', icon: HeartIcon },
 ];
 
 const TAB_CLASS =
@@ -41,7 +39,7 @@ function TabIcon({ icon: Icon, active }: { icon: LucideIcon; active: boolean }) 
 }
 
 /**
- * The phone tab bar: four destinations and "More", which opens the full
+ * The phone tab bar: the destinations and "More", which opens the full
  * navigation sheet. Fixed to the bottom with the safe-area inset below it.
  */
 export function MobileTabBarContent({

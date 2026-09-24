@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useState } from 'react';
-import { PlayIcon, PlusIcon, RotateCcwIcon } from 'lucide-react';
+import { PlayIcon, RotateCcwIcon } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useNow, useTranslations } from 'next-intl';
 import type { StudentDetail } from '@tutorio/validation';
@@ -12,8 +12,7 @@ import { useSetPageCrumb } from '@/components/shared/page-crumb';
 import { QueryErrorAlert } from '@/components/shared/page-shell';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
-import { PackageFormDialog } from '@/features/packages';
-import { LessonFormDialog, StudentLessonsCard, studentLessonsRange } from '@/features/scheduling';
+import { StudentLessonsCard, studentLessonsRange } from './student-lessons-card';
 import { studentLifecyclePolicy } from '@/features/students/model/lifecycle';
 import { deriveStudentProfileMetrics } from '@/features/students/model/profile-metrics';
 import {
@@ -86,9 +85,6 @@ export function StudentProfileContent({
   useSetPageCrumb(t('detail.pageLabel'));
   const setupVisible = searchParams.get('setup') === '1' && !archived;
   const statusActions = useStudentStatusActions(student);
-  const [lessonOpen, setLessonOpen] = useState(false);
-  const [packageOpen, setPackageOpen] = useState(false);
-  const [learningOpen, setLearningOpen] = useState(false);
   const parentsSectionRef = useRef<HTMLDivElement>(null);
 
   // One pinned window shared with the lessons panel, so both read one query.
@@ -139,7 +135,6 @@ export function StudentProfileContent({
     parentsSectionRef.current?.scrollIntoView({ block: 'center' });
     parentsSectionRef.current?.querySelector<HTMLButtonElement>('#student-link-parent')?.focus();
   };
-  const schedule = () => setLessonOpen(true);
 
   const banner =
     student.status === 'ON_HOLD' ? (
@@ -189,7 +184,6 @@ export function StudentProfileContent({
         <StudentProfileHero
           student={student}
           statusActions={statusActions}
-          onSchedule={schedule}
           onRestore={restore}
           restoring={restoring}
         />
@@ -209,9 +203,6 @@ export function StudentProfileContent({
         <StudentSetupCard
           onDismiss={dismissSetup}
           onAction={(action) => {
-            if (action === 'lesson' && policy.canSchedule) setLessonOpen(true);
-            if (action === 'package') setPackageOpen(true);
-            if (action === 'learning') setLearningOpen(true);
             if (action === 'parent') focusParents();
             if (action === 'profile') router.push(`/app/students/${student.id}/edit`);
           }}
@@ -219,41 +210,19 @@ export function StudentProfileContent({
       ) : null}
       <StudentSectionsCard
         historyOnly={archived}
-        onAddLesson={policy.canSchedule ? schedule : undefined}
-        onAddPackage={archived ? undefined : () => setPackageOpen(true)}
         lessons={
           <StudentLessonsCard
             studentId={student.id}
             readOnly={archived}
             historyOnly={archived}
             nowMs={now}
-            emptyAction={
-              policy.canSchedule ? (
-                <Button type="button" leading={<PlusIcon />} onClick={schedule}>
-                  {t('detail.scheduleLesson')}
-                </Button>
-              ) : undefined
-            }
           />
         }
-        packages={
-          <StudentPackagesCard
-            bare
-            studentId={student.id}
-            createOpen={packageOpen}
-            onCreateOpenChange={setPackageOpen}
-            readOnly={archived}
-          />
-        }
+        packages={<StudentPackagesCard bare studentId={student.id} readOnly={archived} />}
       />
       {/* History stays readable: an archived profile shows its relationships
           without the commands that would change them. */}
-      <StudentLearningCard
-        student={student}
-        createOpen={learningOpen}
-        onCreateOpenChange={setLearningOpen}
-        readOnly={archived}
-      />
+      <StudentLearningCard student={student} readOnly={archived} />
     </>
   );
 
@@ -272,32 +241,12 @@ export function StudentProfileContent({
         identity={identity}
         // An archived profile is history: the live metrics would only mislead.
         metrics={
-          archived ? undefined : (
-            <StudentProfileMetrics
-              student={student}
-              metrics={metrics}
-              onAddPackage={() => setPackageOpen(true)}
-            />
-          )
+          archived ? undefined : <StudentProfileMetrics student={student} metrics={metrics} />
         }
         main={main}
         aside={aside}
       />
       {statusActions.dialogs}
-      {!archived ? (
-        <LessonFormDialog
-          open={lessonOpen}
-          onOpenChange={setLessonOpen}
-          lockedStudentId={student.id}
-        />
-      ) : null}
-      {!archived ? (
-        <PackageFormDialog
-          open={packageOpen}
-          onOpenChange={setPackageOpen}
-          lockedStudentId={student.id}
-        />
-      ) : null}
     </>
   );
 }

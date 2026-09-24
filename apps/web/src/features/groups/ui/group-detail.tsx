@@ -17,7 +17,6 @@ import { LoadingPanel } from '@/components/shared/loading';
 import { Notice } from '@/components/shared/notice';
 import { useSetPageCrumb } from '@/components/shared/page-crumb';
 import { QueryErrorAlert } from '@/components/shared/page-shell';
-import { LessonActionsDialog, LessonFormDialog } from '@/features/scheduling';
 import { memberPackages } from '@/features/groups/model/presentation';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useGroupAttendanceQuery, useGroupQuery } from '@/lib/api/groups';
@@ -134,9 +133,7 @@ export function GroupPageContent({
   const lifecycle = archived ? 'ARCHIVED' : group.status;
   const justCreated = searchParams.get('created') === '1';
 
-  const [scheduleOpen, setScheduleOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [openLesson, setOpenLesson] = useState<LessonResponse | null>(null);
   const [markLesson, setMarkLesson] = useState<LessonResponse | null>(null);
   const members = useMemo(() => memberPackages(packages.items, now), [packages.items, now]);
   const archiving = useGroupArchive({ onArchived: () => router.push('/app/groups') });
@@ -145,8 +142,6 @@ export function GroupPageContent({
     setRestoring(true);
     void archiving.restore(group.id).finally(() => setRestoring(false));
   };
-  const nextLesson =
-    lessons.items.find((lesson) => lesson.id === group.nextLesson?.id) ?? null;
 
   const identity = (
     <div className="flex flex-col gap-4">
@@ -157,7 +152,13 @@ export function GroupPageContent({
           text={t('detail.archivedText')}
           action={
             archiving.canArchive ? (
-              <Button type="button" variant="white" size="xs" disabled={restoring} onClick={restore}>
+              <Button
+                type="button"
+                variant="white"
+                size="xs"
+                disabled={restoring}
+                onClick={restore}
+              >
                 {restoring ? (
                   <Spinner data-icon="inline-start" />
                 ) : (
@@ -177,17 +178,12 @@ export function GroupPageContent({
           lifecycle={lifecycle}
           justCreated={justCreated}
           canArchive={archiving.canArchive}
-          onSchedule={() => setScheduleOpen(true)}
           onAddStudents={() => setPickerOpen(true)}
           onArchive={() => archiving.request(group)}
           onRestore={restore}
           restoring={restoring}
         />
-        <GroupScheduleCard
-          group={group}
-          archived={archived}
-          onOpenLesson={() => (nextLesson ? setOpenLesson(nextLesson) : undefined)}
-        />
+        <GroupScheduleCard group={group} archived={archived} />
       </div>
     </div>
   );
@@ -212,8 +208,6 @@ export function GroupPageContent({
               loading={lessons.loading}
               now={now}
               archived={archived}
-              onSchedule={() => setScheduleOpen(true)}
-              onOpenLesson={setOpenLesson}
               onMarkAttendance={setMarkLesson}
             />
             {/* A group with no students and no lessons yet has nothing to count;
@@ -245,16 +239,6 @@ export function GroupPageContent({
       {archiving.dialog}
       {archived ? null : (
         <>
-          <LessonFormDialog
-            open={scheduleOpen}
-            onOpenChange={setScheduleOpen}
-            lockedGroupId={group.id}
-          />
-          <LessonActionsDialog
-            open={openLesson !== null}
-            onOpenChange={(open) => (open ? undefined : setOpenLesson(null))}
-            lesson={openLesson}
-          />
           <AttendanceDialog
             lesson={markLesson}
             open={markLesson !== null}

@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { packageFormSchema, emptyPackageForm } from '@/features/packages/model/package-form';
 import { makeGroupFormSchema, emptyGroupForm } from '@/features/groups/model/form';
 import { makeZodErrorMap } from './error-map';
 
@@ -23,18 +22,7 @@ describe('makeZodErrorMap', () => {
       { ...emptyGroupForm('UAH'), name: 'B2', capacity: '0', weekdays: [1] },
       { errorMap },
     );
-    const pkg = packageFormSchema.safeParse(
-      {
-        ...emptyPackageForm({ currency: 'UAH', timezone: 'Europe/Kyiv' }),
-        sizingMode: 'BY_PERIOD',
-        endDate: '',
-      },
-      { errorMap },
-    );
-    const messages = [
-      ...(group.success ? [] : group.error.issues),
-      ...(pkg.success ? [] : pkg.error.issues),
-    ]
+    const messages = (group.success ? [] : group.error.issues)
       .filter((issue) => issue.code === z.ZodIssueCode.custom)
       .map((issue) => issue.message);
     expect(messages.length).toBeGreaterThan(0);

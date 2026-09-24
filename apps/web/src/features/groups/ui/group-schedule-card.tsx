@@ -18,11 +18,9 @@ import { useWeekdayLabels } from '@/lib/i18n/weekdays';
 export function GroupScheduleCard({
   group,
   archived,
-  onOpenLesson,
 }: {
   group: GroupDetail;
   archived: boolean;
-  onOpenLesson: () => void;
 }) {
   const t = useTranslations('groups');
   const format = useFormatter();
@@ -70,13 +68,6 @@ export function GroupScheduleCard({
     >
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-base font-semibold">{t('schedule.title')}</h2>
-        {archived ? null : (
-          <Button asChild variant="dark-outline" size="xs" className="max-md:h-11">
-            <Link prefetch={false} href="/app/lessons/patterns">
-              {t('schedule.change')}
-            </Link>
-          </Button>
-        )}
       </div>
 
       {/* Phones read the week as pills; wider screens as one row per day. */}
@@ -128,15 +119,6 @@ export function GroupScheduleCard({
                 })}
               </span>
             </div>
-            <Button
-              type="button"
-              variant="soft"
-              size="xl"
-              className="w-full max-md:hidden"
-              onClick={onOpenLesson}
-            >
-              {t('schedule.openLesson')}
-            </Button>
           </>
         ) : (
           <span className="text-sm text-feature-muted">{t('schedule.noNext')}</span>

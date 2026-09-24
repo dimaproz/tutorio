@@ -6,7 +6,6 @@ import {
   EllipsisVerticalIcon,
   PencilIcon,
   PlusIcon,
-  RepeatIcon,
   RotateCcwIcon,
 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
@@ -40,7 +39,6 @@ export function GroupHero({
   lifecycle,
   justCreated,
   canArchive,
-  onSchedule,
   onAddStudents,
   onArchive,
   onRestore,
@@ -51,7 +49,6 @@ export function GroupHero({
   /** The page opened straight after create. */
   justCreated: boolean;
   canArchive: boolean;
-  onSchedule: () => void;
   onAddStudents: () => void;
   onArchive: () => void;
   onRestore: () => void;
@@ -85,13 +82,9 @@ export function GroupHero({
         {t('detail.restore')}
       </Button>
     ) : null
-  ) : students.length === 0 ? (
+  ) : (
     <Button type="button" size="xl" leading={<PlusIcon />} onClick={onAddStudents}>
       {t('detail.addStudents')}
-    </Button>
-  ) : (
-    <Button type="button" size="xl" leading={<PlusIcon />} onClick={onSchedule}>
-      {t('detail.scheduleLesson')}
     </Button>
   );
 
@@ -112,12 +105,6 @@ export function GroupHero({
               </Link>
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem asChild>
-            <Link prefetch={false} href="/app/lessons/patterns">
-              <RepeatIcon data-icon />
-              {t('form.openPatterns')}
-            </Link>
-          </DropdownMenuItem>
         </DropdownMenuGroup>
         {canArchive ? (
           <>

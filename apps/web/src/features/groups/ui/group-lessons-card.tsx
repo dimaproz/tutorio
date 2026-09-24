@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { CalendarIcon, ClipboardCheckIcon, ExternalLinkIcon, PlusIcon } from 'lucide-react';
+import { CalendarIcon, ClipboardCheckIcon, PlusIcon } from 'lucide-react';
 import { useFormatter, useTranslations } from 'next-intl';
 import type { GroupDetail, LessonResponse } from '@tutorio/validation';
 import { Badge } from '@/components/ui/badge';
@@ -11,7 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem } from '@/component
 import { EmptyState } from '@/components/shared/empty-state';
 import { LessonList, type LessonListItem } from '@/components/shared/lesson-list';
 import { RowActionsTrigger } from '@/components/shared/row-actions-trigger';
-import { LessonStatusBadge } from '@/features/scheduling';
+import { LessonStatusBadge } from '@/features/lessons';
 import { lessonBuckets, scheduleSlots } from '@/features/groups/model/presentation';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useWeekdayLabels } from '@/lib/i18n/weekdays';
@@ -40,8 +40,6 @@ export function GroupLessonsCard({
   loading,
   now,
   archived,
-  onSchedule,
-  onOpenLesson,
   onMarkAttendance,
 }: {
   group: GroupDetail;
@@ -49,12 +47,9 @@ export function GroupLessonsCard({
   loading: boolean;
   now: number;
   archived: boolean;
-  onSchedule: () => void;
-  onOpenLesson: (lesson: LessonResponse) => void;
   onMarkAttendance: (lesson: LessonResponse) => void;
 }) {
   const t = useTranslations('groups.lessons');
-  const tDetail = useTranslations('groups.detail');
   const format = useFormatter();
   const mobile = useIsMobile();
   const shortDays = useWeekdayLabels();
@@ -107,27 +102,21 @@ export function GroupLessonsCard({
       ) : (
         <LessonStatusBadge status={lesson.status} />
       ),
-      menu: (
+      // Marking who came is the one action a lesson row has until the lesson
+      // screen is rebuilt; a phone row opens it directly.
+      menu: markable ? (
         <DropdownMenu>
           <RowActionsTrigger label={t('actions', { date: dateLabel })} />
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={() => onOpenLesson(lesson)}>
-              <ExternalLinkIcon data-icon />
-              {t('open')}
+            <DropdownMenuItem onSelect={() => onMarkAttendance(lesson)}>
+              <ClipboardCheckIcon data-icon />
+              {t('mark')}
             </DropdownMenuItem>
-            {markable ? (
-              <DropdownMenuItem onSelect={() => onMarkAttendance(lesson)}>
-                <ClipboardCheckIcon data-icon />
-                {t('mark')}
-              </DropdownMenuItem>
-            ) : null}
           </DropdownMenuContent>
         </DropdownMenu>
-      ),
-      // A phone row has no menu: a held lesson opens who came, which is what
-      // a tutor does with it; any other lesson opens the lesson.
-      onSelect: markable ? () => onMarkAttendance(lesson) : () => onOpenLesson(lesson),
-      selectLabel: markable ? t('markOn', { date: dateLabel }) : t('openOn', { date: dateLabel }),
+      ) : undefined,
+      onSelect: markable ? () => onMarkAttendance(lesson) : undefined,
+      selectLabel: markable ? t('markOn', { date: dateLabel }) : undefined,
     };
   };
 
@@ -143,7 +132,6 @@ export function GroupLessonsCard({
             ? t('meta', { total: lessons.length, upcoming: buckets.upcoming.length })
             : undefined,
       }}
-      action={archived ? undefined : { label: tDetail('scheduleLesson'), onClick: onSchedule }}
       groups={[
         {
           label: comingUp,
