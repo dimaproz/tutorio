@@ -252,12 +252,14 @@ export function useScheduleLabel(schedule: ScheduleResponse | undefined): string
   const times = new Set(slots.map((slot) => slot.localTime));
   if (times.size === 1) {
     const names = format.list(
-      slots.map((slot) => days[slot.weekday] ?? ''),
+      slots.map((slot) => capitalizeFirst(days[slot.weekday] ?? '')),
       { type: 'conjunction' },
     );
-    return t('slot', { days: capitalizeFirst(names), time: slots[0]!.localTime });
+    return t('slot', { days: names, time: slots[0]!.localTime });
   }
-  return slots.map((slot) => `${days[slot.weekday]} ${slot.localTime}`).join(' · ');
+  return slots
+    .map((slot) => `${capitalizeFirst(days[slot.weekday] ?? '')} ${slot.localTime}`)
+    .join(' · ');
 }
 
 /**

@@ -140,7 +140,7 @@ export function useTeacherOptions() {
   return useMemo(() => {
     const items = teachers.data?.items ?? [];
     const options: EntityPickerOption[] = items
-      .filter((teacher) => teacher.deletedAt === null && teacher.status !== 'ARCHIVED')
+      .filter((teacher) => !teacher.deletedAt && teacher.status !== 'ARCHIVED')
       .map((teacher) => ({
         value: teacher.id,
         label: teacher.fullName,

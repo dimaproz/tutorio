@@ -42,7 +42,8 @@ export function useLessonDates() {
 export function useDurationLabel() {
   const t = useTranslations('lessons.duration');
   return (ms: number) => {
-    const hours = Math.max(Math.floor(ms / HOUR_MS), 0);
+    // To the nearest hour: 2 h 55 min before reads "3 h".
+    const hours = Math.max(Math.round(ms / HOUR_MS), 0);
     return hours < 48 ? t('hours', { count: hours }) : t('days', { count: Math.floor(hours / 24) });
   };
 }

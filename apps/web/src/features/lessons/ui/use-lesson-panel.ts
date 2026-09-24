@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 /** The query parameter that opens the lesson panel on any page (S01 deep link). */
@@ -15,7 +15,12 @@ export function useLessonPanel() {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
-  const lessonId = params.get(LESSON_PARAM);
+  const fromUrl = params.get(LESSON_PARAM);
+  // The panel opens at once and the URL follows; a URL that changes on its
+  // own (back, forward, a link) wins again.
+  const [state, setState] = useState({ url: fromUrl, lessonId: fromUrl });
+  if (state.url !== fromUrl) setState({ url: fromUrl, lessonId: fromUrl });
+  const lessonId = state.lessonId;
 
   const hrefWith = useCallback(
     (id: string | null) => {
@@ -29,13 +34,16 @@ export function useLessonPanel() {
   );
 
   const open = useCallback(
-    (id: string) => router.replace(hrefWith(id), { scroll: false }),
+    (id: string) => {
+      setState((current) => ({ ...current, lessonId: id }));
+      router.replace(hrefWith(id), { scroll: false });
+    },
     [hrefWith, router],
   );
-  const close = useCallback(
-    () => router.replace(hrefWith(null), { scroll: false }),
-    [hrefWith, router],
-  );
+  const close = useCallback(() => {
+    setState((current) => ({ ...current, lessonId: null }));
+    router.replace(hrefWith(null), { scroll: false });
+  }, [hrefWith, router]);
   /** The absolute link to a lesson on this page, for "copy link". */
   const linkTo = useCallback(
     (id: string) => `${window.location.origin}${hrefWith(id)}`,

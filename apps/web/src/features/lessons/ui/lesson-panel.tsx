@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { IconButton } from '@/components/shared/icon-button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useStudentQuery } from '@/lib/api/students';
+import { capitalizeFirst } from '@/lib/utils';
 import { useLessonDetailQuery, useScheduleQuery, useTransitionLessonMutation } from '../api';
 import { cancellationActor, lessonHistory } from '../model/history';
 import {
@@ -248,7 +249,8 @@ function LessonPanelContent({
       : { kind: 'money', amount: money(lesson.priceMinor, lesson.currency) };
   const who = lesson.student?.fullName ?? lesson.group?.name ?? '';
   const when = `${dates.time(lesson.startsAtUtc)}–${dates.endTime(lesson)}`;
-  const longDay = dates.longDay(lesson.startsAtUtc);
+  // The dialog subtitles open with the date: "Пт, 11 вересня · 17:00–18:00 · …".
+  const longDay = capitalizeFirst(dates.longDay(lesson.startsAtUtc));
   const dialogProps = (kind: DialogKind) => ({
     lesson,
     open: dialog === kind,

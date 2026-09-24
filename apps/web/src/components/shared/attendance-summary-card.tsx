@@ -127,12 +127,12 @@ export function AttendanceSummaryCard({
             <li
               key={tile.id}
               className={cn(
-                'flex min-h-19 min-w-0 flex-col justify-between gap-1 rounded-field px-2.5 py-2.5',
+                'flex min-h-19 min-w-0 flex-col justify-between gap-1 rounded-field px-2 py-2.5 sm:px-3',
                 TILE_TONE[tile.tone],
                 tile.count === 0 && 'opacity-55',
               )}
             >
-              <span className="truncate text-[13px] leading-[18px] font-semibold">
+              <span className="truncate text-xs leading-[18px] font-semibold sm:text-[13px]">
                 {tile.label}
               </span>
               <span className="text-[28px] leading-8 font-semibold tabular-nums">{tile.count}</span>

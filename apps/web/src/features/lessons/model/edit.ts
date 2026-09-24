@@ -52,7 +52,11 @@ export function editFormDefaults(
     time,
     durationMin: String(lesson.durationMin),
     teacherId: lesson.teacherId,
-    price: formatPriceInput(lesson.priceMinor),
+    // A whole amount reads "500", as the design writes it; cents keep "500.50".
+    price:
+      lesson.priceMinor % 100 === 0
+        ? String(lesson.priceMinor / 100)
+        : formatPriceInput(lesson.priceMinor),
     topic: lesson.topic ?? '',
     notes: lesson.notes ?? '',
   };

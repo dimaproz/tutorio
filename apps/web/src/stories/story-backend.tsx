@@ -16,6 +16,7 @@ import { SessionProvider } from '@/components/app/session-provider';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { SESSION_QUERY_KEY } from '@/lib/auth/client';
 import { createGroupRoutes, type GroupStoryOptions } from './group-story-backend';
+import { createLessonRoutes, type LessonStoryOptions } from './lesson-story-backend';
 
 /**
  * A deterministic, in-memory backend for screen stories. It answers the same
@@ -336,7 +337,8 @@ export const SAMPLE_LESSONS: LessonResponse[] = [
   lesson(10, anna, at(1, 18), 'SCHEDULED', TEACHER_B, 90, { id: 'g1', name: 'B1 English' }),
 ];
 
-export type StoryBackendOptions = GroupStoryOptions & {
+export type StoryBackendOptions = GroupStoryOptions &
+  LessonStoryOptions & {
   students?: SampleStudent[];
   packages?: PackageResponse[];
   lessons?: LessonResponse[];
@@ -460,6 +462,7 @@ function createHandler(options: StoryBackendOptions) {
   let links = [...(options.parentLinks ?? SAMPLE_PARENT_LINKS)];
   const detailOf = (item: SampleStudent) => toDetail(item, parents, links);
   const groupRoutes = createGroupRoutes(options);
+  const lessonRoutes = createLessonRoutes(options);
   const settle = () =>
     options.saveDelayMs
       ? new Promise((resolve) => setTimeout(resolve, options.saveDelayMs))
@@ -484,10 +487,18 @@ function createHandler(options: StoryBackendOptions) {
       if (!paging.success) return json({ code: 'VALIDATION_FAILED' }, 400);
     }
 
-    const groupResponse = await groupRoutes(path, method, query, () =>
-      JSON.parse(String(init?.body ?? '{}')),
-    );
+    const readBody = () => JSON.parse(String(init?.body ?? '{}'));
+    const lessonResponse = await lessonRoutes(path, method, query, readBody);
+    if (lessonResponse) return lessonResponse;
+    const groupResponse = await groupRoutes(path, method, query, readBody);
     if (groupResponse) return groupResponse;
+
+    // Any sample lesson opens in the lesson panel, with nothing linked to it.
+    const lessonMatch = method === 'GET' ? path.match(/^\/lessons\/([^/]+)$/) : null;
+    const listed = lessonMatch ? lessons.find((item) => item.id === lessonMatch[1]) : undefined;
+    if (listed) {
+      return json({ ...listed, original: null, makeup: null, schedule: null, history: [] });
+    }
 
     // Before the detail route: "summary" is not a student id.
     if (path === '/students/summary') {

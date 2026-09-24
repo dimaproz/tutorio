@@ -25,7 +25,8 @@ const kyiv = (days: number, hour: number, minute = 0) =>
 export const TEACHERS = {
   dmytro: { id: '55555555-5555-4555-8555-555555555555', name: 'Dmytro Tutor', avatarKey: 'user-2', color: null },
   olena: { id: '55555555-5555-4555-8555-555555555557', name: 'Olena Kovalenko', avatarKey: 'user-7', color: null },
-  iryna: { id: '55555555-5555-4555-8555-555555555556', name: 'Iryna Moroz', avatarKey: 'user-9', color: null },
+  // The same teacher as the shared story backend's second one.
+  iryna: { id: '55555555-5555-4555-8555-555555555556', name: 'Iryna Bondar', avatarKey: 'user-9', color: null },
 } as const;
 
 type Teacher = (typeof TEACHERS)[keyof typeof TEACHERS];
@@ -607,6 +608,13 @@ export function createGroupRoutes(options: GroupStoryOptions) {
     if (path === '/packages' && query.get('groupId')) {
       const items = query.get('groupId') === storyGroupId(1) ? b2Packages() : [];
       return json({ items, page: 1, pageSize: 20, total: items.length, totalPages: 1 });
+    }
+
+    // A group lesson opens in the lesson panel, with nothing linked to it.
+    const detailLesson =
+      method === 'GET' ? lessons.find((item) => path === `/lessons/${item.id}`) : undefined;
+    if (detailLesson) {
+      return json({ ...detailLesson, original: null, makeup: null, schedule: null, history: [] });
     }
 
     const sheetMatch = path.match(/^\/lessons\/([^/]+)\/attendance$/);

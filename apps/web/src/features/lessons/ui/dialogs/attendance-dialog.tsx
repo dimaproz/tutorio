@@ -18,6 +18,7 @@ import { AdaptiveDialog } from '@/components/shared/adaptive-dialog';
 import { EntityAvatar } from '@/components/shared/entity-avatar';
 import { Notice } from '@/components/shared/notice';
 import { Segmented } from '@/components/shared/segmented';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { useLessonAttendanceQuery, useSetAttendanceMutation } from '../../api';
 import { useLessonDates } from '../lesson-format';
@@ -59,6 +60,7 @@ export function AttendanceDialog({
   const tMembers = useTranslations('lessons.members');
   const dates = useLessonDates();
   const showError = useErrorToast();
+  const mobile = useIsMobile();
   const sheet = useLessonAttendanceQuery(lesson.id, open);
   const save = useSetAttendanceMutation(lesson.id);
   // The sheet arrives after the dialog opens: the form follows its saved marks.
@@ -110,6 +112,30 @@ export function AttendanceDialog({
     }
   });
 
+  const chips = [
+    { key: 'present', count: counts.present, variant: 'success' },
+    { key: 'absent', count: counts.absent, variant: 'danger' },
+    { key: 'excused', count: counts.excused, variant: 'info' },
+    { key: 'paused', count: counts.paused, variant: 'warning' },
+  ] as const;
+  const allCame = (
+    <Button
+      type="button"
+      variant="white"
+      size="xs"
+      className={cn(mobile && 'h-10 w-full')}
+      disabled={sheet.data?.markable === false}
+      onClick={() =>
+        active.forEach((row) =>
+          form.setValue(`marks.${row.enrollmentId}`, 'PRESENT', { shouldDirty: true }),
+        )
+      }
+    >
+      <CheckCheckIcon data-icon="inline-start" />
+      {t('allCame')}
+    </Button>
+  );
+
   const segments = [
     { tone: 'bg-success', count: counts.present },
     { tone: 'bg-danger-mark', count: counts.absent },
@@ -147,20 +173,7 @@ export function AttendanceDialog({
                 : t('allMarkedNote')}
             </span>
           </div>
-          <Button
-            type="button"
-            variant="white"
-            size="xs"
-            disabled={sheet.data?.markable === false}
-            onClick={() =>
-              active.forEach((row) =>
-                form.setValue(`marks.${row.enrollmentId}`, 'PRESENT', { shouldDirty: true }),
-              )
-            }
-          >
-            <CheckCheckIcon data-icon="inline-start" />
-            {t('allCame')}
-          </Button>
+          {mobile ? null : allCame}
         </div>
         {segments.length > 0 ? (
           <div aria-hidden="true" className="flex gap-1">
@@ -174,13 +187,16 @@ export function AttendanceDialog({
           </div>
         ) : null}
         <div className="flex flex-wrap gap-2">
-          <Badge variant="success">{t('chip.present', { count: counts.present })}</Badge>
-          <Badge variant="danger">{t('chip.absent', { count: counts.absent })}</Badge>
-          <Badge variant="info">{t('chip.excused', { count: counts.excused })}</Badge>
-          {counts.paused > 0 ? (
-            <Badge variant="warning">{t('chip.paused', { count: counts.paused })}</Badge>
-          ) : null}
+          {chips
+            .filter((chip) => chip.count > 0)
+            .map((chip) => (
+              <Badge key={chip.key} variant={chip.variant}>
+                {t(`chip.${chip.key}`, { count: chip.count })}
+              </Badge>
+            ))}
         </div>
+        {/* On a phone the command takes the full width under the chips. */}
+        {mobile ? allCame : null}
       </div>
       <ul className="flex flex-col">
         {participants.map((row) => {

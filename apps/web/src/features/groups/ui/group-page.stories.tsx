@@ -106,14 +106,19 @@ export const MarkAttendance: Story = {
     // The first rows are all upcoming; one "show more" reaches taught lessons.
     await userEvent.click(await canvas.findByRole('button', { name: 'Show 12 more' }));
     const region = await canvas.findByRole('region', { name: 'Group lessons' });
-    const menus = await within(region).findAllByRole('button', { name: /Actions for the lesson/ });
-    await userEvent.click(menus.at(-1)!);
-    const menu = within(await within(document.body).findByRole('menu'));
-    await userEvent.click(menu.getByRole('menuitem', { name: 'Mark attendance' }));
-    const dialog = within(await within(document.body).findByRole('dialog'));
+    // A row opens the lesson panel; a held lesson changes its marks there.
+    const rows = await within(region).findAllByRole('button', { name: /Open the lesson of/ });
+    await userEvent.click(rows.at(-1)!);
+    const panel = within(await within(document.body).findByRole('dialog'));
+    await userEvent.click(await panel.findByRole('button', { name: 'Change' }));
+    const dialog = within(
+      await within(document.body).findByRole('dialog', { name: 'Attendance' }),
+    );
     await userEvent.click(await dialog.findByRole('button', { name: 'Everyone came' }));
     await userEvent.click(dialog.getByRole('button', { name: 'Save' }));
-    await waitFor(() => expect(within(document.body).queryByRole('dialog')).toBeNull());
+    await waitFor(() =>
+      expect(within(document.body).queryByRole('dialog', { name: 'Attendance' })).toBeNull(),
+    );
   },
 };
 
