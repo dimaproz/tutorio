@@ -14,15 +14,25 @@ import { durationMinSchema, localTimeSchema, weekdaySchema } from './scheduling'
 // Shared package primitives
 // ---------------------------------------------------------------------------
 
-export const packageSizingModeSchema = z.enum(['FIXED_COUNT', 'BY_PERIOD']);
+// By count; by period sized by the direction's schedule; by period sized as
+// X lessons a week (L-80).
+export const packageSizingModeSchema = z.enum(['FIXED_COUNT', 'BY_PERIOD', 'BY_PERIOD_WEEKLY']);
 export type PackageSizingModeDto = z.infer<typeof packageSizingModeSchema>;
 
 export const packagePaymentStatusSchema = z.enum(['PENDING', 'PARTIAL', 'PAID']);
 export type PackagePaymentStatusDto = z.infer<typeof packagePaymentStatusSchema>;
 
 // How a package's credits move: granted by the purchase, corrected by hand,
-// or used by a lesson it pays for (one credit per charge, ADR 0007).
-export const creditEntryTypeSchema = z.enum(['purchase', 'manual_adjustment', 'lesson']);
+// moved to another direction, refunded, or used by a lesson it pays for (one
+// credit per charge, ADR 0007).
+export const creditEntryTypeSchema = z.enum([
+  'purchase',
+  'manual_adjustment',
+  'transfer_out',
+  'transfer_in',
+  'refund',
+  'lesson',
+]);
 export type CreditEntryTypeDto = z.infer<typeof creditEntryTypeSchema>;
 
 // CARD is reserved for online acquiring; the MVP records the first three.
@@ -108,28 +118,118 @@ export const initialPackagePaymentSchema = z
 
 export type InitialPackagePaymentDto = z.infer<typeof initialPackagePaymentSchema>;
 
+/** Lessons a week in a flexible period package. */
+export const lessonsPerWeekSchema = z.number().int().min(1).max(14);
+
+/**
+ * What is sold (L-80): the kind, its credits and window, and its price — per
+ * lesson or a total. FIXED_COUNT states `lessonsTotal` (optional
+ * `expiresAt`); BY_PERIOD states `validFrom`/`endDate` and takes its credits
+ * from the direction's schedule unless `lessonsTotal` overrides them;
+ * BY_PERIOD_WEEKLY adds `lessonsPerWeek`.
+ */
+const packageSpecShape = {
+  name: z.string().trim().min(1).max(120).nullable().optional(),
+  sizingMode: packageSizingModeSchema.default('FIXED_COUNT'),
+  lessonsTotal: lessonsTotalSchema.optional(),
+  lessonsPerWeek: lessonsPerWeekSchema.optional(),
+  /** A period package's first day; defaults to the purchase date. */
+  validFrom: isoDateTimeSchema.optional(),
+  /** A period package's last instant, inclusive. */
+  endDate: isoDateTimeSchema.optional(),
+  pricePerLessonMinor: priceMinorSchema.optional(),
+  /** Or the price of the whole package. */
+  totalPriceMinor: priceMinorSchema.optional(),
+  currency: currencyCodeSchema,
+  purchasedAt: isoDateTimeSchema.optional(),
+  expiresAt: isoDateTimeSchema.nullable().optional(),
+  notes: notesSchema.nullable().optional(),
+};
+
+type PackageSpec = {
+  sizingMode: 'FIXED_COUNT' | 'BY_PERIOD' | 'BY_PERIOD_WEEKLY';
+  lessonsTotal?: number;
+  lessonsPerWeek?: number;
+  validFrom?: string;
+  endDate?: string;
+  pricePerLessonMinor?: number;
+  totalPriceMinor?: number;
+  purchasedAt?: string;
+  expiresAt?: string | null;
+};
+
+function refinePackageSpec(value: PackageSpec, ctx: z.RefinementCtx): void {
+  if ((value.pricePerLessonMinor == null) === (value.totalPriceMinor == null)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Provide exactly one of pricePerLessonMinor or totalPriceMinor',
+      path: ['pricePerLessonMinor'],
+    });
+  }
+  if (value.sizingMode === 'FIXED_COUNT') {
+    if (value.lessonsTotal == null) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'lessonsTotal is required for a fixed-count package',
+        path: ['lessonsTotal'],
+      });
+    }
+  } else {
+    if (value.endDate == null) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'endDate is required for a by-period package',
+        path: ['endDate'],
+      });
+    }
+    if (
+      value.endDate != null &&
+      value.validFrom != null &&
+      new Date(value.endDate).getTime() < new Date(value.validFrom).getTime()
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'endDate must not be before validFrom',
+        path: ['endDate'],
+      });
+    }
+  }
+  if (
+    value.sizingMode === 'BY_PERIOD_WEEKLY' &&
+    value.lessonsPerWeek == null &&
+    value.lessonsTotal == null
+  ) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'lessonsPerWeek is required for a weekly package',
+      path: ['lessonsPerWeek'],
+    });
+  }
+  if (
+    value.expiresAt != null &&
+    new Date(value.expiresAt).getTime() <= new Date(value.purchasedAt ?? new Date()).getTime()
+  ) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'expiresAt must be after purchasedAt',
+      path: ['expiresAt'],
+    });
+  }
+}
+
 /**
  * Buying a package for one direction of a student (L-80): their lessons with
  * one teacher (`teacherId`, needed only when they have several), or their
- * membership of a group (`groupId`). FIXED_COUNT states `lessonsTotal`;
- * BY_PERIOD states `endDate` and needs a schedule to know how many lessons fit
- * in the window.
+ * membership of a group (`groupId`). `schedule` and `initialPayment` serve
+ * the current package form only; a sale never creates a schedule or records a
+ * payment by itself in the new sale flow (L-87).
  */
 export const createPackageSchema = z
   .object({
     studentId: uuidSchema,
     groupId: uuidSchema.nullable().optional(),
     teacherId: uuidSchema.nullable().optional(),
-    name: z.string().trim().min(1).max(120).nullable().optional(),
-    sizingMode: packageSizingModeSchema.default('FIXED_COUNT'),
-    lessonsTotal: lessonsTotalSchema.optional(),
-    endDate: isoDateTimeSchema.optional(),
-    pricePerLessonMinor: priceMinorSchema,
-    currency: currencyCodeSchema,
-    purchasedAt: isoDateTimeSchema.optional(),
-    expiresAt: isoDateTimeSchema.nullable().optional(),
-    notes: notesSchema.nullable().optional(),
-    // Provisioning the schedule is what turns a package into real lessons.
+    ...packageSpecShape,
     schedule: packageScheduleSchema.nullable().optional(),
     initialPayment: initialPackagePaymentSchema.nullable().optional(),
   })
@@ -142,39 +242,7 @@ export const createPackageSchema = z
         path: ['teacherId'],
       });
     }
-    if (value.sizingMode === 'FIXED_COUNT' && value.lessonsTotal == null) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'lessonsTotal is required for a fixed-count package',
-        path: ['lessonsTotal'],
-      });
-    }
-    if (value.sizingMode === 'BY_PERIOD') {
-      if (value.endDate == null) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'endDate is required for a by-period package',
-          path: ['endDate'],
-        });
-      }
-      if (value.schedule == null) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'A by-period package needs a schedule to size itself',
-          path: ['schedule'],
-        });
-      }
-    }
-    if (
-      value.expiresAt != null &&
-      new Date(value.expiresAt).getTime() <= new Date(value.purchasedAt ?? new Date()).getTime()
-    ) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'expiresAt must be after purchasedAt',
-        path: ['expiresAt'],
-      });
-    }
+    refinePackageSpec(value, ctx);
   });
 
 export type CreatePackageDto = z.infer<typeof createPackageSchema>;
@@ -195,6 +263,76 @@ export const adjustBalanceSchema = z
   .strict();
 
 export type AdjustBalanceDto = z.infer<typeof adjustBalanceSchema>;
+
+/** What a sale would be, before it is made (L-80 "prefilled, editable"). */
+export const packagePreviewResponseSchema = z.object({
+  lessonsTotal: z.number().int().positive(),
+  pricePerLessonMinor: z.number().int().nonnegative(),
+  totalPriceMinor: z.number().int().nonnegative(),
+  validFrom: isoDateTimeSchema.nullable(),
+  expiresAt: isoDateTimeSchema.nullable(),
+  /** Lessons the direction's schedule has in the window; null without one. */
+  scheduleLessons: z.number().int().nonnegative().nullable(),
+});
+
+export type PackagePreviewResponse = z.infer<typeof packagePreviewResponseSchema>;
+
+/** A later end for a package, so it pays again (L-84). */
+export const extendPackageSchema = z.object({ expiresAt: isoDateTimeSchema }).strict();
+
+export type ExtendPackageDto = z.infer<typeof extendPackageSchema>;
+
+/**
+ * Moves unused credits to another direction of the same student, recalculated
+ * by price and rounded down (L-85). Omitted `credits`: every unused one.
+ */
+export const transferPackageSchema = z
+  .object({
+    toEnrollmentId: uuidSchema,
+    credits: lessonsTotalSchema.optional(),
+    note: notesSchema.nullable().optional(),
+  })
+  .strict();
+
+export type TransferPackageDto = z.infer<typeof transferPackageSchema>;
+
+/**
+ * Takes unused credits back and records the money returned (L-85). Either may
+ * be zero, not both.
+ */
+export const refundPackageSchema = z
+  .object({
+    credits: z.number().int().min(0).max(500),
+    amountMinor: priceMinorSchema,
+    method: paymentMethodSchema.default('CASH'),
+    paidAt: isoDateTimeSchema.optional(),
+    note: notesSchema,
+  })
+  .strict()
+  .refine((value) => value.credits > 0 || value.amountMinor > 0, {
+    message: 'A refund returns credits, money or both',
+    path: ['credits'],
+  });
+
+export type RefundPackageDto = z.infer<typeof refundPackageSchema>;
+
+/** One package spec sold to each selected member of a group (L-86). */
+export const sellToMembersSchema = z
+  .object({
+    groupId: uuidSchema,
+    studentIds: z
+      .array(uuidSchema)
+      .min(1)
+      .max(200)
+      .refine((ids) => new Set(ids).size === ids.length, {
+        message: 'Each student is sold one package',
+      }),
+    ...packageSpecShape,
+  })
+  .strict()
+  .superRefine(refinePackageSpec);
+
+export type SellToMembersDto = z.infer<typeof sellToMembersSchema>;
 
 export const recordPaymentSchema = z
   .object({
@@ -274,10 +412,17 @@ export const packageResponseSchema = z.object({
   endDate: isoDateTimeSchema.nullable(),
   pricePerLessonMinorSnapshot: z.number().int(),
   totalPriceMinorSnapshot: z.number().int(),
+  lessonsPerWeek: z.number().int().nullable(),
+  /** A period package's first instant; null for a count package. */
+  validFrom: isoDateTimeSchema.nullable(),
+  /** The package these credits were transferred from, if any. */
+  transferredFromPackageId: uuidSchema.nullable(),
   // Derived at read time: granted credits minus the lessons it pays for.
   remainingCredits: z.number().int(),
   consumedCredits: z.number().int(),
+  // Money received net of refunds, and the refunds.
   paidMinor: z.number().int(),
+  refundedMinor: z.number().int().nonnegative(),
   currency: currencyCodeSchema,
   paymentStatus: packagePaymentStatusSchema,
   purchasedAt: isoDateTimeSchema,
@@ -294,6 +439,20 @@ export type PackageResponse = z.infer<typeof packageResponseSchema>;
 
 export const packageListResponseSchema = paginatedResponseSchema(packageResponseSchema);
 export type PackageListResponse = z.infer<typeof packageListResponseSchema>;
+
+export const packageTransferResponseSchema = z.object({
+  source: packageResponseSchema,
+  target: packageResponseSchema,
+  /** The moved credits' value at the source price. */
+  valueMinor: z.number().int().nonnegative(),
+  /** What rounding down left over (L-85). */
+  remainderMinor: z.number().int().nonnegative(),
+});
+
+export type PackageTransferResponse = z.infer<typeof packageTransferResponseSchema>;
+
+export const soldPackagesResponseSchema = z.object({ items: z.array(packageResponseSchema) });
+export type SoldPackagesResponse = z.infer<typeof soldPackagesResponseSchema>;
 
 export const creditLedgerResponseSchema = z.object({
   items: z.array(creditEntryResponseSchema),
