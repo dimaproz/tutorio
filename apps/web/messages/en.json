@@ -179,7 +179,10 @@
     "SCHEDULE_ENDED": "This schedule has ended. Create a new one instead.",
     "NOT_ENOUGH_CREDITS": "The package does not have that many unused lessons.",
     "REFUND_TOO_LARGE": "A refund cannot return more than the package received.",
-    "INVALID_TRANSFER_TARGET": "Lessons can move only to another direction of the same student."
+    "INVALID_TRANSFER_TARGET": "Lessons can move only to another direction of the same student.",
+    "PAUSE_NOT_FOUND": "The pause was not found.",
+    "PAUSE_OVERLAP": "The student already has a pause covering this time.",
+    "PAUSE_ENDED": "This pause is already over."
   },
   "validation": {
     "noShowIndividualOnly": "A group lesson records absences through attendance",
@@ -720,7 +723,7 @@
       },
       "ON_HOLD": {
         "label": "On a break",
-        "description": "Paused: no new lessons are planned. The package and history are kept."
+        "description": "Paused: no lessons or charges until they return. Packages are extended by the break."
       },
       "ARCHIVED": {
         "label": "Archived",
@@ -729,17 +732,14 @@
     },
     "holdDialog": {
       "title": "Send the student on a break?",
-      "description": "{name}: no new lessons will be planned. The package, payments and history stay as they are.",
+      "description": "{name}: lessons are paused until they return. Packages are extended by the break; payments and history stay as they are.",
       "confirm": "Send on a break",
-      "cancelLessons": "{count, plural, one {Cancel # scheduled lesson} other {Cancel # scheduled lessons}}",
-      "cancelLessonsHint": "Cancelled lessons are not charged to the package.",
-      "countFailedTitle": "Couldn’t check the scheduled lessons",
-      "countFailedText": "Try again, or send the student on a break and keep every booked lesson in the calendar.",
-      "confirmWithoutCancelling": "Send on a break without cancelling lessons"
+      "lessonsPaused": "{count, plural, one {# scheduled lesson comes off the calendar} other {# scheduled lessons come off the calendar}}",
+      "lessonsPausedHint": "They come back when the student returns. Group lessons go on without them and are not charged."
     },
     "banner": {
       "holdTitle": "Student is on a break",
-      "holdText": "No new lessons are planned while the student is on a break. History and packages stay as they are.",
+      "holdText": "Lessons and charges are paused until the student returns. Packages are extended by the break.",
       "holdAction": "End the break"
     },
     "nextLesson": {

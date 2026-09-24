@@ -20,7 +20,7 @@ import {
 import { useIsMobile } from '@/hooks/use-mobile';
 import { errorMessageKey } from '@/lib/api/error-message';
 import type { GatewayError } from '@/lib/auth/client';
-import { useLessonsQuery, useTransitionLessonMutation } from '@/lib/api/scheduling';
+import { useLessonsQuery } from '@/lib/api/scheduling';
 import {
   useArchiveStudentMutation,
   useRestoreStudentMutation,
@@ -65,26 +65,24 @@ export function useStudentStatusOptionList(
 }
 
 /**
- * Every student status change in one place: the hold dialog with its optional
- * lesson cancellation, the archive confirmation, and the immediate resume and
- * restore. Status changes save on their own and never touch an open form.
+ * Every student status change in one place: the hold dialog (a pause that
+ * takes the lessons off until the student returns), the archive confirmation,
+ * and the immediate resume and restore. Status changes save on their own and never touch an open form.
  */
 export function useStudentStatusActions(student: StatusControlStudent) {
   const t = useTranslations('students');
   const tErrors = useTranslations('errors');
   const [dialog, setDialog] = useState<'hold' | 'archive' | null>(null);
   const clock = useNow();
-  // The cancellation window opens when the tutor asks for the hold, not when
-  // the page mounted: a lesson taught in between is history, not a plan.
+  // The count window opens when the tutor asks for the hold, not when the
+  // page mounted: a lesson taught in between is history, not a plan.
   const [holdFrom, setHoldFrom] = useState(() => clock.getTime());
   const update = useUpdateStudentMutation(student.id);
   const archive = useArchiveStudentMutation();
   const restore = useRestoreStudentMutation();
-  const transition = useTransitionLessonMutation();
-  const [cancelling, setCancelling] = useState(false);
 
-  // Only individual lessons are cancelled: a group lesson belongs to the whole
-  // group and keeps running for everyone else.
+  // Only individual lessons come off the calendar: a group lesson keeps
+  // running for everyone else and leaves the student out.
   const scheduled = useLessonsQuery(
     {
       from: new Date(holdFrom).toISOString(),
@@ -124,33 +122,17 @@ export function useStudentStatusActions(student: StatusControlStudent) {
     }
   };
 
-  const confirmHold = async ({ cancelLessons }: { cancelLessons: boolean }) => {
-    try {
-      // Re-checked at confirmation: the dialog may have stayed open past a start.
-      const confirmedAt = Date.now();
-      const upcoming = individual?.filter(
-        (lesson) => new Date(lesson.startsAtUtc).getTime() >= confirmedAt,
-      );
-      if (cancelLessons && upcoming?.length) {
-        setCancelling(true);
-        // Sequential on purpose: the server validates each transition against
-        // the package ledger, and a partial failure must stop the batch.
-        for (const lesson of upcoming) {
-          await transition.mutateAsync({
-            lessonId: lesson.id,
-            dto: { targetStatus: 'CANCELLED_UNCHARGED', cancelledBy: 'TEACHER' },
-          });
-        }
-      }
-      await update.mutateAsync({ status: 'ON_HOLD' });
-      setDialog(null);
-      toast.success(t('toasts.onHoldName', { name: firstName }));
-    } catch (error) {
-      fail(error);
-    } finally {
-      setCancelling(false);
-    }
-  };
+  const confirmHold = () =>
+    update.mutate(
+      { status: 'ON_HOLD' },
+      {
+        onSuccess: () => {
+          setDialog(null);
+          toast.success(t('toasts.onHoldName', { name: firstName }));
+        },
+        onError: fail,
+      },
+    );
 
   const confirmArchive = () =>
     archive.mutate(student.id, {
@@ -174,13 +156,8 @@ export function useStudentStatusActions(student: StatusControlStudent) {
             ? (individual?.length ?? 0)
             : undefined
         }
-        // A failed count is said out loud: the tutor retries or pauses knowing
-        // the booked lessons stay in place.
-        countFailed={scheduled.isError}
-        retryingCount={scheduled.isFetching}
-        onRetryCount={() => void scheduled.refetch()}
-        pending={cancelling || update.isPending}
-        onConfirm={(options) => void confirmHold(options)}
+        pending={update.isPending}
+        onConfirm={confirmHold}
       />
       <ConfirmDialog
         open={dialog === 'archive'}
@@ -199,7 +176,7 @@ export function useStudentStatusActions(student: StatusControlStudent) {
   return {
     choose,
     dialogs,
-    pending: update.isPending || archive.isPending || restore.isPending || cancelling,
+    pending: update.isPending || archive.isPending || restore.isPending,
   };
 }
 
