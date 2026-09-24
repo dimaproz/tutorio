@@ -12,6 +12,7 @@ import { useSetPageCrumb } from '@/components/shared/page-crumb';
 import { QueryErrorAlert } from '@/components/shared/page-shell';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { LessonPanel, useLessonPanel, type LessonPanelLinks } from '@/features/lessons';
 import { StudentLessonsCard, studentLessonsRange } from './student-lessons-card';
 import { studentLifecyclePolicy } from '@/features/students/model/lifecycle';
 import { deriveStudentProfileMetrics } from '@/features/students/model/profile-metrics';
@@ -33,6 +34,12 @@ import { StudentProfileMetrics } from './student-profile-metrics';
 import { StudentSectionsCard } from './student-sections-card';
 import { StudentSetupCard } from './student-setup-card';
 import { useStudentStatusActions } from './student-status-control';
+
+/** Where the lesson panel links a student and a group. */
+const LESSON_LINKS: LessonPanelLinks = {
+  studentHref: (id) => `/app/students/${id}`,
+  groupHref: (id) => `/app/groups/${id}`,
+};
 
 export function StudentDetailView({ studentId }: { studentId: string }) {
   const t = useTranslations('students');
@@ -80,6 +87,7 @@ export function StudentProfileContent({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const lessonPanel = useLessonPanel();
   const policy = studentLifecyclePolicy(student.status);
   const archived = policy.readOnly;
   useSetPageCrumb(t('detail.pageLabel'));
@@ -216,6 +224,7 @@ export function StudentProfileContent({
             readOnly={archived}
             historyOnly={archived}
             nowMs={now}
+            onSelect={lessonPanel.open}
           />
         }
         packages={<StudentPackagesCard bare studentId={student.id} readOnly={archived} />}
@@ -247,6 +256,13 @@ export function StudentProfileContent({
         aside={aside}
       />
       {statusActions.dialogs}
+      <LessonPanel
+        lessonId={lessonPanel.lessonId}
+        onClose={lessonPanel.close}
+        onOpenLesson={lessonPanel.open}
+        linkTo={lessonPanel.linkTo}
+        links={LESSON_LINKS}
+      />
     </>
   );
 }

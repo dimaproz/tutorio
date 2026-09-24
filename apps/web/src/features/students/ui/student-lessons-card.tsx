@@ -45,13 +45,15 @@ export function StudentLessonsCard({
   readOnly = false,
   historyOnly = false,
   nowMs,
+  onSelect,
 }: {
   studentId: string;
   readOnly?: boolean;
   /** Archived profiles read their history only: nothing is coming up. */
   historyOnly?: boolean;
   nowMs?: number;
-  /** The empty state's command, e.g. "Schedule lesson". */
+  /** Opens a lesson in the lesson panel. */
+  onSelect?: (lessonId: string) => void;
 }) {
   const t = useTranslations('scheduling.studentLessons');
   const tCommon = useTranslations('common');
@@ -94,6 +96,12 @@ export function StudentLessonsCard({
       metaShort: [range, lesson.teacher.name.split(' ')[0]].join(' · '),
       state: lesson.id === nextId ? 'next' : past ? 'past' : 'default',
       status: <LessonStatusBadge status={lesson.status} />,
+      onSelect: onSelect ? () => onSelect(lesson.id) : undefined,
+      selectLabel: onSelect
+        ? t('openLesson', {
+            date: format.dateTime(start, { weekday: 'short', day: 'numeric', month: 'long' }),
+          })
+        : undefined,
     };
   };
 

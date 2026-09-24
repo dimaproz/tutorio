@@ -86,7 +86,8 @@ export function LessonItem({
         ) : null}
       </div>
       {status}
-      {actions}
+      {/* Above the row button, so a menu keeps its own clicks. */}
+      {actions ? (onSelect ? <div className="relative z-1">{actions}</div> : actions) : null}
     </div>
   );
 }

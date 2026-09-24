@@ -22,7 +22,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useGroupAttendanceQuery, useGroupQuery } from '@/lib/api/groups';
 import { usePackagesQuery } from '@/lib/api/packages';
 import { useLessonsQuery } from '@/lib/api/scheduling';
-import { AttendanceDialog } from './attendance-dialog';
+import { LessonPanel, useLessonPanel, type LessonPanelLinks } from '@/features/lessons';
 import { useGroupArchive } from './group-archive';
 import { GroupAttendanceCard } from './group-attendance-card';
 import { GroupHero } from './group-hero';
@@ -34,6 +34,11 @@ import { GroupRosterCard } from './group-roster-card';
 import { GroupScheduleCard } from './group-schedule-card';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+/** Where the lesson panel links a student and a group. */
+const LESSON_LINKS: LessonPanelLinks = {
+  studentHref: (id) => `/app/students/${id}`,
+  groupHref: (id) => `/app/groups/${id}`,
+};
 /** The attendance window: the last eight held lessons. */
 const ATTENDANCE_WINDOW = 8;
 
@@ -134,7 +139,7 @@ export function GroupPageContent({
   const justCreated = searchParams.get('created') === '1';
 
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [markLesson, setMarkLesson] = useState<LessonResponse | null>(null);
+  const lessonPanel = useLessonPanel();
   const members = useMemo(() => memberPackages(packages.items, now), [packages.items, now]);
   const archiving = useGroupArchive({ onArchived: () => router.push('/app/groups') });
   const [restoring, setRestoring] = useState(false);
@@ -208,7 +213,7 @@ export function GroupPageContent({
               loading={lessons.loading}
               now={now}
               archived={archived}
-              onMarkAttendance={setMarkLesson}
+              onOpenLesson={lessonPanel.open}
             />
             {/* A group with no students and no lessons yet has nothing to count;
                 the design leaves the block out until it does. */}
@@ -237,15 +242,13 @@ export function GroupPageContent({
         }
       />
       {archiving.dialog}
-      {archived ? null : (
-        <>
-          <AttendanceDialog
-            lesson={markLesson}
-            open={markLesson !== null}
-            onOpenChange={(open) => (open ? undefined : setMarkLesson(null))}
-          />
-        </>
-      )}
+      <LessonPanel
+        lessonId={lessonPanel.lessonId}
+        onClose={lessonPanel.close}
+        onOpenLesson={lessonPanel.open}
+        linkTo={lessonPanel.linkTo}
+        links={LESSON_LINKS}
+      />
     </>
   );
 }

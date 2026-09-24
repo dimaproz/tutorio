@@ -953,11 +953,9 @@
       "emptyTextScheduled": "Lessons appear here as soon as the group has a student.",
       "setUp": "Set up schedule",
       "open": "Open lesson",
-      "mark": "Mark attendance",
-      "actions": "Actions for the lesson on {date}",
       "openOn": "Open the lesson on {date}",
-      "markOn": "Mark attendance for the lesson on {date}",
-      "and": "and"
+      "and": "and",
+      "openLesson": "Open the lesson of {date}"
     },
     "attendance": {
       "title": "Attendance",
@@ -1118,26 +1116,12 @@
       "descriptionUnknown": "The group leaves the list and its upcoming lessons are cancelled without a charge. The roster, taught lessons, packages and payments stay. The owner can restore the group.",
       "confirm": "Archive"
     },
-    "attendanceDialog": {
-      "title": "Attendance",
-      "subtitle": "{date}",
-      "present": "Came",
-      "absent": "Missed",
-      "excused": "Excused",
-      "markAll": "Everyone came",
-      "save": "Save",
-      "notMarkable": "Attendance is marked once a lesson has started, unless it was cancelled.",
-      "empty": "This lesson has no participants.",
-      "loadError": "Couldn’t load the participants",
-      "statusLabel": "Attendance · {name}"
-    },
     "toasts": {
       "created": "Group created",
       "updated": "Changes saved",
       "archived": "Group archived",
       "restored": "Group restored",
-      "notesSaved": "Notes saved",
-      "attendanceSaved": "Attendance saved"
+      "notesSaved": "Notes saved"
     }
   },
   "parents": {
@@ -1383,7 +1367,8 @@
       "history": "History",
       "showing": "Showing {shown} of {total}",
       "showMore": "Show {count} more",
-      "region": "Student lessons"
+      "region": "Student lessons",
+      "openLesson": "Open the lesson of {date}"
     }
   },
   "lessons": {

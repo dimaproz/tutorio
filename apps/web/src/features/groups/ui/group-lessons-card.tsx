@@ -2,15 +2,13 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { CalendarIcon, ClipboardCheckIcon, PlusIcon } from 'lucide-react';
+import { CalendarIcon, PlusIcon } from 'lucide-react';
 import { useFormatter, useTranslations } from 'next-intl';
 import type { GroupDetail, LessonResponse } from '@tutorio/validation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { EmptyState } from '@/components/shared/empty-state';
 import { LessonList, type LessonListItem } from '@/components/shared/lesson-list';
-import { RowActionsTrigger } from '@/components/shared/row-actions-trigger';
 import { LessonStatusBadge } from '@/features/lessons';
 import { lessonBuckets, scheduleSlots } from '@/features/groups/model/presentation';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -20,19 +18,11 @@ import { useWeekdayLabels } from '@/lib/i18n/weekdays';
 const FIRST_PAGE = 7;
 const MORE = 12;
 
-/** Attendance is marked once a lesson has started, unless it was cancelled. */
-export function isAttendanceMarkable(lesson: LessonResponse, now: number): boolean {
-  return (
-    lesson.status === 'COMPLETED' ||
-    (lesson.status === 'SCHEDULED' && Date.parse(lesson.startsAtUtc) <= now)
-  );
-}
-
 /**
  * The group's lessons in the shared `LessonList`: what is coming up (the next
  * one highlighted), then what happened, in a fixed-height box that scrolls,
- * with "show more" filling the same box. Each row's menu opens the lesson or
- * marks who came.
+ * with "show more" filling the same box. A row opens the lesson panel, where
+ * attendance is marked.
  */
 export function GroupLessonsCard({
   group,
@@ -40,14 +30,14 @@ export function GroupLessonsCard({
   loading,
   now,
   archived,
-  onMarkAttendance,
+  onOpenLesson,
 }: {
   group: GroupDetail;
   lessons: LessonResponse[];
   loading: boolean;
   now: number;
   archived: boolean;
-  onMarkAttendance: (lesson: LessonResponse) => void;
+  onOpenLesson: (lessonId: string) => void;
 }) {
   const t = useTranslations('groups.lessons');
   const format = useFormatter();
@@ -83,13 +73,12 @@ export function GroupLessonsCard({
       : null;
     const teacher = lesson.teacher.name;
     const next = lesson.id === buckets.nextId;
-    const markable = !archived && isAttendanceMarkable(lesson, now);
-    const dateLabel = format.dateTime(start, { day: 'numeric', month: 'long' });
+    const dateLabel = format.dateTime(start, { weekday: 'short', day: 'numeric', month: 'long' });
     return {
       id: lesson.id,
       weekday: format.dateTime(start, { weekday: 'short' }),
       day: format.dateTime(start, { day: '2-digit' }),
-      title: lesson.notes?.split('\n')[0] || t('fallbackTitle'),
+      title: lesson.topic || lesson.notes?.split('\n')[0] || t('fallbackTitle'),
       meta: past
         ? [month, time(start), came ?? teacher].join(' · ')
         : [month, range, teacher].join(' · '),
@@ -102,21 +91,9 @@ export function GroupLessonsCard({
       ) : (
         <LessonStatusBadge status={lesson.status} />
       ),
-      // Marking who came is the one action a lesson row has until the lesson
-      // screen is rebuilt; a phone row opens it directly.
-      menu: markable ? (
-        <DropdownMenu>
-          <RowActionsTrigger label={t('actions', { date: dateLabel })} />
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={() => onMarkAttendance(lesson)}>
-              <ClipboardCheckIcon data-icon />
-              {t('mark')}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ) : undefined,
-      onSelect: markable ? () => onMarkAttendance(lesson) : undefined,
-      selectLabel: markable ? t('markOn', { date: dateLabel }) : undefined,
+      // The whole row opens the lesson panel; every action lives there.
+      onSelect: () => onOpenLesson(lesson.id),
+      selectLabel: t('openLesson', { date: dateLabel }),
     };
   };
 

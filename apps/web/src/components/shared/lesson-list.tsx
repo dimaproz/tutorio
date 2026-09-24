@@ -193,8 +193,8 @@ export function LessonList<T extends string = string>({
                         )
                       }
                       status={item.status}
-                      onSelect={compact ? item.onSelect : undefined}
-                      selectLabel={compact ? item.selectLabel : undefined}
+                      onSelect={item.onSelect}
+                      selectLabel={item.selectLabel}
                       actions={
                         !compact && item.menu ? (
                           <div className="max-md:hidden">{item.menu}</div>
