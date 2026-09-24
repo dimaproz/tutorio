@@ -38,46 +38,41 @@ const CANCELLED = lesson({
 });
 
 describe('busySlots', () => {
-  it('marks the slots a lesson of that length would overlap, with the name', () => {
-    const marks = busySlots([B2], { teacherId: 'dmytro' }, '2026-10-01', 60, [
-      '16:30',
-      '17:00',
-      '17:15',
+  it('marks the slots that start while a lesson is on, with the name', () => {
+    const marks = busySlots([B2], { teacherId: 'dmytro' }, '2026-10-01', [
+      '17:45',
+      '18:00',
+      '18:30',
       '19:15',
       '19:30',
     ]);
-    expect(marks).toEqual({ '17:15': 'B2 prep', '19:15': 'B2 prep' });
+    expect(marks).toEqual({ '18:00': 'B2 prep', '18:30': 'B2 prep', '19:15': 'B2 prep' });
   });
 
   it('checks the student and their groups, not other teachers', () => {
     const lessons = [B2, ANNA];
     expect(
-      busySlots(lessons, { teacherId: 'oleh', studentId: 's1' }, '2026-10-01', 60, ['10:00']),
+      busySlots(lessons, { teacherId: 'oleh', studentId: 's1' }, '2026-10-01', ['10:00']),
     ).toEqual({
       '10:00': 'Anna Shevchenko',
     });
     expect(
-      busySlots(lessons, { teacherId: 'oleh', groupIds: ['g1'] }, '2026-10-01', 60, ['18:30']),
+      busySlots(lessons, { teacherId: 'oleh', groupIds: ['g1'] }, '2026-10-01', ['18:30']),
     ).toEqual({
       '18:30': 'B2 prep',
     });
-    expect(busySlots(lessons, { teacherId: 'oleh' }, '2026-10-01', 60, ['10:00', '18:30'])).toEqual(
-      {},
-    );
+    expect(busySlots(lessons, { teacherId: 'oleh' }, '2026-10-01', ['10:00', '18:30'])).toEqual({});
   });
 
   it('ignores cancelled lessons and the lesson being edited', () => {
-    expect(busySlots([CANCELLED], { teacherId: 'dmytro' }, '2026-10-01', 60, ['12:00'])).toEqual(
-      {},
-    );
+    expect(busySlots([CANCELLED], { teacherId: 'dmytro' }, '2026-10-01', ['12:00'])).toEqual({});
     expect(
-      busySlots([B2], { teacherId: 'dmytro', excludeLessonId: 'b2' }, '2026-10-01', 60, ['18:00']),
+      busySlots([B2], { teacherId: 'dmytro', excludeLessonId: 'b2' }, '2026-10-01', ['18:00']),
     ).toEqual({});
   });
 
-  it('marks nothing without a date or a length', () => {
-    expect(busySlots([B2], { teacherId: 'dmytro' }, '', 60, ['18:00'])).toEqual({});
-    expect(busySlots([B2], { teacherId: 'dmytro' }, '2026-10-01', 0, ['18:00'])).toEqual({});
+  it('marks nothing without a date', () => {
+    expect(busySlots([B2], { teacherId: 'dmytro' }, '', ['18:00'])).toEqual({});
   });
 });
 

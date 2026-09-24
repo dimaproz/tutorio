@@ -9,16 +9,22 @@ import {
   type QueryClient,
 } from '@tanstack/react-query';
 import type {
+  CreateLessonDto,
   CreateMakeupDto,
+  CreateScheduleDto,
   EnrollmentBillingResponse,
   LessonAttendanceResponse,
   LessonDetailResponse,
   LessonListResponse,
   LessonResponse,
+  PauseListResponse,
   RescheduleLessonDto,
   ScheduleChangeDto,
   ScheduleChangePreview,
+  ScheduleChangeResult,
+  ScheduleListResponse,
   ScheduleResponse,
+  StudentBillingResponse,
   SetLessonAttendanceDto,
   TransitionLessonDto,
   UpdateLessonDto,
@@ -35,7 +41,8 @@ export { useLessonsQuery } from '@/lib/api/scheduling';
 export { useLessonAttendanceQuery } from '@/lib/api/attendance';
 export { usePackageQuery, usePackagesQuery } from '@/lib/api/packages';
 export { useTeachersQuery } from '@/lib/api/teachers';
-export { useGroupQuery } from '@/lib/api/groups';
+export { useGroupQuery, useGroupsQuery, useGroupsSummaryQuery } from '@/lib/api/groups';
+export { useStudentQuery, useStudentsQuery, useStudentsSummaryQuery } from '@/lib/api/students';
 
 /**
  * A lesson change moves its charges, so everything that shows a lesson or a
@@ -229,5 +236,86 @@ export function useSetAttendanceMutation(lessonId: string) {
       queryClient.setQueryData(queryKeys.lessons.attendance(lessonId), sheet);
       invalidateLessonGraph(queryClient);
     },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// The lesson form (S02)
+// ---------------------------------------------------------------------------
+
+/** Every direction of a student with how it is paid (L-10, L-11): the form's price and package. */
+export function useStudentBillingQuery(studentId: string | null) {
+  return useQuery<StudentBillingResponse, GatewayError>({
+    queryKey: ['students', 'billing', studentId ?? ''],
+    enabled: Boolean(studentId),
+    queryFn: () =>
+      gatewayFetch<StudentBillingResponse>(`/api/backend/students/${studentId}/billing`),
+  });
+}
+
+/** The active schedules of a student (optionally with one teacher) or of a group (L-20). */
+export function useSchedulesQuery(
+  filters: { studentId?: string; teacherId?: string; groupId?: string },
+  enabled = true,
+) {
+  const query = new URLSearchParams({ page: '1', pageSize: '20', state: 'ACTIVE' });
+  for (const [key, value] of Object.entries(filters)) if (value) query.set(key, value);
+  return useQuery<ScheduleListResponse, GatewayError>({
+    queryKey: [...queryKeys.schedules.all, 'list', filters],
+    enabled,
+    queryFn: () => gatewayFetch<ScheduleListResponse>(`/api/backend/schedules?${query}`),
+  });
+}
+
+/** The pauses in force now, across the studio (L-100): who is on a break and until when. */
+export function useCurrentPausesQuery(enabled = true) {
+  return useQuery<PauseListResponse, GatewayError>({
+    queryKey: ['pauses', 'current'],
+    enabled,
+    queryFn: () =>
+      gatewayFetch<PauseListResponse>('/api/backend/pauses?page=1&pageSize=100&state=current'),
+  });
+}
+
+/** Books one or many lessons for one target (L-30, L-31); `force` after a conflict (L-111). */
+export function useCreateLessonsMutation() {
+  const queryClient = useQueryClient();
+  return useMutation<LessonListResponse, GatewayError, { dto: CreateLessonDto; force?: boolean }>({
+    mutationFn: ({ dto, force: forced }) =>
+      gatewayFetch<LessonListResponse>(`/api/backend/lessons${force(forced)}`, {
+        method: 'POST',
+        body: JSON.stringify(dto),
+      }),
+    onSuccess: () => invalidateLessonGraph(queryClient),
+  });
+}
+
+/** A new schedule for a student with a teacher or for a group (L-20…L-22). */
+export function useCreateScheduleMutation() {
+  const queryClient = useQueryClient();
+  return useMutation<ScheduleResponse, GatewayError, { dto: CreateScheduleDto; force?: boolean }>({
+    mutationFn: ({ dto, force: forced }) =>
+      gatewayFetch<ScheduleResponse>(`/api/backend/schedules${force(forced)}`, {
+        method: 'POST',
+        body: JSON.stringify(dto),
+      }),
+    onSuccess: () => invalidateLessonGraph(queryClient),
+  });
+}
+
+/** Changes an existing schedule from a date (L-23, L-25): "Repeat" adds a day to it. */
+export function useApplyScheduleChangeMutation() {
+  const queryClient = useQueryClient();
+  return useMutation<
+    ScheduleChangeResult,
+    GatewayError,
+    { scheduleId: string; dto: ScheduleChangeDto; force?: boolean }
+  >({
+    mutationFn: ({ scheduleId, dto, force: forced }) =>
+      gatewayFetch<ScheduleChangeResult>(
+        `/api/backend/schedules/${scheduleId}/changes${force(forced)}`,
+        { method: 'POST', body: JSON.stringify(dto) },
+      ),
+    onSuccess: () => invalidateLessonGraph(queryClient),
   });
 }

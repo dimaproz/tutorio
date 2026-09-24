@@ -59,21 +59,22 @@ export function overlapping(
 }
 
 /**
- * The time list's busy marks for one day: every suggested slot where a lesson
- * of that length would overlap a lesson of the teacher, the student or the
- * group, with that lesson's name. The slots stay selectable (L-111).
+ * The time list's busy marks for one day: every suggested slot that starts
+ * while a lesson of the teacher, the student or the group is on, with that
+ * lesson's name (the FieldsTime board marks 18:00 and 18:30 for an 18:00–19:30
+ * lesson). The slots stay selectable (L-111); the row's overlap hint checks
+ * the new lesson's whole length.
  */
 export function busySlots(
   lessons: readonly BusyLesson[],
   scope: BusyScope,
   date: string,
-  minutes: number,
   slots: readonly string[],
 ): Record<string, string> {
   const marks: Record<string, string> = {};
-  if (!date || !Number.isFinite(minutes) || minutes <= 0) return marks;
+  if (!date) return marks;
   for (const slot of slots) {
-    const hit = overlapping(lessons, scope, localInstant(date, slot), minutes)[0];
+    const hit = overlapping(lessons, scope, localInstant(date, slot), 1)[0];
     if (hit) marks[slot] = busyName(hit);
   }
   return marks;
