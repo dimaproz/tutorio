@@ -2,6 +2,7 @@ import {
   AlertCircleIcon,
   ArchiveIcon,
   ArrowLeftIcon,
+  ArrowLeftRightIcon,
   ArrowRightIcon,
   ArrowUpDownIcon,
   BellIcon,
@@ -21,6 +22,7 @@ import {
   GraduationCapIcon,
   HeartIcon,
   HomeIcon,
+  KeyboardIcon,
   LayersIcon,
   LayoutGridIcon,
   ListIcon,
@@ -35,6 +37,7 @@ import {
   PlusIcon,
   RotateCcwIcon,
   SearchIcon,
+  SearchXIcon,
   SendIcon,
   SettingsIcon,
   SlidersHorizontalIcon,
@@ -48,7 +51,7 @@ import {
 } from 'lucide-react';
 
 /**
- * The handoff's 45-glyph stroke set, keyed by the design's own names and drawn
+ * The handoff's stroke set, keyed by the design's own names and drawn
  * with the project's Lucide icons. Components that take a `glyph` prop read
  * this map, so a design reference like `icon="cal"` translates one to one.
  */
@@ -98,6 +101,10 @@ export const GLYPHS = {
   note: FileTextIcon,
   right: ChevronRightIcon,
   building: Building2Icon,
+  // The lesson form (S02): a typed time, a substitute teacher, a search with no result.
+  keyboard: KeyboardIcon,
+  swap: ArrowLeftRightIcon,
+  searchX: SearchXIcon,
 } as const satisfies Record<string, LucideIcon>;
 
 export type GlyphName = keyof typeof GLYPHS;

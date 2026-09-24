@@ -4,7 +4,9 @@ import { cn } from '@/lib/utils';
 /**
  * Lesson credits as one pill per credit. Used at `sm` in collection rows and at
  * `lg` on the package card. Every caption is supplied by the caller so the
- * meter owns no copy.
+ * meter owns no copy. At `sm` the credits left are brand, the used ones a
+ * faint ink, and a direction running out turns them coral; `inline` puts the
+ * caption beside the pills instead of under them (the lesson form's pill).
  */
 export function CreditMeter({
   left,
@@ -14,6 +16,7 @@ export function CreditMeter({
   label,
   usedLabel,
   leftLabel,
+  inline = false,
   className,
 }: {
   left: number;
@@ -27,6 +30,8 @@ export function CreditMeter({
   usedLabel?: ReactNode;
   /** `lg` footer, right side. */
   leftLabel?: ReactNode;
+  /** `sm`: the caption sits beside the pills, in the foreground colour. */
+  inline?: boolean;
   className?: string;
 }) {
   const safeTotal = Math.max(total, 0);
@@ -61,7 +66,10 @@ export function CreditMeter({
   const segmentWidth = Math.max(6, Math.round(96 / Math.max(safeTotal, 1)) - 4);
 
   return (
-    <div data-slot="credit-meter" className={cn('flex flex-col gap-1.5', className)}>
+    <div
+      data-slot="credit-meter"
+      className={cn(inline ? 'flex items-center gap-2.5' : 'flex flex-col gap-1.5', className)}
+    >
       {segments.length > 0 ? (
         <div aria-hidden="true" className="flex gap-1">
           {segments.map((index) => (
@@ -70,7 +78,7 @@ export function CreditMeter({
               style={{ width: segmentWidth }}
               className={cn(
                 'h-2 rounded-[4px]',
-                index < safeLeft ? (low ? 'bg-danger-mark' : 'bg-primary') : 'bg-border',
+                index < safeLeft ? (low ? 'bg-danger-mark' : 'bg-brand') : 'bg-tint-foreground/15',
               )}
             />
           ))}
@@ -80,7 +88,11 @@ export function CreditMeter({
         <span
           className={cn(
             'text-xs leading-4',
-            low ? 'font-semibold text-tint-danger-foreground' : 'text-muted-foreground',
+            low
+              ? 'font-semibold text-tint-danger-foreground'
+              : inline
+                ? 'font-semibold text-foreground'
+                : 'text-muted-foreground',
           )}
         >
           {label}
