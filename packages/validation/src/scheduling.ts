@@ -475,3 +475,70 @@ export type LessonSeriesResponse = z.infer<typeof lessonSeriesResponseSchema>;
 export const lessonSeriesListResponseSchema = paginatedResponseSchema(lessonSeriesResponseSchema);
 
 export type LessonSeriesListResponse = z.infer<typeof lessonSeriesListResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// Bulk cancel (product/scheduling.md L-54)
+// ---------------------------------------------------------------------------
+
+/** The longest period one bulk cancel may cover. */
+export const BULK_CANCEL_MAX_DAYS = 366;
+
+/**
+ * Cancels every scheduled lesson of one teacher, or of the whole studio, in
+ * `[from, to)`: free, cancelled by the teacher, with an optional reason.
+ */
+export const bulkCancelSchema = z
+  .object({
+    from: isoDateTimeSchema,
+    to: isoDateTimeSchema,
+    /** Omitted: every teacher of the studio. */
+    teacherId: uuidSchema.optional(),
+    reason: notesSchema.nullable().optional(),
+  })
+  .strict()
+  .superRefine((value, ctx) => {
+    const span = new Date(value.to).getTime() - new Date(value.from).getTime();
+    if (span <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'to must be after from',
+        path: ['to'],
+      });
+    } else if (span > BULK_CANCEL_MAX_DAYS * 24 * 60 * 60 * 1000) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `A bulk cancel covers at most ${BULK_CANCEL_MAX_DAYS} days`,
+        path: ['to'],
+      });
+    }
+  });
+
+export type BulkCancelDto = z.infer<typeof bulkCancelSchema>;
+
+/** One lesson a bulk cancel would call off. */
+const bulkCancelLessonSchema = z.object({
+  id: uuidSchema,
+  startsAtUtc: isoDateTimeSchema,
+  durationMin: durationMinSchema,
+  student: studentRefSchema.nullable(),
+  group: groupRefSchema.nullable(),
+  teacher: teacherRefSchema,
+});
+
+/** What a bulk cancel would do; the apply cancels exactly these lessons. */
+export const bulkCancelPreviewSchema = z.object({
+  count: z.number().int().nonnegative(),
+  byTeacher: z.array(z.object({ teacher: teacherRefSchema, count: z.number().int().positive() })),
+  /** The lessons, soonest first; at most the first 200. */
+  lessons: z.array(bulkCancelLessonSchema),
+  truncated: z.boolean(),
+});
+
+export type BulkCancelPreview = z.infer<typeof bulkCancelPreviewSchema>;
+
+export const bulkCancelResultSchema = z.object({
+  cancelled: z.number().int().nonnegative(),
+  lessonIds: z.array(uuidSchema),
+});
+
+export type BulkCancelResult = z.infer<typeof bulkCancelResultSchema>;
