@@ -184,3 +184,25 @@ export function allocatePayments(
     unpaid,
   };
 }
+
+/** Why a direction paid by packages needs the tutor's attention (L-82). */
+export type CreditWarning = 'ON_DEBT' | 'NO_CREDITS' | 'LOW_CREDITS';
+
+/** The studio default for "nearly used up" (L-120). */
+export const DEFAULT_LOW_CREDIT_THRESHOLD = 2;
+
+/**
+ * The warning a direction shows (L-82): lessons already held on debt, no
+ * credits left, or no more than `threshold` left. A pay-per-lesson direction
+ * shows its debt as money instead (L-90) and gets no credit warning.
+ */
+export function creditWarning(
+  direction: { mode: BillingMode; creditsLeft: number; debtLessons: number },
+  threshold: number,
+): CreditWarning | null {
+  if (direction.mode !== 'PACKAGE') return null;
+  if (direction.debtLessons > 0) return 'ON_DEBT';
+  if (direction.creditsLeft <= 0) return 'NO_CREDITS';
+  if (direction.creditsLeft <= threshold) return 'LOW_CREDITS';
+  return null;
+}

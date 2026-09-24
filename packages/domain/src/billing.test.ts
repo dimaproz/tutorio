@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   allocatePayments,
   coverDebts,
+  creditWarning,
   initialSource,
   participantIsCharged,
   pickPackage,
@@ -135,5 +136,33 @@ describe('allocatePayments', () => {
   it('keeps money paid ahead as an advance', () => {
     const allocation = allocatePayments(charges.slice(0, 1), 50000);
     expect(allocation).toMatchObject({ debtMinor: 0, advanceMinor: 10000, unpaid: [] });
+  });
+});
+
+describe('creditWarning', () => {
+  const packageMode = (creditsLeft: number, debtLessons = 0) => ({
+    mode: 'PACKAGE' as const,
+    creditsLeft,
+    debtLessons,
+  });
+
+  it('warns when a package direction is nearly used up, at the threshold', () => {
+    expect(creditWarning(packageMode(3), 2)).toBeNull();
+    expect(creditWarning(packageMode(2), 2)).toBe('LOW_CREDITS');
+    expect(creditWarning(packageMode(1), 2)).toBe('LOW_CREDITS');
+  });
+
+  it('says there are no credits, and that lessons went on debt, first', () => {
+    expect(creditWarning(packageMode(0), 2)).toBe('NO_CREDITS');
+    expect(creditWarning(packageMode(0, 3), 2)).toBe('ON_DEBT');
+    expect(creditWarning(packageMode(4, 1), 2)).toBe('ON_DEBT');
+  });
+
+  it('leaves pay-per-lesson directions to their money balance', () => {
+    expect(creditWarning({ mode: 'PER_LESSON', creditsLeft: 0, debtLessons: 0 }, 2)).toBeNull();
+  });
+
+  it('turns the low warning off with a zero threshold', () => {
+    expect(creditWarning(packageMode(1), 0)).toBeNull();
   });
 });
