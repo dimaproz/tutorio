@@ -221,33 +221,39 @@ export class LessonsService {
     lessonId: string,
   ): Promise<LessonDetailResponse> {
     const link = { select: { id: true, startsAtUtc: true, status: true } };
-    const row = await this.prisma.lesson.findFirst({
-      where: { id: lessonId, workspaceId: auth.workspaceId, deletedAt: null },
-      include: {
-        ...lessonInclude,
-        original: link,
-        makeup: {
-          select: {
-            id: true,
-            startsAtUtc: true,
-            status: true,
-            deletedAt: true,
+    // The history needs only the id, so it is read alongside the lesson
+    // rather than after it; a missing lesson throws before it is used.
+    const [row, history] = await Promise.all([
+      this.prisma.lesson.findFirst({
+        where: { id: lessonId, workspaceId: auth.workspaceId, deletedAt: null },
+        include: {
+          ...lessonInclude,
+          original: link,
+          makeup: {
+            select: {
+              id: true,
+              startsAtUtc: true,
+              status: true,
+              deletedAt: true,
+            },
+          },
+          series: {
+            select: { schedule: { select: { id: true, state: true } } },
           },
         },
-        series: { select: { schedule: { select: { id: true, state: true } } } },
-      },
-    });
+      }),
+      this.prisma.auditLog.findMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          entity: 'LESSON',
+          entityId: lessonId,
+        },
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        take: LESSON_HISTORY_LIMIT,
+        include: auditActorInclude,
+      }),
+    ]);
     if (!row) throw lessonNotFound();
-    const history = await this.prisma.auditLog.findMany({
-      where: {
-        workspaceId: auth.workspaceId,
-        entity: 'LESSON',
-        entityId: row.id,
-      },
-      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-      take: LESSON_HISTORY_LIMIT,
-      include: auditActorInclude,
-    });
     const toLink = (lesson: {
       id: string;
       startsAtUtc: Date;
