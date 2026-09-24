@@ -169,10 +169,11 @@ export function LessonList<T extends string = string>({
         className="scrollbar-thin -mr-1 overflow-y-auto rounded-row pr-1 outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
       >
         <ul className="flex flex-col">
-          {groups.map((group, groupIndex) =>
+          {groups.map((group) =>
             group.items.length > 0 ? (
               <Fragment key={group.label}>
-                <li className={cn('px-1', groupIndex === 0 ? 'pb-1' : 'pt-2 pb-1')}>
+                {/* The top padding also clears the region's rounded corner. */}
+                <li className="px-1 pt-2 pb-1">
                   <SectionDivider label={group.label} />
                 </li>
                 {group.items.map((item) => (

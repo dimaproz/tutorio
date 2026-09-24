@@ -9,7 +9,12 @@ import { EmptyState } from '@/components/shared/empty-state';
 import { LessonList, type LessonListItem } from '@/components/shared/lesson-list';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLessonsQuery } from '@/lib/api/scheduling';
-import { LessonStatusBadge } from '@/features/lessons';
+import {
+  isLessonRunning,
+  lessonBuckets,
+  LessonRunningBadge,
+  LessonStatusBadge,
+} from '@/features/lessons';
 
 // How far back and forward a student's schedule is read on their profile.
 const PAST_DAYS = 120;
@@ -68,25 +73,23 @@ export function StudentLessonsCard({
   const range = useMemo(() => studentLessonsRange(now), [now]);
   const lessons = useLessonsQuery({ ...range, studentId });
 
-  const { upcoming, past } = useMemo(() => {
-    const items = lessons.data?.items ?? [];
-    return {
-      upcoming: items.filter((item) => new Date(item.startsAtUtc).getTime() >= now),
-      // Most recent first — the tutor looks backwards from today.
-      past: items.filter((item) => new Date(item.startsAtUtc).getTime() < now).reverse(),
-    };
-  }, [lessons.data, now]);
+  // A lesson under way stays with the upcoming rows until it ends.
+  const {
+    upcoming,
+    past,
+    nextId: next,
+  } = useMemo(() => lessonBuckets(lessons.data?.items ?? [], now), [lessons.data, now]);
 
   const ordered = historyOnly ? past : [...upcoming, ...past];
   const visible = ordered.slice(0, shown);
   const visibleIds = new Set(visible.map((lesson) => lesson.id));
-  const nextId = historyOnly ? null : (upcoming[0]?.id ?? null);
+  const nextId = historyOnly ? null : next;
 
   const toItem = (lesson: LessonResponse): LessonListItem => {
     const start = new Date(lesson.startsAtUtc);
     const end = new Date(start.getTime() + lesson.durationMin * 60 * 1000);
     const range = `${format.dateTime(start, { hour: '2-digit', minute: '2-digit' })} – ${format.dateTime(end, { hour: '2-digit', minute: '2-digit' })}`;
-    const past = start.getTime() < now;
+    const past = end.getTime() <= now;
     return {
       id: lesson.id,
       weekday: format.dateTime(start, { weekday: 'short' }),
@@ -95,7 +98,11 @@ export function StudentLessonsCard({
       meta: [format.dateTime(start, { month: 'short' }), range, lesson.teacher.name].join(' · '),
       metaShort: [range, lesson.teacher.name.split(' ')[0]].join(' · '),
       state: lesson.id === nextId ? 'next' : past ? 'past' : 'default',
-      status: <LessonStatusBadge status={lesson.status} />,
+      status: isLessonRunning(lesson, now) ? (
+        <LessonRunningBadge />
+      ) : (
+        <LessonStatusBadge status={lesson.status} />
+      ),
       onSelect: onSelect ? () => onSelect(lesson.id) : undefined,
       selectLabel: onSelect
         ? t('openLesson', {

@@ -59,6 +59,9 @@ const DOT_TONE = {
   brand: 'bg-brand',
 } as const;
 
+const VARIANT_DOT =
+  'bg-current group-data-[variant=success]/badge:bg-success group-data-[variant=warning]/badge:bg-warning group-data-[variant=danger]/badge:bg-danger-mark group-data-[variant=destructive]/badge:bg-danger-mark group-data-[variant=neutral]/badge:bg-status-archived group-data-[variant=secondary]/badge:bg-status-archived group-data-[variant=surface]/badge:bg-success group-data-[variant=on-ink]/badge:bg-brand-soft group-data-[variant=success-inverse]/badge:bg-success group-data-[variant=info]/badge:bg-tint-info-foreground group-data-[variant=indigo]/badge:bg-tint-indigo-foreground group-data-[variant=brand]/badge:bg-ink';
+
 function Badge({
   className,
   variant = 'default',
@@ -95,8 +98,10 @@ function Badge({
           aria-hidden="true"
           data-slot="badge-dot"
           className={cn(
-            'size-[7px] shrink-0 rounded-pill bg-current group-data-[variant=success]/badge:bg-success group-data-[variant=warning]/badge:bg-warning group-data-[variant=danger]/badge:bg-danger-mark group-data-[variant=destructive]/badge:bg-danger-mark group-data-[variant=neutral]/badge:bg-status-archived group-data-[variant=secondary]/badge:bg-status-archived group-data-[variant=surface]/badge:bg-success group-data-[variant=on-ink]/badge:bg-brand-soft group-data-[variant=success-inverse]/badge:bg-success group-data-[variant=info]/badge:bg-tint-info-foreground group-data-[variant=indigo]/badge:bg-tint-indigo-foreground group-data-[variant=brand]/badge:bg-ink',
-            dotTone && DOT_TONE[dotTone],
+            'size-[7px] shrink-0 rounded-pill',
+            // A variant's own dot colour wins over a plain one by specificity,
+            // so it applies only when no tone is asked for.
+            dotTone ? DOT_TONE[dotTone] : VARIANT_DOT,
           )}
         />
       ) : null}

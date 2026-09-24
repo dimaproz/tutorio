@@ -14,12 +14,8 @@ import { useStudentQuery } from '@/lib/api/students';
 import { capitalizeFirst } from '@/lib/utils';
 import { useLessonDetailQuery, useScheduleQuery, useTransitionLessonMutation } from '../api';
 import { cancellationActor, lessonHistory } from '../model/history';
-import {
-  isRunningGroupLesson,
-  panelActions,
-  type FooterAction,
-  type MenuAction,
-} from '../model/panel-actions';
+import { isLessonRunning } from '../model/buckets';
+import { panelActions, type FooterAction, type MenuAction } from '../model/panel-actions';
 import { priceEditability } from '../model/payment';
 import { AttendanceDialog } from './dialogs/attendance-dialog';
 import { CancelDialog } from './dialogs/cancel-dialog';
@@ -36,6 +32,7 @@ import { LessonHistory } from './lesson-history';
 import { LessonPanelLayout, LessonPanelWindow } from './lesson-panel-window';
 import { LessonPayment, useLessonPayment } from './lesson-payment';
 import { LessonSummary, useScheduleLabel } from './lesson-summary';
+import type { LessonPanelIntent } from './use-lesson-panel';
 
 type DialogKind = 'cancel' | 'fixStatus' | 'makeup' | 'attendance' | 'delete';
 
@@ -127,9 +124,12 @@ export function LessonPanel({
   onOpenLesson,
   links = {},
   linkTo,
+  intent = null,
   nowMs,
 }: {
   lessonId: string | null;
+  /** A command to run once the lesson loads, e.g. from the next-lesson ticket. */
+  intent?: LessonPanelIntent | null;
   onClose: () => void;
   /** Opens another lesson in the panel (the makeup or its original). */
   onOpenLesson: (lessonId: string) => void;
@@ -164,6 +164,7 @@ export function LessonPanel({
           onOpenLesson={onOpenLesson}
           links={links}
           linkTo={linkTo}
+          intent={intent}
           nowMs={nowMs}
         />
       ) : notFound ? (
@@ -204,6 +205,7 @@ function LessonPanelContent({
   onOpenLesson,
   links,
   linkTo,
+  intent,
   nowMs,
 }: {
   lesson: LessonDetailResponse;
@@ -212,6 +214,7 @@ function LessonPanelContent({
   onOpenLesson: (lessonId: string) => void;
   links: LessonPanelLinks;
   linkTo?: (lessonId: string) => string;
+  intent: LessonPanelIntent | null;
   nowMs?: number;
 }) {
   const t = useTranslations('lessons');
@@ -222,7 +225,12 @@ function LessonPanelContent({
   const money = useMoney();
   const showError = useErrorToast();
   const [mode, setMode] = useState<'view' | 'edit'>('view');
-  const [dialog, setDialog] = useState<DialogKind | null>(null);
+  // An intent opens its dialog only while the panel itself would offer it.
+  const [dialog, setDialog] = useState<DialogKind | null>(() =>
+    intent === 'markAttendance' && panelActions(lesson, now).primary === 'markAttendance'
+      ? 'attendance'
+      : null,
+  );
 
   const group = lesson.groupId !== null;
   const student = useStudentQuery(lesson.student?.id ?? '', !group && Boolean(lesson.student));
@@ -235,7 +243,7 @@ function LessonPanelContent({
 
   const events = useMemo(() => lessonHistory(lesson), [lesson]);
   const actions = panelActions(lesson, now);
-  const running = isRunningGroupLesson(lesson, now);
+  const running = isLessonRunning(lesson, now);
 
   const charge: ChargeContext = group
     ? { kind: 'group' }

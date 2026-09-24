@@ -748,6 +748,15 @@
       "teacher": "Teacher",
       "open": "Open lesson",
       "reschedule": "Reschedule",
+      "running": {
+        "heading": "Lesson in progress",
+        "chip": "In progress",
+        "until": "until {time}",
+        "started": "started at {time} · {name}",
+        "elapsed": "{elapsed} of {total} min",
+        "progress": "Lesson progress",
+        "mark": "Mark attendance"
+      },
       "empty": {
         "fresh": {
           "title": "Nothing planned",

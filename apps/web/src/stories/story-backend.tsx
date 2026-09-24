@@ -323,6 +323,9 @@ function lesson(
 const [anna, sofiia, maksym, daryna, artem, vika] = SAMPLE_STUDENTS;
 export const SAMPLE_LESSONS: LessonResponse[] = [
   lesson(1, anna, at(2, 17), 'SCHEDULED'),
+  // Under way at the story clock, 65 of 90 minutes in: the ticket follows it
+  // and it leads the upcoming rows as "In progress".
+  lesson(11, anna, at(0, 13, 55), 'SCHEDULED', TEACHER_B, 90, { id: 'g1', name: 'B1 English' }),
   lesson(2, anna, at(7, 17), 'SCHEDULED'),
   lesson(3, anna, at(-1, 17), 'COMPLETED'),
   lesson(4, anna, at(-5, 17), 'CANCELLED_CHARGED'),

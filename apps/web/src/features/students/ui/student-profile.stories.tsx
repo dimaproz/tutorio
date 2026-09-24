@@ -62,6 +62,10 @@ export const Playground: Story = {
     ).toBeVisible();
     // The next-lesson ticket and the ring metric read the student's own data.
     await expect(await canvas.findByText('6 of 8')).toBeVisible();
+    // A lesson under way takes the ticket and leads the upcoming rows.
+    await expect(await canvas.findByText('Lesson in progress')).toBeVisible();
+    await expect(canvas.getByText('65 of 90 min')).toBeVisible();
+    await expect(canvas.getAllByText('In progress')).toHaveLength(2);
   },
 };
 

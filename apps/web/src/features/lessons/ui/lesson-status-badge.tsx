@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { LessonStatusDto } from '@tutorio/validation';
+import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/shared/status-badges';
 import type { StatusMeta } from '@/components/shared/status-meta';
 
@@ -23,4 +24,14 @@ const LESSON_STATUS_META: Record<LessonStatusDto, StatusMeta> = {
 export function LessonStatusBadge({ status }: { status: LessonStatusDto }) {
   const t = useTranslations('scheduling.status');
   return <StatusBadge label={t(status)} {...LESSON_STATUS_META[status]} />;
+}
+
+/** Stands in for the status chip while a scheduled lesson is under way. */
+export function LessonRunningBadge() {
+  const t = useTranslations('lessons.panel');
+  return (
+    <Badge variant="brand" dot dotTone="danger">
+      {t('runningNow')}
+    </Badge>
+  );
 }

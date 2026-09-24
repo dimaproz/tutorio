@@ -1,3 +1,4 @@
+import { lessonEndsAt } from '@tutorio/domain';
 import type { LessonResponse, PackageResponse } from '@tutorio/validation';
 
 export type AttendanceMark = 'ok' | 'miss';
@@ -20,7 +21,7 @@ export type StudentProfileMetrics = {
     charged: number;
     percent: number;
   } | null;
-  /** The nearest scheduled lesson. */
+  /** The nearest scheduled lesson that is not over: the running one first. */
   next: LessonResponse | null;
   /** The package read failed or was partial: credits and money are unknown. */
   packagesUnavailable: boolean;
@@ -100,7 +101,12 @@ export function deriveStudentProfileMetrics({
   const next =
     lessons
       .filter(
-        (lesson) => lesson.status === 'SCHEDULED' && new Date(lesson.startsAtUtc).getTime() >= now,
+        (lesson) =>
+          lesson.status === 'SCHEDULED' &&
+          lessonEndsAt({
+            startsAtUtc: new Date(lesson.startsAtUtc),
+            durationMin: lesson.durationMin,
+          }).getTime() > now,
       )
       .sort((a, b) => a.startsAtUtc.localeCompare(b.startsAtUtc))[0] ?? null;
 

@@ -19,15 +19,6 @@ export function lessonMoment(
   return now < end.getTime() ? 'running' : 'ended';
 }
 
-/** A group lesson that started and is not over: attendance can be marked now (L-74). */
-export function isRunningGroupLesson(lesson: ActionLesson, now: number): boolean {
-  return (
-    lesson.groupId !== null &&
-    lesson.status === 'SCHEDULED' &&
-    lessonMoment(lesson, now) === 'running'
-  );
-}
-
 /** Commands the panel's footer can carry. */
 export type FooterAction = 'move' | 'cancel' | 'fixStatus' | 'makeup' | 'markAttendance';
 

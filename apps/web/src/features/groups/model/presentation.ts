@@ -2,7 +2,6 @@ import type {
   GroupAttendanceResponse,
   GroupDetail,
   GroupSchedule,
-  LessonResponse,
   PackageResponse,
 } from '@tutorio/validation';
 import type { StatBlockSegment } from '@/components/shared/stat-block';
@@ -97,26 +96,6 @@ export function memberPackagesPaid(packages: readonly PackageResponse[]) {
     paidMinor: packages.reduce((sum, pkg) => sum + pkg.paidMinor, 0),
     totalMinor: packages.reduce((sum, pkg) => sum + pkg.totalPriceMinorSnapshot, 0),
   };
-}
-
-export type LessonBuckets = {
-  /** From now on, soonest first. */
-  upcoming: LessonResponse[];
-  /** Before now, most recent first. */
-  past: LessonResponse[];
-  /** The next lesson that will take place: the highlighted row. */
-  nextId: string | null;
-};
-
-export function lessonBuckets(lessons: readonly LessonResponse[], now: number): LessonBuckets {
-  const upcoming = lessons
-    .filter((lesson) => Date.parse(lesson.startsAtUtc) >= now)
-    .sort((a, b) => a.startsAtUtc.localeCompare(b.startsAtUtc));
-  const past = lessons
-    .filter((lesson) => Date.parse(lesson.startsAtUtc) < now)
-    .sort((a, b) => b.startsAtUtc.localeCompare(a.startsAtUtc));
-  const next = upcoming.find((lesson) => lesson.status === 'SCHEDULED');
-  return { upcoming, past, nextId: next?.id ?? null };
 }
 
 /**

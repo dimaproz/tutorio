@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArchiveArt, EmptyArt, PauseArt } from '@/components/shared/next-lesson-art';
 import { cn } from '@/lib/utils';
@@ -9,9 +10,25 @@ const ART = { empty: EmptyArt, pause: PauseArt, archive: ArchiveArt } as const;
 
 export type NextLessonArt = keyof typeof ART;
 
+/** How far a running lesson has got; every string is the caller's copy. */
+export type NextLessonProgress = {
+  /** Elapsed minutes, clamped to `total`. */
+  value: number;
+  total: number;
+  /** Start and end times under the bar, e.g. "18:00" and "19:30". */
+  start: string;
+  end: string;
+  /** The elapsed caption, e.g. "65 of 90 min"; also the bar's spoken value. */
+  label: string;
+  /** Accessible name of the bar, e.g. "Lesson progress". */
+  name: string;
+};
+
 /**
  * The "next lesson" highlight ticket. Shows the next scheduled lesson with its two
- * commands, or an empty state. The empty state either offers an action or,
+ * commands, or an empty state. A lesson under way passes `progress`: the chip
+ * turns live, `date` carries the end ("until 19:30") and a bar shows how
+ * much of it has passed. The empty state either offers an action or,
  * where the action already lives elsewhere on the page, shows an illustration
  * of why nothing is planned: a fresh calendar, a pause, or the archive.
  * Every string is supplied by the caller.
@@ -28,12 +45,13 @@ export function NextLessonCard({
   emptyDescription,
   emptyAction,
   art = 'empty',
+  progress,
   loading = false,
   className,
 }: {
   /** Uppercase eyebrow, e.g. "Next lesson". */
   heading: string;
-  /** Relative chip beside the eyebrow, e.g. "in 2 days". */
+  /** Chip beside the eyebrow, e.g. "in 2 days", or "In progress" with `progress`. */
   relative?: ReactNode;
   /** Absolute date. When absent the card renders its empty state. */
   date?: ReactNode;
@@ -47,6 +65,8 @@ export function NextLessonCard({
   emptyAction?: ReactNode;
   /** Illustration for an empty card without an action. */
   art?: NextLessonArt;
+  /** The lesson is under way. */
+  progress?: NextLessonProgress;
   loading?: boolean;
   className?: string;
 }) {
@@ -63,7 +83,15 @@ export function NextLessonCard({
         <span className="text-[13px] font-semibold tracking-[0.06em] text-feature-heading uppercase">
           {heading}
         </span>
-        {!loading && date && relative ? <Badge variant="on-ink">{relative}</Badge> : null}
+        {!loading && date && relative ? (
+          progress ? (
+            <Badge variant="brand" dot dotTone="danger">
+              {relative}
+            </Badge>
+          ) : (
+            <Badge variant="on-ink">{relative}</Badge>
+          )
+        ) : null}
       </div>
 
       {loading ? (
@@ -80,8 +108,28 @@ export function NextLessonCard({
             <span className="text-[40px] leading-[44px] font-semibold tracking-[-0.03em]">
               {date}
             </span>
-            {time ? <span className="font-mono text-[15px] text-feature-muted">{time}</span> : null}
+            {time ? (
+              <span className={cn('text-[15px] text-feature-muted', progress ? null : 'font-mono')}>
+                {time}
+              </span>
+            ) : null}
           </div>
+          {progress ? (
+            <div className="flex flex-col gap-2">
+              <Progress
+                // The indicator reads its value as a percentage.
+                value={progress.total > 0 ? (progress.value / progress.total) * 100 : 0}
+                aria-valuetext={progress.label}
+                aria-label={progress.name}
+                className="h-2 bg-feature-soft *:data-[slot=progress-indicator]:bg-brand-soft"
+              />
+              <div className="flex items-center justify-between gap-3 text-[13px] text-feature-muted">
+                <span>{progress.start}</span>
+                <span>{progress.label}</span>
+                <span>{progress.end}</span>
+              </div>
+            </div>
+          ) : null}
           {teacher}
         </>
       ) : (

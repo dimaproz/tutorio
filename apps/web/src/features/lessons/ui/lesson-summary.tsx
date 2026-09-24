@@ -5,14 +5,13 @@ import Link from 'next/link';
 import { ChevronRightIcon, CircleSlashIcon, CircleXIcon } from 'lucide-react';
 import { useFormatter, useTranslations } from 'next-intl';
 import type { LessonDetailResponse, ScheduleResponse } from '@tutorio/validation';
-import { Badge } from '@/components/ui/badge';
 import { DialogTitle } from '@/components/ui/dialog';
 import { EntityAvatar } from '@/components/shared/entity-avatar';
 import { LessonCancellationCard } from '@/components/shared/lesson-cancellation-card';
 import { PersonItem } from '@/components/shared/person-item';
 import { useWeekdayLabels } from '@/lib/i18n/weekdays';
 import { capitalizeFirst } from '@/lib/utils';
-import { LessonStatusBadge } from './lesson-status-badge';
+import { LessonRunningBadge, LessonStatusBadge } from './lesson-status-badge';
 import { useDurationLabel, useLessonDates } from './lesson-format';
 
 type Lesson = LessonDetailResponse;
@@ -40,11 +39,7 @@ function LessonHeading({ lesson, running }: { lesson: Lesson; running: boolean }
           })}
         </span>
         <LessonStatusBadge status={lesson.status} />
-        {running ? (
-          <Badge variant="brand" dot>
-            {t('runningNow')}
-          </Badge>
-        ) : null}
+        {running ? <LessonRunningBadge /> : null}
       </div>
     </div>
   );

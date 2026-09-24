@@ -6,6 +6,9 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 /** The query parameter that opens the lesson panel on any page (S01 deep link). */
 export const LESSON_PARAM = 'lesson';
 
+/** A command the panel runs as soon as the lesson has loaded. */
+export type LessonPanelIntent = 'markAttendance';
+
 /**
  * The lesson panel's own URL: `?lesson=<id>` on the page that opened it, so a
  * lesson can be linked to and the page stays underneath. Opening and closing
@@ -17,10 +20,21 @@ export function useLessonPanel() {
   const params = useSearchParams();
   const fromUrl = params.get(LESSON_PARAM);
   // The panel opens at once and the URL follows; a URL that changes on its
-  // own (back, forward, a link) wins again.
-  const [state, setState] = useState({ url: fromUrl, lessonId: fromUrl });
-  if (state.url !== fromUrl) setState({ url: fromUrl, lessonId: fromUrl });
-  const lessonId = state.lessonId;
+  // own (back, forward, a link) wins again. The intent is not in the URL: it
+  // survives the URL catching up with this lesson and nothing else.
+  const [state, setState] = useState<{
+    url: string | null;
+    lessonId: string | null;
+    intent: LessonPanelIntent | null;
+  }>({ url: fromUrl, lessonId: fromUrl, intent: null });
+  if (state.url !== fromUrl) {
+    setState({
+      url: fromUrl,
+      lessonId: fromUrl,
+      intent: fromUrl === state.lessonId ? state.intent : null,
+    });
+  }
+  const { lessonId, intent } = state;
 
   const hrefWith = useCallback(
     (id: string | null) => {
@@ -34,14 +48,14 @@ export function useLessonPanel() {
   );
 
   const open = useCallback(
-    (id: string) => {
-      setState((current) => ({ ...current, lessonId: id }));
+    (id: string, nextIntent: LessonPanelIntent | null = null) => {
+      setState((current) => ({ ...current, lessonId: id, intent: nextIntent }));
       router.replace(hrefWith(id), { scroll: false });
     },
     [hrefWith, router],
   );
   const close = useCallback(() => {
-    setState((current) => ({ ...current, lessonId: null }));
+    setState((current) => ({ ...current, lessonId: null, intent: null }));
     router.replace(hrefWith(null), { scroll: false });
   }, [hrefWith, router]);
   /** The absolute link to a lesson on this page, for "copy link". */
@@ -50,5 +64,5 @@ export function useLessonPanel() {
     [hrefWith],
   );
 
-  return { lessonId, open, close, linkTo };
+  return { lessonId, intent, open, close, linkTo };
 }

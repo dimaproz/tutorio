@@ -103,4 +103,17 @@ describe('deriveStudentProfileMetrics', () => {
     });
     expect(metrics.next?.startsAtUtc).toBe('2026-09-11T10:00:00.000Z');
   });
+
+  it('keeps a running lesson as the next one until it ends', () => {
+    const metrics = deriveStudentProfileMetrics({
+      packages: [],
+      lessons: [
+        lesson('2026-09-09T10:30:00.000Z', 'SCHEDULED'),
+        lesson('2026-09-09T11:30:00.000Z', 'SCHEDULED'),
+        lesson('2026-09-11T10:00:00.000Z', 'SCHEDULED'),
+      ],
+      now: NOW,
+    });
+    expect(metrics.next?.startsAtUtc).toBe('2026-09-09T11:30:00.000Z');
+  });
 });

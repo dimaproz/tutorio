@@ -748,6 +748,15 @@
       "teacher": "Викладач",
       "open": "Відкрити урок",
       "reschedule": "Перенести",
+      "running": {
+        "heading": "Зараз іде заняття",
+        "chip": "Йде зараз",
+        "until": "до {time}",
+        "started": "почалось о {time} · {name}",
+        "elapsed": "{elapsed} з {total} хв",
+        "progress": "Хід заняття",
+        "mark": "Відмітити"
+      },
       "empty": {
         "fresh": {
           "title": "Нічого не заплановано",

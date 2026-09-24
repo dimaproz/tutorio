@@ -9,8 +9,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/shared/empty-state';
 import { LessonList, type LessonListItem } from '@/components/shared/lesson-list';
-import { LessonStatusBadge } from '@/features/lessons';
-import { lessonBuckets, scheduleSlots } from '@/features/groups/model/presentation';
+import {
+  isLessonRunning,
+  lessonBuckets,
+  LessonRunningBadge,
+  LessonStatusBadge,
+} from '@/features/lessons';
+import { scheduleSlots } from '@/features/groups/model/presentation';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useWeekdayLabels } from '@/lib/i18n/weekdays';
 
@@ -86,7 +91,9 @@ export function GroupLessonsCard({
         ? [time(start), came].filter(Boolean).join(' · ')
         : [range, teacher.split(' ')[0]].join(' · '),
       state: next ? 'next' : past ? 'past' : 'default',
-      status: next ? (
+      status: isLessonRunning(lesson, now) ? (
+        <LessonRunningBadge />
+      ) : next ? (
         <Badge variant="brand">{t('next')}</Badge>
       ) : (
         <LessonStatusBadge status={lesson.status} />

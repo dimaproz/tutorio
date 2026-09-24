@@ -200,6 +200,8 @@ export function StudentProfileContent({
           lesson={metrics?.next ?? null}
           loading={!metrics && !lessons.isError}
           unavailable={lessons.isError}
+          onOpenLesson={lessonPanel.open}
+          onMarkAttendance={(id) => lessonPanel.open(id, 'markAttendance')}
         />
       </div>
     </div>
@@ -258,6 +260,7 @@ export function StudentProfileContent({
       {statusActions.dialogs}
       <LessonPanel
         lessonId={lessonPanel.lessonId}
+        intent={lessonPanel.intent}
         onClose={lessonPanel.close}
         onOpenLesson={lessonPanel.open}
         linkTo={lessonPanel.linkTo}
