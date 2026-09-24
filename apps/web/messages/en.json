@@ -176,7 +176,10 @@
     "LESSON_ENDED": "This lesson has ended. Change its status instead of scheduling it again.",
     "NO_SHOW_INDIVIDUAL_ONLY": "A group lesson records absences through attendance.",
     "MAKEUP_NOT_ALLOWED": "A makeup can replace only a cancelled or missed individual lesson.",
-    "MAKEUP_EXISTS": "This lesson already has a makeup."
+    "MAKEUP_EXISTS": "This lesson already has a makeup.",
+    "SCHEDULE_EXISTS": "This student already has a schedule with this teacher. Change it instead.",
+    "SCHEDULE_NOT_FOUND": "Schedule not found.",
+    "SCHEDULE_ENDED": "This schedule has ended. Create a new one instead."
   },
   "validation": {
     "noShowIndividualOnly": "A group lesson records absences through attendance",
