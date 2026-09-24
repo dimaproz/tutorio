@@ -367,8 +367,17 @@ green gate.
    boundaries. The hold dialog now says how many lessons come off instead of
    cancelling them. Enrollment `PAUSED` stays as the legacy direction status
    until the direction screens replace it.
-7. **Read APIs** — lessons list with filters, lesson side panel, schedules
-   list, student billing summary, low-credit warnings.
+7. **Read APIs** — done 2026-09-24: `GET /lessons/list` (paged, newest
+   first; period, teacher, student — their own lessons and their groups' —,
+   group and status; quick filters unpaid, cancelled, no-show and needs a
+   makeup, each with its count), `GET /lessons/:id` for the side panel (the
+   lesson, its original or makeup, its schedule and its history), every
+   lesson charge says whether it is `paid`, `GET /students/:id/billing`
+   (every direction with its warning, totals per currency) and
+   `GET /billing/warnings` by the studio's `lowCreditThreshold` (default 2,
+   editable in the workspace settings). Deleting a makeup now unlinks it, so
+   its original can get a new one. `GET /schedules` already served the
+   Schedules tab.
 
 Then the screens from the owner's mockups: Calendar, Lessons (List ·
 Schedules), the lesson side panel, schedule form and change confirmation,

@@ -1,6 +1,6 @@
 # ADR 0007: Schedules, Per-Student Charging and Package Credits
 
-- Status: Accepted; phases 1–6 implemented (Work Packet 6.4), the rest pending
+- Status: Accepted; phases 1–7 implemented (Work Packet 6.4); the screens follow
 - Date: 2026-09-23
 - Supersedes: parts of [ADR 0003](./0003-cancellation-and-package-accounting.md)
   (which package a lesson debits; period plans; group packages and shares).
@@ -96,3 +96,8 @@ re-decided the model end to end; the full contract is
   and each package it pushes records by how much, so an early end or a
   cancellation takes back exactly the unused part. "On hold" is derived from
   a running whole-student pause rather than stored on its own.
+- Phase 7 reads what is paid from the same rules instead of storing it: a
+  package charge is paid by its credit, a debt charge is not, and a balance
+  charge is paid once the oldest-first allocation of the direction's payments
+  reaches it. The low-credit warning is a pure rule over credits left, debt
+  and the studio threshold.

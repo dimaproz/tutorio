@@ -161,6 +161,9 @@ columns `validFrom`, `lessonsPerWeek` and `transferredFromPackageId`.
 `ON_HOLD` keep the label without a pause until they are set active; the demo
 seed gives each of them an open pause.
 
+`20260930120000_low_credit_threshold` (phase 7) is additive: the
+`workspaces.lowCreditThreshold` studio setting (default 2, checked 0–50).
+
 ## Deployment order
 
 1. Deploy backward-compatible database/API changes.
