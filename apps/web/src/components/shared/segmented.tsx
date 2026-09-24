@@ -13,13 +13,33 @@ export type SegmentedItem<T extends string> = {
   ariaLabel?: string;
   disabled?: boolean;
   title?: string;
+  /**
+   * Paints the selected segment in a mark colour with a leading dot, e.g. the
+   * attendance marks; untoned segments keep the ink selection.
+   */
+  tone?: SegmentedTone;
 };
+
+export type SegmentedTone = keyof typeof TONE_CLASS;
+
+// A toned segment fills with its tint when selected. The pressed and hover
+// states repeat the fill so the ink selection of the base variant never shows.
+const TONE_CLASS = {
+  success:
+    'aria-pressed:bg-tint-success aria-pressed:text-tint-success-foreground data-[state=on]:bg-tint-success data-[state=on]:text-tint-success-foreground data-[state=on]:hover:bg-tint-success data-[state=on]:hover:text-tint-success-foreground',
+  danger:
+    'aria-pressed:bg-tint-danger aria-pressed:text-tint-danger-foreground data-[state=on]:bg-tint-danger data-[state=on]:text-tint-danger-foreground data-[state=on]:hover:bg-tint-danger data-[state=on]:hover:text-tint-danger-foreground',
+  info: 'aria-pressed:bg-tint-info aria-pressed:text-tint-info-foreground data-[state=on]:bg-tint-info data-[state=on]:text-tint-info-foreground data-[state=on]:hover:bg-tint-info data-[state=on]:hover:text-tint-info-foreground',
+  warning:
+    'aria-pressed:bg-tint-warning aria-pressed:text-tint-warning-foreground data-[state=on]:bg-tint-warning data-[state=on]:text-tint-warning-foreground data-[state=on]:hover:bg-tint-warning data-[state=on]:hover:text-tint-warning-foreground',
+} as const;
 
 /**
  * A pill of mutually exclusive options: status facets with counts, the
  * list/grid switch, profile section tabs. `surface` sits on paper (white pill,
  * ink selection); `paper` sits on a card (paper pill, 34px segments). An
- * icon-only segment selects with a paper disc instead of ink.
+ * icon-only segment selects with a paper disc instead of ink. A segment with a
+ * `tone` selects in that mark colour with a dot (the attendance marks).
  */
 export function Segmented<T extends string>({
   value,
@@ -69,8 +89,15 @@ export function Segmented<T extends string>({
               paper ? 'h-8.5 text-[13px]' : 'h-9 text-sm',
               iconOnly ? (paper ? 'w-8.5 px-0' : 'w-9 px-0') : 'px-3.5',
               '[&_svg:not([class*=size-])]:size-4',
+              item.tone && ['gap-1.5 data-[state=on]:font-semibold', TONE_CLASS[item.tone]],
             )}
           >
+            {item.tone ? (
+              <span
+                aria-hidden="true"
+                className="hidden size-1.5 shrink-0 rounded-pill bg-current in-data-[state=on]:block"
+              />
+            ) : null}
             {item.icon}
             {item.label}
             {item.count != null ? (
