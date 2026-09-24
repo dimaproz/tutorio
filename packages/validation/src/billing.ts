@@ -20,10 +20,22 @@ export const lessonChargeResponseSchema = z.object({
   packageId: uuidSchema.nullable(),
   amountMinor: z.number().int().nonnegative(),
   currency: currencyCodeSchema,
+  /**
+   * Whether it is paid: a package credit is; a lesson on debt is not; a
+   * pay-per-lesson charge is once payments reach it, oldest first (L-90).
+   */
+  paid: z.boolean(),
   student: z.object({ id: uuidSchema, fullName: z.string() }),
 });
 
 export type LessonChargeResponse = z.infer<typeof lessonChargeResponseSchema>;
+
+/** Why a direction paid by packages needs attention (L-82). */
+export const creditWarningSchema = z.enum(['ON_DEBT', 'NO_CREDITS', 'LOW_CREDITS']);
+export type CreditWarningDto = z.infer<typeof creditWarningSchema>;
+
+/** "Nearly used up" means this many credits left or fewer (L-120); 0 turns it off. */
+export const lowCreditThresholdSchema = z.number().int().min(0).max(50);
 
 /**
  * How one direction is paid now: its mode and rate, the credits its packages
@@ -58,6 +70,59 @@ export const enrollmentBillingResponseSchema = z.object({
     advanceMinor: z.number().int().nonnegative(),
     unpaidLessons: z.number().int().nonnegative(),
   }),
+  /** The credit warning it shows, if any (L-82). */
+  warning: creditWarningSchema.nullable(),
 });
 
 export type EnrollmentBillingResponse = z.infer<typeof enrollmentBillingResponseSchema>;
+
+const refSchema = z.object({ id: uuidSchema, name: z.string() });
+
+/**
+ * Every direction of one student with how it is paid, for the student
+ * profile: its teacher or group, and per currency what is owed and paid
+ * ahead ("Debt: 1 200 ₴ · 3 lessons").
+ */
+export const studentBillingResponseSchema = z.object({
+  studentId: uuidSchema,
+  lowCreditThreshold: lowCreditThresholdSchema,
+  directions: z.array(
+    enrollmentBillingResponseSchema.extend({
+      status: z.enum(['ACTIVE', 'PAUSED', 'ARCHIVED']),
+      teacher: refSchema,
+      group: refSchema.nullable(),
+    }),
+  ),
+  totals: z.array(
+    z.object({
+      currency: currencyCodeSchema,
+      debtMinor: z.number().int().nonnegative(),
+      advanceMinor: z.number().int().nonnegative(),
+      /** Pay-per-lesson lessons not paid yet. */
+      unpaidLessons: z.number().int().nonnegative(),
+      /** Package lessons held with no credit (L-82). */
+      debtLessons: z.number().int().nonnegative(),
+      creditsLeft: z.number().int().nonnegative(),
+    }),
+  ),
+});
+
+export type StudentBillingResponse = z.infer<typeof studentBillingResponseSchema>;
+
+/** Every live direction of the studio that shows a credit warning (L-82). */
+export const creditWarningListResponseSchema = z.object({
+  lowCreditThreshold: lowCreditThresholdSchema,
+  items: z.array(
+    z.object({
+      enrollmentId: uuidSchema,
+      warning: creditWarningSchema,
+      creditsLeft: z.number().int().nonnegative(),
+      debtLessons: z.number().int().nonnegative(),
+      student: z.object({ id: uuidSchema, fullName: z.string() }),
+      teacher: refSchema,
+      group: refSchema.nullable(),
+    }),
+  ),
+});
+
+export type CreditWarningListResponse = z.infer<typeof creditWarningListResponseSchema>;

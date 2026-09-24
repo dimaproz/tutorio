@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { workspaceModeSchema, workspaceRoleSchema } from './auth';
 import { cancellationDeadlineHoursSchema, currencyCodeSchema, uuidSchema } from './common';
+import { lowCreditThresholdSchema } from './billing';
 import { scheduleHorizonWeeksSchema } from './schedules';
 
 // Workspace-level defaults inherited by enrollments unless overridden.
@@ -10,6 +11,8 @@ export const updateWorkspaceSettingsSchema = z
     cancellationDeadlineHours: cancellationDeadlineHoursSchema,
     // How far ahead new schedules generate lessons (L-120).
     scheduleHorizonWeeks: scheduleHorizonWeeksSchema,
+    // A package direction warns with this many credits left or fewer (L-120).
+    lowCreditThreshold: lowCreditThresholdSchema,
     // Switching to SOLO is refused while a second active teacher exists.
     mode: workspaceModeSchema,
   })
@@ -25,6 +28,7 @@ export const workspaceSettingsResponseSchema = z.object({
   defaultCurrency: currencyCodeSchema,
   cancellationDeadlineHours: cancellationDeadlineHoursSchema,
   scheduleHorizonWeeks: scheduleHorizonWeeksSchema,
+  lowCreditThreshold: lowCreditThresholdSchema,
   mode: workspaceModeSchema,
 });
 

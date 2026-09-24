@@ -79,6 +79,10 @@ export const authWorkspaceSchema = z.object({
   cancellationDeadlineHours: z.number().int(),
   /** IANA zone the studio's recurring schedules are generated in. */
   timezone: z.string(),
+  /** Weeks ahead new schedules generate lessons (L-120). */
+  scheduleHorizonWeeks: z.number().int(),
+  /** A package direction warns with this many credits left or fewer (L-120). */
+  lowCreditThreshold: z.number().int(),
 });
 
 export type AuthWorkspace = z.infer<typeof authWorkspaceSchema>;

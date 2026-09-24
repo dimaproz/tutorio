@@ -7,6 +7,7 @@ import {
   timezoneSchema,
   uuidSchema,
 } from './common';
+import { auditLogResponseSchema } from './audit';
 import { lessonChargeResponseSchema } from './billing';
 import { priceMinorSchema } from './enrollments';
 import { paginatedResponseSchema, paginationQuerySchema } from './pagination';
@@ -444,6 +445,67 @@ export const lessonListResponseSchema = z.object({
 });
 
 export type LessonListResponse = z.infer<typeof lessonListResponseSchema>;
+
+/**
+ * The Lessons list quick filters (product/scheduling.md, Pages): lessons not
+ * paid yet (on debt, or a pay-per-lesson charge payments have not reached),
+ * cancelled, no-shows, and cancelled or missed individual lessons with no
+ * makeup yet.
+ */
+export const lessonQuickFilterSchema = z.enum(['unpaid', 'cancelled', 'no_show', 'needs_makeup']);
+export type LessonQuickFilterDto = z.infer<typeof lessonQuickFilterSchema>;
+
+/** The Lessons list: every lesson, paged, newest first by default. */
+export const listLessonPageQuerySchema = paginationQuerySchema
+  .extend({
+    from: isoDateTimeSchema.optional(),
+    to: isoDateTimeSchema.optional(),
+    teacherId: uuidSchema.optional(),
+    studentId: uuidSchema.optional(),
+    groupId: uuidSchema.optional(),
+    status: lessonStatusSchema.optional(),
+    filter: lessonQuickFilterSchema.optional(),
+    order: z.enum(['asc', 'desc']).default('desc'),
+  })
+  .strict()
+  .refine((value) => !value.from || !value.to || new Date(value.to) > new Date(value.from), {
+    message: 'to must be after from',
+    path: ['to'],
+  });
+
+export type ListLessonPageQueryDto = z.infer<typeof listLessonPageQuerySchema>;
+
+export const lessonPageResponseSchema = paginatedResponseSchema(lessonResponseSchema).extend({
+  /** How many lessons each quick filter would show with the other filters applied. */
+  counts: z.object({
+    unpaid: z.number().int().nonnegative(),
+    cancelled: z.number().int().nonnegative(),
+    noShow: z.number().int().nonnegative(),
+    needsMakeup: z.number().int().nonnegative(),
+  }),
+});
+
+export type LessonPageResponse = z.infer<typeof lessonPageResponseSchema>;
+
+const lessonLinkSchema = z.object({
+  id: uuidSchema,
+  startsAtUtc: isoDateTimeSchema,
+  status: lessonStatusSchema,
+});
+
+/**
+ * One lesson for the side panel: the lesson itself, the lesson its makeup
+ * replaces or the makeup given for it, the schedule it comes from, and its
+ * history (newest first).
+ */
+export const lessonDetailResponseSchema = lessonResponseSchema.extend({
+  original: lessonLinkSchema.nullable(),
+  makeup: lessonLinkSchema.nullable(),
+  schedule: z.object({ id: uuidSchema, state: z.enum(['ACTIVE', 'ENDED']) }).nullable(),
+  history: z.array(auditLogResponseSchema),
+});
+
+export type LessonDetailResponse = z.infer<typeof lessonDetailResponseSchema>;
 
 export const lessonSeriesResponseSchema = z.object({
   id: uuidSchema,
