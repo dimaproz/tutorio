@@ -1,6 +1,6 @@
 # Screen Delivery Plan
 
-Last verified: 2026-09-24.
+Last verified: 2026-09-24 (S01 done).
 
 The backend of Work Packet 6.4 is complete (phases 1–7, see
 [`next-work.md`](../next-work.md)); the web app holds only the rebuilt
@@ -38,7 +38,7 @@ make, and becomes the acceptance list for that step.
 
 | Step                                      | What it delivers                                                                               | Work packet | Status              |
 | ----------------------------------------- | ---------------------------------------------------------------------------------------------- | ----------- | ------------------- |
-| [S01](./s01-lesson-panel.md)              | Lesson side panel and every action on one lesson (status, edit, move, makeup, attendance)      | 6.4         | Waiting for mockups |
+| [S01](./s01-lesson-panel.md)              | Lesson side panel and every action on one lesson (status, edit, move, makeup, attendance)      | 6.4         | Done                |
 | [S02](./s02-lesson-create.md)             | Lesson create form: one-off, several dates, past lessons, "Repeat"                             | 6.4         | Waiting for mockups |
 | [S03](./s03-calendar.md)                  | Calendar: week, day and month, filters, create by click, move by drag                          | 6.4         | Waiting for mockups |
 | [S04](./s04-lessons-list.md)              | Lessons list with quick filters, and the bulk cancel dialog                                    | 6.4         | Waiting for mockups |

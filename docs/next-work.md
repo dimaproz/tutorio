@@ -384,6 +384,17 @@ their briefs and their status are in [`screens/`](./screens/README.md) (S01
 lesson panel … S11 dashboard), which also carries Work Packets 6.2 (S09), 6.5
 and 7 (S07) and 6.6 (S10, S11).
 
+- **S01 — lesson panel: done 2026-09-24** (`effab27`…`55ef58a`). The panel
+  opens over the student profile and the group page as `?lesson=<id>` and runs
+  every action on one lesson: edit in place, move with "this / this and
+  following" and the preview's numbers, cancel with the deadline suggestion,
+  status fix, makeup, group attendance with paused members, delete, and the
+  conflict dialog with "save anyway". The attendance sheet now flags paused
+  members (API). Eight new shared patterns with stories; the group page's
+  interim attendance dialog is gone. Decisions and open questions (payment
+  method, recording a payment and offering a package from the panel, the
+  group makeup on board 02) are in the [brief](./screens/s01-lesson-panel.md).
+
 ### Work Packet 6.5 — Package Read Surfaces
 
 Migrate package collection, detail, entitlement, participant-share, ledger,

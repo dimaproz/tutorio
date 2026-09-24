@@ -19,6 +19,25 @@ lessons, packages and directions read-only — scheduling, lesson actions, sales
 and direction edits come back with the new screens (Work Packet 6.4 screens,
 6.2, 6.5, 6.6 and 7). Every backend route stays available.
 
+## Lesson panel — screen step S01 (2026-09-24)
+
+The first screen step from the owner's mockups is done: a lesson row on the
+student profile or the group page opens the lesson panel (`?lesson=<id>`), a
+920×720 window on desktop and a full-screen sheet on phones. It shows the
+lesson, its payment (package credits or the single-lesson price) or a group's
+attendance and members' charges, and its history, and runs every action on the
+lesson: edit in place, move (with "this / this and following" and the
+schedule preview's numbers), cancel, status fix, makeup, attendance, delete,
+and the conflict dialog with "save anyway". The attendance sheet now flags a
+paused member (API). Brief, decisions and open questions:
+[`screens/s01-lesson-panel.md`](./screens/s01-lesson-panel.md).
+
+Gate on 2026-09-24: web lint, typecheck, 222 unit tests, build, the Storybook
+browser tests (77 files; one pre-existing timing flake in
+`Students/Screens/Form › DiscardChanges` passes on re-run) and the Storybook
+static build; API lint, 240 unit tests, and the pauses, groups and billing
+E2E suites (27 tests) on an isolated PostgreSQL 17.
+
 ## Executive status
 
 Tutorio has a broad, credible Students-to-Money core, but it is not pilot-safe
