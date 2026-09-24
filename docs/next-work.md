@@ -325,10 +325,17 @@ green gate.
    screen change the schedule instead of creating rows; packages create a
    schedule for their direction. Existing rows keep the former 12-week
    horizon; the legacy `/lesson-series` create does too.
-3. **Billing core** — direction billing mode (package or pay-per-lesson) and
-   rate; per-participant lesson charges; oldest-package-first, debt and debt
-   cover, oldest-first payment allocation; group lessons charged per member
-   by attendance; group packages and participant shares removed.
+3. **Billing core** — done 2026-09-24: direction billing mode (a new
+   direction pays per lesson, the first sale switches it to packages) and
+   rate; one `LessonCharge` per lesson and participant, re-evaluated from the
+   lesson's status, makeup pairing and attendance; oldest valid package
+   first, debt covered by the next credits, pay-per-lesson balance settled
+   oldest lesson first; a package belongs to one direction; group lessons
+   charged per member (excused free, no mark = present); group packages,
+   participant shares and lesson credit debits removed;
+   `GET /enrollments/:id/billing`. The group page shows members' own
+   packages and the package form sells to a student until the phase 5 flows
+   and the owner's mockups replace them.
 4. **Automation** — auto-complete at lesson end, bulk cancel with preview,
    cancellation suggestion.
 5. **Package kinds and operations** — by count, by period from the schedule,

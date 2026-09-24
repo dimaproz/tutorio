@@ -8,18 +8,18 @@ and parent hard-delete behavior is not the accepted target.
 
 ## Student
 
-| Concern            | Contract                                                                                                                                                                                                |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Purpose            | Learner identity, contacts, timezone, optional learning profile, default lesson price, and operational status.                                                                                          |
-| Ownership          | Workspace-scoped.                                                                                                                                                                                       |
-| Relationships      | Parents through `StudentParent`; enrollments; individual packages; indirect lessons, series, payments, shares, and credit history.                                                                      |
-| Create/update      | Name and timezone are the only essential create fields. Updates may replace the complete parent-link set and are audited transactionally; PATCH returns `409 STUDENT_ARCHIVED_REQUIRES_RESTORE` for an archived student. |
-| Business lifecycle | `ACTIVE -> ON_HOLD -> ARCHIVED`; status controls operational visibility, not historical deletion.                                                                                                       |
+| Concern            | Contract                                                                                                                                                                                                                                                                                                                                                         |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Purpose            | Learner identity, contacts, timezone, optional learning profile, default lesson price, and operational status.                                                                                                                                                                                                                                                   |
+| Ownership          | Workspace-scoped.                                                                                                                                                                                                                                                                                                                                                |
+| Relationships      | Parents through `StudentParent`; enrollments; individual packages; indirect lessons, series, payments, lesson charges, and credit history.                                                                                                                                                                                                                       |
+| Create/update      | Name and timezone are the only essential create fields. Updates may replace the complete parent-link set and are audited transactionally; PATCH returns `409 STUDENT_ARCHIVED_REQUIRES_RESTORE` for an archived student.                                                                                                                                         |
+| Business lifecycle | `ACTIVE -> ON_HOLD -> ARCHIVED`; status controls operational visibility, not historical deletion.                                                                                                                                                                                                                                                                |
 | List query         | Archived students keep `deletedAt` null, so `state` selects by status: `active` = not `ARCHIVED`, `deleted` = `ARCHIVED`, `all` = every status; an explicit `status` wins. `groupId` and `groupNames` use live memberships (`ACTIVE`/`PAUSED`, enrollment and group not archived). `GET /students/summary` returns the per-status counts from one grouped query. |
-| Removal            | `DELETE /students/:id` archives (status `ARCHIVED`); `POST /restore` reactivates after calendar conflict checks. `DELETE /permanently` is an explicit owner-only hard-delete command.                   |
-| Hard-delete guard  | Any enrollment, lesson, package, payment, participant share, or credit entry returns `409 STUDENT_HAS_BUSINESS_HISTORY` with dependency counts. An unused record may be deleted with parent links only. The command takes the student lifecycle lock first, so a concurrent enrollment create is either counted (409) or finds the student gone (404). |
-| Side effects       | Archive records `archivedAt`, suspends future individual series and `SCHEDULED` lessons, and preserves history. It also marks live group enrollments with that timestamp and their prior `ACTIVE`/`PAUSED` status; restore revives only rows marked by that archive. |
-| Permissions        | Archive, restore, and hard delete are owner-only under ADR 0004.                                                                                                                                        |
+| Removal            | `DELETE /students/:id` archives (status `ARCHIVED`); `POST /restore` reactivates after calendar conflict checks. `DELETE /permanently` is an explicit owner-only hard-delete command.                                                                                                                                                                            |
+| Hard-delete guard  | Any enrollment, lesson, package, payment, lesson charge, or credit entry returns `409 STUDENT_HAS_BUSINESS_HISTORY` with dependency counts. An unused record may be deleted with parent links only. The command takes the student lifecycle lock first, so a concurrent enrollment create is either counted (409) or finds the student gone (404).               |
+| Side effects       | Archive records `archivedAt`, suspends future individual series and `SCHEDULED` lessons, and preserves history. It also marks live group enrollments with that timestamp and their prior `ACTIVE`/`PAUSED` status; restore revives only rows marked by that archive.                                                                                             |
+| Permissions        | Archive, restore, and hard delete are owner-only under ADR 0004.                                                                                                                                                                                                                                                                                                 |
 
 Archived students are excluded from new individual enrollment, group roster,
 package, payment, and scheduling targets; historical group links and financial
@@ -32,16 +32,16 @@ cross-workspace and non-owner denial.
 
 ## Parent
 
-| Concern        | Contract                                                                                                                            |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Purpose        | Reusable guardian/contact record linked to one or more students.                                                                    |
-| Ownership      | Workspace-scoped.                                                                                                                   |
-| Relationships  | Many-to-many students through `StudentParent`.                                                                                      |
-| Create/update  | Name plus optional email, phone, Telegram, avatar and notes, and optional student IDs; updates replace the full student-link set in one audited transaction. Email is normalized like a student's. |
+| Concern        | Contract                                                                                                                                                                                                                                                |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Purpose        | Reusable guardian/contact record linked to one or more students.                                                                                                                                                                                        |
+| Ownership      | Workspace-scoped.                                                                                                                                                                                                                                       |
+| Relationships  | Many-to-many students through `StudentParent`.                                                                                                                                                                                                          |
+| Create/update  | Name plus optional email, phone, Telegram, avatar and notes, and optional student IDs; updates replace the full student-link set in one audited transaction. Email is normalized like a student's.                                                      |
 | List query     | Search covers name, email, phone and Telegram. `studentId` narrows to one student's parents, `linked=none` to parents with no live linked student, and `sort=fullName\|createdAt` with `order` sorts on the server, so every filter holds across pages. |
-| Lifecycle      | None: a parent is active until the owner deletes it. DELETE is owner-only and permanent — it removes the parent and its links, never the students or their history. There is no archive, trash or restore. |
-| Known leftover | The `deletedAt` column and the `state` list parameter predate the hard-delete decision; no command sets `deletedAt` on a parent. |
-| UX rule        | Do not persist a nested parent before an unsaved student. Create/link after student save unless one atomic API command owns both.   |
+| Lifecycle      | None: a parent is active until the owner deletes it. DELETE is owner-only and permanent — it removes the parent and its links, never the students or their history. There is no archive, trash or restore.                                              |
+| Known leftover | The `deletedAt` column and the `state` list parameter predate the hard-delete decision; no command sets `deletedAt` on a parent.                                                                                                                        |
+| UX rule        | Do not persist a nested parent before an unsaved student. Create/link after student save unless one atomic API command owns both.                                                                                                                       |
 
 Acceptance scenarios: create unlinked, link to multiple students, unlink one,
 archive without breaking student history, and reject cross-workspace student IDs.
@@ -61,15 +61,15 @@ transaction; duplicate links are idempotent or rejected predictably.
 
 ## Teacher
 
-| Concern           | Contract                                                                                                                                              |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Purpose           | Teaching profile and assignment target, independent from login access.                                                                                |
-| Ownership         | Workspace-scoped; may link to one `WorkspaceMember`.                                                                                                  |
-| Relationships     | Enrollments, lessons, recurring series, and optional login membership.                                                                                |
+| Concern           | Contract                                                                                                                                                                                                                 |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Purpose           | Teaching profile and assignment target, independent from login access.                                                                                                                                                   |
+| Ownership         | Workspace-scoped; may link to one `WorkspaceMember`.                                                                                                                                                                     |
+| Relationships     | Enrollments, lessons, recurring series, and optional login membership.                                                                                                                                                   |
 | Create/update     | Solo mode permits one live `ACTIVE` profile; create, update to `ACTIVE` and restore of an `ACTIVE` profile check it under a per-workspace advisory lock. A linked membership must belong to the workspace and be unique. |
-| Lifecycle         | `ACTIVE`/`ARCHIVED` business status plus soft delete/restore.                                                                                         |
-| Pilot permissions | Owner-only CRUD. Teacher login is unsupported until ADR 0004’s future gate is complete.                                                               |
-| Current gaps      | Updating unrelated fields can erase `subjects`; mutations are not consistently owner-only; archive/delete does not define behavior for active series. |
+| Lifecycle         | `ACTIVE`/`ARCHIVED` business status plus soft delete/restore.                                                                                                                                                            |
+| Pilot permissions | Owner-only CRUD. Teacher login is unsupported until ADR 0004’s future gate is complete.                                                                                                                                  |
+| Current gaps      | Updating unrelated fields can erase `subjects`; mutations are not consistently owner-only; archive/delete does not define behavior for active series.                                                                    |
 
 Acceptance scenarios: solo limit, member-link uniqueness, subject preservation,
 archive with assigned future work, restore conflict, and non-owner denial.

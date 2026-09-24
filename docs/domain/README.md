@@ -22,40 +22,41 @@ User -- WorkspaceMember --> Workspace
                                          +------------------> LessonAttendance
                                          |
                                          +--> LessonPackage --> LessonCreditEntry
-                                                      |  \
-                                                      |   --> Payment
-                                                      +------> PackageParticipantShare
+                                         |            |
+                                         +--> Payment +--> LessonCharge <-- Lesson
 
 Every business write -------------------------------> AuditLog
 ```
 
 The `Workspace` is the tenant boundary. `Enrollment` is the operational link
-between a student and individual/group teaching. `LessonPackage` is a purchase
-snapshot. Lesson credits and money are separate histories.
+between a student and individual/group teaching: a direction, paid per lesson
+or with packages. `LessonPackage` is credits for one direction; a
+`LessonCharge` is what one participant owes for one lesson and what pays for
+it. Lesson credits and money are separate histories.
 
 ## Entity registry
 
-| Entity                    | Aggregate                                                        | Lifecycle summary                                                 |
-| ------------------------- | ---------------------------------------------------------------- | ----------------------------------------------------------------- |
-| `User`                    | [Access and tenancy](./access-and-tenancy.md#user)               | Global login identity; soft-delete flag; no account lifecycle API |
-| `Workspace`               | [Access and tenancy](./access-and-tenancy.md#workspace)          | Tenant root; no export/delete workflow yet                        |
-| `WorkspaceMember`         | [Access and tenancy](./access-and-tenancy.md#workspacemember)    | User-to-workspace role; read-only after registration              |
-| `AuthSession`             | [Access and tenancy](./access-and-tenancy.md#authsession)        | Rotating refresh-token session; revoke supported                  |
-| `Student`                 | [People](./people.md#student)                                    | Business status plus unsafe hard-delete endpoint                  |
-| `Parent`                  | [People](./people.md#parent)                                     | Reusable contact; current hard delete                             |
-| `StudentParent`           | [People](./people.md#studentparent)                              | Join record managed through student/parent aggregates             |
-| `Teacher`                 | [People](./people.md#teacher)                                    | Profile status plus soft delete/restore                           |
-| `Group`                   | [Learning operations](./learning-operations.md#group)            | Optional teacher and seats; archive/restore preserves history     |
-| `Enrollment`              | [Learning operations](./learning-operations.md#enrollment)       | Active/paused/archived plus soft delete/restore                   |
-| `Schedule`                | [Learning operations](./learning-operations.md#schedule)         | One active per direction; active until stopped or its end date    |
-| `LessonSeries`            | [Learning operations](./learning-operations.md#lessonseries)     | One start time of one schedule version; ended by a later version  |
-| `Lesson`                  | [Learning operations](./learning-operations.md#lesson)           | Scheduled occurrence; status machine plus soft delete             |
-| `LessonAttendance`        | [Learning operations](./learning-operations.md#lessonattendance) | Per-student mark per held lesson                                  |
-| `LessonPackage`           | [Finance](./finance.md#lessonpackage)                            | Purchase snapshot; soft delete; no restore/edit                   |
-| `LessonCreditEntry`       | [Finance](./finance.md#lessoncreditentry)                        | Append-only lesson-unit ledger                                    |
-| `PackageParticipantShare` | [Finance](./finance.md#packageparticipantshare)                  | Group package debt snapshot                                       |
-| `Payment`                 | [Finance](./finance.md#payment)                                  | Append-only money event; create/list only                         |
-| `AuditLog`                | [Audit](./audit.md#auditlog)                                     | Append-only mutation evidence                                     |
+| Entity              | Aggregate                                                        | Lifecycle summary                                                 |
+| ------------------- | ---------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `User`              | [Access and tenancy](./access-and-tenancy.md#user)               | Global login identity; soft-delete flag; no account lifecycle API |
+| `Workspace`         | [Access and tenancy](./access-and-tenancy.md#workspace)          | Tenant root; no export/delete workflow yet                        |
+| `WorkspaceMember`   | [Access and tenancy](./access-and-tenancy.md#workspacemember)    | User-to-workspace role; read-only after registration              |
+| `AuthSession`       | [Access and tenancy](./access-and-tenancy.md#authsession)        | Rotating refresh-token session; revoke supported                  |
+| `Student`           | [People](./people.md#student)                                    | Business status plus unsafe hard-delete endpoint                  |
+| `Parent`            | [People](./people.md#parent)                                     | Reusable contact; current hard delete                             |
+| `StudentParent`     | [People](./people.md#studentparent)                              | Join record managed through student/parent aggregates             |
+| `Teacher`           | [People](./people.md#teacher)                                    | Profile status plus soft delete/restore                           |
+| `Group`             | [Learning operations](./learning-operations.md#group)            | Optional teacher and seats; archive/restore preserves history     |
+| `Enrollment`        | [Learning operations](./learning-operations.md#enrollment)       | Active/paused/archived plus soft delete/restore                   |
+| `Schedule`          | [Learning operations](./learning-operations.md#schedule)         | One active per direction; active until stopped or its end date    |
+| `LessonSeries`      | [Learning operations](./learning-operations.md#lessonseries)     | One start time of one schedule version; ended by a later version  |
+| `Lesson`            | [Learning operations](./learning-operations.md#lesson)           | Scheduled occurrence; status machine plus soft delete             |
+| `LessonAttendance`  | [Learning operations](./learning-operations.md#lessonattendance) | Per-student mark per held lesson                                  |
+| `LessonPackage`     | [Finance](./finance.md#lessonpackage)                            | Credits for one direction; soft delete; no restore/edit           |
+| `LessonCreditEntry` | [Finance](./finance.md#lessoncreditentry)                        | Append-only credits granted (purchase, correction)                |
+| `LessonCharge`      | [Finance](./finance.md#lessoncharge)                             | One participant's cost per lesson; voided and revived from state  |
+| `Payment`           | [Finance](./finance.md#payment)                                  | Append-only money event; create/list only                         |
+| `AuditLog`          | [Audit](./audit.md#auditlog)                                     | Append-only mutation evidence                                     |
 
 ## Universal implementation checklist
 

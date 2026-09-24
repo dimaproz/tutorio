@@ -1,80 +1,81 @@
 # Finance Aggregate
 
-Last verified: 2026-08-27 (root static/unit/build checks, isolated PostgreSQL 17 E2E, and finance migration-upgrade verification).
+Last verified: 2026-09-24 (Work Packet 6.4 phase 3: root static/unit/build
+checks and isolated PostgreSQL 17 E2E).
 
-The finance aggregate uses two separate histories:
+The rules are [`product/scheduling.md`](../product/scheduling.md) `L-10`…`L-13`,
+`L-61`, `L-70`…`L-74`, `L-80`…`L-91` and
+[ADR 0007](../decisions/0007-schedules-per-student-charging-package-credits.md).
+Three histories stay separate:
 
-- lesson entitlement: `LessonCreditEntry` in lesson units;
-- money received: `Payment` in integer minor units and one currency.
+- package credits: `LessonCreditEntry` (what a package was granted, in lessons);
+- what each lesson costs each participant: `LessonCharge`;
+- money received: `Payment`, in integer minor units and one currency.
 
-Cancellation semantics are defined by
-[ADR 0003](../decisions/0003-cancellation-and-package-accounting.md).
+A **direction** (an `Enrollment`: a student with one teacher, or a student's
+membership of one group) is paid in one of two modes, `Enrollment.billingType`:
+`PER_LESSON` (the default for a new direction) or `PACKAGE` (set when its first
+package is sold; switchable by hand). The pure rules live in
+`packages/domain/src/billing.ts`; `apps/api/src/billing/billing.service.ts`
+applies them.
+
+## LessonCharge
+
+| Concern      | Contract                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Purpose      | One participant's cost for one lesson and what pays for it: `PACKAGE` (one credit of `packageId`), `DEBT` (package mode with no credit left) or `BALANCE` (pay-per-lesson; `amountMinor` on the direction's balance).                                                                                                                                                                                                                   |
+| Ownership    | Workspace-scoped; unique `(lessonId, enrollmentId)`; `packageId` is set exactly when the source is `PACKAGE` (DB CHECK).                                                                                                                                                                                                                                                                                                                |
+| Who owes     | An individual lesson has one participant. A group lesson's participants are the members charged or marked so far plus today's active roster (the roster a tutor backfilling an existing group has). A participant owes the lesson when its status is held, charged-cancelled or no-show, it is not a makeup whose original was charged (L-61), and — in a group — they were not marked excused (no mark counts as present, L-71, L-72). |
+| Amount       | An individual lesson's own price; a group member's own rate (the group price unless overridden on their membership). A package charge costs one credit whatever the amount.                                                                                                                                                                                                                                                             |
+| Evaluation   | Re-evaluated from state after every status change, attendance change and lesson creation in a final status (`BillingService.syncLesson`), and for the makeup of a lesson whose status changed. Repeating it changes nothing. A charge no longer owed is voided (`voidedAt`, kept as history) and revived with a fresh source when owed again.                                                                                           |
+| Package pick | The oldest live package of the direction with a credit left that has not expired at the lesson time (L-81, L-84); none → `DEBT` (L-82). A voided package charge gives its credit back.                                                                                                                                                                                                                                                  |
+| Debt cover   | New credits — a sale, a positive correction, a credit given back — cover `DEBT` charges oldest lesson first (L-82). `BALANCE` charges stay money (L-91).                                                                                                                                                                                                                                                                                |
+| Price change | An individual lesson's price can change while payments do not reach its balance charge (`409 LESSON_PAID`, L-12); the unpaid charge takes the new amount.                                                                                                                                                                                                                                                                               |
+| Delete guard | A lesson with an active charge cannot be deleted (`409 LESSON_CHARGED`); cancel it free or return it to scheduled first.                                                                                                                                                                                                                                                                                                                |
 
 ## LessonPackage
 
-| Concern       | Contract                                                                                                                                                                    |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Purpose       | Immutable purchase snapshot for exactly one student or group.                                                                                                               |
-| Ownership     | Workspace-scoped; target XOR is enforced by validation and database constraints.                                                                                            |
-| Relationships | Target, optional enrollment context, credit entries, payments, participant shares, package-owned series and lessons.                                                        |
-| Create        | Grant opening entitlement atomically. Scheduling and payment are separate user jobs in the target UX, even if orchestration remains transactional internally.               |
-| Edit/version  | No arbitrary mutation of agreed commercial history. A material plan change creates an explicit adjustment or replacement plan.                                              |
-| Archive       | Prevents new debits, archives owned series and future scheduled package lessons, and preserves credits, payments, shares, and historical lessons. Restore is not supported. |
-| Current gaps  | Period-plan entitlement and cancellation semantics remain out of scope for the first pilot; period packages cannot fund fixed-count lesson credits.                         |
-
-Acceptance scenarios: individual/group XOR, entitlement grant, target ownership,
-currency consistency, archive with series, expired/depleted states, idempotency.
+| Concern      | Contract                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Purpose      | Prepaid lesson credits for one direction (`enrollmentId`; `studentId` is its student), valid until `expiresAt` when set. The purchase-time price is an immutable snapshot.                                                                                                                                                                                                                                                              |
+| Ownership    | Workspace-scoped. A group's packages are its members' packages for the group (`GET /packages?groupId=`).                                                                                                                                                                                                                                                                                                                                |
+| Create       | `POST /packages` with `studentId` and, for a group membership, `groupId` (else the student's lessons with `teacherId` or their only teacher; a new direction is created silently, L-2). Writes the package, its `purchase` credit entry and an optional first payment; switches a pay-per-lesson direction to packages; covers the direction's debt. The old package form may still ask for the direction's schedule (not for a group). |
+| Credits      | Remaining = credit entries − active charges it pays for; consumed = those charges. `GET /packages/:id/ledger` lists the entries and one `lesson` row per paid lesson.                                                                                                                                                                                                                                                                   |
+| Correction   | `POST /packages/:id/adjust` appends a signed `manual_adjustment` with a note; a positive one covers debt.                                                                                                                                                                                                                                                                                                                               |
+| Archive      | Soft delete: pays for no new lesson; its credits, charges and payments stay. Restore is not supported.                                                                                                                                                                                                                                                                                                                                  |
+| Current gaps | Package kinds by period, extension, transfer, refund and "sell to members" are Work Packet 6.4 phase 5; the low-credit warning is phase 7.                                                                                                                                                                                                                                                                                              |
 
 ## LessonCreditEntry
 
-| Concern      | Contract                                                                                                                                                                                                                                                                                      |
-| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Purpose      | Append-only explanation of lesson entitlement changes.                                                                                                                                                                                                                                        |
-| Ownership    | Workspace and package-scoped; optional lesson, enrollment, and actor references.                                                                                                                                                                                                              |
-| Lifecycle    | Insert only. Corrections are compensating rows with unique idempotency keys; never update/delete.                                                                                                                                                                                             |
-| Invariants   | Units are integers; one semantic transition produces at most one non-zero delta; a compensation references the same persisted package and lesson context. Current consumption is the net of lesson debits and compensations; purchases/manual adjustments do not represent completed lessons. |
-| Current gaps | Legacy lessons with conflicting package history require manual repair; automatic package inference is deliberately forbidden for compensation.                                                                                                                                                |
-
-Acceptance: reconcile balance from history after every transition and prove
-repeat commands do not change balance or create meaningless ledger rows.
-
-## Eligibility and legacy repair
-
-Only active `FIXED_COUNT` packages may fund a new lesson debit. Explicit and
-automatic selection validates the package target, currency, archive state, and
-`expiresAt` against the occurrence's `startsAtUtc`, not request time. An archived
-package is allowed only for an exact compensation of its own recorded debit.
-Once a lesson has a non-zero credit entry, its price/currency snapshot is
-immutable; notes and the established per-lesson `paidAt` field remain editable.
-
-The finance migration backfills a NULL `Lesson.packageId` only when one distinct
-ledger package exists. Multiple ledger packages, an existing mismatch, or a
-terminal charged lesson without exactly one ledger package require reviewed
-manual repair; the mandatory deploy query is in `deploy.md`.
-
-## PackageParticipantShare
-
-| Concern       | Contract                                                                                                                           |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Purpose       | Creation-time debt allocation for each participant in a group package.                                                             |
-| Ownership     | Workspace/package-scoped through the package; unique `(packageId, enrollmentId)`.                                                  |
-| Create/update | Created from an explicit preview and allocation rule. Settled payments increment the matching share. No independent CRUD.          |
-| Lifecycle     | Historical snapshot; roster changes do not silently rewrite past debt. Corrections require an explicit reallocation/refund design. |
-| Current gaps  | No refund/correction path. Zero-delta credit entries are ignored because shares are immutable purchase-time snapshots.             |
-
-Acceptance scenarios: deterministic rounding, membership snapshot, partial/full
-payment, overpayment rejection, cancellation, and preserved history on archive.
+| Concern   | Contract                                                                                                      |
+| --------- | ------------------------------------------------------------------------------------------------------------- |
+| Purpose   | Append-only record of the credits a package was granted: `purchase` and `manual_adjustment`.                  |
+| Ownership | Workspace and package-scoped; unique `idempotencyKey`.                                                        |
+| Lifecycle | Insert only; a correction is a new entry, never an edit. What a package paid for is its charges, not entries. |
 
 ## Payment
 
-| Concern      | Contract                                                                                                                                                                                                                                                             |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Purpose      | Append-only record of money received or reversed, separate from lesson credits.                                                                                                                                                                                      |
-| Ownership    | Workspace and enrollment-scoped; package optional only for a documented non-package payment use case.                                                                                                                                                                |
-| Create       | Validate amount, currency, date, idempotency, and that enrollment participates in the package target/share. Derive package payment status; do not ask users to set it.                                                                                               |
-| Lifecycle    | Insert-only event with explicit reversal/refund status or compensating event. Routine edit/delete is not allowed.                                                                                                                                                    |
-| Current gaps | Future `paidAt` is accepted, and there is no refund/correction API. Package payments now validate the student target or immutable group share, enforce package currency, cap the outstanding amount, and replay a matching idempotency key without a second payment. |
+| Concern      | Contract                                                                                                                                                                                                                                                            |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Purpose      | Append-only record of money received for a direction, separate from lesson credits.                                                                                                                                                                                 |
+| Ownership    | Workspace and enrollment-scoped; `packageId` for a package payment.                                                                                                                                                                                                 |
+| Package      | A package is paid by its own direction (`409 INVALID_PACKAGE_PAYMENT_RELATION`), in its currency (`CURRENCY_MISMATCH`), up to what it still costs (`OVERPAYMENT`). Settled money refreshes the package's cached `paymentStatus`; responses derive it from payments. |
+| Balance      | A payment without a package goes on the direction's pay-per-lesson balance, in the direction's currency, and may run ahead of the lessons. It settles the oldest balance charges first (L-90); nothing is stored per lesson.                                        |
+| Replay       | A matching `idempotencyKey` replays the original payment; a changed command under the same key is `409 IDEMPOTENCY_CONFLICT`.                                                                                                                                       |
+| Current gaps | Future `paidAt` is accepted; there is no refund/correction API.                                                                                                                                                                                                     |
 
-Acceptance scenarios: related/unrelated enrollment, currency mismatch, duplicate
-idempotency, partial/full/overpayment, group allocation, reversal, future date,
-and audit evidence.
+## Billing summary
+
+`GET /enrollments/:enrollmentId/billing` reports a direction's mode and rate,
+each live package's remaining credits and whether it is usable now, the credits
+left, the lessons held on debt, and the pay-per-lesson balance (charged, paid,
+debt, advance, unpaid lessons). The balance counts only charges and payments in
+the direction's currency.
+
+Acceptance scenarios (`apps/api/test/billing.e2e-spec.ts`): pay-per-lesson
+balance with oldest-first settlement and advance, price change refused once
+paid, first sale switching the mode, oldest valid package first with an expired
+one skipped, one charge per lesson under concurrent completion and correction,
+credit given back on a free cancellation, debt covered by a correction and by
+the next sale, balance money kept after the switch, per-member group charges by
+attendance, package payment caps and replay, archive, cross-workspace denial.

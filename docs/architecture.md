@@ -53,9 +53,8 @@ The web never infers a financial consequence that the API has not returned.
 
 - Access and tenancy: `User`, `Workspace`, `WorkspaceMember`, `AuthSession`.
 - People: `Student`, `Parent`, `StudentParent`, `Teacher`.
-- Learning operations: `Group`, `Enrollment`, `LessonSeries`, `Lesson`.
-- Finance: `LessonPackage`, `LessonCreditEntry`,
-  `PackageParticipantShare`, `Payment`.
+- Learning operations: `Group`, `Enrollment`, `Schedule`, `LessonSeries`, `Lesson`.
+- Finance: `LessonPackage`, `LessonCreditEntry`, `LessonCharge`, `Payment`.
 - Audit: `AuditLog` written alongside every aggregate mutation.
 
 See [`domain/README.md`](./domain/README.md) for entity contracts.
@@ -85,9 +84,10 @@ See [`domain/README.md`](./domain/README.md) for entity contracts.
 
 - Credit units and money are different ledgers.
 - Packages are immutable commercial snapshots.
-- Lessons persist the exact package they consume.
+- Each lesson participant has one charge that names what pays for it (a
+  package credit, debt, or the pay-per-lesson balance).
 - Credit and payment records are append-only and idempotent.
-- Group shares are creation-time allocation snapshots, not live roster formulas.
+- A group member pays for group lessons from their own direction (ADR 0007).
 - Read models expose reconciled lessons remaining, plan total, received, and
   outstanding with one currency.
 

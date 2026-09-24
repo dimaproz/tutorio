@@ -329,8 +329,8 @@ and financial/share history remains append-only and queryable.
 
 Evidence: `packages/domain/src/{lesson-state,ledger,package}.test.ts`,
 `apps/api/test/packages.e2e-spec.ts` (70/70 full API E2E), and
-`apps/api/scripts/verify-finance-migration-upgrade.ts` against a separate
-PostgreSQL 17 database. The verifier covers migrated fixed and `BY_PERIOD`
+`apps/api/scripts/verify-finance-migration-upgrade.ts` (retired in Work
+Packet 6.4 phase 3) against a separate PostgreSQL 17 database. The verifier covers migrated fixed and `BY_PERIOD`
 history, conflicts, missing/mismatched/already-balanced sources, idempotency,
 audit metadata, and transaction rollback.
 

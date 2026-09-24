@@ -36,6 +36,11 @@ Out of scope and still open: the schedule-change confirmation (§ Screen 3),
 calendar work, group packages beyond showing the active one and its shares,
 bulk actions, and the lesson-screen attendance write path.
 
+> **Changed by Work Packet 6.4 phase 3 (2026-09-24).** Group packages and
+> member shares no longer exist (ADR 0007): the package card and the fourth
+> metric show each member's own package for the group, and the group page no
+> longer sells a package until "Sell to members" (`L-86`) arrives.
+
 Every group route is owner-only in the pilot (ADR 0004). Archive and restore
 entry points are hidden for anyone else, not disabled on click.
 

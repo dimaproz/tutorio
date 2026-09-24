@@ -1,6 +1,6 @@
 # ADR 0007: Schedules, Per-Student Charging and Package Credits
 
-- Status: Accepted target; implementation pending (Work Packet 6.4 phases)
+- Status: Accepted; phases 1–3 implemented (Work Packet 6.4), the rest pending
 - Date: 2026-09-23
 - Supersedes: parts of [ADR 0003](./0003-cancellation-and-package-accounting.md)
   (which package a lesson debits; period plans; group packages and shares).
@@ -70,3 +70,20 @@ re-decided the model end to end; the full contract is
   idempotent and takes the existing advisory locks.
 - The patterns screen, the package form's schedule and the enrollment dialog
   are replaced by the pages in the product contract.
+
+## Implementation notes
+
+- Phase 3 (2026-09-24) stores a charge as one `LessonCharge` row per lesson
+  and participant, re-evaluated from the lesson's state rather than from
+  transition deltas; a charge no longer owed is voided and revived later, so
+  history stays and repeats are harmless. `LessonCreditEntry` now records only
+  the credits a package was granted; a package's remaining credits are its
+  entries minus its active charges. Lesson and series package pins are gone.
+- A group lesson's participants are today's roster plus whoever was charged
+  or marked, the same roster attendance uses, so a tutor can backfill an
+  existing group's past lessons.
+- A group member's charge is their own rate; the lesson's price is the group
+  reference price. An individual lesson's charge follows its price until
+  payments reach it.
+- The pay-per-lesson balance is derived: payments without a package settle
+  the oldest balance charges first; nothing is stored per lesson.
