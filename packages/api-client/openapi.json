@@ -913,7 +913,7 @@
     },
     "/api/students/{studentId}/permanently": {
       "delete": {
-        "description": "Irreversible. Returns STUDENT_HAS_BUSINESS_HISTORY when lessons, enrollments, packages, payments, shares, or credits exist.",
+        "description": "Irreversible. Returns STUDENT_HAS_BUSINESS_HISTORY when lessons, enrollments, packages, payments, charges, or credits exist.",
         "operationId": "StudentsController_removePermanently",
         "parameters": [
           {
@@ -2723,6 +2723,63 @@
           }
         ],
         "summary": "Soft-delete an enrollment (move to trash)",
+        "tags": [
+          "enrollments"
+        ]
+      }
+    },
+    "/api/enrollments/{enrollmentId}/billing": {
+      "get": {
+        "description": "Billing mode and rate, the credits each package has left, lessons held on debt in package mode, and the pay-per-lesson balance with payments settling the oldest lessons first.",
+        "operationId": "EnrollmentsController_getBilling",
+        "parameters": [
+          {
+            "name": "enrollmentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnrollmentBillingDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "How a direction is paid now",
         "tags": [
           "enrollments"
         ]
@@ -6384,7 +6441,6 @@
                   "type": "string",
                   "enum": [
                     "PACKAGE",
-                    "MONTHLY",
                     "PER_LESSON"
                   ]
                 },
@@ -8198,7 +8254,6 @@
                   "type": "string",
                   "enum": [
                     "PACKAGE",
-                    "MONTHLY",
                     "PER_LESSON"
                   ]
                 },
@@ -8842,7 +8897,6 @@
                   "type": "string",
                   "enum": [
                     "PACKAGE",
-                    "MONTHLY",
                     "PER_LESSON"
                   ]
                 },
@@ -8958,10 +9012,9 @@
             "type": "string",
             "enum": [
               "PACKAGE",
-              "MONTHLY",
               "PER_LESSON"
             ],
-            "default": "PACKAGE"
+            "default": "PER_LESSON"
           },
           "priceMinor": {
             "type": "integer",
@@ -9086,7 +9139,6 @@
             "type": "string",
             "enum": [
               "PACKAGE",
-              "MONTHLY",
               "PER_LESSON"
             ]
           },
@@ -9152,6 +9204,131 @@
           "deletedAt"
         ]
       },
+      "EnrollmentBillingDto": {
+        "type": "object",
+        "properties": {
+          "enrollmentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "billingType": {
+            "type": "string",
+            "enum": [
+              "PACKAGE",
+              "PER_LESSON"
+            ]
+          },
+          "rateMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "EUR",
+              "UAH",
+              "PLN",
+              "USD",
+              "GBP"
+            ]
+          },
+          "packages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "purchasedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "expiresAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                },
+                "remainingCredits": {
+                  "type": "integer"
+                },
+                "usable": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "purchasedAt",
+                "expiresAt",
+                "remainingCredits",
+                "usable"
+              ]
+            }
+          },
+          "creditsLeft": {
+            "type": "integer"
+          },
+          "debtLessons": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "balance": {
+            "type": "object",
+            "properties": {
+              "chargedMinor": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "paidMinor": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "debtMinor": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "advanceMinor": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "unpaidLessons": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              }
+            },
+            "required": [
+              "chargedMinor",
+              "paidMinor",
+              "debtMinor",
+              "advanceMinor",
+              "unpaidLessons"
+            ]
+          }
+        },
+        "required": [
+          "enrollmentId",
+          "billingType",
+          "rateMinor",
+          "currency",
+          "packages",
+          "creditsLeft",
+          "debtLessons",
+          "balance"
+        ]
+      },
       "UpdateEnrollmentDto": {
         "type": "object",
         "properties": {
@@ -9167,7 +9344,6 @@
             "type": "string",
             "enum": [
               "PACKAGE",
-              "MONTHLY",
               "PER_LESSON"
             ]
           },
@@ -9225,11 +9401,6 @@
                   "nullable": true
                 },
                 "seriesId": {
-                  "type": "string",
-                  "format": "uuid",
-                  "nullable": true
-                },
-                "packageId": {
                   "type": "string",
                   "format": "uuid",
                   "nullable": true
@@ -9365,6 +9536,75 @@
                   ],
                   "nullable": true
                 },
+                "charges": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "enrollmentId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "PACKAGE",
+                          "DEBT",
+                          "BALANCE"
+                        ]
+                      },
+                      "packageId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                      },
+                      "amountMinor": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "exclusiveMinimum": false
+                      },
+                      "currency": {
+                        "type": "string",
+                        "enum": [
+                          "EUR",
+                          "UAH",
+                          "PLN",
+                          "USD",
+                          "GBP"
+                        ]
+                      },
+                      "student": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "fullName": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "fullName"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "enrollmentId",
+                      "source",
+                      "packageId",
+                      "amountMinor",
+                      "currency",
+                      "student"
+                    ]
+                  }
+                },
                 "student": {
                   "type": "object",
                   "properties": {
@@ -9440,7 +9680,6 @@
                 "enrollmentId",
                 "groupId",
                 "seriesId",
-                "packageId",
                 "teacherId",
                 "startsAtUtc",
                 "durationMin",
@@ -9462,6 +9701,7 @@
                 "notes",
                 "cancellationDeadlineHours",
                 "attendance",
+                "charges",
                 "student",
                 "group",
                 "teacher",
@@ -9493,10 +9733,6 @@
             "type": "string",
             "format": "uuid",
             "nullable": true
-          },
-          "packageId": {
-            "type": "string",
-            "format": "uuid"
           },
           "teacherId": {
             "type": "string",
@@ -9654,11 +9890,6 @@
             "format": "uuid",
             "nullable": true
           },
-          "packageId": {
-            "type": "string",
-            "format": "uuid",
-            "nullable": true
-          },
           "teacherId": {
             "type": "string",
             "format": "uuid"
@@ -9790,6 +10021,75 @@
             ],
             "nullable": true
           },
+          "charges": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "enrollmentId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "source": {
+                  "type": "string",
+                  "enum": [
+                    "PACKAGE",
+                    "DEBT",
+                    "BALANCE"
+                  ]
+                },
+                "packageId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "nullable": true
+                },
+                "amountMinor": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                },
+                "currency": {
+                  "type": "string",
+                  "enum": [
+                    "EUR",
+                    "UAH",
+                    "PLN",
+                    "USD",
+                    "GBP"
+                  ]
+                },
+                "student": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "fullName": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "fullName"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "enrollmentId",
+                "source",
+                "packageId",
+                "amountMinor",
+                "currency",
+                "student"
+              ]
+            }
+          },
           "student": {
             "type": "object",
             "properties": {
@@ -9865,7 +10165,6 @@
           "enrollmentId",
           "groupId",
           "seriesId",
-          "packageId",
           "teacherId",
           "startsAtUtc",
           "durationMin",
@@ -9887,6 +10186,7 @@
           "notes",
           "cancellationDeadlineHours",
           "attendance",
+          "charges",
           "student",
           "group",
           "teacher",
@@ -10148,11 +10448,6 @@
                   "format": "uuid",
                   "nullable": true
                 },
-                "packageId": {
-                  "type": "string",
-                  "format": "uuid",
-                  "nullable": true
-                },
                 "teacherId": {
                   "type": "string",
                   "format": "uuid"
@@ -10286,7 +10581,6 @@
                 "scheduleId",
                 "enrollmentId",
                 "groupId",
-                "packageId",
                 "teacherId",
                 "weekdays",
                 "localTime",
@@ -10440,11 +10734,6 @@
             "format": "uuid",
             "nullable": true
           },
-          "packageId": {
-            "type": "string",
-            "format": "uuid",
-            "nullable": true
-          },
           "teacherId": {
             "type": "string",
             "format": "uuid"
@@ -10578,7 +10867,6 @@
           "scheduleId",
           "enrollmentId",
           "groupId",
-          "packageId",
           "teacherId",
           "weekdays",
           "localTime",
@@ -11864,10 +12152,13 @@
                   "type": "string",
                   "format": "uuid"
                 },
+                "enrollmentId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
                 "studentId": {
                   "type": "string",
-                  "format": "uuid",
-                  "nullable": true
+                  "format": "uuid"
                 },
                 "groupId": {
                   "type": "string",
@@ -11897,9 +12188,6 @@
                   "type": "integer"
                 },
                 "totalPriceMinorSnapshot": {
-                  "type": "integer"
-                },
-                "effectiveTotalMinor": {
                   "type": "integer"
                 },
                 "remainingCredits": {
@@ -11956,8 +12244,7 @@
                   "required": [
                     "id",
                     "fullName"
-                  ],
-                  "nullable": true
+                  ]
                 },
                 "group": {
                   "type": "object",
@@ -11976,77 +12263,6 @@
                   ],
                   "nullable": true
                 },
-                "shares": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "enrollmentId": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "student": {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "string",
-                            "format": "uuid"
-                          },
-                          "fullName": {
-                            "type": "string"
-                          },
-                          "avatarKey": {
-                            "type": "string",
-                            "enum": [
-                              "user-1",
-                              "user-2",
-                              "user-3",
-                              "user-4",
-                              "user-5",
-                              "user-6",
-                              "user-7",
-                              "user-8",
-                              "user-9",
-                              "user-10"
-                            ],
-                            "nullable": true
-                          }
-                        },
-                        "required": [
-                          "id",
-                          "fullName",
-                          "avatarKey"
-                        ]
-                      },
-                      "oweMinor": {
-                        "type": "integer"
-                      },
-                      "paidMinor": {
-                        "type": "integer"
-                      },
-                      "paymentStatus": {
-                        "type": "string",
-                        "enum": [
-                          "PENDING",
-                          "PARTIAL",
-                          "PAID"
-                        ]
-                      }
-                    },
-                    "required": [
-                      "id",
-                      "enrollmentId",
-                      "student",
-                      "oweMinor",
-                      "paidMinor",
-                      "paymentStatus"
-                    ]
-                  }
-                },
                 "createdAt": {
                   "type": "string",
                   "format": "date-time"
@@ -12064,6 +12280,7 @@
               "required": [
                 "id",
                 "workspaceId",
+                "enrollmentId",
                 "studentId",
                 "groupId",
                 "name",
@@ -12072,7 +12289,6 @@
                 "endDate",
                 "pricePerLessonMinorSnapshot",
                 "totalPriceMinorSnapshot",
-                "effectiveTotalMinor",
                 "remainingCredits",
                 "consumedCredits",
                 "paidMinor",
@@ -12083,7 +12299,6 @@
                 "notes",
                 "student",
                 "group",
-                "shares",
                 "createdAt",
                 "updatedAt",
                 "deletedAt"
@@ -12130,10 +12345,13 @@
             "type": "string",
             "format": "uuid"
           },
+          "enrollmentId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "studentId": {
             "type": "string",
-            "format": "uuid",
-            "nullable": true
+            "format": "uuid"
           },
           "groupId": {
             "type": "string",
@@ -12163,9 +12381,6 @@
             "type": "integer"
           },
           "totalPriceMinorSnapshot": {
-            "type": "integer"
-          },
-          "effectiveTotalMinor": {
             "type": "integer"
           },
           "remainingCredits": {
@@ -12222,8 +12437,7 @@
             "required": [
               "id",
               "fullName"
-            ],
-            "nullable": true
+            ]
           },
           "group": {
             "type": "object",
@@ -12242,77 +12456,6 @@
             ],
             "nullable": true
           },
-          "shares": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "string",
-                  "format": "uuid"
-                },
-                "enrollmentId": {
-                  "type": "string",
-                  "format": "uuid"
-                },
-                "student": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "fullName": {
-                      "type": "string"
-                    },
-                    "avatarKey": {
-                      "type": "string",
-                      "enum": [
-                        "user-1",
-                        "user-2",
-                        "user-3",
-                        "user-4",
-                        "user-5",
-                        "user-6",
-                        "user-7",
-                        "user-8",
-                        "user-9",
-                        "user-10"
-                      ],
-                      "nullable": true
-                    }
-                  },
-                  "required": [
-                    "id",
-                    "fullName",
-                    "avatarKey"
-                  ]
-                },
-                "oweMinor": {
-                  "type": "integer"
-                },
-                "paidMinor": {
-                  "type": "integer"
-                },
-                "paymentStatus": {
-                  "type": "string",
-                  "enum": [
-                    "PENDING",
-                    "PARTIAL",
-                    "PAID"
-                  ]
-                }
-              },
-              "required": [
-                "id",
-                "enrollmentId",
-                "student",
-                "oweMinor",
-                "paidMinor",
-                "paymentStatus"
-              ]
-            }
-          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -12330,6 +12473,7 @@
         "required": [
           "id",
           "workspaceId",
+          "enrollmentId",
           "studentId",
           "groupId",
           "name",
@@ -12338,7 +12482,6 @@
           "endDate",
           "pricePerLessonMinorSnapshot",
           "totalPriceMinorSnapshot",
-          "effectiveTotalMinor",
           "remainingCredits",
           "consumedCredits",
           "paidMinor",
@@ -12349,7 +12492,6 @@
           "notes",
           "student",
           "group",
-          "shares",
           "createdAt",
           "updatedAt",
           "deletedAt"
@@ -12371,11 +12513,6 @@
                   "type": "string",
                   "format": "uuid"
                 },
-                "enrollmentId": {
-                  "type": "string",
-                  "format": "uuid",
-                  "nullable": true
-                },
                 "lessonId": {
                   "type": "string",
                   "format": "uuid",
@@ -12388,11 +12525,8 @@
                   "type": "string",
                   "enum": [
                     "purchase",
-                    "lesson_completed",
-                    "late_cancellation",
-                    "no_show",
-                    "teacher_cancellation_refund",
-                    "manual_adjustment"
+                    "manual_adjustment",
+                    "lesson"
                   ]
                 },
                 "note": {
@@ -12407,7 +12541,6 @@
               "required": [
                 "id",
                 "packageId",
-                "enrollmentId",
                 "lessonId",
                 "delta",
                 "type",
@@ -12430,10 +12563,14 @@
         "properties": {
           "studentId": {
             "type": "string",
+            "format": "uuid"
+          },
+          "groupId": {
+            "type": "string",
             "format": "uuid",
             "nullable": true
           },
-          "groupId": {
+          "teacherId": {
             "type": "string",
             "format": "uuid",
             "nullable": true
@@ -12569,6 +12706,7 @@
           }
         },
         "required": [
+          "studentId",
           "pricePerLessonMinor",
           "currency"
         ]

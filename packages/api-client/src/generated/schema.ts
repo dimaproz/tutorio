@@ -289,7 +289,7 @@ export interface paths {
         post?: never;
         /**
          * Permanently delete an unused student (owner only)
-         * @description Irreversible. Returns STUDENT_HAS_BUSINESS_HISTORY when lessons, enrollments, packages, payments, shares, or credits exist.
+         * @description Irreversible. Returns STUDENT_HAS_BUSINESS_HISTORY when lessons, enrollments, packages, payments, charges, or credits exist.
          */
         delete: operations["StudentsController_removePermanently"];
         options?: never;
@@ -579,6 +579,26 @@ export interface paths {
          * @description Student, group and teacher are immutable — archive and re-enroll instead. cancellationDeadlineHours null reverts to the workspace default. A no-op update creates no audit entry.
          */
         patch: operations["EnrollmentsController_update"];
+        trace?: never;
+    };
+    "/api/enrollments/{enrollmentId}/billing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * How a direction is paid now
+         * @description Billing mode and rate, the credits each package has left, lessons held on debt in package mode, and the pay-per-lesson balance with payments settling the oldest lessons first.
+         */
+        get: operations["EnrollmentsController_getBilling"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/enrollments/{enrollmentId}/restore": {
@@ -1326,7 +1346,7 @@ export interface components {
                 /** @enum {string} */
                 status: "ACTIVE" | "PAUSED" | "ARCHIVED";
                 /** @enum {string} */
-                billingType: "PACKAGE" | "MONTHLY" | "PER_LESSON";
+                billingType: "PACKAGE" | "PER_LESSON";
                 priceMinor: number;
                 /** @enum {string} */
                 currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
@@ -1724,7 +1744,7 @@ export interface components {
                 /** @enum {string} */
                 status: "ACTIVE" | "PAUSED" | "ARCHIVED";
                 /** @enum {string} */
-                billingType: "PACKAGE" | "MONTHLY" | "PER_LESSON";
+                billingType: "PACKAGE" | "PER_LESSON";
                 priceMinor: number;
                 /** @enum {string} */
                 currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
@@ -1862,7 +1882,7 @@ export interface components {
                 /** @enum {string} */
                 status: "ACTIVE" | "PAUSED" | "ARCHIVED";
                 /** @enum {string} */
-                billingType: "PACKAGE" | "MONTHLY" | "PER_LESSON";
+                billingType: "PACKAGE" | "PER_LESSON";
                 priceMinor: number;
                 /** @enum {string} */
                 currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
@@ -1888,10 +1908,10 @@ export interface components {
             /** Format: uuid */
             teacherId: string;
             /**
-             * @default PACKAGE
+             * @default PER_LESSON
              * @enum {string}
              */
-            billingType: "PACKAGE" | "MONTHLY" | "PER_LESSON";
+            billingType: "PACKAGE" | "PER_LESSON";
             priceMinor: number;
             /** @enum {string} */
             currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
@@ -1927,7 +1947,7 @@ export interface components {
             /** @enum {string} */
             status: "ACTIVE" | "PAUSED" | "ARCHIVED";
             /** @enum {string} */
-            billingType: "PACKAGE" | "MONTHLY" | "PER_LESSON";
+            billingType: "PACKAGE" | "PER_LESSON";
             priceMinor: number;
             /** @enum {string} */
             currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
@@ -1940,11 +1960,40 @@ export interface components {
             /** Format: date-time */
             deletedAt: string | null;
         };
+        EnrollmentBillingDto: {
+            /** Format: uuid */
+            enrollmentId: string;
+            /** @enum {string} */
+            billingType: "PACKAGE" | "PER_LESSON";
+            rateMinor: number;
+            /** @enum {string} */
+            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+            packages: {
+                /** Format: uuid */
+                id: string;
+                name: string | null;
+                /** Format: date-time */
+                purchasedAt: string;
+                /** Format: date-time */
+                expiresAt: string | null;
+                remainingCredits: number;
+                usable: boolean;
+            }[];
+            creditsLeft: number;
+            debtLessons: number;
+            balance: {
+                chargedMinor: number;
+                paidMinor: number;
+                debtMinor: number;
+                advanceMinor: number;
+                unpaidLessons: number;
+            };
+        };
         UpdateEnrollmentDto: {
             /** @enum {string} */
             status?: "ACTIVE" | "PAUSED" | "ARCHIVED";
             /** @enum {string} */
-            billingType?: "PACKAGE" | "MONTHLY" | "PER_LESSON";
+            billingType?: "PACKAGE" | "PER_LESSON";
             priceMinor?: number;
             /** @enum {string} */
             currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
@@ -1962,8 +2011,6 @@ export interface components {
                 groupId: string | null;
                 /** Format: uuid */
                 seriesId: string | null;
-                /** Format: uuid */
-                packageId: string | null;
                 /** Format: uuid */
                 teacherId: string;
                 /** Format: date-time */
@@ -2000,6 +2047,24 @@ export interface components {
                     present: number;
                     marked: number;
                 } | null;
+                charges: {
+                    /** Format: uuid */
+                    id: string;
+                    /** Format: uuid */
+                    enrollmentId: string;
+                    /** @enum {string} */
+                    source: "PACKAGE" | "DEBT" | "BALANCE";
+                    /** Format: uuid */
+                    packageId: string | null;
+                    amountMinor: number;
+                    /** @enum {string} */
+                    currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+                    student: {
+                        /** Format: uuid */
+                        id: string;
+                        fullName: string;
+                    };
+                }[];
                 student: {
                     /** Format: uuid */
                     id: string;
@@ -2031,8 +2096,6 @@ export interface components {
             studentId?: string | null;
             /** Format: uuid */
             groupId?: string | null;
-            /** Format: uuid */
-            packageId?: string;
             /** Format: uuid */
             teacherId?: string;
             startsAt: string[];
@@ -2077,8 +2140,6 @@ export interface components {
             /** Format: uuid */
             seriesId: string | null;
             /** Format: uuid */
-            packageId: string | null;
-            /** Format: uuid */
             teacherId: string;
             /** Format: date-time */
             startsAtUtc: string;
@@ -2114,6 +2175,24 @@ export interface components {
                 present: number;
                 marked: number;
             } | null;
+            charges: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                enrollmentId: string;
+                /** @enum {string} */
+                source: "PACKAGE" | "DEBT" | "BALANCE";
+                /** Format: uuid */
+                packageId: string | null;
+                amountMinor: number;
+                /** @enum {string} */
+                currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+                student: {
+                    /** Format: uuid */
+                    id: string;
+                    fullName: string;
+                };
+            }[];
             student: {
                 /** Format: uuid */
                 id: string;
@@ -2208,8 +2287,6 @@ export interface components {
                 /** Format: uuid */
                 groupId: string | null;
                 /** Format: uuid */
-                packageId: string | null;
-                /** Format: uuid */
                 teacherId: string;
                 weekdays: number[];
                 localTime: string;
@@ -2282,8 +2359,6 @@ export interface components {
             enrollmentId: string | null;
             /** Format: uuid */
             groupId: string | null;
-            /** Format: uuid */
-            packageId: string | null;
             /** Format: uuid */
             teacherId: string;
             weekdays: number[];
@@ -2645,7 +2720,9 @@ export interface components {
                 /** Format: uuid */
                 workspaceId: string;
                 /** Format: uuid */
-                studentId: string | null;
+                enrollmentId: string;
+                /** Format: uuid */
+                studentId: string;
                 /** Format: uuid */
                 groupId: string | null;
                 name: string | null;
@@ -2656,7 +2733,6 @@ export interface components {
                 endDate: string | null;
                 pricePerLessonMinorSnapshot: number;
                 totalPriceMinorSnapshot: number;
-                effectiveTotalMinor: number;
                 remainingCredits: number;
                 consumedCredits: number;
                 paidMinor: number;
@@ -2673,29 +2749,12 @@ export interface components {
                     /** Format: uuid */
                     id: string;
                     fullName: string;
-                } | null;
+                };
                 group: {
                     /** Format: uuid */
                     id: string;
                     name: string;
                 } | null;
-                shares: {
-                    /** Format: uuid */
-                    id: string;
-                    /** Format: uuid */
-                    enrollmentId: string;
-                    student: {
-                        /** Format: uuid */
-                        id: string;
-                        fullName: string;
-                        /** @enum {string|null} */
-                        avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
-                    };
-                    oweMinor: number;
-                    paidMinor: number;
-                    /** @enum {string} */
-                    paymentStatus: "PENDING" | "PARTIAL" | "PAID";
-                }[];
                 /** Format: date-time */
                 createdAt: string;
                 /** Format: date-time */
@@ -2714,7 +2773,9 @@ export interface components {
             /** Format: uuid */
             workspaceId: string;
             /** Format: uuid */
-            studentId: string | null;
+            enrollmentId: string;
+            /** Format: uuid */
+            studentId: string;
             /** Format: uuid */
             groupId: string | null;
             name: string | null;
@@ -2725,7 +2786,6 @@ export interface components {
             endDate: string | null;
             pricePerLessonMinorSnapshot: number;
             totalPriceMinorSnapshot: number;
-            effectiveTotalMinor: number;
             remainingCredits: number;
             consumedCredits: number;
             paidMinor: number;
@@ -2742,29 +2802,12 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 fullName: string;
-            } | null;
+            };
             group: {
                 /** Format: uuid */
                 id: string;
                 name: string;
             } | null;
-            shares: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                enrollmentId: string;
-                student: {
-                    /** Format: uuid */
-                    id: string;
-                    fullName: string;
-                    /** @enum {string|null} */
-                    avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
-                };
-                oweMinor: number;
-                paidMinor: number;
-                /** @enum {string} */
-                paymentStatus: "PENDING" | "PARTIAL" | "PAID";
-            }[];
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -2779,12 +2822,10 @@ export interface components {
                 /** Format: uuid */
                 packageId: string;
                 /** Format: uuid */
-                enrollmentId: string | null;
-                /** Format: uuid */
                 lessonId: string | null;
                 delta: number;
                 /** @enum {string} */
-                type: "purchase" | "lesson_completed" | "late_cancellation" | "no_show" | "teacher_cancellation_refund" | "manual_adjustment";
+                type: "purchase" | "manual_adjustment" | "lesson";
                 note: string | null;
                 /** Format: date-time */
                 createdAt: string;
@@ -2793,9 +2834,11 @@ export interface components {
         };
         CreatePackageDto: {
             /** Format: uuid */
-            studentId?: string | null;
+            studentId: string;
             /** Format: uuid */
             groupId?: string | null;
+            /** Format: uuid */
+            teacherId?: string | null;
             name?: string | null;
             /**
              * @default FIXED_COUNT
@@ -4473,6 +4516,44 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EnrollmentDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    EnrollmentsController_getBilling: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                enrollmentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnrollmentBillingDto"];
                 };
             };
             /** @description OWNER role required */
