@@ -9,6 +9,7 @@ export * from './locale';
 export * from './packages';
 export * from './pagination';
 export * from './parents';
+export * from './pauses';
 export * from './scheduling';
 export * from './schedules';
 export * from './teachers';
