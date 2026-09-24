@@ -24,7 +24,6 @@ type SeriesForMaterialize = Pick<
   | 'workspaceId'
   | 'enrollmentId'
   | 'groupId'
-  | 'packageId'
   | 'teacherId'
   | 'weekdays'
   | 'localTime'
@@ -126,7 +125,6 @@ export class MaterializerService {
           enrollmentId: currentSeries.enrollmentId,
           groupId: currentSeries.groupId,
           seriesId: currentSeries.id,
-          packageId: currentSeries.packageId,
           teacherId: currentSeries.teacherId,
           startsAtUtc,
           durationMin: currentSeries.durationMin,
@@ -156,19 +154,6 @@ export class MaterializerService {
       !(await tx.lessonSeries.findFirst({
         where: {
           id: series.id,
-          workspaceId: series.workspaceId,
-          deletedAt: null,
-        },
-        select: { id: true },
-      }))
-    ) {
-      return false;
-    }
-    if (
-      series.packageId &&
-      !(await tx.lessonPackage.findFirst({
-        where: {
-          id: series.packageId,
           workspaceId: series.workspaceId,
           deletedAt: null,
         },

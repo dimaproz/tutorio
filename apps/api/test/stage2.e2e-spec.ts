@@ -136,7 +136,7 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
     await prisma.payment.deleteMany({
       where: { workspaceId: { in: workspaceIds } },
     });
-    await prisma.packageParticipantShare.deleteMany({
+    await prisma.lessonCharge.deleteMany({
       where: { workspaceId: { in: workspaceIds } },
     });
     await prisma.lesson.deleteMany({
@@ -535,7 +535,7 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
           studentId,
           groupId,
           teacherId: ownerTeacherId,
-          billingType: 'MONTHLY',
+          billingType: 'PER_LESSON',
           priceMinor: 120000,
           currency: 'EUR',
           cancellationDeadlineHours: 48,
@@ -703,10 +703,12 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
       const now = new Date();
       const completedAt = new Date(now.getTime() - 2 * 86_400_000);
       const futureAt = new Date(now.getTime() + 2 * 86_400_000);
+      // The member's package for the group (ADR 0007).
       const pkg = await prisma.lessonPackage.create({
         data: {
           workspaceId: workspaceAId,
-          groupId: historyGroupId,
+          enrollmentId: groupEnrollmentId,
+          studentId: historyStudentId,
           sizingMode: 'FIXED_COUNT',
           lessonsTotal: 2,
           pricePerLessonMinorSnapshot: 2500,
@@ -746,7 +748,6 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
           workspaceId: workspaceAId,
           groupId: historyGroupId,
           seriesId: series.id,
-          packageId: pkg.id,
           teacherId: ownerTeacherId,
           startsAtUtc: completedAt,
           durationMin: 60,
@@ -761,7 +762,6 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
           workspaceId: workspaceAId,
           groupId: historyGroupId,
           seriesId: series.id,
-          packageId: pkg.id,
           teacherId: ownerTeacherId,
           startsAtUtc: futureAt,
           durationMin: 60,
@@ -773,19 +773,20 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
         data: {
           workspaceId: workspaceAId,
           packageId: pkg.id,
-          enrollmentId: groupEnrollmentId,
-          lessonId: completed.id,
-          delta: -1,
-          type: 'lesson_completed',
+          delta: 2,
+          type: 'purchase',
           idempotencyKey: `lifecycle-credit-${runId}`,
         },
       });
-      await prisma.packageParticipantShare.create({
+      await prisma.lessonCharge.create({
         data: {
           workspaceId: workspaceAId,
-          packageId: pkg.id,
+          lessonId: completed.id,
           enrollmentId: groupEnrollmentId,
-          oweMinor: 5000,
+          source: 'PACKAGE',
+          packageId: pkg.id,
+          amountMinor: 2500,
+          currency: 'EUR',
         },
       });
       await prisma.payment.create({
@@ -847,17 +848,17 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
       expect(
         await prisma.lessonPackage.findUniqueOrThrow({
           where: { id: pkg.id },
-          select: { groupId: true, deletedAt: true },
+          select: { enrollmentId: true, deletedAt: true },
         }),
-      ).toEqual({ groupId: historyGroupId, deletedAt: null });
+      ).toEqual({ enrollmentId: groupEnrollmentId, deletedAt: null });
       expect(
         await prisma.payment.count({
           where: { packageId: pkg.id, deletedAt: null },
         }),
       ).toBe(1);
       expect(
-        await prisma.packageParticipantShare.count({
-          where: { packageId: pkg.id },
+        await prisma.lessonCharge.count({
+          where: { packageId: pkg.id, voidedAt: null },
         }),
       ).toBe(1);
       expect(
@@ -1106,8 +1107,8 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
         await prisma.payment.count({ where: { packageId: groupPackageId } }),
       ).toBe(1);
       expect(
-        await prisma.packageParticipantShare.count({
-          where: { packageId: groupPackageId },
+        await prisma.lessonCharge.count({
+          where: { packageId: groupPackageId, voidedAt: null },
         }),
       ).toBe(1);
       expect(
@@ -1116,18 +1117,20 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
         }),
       ).toBe(1);
 
+      // An archived student is sold nothing.
       const blockedCharge = await server()
         .post('/api/packages')
         .set('Authorization', auth(ownerA))
         .send({
+          studentId: historyStudentId,
           groupId: historyGroupId,
           sizingMode: 'FIXED_COUNT',
           lessonsTotal: 1,
           pricePerLessonMinor: 2500,
           currency: 'EUR',
         })
-        .expect(400);
-      expect(blockedCharge.body.code).toBe('INVALID_PACKAGE_PLAN');
+        .expect(404);
+      expect(blockedCharge.body.code).toBe('STUDENT_NOT_FOUND');
 
       const blocked = await server()
         .delete(`/api/students/${historyStudentId}/permanently`)
@@ -1138,7 +1141,7 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
         enrollments: expect.any(Number),
         packages: expect.any(Number),
         payments: expect.any(Number),
-        shares: expect.any(Number),
+        charges: expect.any(Number),
         credits: expect.any(Number),
       });
       expect(await auditCount('STUDENT', historyStudentId, 'DELETE')).toBe(1);

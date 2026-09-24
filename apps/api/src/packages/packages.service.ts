@@ -1,12 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
-  creditBalance,
-  expandPackageSchedule,
-  findConflicts,
   InvalidPackagePlanError,
   planPackage,
-  splitShares,
-  toInterval,
   type RecurrenceRule,
 } from '@tutorio/domain';
 import { Prisma } from '@prisma/client';
@@ -21,11 +16,11 @@ import type {
 import { AuditService } from '../audit/audit.service';
 import { forbidden } from '../auth/auth.errors';
 import type { AuthenticatedUser } from '../auth/auth.types';
+import { BillingService } from '../billing/billing.service';
 import {
-  groupNotFound,
+  enrollmentNotFound,
   invalidPackagePlan,
   packageNotFound,
-  scheduleConflict,
   studentNotFound,
 } from '../common/business.errors';
 import {
@@ -34,42 +29,17 @@ import {
   toSkipTake,
 } from '../common/pagination';
 import { PrismaService } from '../prisma/prisma.service';
-import { MaterializerService } from '../scheduling/materializer.service';
+import { lockStudentLifecycles } from '../scheduling/lifecycle-suspension';
 import { SchedulesService } from '../scheduling/schedules.service';
-import {
-  lockGroupSchedule,
-  lockTeacherSchedules,
-} from '../scheduling/lifecycle-suspension';
 import { resolveStudentTarget } from '../scheduling/scheduling.shared';
-import { LedgerService } from './ledger.service';
 import { packageInclude, toPackageResponse } from './packages.shared';
-
-const DAY_MS = 86_400_000;
-const MAX_DURATION_MIN = 720;
-
-interface PlannedConflict {
-  candidate: {
-    startsAtUtc: string;
-    durationMin: number;
-  };
-  existing: {
-    id: string | null;
-    startsAtUtc: string;
-    durationMin: number;
-    student: { id: string; fullName: string } | null;
-    group: { id: string; name: string } | null;
-  };
-  teacher: { id: string; name: string };
-  source: 'EXISTING_LESSON' | 'NEW_SLOT';
-}
 
 @Injectable()
 export class PackagesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
-    private readonly ledger: LedgerService,
-    private readonly materializer: MaterializerService,
+    private readonly billing: BillingService,
     private readonly schedules: SchedulesService,
   ) {}
 
@@ -85,7 +55,8 @@ export class PackagesService {
       workspaceId: auth.workspaceId,
       ...deletedAtFilter(query.state),
       ...(query.studentId ? { studentId: query.studentId } : {}),
-      ...(query.groupId ? { groupId: query.groupId } : {}),
+      // A group's packages are its members' packages for the group.
+      ...(query.groupId ? { enrollment: { groupId: query.groupId } } : {}),
       ...(query.paymentStatus ? { paymentStatus: query.paymentStatus } : {}),
     };
 
@@ -116,58 +87,67 @@ export class PackagesService {
     return toPackageResponse(row);
   }
 
-  /** The "why is the balance this" view: every entry, newest first. */
+  /**
+   * The "why is the balance this" view, newest first: the credits granted
+   * and corrected, and one entry per lesson the package pays for.
+   */
   async getLedger(
     auth: AuthenticatedUser,
     packageId: string,
   ): Promise<CreditLedgerResponse> {
     const pkg = await this.getDetail(auth, packageId);
-    const rows = await this.prisma.lessonCreditEntry.findMany({
-      where: { packageId: pkg.id, workspaceId: auth.workspaceId },
-      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-    });
-
-    return {
-      items: rows.map((row) => ({
-        id: row.id,
-        packageId: row.packageId,
-        enrollmentId: row.enrollmentId,
-        lessonId: row.lessonId,
-        delta: row.delta,
-        type: row.type,
-        note: row.note,
-        createdAt: row.createdAt.toISOString(),
+    const [entries, charges] = await Promise.all([
+      this.prisma.lessonCreditEntry.findMany({
+        where: { packageId: pkg.id, workspaceId: auth.workspaceId },
+      }),
+      this.prisma.lessonCharge.findMany({
+        where: { packageId: pkg.id, voidedAt: null },
+      }),
+    ]);
+    const items: CreditLedgerResponse['items'] = [
+      ...entries.map((entry) => ({
+        id: entry.id,
+        packageId: entry.packageId,
+        lessonId: null,
+        delta: entry.delta,
+        type: entry.type,
+        note: entry.note,
+        createdAt: entry.createdAt.toISOString(),
       })),
-      balance: creditBalance(rows),
-    };
+      // A charge joins the package when it is charged or when new credits
+      // cover it from debt: its last change is when the credit was used.
+      ...charges.map((charge) => ({
+        id: charge.id,
+        packageId: pkg.id,
+        lessonId: charge.lessonId,
+        delta: -1,
+        type: 'lesson' as const,
+        note: null,
+        createdAt: charge.updatedAt.toISOString(),
+      })),
+    ].sort(
+      (a, b) =>
+        b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id),
+    );
+    return { items, balance: pkg.remainingCredits };
   }
 
   /**
-   * Buys a package. One transaction creates the package, the opening `purchase`
-   * credit entry, the per-member shares for a group, and — when a schedule is
-   * given — the `LessonSeries` whose materialization produces the actual
-   * lessons. Either all of that exists, or none of it does.
+   * Sells a package for one direction of a student (L-80): the package, its
+   * opening credits, an optional first payment and — while the old package
+   * form still offers it — the direction's schedule. A package-mode
+   * direction starts here (L-10), and the new credits cover the lessons held
+   * on debt first (L-82).
    */
   async create(
     auth: AuthenticatedUser,
     dto: CreatePackageDto,
     force = false,
   ): Promise<PackageResponse> {
-    const studentId = dto.studentId ?? null;
-    const groupId = dto.groupId ?? null;
-
     const row = await this.prisma.$transaction(
       async (tx) => {
-        const enrollments = await this.assertTargetAndCollectEnrollments(
-          tx,
-          auth.workspaceId,
-          {
-            studentId,
-            groupId,
-            currency: dto.currency,
-            pricePerLessonMinor: dto.pricePerLessonMinor,
-          },
-        );
+        await lockStudentLifecycles(tx, auth.workspaceId, [dto.studentId]);
+        const direction = await this.resolveDirection(tx, auth, dto);
 
         const scheduleStart = dto.schedule
           ? new Date(dto.schedule.startDate)
@@ -193,9 +173,7 @@ export class PackagesService {
             pricePerLessonMinor: dto.pricePerLessonMinor,
             rules: scheduleRules,
             startsAt: scheduleStart,
-            endDate: periodEndExclusive
-              ? new Date(periodEndExclusive.getTime() - 1)
-              : null,
+            endDate: dto.endDate ? new Date(dto.endDate) : null,
           });
         } catch (error) {
           if (error instanceof InvalidPackagePlanError) {
@@ -206,8 +184,7 @@ export class PackagesService {
 
         const initialPayment = dto.initialPayment ?? null;
         if (initialPayment) {
-          const paidAt = new Date(initialPayment.paidAt);
-          if (paidAt.getTime() > Date.now()) {
+          if (new Date(initialPayment.paidAt).getTime() > Date.now()) {
             throw invalidPackagePlan('Payment date cannot be in the future');
           }
           if (initialPayment.amountMinor > plan.totalPriceMinor) {
@@ -215,67 +192,18 @@ export class PackagesService {
               'Initial payment cannot exceed the package total',
             );
           }
-          if (groupId && initialPayment.amountMinor !== plan.totalPriceMinor) {
-            throw invalidPackagePlan(
-              'A group package only supports a full initial payment',
-            );
-          }
         }
-
-        let plannedStarts: Date[] = [];
-        let seriesEndsAt: Date | null = null;
-        if (dto.schedule && scheduleStart) {
-          const expansionUntil =
-            dto.sizingMode === 'BY_PERIOD'
-              ? periodEndExclusive!
-              : dto.expiresAt
-                ? new Date(dto.expiresAt)
-                : new Date(
-                    scheduleStart.getTime() +
-                      Math.max(plan.lessonsTotal, 1) * 7 * DAY_MS,
-                  );
-          const expanded = expandPackageSchedule(scheduleRules, {
-            from: scheduleStart,
-            until: expansionUntil,
-          });
-          plannedStarts =
-            dto.sizingMode === 'FIXED_COUNT'
-              ? expanded.slice(0, plan.lessonsTotal)
-              : expanded;
-          seriesEndsAt =
-            dto.sizingMode === 'FIXED_COUNT'
-              ? plannedStarts.length > 0
-                ? new Date(plannedStarts.at(-1)!.getTime() + 1)
-                : expansionUntil
-              : expansionUntil;
-
-          if (!force) {
-            const conflicts = await this.findPackageConflicts(tx, {
-              workspaceId: auth.workspaceId,
-              teacherId: enrollments[0].teacherId,
-              starts: plannedStarts,
-              durationMin: dto.schedule.durationMin,
-            });
-            if (conflicts.length > 0) {
-              throw scheduleConflict(
-                [
-                  ...new Set(
-                    conflicts.flatMap((conflict) =>
-                      conflict.existing.id ? [conflict.existing.id] : [],
-                    ),
-                  ),
-                ],
-                conflicts,
-              );
-            }
-          }
+        if (dto.schedule && direction.groupId) {
+          throw invalidPackagePlan(
+            "A group's lessons follow the group's own schedule",
+          );
         }
 
         const created = await tx.lessonPackage.create({
           data: {
             workspaceId: auth.workspaceId,
-            studentId,
-            groupId,
+            enrollmentId: direction.id,
+            studentId: dto.studentId,
             name: dto.name ?? null,
             sizingMode: dto.sizingMode,
             lessonsTotal: plan.lessonsTotal,
@@ -301,73 +229,48 @@ export class PackagesService {
           },
         });
 
-        // The opening balance: the package grants its lessons up front.
-        await this.ledger.append(tx, {
-          workspaceId: auth.workspaceId,
-          packageId: created.id,
-          enrollmentId: enrollments[0]?.id ?? null,
-          delta: plan.lessonsTotal,
-          type: 'purchase',
-          idempotencyKey: `package:${created.id}:purchase`,
-          createdById: auth.userId,
+        // The opening credits: the package grants its lessons up front.
+        await tx.lessonCreditEntry.create({
+          data: {
+            workspaceId: auth.workspaceId,
+            packageId: created.id,
+            delta: plan.lessonsTotal,
+            type: 'purchase',
+            idempotencyKey: `package:${created.id}:purchase`,
+            createdById: auth.userId,
+          },
         });
 
-        // A group shares the schedule but splits the money.
-        const shares = groupId
-          ? splitShares(
-              plan.totalPriceMinor,
-              enrollments.map((enrollment) => enrollment.id),
-            )
-          : [];
-        if (shares.length > 0) {
-          await tx.packageParticipantShare.createMany({
-            data: shares.map((share) => ({
-              workspaceId: auth.workspaceId,
-              packageId: created.id,
-              enrollmentId: share.enrollmentId,
-              oweMinor: share.oweMinor,
-              paidMinor: initialPayment ? share.oweMinor : 0,
-            })),
-          });
-        }
-
         if (initialPayment) {
-          const paidAt = new Date(initialPayment.paidAt);
-          const payments = groupId
-            ? shares.map((share) => ({
-                enrollmentId: share.enrollmentId,
-                amountMinor: share.oweMinor,
-              }))
-            : [
-                {
-                  enrollmentId: enrollments[0].id,
-                  amountMinor: initialPayment.amountMinor,
-                },
-              ];
-          await tx.payment.createMany({
-            data: payments.map((payment) => ({
+          await tx.payment.create({
+            data: {
               workspaceId: auth.workspaceId,
-              enrollmentId: payment.enrollmentId,
+              enrollmentId: direction.id,
               packageId: created.id,
-              amountMinor: payment.amountMinor,
+              amountMinor: initialPayment.amountMinor,
               currency: dto.currency,
               method: 'OTHER',
               status: 'PAID',
               provider: 'manual',
-              paidAt,
+              paidAt: new Date(initialPayment.paidAt),
               createdById: auth.userId,
-            })),
+            },
           });
         }
 
-        // The optional recurring schedule is what turns the package into
-        // lessons: the direction's schedule, ending with the package, and
-        // generated far enough ahead to cover it. The conflicts were checked
-        // above in the package's own terms.
-        if (dto.schedule && scheduleStart && seriesEndsAt) {
-          const weeksToEnd = Math.ceil(
-            (seriesEndsAt.getTime() - Date.now()) / (7 * DAY_MS),
-          );
+        // Selling a package switches a pay-per-lesson direction to packages
+        // (L-10); the credits then cover the lessons on debt first (L-82).
+        if (direction.billingType !== 'PACKAGE') {
+          await tx.enrollment.update({
+            where: { id: direction.id },
+            data: { billingType: 'PACKAGE' },
+          });
+        }
+        const covered = await this.billing.coverDebtsOf(tx, direction.id);
+
+        // The old package form can still ask for the direction's schedule.
+        // It belongs to the direction and outlives the package (L-20, L-87).
+        if (dto.schedule && scheduleStart) {
           const workspace = await tx.workspace.findUniqueOrThrow({
             where: { id: auth.workspaceId },
             select: { scheduleHorizonWeeks: true },
@@ -376,23 +279,19 @@ export class PackagesService {
             tx,
             auth,
             {
-              enrollmentId: groupId ? null : (enrollments[0]?.id ?? null),
-              groupId,
-              packageId: created.id,
-              teacherId: enrollments[0].teacherId,
+              enrollmentId: direction.id,
+              groupId: null,
+              teacherId: direction.teacherId,
               slots: dto.schedule.slots,
               durationMin: dto.schedule.durationMin,
               timezone: dto.schedule.timezone,
               startDate: scheduleStart,
-              endsAt: seriesEndsAt,
-              horizonWeeks: Math.min(
-                26,
-                Math.max(workspace.scheduleHorizonWeeks, weeksToEnd),
-              ),
-              priceMinor: plan.pricePerLessonMinor,
-              currency: dto.currency,
+              endsAt: null,
+              horizonWeeks: workspace.scheduleHorizonWeeks,
+              priceMinor: direction.priceMinor,
+              currency: direction.currency,
             },
-            { force: true },
+            { force },
           );
         }
 
@@ -405,11 +304,14 @@ export class PackagesService {
           changes: this.audit.buildChanges(
             {},
             {
-              studentId,
-              groupId,
+              enrollmentId: direction.id,
               lessonsTotal: plan.lessonsTotal,
               totalPriceMinorSnapshot: plan.totalPriceMinor,
               currency: dto.currency,
+              ...(direction.billingType !== 'PACKAGE'
+                ? { billingType: 'PACKAGE' }
+                : {}),
+              ...(covered > 0 ? { debtLessonsCovered: covered } : {}),
             },
           ),
         });
@@ -425,107 +327,63 @@ export class PackagesService {
     return toPackageResponse(row);
   }
 
-  private async findPackageConflicts(
+  /**
+   * The direction a package pays for: the student's membership of `groupId`,
+   * or their lessons with a teacher (created silently when new, L-2).
+   */
+  private async resolveDirection(
     tx: Prisma.TransactionClient,
-    params: {
-      workspaceId: string;
-      teacherId: string;
-      starts: readonly Date[];
-      durationMin: number;
-    },
-  ): Promise<PlannedConflict[]> {
-    if (params.starts.length === 0) {
-      return [];
+    auth: AuthenticatedUser,
+    dto: CreatePackageDto,
+  ) {
+    const select = {
+      id: true,
+      groupId: true,
+      teacherId: true,
+      billingType: true,
+      priceMinor: true,
+      currency: true,
+    } as const;
+    if (dto.groupId) {
+      const student = await tx.student.findFirst({
+        where: {
+          id: dto.studentId,
+          workspaceId: auth.workspaceId,
+          deletedAt: null,
+          status: { not: 'ARCHIVED' },
+        },
+        select: { id: true },
+      });
+      if (!student) throw studentNotFound();
+      const membership = await tx.enrollment.findFirst({
+        where: {
+          workspaceId: auth.workspaceId,
+          studentId: dto.studentId,
+          groupId: dto.groupId,
+          deletedAt: null,
+          status: { not: 'ARCHIVED' },
+        },
+        select,
+      });
+      if (!membership) throw enrollmentNotFound();
+      return membership;
     }
-
-    const teacher = await tx.teacher.findUniqueOrThrow({
-      where: { id: params.teacherId },
-      select: { id: true, fullName: true },
+    const resolved = await resolveStudentTarget(tx, auth.workspaceId, {
+      studentId: dto.studentId,
+      teacherId: dto.teacherId,
+      priceMinor: dto.pricePerLessonMinor,
+      currency: dto.currency,
     });
-    const first = params.starts[0];
-    const last = params.starts.at(-1)!;
-    const rows = await tx.lesson.findMany({
-      where: {
-        workspaceId: params.workspaceId,
-        teacherId: params.teacherId,
-        deletedAt: null,
-        status: { in: ['SCHEDULED', 'COMPLETED'] },
-        startsAtUtc: {
-          gte: new Date(first.getTime() - MAX_DURATION_MIN * 60_000),
-          lt: new Date(last.getTime() + params.durationMin * 60_000),
-        },
-      },
-      select: {
-        id: true,
-        startsAtUtc: true,
-        durationMin: true,
-        enrollment: {
-          select: { student: { select: { id: true, fullName: true } } },
-        },
-        group: { select: { id: true, name: true } },
-      },
+    return tx.enrollment.findUniqueOrThrow({
+      where: { id: resolved.enrollmentId },
+      select,
     });
-
-    const conflicts: PlannedConflict[] = [];
-    const busy = rows.map((row) => ({
-      ...toInterval(row.startsAtUtc, row.durationMin),
-      id: row.id,
-      row,
-    }));
-    params.starts.forEach((start, index) => {
-      const candidate = toInterval(start, params.durationMin);
-      for (const overlap of findConflicts(candidate, busy)) {
-        const row = rows.find((item) => item.id === overlap.id)!;
-        conflicts.push({
-          candidate: {
-            startsAtUtc: start.toISOString(),
-            durationMin: params.durationMin,
-          },
-          existing: {
-            id: row.id,
-            startsAtUtc: row.startsAtUtc.toISOString(),
-            durationMin: row.durationMin,
-            student: row.enrollment?.student ?? null,
-            group: row.group,
-          },
-          teacher: { id: teacher.id, name: teacher.fullName },
-          source: 'EXISTING_LESSON',
-        });
-      }
-
-      for (
-        let otherIndex = index + 1;
-        otherIndex < params.starts.length;
-        otherIndex += 1
-      ) {
-        const other = params.starts[otherIndex];
-        if (other.getTime() >= candidate.end.getTime()) {
-          break;
-        }
-        conflicts.push({
-          candidate: {
-            startsAtUtc: other.toISOString(),
-            durationMin: params.durationMin,
-          },
-          existing: {
-            id: null,
-            startsAtUtc: start.toISOString(),
-            durationMin: params.durationMin,
-            student: null,
-            group: null,
-          },
-          teacher: { id: teacher.id, name: teacher.fullName },
-          source: 'NEW_SLOT',
-        });
-      }
-    });
-
-    return conflicts;
   }
 
   /**
    * A tutor's manual correction. Appends a signed entry with a mandatory note —
-   * the balance history must always explain itself.
+   * the balance history must always explain itself. Added credits cover the
+   * lessons on debt first.
    */
   async adjust(
     auth: AuthenticatedUser,
@@ -539,22 +397,27 @@ export class PackagesService {
           workspaceId: auth.workspaceId,
           deletedAt: null,
         },
-        select: { id: true },
+        select: { id: true, enrollmentId: true },
       });
       if (!pkg) {
         throw packageNotFound();
       }
 
       // Each adjustment is its own event, so the key carries a timestamp.
-      await this.ledger.append(tx, {
-        workspaceId: auth.workspaceId,
-        packageId: pkg.id,
-        delta: dto.delta,
-        type: 'manual_adjustment',
-        idempotencyKey: `package:${pkg.id}:manual:${Date.now()}`,
-        note: dto.note,
-        createdById: auth.userId,
+      await tx.lessonCreditEntry.create({
+        data: {
+          workspaceId: auth.workspaceId,
+          packageId: pkg.id,
+          delta: dto.delta,
+          type: 'manual_adjustment',
+          idempotencyKey: `package:${pkg.id}:manual:${Date.now()}`,
+          note: dto.note,
+          createdById: auth.userId,
+        },
       });
+      if (dto.delta > 0) {
+        await this.billing.coverDebtsOf(tx, pkg.enrollmentId);
+      }
 
       await this.audit.record(tx, {
         workspaceId: auth.workspaceId,
@@ -578,13 +441,12 @@ export class PackagesService {
   }
 
   /**
-   * Archives a package without touching financial history. Operational work
-   * owned by it stops, while a later compensation can still target its pinned
-   * historical package id.
+   * Archives a package: it pays for no new lesson, and the lessons it paid
+   * for, its credits and its payments stay as history.
    */
   async remove(auth: AuthenticatedUser, packageId: string): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
-      let pkg = await tx.lessonPackage.findFirst({
+      const pkg = await tx.lessonPackage.findFirst({
         where: {
           id: packageId,
           workspaceId: auth.workspaceId,
@@ -595,62 +457,9 @@ export class PackagesService {
       if (!pkg) {
         return; // Idempotent: deleting an already-deleted package is a no-op.
       }
-      const ownedSeries = await tx.lessonSeries.findMany({
-        where: {
-          workspaceId: auth.workspaceId,
-          packageId: pkg.id,
-        },
-        select: { groupId: true, teacherId: true },
-      });
-      for (const groupId of [
-        ...new Set(
-          ownedSeries.flatMap((series) =>
-            series.groupId ? [series.groupId] : [],
-          ),
-        ),
-      ].sort()) {
-        await lockGroupSchedule(tx, auth.workspaceId, groupId);
-      }
-      await lockTeacherSchedules(
-        tx,
-        auth.workspaceId,
-        ownedSeries.map((series) => series.teacherId),
-      );
-      pkg = await tx.lessonPackage.findFirst({
-        where: {
-          id: packageId,
-          workspaceId: auth.workspaceId,
-          deletedAt: null,
-        },
-        select: { id: true },
-      });
-      if (!pkg) {
-        return;
-      }
-      const archivedAt = new Date();
-      const archivedSeries = await tx.lessonSeries.updateMany({
-        where: {
-          workspaceId: auth.workspaceId,
-          packageId: pkg.id,
-        },
-        data: { deletedAt: archivedAt, scheduleSuspensionToken: null },
-      });
-      const archivedLessons = await tx.lesson.updateMany({
-        where: {
-          workspaceId: auth.workspaceId,
-          packageId: pkg.id,
-          status: 'SCHEDULED',
-          startsAtUtc: { gte: archivedAt },
-        },
-        data: {
-          deletedAt: archivedAt,
-          isDetached: true,
-          scheduleSuspensionToken: null,
-        },
-      });
       await tx.lessonPackage.update({
         where: { id: pkg.id },
-        data: { deletedAt: archivedAt },
+        data: { deletedAt: new Date() },
       });
       await this.audit.record(tx, {
         workspaceId: auth.workspaceId,
@@ -660,100 +469,9 @@ export class PackagesService {
         entityId: pkg.id,
         changes: this.audit.buildChanges(
           {},
-          {
-            archivedSeries: archivedSeries.count,
-            archivedFutureScheduledLessons: archivedLessons.count,
-            retained: ['credits', 'payments', 'participantShares', 'history'],
-          },
+          { retained: ['credits', 'charges', 'payments', 'history'] },
         ),
       });
     });
-  }
-
-  /**
-   * Validates the package target and returns the enrollments the money attaches
-   * to: one for an individual package, one per member for a group package.
-   */
-  private async assertTargetAndCollectEnrollments(
-    tx: Prisma.TransactionClient,
-    workspaceId: string,
-    target: {
-      studentId: string | null;
-      groupId: string | null;
-      currency: string;
-      pricePerLessonMinor: number;
-    },
-  ): Promise<{ id: string; teacherId: string; currency: string }[]> {
-    if (target.studentId) {
-      const student = await tx.student.findFirst({
-        where: {
-          id: target.studentId,
-          workspaceId,
-          deletedAt: null,
-          status: { not: 'ARCHIVED' },
-        },
-        select: { id: true },
-      });
-      if (!student) {
-        throw studentNotFound();
-      }
-      const enrollments = await tx.enrollment.findMany({
-        where: {
-          workspaceId,
-          studentId: target.studentId,
-          groupId: null,
-          status: 'ACTIVE',
-          deletedAt: null,
-        },
-        orderBy: { createdAt: 'asc' },
-        select: { id: true, teacherId: true, currency: true },
-      });
-      if (enrollments.length > 0) {
-        return enrollments;
-      }
-
-      // A tutor may buy a package for a brand-new student who has never been
-      // scheduled yet. Rather than failing, resolve (and create) the enrollment
-      // the same way booking a lesson does — the tutor never has to know the
-      // word "enrollment".
-      const resolved = await resolveStudentTarget(tx, workspaceId, {
-        studentId: target.studentId,
-        priceMinor: target.pricePerLessonMinor,
-        currency: target.currency,
-      });
-      return [
-        {
-          id: resolved.enrollmentId,
-          teacherId: resolved.teacherId,
-          currency: resolved.currency,
-        },
-      ];
-    }
-
-    const group = await tx.group.findFirst({
-      where: { id: target.groupId ?? '', workspaceId, deletedAt: null },
-      select: { id: true },
-    });
-    if (!group) {
-      throw groupNotFound();
-    }
-    // A group package needs at least one member to split the money between.
-    const enrollments = await tx.enrollment.findMany({
-      where: {
-        workspaceId,
-        groupId: target.groupId,
-        status: 'ACTIVE',
-        deletedAt: null,
-        student: { deletedAt: null, status: { not: 'ARCHIVED' } },
-      },
-      orderBy: { createdAt: 'asc' },
-      select: { id: true, teacherId: true, currency: true },
-    });
-    if (enrollments.length === 0) {
-      throw invalidPackagePlan(
-        'Add at least one active student to the group before buying a package',
-      );
-    }
-    return enrollments;
   }
 }

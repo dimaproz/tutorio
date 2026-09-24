@@ -84,7 +84,7 @@ function buildPrismaMock() {
     lessonSeries: { updateMany: jest.fn().mockResolvedValue({ count: 0 }) },
     lessonPackage: { count: jest.fn().mockResolvedValue(0) },
     payment: { count: jest.fn().mockResolvedValue(0) },
-    packageParticipantShare: { count: jest.fn().mockResolvedValue(0) },
+    lessonCharge: { count: jest.fn().mockResolvedValue(0) },
     lessonCreditEntry: { count: jest.fn().mockResolvedValue(0) },
     auditLog: { create: jest.fn() },
     $transaction: jest.fn(),

@@ -236,25 +236,19 @@ export const makeupExists = () =>
     HttpStatus.CONFLICT,
   );
 
-export const lessonCreditMustBeReversed = (netCreditDelta: number) =>
+export const lessonCharged = (charges: number) =>
   new BusinessApiException(
-    'LESSON_CREDIT_MUST_BE_REVERSED',
-    'Restore this charged lesson to SCHEDULED before archiving it',
+    'LESSON_CHARGED',
+    'This lesson is charged; cancel it free or return it to scheduled before deleting it',
     HttpStatus.CONFLICT,
-    { netCreditDelta },
+    { charges },
   );
 
-export const lessonFinancialHistoryImmutable = () =>
+// Payments already cover this pay-per-lesson lesson (L-12).
+export const lessonPaid = () =>
   new BusinessApiException(
-    'LESSON_FINANCIAL_HISTORY_IMMUTABLE',
-    'A lesson with credit history cannot change its price or currency; update notes or use a compensating workflow instead',
-    HttpStatus.CONFLICT,
-  );
-
-export const lessonCompensationSourceMissing = () =>
-  new BusinessApiException(
-    'LESSON_COMPENSATION_SOURCE_MISSING',
-    'This lesson has no unmatched debit to compensate',
+    'LESSON_PAID',
+    'Payments already cover this lesson; its price can no longer change',
     HttpStatus.CONFLICT,
   );
 
@@ -277,21 +271,6 @@ export const paymentNotFound = () =>
     'PAYMENT_NOT_FOUND',
     'Payment not found',
     HttpStatus.NOT_FOUND,
-  );
-
-// A lesson can only consume credits from a package that still covers it.
-export const noActivePackage = () =>
-  new BusinessApiException(
-    'NO_ACTIVE_PACKAGE',
-    'No active package covers this lesson',
-    HttpStatus.CONFLICT,
-  );
-
-export const packageNotEligibleForCredit = () =>
-  new BusinessApiException(
-    'PACKAGE_NOT_ELIGIBLE_FOR_CREDIT',
-    'Only an active fixed-count package that covers the lesson occurrence can fund a lesson; choose a compatible fixed-count package or record a manual correction',
-    HttpStatus.CONFLICT,
   );
 
 export const invalidPackagePlan = (message: string) =>

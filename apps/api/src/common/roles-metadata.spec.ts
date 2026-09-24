@@ -70,6 +70,7 @@ const ownerRoutes = new Set([
   'AttendanceController.set',
   'AuditController.list',
   'EnrollmentsController.create',
+  'EnrollmentsController.getBilling',
   'EnrollmentsController.getDetail',
   'EnrollmentsController.list',
   'EnrollmentsController.restore',

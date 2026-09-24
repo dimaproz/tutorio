@@ -82,6 +82,21 @@ export async function lockStudentLifecycles(
 }
 
 /**
+ * Serializes billing decisions of one direction (which package pays, which
+ * debt a new credit covers), taken after the schedule locks.
+ */
+export async function lockEnrollmentBilling(
+  tx: Prisma.TransactionClient,
+  workspaceId: string,
+  enrollmentIds: Iterable<string>,
+): Promise<void> {
+  await lockKeys(
+    tx,
+    [...enrollmentIds].map((id) => `${workspaceId}:billing:${id}`),
+  );
+}
+
+/**
  * Throws SCHEDULE_CONFLICT when any lesson would overlap a live busy lesson of
  * its teacher, or another lesson in the same batch. One query covers the whole
  * batch: every busy lesson of the involved teachers that starts within

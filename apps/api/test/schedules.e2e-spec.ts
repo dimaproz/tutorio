@@ -114,6 +114,7 @@ describe('Work Packet 6.4 phase 2: schedules (e2e)', () => {
 
   afterAll(async () => {
     await prisma.lessonAttendance.deleteMany({ where: { workspaceId } });
+    await prisma.lessonCharge.deleteMany({ where: { workspaceId } });
     await prisma.lesson.deleteMany({ where: { workspaceId } });
     await prisma.lessonSeries.deleteMany({ where: { workspaceId } });
     await prisma.schedule.deleteMany({ where: { workspaceId } });

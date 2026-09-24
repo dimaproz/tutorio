@@ -59,8 +59,6 @@ export interface NewSchedule {
   horizonWeeks: number;
   priceMinor: number;
   currency: string;
-  /** A package-owned schedule pins its lessons to the package (until phase 3). */
-  packageId?: string | null;
 }
 
 const scheduleInclude = {
@@ -449,7 +447,6 @@ export class SchedulesService {
             scheduleId: schedule.id,
             enrollmentId: input.enrollmentId,
             groupId: input.groupId,
-            packageId: input.packageId ?? null,
             teacherId: input.teacherId,
             weekdays: rule.weekdays,
             localTime: rule.localTime,
@@ -591,7 +588,6 @@ export class SchedulesService {
           scheduleId: schedule.id,
           enrollmentId: schedule.enrollmentId,
           groupId: schedule.groupId,
-          packageId: template?.packageId ?? null,
           teacherId: schedule.teacherId,
           weekdays: rule.weekdays,
           localTime: rule.localTime,

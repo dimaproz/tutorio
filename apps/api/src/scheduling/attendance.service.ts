@@ -6,6 +6,7 @@ import type {
   SetLessonAttendanceDto,
 } from '@tutorio/validation';
 import { AuditService } from '../audit/audit.service';
+import { BillingService } from '../billing/billing.service';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import {
   attendanceNotMarkable,
@@ -44,6 +45,7 @@ export class AttendanceService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
+    private readonly billing: BillingService,
   ) {}
 
   /**
@@ -227,6 +229,13 @@ export class AttendanceService {
           entityId: lesson.id,
           changes: { fields },
         });
+        // A mark decides whether the participant pays (L-71, L-74).
+        await this.billing.syncLesson(
+          tx,
+          auth.workspaceId,
+          lesson.id,
+          auth.userId,
+        );
       }
 
       return this.toResponse(lesson, await this.participants(tx, lesson), now);

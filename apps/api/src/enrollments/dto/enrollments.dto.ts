@@ -1,5 +1,6 @@
 import {
   createEnrollmentSchema,
+  enrollmentBillingResponseSchema,
   enrollmentListResponseSchema,
   enrollmentResponseSchema,
   listEnrollmentsQuerySchema,
@@ -18,4 +19,7 @@ export class ListEnrollmentsQueryDto extends createZodDto(
 export class EnrollmentDto extends createZodDto(enrollmentResponseSchema) {}
 export class EnrollmentListDto extends createZodDto(
   enrollmentListResponseSchema,
+) {}
+export class EnrollmentBillingDto extends createZodDto(
+  enrollmentBillingResponseSchema,
 ) {}

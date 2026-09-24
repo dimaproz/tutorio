@@ -18,7 +18,7 @@ function serviceWith(transaction: Record<string, unknown>): PaymentsService {
 }
 
 describe('PaymentsService.record', () => {
-  it('rejects an enrollment that is not the package student before writing money', async () => {
+  it('rejects a payment from another direction than the package before writing money', async () => {
     const create = jest.fn();
     const service = serviceWith({
       payment: { create, findFirst: jest.fn() },
@@ -33,8 +33,7 @@ describe('PaymentsService.record', () => {
       lessonPackage: {
         findFirst: jest.fn().mockResolvedValue({
           id: 'package-1',
-          studentId: 'student-2',
-          groupId: null,
+          enrollmentId: 'enrollment-2',
           currency: 'UAH',
           totalPriceMinorSnapshot: 100000,
         }),
@@ -99,8 +98,7 @@ describe('PaymentsService.record', () => {
       lessonPackage: {
         findFirst: jest.fn().mockResolvedValue({
           id: 'package-1',
-          studentId: 'student-1',
-          groupId: null,
+          enrollmentId: 'enrollment-1',
           currency: 'UAH',
           totalPriceMinorSnapshot: 100000,
         }),

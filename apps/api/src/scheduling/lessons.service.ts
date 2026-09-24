@@ -4,7 +4,6 @@ import {
   canTransition,
   isCancelledStatus,
   localWeekdayOf,
-  makeupIsFree,
   replaceSlot,
 } from '@tutorio/domain';
 import { Prisma } from '@prisma/client';
@@ -22,17 +21,16 @@ import { AuditService } from '../audit/audit.service';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import {
   invalidLessonTransition,
+  lessonCharged,
   lessonEnded,
-  lessonFinancialHistoryImmutable,
   lessonTransitionReplayConflict,
-  lessonCreditMustBeReversed,
   lessonNotFound,
   makeupExists,
   makeupNotAllowed,
   noShowIndividualOnly,
   teacherNotFound,
 } from '../common/business.errors';
-import { LedgerService } from '../packages/ledger.service';
+import { BillingService } from '../billing/billing.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { assertNoScheduleConflicts } from './conflicts';
 import { SchedulesService, currentVersionRows } from './schedules.service';
@@ -55,7 +53,7 @@ export class LessonsService {
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
     private readonly schedules: SchedulesService,
-    private readonly ledger: LedgerService,
+    private readonly billing: BillingService,
   ) {}
 
   private assertCompatibleTransitionReplay(
@@ -181,9 +179,8 @@ export class LessonsService {
         );
       }
 
-      // A lesson booked straight into a finished state still has to walk the
-      // status machine: the ledger, not the row, is the source of truth for
-      // credits, and it only learns about a lesson through a transition.
+      // A lesson booked straight into a finished state is charged the same
+      // way a status change would charge it.
       const now = new Date();
       const isCancel = isCancelledStatus(dto.status);
       if (dto.status === 'NO_SHOW' && groupId) {
@@ -192,20 +189,6 @@ export class LessonsService {
 
       const created: string[] = [];
       for (const startsAtUtc of starts) {
-        if (dto.packageId) {
-          await this.ledger.assertCompatiblePackage(
-            tx,
-            auth.workspaceId,
-            {
-              packageId: dto.packageId,
-              enrollmentId,
-              groupId,
-              currency,
-              occursAt: startsAtUtc,
-            },
-            false,
-          );
-        }
         const lesson = await tx.lesson.create({
           data: {
             workspaceId: auth.workspaceId,
@@ -216,7 +199,6 @@ export class LessonsService {
             durationMin: dto.durationMin,
             priceMinor,
             currency,
-            packageId: dto.packageId ?? null,
             status: 'SCHEDULED',
             paidAt: dto.paidAt ? new Date(dto.paidAt) : null,
             topic: dto.topic?.trim() || null,
@@ -226,23 +208,6 @@ export class LessonsService {
         created.push(lesson.id);
 
         if (dto.status !== 'SCHEDULED') {
-          await this.ledger.applyTransition(tx, {
-            workspaceId: auth.workspaceId,
-            actorId: auth.userId,
-            lesson: {
-              id: lesson.id,
-              packageId: lesson.packageId,
-              enrollmentId,
-              groupId,
-              currency,
-              startsAtUtc,
-              // The ledger diffs against where the lesson came from, and every
-              // lesson is born SCHEDULED.
-              status: 'SCHEDULED',
-            },
-            targetStatus: dto.status,
-            transitionVersion: 1,
-          });
           await tx.lesson.update({
             where: { id: lesson.id },
             data: {
@@ -254,6 +219,12 @@ export class LessonsService {
               cancelledAt: isCancel ? now : null,
             },
           });
+          await this.billing.syncLesson(
+            tx,
+            auth.workspaceId,
+            lesson.id,
+            auth.userId,
+          );
         }
         await this.audit.record(tx, {
           workspaceId: auth.workspaceId,
@@ -384,24 +355,12 @@ export class LessonsService {
         (dto.priceMinor !== lesson.priceMinor ||
           dto.currency !== lesson.currency);
       if (changesFinancialSnapshot) {
-        const creditHistory = await tx.lessonCreditEntry.count({
-          where: { lessonId: lesson.id, delta: { not: 0 } },
-        });
-        if (creditHistory > 0) throw lessonFinancialHistoryImmutable();
-        if (lesson.packageId) {
-          await this.ledger.assertCompatiblePackage(
-            tx,
-            auth.workspaceId,
-            {
-              packageId: lesson.packageId,
-              enrollmentId: lesson.enrollmentId,
-              groupId: lesson.groupId,
-              currency: dto.currency!,
-              occursAt: lesson.startsAtUtc,
-            },
-            false,
-          );
-        }
+        await this.billing.repriceLesson(
+          tx,
+          lesson,
+          dto.priceMinor!,
+          dto.currency!,
+        );
       }
       const data: Prisma.LessonUncheckedUpdateInput = {
         ...('topic' in dto ? { topic: dto.topic?.trim() || null } : {}),
@@ -540,18 +499,14 @@ export class LessonsService {
         select: {
           id: true,
           seriesId: true,
-          creditEntries: { select: { delta: true } },
+          _count: { select: { charges: { where: { voidedAt: null } } } },
         },
       });
       if (!lesson) {
         return; // Idempotent: deleting an already-deleted lesson is a no-op.
       }
-      const netCreditDelta = lesson.creditEntries.reduce(
-        (sum, entry) => sum + entry.delta,
-        0,
-      );
-      if (netCreditDelta !== 0) {
-        throw lessonCreditMustBeReversed(netCreditDelta);
+      if (lesson._count.charges > 0) {
+        throw lessonCharged(lesson._count.charges);
       }
       await tx.lesson.update({
         where: { id: lesson.id },
@@ -711,7 +666,7 @@ export class LessonsService {
     return toLessonResponse(row);
   }
 
-  /** Applies an atomic, versioned status transition and its credit effect. */
+  /** Applies an atomic, versioned status transition and its charges. */
   async transition(
     auth: AuthenticatedUser,
     lessonId: string,
@@ -743,14 +698,6 @@ export class LessonsService {
       if (dto.targetStatus === 'SCHEDULED' && endsAt <= now.getTime()) {
         throw lessonEnded();
       }
-      // Exactly one of a lesson and its makeup is charged (L-61).
-      const original = lesson.originalLessonId
-        ? await tx.lesson.findUnique({
-            where: { id: lesson.originalLessonId },
-            select: { status: true },
-          })
-        : null;
-      const free = original ? makeupIsFree(original.status) : false;
 
       const isCancel = isCancelledStatus(dto.targetStatus);
       const data: Prisma.LessonUpdateInput = {
@@ -786,25 +733,14 @@ export class LessonsService {
         throw invalidLessonTransition();
       }
 
-      // Stage 4: the transition now moves the credit balance. Idempotent, so a
-      // repeated click cannot charge twice; a lesson with no package behind it
-      // simply has no ledger effect.
-      await this.ledger.applyTransition(tx, {
-        workspaceId: auth.workspaceId,
-        actorId: auth.userId,
-        lesson: {
-          id: lesson.id,
-          packageId: lesson.packageId,
-          enrollmentId: lesson.enrollmentId,
-          groupId: lesson.groupId,
-          currency: lesson.currency,
-          startsAtUtc: lesson.startsAtUtc,
-          status: lesson.status,
-        },
-        targetStatus: dto.targetStatus,
-        transitionVersion: lesson.statusVersion + 1,
-        free,
-      });
+      // The charges follow the new status: one per participant, a makeup
+      // paired with its original (L-61), whatever pays for it (L-81, L-90).
+      await this.billing.syncLesson(
+        tx,
+        auth.workspaceId,
+        lesson.id,
+        auth.userId,
+      );
 
       await this.audit.record(tx, {
         workspaceId: auth.workspaceId,

@@ -175,7 +175,7 @@ export class StudentsController {
     summary: 'Permanently delete an unused student (owner only)',
     description:
       'Irreversible. Returns STUDENT_HAS_BUSINESS_HISTORY when lessons, ' +
-      'enrollments, packages, payments, shares, or credits exist.',
+      'enrollments, packages, payments, charges, or credits exist.',
   })
   @ApiNoContentResponse()
   @ApiNotFoundResponse({ type: ApiErrorDto })

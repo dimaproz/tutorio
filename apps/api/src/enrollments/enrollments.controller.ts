@@ -27,8 +27,10 @@ import type { AuthenticatedUser } from '../auth/auth.types';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { ApiErrorDto } from '../auth/dto/auth.dto';
+import { BillingService } from '../billing/billing.service';
 import {
   CreateEnrollmentDto,
+  EnrollmentBillingDto,
   EnrollmentDto,
   EnrollmentListDto,
   ListEnrollmentsQueryDto,
@@ -41,7 +43,10 @@ import { EnrollmentsService } from './enrollments.service';
 @ApiForbiddenResponse({ type: ApiErrorDto, description: 'OWNER role required' })
 @Controller('enrollments')
 export class EnrollmentsController {
-  constructor(private readonly enrollments: EnrollmentsService) {}
+  constructor(
+    private readonly enrollments: EnrollmentsService,
+    private readonly billing: BillingService,
+  ) {}
 
   @Get()
   @Roles('OWNER')
@@ -94,6 +99,25 @@ export class EnrollmentsController {
     @Param('enrollmentId', ParseUUIDPipe) enrollmentId: string,
   ): Promise<EnrollmentDto> {
     return this.enrollments.getDetail(user, enrollmentId);
+  }
+
+  @Get(':enrollmentId/billing')
+  @Roles('OWNER')
+  @ApiOperation({
+    summary: 'How a direction is paid now',
+    description:
+      'Billing mode and rate, the credits each package has left, lessons ' +
+      'held on debt in package mode, and the pay-per-lesson balance with ' +
+      'payments settling the oldest lessons first.',
+  })
+  @ApiOkResponse({ type: EnrollmentBillingDto })
+  @ApiNotFoundResponse({ type: ApiErrorDto })
+  @ZodSerializerDto(EnrollmentBillingDto)
+  getBilling(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('enrollmentId', ParseUUIDPipe) enrollmentId: string,
+  ): Promise<EnrollmentBillingDto> {
+    return this.billing.getEnrollmentBilling(user, enrollmentId);
   }
 
   @Patch(':enrollmentId')

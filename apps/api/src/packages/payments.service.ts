@@ -68,9 +68,10 @@ export class PaymentsService {
   }
 
   /**
-   * Records money received. Writing a payment never touches lesson credits —
-   * the two ledgers stay separate. What it does update is how much of a
-   * package (or a group member's share) has been settled.
+   * Records money received for a direction: towards a package (capped at what
+   * it still costs), or on its pay-per-lesson balance, where it settles the
+   * oldest lessons first (L-90) and may run ahead of them. Money never moves
+   * lesson credits.
    */
   async record(
     auth: AuthenticatedUser,
@@ -101,12 +102,7 @@ export class PaymentsService {
               workspaceId: auth.workspaceId,
               deletedAt: null,
             },
-            select: {
-              id: true,
-              studentId: true,
-              groupId: true,
-              currency: true,
-            },
+            select: { id: true, currency: true },
           });
           if (!enrollment) {
             throw enrollmentNotFound();
@@ -121,8 +117,7 @@ export class PaymentsService {
               },
               select: {
                 id: true,
-                studentId: true,
-                groupId: true,
+                enrollmentId: true,
                 currency: true,
                 totalPriceMinorSnapshot: true,
               },
@@ -133,54 +128,18 @@ export class PaymentsService {
             if (pkg.currency !== dto.currency) {
               throw currencyMismatch();
             }
-
-            let totalMinor = pkg.totalPriceMinorSnapshot;
-            let paidMinor: number;
-            if (pkg.studentId) {
-              if (
-                enrollment.studentId !== pkg.studentId ||
-                enrollment.groupId !== null
-              ) {
-                throw invalidPackagePaymentRelation();
-              }
-              const paid = await tx.payment.aggregate({
-                where: {
-                  packageId: pkg.id,
-                  deletedAt: null,
-                  status: 'PAID',
-                },
-                _sum: { amountMinor: true },
-              });
-              paidMinor = paid._sum.amountMinor ?? 0;
-            } else {
-              const share = await tx.packageParticipantShare.findUnique({
-                where: {
-                  packageId_enrollmentId: {
-                    packageId: pkg.id,
-                    enrollmentId: enrollment.id,
-                  },
-                },
-                select: { oweMinor: true },
-              });
-              if (!share) {
-                throw invalidPackagePaymentRelation();
-              }
-              totalMinor = share.oweMinor;
-              const paid = await tx.payment.aggregate({
-                where: {
-                  packageId: pkg.id,
-                  enrollmentId: enrollment.id,
-                  deletedAt: null,
-                  status: 'PAID',
-                },
-                _sum: { amountMinor: true },
-              });
-              paidMinor = paid._sum.amountMinor ?? 0;
+            // A package is paid by the direction it belongs to.
+            if (pkg.enrollmentId !== enrollment.id) {
+              throw invalidPackagePaymentRelation();
             }
+            const paid = await tx.payment.aggregate({
+              where: { packageId: pkg.id, deletedAt: null, status: 'PAID' },
+              _sum: { amountMinor: true },
+            });
             try {
               assertPaymentWithinOutstanding(
-                totalMinor,
-                paidMinor,
+                pkg.totalPriceMinorSnapshot,
+                paid._sum.amountMinor ?? 0,
                 dto.amountMinor,
               );
             } catch (error) {
@@ -296,39 +255,20 @@ export class PaymentsService {
   }
 
   /**
-   * The single place a *settled* payment moves balances: it credits the
-   * member's share of a group package and refreshes the package's cached
-   * payment status from the money actually received.
-   *
-   * Both paths converge here — the tutor recording cash today, and an acquirer
-   * webhook flipping a PENDING payment to PAID later — so the accounting can
-   * never drift between them.
+   * The single place a *settled* payment moves a package's cached payment
+   * status. Both paths converge here — the tutor recording cash today, and an
+   * acquirer webhook flipping a PENDING payment to PAID later — so the
+   * accounting can never drift between them. A balance payment needs no
+   * write: the balance is derived from payments and charges.
    */
   private async applyPaidPayment(
     tx: Prisma.TransactionClient,
-    payment: {
-      packageId: string | null;
-      enrollmentId: string;
-      amountMinor: number;
-    },
+    payment: { packageId: string | null },
   ): Promise<void> {
     const packageId = payment.packageId;
     if (!packageId) {
       return;
     }
-    const { enrollmentId, amountMinor } = payment;
-
-    const share = await tx.packageParticipantShare.findUnique({
-      where: { packageId_enrollmentId: { packageId, enrollmentId } },
-      select: { id: true },
-    });
-    if (share) {
-      await tx.packageParticipantShare.update({
-        where: { id: share.id },
-        data: { paidMinor: { increment: amountMinor } },
-      });
-    }
-
     const [pkg, paid] = await Promise.all([
       tx.lessonPackage.findUniqueOrThrow({
         where: { id: packageId },

@@ -38,9 +38,10 @@ enum EnrollmentStatus {
   @@map("enrollment_status")
 }
 
+// How a direction is paid (product/scheduling.md L-10): package credits, or
+// each lesson's price on the direction's balance.
 enum BillingType {
   PACKAGE
-  MONTHLY
   PER_LESSON
 
   @@map("billing_type")
@@ -150,11 +151,11 @@ model Workspace {
   lessonSeries LessonSeries[]
   schedules    Schedule[]
 
-  packages          LessonPackage[]
-  creditEntries     LessonCreditEntry[]
-  participantShares PackageParticipantShare[]
-  payments          Payment[]
-  attendance        LessonAttendance[]
+  packages      LessonPackage[]
+  creditEntries LessonCreditEntry[]
+  charges       LessonCharge[]
+  payments      Payment[]
+  attendance    LessonAttendance[]
 
   @@map("workspaces")
 }
@@ -312,13 +313,12 @@ model Group {
   // eligible participants. It is deliberately separate from deletedAt.
   rosterSuspensionToken String?
 
-  workspace    Workspace       @relation(fields: [workspaceId], references: [id])
-  teacher      Teacher?        @relation("GroupTeacher", fields: [teacherId], references: [id])
+  workspace    Workspace      @relation(fields: [workspaceId], references: [id])
+  teacher      Teacher?       @relation("GroupTeacher", fields: [teacherId], references: [id])
   enrollments  Enrollment[]
   lessons      Lesson[]
   lessonSeries LessonSeries[]
   schedules    Schedule[]
-  packages     LessonPackage[]
 
   @@index([workspaceId, deletedAt])
   @@index([workspaceId, name])
@@ -339,7 +339,8 @@ model Enrollment {
   // teacher identity are workspace-scoped.
   teacherId                  String
   status                     EnrollmentStatus  @default(ACTIVE)
-  billingType                BillingType       @default(PACKAGE)
+  // A new direction pays per lesson until its first package (L-10).
+  billingType                BillingType       @default(PER_LESSON)
   // Price per lesson in minor units of `currency`; non-negative (DB CHECK).
   priceMinor                 Int
   currency                   String
@@ -364,10 +365,10 @@ model Enrollment {
   lessonSeries LessonSeries[]
   schedules    Schedule[]
 
-  creditEntries     LessonCreditEntry[]
-  participantShares PackageParticipantShare[]
-  payments          Payment[]
-  attendance        LessonAttendance[]
+  packages   LessonPackage[]
+  charges    LessonCharge[]
+  payments   Payment[]
+  attendance LessonAttendance[]
 
   // Uniqueness among non-deleted rows only (one active enrollment per
   // student+group, one active individual enrollment per student+teacher) is
@@ -443,14 +444,12 @@ model Teacher {
 
 // A recurring lesson pattern stored in local time (weekday + wall-clock time +
 // tz); concrete Lessons are materialized to UTC over a rolling horizon by the
-// cron job. Exactly one of enrollmentId / groupId is set. packageId identifies
-// the purchase snapshot that owns the generated lessons.
+// cron job. Exactly one of enrollmentId / groupId is set.
 model LessonSeries {
   id                       String    @id @default(uuid())
   workspaceId              String
   enrollmentId             String?
   groupId                  String?
-  packageId                String?
   // Denormalized from the enrollment/group so conflict detection and calendar
   // filtering hit an index without joining.
   teacherId                String
@@ -532,15 +531,14 @@ model Schedule {
 
 // A concrete lesson at a UTC instant. Generated from a LessonSeries or created
 // as a one-off (seriesId null). isDetached marks a series lesson that was
-// rescheduled/cancelled individually and must not be regenerated. packageId is
-// immutable once a credit effect pins the lesson to a purchase snapshot.
+// rescheduled/cancelled individually and must not be regenerated. What each
+// participant pays for it is a LessonCharge.
 model Lesson {
   id                      String       @id @default(uuid())
   workspaceId             String
   enrollmentId            String?
   groupId                 String?
   seriesId                String?
-  packageId               String?
   teacherId               String
   startsAtUtc             DateTime
   durationMin             Int
@@ -586,8 +584,8 @@ model Lesson {
   original   Lesson?       @relation("LessonMakeup", fields: [originalLessonId], references: [id], onDelete: SetNull)
   makeup     Lesson?       @relation("LessonMakeup")
 
-  creditEntries LessonCreditEntry[]
-  attendance    LessonAttendance[]
+  charges    LessonCharge[]
+  attendance LessonAttendance[]
 
   // One materialized slot per series instant — the materializer's idempotency key.
   @@unique([seriesId, startsAtUtc])
@@ -664,10 +662,6 @@ enum PackagePaymentStatus {
 // is the tutor's own correction (never an edit of an existing row).
 enum CreditEntryType {
   purchase
-  lesson_completed
-  late_cancellation
-  no_show
-  teacher_cancellation_refund
   manual_adjustment
 
   @@map("credit_entry_type")
@@ -695,14 +689,16 @@ enum PaymentStatus {
   @@map("payment_status")
 }
 
-// A block of prepaid lessons for one student or one whole group (exactly one
-// target). `totalPriceMinorSnapshot` is the immutable purchase-time value. It
-// is never changed by lesson-credit history.
+// Prepaid lesson credits for one direction (an individual enrollment or a
+// student's group membership; product/scheduling.md L-80). Its remaining
+// credits are its credit entries minus the charges it pays for.
+// `totalPriceMinorSnapshot` is the immutable purchase-time value.
 model LessonPackage {
   id                          String               @id @default(uuid())
   workspaceId                 String
-  studentId                   String?
-  groupId                     String?
+  // The direction the credits pay for; studentId is its student.
+  enrollmentId                String
+  studentId                   String
   name                        String?
   sizingMode                  PackageSizingMode    @default(FIXED_COUNT)
   // Set for FIXED_COUNT; for BY_PERIOD it holds the generated count.
@@ -720,18 +716,18 @@ model LessonPackage {
   updatedAt                   DateTime             @updatedAt
   deletedAt                   DateTime?
 
-  workspace     Workspace                 @relation(fields: [workspaceId], references: [id])
-  student       Student?                  @relation(fields: [studentId], references: [id])
-  group         Group?                    @relation(fields: [groupId], references: [id])
+  workspace     Workspace           @relation(fields: [workspaceId], references: [id])
+  enrollment    Enrollment          @relation(fields: [enrollmentId], references: [id])
+  student       Student             @relation(fields: [studentId], references: [id])
   creditEntries LessonCreditEntry[]
-  shares        PackageParticipantShare[]
+  charges       LessonCharge[]
   payments      Payment[]
 
   @@index([workspaceId, deletedAt])
   // Revenue by period scans packages by purchase date (Stage 5 analytics).
   @@index([workspaceId, purchasedAt])
   @@index([studentId])
-  @@index([groupId])
+  @@index([enrollmentId])
   @@map("lesson_packages")
 }
 
@@ -742,8 +738,6 @@ model LessonCreditEntry {
   id             String          @id @default(uuid())
   workspaceId    String
   packageId      String
-  enrollmentId   String?
-  lessonId       String?
   delta          Int
   type           CreditEntryType
   idempotencyKey String          @unique
@@ -751,38 +745,58 @@ model LessonCreditEntry {
   createdById    String?
   createdAt      DateTime        @default(now())
 
-  workspace  Workspace     @relation(fields: [workspaceId], references: [id])
-  package    LessonPackage @relation(fields: [packageId], references: [id])
-  enrollment Enrollment?   @relation(fields: [enrollmentId], references: [id])
-  lesson     Lesson?       @relation(fields: [lessonId], references: [id])
-  createdBy  User?         @relation(fields: [createdById], references: [id])
+  workspace Workspace     @relation(fields: [workspaceId], references: [id])
+  package   LessonPackage @relation(fields: [packageId], references: [id])
+  createdBy User?         @relation(fields: [createdById], references: [id])
 
   @@index([packageId, createdAt])
   @@index([workspaceId, createdAt])
-  @@index([lessonId])
   @@map("lesson_credit_entries")
 }
 
-// A group package shares one schedule but splits the money: each member owes
-// their own share and pays it separately.
-model PackageParticipantShare {
-  id           String   @id @default(uuid())
+// What pays for one participant's lesson (product/scheduling.md L-70, L-81,
+// L-82, L-90).
+enum ChargeSource {
+  // One credit of packageId.
+  PACKAGE
+  // Package mode with no credits left: covered by the next credits.
+  DEBT
+  // Pay-per-lesson: amountMinor on the direction's balance.
+  BALANCE
+
+  @@map("charge_source")
+}
+
+// One participant's cost for one lesson: an individual lesson has one, a
+// group lesson one per member taking part. The billing service re-evaluates
+// it from the lesson's status, the makeup pairing and attendance; a charge no
+// longer owed is voided (kept, with voidedAt) and revived if owed again.
+model LessonCharge {
+  id           String       @id @default(uuid())
   workspaceId  String
-  packageId    String
+  lessonId     String
   enrollmentId String
-  oweMinor     Int
-  paidMinor    Int      @default(0)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  source       ChargeSource
+  // Set exactly when source is PACKAGE (DB CHECK).
+  packageId    String?
+  // The participant's price for the lesson; the balance amount in
+  // pay-per-lesson mode, informational for package credits.
+  amountMinor  Int
+  currency     String
+  voidedAt     DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
-  workspace  Workspace     @relation(fields: [workspaceId], references: [id])
-  package    LessonPackage @relation(fields: [packageId], references: [id])
-  enrollment Enrollment    @relation(fields: [enrollmentId], references: [id])
+  workspace  Workspace      @relation(fields: [workspaceId], references: [id])
+  lesson     Lesson         @relation(fields: [lessonId], references: [id])
+  enrollment Enrollment     @relation(fields: [enrollmentId], references: [id])
+  package    LessonPackage? @relation(fields: [packageId], references: [id], onDelete: Restrict)
 
-  // One share per member per package.
-  @@unique([packageId, enrollmentId])
+  @@unique([lessonId, enrollmentId])
+  @@index([enrollmentId, voidedAt])
+  @@index([packageId])
   @@index([workspaceId])
-  @@map("package_participant_shares")
+  @@map("lesson_charges")
 }
 
 // The money ledger: an actual payment received, in currency minor units.

@@ -1,41 +1,15 @@
-import {
-  consumedCredits,
-  creditBalance,
-  paymentStatusOf,
-} from '@tutorio/domain';
+import { creditBalance, paymentStatusOf } from '@tutorio/domain';
 import { Prisma } from '@prisma/client';
-import type {
-  CreditEntryResponse,
-  PackageResponse,
-  PaymentResponse,
-} from '@tutorio/validation';
+import type { PackageResponse, PaymentResponse } from '@tutorio/validation';
 
 export const packageInclude = {
   student: { select: { id: true, fullName: true } },
-  group: { select: { id: true, name: true } },
-  creditEntries: {
-    select: {
-      id: true,
-      packageId: true,
-      enrollmentId: true,
-      lessonId: true,
-      delta: true,
-      type: true,
-      note: true,
-      createdAt: true,
-    },
-    orderBy: { createdAt: 'desc' },
+  enrollment: {
+    select: { groupId: true, group: { select: { id: true, name: true } } },
   },
-  shares: {
-    include: {
-      enrollment: {
-        select: {
-          student: { select: { id: true, fullName: true, avatarKey: true } },
-        },
-      },
-    },
-    orderBy: [{ enrollment: { student: { fullName: 'asc' } } }, { id: 'asc' }],
-  },
+  creditEntries: { select: { delta: true, type: true } },
+  // The lessons it pays for: one credit each (ADR 0007).
+  _count: { select: { charges: { where: { voidedAt: null } } } },
   // Only settled money is reported as paid; a PENDING online payment is not
   // money in hand yet.
   payments: {
@@ -58,75 +32,42 @@ export type PaymentRow = Prisma.PaymentGetPayload<{
   include: typeof paymentInclude;
 }>;
 
-export function toCreditEntryResponse(
-  row: PackageRow['creditEntries'][number],
-): CreditEntryResponse {
-  return {
-    id: row.id,
-    packageId: row.packageId,
-    enrollmentId: row.enrollmentId,
-    lessonId: row.lessonId,
-    delta: row.delta,
-    type: row.type,
-    note: row.note,
-    createdAt: row.createdAt.toISOString(),
-  };
-}
-
 /**
- * Builds the read model. Credit balances are derived from the credit ledger;
- * money is derived from the immutable purchase snapshot and payments. The two
- * ledgers never alter each other.
+ * Builds the read model. Credits are the granted entries minus the lessons the
+ * package pays for; money is the purchase snapshot against payments. The two
+ * never alter each other.
  */
 export function toPackageResponse(row: PackageRow): PackageResponse {
-  const entries = row.creditEntries.map((entry) => ({
-    delta: entry.delta,
-    type: entry.type,
-  }));
-
   const paidMinor = row.payments.reduce(
     (sum, payment) => sum + payment.amountMinor,
     0,
   );
-
-  const effectiveTotal = row.totalPriceMinorSnapshot;
+  const used = row._count.charges;
 
   return {
     id: row.id,
     workspaceId: row.workspaceId,
+    enrollmentId: row.enrollmentId,
     studentId: row.studentId,
-    groupId: row.groupId,
+    groupId: row.enrollment.groupId,
     name: row.name,
     sizingMode: row.sizingMode,
     lessonsTotal: row.lessonsTotal,
     endDate: row.endDate?.toISOString() ?? null,
     pricePerLessonMinorSnapshot: row.pricePerLessonMinorSnapshot,
     totalPriceMinorSnapshot: row.totalPriceMinorSnapshot,
-    effectiveTotalMinor: effectiveTotal,
-    remainingCredits: creditBalance(entries),
-    consumedCredits: consumedCredits(entries),
+    remainingCredits: creditBalance(row.creditEntries) - used,
+    consumedCredits: used,
     paidMinor,
     currency: row.currency as PackageResponse['currency'],
     // The stored status is a cache for filtering; the response always reports
     // the truth derived from money actually received.
-    paymentStatus: paymentStatusOf(effectiveTotal, paidMinor),
+    paymentStatus: paymentStatusOf(row.totalPriceMinorSnapshot, paidMinor),
     purchasedAt: row.purchasedAt.toISOString(),
     expiresAt: row.expiresAt?.toISOString() ?? null,
     notes: row.notes,
     student: row.student,
-    group: row.group,
-    shares: row.shares.map((share) => ({
-      id: share.id,
-      enrollmentId: share.enrollmentId,
-      student: {
-        ...share.enrollment.student,
-        avatarKey: share.enrollment.student
-          .avatarKey as PackageResponse['shares'][number]['student']['avatarKey'],
-      },
-      oweMinor: share.oweMinor,
-      paidMinor: share.paidMinor,
-      paymentStatus: paymentStatusOf(share.oweMinor, share.paidMinor),
-    })),
+    group: row.enrollment.group,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     deletedAt: row.deletedAt?.toISOString() ?? null,

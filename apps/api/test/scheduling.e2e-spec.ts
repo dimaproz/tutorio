@@ -76,6 +76,7 @@ describe('Stage 3: scheduling — series, lessons, reschedule, cancel (e2e)', ()
   });
 
   afterAll(async () => {
+    await prisma.lessonCharge.deleteMany({ where: { workspaceId } });
     await prisma.lesson.deleteMany({ where: { workspaceId } });
     await prisma.lessonSeries.deleteMany({ where: { workspaceId } });
     await prisma.schedule.deleteMany({ where: { workspaceId } });

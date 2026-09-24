@@ -362,7 +362,7 @@ async function main() {
     ownerTeacher.id,
     {
       status: 'ACTIVE',
-      billingType: 'MONTHLY',
+      billingType: 'PER_LESSON',
       priceMinor: 120000, // 1200.00 EUR per month
       currency: 'EUR',
       cancellationDeadlineHours: 48,

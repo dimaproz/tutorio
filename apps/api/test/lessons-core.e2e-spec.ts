@@ -78,6 +78,7 @@ describe('Work Packet 6.4 phase 1: lesson core and conflicts (e2e)', () => {
   });
 
   afterAll(async () => {
+    await prisma.lessonCharge.deleteMany({ where: { workspaceId } });
     await prisma.lessonCreditEntry.deleteMany({ where: { workspaceId } });
     await prisma.payment.deleteMany({ where: { workspaceId } });
     await prisma.lessonPackage.deleteMany({ where: { workspaceId } });
@@ -286,20 +287,27 @@ describe('Work Packet 6.4 phase 1: lesson core and conflicts (e2e)', () => {
       .expect(200);
     expect(original.body.items[0].makeupLessonId).toBe(makeup.body.id);
 
-    // The no-show was charged, so the makeup is free — and undoing it
-    // refunds nothing.
-    await patch(`/lessons/${makeup.body.id}/status`)
+    // The no-show was charged, so the makeup is free.
+    const held = await patch(`/lessons/${makeup.body.id}/status`)
       .send({ targetStatus: 'COMPLETED' })
       .expect(200);
-    await patch(`/lessons/${makeup.body.id}/status`)
-      .send({ targetStatus: 'SCHEDULED' })
+    expect(held.body.charges).toEqual([]);
+    const charged = () =>
+      prisma.lessonCharge.findMany({
+        where: { enrollment: { studentId: students.Clara }, voidedAt: null },
+        select: { lessonId: true, source: true, packageId: true },
+      });
+    expect(await charged()).toEqual([
+      { lessonId: lesson.id, source: 'PACKAGE', packageId: pkg.body.id },
+    ]);
+
+    // Correcting the original to a free cancellation moves the charge to
+    // the makeup: still exactly one of the pair.
+    await patch(`/lessons/${lesson.id}/status`)
+      .send({ targetStatus: 'CANCELLED_UNCHARGED', cancelledBy: 'TEACHER' })
       .expect(200);
-    const entries = await prisma.lessonCreditEntry.findMany({
-      where: { packageId: pkg.body.id, type: { not: 'purchase' } },
-      select: { lessonId: true, delta: true, type: true },
-    });
-    expect(entries).toEqual([
-      { lessonId: lesson.id, delta: -1, type: 'no_show' },
+    expect(await charged()).toEqual([
+      { lessonId: makeup.body.id, source: 'PACKAGE', packageId: pkg.body.id },
     ]);
   });
 });

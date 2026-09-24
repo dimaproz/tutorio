@@ -715,7 +715,7 @@ export class StudentsService {
         throw studentNotFound();
       }
 
-      const [enrollments, lessons, packages, payments, shares, credits] =
+      const [enrollments, lessons, packages, payments, charges, credits] =
         await Promise.all([
           tx.enrollment.count({ where: { studentId: student.id } }),
           tx.lesson.count({ where: { enrollment: { studentId: student.id } } }),
@@ -728,16 +728,11 @@ export class StudentsService {
               ],
             },
           }),
-          tx.packageParticipantShare.count({
+          tx.lessonCharge.count({
             where: { enrollment: { studentId: student.id } },
           }),
           tx.lessonCreditEntry.count({
-            where: {
-              OR: [
-                { enrollment: { studentId: student.id } },
-                { package: { is: { studentId: student.id } } },
-              ],
-            },
+            where: { package: { studentId: student.id } },
           }),
         ]);
       const dependencies = {
@@ -745,7 +740,7 @@ export class StudentsService {
         lessons,
         packages,
         payments,
-        shares,
+        charges,
         credits,
       };
       if (Object.values(dependencies).some((count) => count > 0)) {

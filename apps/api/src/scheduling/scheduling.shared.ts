@@ -35,6 +35,16 @@ export const lessonInclude = {
   // Only the statuses: a lesson row reports "5 of 6 came", not who.
   attendance: { select: { status: true } },
   makeup: { select: { id: true } },
+  // What each participant owes for the lesson (voided charges are history).
+  charges: {
+    where: { voidedAt: null },
+    orderBy: { createdAt: 'asc' },
+    include: {
+      enrollment: {
+        select: { student: { select: { id: true, fullName: true } } },
+      },
+    },
+  },
 } satisfies Prisma.LessonInclude;
 
 export type LessonRow = Prisma.LessonGetPayload<{
@@ -60,7 +70,6 @@ export function toLessonResponse(row: LessonRow): LessonResponse {
     enrollmentId: row.enrollmentId,
     groupId: row.groupId,
     seriesId: row.seriesId,
-    packageId: row.packageId,
     teacherId: row.teacherId,
     startsAtUtc: row.startsAtUtc.toISOString(),
     durationMin: row.durationMin,
@@ -92,6 +101,15 @@ export function toLessonResponse(row: LessonRow): LessonResponse {
             marked: row.attendance.length,
           }
         : null,
+    charges: row.charges.map((charge) => ({
+      id: charge.id,
+      enrollmentId: charge.enrollmentId,
+      source: charge.source,
+      packageId: charge.packageId,
+      amountMinor: charge.amountMinor,
+      currency: charge.currency as LessonResponse['currency'],
+      student: charge.enrollment.student,
+    })),
     student: row.enrollment?.student ?? null,
     group: row.group,
     teacher: {
@@ -112,7 +130,6 @@ export function toSeriesResponse(row: SeriesRow): LessonSeriesResponse {
     scheduleId: row.scheduleId,
     enrollmentId: row.enrollmentId,
     groupId: row.groupId,
-    packageId: row.packageId,
     teacherId: row.teacherId,
     weekdays: row.weekdays,
     localTime: row.localTime,
@@ -314,7 +331,7 @@ export async function resolveStudentTarget(
       groupId: null,
       teacherId,
       status: 'ACTIVE',
-      billingType: 'PACKAGE',
+      // A new direction pays per lesson until its first package (L-10).
       priceMinor: resolvedPrice.priceMinor,
       currency: resolvedPrice.currency,
       cancellationDeadlineHours: input.defaultCancellationDeadlineHours ?? null,

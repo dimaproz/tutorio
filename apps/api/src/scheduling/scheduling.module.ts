@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AuditModule } from '../audit/audit.module';
-import { PackagesModule } from '../packages/packages.module';
+import { BillingModule } from '../billing/billing.module';
 import { AttendanceController } from './attendance.controller';
 import { AttendanceService } from './attendance.service';
 import { LessonsController } from './lessons.controller';
@@ -11,9 +11,8 @@ import { SeriesController } from './series.controller';
 import { SeriesService } from './series.service';
 
 @Module({
-  // PackagesModule supplies LedgerService: a lesson status change is what
-  // moves a credit balance.
-  imports: [AuditModule, MaterializerModule, PackagesModule],
+  // A lesson status or attendance change is what changes a charge.
+  imports: [AuditModule, BillingModule, MaterializerModule],
   controllers: [
     LessonsController,
     AttendanceController,

@@ -55,6 +55,12 @@ import {
   unpaidPackageWhere,
 } from './groups.shared';
 
+/** A member who owes money for a package of this group (ADR 0007). */
+const memberWithUnpaidPackage = {
+  deletedAt: null,
+  packages: { some: unpaidPackageWhere },
+} satisfies Prisma.EnrollmentWhereInput;
+
 const listInclude = {
   teacher: { select: teacherRefSelect },
   enrollments: {
@@ -169,7 +175,7 @@ export class GroupsService {
       });
     }
     if (query.payment === 'unpaid') {
-      and.push({ packages: { some: unpaidPackageWhere } });
+      and.push({ enrollments: { some: memberWithUnpaidPackage } });
     }
     return {
       workspaceId: auth.workspaceId,
@@ -319,11 +325,10 @@ export class GroupsService {
       this.prisma.lessonPackage.findMany({
         where: {
           workspaceId: auth.workspaceId,
-          groupId: { in: ids },
+          enrollment: { groupId: { in: ids } },
           ...unpaidPackageWhere,
         },
-        distinct: ['groupId'],
-        select: { groupId: true },
+        select: { enrollment: { select: { groupId: true } } },
       }),
     ]);
 
@@ -331,7 +336,7 @@ export class GroupsService {
     const nextByGroup = new Map(
       nextLessons.map((lesson) => [lesson.groupId, lesson]),
     );
-    const unpaidGroups = new Set(unpaid.map((row) => row.groupId));
+    const unpaidGroups = new Set(unpaid.map((row) => row.enrollment.groupId));
 
     const items = ids
       .map((id) => byId.get(id))
@@ -477,7 +482,7 @@ export class GroupsService {
         },
       }),
       this.prisma.group.count({
-        where: { ...liveGroup, packages: { some: unpaidPackageWhere } },
+        where: { ...liveGroup, enrollments: { some: memberWithUnpaidPackage } },
       }),
     ]);
 
@@ -806,7 +811,6 @@ export class GroupsService {
           studentId: student.id,
           groupId: group.id,
           teacherId,
-          billingType: 'PACKAGE' as const,
           priceMinor:
             (usesGroupPrice ? group.pricePerLesson : student.hourlyRateMinor) ??
             0,
