@@ -1,6 +1,6 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   CreateTeacherDto,
   TeacherListResponse,
@@ -12,11 +12,11 @@ import { buildQueryString } from './filters';
 import { applyInvalidations, teacherInvalidations } from './invalidation';
 import { queryKeys, type TeacherListFilters } from './keys';
 
-export function useTeachersQuery(filters: TeacherListFilters, enabled = true) {
-  return useQuery<TeacherListResponse, GatewayError>({
+/** The teacher page read, shared by the hook and by a screen that prefetches it. */
+export function teachersQueryOptions(filters: TeacherListFilters) {
+  return queryOptions<TeacherListResponse, GatewayError>({
     queryKey: queryKeys.teachers.lists(filters),
-    enabled,
-    queryFn: ({ signal }) =>
+    queryFn: () =>
       gatewayFetch<TeacherListResponse>(
         `/api/backend/teachers${buildQueryString({
           page: filters.page,
@@ -25,8 +25,14 @@ export function useTeachersQuery(filters: TeacherListFilters, enabled = true) {
           state: filters.state,
           status: filters.status,
         })}`,
-        { signal },
       ),
+  });
+}
+
+export function useTeachersQuery(filters: TeacherListFilters, enabled = true) {
+  return useQuery({
+    ...teachersQueryOptions(filters),
+    enabled,
     placeholderData: (previous) => previous,
   });
 }
@@ -35,8 +41,7 @@ export function useTeacherQuery(teacherId: string, enabled = true) {
   return useQuery<TeacherResponse, GatewayError>({
     queryKey: queryKeys.teachers.detail(teacherId),
     enabled: enabled && Boolean(teacherId),
-    queryFn: ({ signal }) =>
-      gatewayFetch<TeacherResponse>(`/api/backend/teachers/${teacherId}`, { signal }),
+    queryFn: () => gatewayFetch<TeacherResponse>(`/api/backend/teachers/${teacherId}`),
   });
 }
 

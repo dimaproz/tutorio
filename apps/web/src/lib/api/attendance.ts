@@ -1,19 +1,24 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { LessonAttendanceResponse, SetLessonAttendanceDto } from '@tutorio/validation';
 import { gatewayFetch, type GatewayError } from '@/lib/auth/client';
 import { queryKeys } from './keys';
 
+/** The attendance read, shared by the hook and by a screen that prefetches it. */
+export function lessonAttendanceQueryOptions(lessonId: string) {
+  return queryOptions<LessonAttendanceResponse, GatewayError>({
+    queryKey: queryKeys.lessons.attendance(lessonId),
+    queryFn: () =>
+      gatewayFetch<LessonAttendanceResponse>(`/api/backend/lessons/${lessonId}/attendance`),
+  });
+}
+
 /** A lesson's participants and the mark each of them has so far. */
 export function useLessonAttendanceQuery(lessonId: string, enabled = true) {
-  return useQuery<LessonAttendanceResponse, GatewayError>({
-    queryKey: queryKeys.lessons.attendance(lessonId),
+  return useQuery({
+    ...lessonAttendanceQueryOptions(lessonId),
     enabled: enabled && Boolean(lessonId),
-    queryFn: ({ signal }) =>
-      gatewayFetch<LessonAttendanceResponse>(`/api/backend/lessons/${lessonId}/attendance`, {
-        signal,
-      }),
   });
 }
 

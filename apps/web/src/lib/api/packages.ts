@@ -58,7 +58,7 @@ export function usePrefetchPackagesQuery(filters: PackageListFilters) {
 export function packagesQueryOptions(filters: PackageListFilters) {
   return queryOptions<PackageListResponse, GatewayError>({
     queryKey: queryKeys.packages.lists(filters),
-    queryFn: ({ signal }) =>
+    queryFn: () =>
       gatewayFetch<PackageListResponse>(
         `/api/backend/packages${buildQueryString({
           page: filters.page,
@@ -68,7 +68,6 @@ export function packagesQueryOptions(filters: PackageListFilters) {
           paymentStatus: filters.paymentStatus,
           state: filters.state,
         })}`,
-        { signal },
       ),
   });
 }
@@ -90,7 +89,7 @@ export function useAllPackagesQuery(
   return useQuery<PackageListResponse, GatewayError>({
     queryKey: queryKeys.packages.everything(filters),
     enabled,
-    queryFn: async ({ signal }) => {
+    queryFn: async () => {
       const fetchPage = (page: number) =>
         gatewayFetch<PackageListResponse>(
           `/api/backend/packages${buildQueryString({
@@ -101,7 +100,6 @@ export function useAllPackagesQuery(
             paymentStatus: filters.paymentStatus,
             state: filters.state,
           })}`,
-          { signal },
         );
       // The first page says how many there are; the rest are read at once.
       const first = await fetchPage(1);
@@ -120,8 +118,7 @@ export function usePackageQuery(packageId: string, enabled = true) {
   return useQuery<PackageResponse, GatewayError>({
     queryKey: queryKeys.packages.detail(packageId),
     enabled: enabled && Boolean(packageId),
-    queryFn: ({ signal }) =>
-      gatewayFetch<PackageResponse>(`/api/backend/packages/${packageId}`, { signal }),
+    queryFn: () => gatewayFetch<PackageResponse>(`/api/backend/packages/${packageId}`),
   });
 }
 
@@ -130,8 +127,7 @@ export function usePackageLedgerQuery(packageId: string, enabled = true) {
   return useQuery<CreditLedgerResponse, GatewayError>({
     queryKey: queryKeys.packages.ledger(packageId),
     enabled: enabled && Boolean(packageId),
-    queryFn: ({ signal }) =>
-      gatewayFetch<CreditLedgerResponse>(`/api/backend/packages/${packageId}/ledger`, { signal }),
+    queryFn: () => gatewayFetch<CreditLedgerResponse>(`/api/backend/packages/${packageId}/ledger`),
   });
 }
 
@@ -178,7 +174,7 @@ export function usePaymentsQuery(filters: PaymentListFilters, enabled = true) {
   return useQuery<PaymentListResponse, GatewayError>({
     queryKey: queryKeys.payments.lists(filters),
     enabled,
-    queryFn: ({ signal }) =>
+    queryFn: () =>
       gatewayFetch<PaymentListResponse>(
         `/api/backend/payments${buildQueryString({
           page: filters.page,
@@ -187,7 +183,6 @@ export function usePaymentsQuery(filters: PaymentListFilters, enabled = true) {
           packageId: filters.packageId,
           studentId: filters.studentId,
         })}`,
-        { signal },
       ),
     placeholderData: (previous) => previous,
   });

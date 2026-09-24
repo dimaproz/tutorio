@@ -1,6 +1,12 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
+import {
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from '@tanstack/react-query';
 import type {
   CreateGroupDto,
   GroupAttendanceResponse,
@@ -51,7 +57,7 @@ export function useGroupsQuery(filters: GroupListFilters, enabled = true) {
   return useQuery<GroupListResponse, GatewayError>({
     queryKey: queryKeys.groups.lists(filters),
     enabled,
-    queryFn: ({ signal }) =>
+    queryFn: () =>
       gatewayFetch<GroupListResponse>(
         `/api/backend/groups${buildQueryString({
           page: filters.page,
@@ -66,7 +72,6 @@ export function useGroupsQuery(filters: GroupListFilters, enabled = true) {
           sort: filters.sort,
           order: filters.order,
         })}`,
-        { signal },
       ),
     placeholderData: (previous) => previous,
   });
@@ -77,8 +82,7 @@ export function useGroupsSummaryQuery(enabled = true) {
   return useQuery<GroupSummaryResponse, GatewayError>({
     queryKey: queryKeys.groups.summary,
     enabled,
-    queryFn: ({ signal }) =>
-      gatewayFetch<GroupSummaryResponse>('/api/backend/groups/summary', { signal }),
+    queryFn: () => gatewayFetch<GroupSummaryResponse>('/api/backend/groups/summary'),
   });
 }
 
@@ -87,28 +91,29 @@ export function useGroupOptionsQuery(enabled = true) {
   return useQuery<GroupOptionsResponse, GatewayError>({
     queryKey: queryKeys.groups.options,
     enabled,
-    queryFn: ({ signal }) =>
-      gatewayFetch<GroupOptionsResponse>('/api/backend/groups/options', { signal }),
+    queryFn: () => gatewayFetch<GroupOptionsResponse>('/api/backend/groups/options'),
+  });
+}
+
+/** The group read, shared by the hook and by a screen that prefetches it. */
+export function groupQueryOptions(groupId: string) {
+  return queryOptions<GroupDetail, GatewayError>({
+    queryKey: queryKeys.groups.detail(groupId),
+    queryFn: () => gatewayFetch<GroupDetail>(`/api/backend/groups/${groupId}`),
   });
 }
 
 export function useGroupQuery(groupId: string, enabled = true) {
-  return useQuery<GroupDetail, GatewayError>({
-    queryKey: queryKeys.groups.detail(groupId),
-    enabled: enabled && Boolean(groupId),
-    queryFn: ({ signal }) =>
-      gatewayFetch<GroupDetail>(`/api/backend/groups/${groupId}`, { signal }),
-  });
+  return useQuery({ ...groupQueryOptions(groupId), enabled: enabled && Boolean(groupId) });
 }
 
 export function useGroupAttendanceQuery(groupId: string, window: number, enabled = true) {
   return useQuery<GroupAttendanceResponse, GatewayError>({
     queryKey: queryKeys.groups.attendance(groupId, window),
     enabled: enabled && Boolean(groupId),
-    queryFn: ({ signal }) =>
+    queryFn: () =>
       gatewayFetch<GroupAttendanceResponse>(
         `/api/backend/groups/${groupId}/attendance${buildQueryString({ window })}`,
-        { signal },
       ),
   });
 }

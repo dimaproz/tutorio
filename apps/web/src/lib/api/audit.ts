@@ -11,7 +11,7 @@ import { queryKeys, type AuditListFilters } from './keys';
 export function useAuditLogsQuery(filters: AuditListFilters, enabled = true) {
   return useQuery<AuditLogListResponse, GatewayError>({
     queryKey: queryKeys.audit.lists(filters),
-    queryFn: ({ signal }) =>
+    queryFn: () =>
       gatewayFetch<AuditLogListResponse>(
         `/api/backend/audit-logs${buildQueryString({
           page: filters.page,
@@ -20,7 +20,6 @@ export function useAuditLogsQuery(filters: AuditListFilters, enabled = true) {
           actorId: filters.actorId,
           action: filters.action,
         })}`,
-        { signal },
       ),
     enabled,
     placeholderData: (previous) => previous,

@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import { errorMessageKey } from '@/lib/api/error-message';
 import type { GatewayError } from '@/lib/auth/client';
 import { makeZodErrorMap } from '@/lib/forms/error-map';
-import { useTeachersQuery } from '../api';
+import { TEACHER_OPTIONS_FILTERS, useTeachersQuery } from '../api';
 import { durationOptions } from '../model/edit';
 import { useLessonDates } from './lesson-format';
 
@@ -136,7 +136,7 @@ export function useDurationOptions(current: number) {
 
 /** Active teachers of the studio as picker options, with a lookup of every name by id. */
 export function useTeacherOptions() {
-  const teachers = useTeachersQuery({ page: 1, pageSize: 100, state: 'all' });
+  const teachers = useTeachersQuery(TEACHER_OPTIONS_FILTERS);
   return useMemo(() => {
     const items = teachers.data?.items ?? [];
     const options: EntityPickerOption[] = items

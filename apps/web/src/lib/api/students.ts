@@ -1,6 +1,6 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   CreateStudentDto,
   StudentDetail,
@@ -18,7 +18,7 @@ export function useStudentsQuery(filters: StudentListFilters, enabled = true) {
   return useQuery<StudentListResponse, GatewayError>({
     queryKey: queryKeys.students.lists(filters),
     enabled,
-    queryFn: ({ signal }) =>
+    queryFn: () =>
       gatewayFetch<StudentListResponse>(
         `/api/backend/students${buildQueryString({
           page: filters.page,
@@ -30,7 +30,6 @@ export function useStudentsQuery(filters: StudentListFilters, enabled = true) {
           sort: filters.sort,
           order: filters.order,
         })}`,
-        { signal },
       ),
     placeholderData: (previous) => previous,
   });
@@ -49,13 +48,16 @@ export function useStudentsSummaryQuery(enabled = true) {
   });
 }
 
-export function useStudentQuery(studentId: string, enabled = true) {
-  return useQuery<StudentDetail, GatewayError>({
+/** The student read, shared by the hook and by a screen that prefetches it. */
+export function studentQueryOptions(studentId: string) {
+  return queryOptions<StudentDetail, GatewayError>({
     queryKey: queryKeys.students.detail(studentId),
-    enabled: enabled && Boolean(studentId),
-    queryFn: ({ signal }) =>
-      gatewayFetch<StudentDetail>(`/api/backend/students/${studentId}`, { signal }),
+    queryFn: () => gatewayFetch<StudentDetail>(`/api/backend/students/${studentId}`),
   });
+}
+
+export function useStudentQuery(studentId: string, enabled = true) {
+  return useQuery({ ...studentQueryOptions(studentId), enabled: enabled && Boolean(studentId) });
 }
 
 export function useCreateStudentMutation() {

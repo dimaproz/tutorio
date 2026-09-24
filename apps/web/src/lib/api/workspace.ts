@@ -15,10 +15,8 @@ export function useWorkspaceMembersQuery(enabled = true) {
   return useQuery<WorkspaceMemberListResponse, GatewayError>({
     queryKey: queryKeys.workspace.members,
     enabled,
-    queryFn: ({ signal }) =>
-      gatewayFetch<WorkspaceMemberListResponse>('/api/backend/workspaces/current/members', {
-        signal,
-      }),
+    queryFn: () =>
+      gatewayFetch<WorkspaceMemberListResponse>('/api/backend/workspaces/current/members'),
     staleTime: 5 * 60 * 1000,
   });
 }

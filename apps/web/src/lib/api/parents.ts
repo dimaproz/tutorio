@@ -17,7 +17,7 @@ export function useParentsQuery(filters: ParentListFilters, enabled = true) {
   return useQuery<ParentListResponse, GatewayError>({
     queryKey: queryKeys.parents.lists(filters),
     enabled,
-    queryFn: ({ signal }) =>
+    queryFn: () =>
       gatewayFetch<ParentListResponse>(
         `/api/backend/parents${buildQueryString({
           page: filters.page,
@@ -29,7 +29,6 @@ export function useParentsQuery(filters: ParentListFilters, enabled = true) {
           sort: filters.sort,
           order: filters.order,
         })}`,
-        { signal },
       ),
     placeholderData: (previous) => previous,
   });
@@ -39,8 +38,7 @@ export function useParentQuery(parentId: string, enabled = true) {
   return useQuery<ParentDetail, GatewayError>({
     queryKey: queryKeys.parents.detail(parentId),
     enabled: enabled && Boolean(parentId),
-    queryFn: ({ signal }) =>
-      gatewayFetch<ParentDetail>(`/api/backend/parents/${parentId}`, { signal }),
+    queryFn: () => gatewayFetch<ParentDetail>(`/api/backend/parents/${parentId}`),
   });
 }
 

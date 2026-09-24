@@ -10,7 +10,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { AttendanceSummaryCard } from '@/components/shared/attendance-summary-card';
 import { EntityAvatar } from '@/components/shared/entity-avatar';
 import { MemberChargeRow, type MemberNoteTone } from '@/components/shared/member-charge-row';
-import { useGroupQuery, useLessonAttendanceQuery, usePackagesQuery } from '../api';
+import {
+  groupPackagesFilters,
+  useGroupQuery,
+  useLessonAttendanceQuery,
+  usePackagesQuery,
+} from '../api';
 import { lastAttendanceMark, type HistoryEvent } from '../model/history';
 import {
   activeCount,
@@ -28,10 +33,7 @@ export function useGroupMembers(lesson: LessonDetailResponse) {
   const groupId = lesson.groupId ?? '';
   const group = useGroupQuery(groupId, Boolean(groupId));
   const sheet = useLessonAttendanceQuery(lesson.id, Boolean(groupId));
-  const packages = usePackagesQuery(
-    { page: 1, pageSize: 100, groupId, state: 'active' },
-    Boolean(groupId),
-  );
+  const packages = usePackagesQuery(groupPackagesFilters(groupId), Boolean(groupId));
   const rows = useMemo(
     () =>
       memberRows({

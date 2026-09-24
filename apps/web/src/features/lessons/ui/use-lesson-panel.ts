@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useUpdateSearchParams } from '@/components/shared/list-controls';
 
 /** The query parameter that opens the lesson panel on any page (S01 deep link). */
 export const LESSON_PARAM = 'lesson';
@@ -12,10 +13,11 @@ export type LessonPanelIntent = 'markAttendance';
 /**
  * The lesson panel's own URL: `?lesson=<id>` on the page that opened it, so a
  * lesson can be linked to and the page stays underneath. Opening and closing
- * replace the entry instead of stacking history.
+ * replace the entry instead of stacking history, through native history: the
+ * panel reads its lesson on the client, so the server has nothing to render.
  */
 export function useLessonPanel() {
-  const router = useRouter();
+  const updateParams = useUpdateSearchParams();
   const pathname = usePathname();
   const params = useSearchParams();
   const fromUrl = params.get(LESSON_PARAM);
@@ -50,14 +52,14 @@ export function useLessonPanel() {
   const open = useCallback(
     (id: string, nextIntent: LessonPanelIntent | null = null) => {
       setState((current) => ({ ...current, lessonId: id, intent: nextIntent }));
-      router.replace(hrefWith(id), { scroll: false });
+      updateParams({ [LESSON_PARAM]: id });
     },
-    [hrefWith, router],
+    [updateParams],
   );
   const close = useCallback(() => {
     setState((current) => ({ ...current, lessonId: null, intent: null }));
-    router.replace(hrefWith(null), { scroll: false });
-  }, [hrefWith, router]);
+    updateParams({ [LESSON_PARAM]: undefined });
+  }, [updateParams]);
   /** The absolute link to a lesson on this page, for "copy link". */
   const linkTo = useCallback(
     (id: string) => `${window.location.origin}${hrefWith(id)}`,

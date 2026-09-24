@@ -1,11 +1,19 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import {
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from '@tanstack/react-query';
 import type {
   CreateMakeupDto,
   EnrollmentBillingResponse,
   LessonAttendanceResponse,
   LessonDetailResponse,
+  LessonListResponse,
   LessonResponse,
   RescheduleLessonDto,
   ScheduleChangeDto,
@@ -15,7 +23,12 @@ import type {
   TransitionLessonDto,
   UpdateLessonDto,
 } from '@tutorio/validation';
-import { queryKeys } from '@/lib/api/keys';
+import { lessonAttendanceQueryOptions } from '@/lib/api/attendance';
+import { groupQueryOptions } from '@/lib/api/groups';
+import { queryKeys, type PackageListFilters, type TeacherListFilters } from '@/lib/api/keys';
+import { packagesQueryOptions } from '@/lib/api/packages';
+import { studentQueryOptions } from '@/lib/api/students';
+import { teachersQueryOptions } from '@/lib/api/teachers';
 import { gatewayFetch, type GatewayError } from '@/lib/auth/client';
 
 export { useLessonsQuery } from '@/lib/api/scheduling';
@@ -57,29 +70,74 @@ export function useLessonDetailQuery(lessonId: string | null) {
     enabled: Boolean(lessonId),
     // A deleted lesson answers 404 at once; retrying it only delays "not found".
     retry: (count, error) => error.status !== 404 && count < 2,
-    queryFn: ({ signal }) =>
-      gatewayFetch<LessonDetailResponse>(`/api/backend/lessons/${lessonId}`, { signal }),
+    queryFn: () => gatewayFetch<LessonDetailResponse>(`/api/backend/lessons/${lessonId}`),
+  });
+}
+
+function enrollmentBillingQueryOptions(enrollmentId: string) {
+  return queryOptions<EnrollmentBillingResponse, GatewayError>({
+    queryKey: queryKeys.enrollments.billing(enrollmentId),
+    queryFn: () =>
+      gatewayFetch<EnrollmentBillingResponse>(`/api/backend/enrollments/${enrollmentId}/billing`),
   });
 }
 
 /** How a direction is paid now: its mode, rate and packages (L-10, L-81). */
 export function useEnrollmentBillingQuery(enrollmentId: string | null) {
-  return useQuery<EnrollmentBillingResponse, GatewayError>({
-    queryKey: queryKeys.enrollments.billing(enrollmentId ?? ''),
+  return useQuery({
+    ...enrollmentBillingQueryOptions(enrollmentId ?? ''),
     enabled: Boolean(enrollmentId),
-    queryFn: ({ signal }) =>
-      gatewayFetch<EnrollmentBillingResponse>(`/api/backend/enrollments/${enrollmentId}/billing`, {
-        signal,
-      }),
   });
+}
+
+/** The teachers the panel's pickers offer. */
+export const TEACHER_OPTIONS_FILTERS: TeacherListFilters = { page: 1, pageSize: 100, state: 'all' };
+
+/** The packages a group lesson's members pay with. */
+export function groupPackagesFilters(groupId: string): PackageListFilters {
+  return { page: 1, pageSize: 100, groupId, state: 'active' };
+}
+
+/** A lesson some list on screen already holds: the row that was clicked. */
+function listedLesson(queryClient: QueryClient, lessonId: string): LessonResponse | undefined {
+  for (const [, list] of queryClient.getQueriesData<LessonListResponse>({
+    queryKey: queryKeys.lessons.listsAll,
+  })) {
+    const row = list?.items.find((item) => item.id === lessonId);
+    if (row) return row;
+  }
+  return undefined;
+}
+
+/**
+ * Starts the panel's second-level reads together with the lesson instead of
+ * after it. The row that opened the panel already says whether the lesson is
+ * a group's (the group, its attendance sheet, the members' packages) or one
+ * student's (the direction's billing, the student); the teacher picker's list
+ * needs neither. A lesson opened from a bare link waits for its detail, as before.
+ */
+export function usePrefetchLessonPanel(lessonId: string | null) {
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    if (!lessonId) return;
+    void queryClient.prefetchQuery(teachersQueryOptions(TEACHER_OPTIONS_FILTERS));
+    const row = listedLesson(queryClient, lessonId);
+    if (row?.groupId) {
+      void queryClient.prefetchQuery(groupQueryOptions(row.groupId));
+      void queryClient.prefetchQuery(lessonAttendanceQueryOptions(lessonId));
+      void queryClient.prefetchQuery(packagesQueryOptions(groupPackagesFilters(row.groupId)));
+    } else if (row?.enrollmentId) {
+      void queryClient.prefetchQuery(enrollmentBillingQueryOptions(row.enrollmentId));
+      if (row.student) void queryClient.prefetchQuery(studentQueryOptions(row.student.id));
+    }
+  }, [lessonId, queryClient]);
 }
 
 export function useScheduleQuery(scheduleId: string | null) {
   return useQuery<ScheduleResponse, GatewayError>({
     queryKey: queryKeys.schedules.detail(scheduleId ?? ''),
     enabled: Boolean(scheduleId),
-    queryFn: ({ signal }) =>
-      gatewayFetch<ScheduleResponse>(`/api/backend/schedules/${scheduleId}`, { signal }),
+    queryFn: () => gatewayFetch<ScheduleResponse>(`/api/backend/schedules/${scheduleId}`),
   });
 }
 
@@ -91,11 +149,10 @@ export function useScheduleChangePreviewQuery(
   return useQuery<ScheduleChangePreview, GatewayError>({
     queryKey: queryKeys.schedules.preview(scheduleId ?? '', change),
     enabled: Boolean(scheduleId && change),
-    queryFn: ({ signal }) =>
+    queryFn: () =>
       gatewayFetch<ScheduleChangePreview>(`/api/backend/schedules/${scheduleId}/changes/preview`, {
         method: 'POST',
         body: JSON.stringify(change),
-        signal,
       }),
   });
 }

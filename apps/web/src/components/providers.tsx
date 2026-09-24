@@ -11,6 +11,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
     () =>
       new QueryClient({
         defaultOptions: {
+          // Query functions never read the AbortSignal: React Query aborts a
+          // read that uses it as soon as its last observer unmounts, so a
+          // remount (StrictMode, a tab switch, a prefetch whose screen mounts
+          // later) threw away a request in flight and sent it again. The API
+          // does the work either way; a read now finishes into the cache.
           queries: {
             retry: shouldRetryQuery,
             refetchOnWindowFocus: false,

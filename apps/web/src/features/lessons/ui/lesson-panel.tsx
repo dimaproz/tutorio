@@ -12,7 +12,12 @@ import { IconButton } from '@/components/shared/icon-button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useStudentQuery } from '@/lib/api/students';
 import { capitalizeFirst } from '@/lib/utils';
-import { useLessonDetailQuery, useScheduleQuery, useTransitionLessonMutation } from '../api';
+import {
+  useLessonDetailQuery,
+  usePrefetchLessonPanel,
+  useScheduleQuery,
+  useTransitionLessonMutation,
+} from '../api';
 import { cancellationActor, lessonHistory } from '../model/history';
 import { isLessonRunning } from '../model/buckets';
 import { panelActions, type FooterAction, type MenuAction } from '../model/panel-actions';
@@ -142,6 +147,7 @@ export function LessonPanel({
   const t = useTranslations('lessons.panel');
   const mobile = useIsMobile();
   const detail = useLessonDetailQuery(lessonId);
+  usePrefetchLessonPanel(lessonId);
   const lesson = detail.data;
   const notFound = detail.error?.status === 404;
 

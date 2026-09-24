@@ -24,7 +24,7 @@ function invalidateEnrollmentGraph(queryClient: QueryClient) {
 export function useEnrollmentsQuery(filters: EnrollmentListFilters, enabled = true) {
   return useQuery<EnrollmentListResponse, GatewayError>({
     queryKey: queryKeys.enrollments.lists(filters),
-    queryFn: ({ signal }) =>
+    queryFn: () =>
       gatewayFetch<EnrollmentListResponse>(
         `/api/backend/enrollments${buildQueryString({
           page: filters.page,
@@ -33,7 +33,6 @@ export function useEnrollmentsQuery(filters: EnrollmentListFilters, enabled = tr
           teacherId: filters.teacherId,
           status: filters.status,
         })}`,
-        { signal },
       ),
     enabled,
   });
@@ -42,8 +41,7 @@ export function useEnrollmentsQuery(filters: EnrollmentListFilters, enabled = tr
 export function useEnrollmentQuery(enrollmentId: string, enabled = true) {
   return useQuery<EnrollmentResponse, GatewayError>({
     queryKey: queryKeys.enrollments.detail(enrollmentId),
-    queryFn: ({ signal }) =>
-      gatewayFetch<EnrollmentResponse>(`/api/backend/enrollments/${enrollmentId}`, { signal }),
+    queryFn: () => gatewayFetch<EnrollmentResponse>(`/api/backend/enrollments/${enrollmentId}`),
     enabled: enabled && Boolean(enrollmentId),
   });
 }
