@@ -9,3 +9,4 @@ export * from './ledger';
 export * from './package';
 export * from './attendance';
 export * from './calendar-range';
+export * from './schedule';
