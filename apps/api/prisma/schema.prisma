@@ -135,6 +135,9 @@ model Workspace {
   timezone                  String        @default("Europe/Kyiv")
   // How many weeks ahead new schedules generate lessons (product/scheduling.md L-120).
   scheduleHorizonWeeks      Int           @default(4)
+  // A package direction warns with this many credits left or fewer (L-82,
+  // L-120); 0 turns the warning off.
+  lowCreditThreshold        Int           @default(2)
   createdAt                 DateTime      @default(now())
   updatedAt                 DateTime      @updatedAt
   deletedAt                 DateTime?

@@ -56,6 +56,27 @@ function isEqual(a: AuditValue, b: AuditValue): boolean {
   return a === b;
 }
 
+export const auditActorInclude = {
+  actor: { select: { id: true, name: true, email: true } },
+} satisfies Prisma.AuditLogInclude;
+
+/** One audit row with its actor, as the API returns it. */
+export function toAuditLogResponse(
+  row: Prisma.AuditLogGetPayload<{ include: typeof auditActorInclude }>,
+): AuditLogResponse {
+  return {
+    id: row.id,
+    workspaceId: row.workspaceId,
+    actorId: row.actorId,
+    actor: row.actor,
+    entity: row.entity as AuditLogResponse['entity'],
+    entityId: row.entityId,
+    action: row.action,
+    changes: (row.diff as AuditChanges | null) ?? null,
+    createdAt: row.createdAt.toISOString(),
+  };
+}
+
 @Injectable()
 export class AuditService {
   constructor(private readonly prisma: PrismaService) {}
@@ -161,29 +182,11 @@ export class AuditService {
         // `id` as a tiebreaker keeps pagination stable for same-instant rows.
         orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
         ...toSkipTake(query),
-        include: {
-          actor: { select: { id: true, name: true, email: true } },
-        },
+        include: auditActorInclude,
       }),
       this.prisma.auditLog.count({ where }),
     ]);
 
-    return buildPaginatedResponse(
-      rows.map((row): AuditLogResponse => {
-        return {
-          id: row.id,
-          workspaceId: row.workspaceId,
-          actorId: row.actorId,
-          actor: row.actor,
-          entity: row.entity as AuditLogResponse['entity'],
-          entityId: row.entityId,
-          action: row.action,
-          changes: (row.diff as AuditChanges | null) ?? null,
-          createdAt: row.createdAt.toISOString(),
-        };
-      }),
-      total,
-      query,
-    );
+    return buildPaginatedResponse(rows.map(toAuditLogResponse), total, query);
   }
 }

@@ -5,16 +5,13 @@ import {
   coverDebts,
   initialSource,
   isChargedStatus,
-  isPackageValidAt,
   participantIsCharged,
   pickPackage,
   type BalanceAllocation,
   type CreditPackage,
 } from '@tutorio/domain';
-import type { EnrollmentBillingResponse } from '@tutorio/validation';
 import { AuditService } from '../audit/audit.service';
-import type { AuthenticatedUser } from '../auth/auth.types';
-import { enrollmentNotFound, lessonPaid } from '../common/business.errors';
+import { lessonPaid } from '../common/business.errors';
 import { PrismaService } from '../prisma/prisma.service';
 import { lockEnrollmentBilling } from '../scheduling/lifecycle-suspension';
 import { pausedDirectionIds } from '../scheduling/pause-windows';
@@ -347,61 +344,5 @@ export class BillingService {
       where: { id: charge.id },
       data: { amountMinor: priceMinor, currency },
     });
-  }
-
-  async getEnrollmentBilling(
-    auth: AuthenticatedUser,
-    enrollmentId: string,
-  ): Promise<EnrollmentBillingResponse> {
-    const direction = await this.prisma.enrollment.findFirst({
-      where: { id: enrollmentId, workspaceId: auth.workspaceId },
-      select: { id: true, billingType: true, priceMinor: true, currency: true },
-    });
-    if (!direction) throw enrollmentNotFound();
-    const [packages, rows, debtLessons, balance] = await Promise.all([
-      this.creditPackages(this.prisma, direction.id),
-      this.prisma.lessonPackage.findMany({
-        where: { enrollmentId: direction.id, deletedAt: null },
-        select: { id: true, name: true },
-      }),
-      this.prisma.lessonCharge.count({
-        where: { enrollmentId: direction.id, voidedAt: null, source: 'DEBT' },
-      }),
-      this.balanceOf(this.prisma, direction),
-    ]);
-    const names = new Map(rows.map((row) => [row.id, row.name]));
-    const now = new Date();
-    const items = packages
-      .sort(
-        (a, b) =>
-          a.purchasedAt.getTime() - b.purchasedAt.getTime() ||
-          a.id.localeCompare(b.id),
-      )
-      .map((pkg) => ({
-        id: pkg.id,
-        name: names.get(pkg.id) ?? null,
-        purchasedAt: pkg.purchasedAt.toISOString(),
-        expiresAt: pkg.expiresAt?.toISOString() ?? null,
-        remainingCredits: pkg.remaining,
-        usable: isPackageValidAt(pkg, now),
-      }));
-    return {
-      enrollmentId: direction.id,
-      billingType: direction.billingType,
-      rateMinor: direction.priceMinor,
-      currency: direction.currency as EnrollmentBillingResponse['currency'],
-      packages: items,
-      creditsLeft: items
-        .filter((pkg) => pkg.usable)
-        .reduce((sum, pkg) => sum + Math.max(0, pkg.remainingCredits), 0),
-      debtLessons,
-      balance: {
-        chargedMinor: balance.chargedMinor,
-        paidMinor: balance.paidMinor,
-        debtMinor: balance.debtMinor,
-        advanceMinor: balance.advanceMinor,
-        unpaidLessons: balance.unpaid.length,
-      },
-    };
   }
 }

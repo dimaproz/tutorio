@@ -27,7 +27,7 @@ import type { AuthenticatedUser } from '../auth/auth.types';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { ApiErrorDto } from '../auth/dto/auth.dto';
-import { BillingService } from '../billing/billing.service';
+import { BillingReadsService } from '../billing/billing-reads.service';
 import {
   CreateEnrollmentDto,
   EnrollmentBillingDto,
@@ -45,7 +45,7 @@ import { EnrollmentsService } from './enrollments.service';
 export class EnrollmentsController {
   constructor(
     private readonly enrollments: EnrollmentsService,
-    private readonly billing: BillingService,
+    private readonly billing: BillingReadsService,
   ) {}
 
   @Get()
@@ -107,8 +107,8 @@ export class EnrollmentsController {
     summary: 'How a direction is paid now',
     description:
       'Billing mode and rate, the credits each package has left, lessons ' +
-      'held on debt in package mode, and the pay-per-lesson balance with ' +
-      'payments settling the oldest lessons first.',
+      'held on debt in package mode, the pay-per-lesson balance with ' +
+      'payments settling the oldest lessons first, and the credit warning.',
   })
   @ApiOkResponse({ type: EnrollmentBillingDto })
   @ApiNotFoundResponse({ type: ApiErrorDto })

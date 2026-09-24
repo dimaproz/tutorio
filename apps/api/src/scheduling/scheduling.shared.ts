@@ -63,7 +63,11 @@ export type SeriesRow = Prisma.LessonSeriesGetPayload<{
   include: typeof seriesInclude;
 }>;
 
-export function toLessonResponse(row: LessonRow): LessonResponse {
+/** `paidChargeIds`: the charges that are paid (see `BillingReadsService`). */
+export function toLessonResponse(
+  row: LessonRow,
+  paidChargeIds: ReadonlySet<string>,
+): LessonResponse {
   return {
     id: row.id,
     workspaceId: row.workspaceId,
@@ -108,6 +112,7 @@ export function toLessonResponse(row: LessonRow): LessonResponse {
       packageId: charge.packageId,
       amountMinor: charge.amountMinor,
       currency: charge.currency as LessonResponse['currency'],
+      paid: paidChargeIds.has(charge.id),
       student: charge.enrollment.student,
     })),
     student: row.enrollment?.student ?? null,

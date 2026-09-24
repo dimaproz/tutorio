@@ -35,8 +35,11 @@ import {
   CreateLessonDto,
   CreateMakeupDto,
   ForceQueryDto,
+  LessonDetailDto,
   LessonDto,
   LessonListDto,
+  LessonPageDto,
+  ListLessonPageQueryDto,
   ListLessonsQueryDto,
   RescheduleLessonDto,
   TransitionLessonDto,
@@ -68,6 +71,44 @@ export class LessonsController {
     @Query() query: ListLessonsQueryDto,
   ): Promise<LessonListDto> {
     return this.lessons.list(user, query);
+  }
+
+  // Declared before `:lessonId` so the path is not read as a lesson id.
+  @Get('list')
+  @Roles('OWNER')
+  @ApiOperation({
+    summary: 'The Lessons list: every lesson, paged, with quick filters',
+    description:
+      'Filters by period, teacher, student (their own lessons and their ' +
+      "groups'), group and status; `filter` narrows to unpaid, cancelled, " +
+      'no-show or needs-a-makeup lessons, and `counts` says how many each ' +
+      'quick filter would show.',
+  })
+  @ApiOkResponse({ type: LessonPageDto })
+  @ZodSerializerDto(LessonPageDto)
+  listPage(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query() query: ListLessonPageQueryDto,
+  ): Promise<LessonPageDto> {
+    return this.lessons.listPage(user, query);
+  }
+
+  @Get(':lessonId')
+  @Roles('OWNER')
+  @ApiOperation({
+    summary: 'One lesson for the side panel',
+    description:
+      'The lesson with its charges, the lesson its makeup replaces or the ' +
+      'makeup given for it, its schedule and its history, newest first.',
+  })
+  @ApiOkResponse({ type: LessonDetailDto })
+  @ApiNotFoundResponse({ type: ApiErrorDto })
+  @ZodSerializerDto(LessonDetailDto)
+  getDetail(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('lessonId', ParseUUIDPipe) lessonId: string,
+  ): Promise<LessonDetailDto> {
+    return this.lessons.getDetail(user, lessonId);
   }
 
   @Post('bulk-cancel/preview')

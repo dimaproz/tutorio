@@ -387,6 +387,8 @@ export class AuthService {
       defaultCurrency: workspace.defaultCurrency,
       cancellationDeadlineHours: workspace.cancellationDeadlineHours,
       timezone: workspace.timezone,
+      scheduleHorizonWeeks: workspace.scheduleHorizonWeeks,
+      lowCreditThreshold: workspace.lowCreditThreshold,
     };
   }
 

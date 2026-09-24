@@ -39,13 +39,15 @@ export class WorkspacesService {
         cancellationDeadlineHours:
           membership.workspace.cancellationDeadlineHours,
         timezone: membership.workspace.timezone,
+        scheduleHorizonWeeks: membership.workspace.scheduleHorizonWeeks,
+        lowCreditThreshold: membership.workspace.lowCreditThreshold,
       },
       role: membership.role,
     };
   }
 
   /**
-   * Owner-only (controller guard). Only the two Stage 2 settings are
+   * Owner-only (controller guard). The studio defaults and the mode are
    * mutable here — name/plan changes are out of this endpoint's contract.
    * Existing enrollments keep their own currency/price snapshots; only
    * enrollments without a deadline override inherit the new default.

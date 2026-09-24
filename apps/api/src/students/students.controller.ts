@@ -27,6 +27,8 @@ import type { AuthenticatedUser } from '../auth/auth.types';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { ApiErrorDto } from '../auth/dto/auth.dto';
+import { BillingReadsService } from '../billing/billing-reads.service';
+import { StudentBillingDto } from '../billing/dto/billing.dto';
 import {
   CreateStudentDto,
   ListStudentsQueryDto,
@@ -43,7 +45,10 @@ import { StudentsService } from './students.service';
 @ApiForbiddenResponse({ type: ApiErrorDto, description: 'OWNER role required' })
 @Controller('students')
 export class StudentsController {
-  constructor(private readonly students: StudentsService) {}
+  constructor(
+    private readonly students: StudentsService,
+    private readonly billing: BillingReadsService,
+  ) {}
 
   @Get()
   @Roles('OWNER')
@@ -109,6 +114,25 @@ export class StudentsController {
     @Param('studentId', ParseUUIDPipe) studentId: string,
   ): Promise<StudentDetailDto> {
     return this.students.getDetail(user, studentId);
+  }
+
+  @Get(':studentId/billing')
+  @Roles('OWNER')
+  @ApiOperation({
+    summary: 'How each of the student directions is paid',
+    description:
+      'Every direction with its mode, rate, packages and credits left, ' +
+      'lessons on debt, the pay-per-lesson balance and the credit warning, ' +
+      'plus what is owed and paid ahead per currency.',
+  })
+  @ApiOkResponse({ type: StudentBillingDto })
+  @ApiNotFoundResponse({ type: ApiErrorDto })
+  @ZodSerializerDto(StudentBillingDto)
+  getBilling(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('studentId', ParseUUIDPipe) studentId: string,
+  ): Promise<StudentBillingDto> {
+    return this.billing.getStudentBilling(user, studentId);
   }
 
   @Patch(':studentId')

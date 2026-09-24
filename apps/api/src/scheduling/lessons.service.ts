@@ -10,14 +10,22 @@ import { Prisma } from '@prisma/client';
 import type {
   CreateLessonDto,
   CreateMakeupDto,
+  LessonDetailResponse,
   LessonListResponse,
+  LessonPageResponse,
+  LessonQuickFilterDto,
   LessonResponse,
+  ListLessonPageQueryDto,
   ListLessonsQueryDto,
   RescheduleLessonDto,
   TransitionLessonDto,
   UpdateLessonDto,
 } from '@tutorio/validation';
-import { AuditService } from '../audit/audit.service';
+import {
+  AuditService,
+  auditActorInclude,
+  toAuditLogResponse,
+} from '../audit/audit.service';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import {
   invalidLessonTransition,
@@ -30,6 +38,8 @@ import {
   noShowIndividualOnly,
   teacherNotFound,
 } from '../common/business.errors';
+import { BillingReadsService } from '../billing/billing-reads.service';
+import { buildPaginatedResponse, toSkipTake } from '../common/pagination';
 import { BillingService } from '../billing/billing.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { markRosterPresent } from './attendance.service';
@@ -43,10 +53,14 @@ import {
 import {
   assertTargetAndTeacher,
   lessonInclude,
+  type LessonRow,
   localHourMinute,
   resolveStudentTarget,
   toLessonResponse,
 } from './scheduling.shared';
+
+/** How many history entries the lesson side panel shows. */
+const LESSON_HISTORY_LIMIT = 50;
 
 @Injectable()
 export class LessonsService {
@@ -55,7 +69,17 @@ export class LessonsService {
     private readonly audit: AuditService,
     private readonly schedules: SchedulesService,
     private readonly billing: BillingService,
+    private readonly billingReads: BillingReadsService,
   ) {}
+
+  /** Lesson responses with whether each charge is paid, in one batch. */
+  private async respond(rows: LessonRow[]): Promise<LessonResponse[]> {
+    const paid = await this.billingReads.paidChargeIds(
+      this.prisma,
+      rows.flatMap((row) => row.charges),
+    );
+    return rows.map((row) => toLessonResponse(row, paid));
+  }
 
   private assertCompatibleTransitionReplay(
     lesson: {
@@ -99,7 +123,149 @@ export class LessonsService {
       orderBy: [{ startsAtUtc: 'asc' }, { id: 'asc' }],
       include: lessonInclude,
     });
-    return { items: rows.map(toLessonResponse) };
+    return { items: await this.respond(rows) };
+  }
+
+  /**
+   * The Lessons list (product/scheduling.md, Pages): every lesson, paged, with
+   * the quick filters and how many lessons each of them would show.
+   */
+  async listPage(
+    auth: AuthenticatedUser,
+    query: ListLessonPageQueryDto,
+  ): Promise<LessonPageResponse> {
+    const base: Prisma.LessonWhereInput = {
+      workspaceId: auth.workspaceId,
+      deletedAt: null,
+      ...(query.from || query.to
+        ? {
+            startsAtUtc: {
+              ...(query.from ? { gte: new Date(query.from) } : {}),
+              ...(query.to ? { lt: new Date(query.to) } : {}),
+            },
+          }
+        : {}),
+      ...(query.teacherId ? { teacherId: query.teacherId } : {}),
+      // A student's own lessons and the lessons of the groups they are in.
+      ...(query.studentId
+        ? {
+            OR: [
+              { enrollment: { studentId: query.studentId } },
+              {
+                group: {
+                  enrollments: {
+                    some: { studentId: query.studentId, deletedAt: null },
+                  },
+                },
+              },
+            ],
+          }
+        : {}),
+      ...(query.groupId ? { groupId: query.groupId } : {}),
+      ...(query.status ? { status: query.status } : {}),
+    };
+    const unpaid = await this.billingReads.unpaidLessonIds(
+      this.prisma,
+      auth.workspaceId,
+    );
+    const quick: Record<LessonQuickFilterDto, Prisma.LessonWhereInput> = {
+      unpaid: { id: { in: [...unpaid] } },
+      cancelled: {
+        status: { in: ['CANCELLED_CHARGED', 'CANCELLED_UNCHARGED'] },
+      },
+      no_show: { status: 'NO_SHOW' },
+      // Cancelled or missed individual lessons with no makeup yet (L-60).
+      needs_makeup: {
+        enrollmentId: { not: null },
+        groupId: null,
+        status: {
+          in: ['CANCELLED_CHARGED', 'CANCELLED_UNCHARGED', 'NO_SHOW'],
+        },
+        OR: [
+          { makeup: { is: null } },
+          { makeup: { is: { deletedAt: { not: null } } } },
+        ],
+      },
+    };
+    const where: Prisma.LessonWhereInput = query.filter
+      ? { AND: [base, quick[query.filter]] }
+      : base;
+    const count = (filter: LessonQuickFilterDto) =>
+      this.prisma.lesson.count({ where: { AND: [base, quick[filter]] } });
+    const [rows, total, unpaidCount, cancelled, noShow, needsMakeup] =
+      await Promise.all([
+        this.prisma.lesson.findMany({
+          where,
+          orderBy: [{ startsAtUtc: query.order }, { id: query.order }],
+          ...toSkipTake(query),
+          include: lessonInclude,
+        }),
+        this.prisma.lesson.count({ where }),
+        count('unpaid'),
+        count('cancelled'),
+        count('no_show'),
+        count('needs_makeup'),
+      ]);
+    return {
+      ...buildPaginatedResponse(await this.respond(rows), total, query),
+      counts: { unpaid: unpaidCount, cancelled, noShow, needsMakeup },
+    };
+  }
+
+  /**
+   * One lesson for the side panel: the lesson, the lesson its makeup replaces
+   * or the makeup given for it, the schedule it comes from, and its history.
+   */
+  async getDetail(
+    auth: AuthenticatedUser,
+    lessonId: string,
+  ): Promise<LessonDetailResponse> {
+    const link = { select: { id: true, startsAtUtc: true, status: true } };
+    const row = await this.prisma.lesson.findFirst({
+      where: { id: lessonId, workspaceId: auth.workspaceId, deletedAt: null },
+      include: {
+        ...lessonInclude,
+        original: link,
+        makeup: {
+          select: {
+            id: true,
+            startsAtUtc: true,
+            status: true,
+            deletedAt: true,
+          },
+        },
+        series: { select: { schedule: { select: { id: true, state: true } } } },
+      },
+    });
+    if (!row) throw lessonNotFound();
+    const history = await this.prisma.auditLog.findMany({
+      where: {
+        workspaceId: auth.workspaceId,
+        entity: 'LESSON',
+        entityId: row.id,
+      },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: LESSON_HISTORY_LIMIT,
+      include: auditActorInclude,
+    });
+    const toLink = (lesson: {
+      id: string;
+      startsAtUtc: Date;
+      status: LessonDetailResponse['status'];
+    }) => ({
+      id: lesson.id,
+      startsAtUtc: lesson.startsAtUtc.toISOString(),
+      status: lesson.status,
+    });
+    const makeup = row.makeup && !row.makeup.deletedAt ? row.makeup : null;
+    const [lesson] = await this.respond([{ ...row, makeup }]);
+    return {
+      ...lesson,
+      original: row.original ? toLink(row.original) : null,
+      makeup: makeup ? toLink(makeup) : null,
+      schedule: row.series?.schedule ?? null,
+      history: history.map(toAuditLogResponse),
+    };
   }
 
   async create(
@@ -271,7 +437,7 @@ export class LessonsService {
       });
     });
 
-    return { items: rows.map(toLessonResponse) };
+    return { items: await this.respond(rows) };
   }
 
   /**
@@ -412,7 +578,7 @@ export class LessonsService {
       return updated;
     });
 
-    return toLessonResponse(row);
+    return (await this.respond([row]))[0];
   }
 
   /**
@@ -499,7 +665,7 @@ export class LessonsService {
       });
       return created;
     });
-    return toLessonResponse(row);
+    return (await this.respond([row]))[0];
   }
 
   /**
@@ -513,6 +679,7 @@ export class LessonsService {
         select: {
           id: true,
           seriesId: true,
+          originalLessonId: true,
           _count: { select: { charges: { where: { voidedAt: null } } } },
         },
       });
@@ -527,6 +694,9 @@ export class LessonsService {
         data: {
           deletedAt: new Date(),
           isDetached: lesson.seriesId ? true : undefined,
+          // A deleted makeup no longer stands in for its original, which
+          // may get a new one (L-60).
+          originalLessonId: null,
         },
       });
       await this.audit.record(tx, {
@@ -535,6 +705,12 @@ export class LessonsService {
         action: 'DELETE',
         entity: 'LESSON',
         entityId: lesson.id,
+        changes: lesson.originalLessonId
+          ? this.audit.buildChanges(
+              { originalLessonId: lesson.originalLessonId },
+              { originalLessonId: null },
+            )
+          : null,
       });
     });
   }
@@ -677,7 +853,7 @@ export class LessonsService {
       return updated;
     });
 
-    return toLessonResponse(row);
+    return (await this.respond([row]))[0];
   }
 
   /** Applies an atomic, versioned status transition and its charges. */
@@ -785,6 +961,6 @@ export class LessonsService {
       });
     });
 
-    return toLessonResponse(row);
+    return (await this.respond([row]))[0];
   }
 }

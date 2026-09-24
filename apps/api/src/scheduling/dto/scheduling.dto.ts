@@ -15,7 +15,10 @@ import {
   updateScheduleSchema,
   createLessonSeriesSchema,
   forceQuerySchema,
+  lessonDetailResponseSchema,
   lessonListResponseSchema,
+  lessonPageResponseSchema,
+  listLessonPageQuerySchema,
   lessonResponseSchema,
   lessonSeriesListResponseSchema,
   lessonSeriesResponseSchema,
@@ -35,6 +38,9 @@ export class CreateMakeupDto extends createZodDto(createMakeupSchema) {}
 export class RescheduleLessonDto extends createZodDto(rescheduleLessonSchema) {}
 export class TransitionLessonDto extends createZodDto(transitionLessonSchema) {}
 export class ListLessonsQueryDto extends createZodDto(listLessonsQuerySchema) {}
+export class ListLessonPageQueryDto extends createZodDto(
+  listLessonPageQuerySchema,
+) {}
 export class CreateLessonSeriesDto extends createZodDto(
   createLessonSeriesSchema,
 ) {}
@@ -49,6 +55,8 @@ export class ListLessonSeriesQueryDto extends createZodDto(
 // Response DTOs — serialized through ZodSerializerInterceptor.
 export class LessonDto extends createZodDto(lessonResponseSchema) {}
 export class LessonListDto extends createZodDto(lessonListResponseSchema) {}
+export class LessonPageDto extends createZodDto(lessonPageResponseSchema) {}
+export class LessonDetailDto extends createZodDto(lessonDetailResponseSchema) {}
 export class LessonSeriesDto extends createZodDto(lessonSeriesResponseSchema) {}
 export class LessonSeriesListDto extends createZodDto(
   lessonSeriesListResponseSchema,
