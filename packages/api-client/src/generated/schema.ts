@@ -645,6 +645,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lessons/bulk-cancel/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview cancelling every lesson of a period
+         * @description The scheduled lessons of one teacher (or of the whole studio) in [from, to): how many, per teacher, and the first 200. Writes nothing.
+         */
+        post: operations["LessonsController_previewBulkCancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/bulk-cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel every lesson of a period
+         * @description Holiday or illness: the scheduled lessons of one teacher (or of the whole studio) in [from, to) become cancelled by the teacher, free, with the reason. Held, cancelled and no-show lessons stay.
+         */
+        post: operations["LessonsController_applyBulkCancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/lessons/{lessonId}": {
         parameters: {
             query?: never;
@@ -2088,6 +2128,55 @@ export interface components {
                 /** Format: date-time */
                 deletedAt: string | null;
             }[];
+        };
+        BulkCancelDto: {
+            /** Format: date-time */
+            from: string;
+            /** Format: date-time */
+            to: string;
+            /** Format: uuid */
+            teacherId?: string;
+            reason?: string | null;
+        };
+        BulkCancelPreviewDto: {
+            count: number;
+            byTeacher: {
+                teacher: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    color: string | null;
+                };
+                count: number;
+            }[];
+            lessons: {
+                /** Format: uuid */
+                id: string;
+                /** Format: date-time */
+                startsAtUtc: string;
+                durationMin: number;
+                student: {
+                    /** Format: uuid */
+                    id: string;
+                    fullName: string;
+                } | null;
+                group: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                } | null;
+                teacher: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    color: string | null;
+                };
+            }[];
+            truncated: boolean;
+        };
+        BulkCancelResultDto: {
+            cancelled: number;
+            lessonIds: string[];
         };
         CreateLessonDto: {
             /** Format: uuid */
@@ -4689,6 +4778,78 @@ export interface operations {
                 };
             };
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    LessonsController_previewBulkCancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkCancelDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkCancelPreviewDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    LessonsController_applyBulkCancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkCancelDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkCancelResultDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
