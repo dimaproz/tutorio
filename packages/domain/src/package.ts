@@ -213,3 +213,72 @@ export function paymentStatusOf(oweMinor: number, paidMinor: number): PaymentSta
   }
   return paidMinor >= oweMinor ? 'PAID' : 'PARTIAL';
 }
+
+/**
+ * Where a package is in its life (S07): it has credits to use in its window,
+ * its credits are used up, or its window closed with credits left (L-84).
+ */
+export type PackageLifecycle = 'active' | 'used' | 'expired';
+
+export interface PackageLifecycleInput {
+  remainingCredits: number;
+  /** Exclusive end of validity; null when it does not expire. */
+  expiresAt: Date | null;
+}
+
+export function packageLifecycle(pkg: PackageLifecycleInput, now: Date): PackageLifecycle {
+  if (pkg.remainingCredits <= 0) return 'used';
+  if (pkg.expiresAt !== null && pkg.expiresAt.getTime() <= now.getTime()) return 'expired';
+  return 'active';
+}
+
+/** A window closing within this many days reads as "running out". */
+export const PACKAGE_ENDING_DAYS = 7;
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * A live package running out: `lowCreditThreshold` credits left or fewer
+ * (L-82, L-120; 0 turns that part off), or its window closing within
+ * {@link PACKAGE_ENDING_DAYS}.
+ */
+export function isPackageEnding(
+  pkg: PackageLifecycleInput,
+  now: Date,
+  lowCreditThreshold: number,
+): boolean {
+  if (packageLifecycle(pkg, now) !== 'active') return false;
+  if (lowCreditThreshold > 0 && pkg.remainingCredits <= lowCreditThreshold) return true;
+  return (
+    pkg.expiresAt !== null && pkg.expiresAt.getTime() - now.getTime() <= PACKAGE_ENDING_DAYS * DAY_MS
+  );
+}
+
+export interface EndingOrderInput extends PackageLifecycleInput {
+  id: string;
+  purchasedAt: Date;
+}
+
+/**
+ * «Спочатку ті, що закінчуються»: live packages before finished ones, the
+ * running-out ones first, then the nearest end, the fewest credits left and
+ * the newest sale.
+ */
+export function compareEndingFirst(
+  now: Date,
+  lowCreditThreshold: number,
+): (a: EndingOrderInput, b: EndingOrderInput) => number {
+  const rank = (pkg: EndingOrderInput) =>
+    packageLifecycle(pkg, now) !== 'active'
+      ? 2
+      : isPackageEnding(pkg, now, lowCreditThreshold)
+        ? 0
+        : 1;
+  const end = (pkg: EndingOrderInput) => pkg.expiresAt?.getTime() ?? Number.POSITIVE_INFINITY;
+  return (a, b) =>
+    rank(a) - rank(b) ||
+    end(a) - end(b) ||
+    a.remainingCredits - b.remainingCredits ||
+    b.purchasedAt.getTime() - a.purchasedAt.getTime() ||
+    a.id.localeCompare(b.id);
+}

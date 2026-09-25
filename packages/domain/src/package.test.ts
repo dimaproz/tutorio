@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   assertPaymentWithinOutstanding,
+  compareEndingFirst,
+  isPackageEnding,
+  packageLifecycle,
   InvalidPackagePlanError,
   OverpaymentError,
   paymentStatusOf,
@@ -211,5 +214,43 @@ describe('transferCredits (L-85)', () => {
 describe('paymentStatusOf — nothing owed', () => {
   it('reports a package that costs nothing as paid', () => {
     expect(paymentStatusOf(0, 0)).toBe('PAID');
+  });
+});
+
+describe('package lifecycle and running out (S07)', () => {
+  const now = new Date('2026-09-25T12:00:00.000Z');
+  const days = (count: number) => new Date(now.getTime() + count * 86_400_000);
+
+  it('is active with credits in its window, used without credits, expired after its end', () => {
+    expect(packageLifecycle({ remainingCredits: 3, expiresAt: days(10) }, now)).toBe('active');
+    expect(packageLifecycle({ remainingCredits: 3, expiresAt: null }, now)).toBe('active');
+    expect(packageLifecycle({ remainingCredits: 0, expiresAt: days(-2) }, now)).toBe('used');
+    expect(packageLifecycle({ remainingCredits: 2, expiresAt: days(-5) }, now)).toBe('expired');
+  });
+
+  it('runs out with few credits left or a window closing within a week', () => {
+    expect(isPackageEnding({ remainingCredits: 2, expiresAt: null }, now, 2)).toBe(true);
+    expect(isPackageEnding({ remainingCredits: 3, expiresAt: null }, now, 2)).toBe(false);
+    expect(isPackageEnding({ remainingCredits: 6, expiresAt: days(6) }, now, 2)).toBe(true);
+    expect(isPackageEnding({ remainingCredits: 1, expiresAt: null }, now, 0)).toBe(false);
+    expect(isPackageEnding({ remainingCredits: 1, expiresAt: days(-1) }, now, 2)).toBe(false);
+  });
+
+  it('orders the running-out packages first, then the nearest end', () => {
+    const at = new Date('2026-09-01T00:00:00.000Z');
+    const rows = [
+      { id: 'used', remainingCredits: 0, expiresAt: null, purchasedAt: at },
+      { id: 'late', remainingCredits: 6, expiresAt: days(40), purchasedAt: at },
+      { id: 'low', remainingCredits: 1, expiresAt: null, purchasedAt: at },
+      { id: 'soon', remainingCredits: 6, expiresAt: days(20), purchasedAt: at },
+      { id: 'closing', remainingCredits: 5, expiresAt: days(3), purchasedAt: at },
+    ];
+    expect([...rows].sort(compareEndingFirst(now, 2)).map((row) => row.id)).toEqual([
+      'closing',
+      'low',
+      'soon',
+      'late',
+      'used',
+    ]);
   });
 });
