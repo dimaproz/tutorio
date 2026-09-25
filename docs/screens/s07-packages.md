@@ -164,14 +164,14 @@ now refuses to delete a used package.
   until the tutor types their own: «English · 8 занять» for a count package,
   «English · 1–31 жовт» for a period; left empty, the package is sold with
   the suggestion. The preview and «Пакет продано» show it.
+- **The debt note stays conditional**: «Спершу закриє N заняття в борг» shows
+  only when there are lessons on debt, with their number (L-82).
 - **An extension by hand is in «Історія»**: the ticket's read returns
   `manualExtensions` (from the extension's audit row) and the history shows
   «Продовжено до 31 жовтня · було до 20 вересня».
 
 ## Open questions
 
-- **«Спершу закриє заняття в борг, якщо вони є»** is shown only with the
-  number when there are lessons on debt; the generic line is dropped.
 - **The sale's dates use the browser's time zone** (the known S02 issue):
   «Діє до 30.10» ends at the browser's midnight, while the studio shows
   dates in its own time zone.
