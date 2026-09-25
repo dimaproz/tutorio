@@ -10,8 +10,11 @@ type Args = {
   role: 'OWNER' | 'TEACHER';
   /** `mixed`: Mark pays his own price; `group`: everyone the group's; `saving`: a save hangs. */
   memberPrices: 'mixed' | 'group' | 'saving';
-  /** S08: the B2 group's schedule — as it is, with a change planned from 1 October, or none. */
-  schedule: 'active' | 'planned' | 'none';
+  /**
+   * S08: the B2 group's schedule — as it is, with a change or a stop planned
+   * from 1 October, or none.
+   */
+  schedule: 'active' | 'planned' | 'stopping' | 'none';
   /** S08: `fails` refuses the sale to members, so nothing is sold. */
   memberSale: 'sells' | 'fails';
 };
@@ -61,7 +64,7 @@ const meta = {
     scenario: { control: 'inline-radio', options: ['full', 'new', 'archived', 'empty-lessons'] },
     role: { control: 'inline-radio', options: ['OWNER', 'TEACHER'] },
     memberPrices: { control: 'inline-radio', options: ['mixed', 'group', 'saving'] },
-    schedule: { control: 'inline-radio', options: ['active', 'planned', 'none'] },
+    schedule: { control: 'inline-radio', options: ['active', 'planned', 'stopping', 'none'] },
     memberSale: { control: 'inline-radio', options: ['sells', 'fails'] },
   },
 } satisfies Meta<typeof GroupPageScreen>;
@@ -290,7 +293,10 @@ export const PriceDialogNegative: Story = {
     // The field takes the focus with its value selected: type only after that.
     await waitFor(() => expect(field).toHaveFocus());
     await userEvent.clear(field);
-    await userEvent.type(field, '-50');
+    await waitFor(() => expect(field).toHaveValue(''));
+    // One input event: typing key by key races the field's own formatting under load.
+    await userEvent.paste('-50');
+    await waitFor(() => expect(field).toHaveValue('-50'));
     await userEvent.click(dialog.getByRole('button', { name: 'Save' }));
     // Under a full run the validation can take longer than the default second.
     await expect(
@@ -319,7 +325,8 @@ export const PriceSaved: Story = {
     // The field takes the focus with its value selected: type only after that.
     await waitFor(() => expect(field).toHaveFocus());
     await userEvent.clear(field);
-    await userEvent.type(field, '300');
+    await waitFor(() => expect(field).toHaveValue(''));
+    await userEvent.paste('300');
     await waitFor(() => expect(field).toHaveValue('300'));
     await userEvent.click(dialog.getByRole('button', { name: 'Save' }));
     // The toast slides in; it is visible once it has.
@@ -416,6 +423,24 @@ export const PlannedChange: Story = {
   },
 };
 
+/** A stop set for 1 October (no board; composed from the planned change): «Cancel the stop». */
+export const PlannedStop: Story = {
+  args: { schedule: 'stopping' },
+  play: async ({ canvasElement }) => {
+    const card = await scheduleCard(canvasElement);
+    const from = /^Stops from (1 October|October 1)$/;
+    await expect(await card.findByText(from)).toBeVisible();
+    await expect(card.getByText(/^Last lesson — /)).toBeVisible();
+    await userEvent.click(card.getByRole('button', { name: 'Cancel the stop' }));
+    await expect(
+      await within(document.body).findByText(
+        'Stop cancelled — the lessons are back in the calendar',
+      ),
+    ).toBeInTheDocument();
+    await waitFor(() => expect(card.queryByText(from)).toBeNull());
+  },
+};
+
 /** Board 01 · 05 · The ⋯ menu opens the S05 change dialog, and the stop dialog. */
 export const ScheduleMenu: Story = {
   play: async ({ canvasElement }) => {
@@ -497,6 +522,10 @@ export const SellToMembers: Story = {
     // Nine lessons of the schedule in October at the group price, three times.
     await expect(dialog.getByText('3 packages · 9 lessons each · Oct 1 – 31')).toBeInTheDocument();
     await expect(dialog.getByRole('button', { name: 'Sell 3 packages · 10,800 ₴' })).toBeEnabled();
+    // Artem's package closes his two unpaid lessons first (L-91).
+    await expect(
+      dialog.getByText('First covers 2 lessons on debt — 7 stay in the package'),
+    ).toBeInTheDocument();
     // Mark's own rate is only a hint until applied.
     await expect(dialog.getByText('Own price 350 ₴ · 9 × 350 = 3,150 ₴')).toBeInTheDocument();
   },
@@ -542,6 +571,7 @@ export const SellSold: Story = {
       sold.getByRole('button', { name: 'Record payment · Artem Lysenko' }),
     ).toBeInTheDocument();
     await expect(sold.getAllByRole('button', { name: /^Record payment ·/ })).toHaveLength(3);
+    await expect(sold.getByText('7 of 9 · 2 lessons on debt covered')).toBeInTheDocument();
   },
 };
 

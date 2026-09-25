@@ -127,7 +127,11 @@ export function MembersSoldDialog({
               return (
                 <li
                   key={pkg.id}
-                  className="flex items-center gap-3.5 rounded-row bg-background px-4 py-3.5"
+                  className={
+                    mobile
+                      ? 'grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3.5 gap-y-3 rounded-row bg-background px-4 py-3.5'
+                      : 'flex items-center gap-3.5 rounded-row bg-background px-4 py-3.5'
+                  }
                 >
                   <EntityAvatar
                     avatarKey={avatars.get(pkg.studentId) ?? null}
@@ -150,12 +154,12 @@ export function MembersSoldDialog({
                   <span className="shrink-0 text-[15px] font-semibold whitespace-nowrap tabular-nums">
                     {format.money(pkg.totalPriceMinorSnapshot, currency)}
                   </span>
-                  {mobile || owedMinor(pkg) === 0 || paid.has(pkg.id) ? null : (
+                  {owedMinor(pkg) === 0 || paid.has(pkg.id) ? null : (
                     <Button
                       type="button"
                       variant="outline"
                       size="xs"
-                      className="shrink-0"
+                      className={mobile ? 'col-span-3 h-10 w-full' : 'shrink-0'}
                       aria-label={t('payFor', { name: pkg.student.fullName })}
                       onClick={() => setPaying(pkg)}
                     >

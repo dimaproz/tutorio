@@ -343,15 +343,20 @@ export function useApplyScheduleChangeMutation() {
 }
 
 /**
- * Takes back the change planned for later (S08): the rule before it applies
- * again from its date, and the lessons it moved move back.
+ * Takes back what a schedule planned for later (S08): a change — the rule
+ * before it applies again and its lessons move back — or a stop — the
+ * schedule runs on and books its lessons again.
  */
-export function useCancelScheduleChangeMutation() {
+export function useCancelSchedulePlanMutation() {
   const queryClient = useQueryClient();
-  return useMutation<ScheduleChangeResult, GatewayError, { scheduleId: string; force?: boolean }>({
-    mutationFn: ({ scheduleId, force: forced }) =>
+  return useMutation<
+    ScheduleChangeResult,
+    GatewayError,
+    { scheduleId: string; plan: 'change' | 'stop'; force?: boolean }
+  >({
+    mutationFn: ({ scheduleId, plan, force: forced }) =>
       gatewayFetch<ScheduleChangeResult>(
-        `/api/backend/schedules/${scheduleId}/changes/cancel${force(forced)}`,
+        `/api/backend/schedules/${scheduleId}/${plan === 'stop' ? 'stop' : 'changes'}/cancel${force(forced)}`,
         { method: 'POST' },
       ),
     onSuccess: () => invalidateLessonGraph(queryClient),

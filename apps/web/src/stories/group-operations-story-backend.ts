@@ -129,7 +129,11 @@ export function b2Billing(members: readonly number[]): GroupBillingResponse {
 export const paysPerLesson = (n: number) => n === 5 || n === 2;
 
 /** The B2 group's schedule: Tuesday and Thursday at 17:00, and the planned move to 18:00. */
-export function b2Schedule(planned: boolean, memberCount: number): ScheduleResponse {
+export function b2Schedule(
+  planned: boolean,
+  memberCount: number,
+  stopsAt: string | null = null,
+): ScheduleResponse {
   return {
     id: B2_SCHEDULE_ID,
     workspaceId: WORKSPACE,
@@ -139,7 +143,7 @@ export function b2Schedule(planned: boolean, memberCount: number): ScheduleRespo
     timezone: 'Europe/Kyiv',
     durationMin: 60,
     horizonWeeks: 4,
-    endsAt: null,
+    endsAt: stopsAt,
     state: 'ACTIVE',
     slots: [
       { weekday: 2, localTime: '17:00', seriesId: SERIES_ID },
@@ -253,7 +257,7 @@ export function memberSalePreview(
         validFrom: plan.validFrom,
         expiresAt: plan.expiresAt,
         scheduleLessons: plan.scheduleLessons,
-        debtLessons: row?.debtLessons ?? 0,
+        debtLessons: owedOf(row, plan.lessonsTotal),
         ahead: live ? { id: live.id, name: live.name } : null,
         pause: row?.pause ?? null,
       };
@@ -261,12 +265,27 @@ export function memberSalePreview(
   };
 }
 
-/** `POST /packages/members`: one new package per member. */
-export function soldToMembers(body: SellToMembersDto): PackageResponse[] {
+/**
+ * The owed lessons a new package pays for first, up to its size: on debt and
+ * unpaid per lesson (L-82, L-91).
+ */
+function owedOf(row: Billing | undefined, lessons: number): number {
+  return row ? Math.min(row.debtLessons + row.balance.unpaidLessons, lessons) : 0;
+}
+
+/** `POST /packages/members`: one new package per member; each closes the member's owed lessons. */
+export function soldToMembers(
+  body: SellToMembersDto,
+  billing: GroupBillingResponse,
+): PackageResponse[] {
   const plan = planOf(body);
   return body.studentIds.map((id) => {
     const n = memberN(id);
     const price = priceOf(body, id, plan.lessonsTotal);
+    const covered = owedOf(
+      billing.members.find((item) => item.studentId === id),
+      plan.lessonsTotal,
+    );
     return {
       id: `77777777-7777-4777-8777-${String(900 + n).padStart(12, '0')}`,
       workspaceId: WORKSPACE,
@@ -282,8 +301,8 @@ export function soldToMembers(body: SellToMembersDto): PackageResponse[] {
       endDate: body.endDate ?? null,
       pricePerLessonMinorSnapshot: price.perLesson,
       totalPriceMinorSnapshot: price.total,
-      remainingCredits: plan.lessonsTotal,
-      consumedCredits: 0,
+      remainingCredits: plan.lessonsTotal - covered,
+      consumedCredits: covered,
       paidMinor: 0,
       refundedMinor: 0,
       currency: body.currency,

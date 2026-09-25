@@ -3,6 +3,7 @@
 import {
   CalendarClockIcon,
   CalendarPlusIcon,
+  CircleSlashIcon,
   EllipsisVerticalIcon,
   OctagonXIcon,
   PencilIcon,
@@ -32,7 +33,9 @@ export type ScheduleCardActions = {
   onAddDay: () => void;
   onStop: () => void;
   onCancelChange: () => void;
-  cancelling: boolean;
+  onCancelStop: () => void;
+  /** Which planned change is being taken back, if any. */
+  cancelling: 'change' | 'stop' | null;
 };
 
 /**
@@ -99,6 +102,9 @@ export function GroupScheduleCard({
   }
 
   const planned = schedule?.nextChange ?? null;
+  // A stop set for a later date keeps the schedule active until then (L-24).
+  const stopsAt =
+    schedule?.endsAt && Date.parse(schedule.endsAt) > now.getTime() ? schedule.endsAt : null;
 
   return (
     <Card
@@ -143,6 +149,7 @@ export function GroupScheduleCard({
       {planned && schedule ? (
         <PlannedChange schedule={schedule} planned={planned} lessons={lessons} actions={actions} />
       ) : null}
+      {stopsAt ? <PlannedStop stopsAt={stopsAt} lessons={lessons} actions={actions} /> : null}
 
       <div className="mt-auto flex flex-col gap-3 border-t border-feature-line pt-4">
         {next ? (
@@ -262,18 +269,12 @@ function PlannedChange({
           })}
         </span>
         {actions ? (
-          <button
-            type="button"
-            disabled={actions.cancelling}
+          <PlanCancel
+            label={t('cancelChange')}
+            pending={actions.cancelling === 'change'}
+            disabled={actions.cancelling !== null}
             onClick={actions.onCancelChange}
-            className={cn(
-              'inline-flex items-center gap-1.5 rounded-sm text-[13px] font-medium text-feature-muted underline outline-none focus-visible:ring-2 focus-visible:ring-feature-foreground',
-              'disabled:opacity-60',
-            )}
-          >
-            {actions.cancelling ? <Spinner className="size-3.5" /> : null}
-            {t('cancelChange')}
-          </button>
+          />
         ) : null}
       </div>
       <ul className="flex flex-wrap gap-1.5">
@@ -288,6 +289,94 @@ function PlannedChange({
         ))}
       </ul>
       <span className="text-xs text-feature-muted">{caption}</span>
+    </div>
+  );
+}
+
+/** The underlined text command of a planned change or stop: «Скасувати зміну». */
+function PlanCancel({
+  label,
+  name,
+  pending,
+  disabled,
+  onClick,
+}: {
+  label: string;
+  /** The accessible name, when the visible label is shorter («Скасувати»). */
+  name?: string;
+  pending: boolean;
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      aria-label={name}
+      onClick={onClick}
+      className={cn(
+        'inline-flex shrink-0 items-center gap-1.5 rounded-sm text-[13px] font-medium text-feature-muted underline outline-none focus-visible:ring-2 focus-visible:ring-feature-foreground',
+        'disabled:opacity-60',
+      )}
+    >
+      {pending ? <Spinner className="size-3.5" /> : null}
+      {label}
+    </button>
+  );
+}
+
+/**
+ * A stop set for a later date (L-24): the warm band of a planned change with
+ * its date, the last lesson the schedule still holds and «Скасувати», which
+ * runs the schedule on and books its lessons again.
+ */
+function PlannedStop({
+  stopsAt,
+  lessons,
+  actions,
+}: {
+  stopsAt: string;
+  lessons: readonly LessonResponse[];
+  actions?: ScheduleCardActions;
+}) {
+  const t = useTranslations('groups.schedule');
+  const format = useFormatter();
+  const end = Date.parse(stopsAt);
+  const last = lessons
+    .filter((lesson) => lesson.status === 'SCHEDULED' && Date.parse(lesson.startsAtUtc) < end)
+    .map((lesson) => lesson.startsAtUtc)
+    .sort()
+    .at(-1);
+  return (
+    <div className="flex flex-col gap-1.5 rounded-item bg-warning/22 p-3.5">
+      <div className="flex items-center justify-between gap-2">
+        <span className="flex items-center gap-2 text-[13px] font-semibold [&_svg]:size-[15px]">
+          <CircleSlashIcon />
+          {t('plannedStop', {
+            date: format.dateTime(new Date(stopsAt), { day: 'numeric', month: 'long' }),
+          })}
+        </span>
+        {actions ? (
+          <PlanCancel
+            label={t('cancelStopShort')}
+            name={t('cancelStop')}
+            pending={actions.cancelling === 'stop'}
+            disabled={actions.cancelling !== null}
+            onClick={actions.onCancelStop}
+          />
+        ) : null}
+      </div>
+      <span className="text-xs text-feature-muted">
+        {last
+          ? t('plannedStopLast', {
+              date: format.dateTime(new Date(last), {
+                weekday: 'short',
+                day: 'numeric',
+                month: 'short',
+              }),
+            })
+          : t('plannedStopNone')}
+      </span>
     </div>
   );
 }

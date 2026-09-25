@@ -185,7 +185,8 @@
     "PAUSE_OVERLAP": "The student already has a pause covering this time.",
     "PAUSE_ENDED": "This pause is already over.",
     "PAUSE_RUNNING": "A pause that has begun can only change its end and reason.",
-    "NO_PLANNED_CHANGE": "There is no planned change any more — refresh the page."
+    "NO_PLANNED_CHANGE": "There is no planned change any more — refresh the page.",
+    "NO_PLANNED_STOP": "There is no planned stop any more — refresh the page."
   },
   "validation": {
     "noShowIndividualOnly": "A group lesson records absences through attendance",
@@ -1285,7 +1286,12 @@
       "plannedMoves": "{count, plural, one {# lesson moves} other {# lessons move}} to {range}",
       "plannedMovesNoTime": "{count, plural, one {# lesson moves} other {# lessons move}} to the new times",
       "plannedNone": "From this date the lessons follow the new schedule",
-      "cancelChange": "Cancel the change"
+      "cancelChange": "Cancel the change",
+      "plannedStop": "Stops from {date}",
+      "plannedStopLast": "Last lesson — {date}",
+      "plannedStopNone": "No lessons left before this date",
+      "cancelStop": "Cancel the stop",
+      "cancelStopShort": "Cancel"
     },
     "stats": {
       "students": "Students in the group",
@@ -3425,6 +3431,9 @@
     },
     "cancelChange": {
       "done": "Change cancelled — the lessons are back at their time"
+    },
+    "cancelStop": {
+      "done": "Stop cancelled — the lessons are back in the calendar"
     }
   }
 }

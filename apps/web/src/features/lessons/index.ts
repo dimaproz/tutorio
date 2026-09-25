@@ -13,7 +13,7 @@ export { useLessonMove, type LessonMoveSource } from './ui/use-lesson-move';
 export { BulkCancelDialog, type BulkCancelRange } from './ui/bulk-cancel/bulk-cancel-dialog';
 export { panelActions } from './model/panel-actions';
 export { invalidateLessonGraph, useSchedulesQuery } from './api';
-export { useCancelScheduleChange } from './ui/schedule/use-cancel-schedule-change';
+export { useCancelSchedulePlan, type SchedulePlan } from './ui/schedule/use-cancel-schedule-plan';
 export {
   ScheduleCreateDialog,
   type ScheduleCreateInitial,

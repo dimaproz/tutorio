@@ -538,7 +538,7 @@ export type GroupStoryOptions = {
    * S08, the B2 group's schedule: `active` (default), a change `planned` from
    * 1 October, or `none` yet.
    */
-  groupSchedule?: 'active' | 'planned' | 'none';
+  groupSchedule?: 'active' | 'planned' | 'stopping' | 'none';
   /** S08: `fails` refuses the sale to members, so nothing is sold (all or nothing). */
   memberSale?: 'sells' | 'fails';
 };
@@ -565,6 +565,10 @@ export function createGroupRoutes(options: GroupStoryOptions) {
           ...(options.withNewGroup ? [{ ...NEW_GROUP }] : []),
         ];
   let scheduleMode = options.groupSchedule ?? 'active';
+  // A stop set for 1 October (S08): the schedule runs until then.
+  let stopsAt: string | null = scheduleMode === 'stopping' ? PLANNED_FROM : null;
+  const b2ScheduleNow = () =>
+    b2Schedule(scheduleMode === 'planned', b2?.members.length ?? 0, stopsAt);
   const b2 = groups.find((group) => group.n === 1);
   const b2Slots = b2?.schedule ?? null;
   if (b2 && scheduleMode === 'none') b2.schedule = null;
@@ -644,7 +648,7 @@ export function createGroupRoutes(options: GroupStoryOptions) {
     if (path === '/schedules' && method === 'GET' && query.get('groupId')) {
       const items =
         query.get('groupId') === storyGroupId(1) && scheduleMode !== 'none' && b2
-          ? [b2Schedule(scheduleMode === 'planned', b2.members.length)]
+          ? [b2ScheduleNow()]
           : [];
       return json({
         items,
@@ -656,14 +660,17 @@ export function createGroupRoutes(options: GroupStoryOptions) {
       });
     }
     const scheduleResult = (summary: ReturnType<typeof changeSummary>) =>
-      json(
-        { schedule: b2Schedule(scheduleMode === 'planned', b2?.members.length ?? 0), summary },
-        201,
-      );
+      json({ schedule: b2ScheduleNow(), summary }, 201);
     if (path === `/schedules/${B2_SCHEDULE_ID}/changes` && method === 'POST') {
       const change = body() as { effectiveFrom?: string };
       scheduleMode = 'planned';
       return scheduleResult(changeSummary(change.effectiveFrom ?? kyiv(0, 12)));
+    }
+    if (path === `/schedules/${B2_SCHEDULE_ID}/stop/cancel` && method === 'POST') {
+      if (!stopsAt) return json({ code: 'NO_PLANNED_STOP' }, 409);
+      const summary = { ...changeSummary(stopsAt), created: 6 };
+      stopsAt = null;
+      return scheduleResult(summary);
     }
     if (path === `/schedules/${B2_SCHEDULE_ID}/changes/cancel` && method === 'POST') {
       scheduleMode = 'active';
@@ -674,6 +681,11 @@ export function createGroupRoutes(options: GroupStoryOptions) {
       const from = String(body().from ?? kyiv(0, 12));
       const summary = changeSummary(from, 8);
       if (stopMatch[2]) return json(summary);
+      // A later date keeps the schedule until then (L-24).
+      if (from > kyiv(0, 12)) {
+        stopsAt = from;
+        return scheduleResult(summary);
+      }
       scheduleMode = 'none';
       if (b2) b2.schedule = null;
       return json({ schedule: { ...b2Schedule(false, 0), state: 'ENDED' }, summary }, 201);
@@ -702,7 +714,12 @@ export function createGroupRoutes(options: GroupStoryOptions) {
     }
     if (path === '/packages/members' && method === 'POST') {
       if (options.memberSale === 'fails') return json({ code: 'ENROLLMENT_NOT_FOUND' }, 404);
-      return json({ items: soldToMembers(body() as unknown as SellToMembersDto) }, 201);
+      return json(
+        {
+          items: soldToMembers(body() as unknown as SellToMembersDto, b2Billing(b2?.members ?? [])),
+        },
+        201,
+      );
     }
 
     // A member's own price (L-11): the group's price clears it.

@@ -6,7 +6,7 @@ import {
   ScheduleChangeDialog,
   ScheduleCreateDialog,
   ScheduleStopDialog,
-  useCancelScheduleChange,
+  useCancelSchedulePlan,
 } from '@/features/lessons';
 import { MemberSaleDialog, PackageSaleDialog, type MemberBillingState } from '@/features/packages';
 import { DirectionPauseEndDialog, DirectionPaymentDialog } from '@/features/students';
@@ -25,7 +25,7 @@ type Open =
 /**
  * Every S08 command of the group page in one place: the schedule card's
  * (create, change, add a day, stop — the S05 dialogs — and cancel a planned
- * change), the member cards' (record a payment and bring back — the S06
+ * change or stop), the member cards' (record a payment and bring back — the S06
  * dialogs —, sell one package — the S07 sale) and the group sale. The caller
  * renders `dialogs` once.
  */
@@ -42,7 +42,7 @@ export function useGroupPageActions({
 }) {
   const [open, setOpen] = useState<Open>(null);
   const close = () => setOpen(null);
-  const cancelChange = useCancelScheduleChange();
+  const cancelPlan = useCancelSchedulePlan();
 
   const scheduleActions: ScheduleCardActions = {
     onCreate: () => setOpen({ kind: 'scheduleCreate' }),
@@ -51,9 +51,12 @@ export function useGroupPageActions({
     onAddDay: () => setOpen({ kind: 'scheduleChange' }),
     onStop: () => setOpen({ kind: 'scheduleStop' }),
     onCancelChange: () => {
-      if (schedule) void cancelChange.cancel(schedule);
+      if (schedule) void cancelPlan.cancel(schedule, 'change');
     },
-    cancelling: cancelChange.pending,
+    onCancelStop: () => {
+      if (schedule) void cancelPlan.cancel(schedule, 'stop');
+    },
+    cancelling: cancelPlan.pending,
   };
 
   const candidates = saleCandidates(group, states);
@@ -97,7 +100,7 @@ export function useGroupPageActions({
           />
         </>
       ) : null}
-      {cancelChange.dialog}
+      {cancelPlan.dialog}
       <MemberSaleDialog
         open={open?.kind === 'sale'}
         onOpenChange={(next) => (next ? undefined : close())}
