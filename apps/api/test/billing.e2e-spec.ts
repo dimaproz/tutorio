@@ -449,6 +449,93 @@ describe('Work Packet 6.4 phase 3: billing core (e2e)', () => {
     expect(await chargesOf(lesson.id)).toHaveLength(3);
   });
 
+  it("keeps a member's own price and reprices only the others' future lessons (L-11, L-12)", async () => {
+    const [ann, bob] = await Promise.all([
+      newStudent('Price Ann'),
+      newStudent('Price Bob'),
+    ]);
+    const group = await post('/groups')
+      .send({
+        name: `Billing prices ${runId}`,
+        teacherId,
+        pricePerLesson: 40000,
+        currency: 'UAH',
+        students: { studentIds: [ann, bob] },
+      })
+      .expect(201);
+    const roster = async () =>
+      (await get(`/groups/${group.body.id}`).expect(200)).body.enrollments as {
+        id: string;
+        studentId: string;
+        priceMinor: number;
+        ownPrice: boolean;
+      }[];
+    const row = async (studentId: string) =>
+      (await roster()).find((item) => item.studentId === studentId)!;
+    const annId = (await row(ann)).id;
+    const bobId = (await row(bob)).id;
+    expect(await row(ann)).toMatchObject({
+      priceMinor: 40000,
+      ownPrice: false,
+    });
+
+    // Bob's own price; saving the group price turns it back into the group's.
+    const own = await patch(`/enrollments/${bobId}`)
+      .send({ priceMinor: 35000 })
+      .expect(200);
+    expect(own.body).toMatchObject({ priceMinor: 35000, ownPrice: true });
+    await patch(`/enrollments/${bobId}`)
+      .send({ priceMinor: 40000 })
+      .expect(200);
+    expect(await row(bob)).toMatchObject({
+      priceMinor: 40000,
+      ownPrice: false,
+    });
+    await patch(`/enrollments/${bobId}`)
+      .send({ priceMinor: 35000 })
+      .expect(200);
+
+    const before = await book({
+      groupId: group.body.id,
+      priceMinor: 40000,
+      startsAt: [at(-2, 16)],
+      status: 'COMPLETED',
+    });
+    const amounts = async (lessonId: string) =>
+      Object.fromEntries(
+        (await chargesOf(lessonId)).map((charge) => [
+          charge.enrollmentId,
+          charge.amountMinor,
+        ]),
+      );
+    expect(await amounts(before.id)).toEqual({
+      [annId]: 40000,
+      [bobId]: 35000,
+    });
+
+    // A new group price moves Ann, not Bob, and no charge already made.
+    await patch(`/groups/${group.body.id}`)
+      .send({ pricePerLesson: 45000 })
+      .expect(200);
+    expect(await row(ann)).toMatchObject({
+      priceMinor: 45000,
+      ownPrice: false,
+    });
+    expect(await row(bob)).toMatchObject({ priceMinor: 35000, ownPrice: true });
+    expect(await amounts(before.id)).toEqual({
+      [annId]: 40000,
+      [bobId]: 35000,
+    });
+
+    const after = await book({
+      groupId: group.body.id,
+      priceMinor: 45000,
+      startsAt: [at(-1, 16)],
+      status: 'COMPLETED',
+    });
+    expect(await amounts(after.id)).toEqual({ [annId]: 45000, [bobId]: 35000 });
+  });
+
   it('caps a package payment at what it still costs and ties it to its direction', async () => {
     const studentId = await newStudent('Payer');
     const pkg = await sell({ studentId, lessonsTotal: 2 });

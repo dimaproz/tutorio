@@ -616,6 +616,7 @@ export class GroupsService {
         billingType: enrollment.billingType,
         priceMinor: enrollment.priceMinor,
         currency: enrollment.currency as Enrollment['currency'],
+        ownPrice: enrollment.ownPrice,
         cancellationDeadlineHours: enrollment.cancellationDeadlineHours,
         student: {
           id: enrollment.student.id,
@@ -772,6 +773,19 @@ export class GroupsService {
         where: { id: { in: reactivated.map((row) => row.id) } },
         data: { status: 'ACTIVE', ...(teacherId ? { teacherId } : {}) },
       });
+      // A returning member without their own price pays today's group price.
+      if (group.pricePerLesson !== null) {
+        await tx.enrollment.updateMany({
+          where: {
+            id: { in: reactivated.map((row) => row.id) },
+            ownPrice: false,
+          },
+          data: {
+            priceMinor: group.pricePerLesson,
+            ...(group.currency ? { currency: group.currency } : {}),
+          },
+        });
+      }
       for (const row of reactivated) {
         entries.push({
           ...base,
@@ -1114,6 +1128,31 @@ export class GroupsService {
           changes.fields.reassignedLessons = {
             before: null,
             after: moved.lessons,
+          };
+        }
+        const priceChanged =
+          updated.pricePerLesson !== null &&
+          (updated.pricePerLesson !== before.pricePerLesson ||
+            updated.currency !== before.currency);
+        if (priceChanged) {
+          // Members without their own price follow the group (L-11). Only
+          // their charges from now on use it: a charge keeps the amount it
+          // was made with, so held lessons are never repriced (L-12).
+          const repriced = await tx.enrollment.updateMany({
+            where: {
+              workspaceId: auth.workspaceId,
+              groupId: before.id,
+              deletedAt: null,
+              ownPrice: false,
+            },
+            data: {
+              priceMinor: updated.pricePerLesson!,
+              ...(updated.currency ? { currency: updated.currency } : {}),
+            },
+          });
+          changes.fields.repricedMembers = {
+            before: null,
+            after: repriced.count,
           };
         }
         await this.audit.record(tx, {

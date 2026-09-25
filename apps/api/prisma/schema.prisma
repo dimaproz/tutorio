@@ -349,6 +349,9 @@ model Enrollment {
   // Price per lesson in minor units of `currency`; non-negative (DB CHECK).
   priceMinor                 Int
   currency                   String
+  // A group member's own price (L-11): false = follows the group price, and a
+  // group price change reprices the member. Always false for a direction.
+  ownPrice                   Boolean           @default(false)
   // Overrides Workspace.cancellationDeadlineHours; null = inherit the default.
   cancellationDeadlineHours  Int?
   createdAt                  DateTime          @default(now())

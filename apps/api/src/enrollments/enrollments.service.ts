@@ -43,7 +43,15 @@ import {
 // the lifecycle rules check (student status, group and teacher liveness).
 const lockedEnrollmentInclude = {
   student: { select: { id: true, fullName: true, status: true } },
-  group: { select: { id: true, name: true, deletedAt: true } },
+  group: {
+    select: {
+      id: true,
+      name: true,
+      deletedAt: true,
+      pricePerLesson: true,
+      currency: true,
+    },
+  },
   teacher: {
     select: { id: true, fullName: true, color: true, deletedAt: true },
   },
@@ -316,7 +324,17 @@ export class EnrollmentsService {
       if (!before) {
         throw enrollmentNotFound();
       }
-      const changes = this.audit.buildChanges(before, { ...dto });
+      // A group member's price is their own unless it is the group's
+      // (L-11): saving the group price makes the member follow it again.
+      const ownPrice =
+        before.group &&
+        (dto.priceMinor !== undefined || dto.currency !== undefined)
+          ? before.group.pricePerLesson === null ||
+            (dto.priceMinor ?? before.priceMinor) !==
+              before.group.pricePerLesson ||
+            (dto.currency ?? before.currency) !== before.group.currency
+          : before.ownPrice;
+      const changes = this.audit.buildChanges(before, { ...dto, ownPrice });
       if (!changes) {
         // No-op PATCH: nothing to persist, no audit row.
         return before;
@@ -362,6 +380,7 @@ export class EnrollmentsService {
         where: { id: before.id },
         data: {
           ...dto,
+          ownPrice,
           ...(becomesInactive
             ? { scheduleSuspensionToken: suspensionToken }
             : {}),

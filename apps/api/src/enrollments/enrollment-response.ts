@@ -45,6 +45,7 @@ export function toEnrollmentResponse(
     billingType: row.billingType,
     priceMinor: row.priceMinor,
     currency: row.currency as EnrollmentResponse['currency'],
+    ownPrice: row.ownPrice,
     cancellationDeadlineHours: row.cancellationDeadlineHours,
     effectiveCancellationDeadlineHours:
       row.cancellationDeadlineHours ?? workspaceDefaultDeadlineHours,
