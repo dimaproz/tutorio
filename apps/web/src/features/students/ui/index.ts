@@ -7,10 +7,8 @@ export { StudentCreatePage } from './student-create-page';
 export { StudentEditPage } from './student-edit-page';
 export { StudentStatusControl } from './student-status-control';
 export { StudentSetupCard } from './student-setup-card';
-export { StudentPackagesCard } from './student-packages-card';
 export { StudentParentsCard } from './student-parents-card';
 export { StudentInformationCard } from './student-information-card';
-export { StudentLearningCard } from './student-learning-card';
 export {
   useStudentFormPicker,
   useStudentLinkResults,

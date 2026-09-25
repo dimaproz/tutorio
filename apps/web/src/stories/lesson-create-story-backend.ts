@@ -94,6 +94,7 @@ function billing(kind: CreateBilling, student = CREATE_STUDENT_ID): StudentBilli
   const perLesson = kind === 'noPackage';
   return {
     studentId: student,
+    cancellationDeadlineHours: 12,
     lowCreditThreshold: 2,
     directions: [
       {
@@ -111,15 +112,28 @@ function billing(kind: CreateBilling, student = CREATE_STUDENT_ID): StudentBilli
                 expiresAt: kyivAutumn(10, 30, 12),
                 remainingCredits: credits,
                 usable: true,
+                validFrom: null,
+                lessonsTotal: 8,
+                totalPriceMinor: 400000,
+                paidMinor: 400000,
+                paymentStatus: 'PAID',
               },
             ],
         creditsLeft: credits,
         debtLessons: 0,
-        balance: { chargedMinor: 0, paidMinor: 0, debtMinor: 0, advanceMinor: 0, unpaidLessons: 0 },
+        balance: {
+          chargedMinor: 0,
+          paidMinor: 0,
+          debtMinor: 0,
+          advanceMinor: 0,
+          unpaidLessons: 0,
+          unpaid: [],
+        },
         warning: null,
         status: 'ACTIVE',
-        teacher: DMYTRO,
+        teacher: { ...DMYTRO, avatarKey: null, subjects: ['English'] },
         group: null,
+        cancellationDeadlineHours: null,
       },
     ],
     totals: [],

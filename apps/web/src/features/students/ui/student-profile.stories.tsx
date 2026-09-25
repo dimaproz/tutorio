@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 import {
   FRESH_STUDENT,
   FRESH_STUDENT_ID,
@@ -23,8 +23,8 @@ type Args = {
 
 /**
  * The student profile in the app frame. `profile` picks the four reference
- * states — active, freshly created (with the set-up checklist), on a break
- * and archived; `request` shows loading and a failed load. Status changes in
+ * states — active, freshly created (with the set-up checklist), paused and
+ * archived; `request` shows loading and a failed load. Status changes in
  * the hero run against the in-memory backend.
  */
 function StudentProfileScreen({ profile, request }: Args) {
@@ -87,7 +87,7 @@ export const Fresh: Story = {
 export const OnHold: Story = {
   args: { profile: 'hold' },
   play: async ({ canvas }) => {
-    await expect(await canvas.findByText('Student is on a break')).toBeVisible();
+    await expect(await canvas.findByText('The student is paused')).toBeVisible();
   },
 };
 
@@ -107,8 +107,8 @@ export const StatusMenu: Story = {
       'aria-checked',
       'true',
     );
-    await userEvent.click(menu.getByRole('menuitemradio', { name: /On a break/ }));
+    await userEvent.click(menu.getByRole('menuitemradio', { name: /Paused/ }));
     const dialog = within(await within(document.body).findByRole('dialog'));
-    await expect(dialog.getByText('Send the student on a break?')).toBeVisible();
+    await waitFor(() => expect(dialog.getByRole('heading', { name: 'Pause' })).toBeVisible());
   },
 };

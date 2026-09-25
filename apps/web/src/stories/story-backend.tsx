@@ -24,6 +24,10 @@ import {
 import { createLessonListRoutes, type LessonListStoryOptions } from './lesson-list-story-backend';
 import { createLessonRoutes, type LessonStoryOptions } from './lesson-story-backend';
 import { createSchedulesRoutes, type SchedulesStoryOptions } from './schedules-story-backend';
+import {
+  createProfileBillingRoutes,
+  type ProfileBillingOptions,
+} from './student-billing-story-backend';
 
 /**
  * A deterministic, in-memory backend for screen stories. It answers the same
@@ -352,7 +356,8 @@ export type StoryBackendOptions = GroupStoryOptions &
   LessonListStoryOptions &
   SchedulesStoryOptions &
   LessonStoryOptions &
-  LessonCreateStoryOptions & {
+  LessonCreateStoryOptions &
+  ProfileBillingOptions & {
     students?: SampleStudent[];
     packages?: PackageResponse[];
     lessons?: LessonResponse[];
@@ -492,6 +497,7 @@ function createHandler(options: StoryBackendOptions) {
   const schedulesRoutes = createSchedulesRoutes(options);
   const lessonRoutes = createLessonRoutes(options);
   const lessonCreateRoutes = createLessonCreateRoutes(options);
+  const profileBillingRoutes = createProfileBillingRoutes(options);
   const settle = () =>
     options.saveDelayMs
       ? new Promise((resolve) => setTimeout(resolve, options.saveDelayMs))
@@ -517,6 +523,8 @@ function createHandler(options: StoryBackendOptions) {
     }
 
     const readBody = () => JSON.parse(String(init?.body ?? '{}'));
+    const billingResponse = await profileBillingRoutes(path, method, query, readBody);
+    if (billingResponse) return billingResponse;
     const schedulesResponse = await schedulesRoutes(path, method, query, readBody);
     if (schedulesResponse) return schedulesResponse;
     const lessonListResponse = await lessonListRoutes(path, method, query, readBody);
@@ -715,6 +723,33 @@ function createHandler(options: StoryBackendOptions) {
         pageSize,
         total: rows.length,
         totalPages: Math.max(1, Math.ceil(rows.length / pageSize)),
+      });
+    }
+
+    // A profile with no billing story: directions not set up yet.
+    const billingMatch = path.match(/^\/students\/([^/]+)\/billing$/);
+    if (billingMatch) {
+      return json({
+        studentId: billingMatch[1],
+        cancellationDeadlineHours: 12,
+        lowCreditThreshold: 2,
+        directions: [],
+        totals: [],
+      });
+    }
+
+    if (path === '/pauses/preview' && method === 'POST') {
+      const body = readBody() as {
+        startsAt?: string;
+        endsAt?: string | null;
+        enrollmentId?: string;
+      };
+      return json({
+        startsAt: body.startsAt ?? new Date(STORY_CLOCK).toISOString(),
+        endsAt: body.endsAt ?? null,
+        directions: [],
+        extensions: [],
+        holdsStudent: !body.enrollmentId,
       });
     }
 

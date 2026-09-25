@@ -29,16 +29,20 @@ import { usePackagesQuery, usePrefetchPackagesQuery } from '@/lib/api/packages';
 import { useLessonsQuery, usePrefetchLessonsQuery } from '@/lib/api/scheduling';
 import { useStudentQuery } from '@/lib/api/students';
 import { StudentInformationCard } from './student-information-card';
-import { StudentLearningCard } from './student-learning-card';
 import { StudentNextLesson } from './student-next-lesson';
 import { StudentNotesCard } from './student-notes-card';
-import { StudentPackagesCard } from './student-packages-card';
 import { StudentParentsCard } from './student-parents-card';
 import { StudentProfileHero } from './student-profile-hero';
 import { StudentProfileMetrics } from './student-profile-metrics';
 import { StudentSectionsCard } from './student-sections-card';
 import { StudentSetupCard } from './student-setup-card';
 import { useStudentStatusActions } from './student-status-control';
+import { PauseBanner } from './learning/pause-banner';
+import { StudentLearningBlock } from './learning/student-learning-block';
+import { StudentPackagesTab } from './learning/student-packages-tab';
+import { StudentPaymentsTab } from './learning/student-payments-tab';
+import { useLearningActions } from './learning/use-learning-actions';
+import { useProfileBilling } from './learning/use-profile-billing';
 
 /** Where the lesson panel links a student and a group. */
 const LESSON_LINKS: LessonPanelLinks = {
@@ -98,8 +102,22 @@ export function StudentProfileContent({
   const archived = policy.readOnly;
   useSetPageCrumb(t('detail.pageLabel'));
   const setupVisible = searchParams.get('setup') === '1' && !archived;
-  const statusActions = useStudentStatusActions(student);
+  const money = useProfileBilling(student.id);
+  const learning = useLearningActions({
+    student,
+    directions: money.directions,
+    studioDeadlineHours: money.billing.data?.cancellationDeadlineHours ?? 0,
+  });
+  const statusActions = useStudentStatusActions(student, {
+    pause: () => learning.pause(),
+    returnNow: () => {
+      if (!money.running) return false;
+      learning.endPause(money.running);
+      return true;
+    },
+  });
   const parentsSectionRef = useRef<HTMLDivElement>(null);
+  const firstName = student.fullName.split(/\s+/)[0] || student.fullName;
 
   // One pinned window shared with the lessons panel, so both read one query.
   const clock = useNow();
@@ -150,48 +168,58 @@ export function StudentProfileContent({
     parentsSectionRef.current?.querySelector<HTMLButtonElement>('#student-link-parent')?.focus();
   };
 
-  const banner =
-    student.status === 'ON_HOLD' ? (
-      <Notice
-        tone="info"
-        icon={<PauseIcon />}
-        title={t('banner.holdTitle')}
-        text={t('banner.holdText')}
-        action={
-          <Button
-            type="button"
-            variant="white"
-            size="xs"
-            disabled={statusActions.pending}
-            onClick={() => statusActions.choose('ACTIVE')}
-          >
-            {statusActions.pending ? (
-              <Spinner data-icon="inline-start" />
-            ) : (
-              <PlayIcon data-icon="inline-start" />
-            )}
-            {t('banner.holdAction')}
-          </Button>
-        }
-      />
-    ) : archived ? (
-      <Notice
-        tone="warning"
-        icon={<ArchiveIcon />}
-        title={t('detail.archivedTitle')}
-        text={t('detail.archivedDescription')}
-        action={
-          <Button type="button" variant="white" size="xs" disabled={restoring} onClick={restore}>
-            {restoring ? (
-              <Spinner data-icon="inline-start" />
-            ) : (
-              <RotateCcwIcon data-icon="inline-start" />
-            )}
-            {t('detail.restore')}
-          </Button>
-        }
-      />
-    ) : null;
+  // A pause banner leads (decision 9): a running whole-student pause, else
+  // the next one that has not begun; a legacy hold with no pause behind it
+  // keeps the plain banner.
+  const pauseBanner = money.running ?? money.scheduled;
+  const banner = archived ? (
+    <Notice
+      tone="warning"
+      icon={<ArchiveIcon />}
+      title={t('detail.archivedTitle')}
+      text={t('detail.archivedDescription')}
+      action={
+        <Button type="button" variant="white" size="xs" disabled={restoring} onClick={restore}>
+          {restoring ? (
+            <Spinner data-icon="inline-start" />
+          ) : (
+            <RotateCcwIcon data-icon="inline-start" />
+          )}
+          {t('detail.restore')}
+        </Button>
+      }
+    />
+  ) : pauseBanner ? (
+    <PauseBanner
+      pause={pauseBanner}
+      firstName={firstName}
+      billing={money.billing.data}
+      actions={learning}
+    />
+  ) : student.status === 'ON_HOLD' ? (
+    <Notice
+      tone="info"
+      icon={<PauseIcon />}
+      title={t('banner.holdTitle')}
+      text={t('banner.holdText')}
+      action={
+        <Button
+          type="button"
+          variant="white"
+          size="xs"
+          disabled={statusActions.pending}
+          onClick={() => statusActions.choose('ACTIVE')}
+        >
+          {statusActions.pending ? (
+            <Spinner data-icon="inline-start" />
+          ) : (
+            <PlayIcon data-icon="inline-start" />
+          )}
+          {t('banner.holdAction')}
+        </Button>
+      }
+    />
+  ) : null;
 
   const identity = (
     <div className="flex flex-col gap-4">
@@ -210,6 +238,7 @@ export function StudentProfileContent({
           unavailable={lessons.isError}
           onOpenLesson={lessonPanel.open}
           onMarkAttendance={(id) => lessonPanel.open(id, 'markAttendance')}
+          onReschedule={archived ? undefined : (id) => lessonPanel.open(id, 'move')}
         />
       </div>
     </div>
@@ -238,11 +267,31 @@ export function StudentProfileContent({
             onSelect={lessonPanel.open}
           />
         }
-        packages={<StudentPackagesCard bare studentId={student.id} readOnly={archived} />}
+        packages={
+          <StudentPackagesTab
+            packages={packageItems}
+            loading={packages.isPending}
+            error={packages.isError ? packages.error : undefined}
+            onRetry={() => void packages.refetch()}
+            nowMs={now}
+          />
+        }
+        payments={
+          <StudentPaymentsTab
+            payments={money.payments.data?.items ?? []}
+            packages={packageItems}
+            directionNames={money.directionNames}
+            loading={money.payments.isPending}
+            error={money.payments.isError ? money.payments.error : undefined}
+            onRetry={() => void money.payments.refetch()}
+          />
+        }
+        onRecordPayment={
+          archived || !money.payTarget
+            ? undefined
+            : () => learning.pay(money.payTarget!.enrollmentId)
+        }
       />
-      {/* History stays readable: an archived profile shows its relationships
-          without the commands that would change them. */}
-      <StudentLearningCard student={student} readOnly={archived} />
     </>
   );
 
@@ -261,12 +310,33 @@ export function StudentProfileContent({
         identity={identity}
         // An archived profile is history: the live metrics would only mislead.
         metrics={
-          archived ? undefined : <StudentProfileMetrics student={student} metrics={metrics} />
+          <>
+            {archived ? undefined : (
+              <StudentProfileMetrics
+                student={student}
+                metrics={metrics}
+                money={money.money}
+                balance={money.balance}
+              />
+            )}
+            {/* History stays readable: an archived profile shows its directions
+                without the commands that would change them. */}
+            <StudentLearningBlock
+              billing={money.billing.data}
+              pauses={money.pauseItems}
+              schedules={money.schedules}
+              actions={learning}
+              error={money.billing.isError ? money.billing.error : undefined}
+              onRetry={() => void money.billing.refetch()}
+              readOnly={archived}
+            />
+          </>
         }
         main={main}
         aside={aside}
       />
       {statusActions.dialogs}
+      {learning.dialogs}
       <LessonCreateDialog
         open={creating}
         onOpenChange={setCreating}

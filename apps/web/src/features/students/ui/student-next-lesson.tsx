@@ -36,6 +36,7 @@ export function StudentNextLesson({
   unavailable = false,
   onOpenLesson,
   onMarkAttendance,
+  onReschedule,
 }: {
   status: StudentStatusDto;
   lesson: LessonResponse | null;
@@ -46,6 +47,8 @@ export function StudentNextLesson({
   onOpenLesson?: (lessonId: string) => void;
   /** Opens the panel on its attendance dialog; group lessons only. */
   onMarkAttendance?: (lessonId: string) => void;
+  /** Opens the panel on its move (the S01 move dialog). */
+  onReschedule?: (lessonId: string) => void;
 }) {
   const t = useTranslations('students.nextLesson');
   const format = useFormatter();
@@ -143,6 +146,20 @@ export function StudentNextLesson({
         )}
         time={`${time(start)} – ${time(end)} · ${name}`}
         teacher={teacher}
+        primaryAction={
+          onOpenLesson ? (
+            <Button type="button" variant="soft" onClick={() => onOpenLesson(lesson.id)}>
+              {t('open')}
+            </Button>
+          ) : undefined
+        }
+        secondaryAction={
+          onReschedule ? (
+            <Button type="button" variant="dark-outline" onClick={() => onReschedule(lesson.id)}>
+              {t('reschedule')}
+            </Button>
+          ) : undefined
+        }
       />
     </>
   );

@@ -14,4 +14,11 @@ export {
 export { ScheduleChangeDialog } from './ui/schedule/schedule-change-dialog';
 export { ScheduleStopDialog } from './ui/schedule/schedule-stop-dialog';
 export { ScheduleHorizonDialog } from './ui/schedule/schedule-horizon-dialog';
-export { SlotChips, useDayCode, useLengthLabel } from './ui/schedule/schedule-parts';
+export {
+  ConflictPairs,
+  SlotChip,
+  SlotChips,
+  useDayCode,
+  useLengthLabel,
+} from './ui/schedule/schedule-parts';
+export { scheduleConflicts } from './model/move';

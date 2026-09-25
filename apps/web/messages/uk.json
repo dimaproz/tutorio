@@ -182,7 +182,8 @@
     "INVALID_TRANSFER_TARGET": "Уроки можна перенести лише на інший напрям того самого учня.",
     "PAUSE_NOT_FOUND": "Паузу не знайдено.",
     "PAUSE_OVERLAP": "У учня вже є пауза на цей час.",
-    "PAUSE_ENDED": "Ця пауза вже завершилася."
+    "PAUSE_ENDED": "Ця пауза вже завершилася.",
+    "PAUSE_RUNNING": "У паузи, що вже триває, можна змінити лише кінець і причину."
   },
   "validation": {
     "noShowIndividualOnly": "Для групового заняття пропуски відмічають у присутності",
@@ -241,7 +242,12 @@
     "periodEndRequired": "Вкажіть останній день",
     "periodEndBeforeStart": "Кінець раніше за початок",
     "periodTooLong": "Не довше за 366 днів",
-    "teacherPick": "Оберіть викладача зі списку"
+    "teacherPick": "Оберіть викладача зі списку",
+    "amountRequired": "Вкажіть суму",
+    "amountOverPackage": "Більше, ніж лишилось сплатити за пакет",
+    "pauseStartRequired": "Вкажіть перший день",
+    "pauseEndBeforeStart": "Кінець раніше за початок",
+    "directionRequired": "Оберіть напрям"
   },
   "pagination": {
     "label": "Сторінки",
@@ -278,7 +284,7 @@
   },
   "studentStatus": {
     "ACTIVE": "Активний",
-    "ON_HOLD": "На канікулах",
+    "ON_HOLD": "На паузі",
     "ARCHIVED": "Заархівовано"
   },
   "languageLevel": {
@@ -349,8 +355,8 @@
     "searchLabel": "Пошук учнів",
     "searchPlaceholder": "Ім'я, пошта, телефон або Telegram…",
     "deletedBadge": "Заархівовано",
-    "putOnHold": "Відправити на канікули",
-    "reactivate": "Повернути з канікул",
+    "putOnHold": "Поставити на паузу",
+    "reactivate": "Повернути з паузи",
     "archive": "Заархівувати учня",
     "count": "{count, plural, =0 {Учнів немає} one {# учень} few {# учні} many {# учнів} other {# учня}}",
     "columns": {
@@ -632,9 +638,9 @@
       "updated": "Зміни збережено",
       "archived": "Учня заархівовано",
       "restored": "Учня відновлено",
-      "onHold": "Учня відправлено на канікули",
-      "reactivated": "Учня повернено з канікул",
-      "onHoldName": "{name} на канікулах",
+      "onHold": "Учня поставлено на паузу",
+      "reactivated": "Учня повернено з паузи",
+      "onHoldName": "{name} на паузі",
       "reactivatedName": "{name} знову серед активних"
     },
     "archiveDialog": {
@@ -650,7 +656,7 @@
     "statusTabs": {
       "all": "Усі",
       "active": "Активні",
-      "onHold": "На канікулах",
+      "onHold": "На паузі",
       "archived": "Архів"
     },
     "list": {
@@ -685,7 +691,7 @@
       "noPackage": "Немає абонемента",
       "noDebt": "Боргів немає",
       "debt": "Борг {amount}",
-      "paidCaption": "{date} · {count, plural, one {# пакет} few {# пакети} many {# пакетів} other {# пакета}}",
+      "paidCaption": "{date} · {count, plural, one {# оплата} few {# оплати} many {# оплат} other {# оплати}}",
       "noPayments": "Оплат немає",
       "perLessonShort": "за заняття",
       "attendanceCaption": "{attended} відвідано · {charged, plural, one {# пізнє скасування} few {# пізні скасування} many {# пізніх скасувань} other {# пізнього скасування}}",
@@ -696,7 +702,12 @@
       "levelNoneSub": "рівень мови (CEFR)",
       "knowledgeCaption": "{level} загальний рівень",
       "unavailable": "Недоступно",
-      "mixedCurrency": "Кілька валют"
+      "mixedCurrency": "Кілька валют",
+      "balance": "Баланс",
+      "balanceDebt": "Борг",
+      "balanceAdvance": "Аванс",
+      "balanceClear": "Боргів немає",
+      "unpaidLessons": "{count, plural, one {# заняття не оплачене} few {# заняття не оплачені} many {# занять не оплачені} other {# заняття не оплачено}}"
     },
     "sections": {
       "label": "Розділи учня",
@@ -704,9 +715,10 @@
       "packages": "Пакети",
       "payments": "Оплати",
       "history": "Історія",
-      "addLesson": "Додати заняття",
+      "addLesson": "Заняття",
       "comingSoon": "Цей розділ ще недоступний.",
-      "addPackage": "Додати пакет"
+      "addPackage": "Продати пакет",
+      "recordPayment": "Записати оплату"
     },
     "sort": {
       "fullName": "Ім'я учня",
@@ -738,25 +750,18 @@
         "description": "Уроки плануються, заняття списуються з абонемента."
       },
       "ON_HOLD": {
-        "label": "На канікулах",
-        "description": "Пауза: без уроків і списань до повернення. Пакети подовжуються на час перерви."
+        "label": "На паузі",
+        "description": "Оберете дати: заняття в ці дні приберуться, пакети подовжаться."
       },
       "ARCHIVED": {
         "label": "В архіві",
         "description": "Прихований зі списку, лише перегляд. Відновити можна будь-коли."
       }
     },
-    "holdDialog": {
-      "title": "Відправити учня на канікули?",
-      "description": "{name}: заняття на паузі до повернення. Пакети подовжуються на час перерви, оплати й історія лишаються як є.",
-      "confirm": "Відправити на канікули",
-      "lessonsPaused": "{count, plural, one {# запланований урок зникне з календаря} few {# заплановані уроки зникнуть з календаря} many {# запланованих уроків зникнуть з календаря} other {# запланованого уроку зникне з календаря}}",
-      "lessonsPausedHint": "Вони повернуться, коли учень повернеться. Групові заняття тривають без нього й не списуються."
-    },
     "banner": {
-      "holdTitle": "Учень на канікулах",
-      "holdText": "Уроки й списання на паузі до повернення учня. Пакети подовжуються на час перерви.",
-      "holdAction": "Повернути з канікул"
+      "holdTitle": "Учень на паузі",
+      "holdText": "Заняття й списання на паузі до повернення учня. Пакети подовжуються на час паузи.",
+      "holdAction": "Повернути з паузи"
     },
     "nextLesson": {
       "heading": "Наступне заняття",
@@ -779,8 +784,8 @@
           "text": "Перший урок з’явиться тут, щойно ви його заплануєте."
         },
         "hold": {
-          "title": "Уроки на паузі",
-          "text": "Учень на канікулах. Нові уроки з’являться після повернення."
+          "title": "Заняття на паузі",
+          "text": "Учень на паузі. Нові заняття з’являться після повернення."
         },
         "archived": {
           "title": "Уроки не плануються",
@@ -792,7 +797,320 @@
         "text": "Оновіть сторінку, щоб побачити заплановане."
       }
     },
-    "subtitleShort": "{total, plural, one {# учень} few {# учні} many {# учнів} other {# учня}} · {active} активних"
+    "subtitleShort": "{total, plural, one {# учень} few {# учні} many {# учнів} other {# учня}} · {active} активних",
+    "learningBlock": {
+      "title": "Навчання й оплата",
+      "count": "{count, plural, one {# напрям} few {# напрями} many {# напрямів} other {# напряму}}",
+      "chipDebt": "Борг {amount}",
+      "chipAdvance": "Аванс {amount}",
+      "add": "Напрям",
+      "error": "Не вдалося завантажити навчання й оплату",
+      "empty": "Ще немає напрямів",
+      "emptyText": "Напрям з’явиться з першим розкладом або заняттям з викладачем.",
+      "emptyArchived": "Учень в архіві: напрямів для навчання немає.",
+      "titlePackage": "{name} · пакет «{package}»",
+      "titleNoPackage": "{name} · пакетами",
+      "titlePerLesson": "{name} · оплата за заняття",
+      "packageUnnamed": "Пакет",
+      "subtitleGroup": "Група · {teacher}",
+      "subtitleIndividual": "Індивідуально · {teacher}",
+      "pay": "Записати оплату",
+      "return": "Повернути",
+      "noSchedule": "Без розкладу",
+      "noScheduleText": "заняття призначаються окремо",
+      "scheduleNext": "по {minutes} хв · наступне {next}",
+      "scheduleLength": "по {minutes} хв",
+      "paidOf": "Сплачено {paid}",
+      "paidOfText": "з {total} · лишилось {left}",
+      "perPackage": "{price} за пакет",
+      "perPackageText": "{count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}} · {price} за заняття",
+      "rateForNew": "ставка для занять поза пакетом",
+      "perLesson": "{price} за заняття",
+      "perLessonText": "оплата за кожне заняття",
+      "cancelUntilStart": "Скасування до початку",
+      "cancelHours": "Скасування за {hours} год",
+      "cancelLater": "пізніше списується",
+      "ended": "Навчання «{name}» завершено",
+      "endTitle": "Завершити навчання?",
+      "endText": "{student} більше не займатиметься «{name}»: майбутні заняття приберуться. Оплати, пакети й історія лишаються.",
+      "endConfirm": "Завершити навчання",
+      "stub": {
+        "label": {
+          "package": "Пакет",
+          "low": "Закінчується",
+          "debt": "Борг",
+          "advance": "Аванс",
+          "clear": "Баланс"
+        },
+        "paused": "На паузі",
+        "pausedUntil": "На паузі до {date}",
+        "of": "з {total}",
+        "lessonsOnDebt": "{count, plural, one {заняття в борг} few {заняття в борг} many {занять у борг} other {заняття в борг}}",
+        "debtStaysUntil": "борг лишається · повернеться після {date}",
+        "debtStays": "борг лишається",
+        "extendedTo": "пакет продовжено до {date}",
+        "backAfter": "повернеться після {date}",
+        "backByHand": "до ручного повернення",
+        "usedUntil": "{used} використано · до {date}",
+        "used": "{used} використано",
+        "nextPackageCovers": "наступний пакет покриє їх першими",
+        "unpaidOn": "{count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}}: {dates}",
+        "unpaid": "{count, plural, one {# заняття не оплачене} few {# заняття не оплачені} many {# занять не оплачені} other {# заняття не оплачено}}",
+        "enoughFor": "{count, plural, one {вистачить на # заняття} few {вистачить на # заняття} many {вистачить на # занять} other {вистачить на # заняття}}",
+        "clear": "боргів немає",
+        "noPackage": "немає активного пакета"
+      },
+      "menu": {
+        "label": "Дії з напрямом {name}",
+        "pay": "Записати оплату",
+        "settings": "Налаштування напряму",
+        "schedule": "Змінити розклад",
+        "pause": "Пауза напряму",
+        "return": "Повернути з паузи",
+        "end": "Завершити навчання",
+        "close": "Закрити"
+      }
+    },
+    "payment": {
+      "title": "Записати оплату",
+      "subtitle": "{student} · {direction}",
+      "close": "Закрити",
+      "cancel": "Скасувати",
+      "confirm": "Записати",
+      "confirmAmount": "Записати {amount}",
+      "done": "Оплату {amount} записано",
+      "notePackage": "Пакет можна оплачувати частинами",
+      "noteOldestFirst": "Спочатку закриває найстаріші заняття",
+      "debtLabel": "Борг",
+      "unpaidLessons": "{count, plural, one {# заняття не оплачене} few {# заняття не оплачені} many {# занять не оплачені} other {# заняття не оплачено}}",
+      "moreLessons": "+{count}",
+      "forWhat": "За що оплата",
+      "forPackage": "Пакет «{name}»",
+      "packageUnnamed": "Пакет",
+      "forPackageHint": "Сплачено {paid} з {total} · лишилось {left}",
+      "forLessons": "Заняття поза пакетом",
+      "forLessonsDebt": "Борг {amount}",
+      "forLessonsNoDebt": "Боргу немає",
+      "amount": "Сума",
+      "amountHintPackage": "Можна частинами — решта лишиться до сплати",
+      "currency": "Валюта",
+      "currencyHint": "Валюта напряму",
+      "method": "Спосіб",
+      "methods": {
+        "BANK_TRANSFER": "Переказ",
+        "CASH": "Готівка",
+        "OTHER": "Інше"
+      },
+      "paidAt": "Дата оплати",
+      "note": "Коментар",
+      "notePlaceholder": "Необов’язково",
+      "impactLabel": "Що зміниться",
+      "impact": {
+        "packagePaid": "Пакет: сплачено {paid} з {total}",
+        "packageFull": "Пакет стане оплаченим повністю",
+        "packageLeft": "Лишиться {left} — стан «Частково»",
+        "creditsAsBefore": "Заняття з пакета списуються як і раніше",
+        "creditsAsBeforeText": "Незалежно від того, скільки сплачено",
+        "closes": "{count, plural, one {Закриє # заняття} few {Закриє # заняття} many {Закриє # занять} other {Закриє # заняття}}",
+        "closesText": "{dates} — від найстарішого",
+        "partial": "Частково закриє {date}",
+        "partialText": "за нього лишиться {left}",
+        "debtAfter": "Борг стане {amount}",
+        "toAdvance": "+{amount} піде в аванс",
+        "advanceLessons": "{count, plural, one {вистачить на # заняття} few {вистачить на # заняття} many {вистачить на # занять} other {вистачить на # заняття}}"
+      }
+    },
+    "directionSettings": {
+      "title": "Налаштування напряму",
+      "subtitle": "{student} · {direction}",
+      "close": "Закрити",
+      "cancel": "Скасувати",
+      "save": "Зберегти",
+      "done": "Налаштування збережено",
+      "howPays": "Як платить",
+      "packages": "Пакетами",
+      "packagesHint": "Спочатку продаєте пакет, заняття списуються з нього",
+      "perLesson": "За кожне заняття",
+      "perLessonHint": "Проведене заняття додає борг, оплата його закриває",
+      "rate": "Ставка за заняття",
+      "rateHint": "Для нових занять; проведені не зміняться",
+      "deadline": "Безкоштовне скасування",
+      "deadlineStudio": "Як у студії ({hours} год)",
+      "deadlineUntilStart": "До початку заняття",
+      "deadlineHours": "За {hours} год",
+      "deadlineHintStudio": "Налаштування студії · пізніше заняття списується",
+      "deadlineHint": "Пізніше заняття списується",
+      "impactLabel": "Що зміниться",
+      "packageUnnamed": "Пакет",
+      "impact": {
+        "packageStays": "Пакет «{name}» лишається",
+        "packageStaysText": "{count, plural, one {# заняття спишеться} few {# заняття спишуться} many {# занять спишуться} other {# заняття спишуться}} з нього, далі — оплата за кожне",
+        "newLessons": "Нові заняття по {price}",
+        "newLessonsText": "Борг з’явиться після першого заняття без пакета",
+        "fromPackage": "Заняття списуватимуться з пакета",
+        "fromPackageText": "Продайте пакет, щоб з’явилися заняття для списання",
+        "debtStays": "Борг {amount} лишається грошима",
+        "pastStays": "Проведені заняття не зміняться"
+      }
+    },
+    "pause": {
+      "title": "Пауза",
+      "titleChange": "Змінити паузу",
+      "subtitle": "{name} · {count, plural, one {# напрям} few {# напрями} many {# напрямів} other {# напряму}}",
+      "close": "Закрити",
+      "cancel": "Скасувати",
+      "confirm": "Поставити на паузу",
+      "save": "Зберегти",
+      "saveWithout": "Зберегти без них",
+      "changed": "Паузу змінено",
+      "done": "{name} на паузі з {date}",
+      "noteStatus": "Статус учня стане «На паузі» на ці дні",
+      "noteStatusStays": "Статус учня не зміниться",
+      "returns": "Повернеться",
+      "conflictsTitle": "{count, plural, one {# заняття не можна повернути — час зайнятий} few {# заняття не можна повернути — час зайнятий} many {# занять не можна повернути — час зайнятий} other {# заняття не можна повернути — час зайнятий}}",
+      "conflictsText": "На цей час уже є інші заняття. Збережіть без них — їх можна додати вручну.",
+      "what": "Що ставимо на паузу",
+      "whole": "Усе навчання",
+      "wholeHint": "Усі напрями учня",
+      "one": "Один напрям",
+      "oneHint": "Інші тривають як звичайно",
+      "groupWith": "Група · {teacher}",
+      "individualWith": "Індивідуально · {teacher}",
+      "direction": "Напрям",
+      "directionPlaceholder": "Оберіть напрям",
+      "directionSearch": "Пошук напряму",
+      "directionEmpty": "Напрямів не знайдено",
+      "from": "З",
+      "fromPlaceholder": "Перший день",
+      "until": "До",
+      "untilHint": "Без дати — до ручного повернення",
+      "untilClear": "Без дати",
+      "untilPlaceholder": "Без дати",
+      "reason": "Причина",
+      "reasons": {
+        "HOLIDAY": "Канікули",
+        "ILLNESS": "Хвороба",
+        "VACATION": "Відпустка",
+        "MOVING": "Переїзд",
+        "OTHER": "Інше"
+      },
+      "impactLabel": "Що зміниться",
+      "previewFailed": "Не вдалося порахувати наслідки. Паузу все одно можна поставити.",
+      "impact": {
+        "fromDate": "з {date}",
+        "groupWithout": "{count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}} {name} без {student}",
+        "groupWithoutText": "{range} · група займається як звичайно",
+        "removedOne": "{count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}} {name} буде прибрано",
+        "noCharges": "Оплата за ці заняття не нараховується",
+        "otherGoesOn": "{name} триває як звичайно",
+        "removed": "{count, plural, one {# заняття буде прибрано} few {# заняття буде прибрано} many {# занять буде прибрано} other {# заняття буде прибрано}}",
+        "extended": "{count, plural, one {Пакет продовжиться на # день} few {Пакет продовжиться на # дні} many {Пакет продовжиться на # днів} other {Пакет продовжиться на # дні}}",
+        "extendedText": "«{name}» — до {date}{more, plural, =0 {} other { · ще #}}",
+        "packageUnnamed": "Пакет",
+        "extendOnReturn": "Пакети подовжаться на час паузи, коли учень повернеться",
+        "groupGoesOn": "Група {name} займатиметься без {student}",
+        "groupGoesOnText": "Заняття групи не скасовуються",
+        "schedulesKept": "Розклади збережуться",
+        "backFrom": "Заняття повернуться з {date}",
+        "backByHand": "Заняття повернуться, коли ви повернете учня"
+      }
+    },
+    "pauseEnd": {
+      "close": "Закрити",
+      "cancel": "Скасувати",
+      "keep": "Не скасовувати",
+      "cancelTitle": "Скасувати паузу?",
+      "returnTitle": "Повернути з паузи зараз?",
+      "scheduled": "Запланована {window}",
+      "until": "Пауза до {date}",
+      "open": "Пауза без дати кінця",
+      "fromDate": "з {date}",
+      "confirmCancel": "Скасувати паузу",
+      "confirmReturn": "Повернути",
+      "returnWithout": "Повернути без них",
+      "cancelled": "Паузу скасовано",
+      "returned": "{name} повернеться до занять",
+      "returns": "Повернеться",
+      "conflictsTitle": "{count, plural, one {# заняття не можна повернути — час зайнятий} few {# заняття не можна повернути — час зайнятий} many {# занять не можна повернути — час зайнятий} other {# заняття не можна повернути — час зайнятий}}",
+      "conflictsText": "Поки {name} була на паузі, {teacher} поставив на цей час інших учнів.",
+      "previewFailed": "Не вдалося порахувати, що повернеться.",
+      "impactLabel": "Що зміниться",
+      "lessonsStay": "{count, plural, one {# заняття лишиться за розкладом} few {# заняття лишаться за розкладом} many {# занять лишаться за розкладом} other {# заняття лишаться за розкладом}}",
+      "lessonsReturn": "{count, plural, one {Повернеться # заняття} few {Повернеться # заняття} many {Повернеться # занять} other {Повернеться # заняття}}",
+      "lessonsRange": "з {from} до {to} — за розкладом",
+      "lessonsSkipped": "{count, plural, one {# заняття не повернеться} few {# заняття не повернуться} many {# занять не повернуться} other {# заняття не повернуться}}",
+      "lessonsSkippedText": "їх можна додати вручну в інший час",
+      "packageUnnamed": "Пакет",
+      "packageNotExtended": "Пакет не продовжиться",
+      "packageShorter": "Продовження пакета скоротиться",
+      "packageUntil": "«{name}» — до {date}",
+      "packageInstead": "«{name}» — до {date} замість {was}",
+      "pastDaysStay": "Минулі дні паузи лишаються без занять"
+    },
+    "pauseBanner": {
+      "scheduled": "Пауза {range}",
+      "scheduledDirection": "Пауза {name} {range}",
+      "scheduledOpen": "Пауза з {date}",
+      "scheduledOpenDirection": "Пауза {name} з {date}",
+      "running": "{name} на паузі до {date}",
+      "runningOpen": "{name} на паузі",
+      "packageWillExtend": "пакет «{name}» продовжиться на {count, plural, one {# день} few {# дні} many {# днів} other {# дні}}",
+      "packageExtended": "пакет «{name}» продовжено до {date}",
+      "packageUnnamed": "Пакет",
+      "willRemove": "{count, plural, one {# заняття у ці дні буде прибрано} few {# заняття у ці дні буде прибрано} many {# занять у ці дні буде прибрано} other {# заняття у ці дні буде прибрано}}",
+      "removed": "{count, plural, one {# заняття прибрано} few {# заняття прибрано} many {# занять прибрано} other {# заняття прибрано}}",
+      "backOn": "Навчання повернеться {date}.",
+      "backByHand": "Навчання повернеться, коли ви повернете учня.",
+      "change": "Змінити",
+      "cancel": "Скасувати паузу",
+      "returnNow": "Повернути зараз"
+    },
+    "packagesTab": {
+      "error": "Не вдалося завантажити пакети",
+      "empty": "Пакетів ще немає",
+      "emptyText": "Проданий пакет з’явиться тут разом з історією оплат і використання.",
+      "label": "Пакети учня",
+      "columns": {
+        "package": "Пакет",
+        "lessons": "Заняття",
+        "state": "Стан і оплата",
+        "price": "Ціна"
+      },
+      "until": "до {date}",
+      "unnamed": "Пакет",
+      "bought": "Куплено {date}",
+      "used": "{used} з {total} використано",
+      "states": {
+        "active": "Активний",
+        "used": "Використано",
+        "expired": "Термін минув"
+      },
+      "paid": "Оплачено",
+      "paidOf": "{paid} з {total}",
+      "summaryCount": "{count, plural, one {# пакет} few {# пакети} many {# пакетів} other {# пакета}}",
+      "summaryUsed": "{used} з {total} занять використано",
+      "summaryPaid": "сплачено {amount}"
+    },
+    "paymentsTab": {
+      "error": "Не вдалося завантажити оплати",
+      "empty": "Оплат ще немає",
+      "emptyText": "Записана оплата з’явиться тут — за пакет чи за заняття.",
+      "paidTotal": "Сплачено всього",
+      "refunded": "Повернуто",
+      "lastPayment": "Остання оплата",
+      "refund": "Повернення",
+      "forPackage": "Пакет «{name}»",
+      "unnamed": "Пакет",
+      "forLessons": "За заняття",
+      "refundOf": "пакет «{name}»",
+      "packageLessons": "{count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}}",
+      "methods": {
+        "CASH": "Готівка",
+        "BANK_TRANSFER": "Переказ",
+        "CARD": "Картка",
+        "OTHER": "Інше"
+      }
+    }
   },
   "groups": {
     "title": "Групи",
@@ -938,7 +1256,7 @@
     },
     "stats": {
       "students": "Учнів у групі",
-      "onHoldBadge": "{count} на канікулах",
+      "onHoldBadge": "{count} на паузі",
       "freeSeats": "Вільних місць: {count}",
       "noCapacity": "Кількість місць не обмежено",
       "addFirst": "Додайте перших учнів",
@@ -998,7 +1316,7 @@
       "free": "без",
       "risk": "{count, plural, one {# пропуск} few {# пропуски} many {# пропусків} other {# пропуску}} поспіль",
       "lastCame": "востаннє був {date}",
-      "hold": "На канікулах · у підрахунок не входить",
+      "hold": "На паузі · у підрахунок не входить",
       "noMisses": "без пропусків",
       "missCount": "{count, plural, one {# пропуск} few {# пропуски} many {# пропусків} other {# пропуску}}",
       "notMarked": "ще не відмічено",

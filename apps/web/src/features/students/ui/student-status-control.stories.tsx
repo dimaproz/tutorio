@@ -1,9 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 import type { StudentStatusDto } from '@tutorio/validation';
 import { SAMPLE_STUDENTS, StoryBackend } from '@/stories/story-backend';
 import { forceMobileMediaQuery } from '@/stories/story-helpers';
-import { StudentHoldDialog } from './student-hold-dialog';
 import { StudentStatusControl } from './student-status-control';
 
 type Args = {
@@ -14,8 +13,8 @@ type Args = {
 
 /**
  * StudentStatusControl: the pill with its dropdown on desktop and its bottom
- * sheet on phones (viewport toolbar: Handoff mobile 390). Choosing "On a
- * break" opens the hold dialog, "Archived" the archive confirmation; resume
+ * sheet on phones (viewport toolbar: Handoff mobile 390). Choosing "Paused"
+ * opens the pause dialog, "Archived" the archive confirmation; resume
  * and restore apply at once.
  */
 function StudentStatusControlStory({ status, size, note }: Args) {
@@ -64,35 +63,23 @@ export const PhoneSheet: Story = {
   play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole('button', { name: /Student status/ }));
     const sheet = within(await within(document.body).findByRole('dialog'));
-    await expect(sheet.getByRole('radio', { name: /On a break/ })).toHaveAttribute(
+    await expect(sheet.getByRole('radio', { name: /Paused/ })).toHaveAttribute(
       'aria-checked',
       'true',
     );
   },
 };
 
-type HoldArgs = { fullName: string; lessons: number; pending: boolean; onConfirm: () => void };
-
-/** HoldDialog on its own: how many lessons come off appears only when there are some. */
-export const HoldDialog: StoryObj<HoldArgs> = {
-  args: { fullName: 'Anna Shevchenko', lessons: 2, pending: false, onConfirm: fn() },
-  argTypes: { lessons: { control: { type: 'range', min: 0, max: 6 } } },
-  render: ({ fullName, lessons, pending, onConfirm }) => (
-    <StudentHoldDialog
-      open
-      onOpenChange={() => undefined}
-      fullName={fullName}
-      scheduledLessons={lessons}
-      pending={pending}
-      onConfirm={onConfirm}
-    />
-  ),
-  play: async ({ args }) => {
-    const dialog = within(await within(document.body).findByRole('dialog'));
-    await waitFor(() =>
-      expect(dialog.getByText('2 scheduled lessons come off the calendar')).toBeVisible(),
-    );
-    await userEvent.click(dialog.getByRole('button', { name: 'Send on a break' }));
-    await expect(args.onConfirm).toHaveBeenCalled();
+/** «На паузі» opens the pause dialog with dates (S06 decision 8). */
+export const Pause: Story = {
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole('button', { name: /Student status: Active/ }));
+    const body = within(document.body);
+    const menu = within(await body.findByRole('menu', {}, { timeout: 5000 }));
+    const paused = menu.getByRole('menuitemradio', { name: /Paused/ });
+    await waitFor(() => expect(paused).toBeVisible());
+    await userEvent.click(paused);
+    const dialog = within(await body.findByRole('dialog', {}, { timeout: 5000 }));
+    await waitFor(() => expect(dialog.getByRole('heading', { name: 'Pause' })).toBeVisible());
   },
 };

@@ -12,17 +12,26 @@ function direction(fields: Partial<Direction> & Pick<Direction, 'enrollmentId'>)
     packages: [],
     creditsLeft: 0,
     debtLessons: 0,
-    balance: { chargedMinor: 0, paidMinor: 0, debtMinor: 0, advanceMinor: 0, unpaidLessons: 0 },
+    balance: {
+      chargedMinor: 0,
+      paidMinor: 0,
+      debtMinor: 0,
+      advanceMinor: 0,
+      unpaidLessons: 0,
+      unpaid: [],
+    },
     warning: null,
     status: 'ACTIVE',
-    teacher: { id: 'dmytro', name: 'Dmytro Tutor' },
+    teacher: { id: 'dmytro', name: 'Dmytro Tutor', avatarKey: null, subjects: [] },
     group: null,
+    cancellationDeadlineHours: null,
     ...fields,
   };
 }
 
 const billing = (directions: Direction[]): StudentBillingResponse => ({
   studentId: 'anna',
+  cancellationDeadlineHours: 12,
   lowCreditThreshold: 2,
   directions,
   totals: [],
@@ -91,6 +100,11 @@ describe('payingPackage and pauseAt', () => {
       expiresAt: null,
       remainingCredits,
       usable,
+      validFrom: null,
+      lessonsTotal: 8,
+      totalPriceMinor: 400000,
+      paidMinor: 400000,
+      paymentStatus: 'PAID' as const,
     });
     const found = payingPackage(
       direction({

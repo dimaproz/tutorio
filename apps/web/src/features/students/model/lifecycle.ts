@@ -32,11 +32,11 @@ export function studentCollectionActions(status: StudentStatusDto): StudentLifec
 /** What choosing a status in the status control does from the current one. */
 export type StudentStatusTransition =
   | { kind: 'none' }
-  /** Pause with the hold dialog: optional lesson cancellation. */
+  /** A pause: the pause dialog with dates (S06). */
   | { kind: 'hold' }
   /** Archive after a destructive confirmation. */
   | { kind: 'archive' }
-  /** Resume from a pause immediately. */
+  /** Back from a pause: its return dialog, or at once when none runs. */
   | { kind: 'reactivate' }
   /** Restore from the archive immediately. */
   | { kind: 'restore' }

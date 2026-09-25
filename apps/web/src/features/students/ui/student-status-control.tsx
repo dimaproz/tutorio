@@ -2,7 +2,7 @@
 
 import { useMemo, useState, type ReactNode } from 'react';
 import { ArchiveIcon, PauseIcon, PlayIcon } from 'lucide-react';
-import { useNow, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { StudentStatusDto } from '@tutorio/validation';
 import { DropdownMenu, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -20,14 +20,16 @@ import {
 import { useIsMobile } from '@/hooks/use-mobile';
 import { errorMessageKey } from '@/lib/api/error-message';
 import type { GatewayError } from '@/lib/auth/client';
-import { useLessonsQuery } from '@/lib/api/scheduling';
 import {
   useArchiveStudentMutation,
   useRestoreStudentMutation,
   useUpdateStudentMutation,
 } from '@/lib/api/students';
 import { studentStatusTransition } from '@/features/students/model/lifecycle';
-import { StudentHoldDialog } from './student-hold-dialog';
+import { useStudentBillingQuery, useStudentPausesQuery } from '@/features/students/api';
+import { visibleDirections } from '@/features/students/model/learning';
+import { PauseDialog } from './learning/pause-dialog';
+import { PauseEndDialog } from './learning/pause-end-dialog';
 
 export const STUDENT_STATUS_TONE: Record<StudentStatusDto, LifecycleTone> = {
   ACTIVE: 'active',
@@ -42,7 +44,6 @@ const STATUS_ICON: Record<StudentStatusDto, ReactNode> = {
 };
 
 const STATUSES: StudentStatusDto[] = ['ACTIVE', 'ON_HOLD', 'ARCHIVED'];
-const YEAR_MS = 365 * 24 * 60 * 60 * 1000;
 
 export type StatusControlStudent = { id: string; fullName: string; status: StudentStatusDto };
 
@@ -64,48 +65,45 @@ export function useStudentStatusOptionList(
   );
 }
 
+/** How the status control starts and ends a pause, when the page owns the pause dialogs. */
+export type StatusPauseActions = {
+  /** «На паузі»: the pause dialog for the whole student. */
+  pause: () => void;
+  /**
+   * «Активний» from a pause: the return dialog of the running whole-student
+   * pause; false when there is none to end, so the status changes at once.
+   */
+  returnNow: () => boolean;
+};
+
 /**
- * Every student status change in one place: the hold dialog (a pause that
- * takes the lessons off until the student returns), the archive confirmation,
- * and the immediate resume and restore. Status changes save on their own and never touch an open form.
+ * Every student status change in one place: «На паузі» opens the pause
+ * dialog with dates (L-100…L-104, S06 decision 8), «Активний» from a pause
+ * the return dialog, the archive its confirmation, and the restore applies at
+ * once. A page that owns the pause dialogs (the profile) passes them in;
+ * elsewhere the control brings its own. Status changes save on their own and
+ * never touch an open form.
  */
-export function useStudentStatusActions(student: StatusControlStudent) {
+export function useStudentStatusActions(
+  student: StatusControlStudent,
+  pauseActions?: StatusPauseActions,
+) {
   const t = useTranslations('students');
   const tErrors = useTranslations('errors');
-  const [dialog, setDialog] = useState<'hold' | 'archive' | null>(null);
-  const clock = useNow();
-  // The count window opens when the tutor asks for the hold, not when the
-  // page mounted: a lesson taught in between is history, not a plan.
-  const [holdFrom, setHoldFrom] = useState(() => clock.getTime());
+  const [archiving, setArchiving] = useState(false);
   const update = useUpdateStudentMutation(student.id);
   const archive = useArchiveStudentMutation();
   const restore = useRestoreStudentMutation();
-
-  // Only individual lessons come off the calendar: a group lesson keeps
-  // running for everyone else and leaves the student out.
-  const scheduled = useLessonsQuery(
-    {
-      from: new Date(holdFrom).toISOString(),
-      to: new Date(holdFrom + YEAR_MS).toISOString(),
-      studentId: student.id,
-      status: 'SCHEDULED',
-    },
-    dialog === 'hold',
-  );
-  const individual = scheduled.isPlaceholderData
-    ? undefined
-    : scheduled.data?.items.filter((lesson) => lesson.groupId === null);
+  const own = useOwnPauseDialogs(student, !pauseActions);
+  const pausing = pauseActions ?? own;
   const firstName = student.fullName.split(/\s+/)[0] || student.fullName;
   const fail = (error: unknown) => toast.error(tErrors(errorMessageKey(error as GatewayError)));
 
   const choose = (next: StudentStatusDto) => {
     const change = studentStatusTransition(student.status, next);
-    if (change.kind === 'hold') {
-      setHoldFrom(Date.now());
-      setDialog('hold');
-    }
-    if (change.kind === 'archive') setDialog('archive');
-    if (change.kind === 'reactivate') {
+    if (change.kind === 'hold') pausing.pause();
+    if (change.kind === 'archive') setArchiving(true);
+    if (change.kind === 'reactivate' && !pausing.returnNow()) {
       update.mutate(
         { status: 'ACTIVE' },
         {
@@ -122,22 +120,10 @@ export function useStudentStatusActions(student: StatusControlStudent) {
     }
   };
 
-  const confirmHold = () =>
-    update.mutate(
-      { status: 'ON_HOLD' },
-      {
-        onSuccess: () => {
-          setDialog(null);
-          toast.success(t('toasts.onHoldName', { name: firstName }));
-        },
-        onError: fail,
-      },
-    );
-
   const confirmArchive = () =>
     archive.mutate(student.id, {
       onSuccess: () => {
-        setDialog(null);
+        setArchiving(false);
         toast.success(t('toasts.archived'));
       },
       onError: fail,
@@ -145,23 +131,10 @@ export function useStudentStatusActions(student: StatusControlStudent) {
 
   const dialogs = (
     <>
-      <StudentHoldDialog
-        open={dialog === 'hold'}
-        onOpenChange={(open) => setDialog(open ? 'hold' : null)}
-        fullName={student.fullName}
-        // A new hold window is a new query key, and the previous opening's list
-        // is served as placeholder until it answers: that list is not a count.
-        scheduledLessons={
-          scheduled.isSuccess && !scheduled.isPlaceholderData
-            ? (individual?.length ?? 0)
-            : undefined
-        }
-        pending={update.isPending}
-        onConfirm={confirmHold}
-      />
+      {own.dialogs}
       <ConfirmDialog
-        open={dialog === 'archive'}
-        onOpenChange={(open) => setDialog(open ? 'archive' : null)}
+        open={archiving}
+        onOpenChange={setArchiving}
         tone="danger"
         icon={<ArchiveIcon />}
         title={t('archiveDialog.title')}
@@ -177,6 +150,47 @@ export function useStudentStatusActions(student: StatusControlStudent) {
     choose,
     dialogs,
     pending: update.isPending || archive.isPending || restore.isPending,
+  };
+}
+
+/**
+ * The pause and return dialogs of a status control that stands alone (the
+ * edit page): the student's directions and pauses are read only once needed.
+ */
+function useOwnPauseDialogs(student: StatusControlStudent, enabled: boolean) {
+  const [open, setOpen] = useState<'pause' | 'return' | null>(null);
+  const billing = useStudentBillingQuery(student.id, enabled && open === 'pause');
+  const pauses = useStudentPausesQuery(student.id, enabled && student.status === 'ON_HOLD');
+  const running =
+    pauses.data?.items.find((item) => item.enrollmentId === null && item.state === 'ACTIVE') ??
+    null;
+  const close = (next: boolean) => (next ? undefined : setOpen(null));
+
+  return {
+    pause: () => setOpen('pause'),
+    returnNow: () => {
+      if (!running) return false;
+      setOpen('return');
+      return true;
+    },
+    dialogs: enabled ? (
+      <>
+        <PauseDialog
+          open={open === 'pause' && Boolean(billing.data)}
+          onOpenChange={close}
+          student={student}
+          directions={visibleDirections(billing.data?.directions ?? []).filter(
+            (direction) => direction.status !== 'ARCHIVED',
+          )}
+        />
+        <PauseEndDialog
+          open={open === 'return'}
+          onOpenChange={close}
+          pause={running}
+          student={student}
+        />
+      </>
+    ) : null,
   };
 }
 

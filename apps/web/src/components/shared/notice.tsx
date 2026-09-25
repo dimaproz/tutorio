@@ -43,6 +43,7 @@ export function Notice({
   text,
   action,
   icon,
+  actionPlacement = 'inline',
   className,
 }: {
   tone?: NoticeTone;
@@ -51,6 +52,11 @@ export function Notice({
   text: ReactNode;
   action?: ReactNode;
   icon?: ReactNode;
+  /**
+   * `stacked` moves a banner's actions under its text on phones (a pause
+   * banner with two actions); `inline` keeps them on the trailing edge.
+   */
+  actionPlacement?: 'inline' | 'stacked';
   className?: string;
 }) {
   const Icon = TONE_ICON[tone];
@@ -111,7 +117,16 @@ export function Notice({
       {icon ?? <Icon aria-hidden="true" />}
       {title ? <AlertTitle className="text-sm leading-5 font-semibold">{title}</AlertTitle> : null}
       <AlertDescription className="text-[13px] leading-[19px]">{text}</AlertDescription>
-      {action ? <AlertAction>{action}</AlertAction> : null}
+      {action ? (
+        <AlertAction
+          className={cn(
+            actionPlacement === 'stacked' &&
+              'max-md:col-start-2! max-md:row-span-1 max-md:row-start-3 max-md:mt-2 max-md:justify-self-start',
+          )}
+        >
+          {action}
+        </AlertAction>
+      ) : null}
     </Alert>
   );
 }

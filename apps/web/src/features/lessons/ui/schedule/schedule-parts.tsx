@@ -284,6 +284,8 @@ export function ConflictPairs({
   title,
   newLabel,
   mobile,
+  heading,
+  explanation,
 }: {
   conflicts: readonly ScheduleConflict[];
   durationMin: number;
@@ -292,6 +294,10 @@ export function ConflictPairs({
   /** «Нове» or «Після зміни». */
   newLabel: string;
   mobile: boolean;
+  /** Replaces «N занять накладаються», e.g. a pause return's «не можна повернути». */
+  heading?: string;
+  /** Replaces the sentence that explains the overlap. */
+  explanation?: string;
 }) {
   const t = useTranslations('schedules.conflicts');
   const format = useLocalFormatter();
@@ -302,33 +308,35 @@ export function ConflictPairs({
   const nameOf = (conflict: ScheduleConflict) =>
     conflict.group?.name ?? conflict.student?.fullName ?? '';
   const first = conflicts[0];
-  const explain = first
-    ? pairs.length === 1
-      ? t('explainOne', {
-          date: format.dateTime(new Date(first.candidateStartsAtUtc), {
-            weekday: 'short',
-            day: 'numeric',
-            month: 'long',
-          }),
-          time: format.time(Date.parse(first.startsAtUtc)),
-          teacher: first.teacher.name,
-          kind: first.group ? 'group' : 'lesson',
-          name: nameOf(first),
-        })
-      : t('explainMany', {
-          teacher: first.teacher.name,
-          kind: first.group ? 'group' : 'lesson',
-          name: nameOf(first),
-          time: range(first.startsAtUtc, first.durationMin),
-        })
-    : '';
+  const explain =
+    explanation ??
+    (first
+      ? pairs.length === 1
+        ? t('explainOne', {
+            date: format.dateTime(new Date(first.candidateStartsAtUtc), {
+              weekday: 'short',
+              day: 'numeric',
+              month: 'long',
+            }),
+            time: format.time(Date.parse(first.startsAtUtc)),
+            teacher: first.teacher.name,
+            kind: first.group ? 'group' : 'lesson',
+            name: nameOf(first),
+          })
+        : t('explainMany', {
+            teacher: first.teacher.name,
+            kind: first.group ? 'group' : 'lesson',
+            name: nameOf(first),
+            time: range(first.startsAtUtc, first.durationMin),
+          })
+      : '');
 
   return (
     <section className="flex flex-col gap-3 rounded-card bg-tint-warning px-5 py-5 text-tint-foreground">
       <div className="flex flex-col gap-1">
         <h3 className="flex items-start gap-2 text-[17px] leading-6 font-semibold text-tint-warning-foreground [&_svg]:mt-0.5 [&_svg]:size-5 [&_svg]:shrink-0">
           <TriangleAlertIcon aria-hidden="true" />
-          {t('title', { count: pairs.length })}
+          {heading ?? t('title', { count: pairs.length })}
         </h3>
         <p className="text-[15px] leading-6">{explain}</p>
       </div>

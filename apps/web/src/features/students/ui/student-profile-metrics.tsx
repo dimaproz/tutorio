@@ -4,6 +4,7 @@ import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import type { StudentDetail } from '@tutorio/validation';
 import { StatBlock } from '@/components/shared/stat-block';
 import { Skeleton } from '@/components/ui/skeleton';
+import type { BalanceMetric, MoneyMetric } from '@/features/students/model/learning';
 import type { StudentProfileMetrics as Metrics } from '@/features/students/model/profile-metrics';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { formatMoneyCompact } from '@/lib/money';
@@ -17,11 +18,17 @@ import { formatMoneyCompact } from '@/lib/money';
 export function StudentProfileMetrics({
   student,
   metrics,
+  money,
+  balance,
   onAddPackage,
 }: {
   student: StudentDetail;
   /** Undefined while the packages and lessons load. */
   metrics?: Metrics;
+  /** Money received and owed; undefined while the billing reads load. */
+  money?: MoneyMetric;
+  /** Set when every direction is paid per lesson: the first metric is the balance. */
+  balance?: BalanceMetric | null;
   onAddPackage?: () => void;
 }) {
   const t = useTranslations('students.profileMetrics');
@@ -37,23 +44,45 @@ export function StudentProfileMetrics({
       ? formatMoneyCompact(student.hourlyRateMinor, student.currency, locale).text
       : undefined;
   const credits = metrics?.credits;
-  const paid = metrics?.paid;
   const attendance = metrics?.attendance;
+  const single = money?.kind === 'single' ? money : null;
   const paidMoney = formatMoneyCompact(
-    paid?.paidMinor ?? 0,
-    paid?.currency ?? student.currency ?? 'UAH',
+    single?.paidMinor ?? 0,
+    single?.currency ?? student.currency ?? 'UAH',
     locale,
-  );
-  // Unknown or not summable: a zero here would read as "nothing paid".
-  const unknownPaid = Boolean(
-    metrics && !paid && (metrics.packagesUnavailable || metrics.mixedCurrency),
   );
   const shortDate = (iso: string) =>
     format.dateTime(new Date(iso), { day: 'numeric', month: 'short' });
+  const balanceMoney = balance
+    ? formatMoneyCompact(Math.abs(balance.balanceMinor), balance.currency, locale)
+    : null;
+  const rate = balance
+    ? formatMoneyCompact(balance.rateMinor, balance.currency, locale).text
+    : price;
 
   return (
     <div className="-mx-4 flex gap-3 overflow-x-auto px-4 md:mx-0 md:grid md:grid-cols-2 md:gap-4 md:overflow-visible md:px-0 xl:grid-cols-4 [&>*]:w-65 [&>*]:shrink-0 md:[&>*]:w-auto">
-      {!metrics ? (
+      {balance && balanceMoney ? (
+        <StatBlock
+          type="amount"
+          label={t('balance')}
+          value={`${balance.balanceMinor < 0 ? '−' : balance.balanceMinor > 0 ? '+' : ''}${balanceMoney.value}`}
+          unit={balanceMoney.symbol}
+          badge={
+            balance.balanceMinor < 0
+              ? { label: t('balanceDebt'), tone: 'danger' }
+              : balance.balanceMinor > 0
+                ? { label: t('balanceAdvance'), tone: 'success' }
+                : undefined
+          }
+          caption={
+            balance.unpaidLessons > 0
+              ? t('unpaidLessons', { count: balance.unpaidLessons })
+              : t('balanceClear')
+          }
+          detail={!mobile && rate ? t('perLesson', { price: rate }) : undefined}
+        />
+      ) : !metrics ? (
         <StatBlock type="amount" label={t('creditsLeft')} value={loading} />
       ) : metrics.packagesUnavailable ? (
         <StatBlock type="amount" label={t('creditsLeft')} value="—" caption={t('unavailable')} />
@@ -82,34 +111,32 @@ export function StudentProfileMetrics({
       <StatBlock
         type="amount"
         label={t('paidThisTerm')}
-        value={!metrics ? loading : paid ? paidMoney.value : unknownPaid ? '—' : paidMoney.value}
-        unit={metrics && !unknownPaid ? paidMoney.symbol : undefined}
+        value={money === undefined ? loading : single ? paidMoney.value : '—'}
+        unit={single ? paidMoney.symbol : undefined}
         badge={
-          !paid
+          !single
             ? undefined
-            : paid.owedMinor > 0
+            : single.owedMinor > 0
               ? {
                   label: t('debt', {
-                    amount: formatMoneyCompact(paid.owedMinor, paid.currency, locale).text,
+                    amount: formatMoneyCompact(single.owedMinor, single.currency, locale).text,
                   }),
                   tone: 'warning',
                 }
               : { label: t('noDebt'), tone: 'success' }
         }
         caption={
-          !metrics
+          money === undefined
             ? undefined
-            : paid
-              ? t('paidCaption', { date: shortDate(paid.lastPurchaseAt), count: paid.packages })
-              : metrics.packagesUnavailable
-                ? t('unavailable')
-                : metrics.mixedCurrency
-                  ? t('mixedCurrency')
-                  : t('noPayments')
+            : money?.kind === 'mixed'
+              ? t('mixedCurrency')
+              : single?.lastPaidAt
+                ? t('paidCaption', { date: shortDate(single.lastPaidAt), count: single.payments })
+                : t('noPayments')
         }
-        detail={!mobile && price ? t('perLesson', { price }) : undefined}
-        aside={mobile && price ? price : undefined}
-        asideLabel={mobile && price ? t('perLessonShort') : undefined}
+        detail={!mobile && rate && single ? t('perLesson', { price: rate }) : undefined}
+        aside={mobile && rate && single ? rate : undefined}
+        asideLabel={mobile && rate && single ? t('perLessonShort') : undefined}
       />
 
       {attendance ? (

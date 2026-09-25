@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, type ReactNode } from 'react';
-import { PlusIcon } from 'lucide-react';
+import { BanknoteIcon, PackagePlusIcon, PlusIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -10,21 +10,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 /**
  * The main column of the profile: one card whose segments switch between the
- * student's lessons and their packages. Payments and history are part of the
- * approved design but have no read surface yet, so each keeps its segment and
- * says what is coming instead of disappearing.
+ * student's lessons, their package history and their payments (S06 decision
+ * 11). History has no read surface yet, so it keeps its segment and says what
+ * is coming instead of disappearing.
  */
 export function StudentSectionsCard({
   lessons,
   packages,
+  payments,
   onAddLesson,
   onAddPackage,
+  onRecordPayment,
   historyOnly = false,
 }: {
   lessons: ReactNode;
   packages: ReactNode;
+  payments: ReactNode;
   onAddLesson?: () => void;
   onAddPackage?: () => void;
+  onRecordPayment?: () => void;
   /** Archived profiles only read their history, so no section adds anything. */
   historyOnly?: boolean;
 }) {
@@ -36,10 +40,20 @@ export function StudentSectionsCard({
   const action = historyOnly
     ? null
     : section === 'lessons' && onAddLesson
-      ? { label: t('addLesson'), onClick: onAddLesson }
+      ? { label: t('addLesson'), icon: <PlusIcon data-icon="inline-start" />, onClick: onAddLesson }
       : section === 'packages' && onAddPackage
-        ? { label: t('addPackage'), onClick: onAddPackage }
-        : null;
+        ? {
+            label: t('addPackage'),
+            icon: <PackagePlusIcon data-icon="inline-start" />,
+            onClick: onAddPackage,
+          }
+        : section === 'payments' && onRecordPayment
+          ? {
+              label: t('recordPayment'),
+              icon: <BanknoteIcon data-icon="inline-start" />,
+              onClick: onRecordPayment,
+            }
+          : null;
 
   const actionButton = (className?: string) =>
     action ? (
@@ -50,7 +64,7 @@ export function StudentSectionsCard({
         onClick={action.onClick}
         className={className}
       >
-        <PlusIcon data-icon="inline-start" />
+        {action.icon}
         {action.label}
       </Button>
     ) : null;
@@ -73,9 +87,7 @@ export function StudentSectionsCard({
         </div>
         <TabsContent value="lessons">{lessons}</TabsContent>
         <TabsContent value="packages">{packages}</TabsContent>
-        <TabsContent value="payments">
-          <SectionComingSoon title={t('payments')} />
-        </TabsContent>
+        <TabsContent value="payments">{payments}</TabsContent>
         <TabsContent value="history">
           <SectionComingSoon title={t('history')} />
         </TabsContent>

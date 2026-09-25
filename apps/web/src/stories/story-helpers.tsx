@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { NextIntlClientProvider, useLocale, useMessages, useTimeZone } from 'next-intl';
 import { GLYPH_NAMES, Glyph, type GlyphName } from '@/components/shared/glyph';
 import { MOBILE_MEDIA_QUERY } from '@/hooks/use-mobile';
 
@@ -47,3 +48,23 @@ export const MOBILE_VIEWPORT = { viewport: { value: 'handoffMobile', isRotated: 
 export const DESKTOP_VIEWPORT = {
   viewport: { value: 'handoffDesktop', isRotated: false },
 } as const;
+
+/**
+ * Moves a story's clock: the same locale, messages and time zone as the
+ * preview decorator, with another `now` for every `useNow()` below it.
+ */
+export function StoryClock({ now, children }: { now: number; children: ReactNode }) {
+  const locale = useLocale();
+  const messages = useMessages();
+  const timeZone = useTimeZone();
+  return (
+    <NextIntlClientProvider
+      locale={locale}
+      messages={messages}
+      timeZone={timeZone}
+      now={new Date(now)}
+    >
+      {children}
+    </NextIntlClientProvider>
+  );
+}

@@ -182,7 +182,8 @@
     "INVALID_TRANSFER_TARGET": "Lessons can move only to another direction of the same student.",
     "PAUSE_NOT_FOUND": "The pause was not found.",
     "PAUSE_OVERLAP": "The student already has a pause covering this time.",
-    "PAUSE_ENDED": "This pause is already over."
+    "PAUSE_ENDED": "This pause is already over.",
+    "PAUSE_RUNNING": "A pause that has begun can only change its end and reason."
   },
   "validation": {
     "noShowIndividualOnly": "A group lesson records absences through attendance",
@@ -241,7 +242,12 @@
     "periodEndRequired": "Pick the last day",
     "periodEndBeforeStart": "The end is before the start",
     "periodTooLong": "366 days at most",
-    "teacherPick": "Pick a teacher from the list"
+    "teacherPick": "Pick a teacher from the list",
+    "amountRequired": "Enter an amount",
+    "amountOverPackage": "More than is left to pay for the package",
+    "pauseStartRequired": "Enter the first day",
+    "pauseEndBeforeStart": "The end is before the start",
+    "directionRequired": "Choose a direction"
   },
   "pagination": {
     "label": "Pagination",
@@ -278,7 +284,7 @@
   },
   "studentStatus": {
     "ACTIVE": "Active",
-    "ON_HOLD": "On hold",
+    "ON_HOLD": "Paused",
     "ARCHIVED": "Archived"
   },
   "languageLevel": {
@@ -349,8 +355,8 @@
     "searchLabel": "Search students",
     "searchPlaceholder": "Name, email, phone or Telegram…",
     "deletedBadge": "Archived",
-    "putOnHold": "Put on hold",
-    "reactivate": "Reactivate",
+    "putOnHold": "Pause",
+    "reactivate": "Bring back from the pause",
     "archive": "Archive student",
     "count": "{count, plural, =0 {No students} one {# student} other {# students}}",
     "columns": {
@@ -382,7 +388,7 @@
     "metrics": {
       "total": "Total students",
       "active": "Active students",
-      "onHold": "On hold",
+      "onHold": "Paused",
       "archived": "Archived",
       "unavailable": "Unavailable",
       "error": "Could not load this count",
@@ -632,9 +638,9 @@
       "updated": "Changes saved",
       "archived": "Student archived",
       "restored": "Student restored",
-      "onHold": "Student put on hold",
-      "reactivated": "Student reactivated",
-      "onHoldName": "{name} is on a break",
+      "onHold": "The student is paused",
+      "reactivated": "The student is back from the pause",
+      "onHoldName": "{name} is paused",
       "reactivatedName": "{name} is active again"
     },
     "archiveDialog": {
@@ -650,7 +656,7 @@
     "statusTabs": {
       "all": "All",
       "active": "Active",
-      "onHold": "On a break",
+      "onHold": "Paused",
       "archived": "Archived"
     },
     "list": {
@@ -685,7 +691,7 @@
       "noPackage": "No package",
       "noDebt": "Nothing due",
       "debt": "Due {amount}",
-      "paidCaption": "{date} · {count, plural, one {# package} other {# packages}}",
+      "paidCaption": "{date} · {count, plural, one {# payment} other {# payments}}",
       "noPayments": "No payments yet",
       "perLessonShort": "per lesson",
       "attendanceCaption": "{attended} attended · {charged, plural, one {# late cancel} other {# late cancels}}",
@@ -696,7 +702,12 @@
       "levelNoneSub": "language level (CEFR)",
       "knowledgeCaption": "{level} general level",
       "unavailable": "Unavailable",
-      "mixedCurrency": "Several currencies"
+      "mixedCurrency": "Several currencies",
+      "balance": "Balance",
+      "balanceDebt": "Debt",
+      "balanceAdvance": "Advance",
+      "balanceClear": "Nothing owed",
+      "unpaidLessons": "{count, plural, one {# lesson not paid} other {# lessons not paid}}"
     },
     "sections": {
       "label": "Student sections",
@@ -704,9 +715,10 @@
       "packages": "Packages",
       "payments": "Payments",
       "history": "History",
-      "addLesson": "Add lesson",
+      "addLesson": "Lesson",
       "comingSoon": "This section is not available yet.",
-      "addPackage": "Add package"
+      "addPackage": "Sell a package",
+      "recordPayment": "Record a payment"
     },
     "sort": {
       "fullName": "Student name",
@@ -738,25 +750,18 @@
         "description": "Lessons are scheduled and charged to the package."
       },
       "ON_HOLD": {
-        "label": "On a break",
-        "description": "Paused: no lessons or charges until they return. Packages are extended by the break."
+        "label": "Paused",
+        "description": "Pick the dates: lessons on those days come off, packages are extended."
       },
       "ARCHIVED": {
         "label": "Archived",
         "description": "Hidden from the list, view only. Can be restored any time."
       }
     },
-    "holdDialog": {
-      "title": "Send the student on a break?",
-      "description": "{name}: lessons are paused until they return. Packages are extended by the break; payments and history stay as they are.",
-      "confirm": "Send on a break",
-      "lessonsPaused": "{count, plural, one {# scheduled lesson comes off the calendar} other {# scheduled lessons come off the calendar}}",
-      "lessonsPausedHint": "They come back when the student returns. Group lessons go on without them and are not charged."
-    },
     "banner": {
-      "holdTitle": "Student is on a break",
-      "holdText": "Lessons and charges are paused until the student returns. Packages are extended by the break.",
-      "holdAction": "End the break"
+      "holdTitle": "The student is paused",
+      "holdText": "Lessons and charges are paused until the student is back. Packages are extended by the pause.",
+      "holdAction": "Bring back"
     },
     "nextLesson": {
       "heading": "Next lesson",
@@ -780,7 +785,7 @@
         },
         "hold": {
           "title": "Lessons are paused",
-          "text": "The student is on a break. New lessons appear after they return."
+          "text": "The student is paused. New lessons appear after they are back."
         },
         "archived": {
           "title": "No lessons are planned",
@@ -792,7 +797,320 @@
         "text": "Refresh the page to see what is planned."
       }
     },
-    "subtitleShort": "{total, plural, one {# student} other {# students}} · {active} active"
+    "subtitleShort": "{total, plural, one {# student} other {# students}} · {active} active",
+    "learningBlock": {
+      "title": "Learning and payments",
+      "count": "{count, plural, one {# direction} other {# directions}}",
+      "chipDebt": "Debt {amount}",
+      "chipAdvance": "Advance {amount}",
+      "add": "Direction",
+      "error": "Could not load learning and payments",
+      "empty": "No directions yet",
+      "emptyText": "A direction appears with the first schedule or lesson with a teacher.",
+      "emptyArchived": "The student is archived: no directions to learn.",
+      "titlePackage": "{name} · package “{package}”",
+      "titleNoPackage": "{name} · by packages",
+      "titlePerLesson": "{name} · pay per lesson",
+      "packageUnnamed": "Package",
+      "subtitleGroup": "Group · {teacher}",
+      "subtitleIndividual": "Individual · {teacher}",
+      "pay": "Record a payment",
+      "return": "Bring back",
+      "noSchedule": "No schedule",
+      "noScheduleText": "lessons are booked one by one",
+      "scheduleNext": "{minutes} min · next {next}",
+      "scheduleLength": "{minutes} min",
+      "paidOf": "Paid {paid}",
+      "paidOfText": "of {total} · {left} left",
+      "perPackage": "{price} per package",
+      "perPackageText": "{count, plural, one {# lesson} other {# lessons}} · {price} per lesson",
+      "rateForNew": "rate for lessons outside a package",
+      "perLesson": "{price} per lesson",
+      "perLessonText": "paid for each lesson",
+      "cancelUntilStart": "Cancel until the start",
+      "cancelHours": "Cancel {hours} h ahead",
+      "cancelLater": "later is charged",
+      "ended": "“{name}” has ended",
+      "endTitle": "End this learning?",
+      "endText": "{student} will no longer learn “{name}”: future lessons come off. Payments, packages and history stay.",
+      "endConfirm": "End learning",
+      "stub": {
+        "label": {
+          "package": "Package",
+          "low": "Running low",
+          "debt": "Debt",
+          "advance": "Advance",
+          "clear": "Balance"
+        },
+        "paused": "Paused",
+        "pausedUntil": "Paused until {date}",
+        "of": "of {total}",
+        "lessonsOnDebt": "{count, plural, one {lesson on debt} other {lessons on debt}}",
+        "debtStaysUntil": "the debt stays · back after {date}",
+        "debtStays": "the debt stays",
+        "extendedTo": "package extended to {date}",
+        "backAfter": "back after {date}",
+        "backByHand": "until brought back",
+        "usedUntil": "{used} used · until {date}",
+        "used": "{used} used",
+        "nextPackageCovers": "the next package covers them first",
+        "unpaidOn": "{count, plural, one {# lesson} other {# lessons}}: {dates}",
+        "unpaid": "{count, plural, one {# lesson not paid} other {# lessons not paid}}",
+        "enoughFor": "{count, plural, one {enough for # lesson} other {enough for # lessons}}",
+        "clear": "nothing owed",
+        "noPackage": "no active package"
+      },
+      "menu": {
+        "label": "Actions for {name}",
+        "pay": "Record a payment",
+        "settings": "Direction settings",
+        "schedule": "Change the schedule",
+        "pause": "Pause this direction",
+        "return": "Bring back from the pause",
+        "end": "End learning",
+        "close": "Close"
+      }
+    },
+    "payment": {
+      "title": "Record a payment",
+      "subtitle": "{student} · {direction}",
+      "close": "Close",
+      "cancel": "Cancel",
+      "confirm": "Record",
+      "confirmAmount": "Record {amount}",
+      "done": "Payment of {amount} recorded",
+      "notePackage": "A package can be paid in parts",
+      "noteOldestFirst": "Settles the oldest lessons first",
+      "debtLabel": "Debt",
+      "unpaidLessons": "{count, plural, one {# lesson not paid} other {# lessons not paid}}",
+      "moreLessons": "+{count}",
+      "forWhat": "What it pays for",
+      "forPackage": "Package “{name}”",
+      "packageUnnamed": "Package",
+      "forPackageHint": "Paid {paid} of {total} · {left} left",
+      "forLessons": "Lessons outside the package",
+      "forLessonsDebt": "Debt {amount}",
+      "forLessonsNoDebt": "Nothing owed",
+      "amount": "Amount",
+      "amountHintPackage": "Can be paid in parts — the rest stays owed",
+      "currency": "Currency",
+      "currencyHint": "The direction’s currency",
+      "method": "Method",
+      "methods": {
+        "BANK_TRANSFER": "Transfer",
+        "CASH": "Cash",
+        "OTHER": "Other"
+      },
+      "paidAt": "Payment date",
+      "note": "Note",
+      "notePlaceholder": "Optional",
+      "impactLabel": "What changes",
+      "impact": {
+        "packagePaid": "Package: {paid} of {total} paid",
+        "packageFull": "The package becomes paid in full",
+        "packageLeft": "{left} left — state “Partial”",
+        "creditsAsBefore": "Package lessons are used as before",
+        "creditsAsBeforeText": "Whatever has been paid",
+        "closes": "{count, plural, one {Settles # lesson} other {Settles # lessons}}",
+        "closesText": "{dates} — oldest first",
+        "partial": "Settles {date} in part",
+        "partialText": "{left} left on it",
+        "debtAfter": "Debt becomes {amount}",
+        "toAdvance": "+{amount} goes to the advance",
+        "advanceLessons": "{count, plural, one {enough for # lesson} other {enough for # lessons}}"
+      }
+    },
+    "directionSettings": {
+      "title": "Direction settings",
+      "subtitle": "{student} · {direction}",
+      "close": "Close",
+      "cancel": "Cancel",
+      "save": "Save",
+      "done": "Settings saved",
+      "howPays": "How it is paid",
+      "packages": "By packages",
+      "packagesHint": "Sell a package first; lessons are taken from it",
+      "perLesson": "Per lesson",
+      "perLessonHint": "A held lesson adds a debt; a payment settles it",
+      "rate": "Rate per lesson",
+      "rateHint": "For new lessons; held ones do not change",
+      "deadline": "Free cancellation",
+      "deadlineStudio": "As the studio ({hours} h)",
+      "deadlineUntilStart": "Until the lesson starts",
+      "deadlineHours": "{hours} h ahead",
+      "deadlineHintStudio": "The studio setting · later is charged",
+      "deadlineHint": "A later cancellation is charged",
+      "impactLabel": "What changes",
+      "packageUnnamed": "Package",
+      "impact": {
+        "packageStays": "Package “{name}” stays",
+        "packageStaysText": "{count, plural, one {# lesson is} other {# lessons are}} taken from it, then each lesson is paid",
+        "newLessons": "New lessons at {price}",
+        "newLessonsText": "A debt appears after the first lesson without a package",
+        "fromPackage": "Lessons are taken from a package",
+        "fromPackageText": "Sell a package so there are lessons to take",
+        "debtStays": "The {amount} debt stays money",
+        "pastStays": "Held lessons do not change"
+      }
+    },
+    "pause": {
+      "title": "Pause",
+      "titleChange": "Change the pause",
+      "subtitle": "{name} · {count, plural, one {# direction} other {# directions}}",
+      "close": "Close",
+      "cancel": "Cancel",
+      "confirm": "Pause",
+      "save": "Save",
+      "saveWithout": "Save without them",
+      "changed": "The pause is changed",
+      "done": "{name} is paused from {date}",
+      "noteStatus": "The student’s status becomes “Paused” on these days",
+      "noteStatusStays": "The student’s status does not change",
+      "returns": "Comes back",
+      "conflictsTitle": "{count, plural, one {# lesson cannot come back — the time is taken} other {# lessons cannot come back — the time is taken}}",
+      "conflictsText": "Other lessons are booked at that time. Save without them — they can be added by hand.",
+      "what": "What to pause",
+      "whole": "All learning",
+      "wholeHint": "Every direction of the student",
+      "one": "One direction",
+      "oneHint": "The others go on as usual",
+      "groupWith": "Group · {teacher}",
+      "individualWith": "Individual · {teacher}",
+      "direction": "Direction",
+      "directionPlaceholder": "Choose a direction",
+      "directionSearch": "Search directions",
+      "directionEmpty": "No directions found",
+      "from": "From",
+      "fromPlaceholder": "First day",
+      "until": "Until",
+      "untilHint": "No date — until brought back by hand",
+      "untilClear": "No date",
+      "untilPlaceholder": "No date",
+      "reason": "Reason",
+      "reasons": {
+        "HOLIDAY": "Holidays",
+        "ILLNESS": "Illness",
+        "VACATION": "Vacation",
+        "MOVING": "Moving",
+        "OTHER": "Other"
+      },
+      "impactLabel": "What changes",
+      "previewFailed": "Could not work out what the pause does. It can still be saved.",
+      "impact": {
+        "fromDate": "from {date}",
+        "groupWithout": "{count, plural, one {# lesson} other {# lessons}} of {name} without {student}",
+        "groupWithoutText": "{range} · the group goes on as usual",
+        "removedOne": "{count, plural, one {# lesson} other {# lessons}} of {name} will come off",
+        "noCharges": "These lessons are not charged",
+        "otherGoesOn": "{name} goes on as usual",
+        "removed": "{count, plural, one {# lesson will come off} other {# lessons will come off}}",
+        "extended": "{count, plural, one {The package is extended by # day} other {The package is extended by # days}}",
+        "extendedText": "“{name}” — until {date}{more, plural, =0 {} other { · # more}}",
+        "packageUnnamed": "Package",
+        "extendOnReturn": "Packages are extended by the pause when the student is back",
+        "groupGoesOn": "Group {name} goes on without {student}",
+        "groupGoesOnText": "Group lessons are not cancelled",
+        "schedulesKept": "Schedules are kept",
+        "backFrom": "Lessons come back from {date}",
+        "backByHand": "Lessons come back when you bring the student back"
+      }
+    },
+    "pauseEnd": {
+      "close": "Close",
+      "cancel": "Cancel",
+      "keep": "Keep it",
+      "cancelTitle": "Cancel the pause?",
+      "returnTitle": "Bring back from the pause now?",
+      "scheduled": "Planned {window}",
+      "until": "Pause until {date}",
+      "open": "Pause with no end date",
+      "fromDate": "from {date}",
+      "confirmCancel": "Cancel the pause",
+      "confirmReturn": "Bring back",
+      "returnWithout": "Bring back without them",
+      "cancelled": "The pause is cancelled",
+      "returned": "{name} is back to lessons",
+      "returns": "Comes back",
+      "conflictsTitle": "{count, plural, one {# lesson cannot come back — the time is taken} other {# lessons cannot come back — the time is taken}}",
+      "conflictsText": "While {name} was paused, {teacher} booked other students at that time.",
+      "previewFailed": "Could not work out what comes back.",
+      "impactLabel": "What changes",
+      "lessonsStay": "{count, plural, one {# lesson stays on the schedule} other {# lessons stay on the schedule}}",
+      "lessonsReturn": "{count, plural, one {# lesson comes back} other {# lessons come back}}",
+      "lessonsRange": "from {from} to {to} — as scheduled",
+      "lessonsSkipped": "{count, plural, one {# lesson does not come back} other {# lessons do not come back}}",
+      "lessonsSkippedText": "they can be added by hand at another time",
+      "packageUnnamed": "Package",
+      "packageNotExtended": "The package is not extended",
+      "packageShorter": "The package extension gets shorter",
+      "packageUntil": "“{name}” — until {date}",
+      "packageInstead": "“{name}” — until {date} instead of {was}",
+      "pastDaysStay": "Past pause days stay without lessons"
+    },
+    "pauseBanner": {
+      "scheduled": "Pause {range}",
+      "scheduledDirection": "{name} pause {range}",
+      "scheduledOpen": "Pause from {date}",
+      "scheduledOpenDirection": "{name} pause from {date}",
+      "running": "{name} is paused until {date}",
+      "runningOpen": "{name} is paused",
+      "packageWillExtend": "package “{name}” is extended by {count, plural, one {# day} other {# days}}",
+      "packageExtended": "package “{name}” is extended to {date}",
+      "packageUnnamed": "Package",
+      "willRemove": "{count, plural, one {# lesson on these days will come off} other {# lessons on these days will come off}}",
+      "removed": "{count, plural, one {# lesson came off} other {# lessons came off}}",
+      "backOn": "Learning resumes on {date}.",
+      "backByHand": "Learning resumes when you bring the student back.",
+      "change": "Change",
+      "cancel": "Cancel the pause",
+      "returnNow": "Bring back now"
+    },
+    "packagesTab": {
+      "error": "Could not load the packages",
+      "empty": "No packages yet",
+      "emptyText": "A sold package appears here with its payments and use.",
+      "label": "The student’s packages",
+      "columns": {
+        "package": "Package",
+        "lessons": "Lessons",
+        "state": "State and payment",
+        "price": "Price"
+      },
+      "until": "until {date}",
+      "unnamed": "Package",
+      "bought": "Bought {date}",
+      "used": "{used} of {total} used",
+      "states": {
+        "active": "Active",
+        "used": "Used up",
+        "expired": "Expired"
+      },
+      "paid": "Paid",
+      "paidOf": "{paid} of {total}",
+      "summaryCount": "{count, plural, one {# package} other {# packages}}",
+      "summaryUsed": "{used} of {total} lessons used",
+      "summaryPaid": "{amount} paid"
+    },
+    "paymentsTab": {
+      "error": "Could not load the payments",
+      "empty": "No payments yet",
+      "emptyText": "A recorded payment appears here — for a package or for lessons.",
+      "paidTotal": "Paid in total",
+      "refunded": "Refunded",
+      "lastPayment": "Last payment",
+      "refund": "Refund",
+      "forPackage": "Package “{name}”",
+      "unnamed": "Package",
+      "forLessons": "For lessons",
+      "refundOf": "package “{name}”",
+      "packageLessons": "{count, plural, one {# lesson} other {# lessons}}",
+      "methods": {
+        "CASH": "Cash",
+        "BANK_TRANSFER": "Transfer",
+        "CARD": "Card",
+        "OTHER": "Other"
+      }
+    }
   },
   "groups": {
     "title": "Groups",
@@ -938,7 +1256,7 @@
     },
     "stats": {
       "students": "Students in the group",
-      "onHoldBadge": "{count} on a break",
+      "onHoldBadge": "{count} paused",
       "freeSeats": "Free seats: {count}",
       "noCapacity": "No seat limit",
       "addFirst": "Add the first students",
@@ -998,7 +1316,7 @@
       "free": "free",
       "risk": "{count, plural, one {# absence} other {# absences}} in a row",
       "lastCame": "last came {date}",
-      "hold": "On a break · not counted",
+      "hold": "Paused · not counted",
       "noMisses": "no absences",
       "missCount": "{count, plural, one {# absence} other {# absences}}",
       "notMarked": "not marked yet",

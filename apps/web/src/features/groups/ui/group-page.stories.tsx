@@ -90,7 +90,7 @@ export const AddStudents: Story = {
   play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole('button', { name: 'Add student' }));
     const dialog = within(await within(document.body).findByRole('dialog'));
-    await expect(dialog.getByText('Add students to the group')).toBeVisible();
+    await waitFor(() => expect(dialog.getByText('Add students to the group')).toBeVisible());
     await expect(await dialog.findByRole('button', { name: 'Create a new student' })).toBeVisible();
   },
 };
@@ -303,7 +303,9 @@ export const PriceSaved: Story = {
     await waitFor(() => expect(toastTitle).toBeVisible());
     const card = await roster(canvasElement);
     await expect(await card.findByText('300 ₴')).toBeVisible();
-    await expect(within(document.body).getByRole('button', { name: 'Undo' })).toBeVisible();
+    await waitFor(() =>
+      expect(within(document.body).getByRole('button', { name: 'Undo' })).toBeVisible(),
+    );
   },
 };
 
