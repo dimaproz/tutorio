@@ -218,7 +218,7 @@ Decided while building (for the owner's confirmation):
 The S02 handoff redrew the panel as the same family as the lesson form;
 only the layout changed, every decision and copy above stands.
 
-- **The window** is one 640px column (`LessonWindowLayout`), as tall as its
+- **The window** is one 640px column (`LessonWindowLayout`, since S07 the shared `BandWindowLayout`), as tall as its
   content up to the viewport less 48px, with the pinned footer (border-top,
   actions on the right). On phones the band and the body scroll together.
 - **The indigo band** (`TintBand`) holds the kind, the date (32/38), the time

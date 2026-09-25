@@ -352,8 +352,8 @@ green gate.
    `POST /packages/preview`, `/packages/members` (sell to members),
    `/packages/:id/extend`, `/packages/:id/transfer` (recalculated by price,
    rounded down, remainder reported) and `/packages/:id/refund` (credits and a
-   `REFUNDED` payment). The current package form still sends a schedule and a
-   first payment until the new sale form (L-87) replaces it.
+   `REFUNDED` payment). The legacy schedule and first payment left the sale
+   contract with S07 (L-87).
 6. **Pause** — done 2026-09-24: `Pause` for the whole student or one
    direction, from now or a later date, with an optional end. It takes the
    individual lessons in its window off the calendar (and the schedule skips
@@ -448,12 +448,22 @@ and 7 (S07) and 6.6 (S10, S11).
   create) and the data left out are in the
   [brief](./screens/s02-lesson-create.md).
 
-### Work Packet 6.5 — Package Read Surfaces
+### Work Packet 6.5 — Package Read Surfaces (done with S07, 2026-09-25)
 
 Migrate package collection, detail, entitlement, participant-share, ledger,
 payment-history, archive, and adjustment surfaces. Do not redesign package
 creation in this packet: the new sale flow remains Work Packet 7, avoiding a
 temporary form that would immediately be replaced.
+
+Delivered by screen step S07 (`5c88801`…`7d42c35`): the «Пакети» page
+(tabs with counts, search, teacher, student or group and kind filters, the
+ending-first order, per-currency money owed), the package ticket modal with
+its credits, window, payment ring, lessons and history, and the payment,
+extend, transfer, refund, correction and delete dialogs; `GET /packages`
+gained the tabs, search, filters, order and counts, `GET /packages/:id` the
+package ahead and the pause extensions, the ledger its lessons, and delete
+refuses a used package (`PACKAGE_IN_USE`). Group members' packages stay on
+the group page (S08). Brief: [`screens/s07-packages.md`](./screens/s07-packages.md).
 
 ### Work Packet 6.6 — Dashboard and Settings
 
@@ -462,12 +472,18 @@ patterns are stable. Dashboard content remains limited to today and actionable
 exceptions; Settings reuses approved fields, sections, tables, and feedback
 patterns without introducing theme customization.
 
-## Work Packet 7 — Lesson Pack Sale
+## Work Packet 7 — Lesson Pack Sale (done with S07, 2026-09-25)
 
 Implement the package sale from [`product/scheduling.md`](./product/scheduling.md)
 (`L-80`…`L-87`) and the flow in [`product/packages.md`](./product/packages.md):
 the three package kinds, no schedule or payment created by the sale, explicit
 next actions, lifecycle/detail states, and interaction tests.
+
+Delivered by S07: «Новий пакет» with the three kinds, the linked price pair
+and the live ticket preview (`POST /packages/preview`, now with the debt it
+covers and the package it follows), «Пакет продано» with «Записати оплату»
+and the schedule; the legacy schedule and first-payment inputs are gone from
+`POST /packages`. Selling to group members remains S08.
 
 ## Work Packet 8 — Pilot Operations
 

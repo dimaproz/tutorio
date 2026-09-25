@@ -225,5 +225,6 @@ three-direction, two-currency student.
 
 - **«1 невикористане»** under a refund: the refunded credits are a separate
   credit entry, not on the payment; the row names the package only.
-- **«Продати пакет»** stays hidden until S07 (the card, the ⋯ and the
-  «Пакети» tab keep its place).
+- ~~**«Продати пакет»** stays hidden until S07~~ — shipped with S07: the
+  pass's next step, the ⋯ and the «Пакети» tab; the tab's rows open the
+  package ticket.

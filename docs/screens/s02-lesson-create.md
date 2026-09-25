@@ -53,7 +53,7 @@ L-2, L-3, L-10, L-11, L-12, L-20…L-23, L-30, L-31, L-82, L-110, L-111.
 `Notice`, the S01 conflict dialog.
 
 Built with: the S01 window (`LessonPanelWindow`, now layout A with
-`LessonWindowLayout`), `TintBand`/`BandHeader`, the band picker (`WhoTiles`,
+`LessonWindowLayout`; since S07 the shared `BandWindow` and `BandWindowLayout`), `TintBand`/`BandHeader`, the band picker (`WhoTiles`,
 `WhoEmptyCard`, `WhoSearch`, `WhoCard`, `WhoChip`, `AvatarStack`),
 `EntityPicker` (rich rows, locked) as the teacher field with `FieldNote`
 strips, `DateRowsField` with `TimeField`, `DurationField`, `PriceField`,

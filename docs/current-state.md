@@ -1,7 +1,7 @@
 # Tutorio Current State
 
-Last verified: 2026-09-25 after screen step S06 (see "Student learning,
-billing and pause").
+Last verified: 2026-09-25 after screen step S07 (see "Packages: sale,
+ticket and operations").
 
 This is the first project document to read before planning or implementing
 work. It reports the repository as it exists; [`mvp-plan.md`](./mvp-plan.md)
@@ -19,6 +19,45 @@ they used were deleted; `/app` opens the students. The rebuilt screens show
 lessons, packages and directions read-only — scheduling, lesson actions, sales
 and direction edits come back with the new screens (Work Packet 6.4 screens,
 6.2, 6.5, 6.6 and 7). Every backend route stays available.
+
+## Packages: sale, ticket and operations — screen step S07 (2026-09-25)
+
+Navigation: Календар · Заняття · Розклади · Пакети · Учні · Групи · Батьки;
+on phones «Пакети» lives under «Ще».
+
+«Новий пакет» sells a package for one direction — by count (with an
+optional «Діє до»), by period from the schedule (the count prefilled and
+editable) or by period N a week — with «За заняття» ⇄ «За пакет» (the one
+typed last wins) and a live ticket preview; selling creates no schedule and
+records no payment (L-87), and «Пакет продано» offers «Записати оплату» and
+the schedule. It opens from a direction's pass (its next step once nothing
+is owed), the direction's ⋯, the profile's «Пакети» tab and the «Пакети»
+page (with a student and direction picker). A package opens as a ticket — a
+modal on desktop, a bottom sheet on phones, `?package=` on the profile or
+the page — new, active, used up, expired or extended by a pause, with its
+window and payment metrics, the callout of its state, its lessons and its
+history; payment (capped at what is left), extend, transfer (same currency,
+recalculated by price, the remainder shown), refund (credits and/or money,
+by transfer), correction and delete (only unused) open over it. «Пакети»
+(`/app/packages`) lists the studio's packages by tab (active, running out,
+unpaid, finished, all) with counts, the money owed per currency, teacher,
+student or group and kind filters, a search and the ending-first order; a
+table on desktop, cards on phones, a row menu.
+
+API: the package read names the direction's teacher and the student's
+avatar; the detail adds the package ahead in the queue and the pause
+extensions; the ledger's lesson entries carry the lesson; the list takes
+the tabs, search, teacher, kind and order and counts them; the sale preview
+returns the debt it covers and the package it follows; the legacy schedule
+and first payment left the sale; delete refuses a used package
+(`PACKAGE_IN_USE`). The domain decides a package's lifecycle, running out
+and the ending-first order. Brief, decisions and open questions:
+[`screens/s07-packages.md`](./screens/s07-packages.md).
+
+Gate on 2026-09-25: web lint, typecheck, 359 unit tests, build, the
+Storybook browser tests (374 in 93 files) and the Storybook build; API lint,
+typecheck, 246 unit tests and the API E2E suite on an isolated PostgreSQL 17
+(130 tests in 13 files); validation 63 and domain 131 tests.
 
 ## Student learning, billing and pause — screen step S06 (2026-09-25)
 

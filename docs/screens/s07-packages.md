@@ -1,6 +1,7 @@
 # S07 — Package Sale and Package Operations
 
-- Status: Waiting for mockups
+- Status: Done (2026-09-25, commits `5c88801`…`7d42c35`; this brief closes
+  it)
 - Work packets: 7 (sale) and 6.5 (package read surfaces)
 - Depends on: S06 (the directions block the sale starts from)
 
@@ -13,68 +14,156 @@ direction, or refund.
 
 ## Entry points
 
-- "Sell a package" on a direction of the student profile (S06).
-- The package opened from the direction block (sheet or page — decided with
-  the mockups).
+- «Продати пакет» on a direction's pass (the next step once nothing is owed;
+  the ink one once the credits run low or out), in the direction's ⋯ and on
+  the profile's «Пакети» tab.
+- «Продати пакет» on the «Пакети» page: the student and direction are picked
+  in the sale's band.
+- The ticket opens from the pass's stub, a row of the profile's «Пакети» tab,
+  a row of the «Пакети» page and its menu, and `?package=<id>` on either page.
 
 ## Screens and dialogs
 
-1. **Sale form**: direction; kind — by count (N lessons, optional valid
-   until), by period from the schedule (start and end, credits prefilled
-   from the schedule and editable), by period X a week; price per lesson or a
-   total; a live preview of credits, price and window (L-80). Selling creates
-   no schedule and no payment (L-87); the next actions follow the sale.
-2. **Package detail**: kind, window, credits granted / used / left, what was
-   paid and what is still owed, the lessons it paid for, its credit history,
-   the pauses that extended it.
-3. **Package payment dialog**: amount (capped at what it still costs), method,
-   date, note.
-4. **Extend dialog**: a new "valid until" (L-84).
-5. **Transfer dialog**: to another direction of the same student, credits
-   recalculated by price, rounded down, the remainder shown (L-85).
-6. **Refund dialog**: credits and/or money, method, note (L-85).
-7. **Correction** (adjust credits) and **delete** (only an unused package).
+1. **Sale form** (`PackageSaleDialog`): the band with the direction card and
+   «Інший напрям» (plus «Інший учень» on the «Пакети» page), the kind as
+   radio cards, the size (count and optional «Діє до»; a window with the
+   schedule's count, editable; a window with 1–5 a week), the linked price
+   pair and the live ticket preview. Phones: full screen with the summary in
+   the footer.
+2. **«Пакет продано»**: the horizontal ticket (upright on phones) and «Що
+   далі»: the schedule it will pay for (or none yet), «Записати оплату · N»
+   and «Відкрити розклад» / «Додати розклад».
+3. **Package ticket** (`PackageTicketModal`): the vertical ticket — a 580px
+   modal that scrolls as a whole, a bottom sheet with its handle on the stub
+   on phones — new, active, used up, expired, extended by a pause.
+4. **Operations** over the ticket: payment, extend, transfer, refund,
+   correction, delete (and its blocked state).
+5. **«Пакети»** (`/app/packages`): tabs with counts, search, teacher, student
+   or group and kind filters, the order, the table, the phone cards, the row
+   menu, the empty, loading and error states.
 
-## Data available
+## Mockups
 
-- `POST /packages/preview` and `POST /packages` — `studentId`, `groupId?`,
-  `teacherId?`, `name`, `sizingMode` (`FIXED_COUNT`, `BY_PERIOD`, `BY_PERIOD_WEEKLY`),
-  `lessonsTotal`, `lessonsPerWeek`, `validFrom`, `endDate` / `expiresAt`,
-  `pricePerLessonMinor` or `totalPriceMinor`, `currency`, `purchasedAt`,
-  `notes`. The legacy
-  `schedule` and `initialPayment` inputs are not used by the new form and are
-  removed from the contract in this step.
-- `GET /packages?studentId=`, `GET /packages/:id`, `GET /packages/:id/ledger`.
-- `POST /payments` with `packageId`; errors `OVERPAYMENT`, `CURRENCY_MISMATCH`.
-- `POST /packages/:id/extend`, `/transfer`, `/refund`, `/adjust`,
-  `DELETE /packages/:id`; errors `NOT_ENOUGH_CREDITS`, `REFUND_TOO_LARGE`,
-  `INVALID_TRANSFER_TARGET`, `INVALID_PACKAGE_PLAN`.
+The owner's handoff `tutorio-s07-packages`: boards «SaleForm» (6 desktop
+states, 3 phone), «PackageDetail» (5 and 5), «PackageDialogs» (8 and 6) and
+«PackagesList» (5 and 3), 1440 and 390, light and dark, with the canvas
+source. The repository does not keep mockups.
 
-## Rules
+| Board · state                      | Story                                                                                 |
+| ---------------------------------- | ------------------------------------------------------------------------------------- |
+| SaleForm 01 · Кількість занять     | `Packages/Screens/Sale` Playground                                                    |
+| SaleForm 02 · Період за розкладом  | Sale · ByPeriod                                                                       |
+| SaleForm 03 · Період, N на тиждень | Sale · Weekly                                                                         |
+| SaleForm 04 · Ціна за пакет        | Sale · TotalPrice                                                                     |
+| SaleForm 05 · Помилки              | Sale · Errors                                                                         |
+| SaleForm 06 · Пакет продано        | Sale · SellByCount, Sold                                                              |
+| PackageDetail 01–05                | `Packages/Screens/Ticket` New, Playground (`partial`), `state: used`, Expired, Paused |
+| PackageDialogs 01–02 · Оплата      | Ticket · Payment (part and overpayment)                                               |
+| PackageDialogs 03 · Продовжити     | Ticket · Extend                                                                       |
+| PackageDialogs 04 · Перенести      | Ticket · Transfer (remainder)                                                         |
+| PackageDialogs 05 · Повернути      | Ticket · Refund                                                                       |
+| PackageDialogs 06 · Коригування    | Ticket · Correction                                                                   |
+| PackageDialogs 07–08 · Видалити    | Ticket · Delete, DeleteBlocked                                                        |
+| PackagesList 01–05                 | `Packages/Screens/Packages` Playground, Ending, Unpaid, RowMenu, Empty, Filters       |
+| Phone boards                       | the `Phone` story of each file (and the viewport toolbar)                             |
 
-L-80…L-87, L-102; [`product/packages.md`](../product/packages.md) for the
-sale flow and next actions.
+Checked at 1440 and 390, light and dark, Ukrainian and English, including
+Mark's 480 zł package and a transfer target in another currency.
 
-## Reuse
+## Decisions (the owner's, from the handoff)
 
-`FormPageLayout` or `AdaptiveDialog` (decided with the mockups), `ChoiceCard`
-(kind), `TextField`, `CreditMeter`, `ProgressMeter`, `StatBlock`, `Notice`,
-`DangerZone`.
+1. **The sale is a dialog, not a page**, over the profile with the direction
+   preselected, with «Інший напрям».
+2. **Price: two linked fields**; the one typed last wins and the other is
+   derived; the request sends `pricePerLessonMinor` **or** `totalPriceMinor`;
+   the default is the direction's rate.
+3. **The preview is a ticket**, the language of the S06 pass.
+4. **The package detail is a modal, not a page** (the brief's first open
+   question): a vertical ticket on desktop, a bottom sheet on phones; no
+   `/app/packages/:id` — `?package=` over the list or the profile.
+5. **Charts are `StatBlock`s**: a `date` block for the window, a `ring` for
+   the payment (the small `sm` tiles on phones).
+6. **The operation dialogs open over the ticket** and return to it with the
+   new values.
+7. **Payment method defaults to «Переказ»**, in the refund too, sent
+   explicitly.
+8. **Transfer is limited to the same currency**; other directions are listed
+   disabled with «інша валюта».
+9. **Delete only a package with no charges and no payments**; otherwise the
+   blocked dialog offers the refund.
+10. **A studio-wide «Пакети» page exists** (the brief's second open question),
+    after «Розклади» in the navigation, under «Ще» on phones.
+11. **Colours of state**: indigo new or active, grey used up, warning
+    expired, running low or part paid, red unpaid, green paid and the
+    transfer target.
 
-## What the mockups must show
+## Data (answers to the handoff's section 4)
 
-- [ ] Sale form for each kind with the live preview; price per lesson and
-      total.
-- [ ] After the sale: the next actions (take a payment, open the schedule).
-- [ ] Package detail: new, half used, used up, expired, extended by a pause.
-- [ ] Payment, extend, transfer (with a remainder) and refund dialogs.
-- [ ] Phone versions.
+1. **Direction and teacher on the package**: every package read carries the
+   direction's `teacher` (`id`, `name`, `avatarKey`, `subjects`) and the
+   student's `avatarKey`; a direction is named by its group, else the
+   teacher's first subject.
+2. **The lesson rows**: `GET /packages/:id/ledger` gives each `lesson` entry
+   its `lesson` (`startsAt`, `durationMin`, `status`).
+3. **The pause extension**: `GET /packages/:id` (`PackageDetailResponse`)
+   lists `pauseExtensions` — the pause's start, end and seconds added.
+4. **The queue** (L-81): the detail's `ahead` — the older live package with
+   credits, their credits, and when the direction's booked lessons use the
+   last of them; the sale preview returns `ahead` (the newest live package
+   with credits) and `debtLessons` (what the new credits cover first, L-82).
+5. **Transfer preview**: computed on the client with the domain's
+   `transferCredits`, the function the API runs — no endpoint needed.
+6. **Delete only when unused**: `DELETE /packages/:id` answers 409
+   `PACKAGE_IN_USE` (`details.charges`, `details.payments`); the dialog turns
+   to its blocked state on it.
+7. **The list**: `GET /packages` takes `status` (ACTIVE, ENDING, UNPAID,
+   FINISHED), `search` (student, group or package name), `teacherId`,
+   `sizingMode` and `sort=ending`, and returns `counts` per tab, `owed` per
+   currency and `lowCreditThreshold`. «Running out» is the studio's low-credit
+   threshold or a window closing within 7 days (`isPackageEnding` in the
+   domain). The page is counted from the read rows, not in SQL (a pilot
+   studio's packages fit in one read).
+8. **The legacy `schedule` and `initialPayment`** are gone from the create
+   contract; `POST /packages` no longer takes `?force`.
 
-## Out of scope
+API tests: `package-operations.e2e-spec.ts` (ticket reads, pause extension,
+list tabs, search, teacher and kind filters, delete); `billing.e2e-spec.ts`
+now refuses to delete a used package.
 
-Selling to group members (S08); online payments.
+## Decided while building
+
+- **A package sold here has no name**: the sale shows no name field, so it
+  is called «Пакет на 8 занять» / «Пакет 1–31 жовт» wherever it appears.
+- **The kind picker is `ChoiceCardGroup`**: it already lays out as the
+  board's stacked list.
+- **The window shell is shared**: the lesson windows' dialog became
+  `BandWindow` in `components/shared` (the lesson forms and the sale), with a
+  900px size for the preview column.
+- **`EntityPicker` options can be disabled** (the other-currency directions).
+- **Operations from a list row** open directly over the list; the ticket's
+  operations over the ticket.
+- **The profile's «Пакети» tab rows open the ticket** (no separate ⋯: the
+  ticket holds every operation).
+- **Selling is the pass's next step** when nothing is owed on a package
+  direction (the ink button once the credits run low or out).
+- **A period from the schedule counts its own lessons**: switching to it
+  clears the typed count; the field shows the schedule's with «З розкладу».
+- **A weekly package's price follows the preview's count** (the API's
+  `weeks × N`), so the two fields and the preview agree.
+- **The correction stepper** stops at no credits left and at +50.
+- **The profile's phone metrics row** takes the focus (the axe
+  scrollable-region rule failed on a student with several currencies).
 
 ## Open questions
 
-- Package detail: a sheet over the profile or its own page?
-- Is there a studio-wide packages list, or only per student?
+- **13 vs 12 lessons**: board 01 state 03 shows 13 for 3 a week over 1–31
+  October (31 days × 3 ÷ 7); the API rounds the weeks first (L-80 «X ×
+  weeks») and sells 12. Which rule does the owner want?
+- **«Спершу закриє заняття в борг, якщо вони є»** is shown only with the
+  number when there are lessons on debt; the generic line is dropped.
+- **A package's name**: keep the derived title, or add an optional name to
+  the sale?
+- **An extension by hand is not in «Історія»**: `POST /packages/:id/extend`
+  writes the audit log only; the history lists the pause extensions.
+- **The sale's dates use the browser's time zone** (the known S02 issue):
+  «Діє до 30.10» ends at the browser's midnight.
