@@ -15,6 +15,7 @@ import { paginationQuerySchema } from '@tutorio/validation';
 import { SessionProvider } from '@/components/app/session-provider';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { SESSION_QUERY_KEY } from '@/lib/auth/client';
+import { createCalendarRoutes, type CalendarStoryOptions } from './calendar-story-backend';
 import { createGroupRoutes, type GroupStoryOptions } from './group-story-backend';
 import {
   createLessonCreateRoutes,
@@ -345,6 +346,7 @@ export const SAMPLE_LESSONS: LessonResponse[] = [
 ];
 
 export type StoryBackendOptions = GroupStoryOptions &
+  CalendarStoryOptions &
   LessonStoryOptions &
   LessonCreateStoryOptions & {
     students?: SampleStudent[];
@@ -481,6 +483,7 @@ function createHandler(options: StoryBackendOptions) {
   let links = [...(options.parentLinks ?? SAMPLE_PARENT_LINKS)];
   const detailOf = (item: SampleStudent) => toDetail(item, parents, links);
   const groupRoutes = createGroupRoutes(options);
+  const calendarRoutes = createCalendarRoutes(options);
   const lessonRoutes = createLessonRoutes(options);
   const lessonCreateRoutes = createLessonCreateRoutes(options);
   const settle = () =>
@@ -508,6 +511,8 @@ function createHandler(options: StoryBackendOptions) {
     }
 
     const readBody = () => JSON.parse(String(init?.body ?? '{}'));
+    const calendarResponse = await calendarRoutes(path, method, query, readBody);
+    if (calendarResponse) return calendarResponse;
     const lessonCreateResponse = await lessonCreateRoutes(path, method, query);
     if (lessonCreateResponse) return lessonCreateResponse;
     const lessonResponse = await lessonRoutes(path, method, query, readBody);

@@ -293,6 +293,7 @@
     "nav": {
       "label": "Головна навігація",
       "menuLabel": "Меню",
+      "calendar": "Календар",
       "students": "Учні",
       "parents": "Батьки",
       "groups": "Групи",
@@ -1961,7 +1962,10 @@
       "cancel": "Скасувати",
       "confirmOne": "Перенести заняття",
       "confirmMany": "Перенести {count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}}",
-      "done": "Заняття перенесено"
+      "done": "Заняття перенесено",
+      "movedToast": "{name} — {date}, {time}",
+      "undo": "Скасувати",
+      "undone": "Перенесення скасовано"
     },
     "makeup": {
       "title": "Призначити відпрацювання",
@@ -2056,5 +2060,118 @@
     "pickRangeEnd": "Оберіть кінець періоду",
     "nights": "{count, plural, one {# день} few {# дні} many {# днів} other {# дня}}",
     "pickSlot": "Оберіть дату й час"
+  },
+  "calendar": {
+    "title": "Календар",
+    "newLesson": "Нове заняття",
+    "today": "Сьогодні",
+    "previous": "{view, select, day {Попередній день} week {Попередній тиждень} other {Попередній місяць}}",
+    "next": "{view, select, day {Наступний день} week {Наступний тиждень} other {Наступний місяць}}",
+    "viewLabel": "Вигляд календаря",
+    "fab": "Нове заняття",
+    "views": {
+      "day": "День",
+      "week": "Тиждень",
+      "month": "Місяць"
+    },
+    "subtitle": {
+      "teachers": "{count, plural, one {# викладач} few {# викладачі} many {# викладачів} other {# викладача}}",
+      "allTeachers": "Усі викладачі",
+      "loading": "Завантаження…",
+      "filtered": "{count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}}",
+      "cancelledHidden": "{count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}} · скасовані приховано",
+      "week": "{count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}} цього тижня",
+      "month": "{count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}} у {month, select, 0 {січні} 1 {лютому} 2 {березні} 3 {квітні} 4 {травні} 5 {червні} 6 {липні} 7 {серпні} 8 {вересні} 9 {жовтні} 10 {листопаді} 11 {грудні} other {}}"
+    },
+    "teacherFilter": {
+      "label": "Викладачі",
+      "all": "Усі викладачі",
+      "heading": "Викладачі"
+    },
+    "statusFilter": {
+      "label": "Статус",
+      "heading": "Показувати",
+      "scheduled": "Заплановані",
+      "held": "Відбулися",
+      "noShow": "Не прийшли",
+      "makeup": "Відпрацювання",
+      "cancelled": "Скасовані",
+      "unpaidOnly": "Лише не оплачені",
+      "reset": "Скинути",
+      "done": "Готово"
+    },
+    "filters": {
+      "title": "Фільтри",
+      "description": "Викладачі й статуси занять у календарі",
+      "reset": "Скинути",
+      "teachers": "Викладачі",
+      "status": "Статус",
+      "show": "Показати {count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}}",
+      "open": "Фільтри",
+      "openWithCount": "Фільтри, активних: {count}"
+    },
+    "legend": {
+      "label": "Позначення",
+      "individual": "Індивідуальне",
+      "group": "Групове",
+      "makeup": "Відпрацювання",
+      "upcoming": "попереду",
+      "past": "минуло",
+      "cancelled": "скасовано",
+      "unpaid": "не оплачено"
+    },
+    "event": {
+      "label": "{time}, {title}, {type, select, individual {індивідуальне} group {групове} other {відпрацювання}}, {status, select, upcoming {попереду} past {минуло} running {йде зараз} held {відбулося} noShow {не прийшли} cancelled {скасовано} other {}}{unpaid, select, yes {, не оплачено} other {}}, викладач {teacher}"
+    },
+    "badge": {
+      "held": "Відбулося",
+      "running": "Йде зараз",
+      "makeup": "Відпрацювання",
+      "noShow": "Не прийшли",
+      "cancelled": "Скасовано"
+    },
+    "drag": {
+      "hint": "Відпустіть, щоб перенести · Esc — скасувати",
+      "overlap": "Перетин з {name} · {time}",
+      "target": "{date} · {time}"
+    },
+    "slot": {
+      "mark": "+ {range}"
+    },
+    "month": {
+      "more": "+{count} ще",
+      "openDay": "Відкрити день",
+      "close": "Закрити"
+    },
+    "day": {
+      "summary": "{count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}} · {hours} год",
+      "summaryText": "{held, plural, one {# відбулося} few {# відбулися} many {# відбулося} other {# відбулося}}, {running, plural, one {# йде} other {# йдуть}}, {upcoming} попереду",
+      "makeup": "Відпрацювання о {time}",
+      "makeupFor": "{name} · за {date}",
+      "free": "Вільно {ranges}",
+      "freeShort": "вільно {range}",
+      "sideLabel": "День коротко",
+      "summaryLabel": "Підсумок дня"
+    },
+    "agenda": {
+      "count": "{count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}}",
+      "meta": "{minutes} хв · {type, select, individual {індивідуальне} group {групове} other {відпрацювання}}"
+    },
+    "empty": {
+      "weekTitle": "На цьому тижні занять немає",
+      "dayTitle": "Вільний день",
+      "next": "Найближче заняття — {date} о {time} з {name}.",
+      "nextDay": "Занять немає. Наступне — {date} о {time}.",
+      "noNext": "Попереду занять немає.",
+      "goNext": "До {date}",
+      "goNextLesson": "До наступного заняття",
+      "newOn": "Нове заняття на {date}"
+    },
+    "error": {
+      "title": "Не вдалося завантажити заняття",
+      "text": "Перевірте з’єднання й спробуйте ще раз. Календар покаже тиждень, щойно дані надійдуть.",
+      "retry": "Спробувати ще раз"
+    },
+    "gridLabel": "Розклад занять за часом"
   }
 }

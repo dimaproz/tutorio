@@ -40,7 +40,7 @@ const OLENA = {
   name: 'Olena Kovalenko',
   email: 'olena@example.test',
 };
-const ANNA = { id: studentId(1), fullName: 'Anna Shevchenko' };
+const ANNA = { id: studentId(1), fullName: 'Anna Shevchenko', avatarKey: 'user-1' as const };
 
 const SCHEDULE_ID = '12121212-1212-4121-a121-000000000001';
 const GROUP_SCHEDULE_ID = '12121212-1212-4121-a121-000000000002';
