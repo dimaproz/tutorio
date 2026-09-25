@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { currencyCodeSchema, isoDateTimeSchema, uuidSchema } from './common';
+import { avatarKeySchema, currencyCodeSchema, isoDateTimeSchema, uuidSchema } from './common';
 import { billingTypeSchema } from './enrollments';
 
 // ---------------------------------------------------------------------------
@@ -53,9 +53,19 @@ export const enrollmentBillingResponseSchema = z.object({
       name: z.string().nullable(),
       purchasedAt: isoDateTimeSchema,
       expiresAt: isoDateTimeSchema.nullable(),
+      /** A period package's first day; null for a count package. */
+      validFrom: isoDateTimeSchema.nullable(),
+      /** Credits it was sold with. */
+      lessonsTotal: z.number().int(),
       remainingCredits: z.number().int(),
       /** Valid now: not archived and not expired. */
       usable: z.boolean(),
+      /** What the whole package costs (L-80), and what has been paid for it. */
+      totalPriceMinor: z.number().int().nonnegative(),
+      paidMinor: z.number().int().nonnegative(),
+      // The package payment status (`packagePaymentStatusSchema`); spelled out
+      // here because the packages module imports this one.
+      paymentStatus: z.enum(['PENDING', 'PARTIAL', 'PAID']),
     }),
   ),
   /** Credits left on the usable packages. */
@@ -69,6 +79,17 @@ export const enrollmentBillingResponseSchema = z.object({
     debtMinor: z.number().int().nonnegative(),
     advanceMinor: z.number().int().nonnegative(),
     unpaidLessons: z.number().int().nonnegative(),
+    /**
+     * The lessons not (fully) paid yet, oldest first: what a payment settles
+     * next (L-90), and what is still owed for each.
+     */
+    unpaid: z.array(
+      z.object({
+        lessonId: uuidSchema,
+        startsAt: isoDateTimeSchema,
+        outstandingMinor: z.number().int().positive(),
+      }),
+    ),
   }),
   /** The credit warning it shows, if any (L-82). */
   warning: creditWarningSchema.nullable(),
@@ -86,11 +107,19 @@ const refSchema = z.object({ id: uuidSchema, name: z.string() });
 export const studentBillingResponseSchema = z.object({
   studentId: uuidSchema,
   lowCreditThreshold: lowCreditThresholdSchema,
+  /** The studio's free-cancellation window, for directions that follow it (L-10). */
+  cancellationDeadlineHours: z.number().int().nonnegative(),
   directions: z.array(
     enrollmentBillingResponseSchema.extend({
       status: z.enum(['ACTIVE', 'PAUSED', 'ARCHIVED']),
-      teacher: refSchema,
+      /** The teacher, with what they teach: an individual direction is named by its subject. */
+      teacher: refSchema.extend({
+        avatarKey: avatarKeySchema.nullable(),
+        subjects: z.array(z.string()),
+      }),
       group: refSchema.nullable(),
+      /** The direction's own free-cancellation window; null follows the studio. */
+      cancellationDeadlineHours: z.number().int().nonnegative().nullable(),
     }),
   ),
   totals: z.array(
