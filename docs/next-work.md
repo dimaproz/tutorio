@@ -295,13 +295,32 @@ Follow-ups, in the order they unblock the pilot:
 5. Enrollment surfaces outside a group (individual enrollments) still live on
    the student profile; there is no standalone enrollment screen.
 
-### Work Packet 6.2 — Teachers (next)
+### Work Packet 6.2 — Teachers (closed 2026-09-25, screen step S09)
 
-Migrate teacher collection, detail, form, status, assignment, and workspace-mode
-states. Reuse proven person components where their contracts match; keep
-teacher scheduling and availability behavior feature-owned. A teacher's groups
-can now be read from `Group.teacherId` (`GET /groups?teacherId=`), and
-`LessonList` is ready for the teacher's lessons.
+Built from the owner's handoff `tutorio-s09-teachers`; the brief, the
+decisions and the open questions are
+[`screens/s09-teachers.md`](./screens/s09-teachers.md). The navigation has
+«Викладачі» (studio mode, owner only). `/app/teachers` lists the teachers as
+a table or cards with status tabs, a subject filter, search and the sort by
+workload; the owner comes first with «Ви» and the crown, and while she does
+not teach her row sits above the list with «Я теж викладаю». The profile is
+built around the teacher's week and workload: the header in their colour,
+four metrics, «Тиждень», the groups and schedules tabs, the students and the
+notes, and the owner's «Викладання». Archive and «turn teaching off» show
+their consequences and hand the future lessons, the active schedules and
+the led groups to another teacher after a clash check. The full-page form
+takes the subjects, the rate and the calendar colour.
+
+The API gained `subjects` in the teacher contract (an edit no longer erases
+them), the list's figures (`studentCount`, `groupCount`, `week`, `counts`,
+`me`, `sort`, `subject`), `GET /teachers/:id/summary` and `/students`,
+`POST /teachers/:id/archive(/preview)` and restore of an archived profile
+(migration `20261002120000_teacher_archived_at`).
+
+Follow-ups: the owner's answers to the brief's open questions (directions in
+a hand-over, where the switch to tutor mode lives, the neutral wording, solo
+tutors turning teaching off); the settings step (S10) reuses
+`SoloRefusalDialog`.
 
 ### Work Packet 6.4 — Lessons, Schedules and Charging (contract accepted 2026-09-23)
 

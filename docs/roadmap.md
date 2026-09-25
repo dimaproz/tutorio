@@ -85,7 +85,8 @@ Approved implementation order:
 
 1. Work Packet 6 — Student Experience and Quick Create.
 2. Work Packet 6.1 — Parents (closed 2026-09-23).
-3. Work Packet 6.2 — Teachers.
+3. Work Packet 6.2 — Teachers (closed 2026-09-25 as screen step S09; see
+   [`screens/s09-teachers.md`](./screens/s09-teachers.md)).
 4. Work Packet 6.3 — Groups and Enrollments (groups implemented 2026-09-23,
    ahead of 6.2 at the product owner's request; see
    [`product/groups.md`](./product/groups.md)).

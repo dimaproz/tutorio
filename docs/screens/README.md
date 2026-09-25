@@ -1,6 +1,6 @@
 # Screen Delivery Plan
 
-Last verified: 2026-09-25 (S01–S08 done).
+Last verified: 2026-09-25 (S01–S09 done).
 
 The backend of Work Packet 6.4 is complete (phases 1–7, see
 [`next-work.md`](../next-work.md)); the web app holds only the rebuilt
@@ -46,7 +46,7 @@ make, and becomes the acceptance list for that step.
 | [S06](./s06-student-billing-and-pause.md) | Student profile: directions and billing, schedules, pause, recording a payment                 | 6.4         | Done                |
 | [S07](./s07-packages.md)                  | Package sale form and package operations: detail, extend, transfer, refund, pay                | 6.5, 7      | Done                |
 | [S08](./s08-group-page-operations.md)     | Group page: editable schedule, attendance, sell to members, members' billing                   | 6.4         | Done                |
-| [S09](./s09-teachers.md)                  | Teachers: collection, profile, form, status                                                    | 6.2         | Waiting for mockups |
+| [S09](./s09-teachers.md)                  | Teachers: collection, profile, form, status                                                    | 6.2         | Done                |
 | [S10](./s10-settings.md)                  | Studio settings: defaults, mode, horizon, cancellation deadline, low-credit warning; audit log | 6.6         | Waiting for mockups |
 | [S11](./s11-dashboard.md)                 | Today dashboard: today's lessons and the exceptions to act on                                  | 6.6         | Waiting for mockups |
 

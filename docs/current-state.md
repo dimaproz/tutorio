@@ -1,7 +1,7 @@
 # Tutorio Current State
 
-Last verified: 2026-09-25 after the group page operations (see "Group page
-operations — screen step S08").
+Last verified: 2026-09-25 after the teachers pages (see "Teachers — screen
+step S09").
 
 This is the first project document to read before planning or implementing
 work. It reports the repository as it exists; [`mvp-plan.md`](./mvp-plan.md)
@@ -46,6 +46,46 @@ build. Not yet checked by hand in the running app under an emulated zone.
 Found on the way, not fixed: the API's schedule expansion
 (`packages/domain/src/recurrence.ts`) uses `date-fns-tz` and drops a lesson
 at 02:00–02:59 on the spring-switch day in Kyiv.
+
+## Teachers — screen step S09 (2026-09-25)
+
+Work Packet 6.2 is closed. «Викладачі» is in the navigation of a studio
+(owner only). `/app/teachers` shows the teachers as a table or cards (the
+choice is remembered; cards below a desktop) with status tabs and counts, a
+subject filter, search and the sort by this week's lessons; the owner comes
+first with «Ви» and a gold crown and, while she does not teach, sits above
+the list with «Я теж викладаю». With the owner alone the page invites
+colleagues; in tutor mode it shows her with «Перейти в режим студії», and
+the switch to tutor mode (the owner's ⋯) is refused with a plain count of
+the other active teachers. The profile is tinted in the teacher's colour:
+four metrics (hours this week with six weeks of bars, students, lessons held
+this month with no-shows and students' cancellations, the rate), «Тиждень»
+as seven columns or a day strip, the groups (`GroupCard`) and schedules in
+one tabbed card, the students with their level and how they study, the
+owner's «Я викладаю» and notes. Archive and turning teaching off show the
+consequences and hand the future lessons, active schedules and led groups to
+a colleague after a clash check («Все одно передати» on overlaps); the
+archived profile is grey with «Відновити». The full-page form takes the
+avatar, contacts, subjects (a popover of the studio's subjects, or a new
+one), rate and currency, the colour with the calendar preview, bio and
+notes. Dialogs are bottom sheets on phones; `PageHeader` wraps its actions
+instead of overflowing beside the sidebar.
+
+API: `subjects` in the teacher contract (an edit no longer erases them); the
+list carries each teacher's students, groups and this week, the tab counts
+and the caller's own profile (`me`), with `sort` and `subject`;
+`GET /teachers/:id/summary`, `GET /teachers/:id/students`,
+`POST /teachers/:id/archive/preview` and `POST /teachers/:id/archive`
+(`transferTo`, `?force`); restore makes an archived profile active again;
+migration `20261002120000_teacher_archived_at` (applied to the local dev
+database, not yet to Railway dev). Brief, decisions and open questions:
+[`screens/s09-teachers.md`](./screens/s09-teachers.md).
+
+Gate on 2026-09-25: domain 174 tests, validation 68; API lint, typecheck,
+257 unit tests and the API E2E suite on an isolated PostgreSQL 17 (139 tests
+in 14 files, the new teachers suite included); web lint, typecheck, 411 unit
+tests, build, the Storybook browser tests (416 in 97 files) and the
+Storybook build.
 
 ## Group page operations — screen step S08 (2026-09-25)
 
@@ -699,6 +739,7 @@ the complete local gate on 2026-09-23. The Student feature is the reference
 collection/detail/form migration. Work Packet 6.1 — Parents is closed on the
 same pattern, with its brief in [`product/parents.md`](./product/parents.md).
 Work Packet 6.3 — Groups is implemented and reviewed, with its brief in
-[`product/groups.md`](./product/groups.md). The next checkpoint is Work
-Packet 6.2 — Teachers, which starts with its architect-approved screen brief
-in `docs/product/`.
+[`product/groups.md`](./product/groups.md). Work Packet 6.2 — Teachers is
+closed as screen step S09 ([`screens/s09-teachers.md`](./screens/s09-teachers.md)).
+The next screen steps are S10 (settings) and S11 (dashboard), from the
+owner's mockups.
