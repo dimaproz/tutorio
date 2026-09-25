@@ -1876,7 +1876,7 @@
     },
     "/api/teachers": {
       "get": {
-        "description": "Paginated; search + status filter. state=deleted|all is owner-only.",
+        "description": "Paginated; search (name, contacts, subjects), status, subject and sort. Each item carries its students, groups and this studio week. The own profile of the caller comes first; while its teaching is off it is left out and returned as `me`. state=deleted|all is owner-only.",
         "operationId": "TeachersController_list",
         "parameters": [
           {
@@ -1920,6 +1920,26 @@
             "schema": {
               "type": "string",
               "enum": ["ACTIVE", "ARCHIVED"]
+            }
+          },
+          {
+            "name": "subject",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minLength": 1,
+              "maxLength": 60,
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "name",
+              "type": "string",
+              "enum": ["name", "workload", "created"]
             }
           },
           {
@@ -2169,8 +2189,294 @@
         "tags": ["teachers"]
       }
     },
+    "/api/teachers/{teacherId}/summary": {
+      "get": {
+        "description": "Hours per studio week for the last six weeks, students individually and in groups, groups led, and the held lessons of this month, no-shows and lessons the students cancelled.",
+        "operationId": "TeachersController_summary",
+        "parameters": [
+          {
+            "name": "teacherId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeacherSummaryDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "The metrics of a teacher profile",
+        "tags": ["teachers"]
+      }
+    },
+    "/api/teachers/{teacherId}/students": {
+      "get": {
+        "description": "By name: the level and subject, whether the student studies with the teacher one to one, and which groups of the teacher they attend.",
+        "operationId": "TeachersController_students",
+        "parameters": [
+          {
+            "name": "teacherId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "exclusiveMinimum": false,
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "exclusiveMaximum": false,
+              "exclusiveMinimum": false,
+              "default": 20,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeacherStudentsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "The students of a teacher",
+        "tags": ["teachers"]
+      }
+    },
+    "/api/teachers/{teacherId}/archive/preview": {
+      "post": {
+        "description": "Active schedules, future lessons, students and groups; with `transferTo`, the overlaps of the new teacher with the handed-over lessons.",
+        "operationId": "TeachersController_previewArchive",
+        "parameters": [
+          {
+            "name": "teacherId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArchiveTeacherDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeacherArchivePreviewDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "What archiving a teacher changes",
+        "tags": ["teachers"]
+      }
+    },
+    "/api/teachers/{teacherId}/archive": {
+      "post": {
+        "description": "With `transferTo`, hands the future lessons, active schedules and groups to that teacher after a clash check (409 SCHEDULE_CONFLICT unless `force`). History keeps the archived teacher.",
+        "operationId": "TeachersController_archive",
+        "parameters": [
+          {
+            "name": "teacherId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "force",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": false,
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string",
+                  "enum": ["true"]
+                },
+                {
+                  "type": "string",
+                  "enum": ["false"]
+                }
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArchiveTeacherDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeacherDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Archive a teacher, or turn your own teaching off",
+        "tags": ["teachers"]
+      }
+    },
     "/api/teachers/{teacherId}/restore": {
       "post": {
+        "description": "Undeletes a soft-deleted profile, or makes an archived one active again (solo mode allows one active teacher).",
         "operationId": "TeachersController_restore",
         "parameters": [
           {
@@ -2219,7 +2525,7 @@
             "bearer": []
           }
         ],
-        "summary": "Restore a soft-deleted teacher",
+        "summary": "Restore a teacher",
         "tags": ["teachers"]
       }
     },
@@ -9284,6 +9590,12 @@
                   "type": "string",
                   "nullable": true
                 },
+                "subjects": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
                 "bio": {
                   "type": "string",
                   "nullable": true
@@ -9324,6 +9636,11 @@
                   "type": "string",
                   "enum": ["ACTIVE", "ARCHIVED"]
                 },
+                "archivedAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                },
                 "workspaceMemberId": {
                   "type": "string",
                   "format": "uuid",
@@ -9353,6 +9670,35 @@
                   "type": "integer",
                   "minimum": 0,
                   "exclusiveMinimum": false
+                },
+                "studentCount": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                },
+                "groupCount": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                },
+                "week": {
+                  "type": "object",
+                  "properties": {
+                    "lessonCount": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": false
+                    },
+                    "days": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "exclusiveMinimum": false
+                      }
+                    }
+                  },
+                  "required": ["lessonCount", "days"]
                 }
               },
               "required": [
@@ -9362,19 +9708,24 @@
                 "email",
                 "phone",
                 "telegramUsername",
+                "subjects",
                 "bio",
                 "defaultRateMinor",
                 "currency",
                 "color",
                 "avatarKey",
                 "status",
+                "archivedAt",
                 "workspaceMemberId",
                 "isMe",
                 "notes",
                 "createdAt",
                 "updatedAt",
                 "deletedAt",
-                "activeEnrollmentCount"
+                "activeEnrollmentCount",
+                "studentCount",
+                "groupCount",
+                "week"
               ]
             }
           },
@@ -9397,9 +9748,195 @@
             "type": "integer",
             "minimum": 0,
             "exclusiveMinimum": false
+          },
+          "counts": {
+            "type": "object",
+            "properties": {
+              "active": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "archived": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "all": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              }
+            },
+            "required": ["active", "archived", "all"]
+          },
+          "me": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "workspaceId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "fullName": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string",
+                "nullable": true
+              },
+              "phone": {
+                "type": "string",
+                "nullable": true
+              },
+              "telegramUsername": {
+                "type": "string",
+                "nullable": true
+              },
+              "subjects": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "bio": {
+                "type": "string",
+                "nullable": true
+              },
+              "defaultRateMinor": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false,
+                "nullable": true
+              },
+              "currency": {
+                "type": "string",
+                "enum": ["EUR", "UAH", "PLN", "USD", "GBP"],
+                "nullable": true
+              },
+              "color": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$",
+                "nullable": true
+              },
+              "avatarKey": {
+                "type": "string",
+                "enum": [
+                  "user-1",
+                  "user-2",
+                  "user-3",
+                  "user-4",
+                  "user-5",
+                  "user-6",
+                  "user-7",
+                  "user-8",
+                  "user-9",
+                  "user-10"
+                ],
+                "nullable": true
+              },
+              "status": {
+                "type": "string",
+                "enum": ["ACTIVE", "ARCHIVED"]
+              },
+              "archivedAt": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "workspaceMemberId": {
+                "type": "string",
+                "format": "uuid",
+                "nullable": true
+              },
+              "isMe": {
+                "type": "boolean"
+              },
+              "notes": {
+                "type": "string",
+                "nullable": true
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "deletedAt": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "activeEnrollmentCount": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "studentCount": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "groupCount": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "week": {
+                "type": "object",
+                "properties": {
+                  "lessonCount": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "exclusiveMinimum": false
+                  },
+                  "days": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": false
+                    }
+                  }
+                },
+                "required": ["lessonCount", "days"]
+              }
+            },
+            "required": [
+              "id",
+              "workspaceId",
+              "fullName",
+              "email",
+              "phone",
+              "telegramUsername",
+              "subjects",
+              "bio",
+              "defaultRateMinor",
+              "currency",
+              "color",
+              "avatarKey",
+              "status",
+              "archivedAt",
+              "workspaceMemberId",
+              "isMe",
+              "notes",
+              "createdAt",
+              "updatedAt",
+              "deletedAt",
+              "activeEnrollmentCount",
+              "studentCount",
+              "groupCount",
+              "week"
+            ],
+            "nullable": true
           }
         },
-        "required": ["items", "page", "pageSize", "total", "totalPages"]
+        "required": ["items", "page", "pageSize", "total", "totalPages", "counts", "me"]
       },
       "CreateTeacherDto": {
         "type": "object",
@@ -9422,6 +9959,15 @@
           "telegramUsername": {
             "type": "string",
             "maxLength": 64
+          },
+          "subjects": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 60
+            }
           },
           "bio": {
             "type": "string",
@@ -9499,6 +10045,12 @@
             "type": "string",
             "nullable": true
           },
+          "subjects": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "bio": {
             "type": "string",
             "nullable": true
@@ -9539,6 +10091,11 @@
             "type": "string",
             "enum": ["ACTIVE", "ARCHIVED"]
           },
+          "archivedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "workspaceMemberId": {
             "type": "string",
             "format": "uuid",
@@ -9572,18 +10129,349 @@
           "email",
           "phone",
           "telegramUsername",
+          "subjects",
           "bio",
           "defaultRateMinor",
           "currency",
           "color",
           "avatarKey",
           "status",
+          "archivedAt",
           "workspaceMemberId",
           "isMe",
           "notes",
           "createdAt",
           "updatedAt",
           "deletedAt"
+        ]
+      },
+      "TeacherSummaryDto": {
+        "type": "object",
+        "properties": {
+          "weeks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "weekStart": {
+                  "type": "string"
+                },
+                "minutes": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                }
+              },
+              "required": ["weekStart", "minutes"]
+            }
+          },
+          "students": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "individual": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "inGroups": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              }
+            },
+            "required": ["total", "individual", "inGroups"]
+          },
+          "groupCount": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "month": {
+            "type": "object",
+            "properties": {
+              "start": {
+                "type": "string"
+              },
+              "held": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "noShows": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "cancelledByStudents": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              }
+            },
+            "required": ["start", "held", "noShows", "cancelledByStudents"]
+          }
+        },
+        "required": ["weeks", "students", "groupCount", "month"]
+      },
+      "TeacherStudentsDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "fullName": {
+                  "type": "string"
+                },
+                "avatarKey": {
+                  "type": "string",
+                  "enum": [
+                    "user-1",
+                    "user-2",
+                    "user-3",
+                    "user-4",
+                    "user-5",
+                    "user-6",
+                    "user-7",
+                    "user-8",
+                    "user-9",
+                    "user-10"
+                  ],
+                  "nullable": true
+                },
+                "languageLevel": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "subject": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "individual": {
+                  "type": "boolean"
+                },
+                "groups": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "name": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["id", "name"]
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "fullName",
+                "avatarKey",
+                "languageLevel",
+                "subject",
+                "individual",
+                "groups"
+              ]
+            }
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1,
+            "exclusiveMinimum": false
+          },
+          "pageSize": {
+            "type": "integer",
+            "minimum": 1,
+            "exclusiveMinimum": false
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "totalPages": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          }
+        },
+        "required": ["items", "page", "pageSize", "total", "totalPages"]
+      },
+      "ArchiveTeacherDto": {
+        "type": "object",
+        "properties": {
+          "transferTo": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        }
+      },
+      "TeacherArchivePreviewDto": {
+        "type": "object",
+        "properties": {
+          "scheduleCount": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "futureLessonCount": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "lastLessonAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "studentCount": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": ["id", "name"]
+            }
+          },
+          "conflicts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "candidateStartsAtUtc": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "lessonId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "startsAtUtc": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "durationMin": {
+                  "type": "integer",
+                  "minimum": 5,
+                  "exclusiveMinimum": false,
+                  "maximum": 720,
+                  "exclusiveMaximum": false
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": ["REGULAR", "MAKEUP"]
+                },
+                "reason": {
+                  "type": "string",
+                  "enum": ["TEACHER", "STUDENT"]
+                },
+                "teacher": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["id", "name"]
+                },
+                "student": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "fullName": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["id", "fullName"],
+                  "nullable": true
+                },
+                "group": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["id", "name"],
+                  "nullable": true
+                },
+                "students": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "fullName": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["id", "fullName"]
+                  }
+                }
+              },
+              "required": [
+                "candidateStartsAtUtc",
+                "lessonId",
+                "startsAtUtc",
+                "durationMin",
+                "kind",
+                "reason",
+                "teacher",
+                "student",
+                "group",
+                "students"
+              ]
+            }
+          }
+        },
+        "required": [
+          "scheduleCount",
+          "futureLessonCount",
+          "lastLessonAt",
+          "studentCount",
+          "groups",
+          "conflicts"
         ]
       },
       "UpdateTeacherDto": {
@@ -9610,6 +10498,15 @@
             "type": "string",
             "maxLength": 64,
             "nullable": true
+          },
+          "subjects": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 60
+            }
           },
           "bio": {
             "type": "string",

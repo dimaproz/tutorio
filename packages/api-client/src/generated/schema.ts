@@ -497,7 +497,7 @@ export interface paths {
     };
     /**
      * List workspace teachers
-     * @description Paginated; search + status filter. state=deleted|all is owner-only.
+     * @description Paginated; search (name, contacts, subjects), status, subject and sort. Each item carries its students, groups and this studio week. The own profile of the caller comes first; while its teaching is off it is left out and returned as `me`. state=deleted|all is owner-only.
      */
     get: operations['TeachersController_list'];
     put?: never;
@@ -531,6 +531,86 @@ export interface paths {
     patch: operations['TeachersController_update'];
     trace?: never;
   };
+  '/api/teachers/{teacherId}/summary': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * The metrics of a teacher profile
+     * @description Hours per studio week for the last six weeks, students individually and in groups, groups led, and the held lessons of this month, no-shows and lessons the students cancelled.
+     */
+    get: operations['TeachersController_summary'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/teachers/{teacherId}/students': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * The students of a teacher
+     * @description By name: the level and subject, whether the student studies with the teacher one to one, and which groups of the teacher they attend.
+     */
+    get: operations['TeachersController_students'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/teachers/{teacherId}/archive/preview': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * What archiving a teacher changes
+     * @description Active schedules, future lessons, students and groups; with `transferTo`, the overlaps of the new teacher with the handed-over lessons.
+     */
+    post: operations['TeachersController_previewArchive'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/teachers/{teacherId}/archive': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Archive a teacher, or turn your own teaching off
+     * @description With `transferTo`, hands the future lessons, active schedules and groups to that teacher after a clash check (409 SCHEDULE_CONFLICT unless `force`). History keeps the archived teacher.
+     */
+    post: operations['TeachersController_archive'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/teachers/{teacherId}/restore': {
     parameters: {
       query?: never;
@@ -540,7 +620,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Restore a soft-deleted teacher */
+    /**
+     * Restore a teacher
+     * @description Undeletes a soft-deleted profile, or makes an archived one active again (solo mode allows one active teacher).
+     */
     post: operations['TeachersController_restore'];
     delete?: never;
     options?: never;
@@ -2388,6 +2471,7 @@ export interface components {
         email: string | null;
         phone: string | null;
         telegramUsername: string | null;
+        subjects: string[];
         bio: string | null;
         defaultRateMinor: number | null;
         /** @enum {string|null} */
@@ -2408,6 +2492,8 @@ export interface components {
           | null;
         /** @enum {string} */
         status: 'ACTIVE' | 'ARCHIVED';
+        /** Format: date-time */
+        archivedAt: string | null;
         /** Format: uuid */
         workspaceMemberId: string | null;
         isMe: boolean;
@@ -2419,11 +2505,72 @@ export interface components {
         /** Format: date-time */
         deletedAt: string | null;
         activeEnrollmentCount: number;
+        studentCount: number;
+        groupCount: number;
+        week: {
+          lessonCount: number;
+          days: number[];
+        };
       }[];
       page: number;
       pageSize: number;
       total: number;
       totalPages: number;
+      counts: {
+        active: number;
+        archived: number;
+        all: number;
+      };
+      me: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        workspaceId: string;
+        fullName: string;
+        email: string | null;
+        phone: string | null;
+        telegramUsername: string | null;
+        subjects: string[];
+        bio: string | null;
+        defaultRateMinor: number | null;
+        /** @enum {string|null} */
+        currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP' | null;
+        color: string | null;
+        /** @enum {string|null} */
+        avatarKey:
+          | 'user-1'
+          | 'user-2'
+          | 'user-3'
+          | 'user-4'
+          | 'user-5'
+          | 'user-6'
+          | 'user-7'
+          | 'user-8'
+          | 'user-9'
+          | 'user-10'
+          | null;
+        /** @enum {string} */
+        status: 'ACTIVE' | 'ARCHIVED';
+        /** Format: date-time */
+        archivedAt: string | null;
+        /** Format: uuid */
+        workspaceMemberId: string | null;
+        isMe: boolean;
+        notes: string | null;
+        /** Format: date-time */
+        createdAt: string;
+        /** Format: date-time */
+        updatedAt: string;
+        /** Format: date-time */
+        deletedAt: string | null;
+        activeEnrollmentCount: number;
+        studentCount: number;
+        groupCount: number;
+        week: {
+          lessonCount: number;
+          days: number[];
+        };
+      } | null;
     };
     CreateTeacherDto: {
       fullName: string;
@@ -2431,6 +2578,7 @@ export interface components {
       email?: string;
       phone?: string;
       telegramUsername?: string;
+      subjects?: string[];
       bio?: string;
       defaultRateMinor?: number;
       /** @enum {string} */
@@ -2466,6 +2614,7 @@ export interface components {
       email: string | null;
       phone: string | null;
       telegramUsername: string | null;
+      subjects: string[];
       bio: string | null;
       defaultRateMinor: number | null;
       /** @enum {string|null} */
@@ -2486,6 +2635,8 @@ export interface components {
         | null;
       /** @enum {string} */
       status: 'ACTIVE' | 'ARCHIVED';
+      /** Format: date-time */
+      archivedAt: string | null;
       /** Format: uuid */
       workspaceMemberId: string | null;
       isMe: boolean;
@@ -2497,12 +2648,112 @@ export interface components {
       /** Format: date-time */
       deletedAt: string | null;
     };
+    TeacherSummaryDto: {
+      weeks: {
+        weekStart: string;
+        minutes: number;
+      }[];
+      students: {
+        total: number;
+        individual: number;
+        inGroups: number;
+      };
+      groupCount: number;
+      month: {
+        start: string;
+        held: number;
+        noShows: number;
+        cancelledByStudents: number;
+      };
+    };
+    TeacherStudentsDto: {
+      items: {
+        /** Format: uuid */
+        id: string;
+        fullName: string;
+        /** @enum {string|null} */
+        avatarKey:
+          | 'user-1'
+          | 'user-2'
+          | 'user-3'
+          | 'user-4'
+          | 'user-5'
+          | 'user-6'
+          | 'user-7'
+          | 'user-8'
+          | 'user-9'
+          | 'user-10'
+          | null;
+        languageLevel: string | null;
+        subject: string | null;
+        individual: boolean;
+        groups: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+        }[];
+      }[];
+      page: number;
+      pageSize: number;
+      total: number;
+      totalPages: number;
+    };
+    ArchiveTeacherDto: {
+      /** Format: uuid */
+      transferTo?: string | null;
+    };
+    TeacherArchivePreviewDto: {
+      scheduleCount: number;
+      futureLessonCount: number;
+      /** Format: date-time */
+      lastLessonAt: string | null;
+      studentCount: number;
+      groups: {
+        /** Format: uuid */
+        id: string;
+        name: string;
+      }[];
+      conflicts: {
+        /** Format: date-time */
+        candidateStartsAtUtc: string;
+        /** Format: uuid */
+        lessonId: string;
+        /** Format: date-time */
+        startsAtUtc: string;
+        durationMin: number;
+        /** @enum {string} */
+        kind: 'REGULAR' | 'MAKEUP';
+        /** @enum {string} */
+        reason: 'TEACHER' | 'STUDENT';
+        teacher: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+        };
+        student: {
+          /** Format: uuid */
+          id: string;
+          fullName: string;
+        } | null;
+        group: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+        } | null;
+        students: {
+          /** Format: uuid */
+          id: string;
+          fullName: string;
+        }[];
+      }[];
+    };
     UpdateTeacherDto: {
       fullName?: string;
       /** Format: email */
       email?: string | null;
       phone?: string | null;
       telegramUsername?: string | null;
+      subjects?: string[];
       bio?: string | null;
       defaultRateMinor?: number | null;
       /** @enum {string|null} */
@@ -6332,6 +6583,8 @@ export interface operations {
         pageSize?: number;
         search?: string;
         status?: 'ACTIVE' | 'ARCHIVED';
+        subject?: string;
+        sort?: 'name' | 'workload' | 'created';
         state?: 'active' | 'deleted' | 'all';
       };
       header?: never;
@@ -6476,6 +6729,171 @@ export interface operations {
     requestBody: {
       content: {
         'application/json': components['schemas']['UpdateTeacherDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TeacherDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  TeachersController_summary: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        teacherId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TeacherSummaryDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  TeachersController_students: {
+    parameters: {
+      query?: {
+        page?: number;
+        pageSize?: number;
+      };
+      header?: never;
+      path: {
+        teacherId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TeacherStudentsDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  TeachersController_previewArchive: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        teacherId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ArchiveTeacherDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TeacherArchivePreviewDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  TeachersController_archive: {
+    parameters: {
+      query?: {
+        force?: boolean | 'true' | 'false';
+      };
+      header?: never;
+      path: {
+        teacherId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ArchiveTeacherDto'];
       };
     };
     responses: {
