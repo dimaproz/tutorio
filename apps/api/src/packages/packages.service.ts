@@ -17,6 +17,7 @@ import type {
   CreditLedgerResponse,
   ExtendPackageDto,
   ListPackagesQueryDto,
+  MemberSalePreviewResponse,
   PackageDetailResponse,
   PackageListResponse,
   PackagePreviewResponse,
@@ -46,6 +47,7 @@ import {
 import { buildPaginatedResponse, deletedAtFilter } from '../common/pagination';
 import { PrismaService } from '../prisma/prisma.service';
 import { lockStudentLifecycles } from '../scheduling/lifecycle-suspension';
+import { currentOrNextPauses } from '../scheduling/pause-windows';
 import { resolveStudentTarget } from '../scheduling/scheduling.shared';
 import {
   packageInclude,
@@ -91,6 +93,21 @@ interface SalePlan extends PackagePlan {
   validFrom: Date | null;
   expiresAt: Date | null;
   scheduleLessons: number | null;
+}
+
+/**
+ * The spec one member of a sale is sold: the shared one, or at their own
+ * rate per lesson when the sale names one for them (L-11).
+ */
+function memberSpec(dto: SellToMembersDto, studentId: string): PackageSpec {
+  const own = dto.prices?.find((price) => price.studentId === studentId);
+  return own
+    ? {
+        ...dto,
+        pricePerLessonMinor: own.pricePerLessonMinor,
+        totalPriceMinor: undefined,
+      }
+    : dto;
 }
 
 @Injectable()
@@ -526,8 +543,81 @@ export class PackagesService {
   }
 
   /**
+   * What the member sale would be for each selected member (S08), without
+   * writing anything: the same plan the sale makes, the member's queue (L-81,
+   * L-82) and the pause that holds the package's first lessons back (L-73).
+   */
+  async previewMembers(
+    auth: AuthenticatedUser,
+    dto: SellToMembersDto,
+  ): Promise<MemberSalePreviewResponse> {
+    const group = await this.liveGroup(this.prisma, auth, dto.groupId);
+    const members: { studentId: string; direction: Direction }[] = [];
+    for (const studentId of dto.studentIds) {
+      const direction = await this.findDirection(this.prisma, auth, {
+        studentId,
+        groupId: group.id,
+      });
+      members.push({ studentId, direction: direction! });
+    }
+    const pauses = await currentOrNextPauses(
+      this.prisma,
+      members.map((member) => ({
+        id: member.direction.id,
+        studentId: member.studentId,
+      })),
+      new Date(),
+    );
+    let window: Pick<SalePlan, 'validFrom' | 'expiresAt'> = {
+      validFrom: null,
+      expiresAt: null,
+    };
+    const items: MemberSalePreviewResponse['items'] = [];
+    for (const { studentId, direction } of members) {
+      const plan = await this.planSale(
+        this.prisma,
+        direction,
+        memberSpec(dto, studentId),
+      );
+      window = plan;
+      const queue = await this.saleQueue(direction.id);
+      const pause = pauses.get(direction.id);
+      // A pause matters to the sale when it covers the package's start or
+      // begins before its end.
+      const from = plan.validFrom ?? new Date();
+      const holds =
+        pause !== undefined &&
+        (plan.expiresAt === null || pause.startsAt < plan.expiresAt) &&
+        (pause.endsAt === null || pause.endsAt > from);
+      items.push({
+        studentId,
+        lessonsTotal: plan.lessonsTotal,
+        pricePerLessonMinor: plan.pricePerLessonMinor,
+        totalPriceMinor: plan.totalPriceMinor,
+        validFrom: plan.validFrom?.toISOString() ?? null,
+        expiresAt: plan.expiresAt?.toISOString() ?? null,
+        scheduleLessons: plan.scheduleLessons,
+        ...queue,
+        pause: holds
+          ? {
+              startsAt: pause.startsAt.toISOString(),
+              endsAt: pause.endsAt?.toISOString() ?? null,
+            }
+          : null,
+      });
+    }
+    return {
+      validFrom: window.validFrom?.toISOString() ?? null,
+      expiresAt: window.expiresAt?.toISOString() ?? null,
+      items,
+    };
+  }
+
+  /**
    * Sells one package spec to each selected member of a group (L-86): one
-   * package per member, for their membership, each paid separately.
+   * package per member, for their membership, each paid separately; members
+   * in `prices` at their own rate (L-11). One transaction: a member that
+   * cannot be sold to sells nothing to anyone.
    */
   async sellToMembers(
     auth: AuthenticatedUser,
@@ -536,22 +626,20 @@ export class PackagesService {
     const ids = await this.prisma.$transaction(
       async (tx) => {
         await lockStudentLifecycles(tx, auth.workspaceId, dto.studentIds);
-        const group = await tx.group.findFirst({
-          where: {
-            id: dto.groupId,
-            workspaceId: auth.workspaceId,
-            deletedAt: null,
-          },
-          select: { id: true },
-        });
-        if (!group) throw groupNotFound();
+        const group = await this.liveGroup(tx, auth, dto.groupId);
         const created: string[] = [];
         for (const studentId of dto.studentIds) {
           const direction = await this.findDirection(tx, auth, {
             studentId,
             groupId: group.id,
           });
-          const pkg = await this.sellInTx(tx, auth, studentId, direction!, dto);
+          const pkg = await this.sellInTx(
+            tx,
+            auth,
+            studentId,
+            direction!,
+            memberSpec(dto, studentId),
+          );
           created.push(pkg.id);
         }
         return created;
@@ -564,6 +652,16 @@ export class PackagesService {
     });
     const byId = new Map(rows.map((row) => [row.id, row]));
     return { items: ids.map((id) => toPackageResponse(byId.get(id)!)) };
+  }
+
+  /** A group of the workspace that is not archived (404 otherwise). */
+  private async liveGroup(db: Db, auth: AuthenticatedUser, groupId: string) {
+    const group = await db.group.findFirst({
+      where: { id: groupId, workspaceId: auth.workspaceId, deletedAt: null },
+      select: { id: true },
+    });
+    if (!group) throw groupNotFound();
+    return group;
   }
 
   /**

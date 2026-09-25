@@ -40,6 +40,8 @@ import {
   ListGroupsQueryDto,
   UpdateGroupDto,
 } from './dto/groups.dto';
+import { BillingReadsService } from '../billing/billing-reads.service';
+import { GroupBillingDto } from '../billing/dto/billing.dto';
 import { GroupAttendanceService } from './group-attendance.service';
 import { GroupsService } from './groups.service';
 import { ForceQueryDto } from '../scheduling/dto/scheduling.dto';
@@ -52,6 +54,7 @@ export class GroupsController {
   constructor(
     private readonly groups: GroupsService,
     private readonly attendance: GroupAttendanceService,
+    private readonly billing: BillingReadsService,
   ) {}
 
   @Get()
@@ -160,6 +163,25 @@ export class GroupsController {
     @Query() query: GroupAttendanceQueryDto,
   ): Promise<GroupAttendanceDto> {
     return this.attendance.summarize(user, groupId, query);
+  }
+
+  @Get(':groupId/billing')
+  @Roles('OWNER')
+  @ApiOperation({
+    summary: 'How each member pays the group',
+    description:
+      'One row per live member: their billing for the group (mode, rate, ' +
+      'packages and credits, lessons on debt, the pay-per-lesson balance, ' +
+      'the warning) and their pause now or next.',
+  })
+  @ApiOkResponse({ type: GroupBillingDto })
+  @ApiNotFoundResponse({ type: ApiErrorDto })
+  @ZodSerializerDto(GroupBillingDto)
+  getBilling(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('groupId', ParseUUIDPipe) groupId: string,
+  ): Promise<GroupBillingDto> {
+    return this.billing.getGroupBilling(user, groupId);
   }
 
   @Patch(':groupId')

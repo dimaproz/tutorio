@@ -222,6 +222,13 @@ export const scheduleNotFound = () =>
     HttpStatus.NOT_FOUND,
   );
 
+export const noPlannedChange = () =>
+  new BusinessApiException(
+    'NO_PLANNED_CHANGE',
+    'This schedule has no change planned for later',
+    HttpStatus.CONFLICT,
+  );
+
 export const scheduleEnded = () =>
   new BusinessApiException(
     'SCHEDULE_ENDED',

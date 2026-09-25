@@ -88,3 +88,52 @@ export async function pausedDirectionIds(
   }
   return paused;
 }
+
+/**
+ * Each direction's pause covering `now`, else its next one — its own or its
+ * student's — with its effective end (an early end wins over the plan; null
+ * runs until ended). Directions with neither are left out.
+ */
+export async function currentOrNextPauses(
+  db: Db,
+  directions: readonly PausableDirection[],
+  now: Date,
+): Promise<Map<string, { startsAt: Date; endsAt: Date | null }>> {
+  const result = new Map<string, { startsAt: Date; endsAt: Date | null }>();
+  if (directions.length === 0) return result;
+  const pauses = await db.pause.findMany({
+    where: {
+      AND: [
+        coveringWhere(directions),
+        {
+          OR: [
+            { endedAt: { gt: now } },
+            { endedAt: null, OR: [{ endsAt: null }, { endsAt: { gt: now } }] },
+          ],
+        },
+      ],
+    },
+    orderBy: [{ startsAt: 'asc' }, { id: 'asc' }],
+    select: {
+      enrollmentId: true,
+      studentId: true,
+      startsAt: true,
+      endsAt: true,
+      endedAt: true,
+    },
+  });
+  for (const direction of directions) {
+    const first = pauses.find((pause) =>
+      pause.enrollmentId === null
+        ? pause.studentId === direction.studentId
+        : pause.enrollmentId === direction.id,
+    );
+    if (first) {
+      result.set(direction.id, {
+        startsAt: first.startsAt,
+        endsAt: first.endedAt ?? first.endsAt,
+      });
+    }
+  }
+  return result;
+}

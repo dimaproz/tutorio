@@ -251,9 +251,13 @@ export class AttendanceService {
       }
 
       const fields: AuditChanges['fields'] = {};
+      const confirmed: string[] = [];
       for (const mark of dto.marks) {
         const before = known.get(mark.enrollmentId)?.status ?? null;
-        if (before === mark.status) continue;
+        if (before === mark.status) {
+          confirmed.push(mark.enrollmentId);
+          continue;
+        }
         await tx.lessonAttendance.upsert({
           where: {
             lessonId_enrollmentId: {
@@ -279,6 +283,19 @@ export class AttendanceService {
           before,
           after: mark.status,
         };
+      }
+
+      // A mark sent unchanged confirms what the automation set (L-72): the
+      // lesson now reads as marked by a person, with nothing to charge anew.
+      if (confirmed.length > 0) {
+        await tx.lessonAttendance.updateMany({
+          where: {
+            lessonId: lesson.id,
+            enrollmentId: { in: confirmed },
+            markedById: null,
+          },
+          data: { markedById: auth.userId },
+        });
       }
 
       if (Object.keys(fields).length > 0) {

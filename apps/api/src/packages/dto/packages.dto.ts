@@ -3,6 +3,7 @@ import {
   createPackageSchema,
   creditLedgerResponseSchema,
   extendPackageSchema,
+  memberSalePreviewResponseSchema,
   packageDetailResponseSchema,
   packagePreviewResponseSchema,
   packageTransferResponseSchema,
@@ -49,5 +50,8 @@ export class PackageTransferDto extends createZodDto(
   packageTransferResponseSchema,
 ) {}
 export class SoldPackagesDto extends createZodDto(soldPackagesResponseSchema) {}
+export class MemberSalePreviewDto extends createZodDto(
+  memberSalePreviewResponseSchema,
+) {}
 export class PaymentDto extends createZodDto(paymentResponseSchema) {}
 export class PaymentListDto extends createZodDto(paymentListResponseSchema) {}

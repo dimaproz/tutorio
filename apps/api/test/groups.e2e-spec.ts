@@ -46,7 +46,11 @@ describe('Work Packet 6.3: groups — teacher, schedule, filters, attendance (e2
       teacherId: string;
       status: string;
       startsAtUtc: string;
-      attendance: { present: number; marked: number } | null;
+      attendance: {
+        present: number;
+        marked: number;
+        confirmed: boolean;
+      } | null;
     }[];
   };
 
@@ -281,7 +285,11 @@ describe('Work Packet 6.3: groups — teacher, schedule, filters, attendance (e2
       (row) => row.studentId === students.Bohdan,
     )!.id;
 
-    const past = (days: number, status: 'COMPLETED' | 'CANCELLED_CHARGED') =>
+    const past = (
+      days: number,
+      status: 'COMPLETED' | 'CANCELLED_CHARGED',
+      topic: string | null = null,
+    ) =>
       prisma.lesson.create({
         data: {
           workspaceId,
@@ -292,12 +300,13 @@ describe('Work Packet 6.3: groups — teacher, schedule, filters, attendance (e2
           priceMinor: 40000,
           currency: 'UAH',
           status,
+          topic,
         },
       });
     const l1 = await past(10, 'COMPLETED');
     const cancelled = await past(8, 'CANCELLED_CHARGED');
     const l2 = await past(6, 'COMPLETED');
-    const l3 = await past(4, 'COMPLETED');
+    const l3 = await past(4, 'COMPLETED', 'Vocabulary: travel');
 
     for (const [lesson, bohdanMark] of [
       [l1, 'PRESENT'],
@@ -342,11 +351,53 @@ describe('Work Packet 6.3: groups — teacher, schedule, filters, attendance (e2
       cells: ['present', 'cancelled', 'absent', 'absent'],
     });
     expect(summary.body.rows[1]).toMatchObject({ enrollmentId: anna, rate: 1 });
+    // Each window lesson names its topic, for the cell's tooltip (S08).
+    expect(summary.body.lessons.at(-1)).toMatchObject({
+      id: l3.id,
+      topic: 'Vocabulary: travel',
+    });
 
     const withMarks = (await groupLessons(evening)).find(
       (lesson) => lesson.id === l3.id,
     );
-    expect(withMarks?.attendance).toEqual({ present: 1, marked: 2 });
+    expect(withMarks?.attendance).toEqual({
+      present: 1,
+      marked: 2,
+      confirmed: true,
+    });
+
+    // Marks the automation set when it held the lesson (everyone present,
+    // L-72) are not the tutor's: the lesson reads unconfirmed until saved.
+    const auto = await past(2, 'COMPLETED');
+    await prisma.lessonAttendance.createMany({
+      data: [anna, bohdan].map((enrollmentId) => ({
+        workspaceId,
+        lessonId: auto.id,
+        enrollmentId,
+        status: 'PRESENT' as const,
+      })),
+    });
+    const attendanceOf = async (lessonId: string) =>
+      (await groupLessons(evening)).find((lesson) => lesson.id === lessonId)
+        ?.attendance;
+    expect(await attendanceOf(auto.id)).toEqual({
+      present: 2,
+      marked: 2,
+      confirmed: false,
+    });
+    await put(`/lessons/${auto.id}/attendance`)
+      .send({
+        marks: [
+          { enrollmentId: anna, status: 'PRESENT' },
+          { enrollmentId: bohdan, status: 'PRESENT' },
+        ],
+      })
+      .expect(200);
+    expect(await attendanceOf(auto.id)).toEqual({
+      present: 2,
+      marked: 2,
+      confirmed: true,
+    });
   });
 
   it('keeps a started lesson with marks when the rule changes from it on', async () => {

@@ -38,8 +38,9 @@ export const lessonInclude = {
     select: { id: true, fullName: true, color: true, subjects: true },
   },
   workspace: { select: { cancellationDeadlineHours: true } },
-  // Only the statuses: a lesson row reports "5 of 6 came", not who.
-  attendance: { select: { status: true } },
+  // Only the statuses: a lesson row reports "5 of 6 came", not who; and
+  // whether a person marked it, not only the automation (L-72).
+  attendance: { select: { status: true, markedById: true } },
   makeup: { select: { id: true } },
   // What each participant owes for the lesson (voided charges are history).
   charges: {
@@ -109,6 +110,7 @@ export function toLessonResponse(
             present: row.attendance.filter((mark) => mark.status === 'PRESENT')
               .length,
             marked: row.attendance.length,
+            confirmed: row.attendance.some((mark) => mark.markedById !== null),
           }
         : null,
     charges: row.charges.map((charge) => ({

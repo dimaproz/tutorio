@@ -68,8 +68,9 @@ export class GroupAttendanceService {
       },
       orderBy: [{ startsAtUtc: 'desc' }, { id: 'asc' }],
       take: query.window * 2,
-      select: { id: true, startsAtUtc: true, status: true },
+      select: { id: true, startsAtUtc: true, status: true, topic: true },
     });
+    const topics = new Map(recent.map((lesson) => [lesson.id, lesson.topic]));
     const lessons = recent.map((lesson) => ({
       id: lesson.id,
       startsAt: lesson.startsAtUtc,
@@ -116,6 +117,7 @@ export class GroupAttendanceService {
         id: lesson.id,
         startsAtUtc: lesson.startsAt.toISOString(),
         status: lesson.status,
+        topic: topics.get(lesson.id) ?? null,
       })),
       stats: summary.stats,
       rows: summary.rows.map((row) => {

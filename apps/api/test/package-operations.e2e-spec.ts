@@ -426,6 +426,123 @@ describe('Work Packet 6.4 phase 5: package kinds and operations (e2e)', () => {
     expect(listed.body.total).toBe(2);
   });
 
+  it("reads each member's billing, previews the sale per member and sells at an own rate (S08)", async () => {
+    const [dee, eve, fay] = await Promise.all([
+      newStudent('Member Dee'),
+      newStudent('Member Eve'),
+      newStudent('Member Fay'),
+    ]);
+    const group = await post('/groups')
+      .send({
+        name: `Members S08 ${runId}`,
+        teacherId,
+        pricePerLesson: 30000,
+        currency: 'UAH',
+        students: { studentIds: [dee, eve, fay] },
+      })
+      .expect(201);
+    const groupId = group.body.id as string;
+    // Eve is on a break from tomorrow for ten days.
+    await post('/pauses')
+      .send({ studentId: eve, startsAt: at(1, 0), endsAt: at(11, 0) })
+      .expect(201);
+
+    type Member = {
+      studentId: string;
+      billingType: string;
+      creditsLeft: number;
+      packages: { totalPriceMinor: number; paymentStatus: string }[];
+      pause: { startsAt: string; endsAt: string | null } | null;
+    };
+    const billing = async () =>
+      (await get(`/groups/${groupId}/billing`).expect(200)).body as {
+        groupId: string;
+        lowCreditThreshold: number;
+        members: Member[];
+      };
+    const before = await billing();
+    expect(before.lowCreditThreshold).toBe(2);
+    expect(before.members.map((row) => row.studentId).sort()).toEqual(
+      [dee, eve, fay].sort(),
+    );
+    const eveBefore = before.members.find((row) => row.studentId === eve)!;
+    expect(eveBefore).toMatchObject({
+      billingType: 'PER_LESSON',
+      creditsLeft: 0,
+      pause: { startsAt: at(1, 0), endsAt: at(11, 0) },
+    });
+    expect(
+      before.members.find((row) => row.studentId === dee)!.pause,
+    ).toBeNull();
+
+    const spec = {
+      groupId,
+      sizingMode: 'FIXED_COUNT',
+      lessonsTotal: 8,
+      pricePerLessonMinor: 30000,
+      currency: 'UAH',
+      studentIds: [dee, eve],
+      prices: [{ studentId: dee, pricePerLessonMinor: 25000 }],
+    };
+    const preview = await post('/packages/members/preview')
+      .send(spec)
+      .expect(200);
+    expect(preview.body.items).toEqual([
+      expect.objectContaining({
+        studentId: dee,
+        lessonsTotal: 8,
+        pricePerLessonMinor: 25000,
+        totalPriceMinor: 200000,
+        debtLessons: 0,
+        ahead: null,
+        pause: null,
+      }),
+      expect.objectContaining({
+        studentId: eve,
+        pricePerLessonMinor: 30000,
+        totalPriceMinor: 240000,
+        pause: { startsAt: at(1, 0), endsAt: at(11, 0) },
+      }),
+    ]);
+    // The preview wrote nothing.
+    expect(
+      await prisma.lessonPackage.count({ where: { enrollment: { groupId } } }),
+    ).toBe(0);
+
+    // An own price for someone who is not being sold to is refused.
+    await post('/packages/members')
+      .send({ ...spec, prices: [{ studentId: fay, pricePerLessonMinor: 1 }] })
+      .expect(400);
+
+    const sold = await post('/packages/members').send(spec).expect(201);
+    expect(
+      sold.body.items.map(
+        (item: {
+          studentId: string;
+          pricePerLessonMinorSnapshot: number;
+          totalPriceMinorSnapshot: number;
+        }) => [
+          item.studentId,
+          item.pricePerLessonMinorSnapshot,
+          item.totalPriceMinorSnapshot,
+        ],
+      ),
+    ).toEqual([
+      [dee, 25000, 200000],
+      [eve, 30000, 240000],
+    ]);
+
+    const after = await billing();
+    expect(after.members.find((row) => row.studentId === dee)).toMatchObject({
+      billingType: 'PACKAGE',
+      creditsLeft: 8,
+      packages: [{ totalPriceMinor: 200000, paymentStatus: 'PENDING' }],
+    });
+    expect(
+      after.members.find((row) => row.studentId === fay)!.billingType,
+    ).toBe('PER_LESSON');
+  });
+
   it('names the direction, the package ahead and what each credit paid for (S07)', async () => {
     const studentId = await newStudent('Ticket');
     const first = await sell({

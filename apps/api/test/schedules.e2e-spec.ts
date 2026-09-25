@@ -589,4 +589,44 @@ describe('Work Packet 6.4 phase 2: schedules (e2e)', () => {
       byNext.items.slice(2, 4).map((item) => item.id),
     );
   });
+
+  it('cancels a planned change and moves its lessons back (S08, L-26)', async () => {
+    // Anna's Tuesdays move to 15:00 from week 1 (the L-41 test).
+    const before = await lessonsOf(students.Anna);
+    const movedTuesday = before.find(
+      (lesson) => lesson.startsAtUtc === slotAt(2, 2, 15),
+    )!;
+    await patch(`/lessons/${movedTuesday.id}`)
+      .send({ topic: 'Irregular verbs' })
+      .expect(200);
+
+    const cancelled = await post(
+      `/schedules/${schedules.Anna}/changes/cancel`,
+    ).expect(201);
+    expect(cancelled.body.schedule.nextChange).toBeNull();
+    expect(cancelled.body.schedule.slots).toEqual([
+      expect.objectContaining({ weekday: 2, localTime: '10:00' }),
+      expect.objectContaining({ weekday: 4, localTime: '12:00' }),
+      expect.objectContaining({ weekday: 5, localTime: '10:00' }),
+    ]);
+
+    const after = await lessonsOf(students.Anna);
+    const starts = after.map((lesson) => lesson.startsAtUtc);
+    expect(starts).toContain(slotAt(1, 2, 10));
+    expect(starts).toContain(slotAt(2, 2, 10));
+    expect(starts).not.toContain(slotAt(2, 2, 15));
+    expect(after).toHaveLength(before.length);
+    // The lesson moved back, keeping its id and topic.
+    expect(after.find((lesson) => lesson.id === movedTuesday.id)).toMatchObject(
+      { startsAtUtc: slotAt(2, 2, 10), topic: 'Irregular verbs' },
+    );
+
+    // Nothing is planned any more: the list and a second cancel agree.
+    const list = await get('/schedules').query({ state: 'CHANGING' });
+    expect(list.body.counts.changing).toBe(0);
+    const again = await post(
+      `/schedules/${schedules.Anna}/changes/cancel`,
+    ).expect(409);
+    expect(again.body.code).toBe('NO_PLANNED_CHANGE');
+  });
 });

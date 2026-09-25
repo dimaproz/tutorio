@@ -33,6 +33,7 @@ import type { AuthenticatedUser } from '../auth/auth.types';
 import {
   groupNotFound,
   groupTeacherRequired,
+  noPlannedChange,
   scheduleConflict,
   scheduleEnded,
   scheduleExists,
@@ -113,6 +114,51 @@ export function currentVersionRows<
     ? Math.max(...started.map((row) => row.startDate.getTime()))
     : Math.min(...running.map((row) => row.startDate.getTime()));
   return running.filter((row) => row.startDate.getTime() === pick);
+}
+
+/** Whether two versions of a rule meet on the same days, times and length. */
+function sameRule(
+  a: readonly Pick<LessonSeries, 'weekdays' | 'localTime' | 'durationMin'>[],
+  b: readonly Pick<LessonSeries, 'weekdays' | 'localTime' | 'durationMin'>[],
+): boolean {
+  const key = (rows: typeof a) =>
+    JSON.stringify({
+      slots: slotsOf(rows),
+      lengths: [...new Set(rows.map((row) => row.durationMin))].sort(),
+    });
+  return key(a) === key(b);
+}
+
+/**
+ * The change planned after the rule in force at `now`: the first later
+ * version that differs from the one before it (a cancelled change leaves a
+ * version equal to its predecessor, which is no change). Null when none.
+ */
+export function plannedChangeOf<
+  T extends Pick<
+    LessonSeries,
+    'startDate' | 'endsAt' | 'weekdays' | 'localTime' | 'durationMin'
+  >,
+>(rows: readonly T[], now: Date): { effectiveFrom: Date; rows: T[] } | null {
+  const current = currentVersionRows(rows, now);
+  const later = rows.filter(
+    (row) =>
+      row.startDate > now &&
+      !current.includes(row) &&
+      (!row.endsAt || row.endsAt > now),
+  );
+  const starts = [...new Set(later.map((row) => row.startDate.getTime()))].sort(
+    (a, b) => a - b,
+  );
+  let previous = current;
+  for (const start of starts) {
+    const version = later.filter((row) => row.startDate.getTime() === start);
+    if (!sameRule(previous, version)) {
+      return { effectiveFrom: new Date(start), rows: version };
+    }
+    previous = version;
+  }
+  return null;
 }
 
 /**
@@ -233,7 +279,15 @@ export class SchedulesService {
         schedule: { AND: [where, { state: 'ACTIVE' }] },
         ...liveRowWhere,
       },
-      select: { id: true, scheduleId: true, startDate: true, endsAt: true },
+      select: {
+        id: true,
+        scheduleId: true,
+        startDate: true,
+        endsAt: true,
+        weekdays: true,
+        localTime: true,
+        durationMin: true,
+      },
     });
     const bySchedule = new Map<string, typeof rows>();
     for (const row of rows) {
@@ -243,15 +297,7 @@ export class SchedulesService {
       ]);
     }
     return [...bySchedule]
-      .filter(([, own]) => {
-        const current = currentVersionRows(own, now);
-        return own.some(
-          (row) =>
-            row.startDate > now &&
-            !current.includes(row) &&
-            (!row.endsAt || row.endsAt > now),
-        );
-      })
+      .filter(([, own]) => plannedChangeOf(own, now) !== null)
       .map(([id]) => id);
   }
 
@@ -372,18 +418,7 @@ export class SchedulesService {
     return schedules.map((schedule) => {
       const own = rowsBySchedule.get(schedule.id) ?? [];
       const current = currentVersionRows(own, now);
-      const later = own.filter(
-        (row) =>
-          row.startDate > now &&
-          !current.includes(row) &&
-          (!row.endsAt || row.endsAt > now),
-      );
-      const nextStart = later.length
-        ? Math.min(...later.map((row) => row.startDate.getTime()))
-        : null;
-      const nextRows = later.filter(
-        (row) => row.startDate.getTime() === nextStart,
-      );
+      const planned = plannedChangeOf(own, now);
       const everyRow = allRows.filter((row) => row.scheduleId === schedule.id);
       const nextLessonAt = dates(
         everyRow.map((row) => nextBySeries.get(row.id)),
@@ -412,13 +447,12 @@ export class SchedulesService {
             })),
           )
           .sort((a, b) => ((a.weekday + 6) % 7) - ((b.weekday + 6) % 7)),
-        nextChange:
-          nextStart !== null
-            ? {
-                effectiveFrom: new Date(nextStart).toISOString(),
-                slots: slotsOf(nextRows),
-              }
-            : null,
+        nextChange: planned
+          ? {
+              effectiveFrom: planned.effectiveFrom.toISOString(),
+              slots: slotsOf(planned.rows),
+            }
+          : null,
         nextLessonAt: nextLessonAt?.toISOString() ?? null,
         startsAt: startsAt?.toISOString() ?? null,
         lastLessonAt: lastLessonAt?.toISOString() ?? null,
@@ -1155,6 +1189,44 @@ export class SchedulesService {
       moves: plan.moves,
       removes: plan.removes,
     };
+  }
+
+  /**
+   * Takes back the change planned for later: the rule in force before it
+   * applies again from the change's date, through the change path, so the
+   * lessons it moved move back with their topic and notes (L-26) and the
+   * ones it created are removed. SCHEDULE_CONFLICT unless `force`.
+   */
+  async cancelChange(
+    auth: AuthenticatedUser,
+    scheduleId: string,
+    force: boolean,
+  ): Promise<ScheduleChangeResult> {
+    const summary = await this.prisma.$transaction(async (tx) => {
+      const schedule = await this.activeSchedule(tx, auth, scheduleId);
+      const rows = await tx.lessonSeries.findMany({
+        where: { scheduleId: schedule.id, ...liveRowWhere },
+      });
+      const planned = plannedChangeOf(rows, new Date());
+      if (!planned) throw noPlannedChange();
+      const before = currentVersionRows(
+        rows,
+        new Date(planned.effectiveFrom.getTime() - 1),
+      );
+      if (before.length === 0) throw noPlannedChange();
+      return this.changeInTx(
+        tx,
+        auth,
+        schedule.id,
+        {
+          effectiveFrom: planned.effectiveFrom.toISOString(),
+          slots: slotsOf(before),
+          durationMin: before[0].durationMin,
+        },
+        force,
+      );
+    });
+    return { schedule: await this.getDetail(auth, scheduleId), summary };
   }
 
   // -------------------------------------------------------------------------

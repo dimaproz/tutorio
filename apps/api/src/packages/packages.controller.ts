@@ -33,6 +33,7 @@ import {
   CreditLedgerDto,
   ExtendPackageDto,
   ListPackagesQueryDto,
+  MemberSalePreviewDto,
   PackageDetailDto,
   PackageDto,
   PackageListDto,
@@ -89,13 +90,35 @@ export class PackagesController {
     return this.packages.preview(user, dto);
   }
 
+  @Post('members/preview')
+  @HttpCode(HttpStatus.OK)
+  @Roles('OWNER')
+  @ApiOperation({
+    summary: 'Preview a sale to group members',
+    description:
+      'Per selected member: the credits, price and total they would be ' +
+      'sold, the lessons on debt the credits pay first, the package they ' +
+      'follow and the pause that holds the first lessons back. Writes nothing.',
+  })
+  @ApiOkResponse({ type: MemberSalePreviewDto })
+  @ApiBadRequestResponse({ type: ApiErrorDto })
+  @ApiNotFoundResponse({ type: ApiErrorDto })
+  @ZodSerializerDto(MemberSalePreviewDto)
+  previewMembers(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: SellToMembersDto,
+  ): Promise<MemberSalePreviewDto> {
+    return this.packages.previewMembers(user, dto);
+  }
+
   @Post('members')
   @Roles('OWNER')
   @ApiOperation({
     summary: 'Sell one package to each selected group member',
     description:
       'One package per member, for their membership of the group; each ' +
-      'member pays separately.',
+      'member pays separately. `prices` sells some members at their own ' +
+      'rate. All or nothing: one member that fails sells nothing.',
   })
   @ApiCreatedResponse({ type: SoldPackagesDto })
   @ApiNotFoundResponse({ type: ApiErrorDto })

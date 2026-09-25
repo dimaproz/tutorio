@@ -10,12 +10,19 @@ import {
 import type {
   CreditWarningListResponse,
   EnrollmentBillingResponse,
+  GroupBillingResponse,
   StudentBillingResponse,
 } from '@tutorio/validation';
 import type { AuthenticatedUser } from '../auth/auth.types';
-import { enrollmentNotFound, studentNotFound } from '../common/business.errors';
+import {
+  enrollmentNotFound,
+  groupNotFound,
+  studentNotFound,
+} from '../common/business.errors';
+import { liveEnrollmentWhere } from '../groups/groups.shared';
 import { packageInclude, packageMoney } from '../packages/packages.shared';
 import { PrismaService } from '../prisma/prisma.service';
+import { currentOrNextPauses } from '../scheduling/pause-windows';
 
 type Db = Prisma.TransactionClient | PrismaService;
 
@@ -138,6 +145,55 @@ export class BillingReadsService {
       totals: [...totals.values()].sort((a, b) =>
         a.currency.localeCompare(b.currency),
       ),
+    };
+  }
+
+  /**
+   * How every live member of a group pays it (S08): each membership's billing
+   * and the member's pause now or next, in a fixed number of queries.
+   */
+  async getGroupBilling(
+    auth: AuthenticatedUser,
+    groupId: string,
+  ): Promise<GroupBillingResponse> {
+    const group = await this.prisma.group.findFirst({
+      where: { id: groupId, workspaceId: auth.workspaceId },
+      select: {
+        id: true,
+        enrollments: {
+          where: liveEnrollmentWhere,
+          orderBy: [{ student: { fullName: 'asc' } }, { id: 'asc' }],
+          select: { ...directionSelect, studentId: true },
+        },
+      },
+    });
+    if (!group) throw groupNotFound();
+    const now = new Date();
+    const [{ lowCreditThreshold }, pauses] = await Promise.all([
+      this.settingsOf(auth.workspaceId),
+      currentOrNextPauses(this.prisma, group.enrollments, now),
+    ]);
+    const billing = await this.billingOf(
+      this.prisma,
+      group.enrollments,
+      lowCreditThreshold,
+    );
+    return {
+      groupId: group.id,
+      lowCreditThreshold,
+      members: group.enrollments.map((row) => {
+        const pause = pauses.get(row.id);
+        return {
+          ...billing.get(row.id)!,
+          studentId: row.studentId,
+          pause: pause
+            ? {
+                startsAt: pause.startsAt.toISOString(),
+                endsAt: pause.endsAt?.toISOString() ?? null,
+              }
+            : null,
+        };
+      }),
     };
   }
 
