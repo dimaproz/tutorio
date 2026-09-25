@@ -4827,6 +4827,14 @@ export interface components {
         /** Format: date-time */
         lastLessonAt: string | null;
       } | null;
+      manualExtensions: {
+        /** Format: date-time */
+        at: string;
+        /** Format: date-time */
+        from: string | null;
+        /** Format: date-time */
+        to: string;
+      }[];
       pauseExtensions: {
         /** Format: uuid */
         pauseId: string;
