@@ -18,6 +18,11 @@ export interface ConflictCandidate {
   /** Exactly one target: an individual enrollment or a group. */
   enrollmentId?: string | null;
   groupId?: string | null;
+  /**
+   * A student with no direction with this teacher yet (a preview before the
+   * booking opens one, L-2): checked as that student.
+   */
+  studentId?: string | null;
 }
 
 /**
@@ -91,12 +96,15 @@ export async function detectScheduleConflicts(
   const studentsOf = (target: {
     enrollmentId?: string | null;
     groupId?: string | null;
+    studentId?: string | null;
   }): string[] =>
     target.enrollmentId
       ? [own.byEnrollment.get(target.enrollmentId)].filter(isString)
       : target.groupId
         ? (own.byGroup.get(target.groupId) ?? [])
-        : [];
+        : target.studentId
+          ? [target.studentId]
+          : [];
 
   const proposed: ParticipantInterval[] = candidates.map((candidate) => ({
     ...toInterval(candidate.startsAtUtc, candidate.durationMin),

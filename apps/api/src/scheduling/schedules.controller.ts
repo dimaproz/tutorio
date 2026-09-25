@@ -32,6 +32,7 @@ import {
   ScheduleChangeDto,
   ScheduleChangePreviewDto,
   ScheduleChangeResultDto,
+  ScheduleCreatePreviewDto,
   ScheduleDto,
   ScheduleListDto,
   StopScheduleDto,
@@ -84,6 +85,27 @@ export class SchedulesController {
     @Query() query: ForceQueryDto,
   ): Promise<ScheduleDto> {
     return this.schedules.create(user, dto, query.force);
+  }
+
+  @Post('preview')
+  @HttpCode(HttpStatus.OK)
+  @Roles('OWNER')
+  @ApiOperation({
+    summary: 'Preview a new schedule',
+    description:
+      'Exactly what creating the schedule would do: the lessons generated ' +
+      'at once within the horizon, the first one, the active schedule of the ' +
+      'same direction or group if there is one (create would answer ' +
+      'SCHEDULE_EXISTS), and the teacher or student overlaps. Writes ' +
+      'nothing, and never opens a direction for a student.',
+  })
+  @ApiOkResponse({ type: ScheduleCreatePreviewDto })
+  @ZodSerializerDto(ScheduleCreatePreviewDto)
+  previewCreate(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: CreateScheduleDto,
+  ): Promise<ScheduleCreatePreviewDto> {
+    return this.schedules.previewCreate(user, dto);
   }
 
   @Get(':scheduleId')

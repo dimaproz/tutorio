@@ -7,6 +7,7 @@ import {
   createScheduleSchema,
   listSchedulesQuerySchema,
   scheduleChangePreviewSchema,
+  scheduleCreatePreviewSchema,
   scheduleChangeResultSchema,
   scheduleChangeSchema,
   scheduleListResponseSchema,
@@ -74,6 +75,9 @@ export class ScheduleDto extends createZodDto(scheduleResponseSchema) {}
 export class ScheduleListDto extends createZodDto(scheduleListResponseSchema) {}
 export class ScheduleChangePreviewDto extends createZodDto(
   scheduleChangePreviewSchema,
+) {}
+export class ScheduleCreatePreviewDto extends createZodDto(
+  scheduleCreatePreviewSchema,
 ) {}
 export class ScheduleChangeResultDto extends createZodDto(
   scheduleChangeResultSchema,

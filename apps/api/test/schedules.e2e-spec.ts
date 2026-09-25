@@ -182,6 +182,17 @@ describe('Work Packet 6.4 phase 2: schedules (e2e)', () => {
       code: 'SCHEDULE_EXISTS',
       details: { scheduleId: schedules.Anna },
     });
+    const again = await post('/schedules/preview')
+      .send({
+        durationMin: 60,
+        timezone: 'UTC',
+        startDate: base.toISOString(),
+        studentId: students.Anna,
+        teacherId: teacherA,
+        slots: [{ weekday: 5, localTime: '12:00' }],
+      })
+      .expect(200);
+    expect(again.body.existingScheduleId).toBe(schedules.Anna);
 
     const listed = await get('/schedules')
       .query({ studentId: students.Anna })
@@ -400,6 +411,33 @@ describe('Work Packet 6.4 phase 2: schedules (e2e)', () => {
       teacherId: teacherA,
       slots: [{ weekday: 3, localTime: '16:00' }],
     };
+
+    // The preview finds the same overlap before anything is written, and
+    // opens no direction with the new teacher.
+    const preview = await post('/schedules/preview')
+      .send({
+        durationMin: 60,
+        timezone: 'UTC',
+        startDate: base.toISOString(),
+        ...body,
+      })
+      .expect(200);
+    expect(preview.body.created).toBeGreaterThanOrEqual(3);
+    expect(preview.body.firstLessonAt).toBe(slotAt(0, 3, 16));
+    expect(preview.body.existingScheduleId).toBeNull();
+    expect(preview.body.conflicts[0]).toMatchObject({
+      reason: 'STUDENT',
+      teacher: { id: teacherB },
+    });
+    const directions = await get('/enrollments')
+      .query({ studentId: students.Dana })
+      .expect(200);
+    expect(
+      directions.body.items.map(
+        (item: { teacherId: string }) => item.teacherId,
+      ),
+    ).toEqual([teacherB]);
+
     const refused = await createSchedule(body).expect(409);
     expect(refused.body.code).toBe('SCHEDULE_CONFLICT');
     expect(refused.body.details.conflicts[0]).toMatchObject({

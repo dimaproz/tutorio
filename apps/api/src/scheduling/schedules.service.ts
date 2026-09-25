@@ -15,6 +15,7 @@ import type {
   ScheduleChangeDto,
   ScheduleChangePreview,
   ScheduleChangeResult,
+  ScheduleCreatePreview,
   ScheduleListResponse,
   ScheduleResponse,
   StopScheduleDto,
@@ -29,6 +30,8 @@ import {
   scheduleEnded,
   scheduleExists,
   scheduleNotFound,
+  studentNotFound,
+  teacherNotFound,
 } from '../common/business.errors';
 import { buildPaginatedResponse, toSkipTake } from '../common/pagination';
 import { PrismaService } from '../prisma/prisma.service';
@@ -365,6 +368,160 @@ export class SchedulesService {
   }
 
   /**
+   * What creating the schedule would do, writing nothing (L-22, L-110): the
+   * same target, the lessons it generates at once and the same conflict check
+   * as `create`. A student with no direction with the teacher yet is checked
+   * as that student, without opening the direction (L-2).
+   */
+  async previewCreate(
+    auth: AuthenticatedUser,
+    dto: CreateScheduleDto,
+  ): Promise<ScheduleCreatePreview> {
+    return this.prisma.$transaction(async (tx) => {
+      const workspace = await tx.workspace.findUniqueOrThrow({
+        where: { id: auth.workspaceId },
+        select: { timezone: true, scheduleHorizonWeeks: true },
+      });
+      let enrollmentId = dto.enrollmentId ?? null;
+      const groupId = dto.groupId ?? null;
+      let teacherId = dto.teacherId ?? null;
+      let studentId: string | null = null;
+
+      if (dto.studentId) {
+        const student = await tx.student.findFirst({
+          where: {
+            id: dto.studentId,
+            workspaceId: auth.workspaceId,
+            deletedAt: null,
+            status: { not: 'ARCHIVED' },
+          },
+          select: { id: true },
+        });
+        if (!student) throw studentNotFound();
+        const direction = await tx.enrollment.findFirst({
+          where: {
+            workspaceId: auth.workspaceId,
+            studentId: student.id,
+            groupId: null,
+            status: 'ACTIVE',
+            deletedAt: null,
+            ...(teacherId ? { teacherId } : {}),
+          },
+          orderBy: { createdAt: 'asc' },
+          select: { id: true, teacherId: true },
+        });
+        enrollmentId = direction?.id ?? null;
+        teacherId = teacherId ?? direction?.teacherId ?? null;
+        if (!direction) studentId = student.id;
+        if (!teacherId) {
+          // As the create does: the studio's one teacher, never a guess.
+          const teachers = await tx.teacher.findMany({
+            where: {
+              workspaceId: auth.workspaceId,
+              deletedAt: null,
+              status: 'ACTIVE',
+            },
+            take: 2,
+            select: { id: true },
+          });
+          if (teachers.length !== 1) throw teacherNotFound();
+          teacherId = teachers[0].id;
+        }
+      } else if (enrollmentId) {
+        const enrollment = await tx.enrollment.findFirst({
+          where: { id: enrollmentId, workspaceId: auth.workspaceId },
+          select: { teacherId: true },
+        });
+        teacherId = teacherId ?? enrollment?.teacherId ?? null;
+      } else if (groupId) {
+        const group = await tx.group.findFirst({
+          where: {
+            id: groupId,
+            workspaceId: auth.workspaceId,
+            deletedAt: null,
+          },
+          select: { teacherId: true },
+        });
+        if (!group) throw groupNotFound();
+        teacherId = group.teacherId;
+        if (!teacherId) throw groupTeacherRequired();
+      }
+      await assertTargetAndTeacher(tx, auth.workspaceId, {
+        enrollmentId,
+        groupId,
+        teacherId: teacherId ?? '',
+      });
+
+      const existing =
+        enrollmentId || groupId
+          ? await tx.schedule.findFirst({
+              where: {
+                workspaceId: auth.workspaceId,
+                state: 'ACTIVE',
+                ...(enrollmentId ? { enrollmentId } : { groupId }),
+              },
+              select: { id: true },
+            })
+          : null;
+      const timezone = dto.timezone ?? workspace.timezone;
+      const occurrences = this.firstOccurrences(
+        {
+          slots: normalizeSlots(dto.slots),
+          timezone,
+          startDate: dto.startDate ? new Date(dto.startDate) : new Date(),
+          endsAt: dto.endsOn
+            ? localDateStartUtc(nextDay(dto.endsOn), timezone)
+            : null,
+          horizonWeeks: dto.horizonWeeks ?? workspace.scheduleHorizonWeeks,
+        },
+        new Date(),
+      );
+      const conflicts = await detectScheduleConflicts(
+        tx,
+        auth.workspaceId,
+        occurrences.map((occurrence, index) => ({
+          id: `new:${index}`,
+          startsAtUtc: occurrence.startsAtUtc,
+          durationMin: dto.durationMin,
+          teacherId: teacherId!,
+          enrollmentId,
+          groupId,
+          studentId,
+        })),
+      );
+      return {
+        created: occurrences.length,
+        firstLessonAt: occurrences[0]?.startsAtUtc.toISOString() ?? null,
+        existingScheduleId: existing?.id ?? null,
+        conflicts,
+      };
+    });
+  }
+
+  /**
+   * The lessons a new schedule generates at once: its occurrences from the
+   * later of the start and now to the earlier of the end and the horizon.
+   */
+  private firstOccurrences(
+    input: Pick<
+      NewSchedule,
+      'slots' | 'timezone' | 'startDate' | 'endsAt' | 'horizonWeeks'
+    >,
+    now: Date,
+  ) {
+    const from = input.startDate > now ? input.startDate : now;
+    const horizon = this.materializer.horizonUntil(now, input.horizonWeeks);
+    const until =
+      input.endsAt && input.endsAt < horizon ? input.endsAt : horizon;
+    return expandSchedule(normalizeSlots(input.slots), {
+      timezone: input.timezone,
+      startDate: input.startDate,
+      from,
+      until,
+    });
+  }
+
+  /**
    * Creates a schedule and its rows inside the caller's transaction, after a
    * teacher-and-student conflict check of the lessons it would generate
    * (skipped with `force`, or when the caller checked already). Refuses a
@@ -395,16 +552,7 @@ export class SchedulesService {
     const slots = normalizeSlots(input.slots);
     const now = new Date();
     if (!options.force) {
-      const from = input.startDate > now ? input.startDate : now;
-      const horizon = this.materializer.horizonUntil(now, input.horizonWeeks);
-      const until =
-        input.endsAt && input.endsAt < horizon ? input.endsAt : horizon;
-      const occurrences = expandSchedule(slots, {
-        timezone: input.timezone,
-        startDate: input.startDate,
-        from,
-        until,
-      });
+      const occurrences = this.firstOccurrences(input, now);
       const conflicts = await detectScheduleConflicts(
         tx,
         auth.workspaceId,
