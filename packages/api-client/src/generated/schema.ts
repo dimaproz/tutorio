@@ -361,6 +361,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/pauses/preview': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Preview a pause before it is saved
+     * @description Per paused direction, the individual lessons it takes out and the group lessons the student misses, and how it pushes the packages. With replacesPauseId, the pause being changed is released first, as the change does. Nothing is saved.
+     */
+    post: operations['PausesController_preview'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/pauses/{pauseId}': {
     parameters: {
       query?: never;
@@ -372,6 +392,30 @@ export interface paths {
     get: operations['PausesController_get'];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Change a pause
+     * @description A scheduled pause takes a new window, direction and reason; a running one a new end and reason. The pause ends and its replacement starts in one step, and the replacement is returned. The lessons that come back outside the new window are checked for conflicts unless force; skipConflicts leaves the overlapping ones off.
+     */
+    patch: operations['PausesController_update'];
+    trace?: never;
+  };
+  '/api/pauses/{pauseId}/end/preview': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Preview ending a pause now, or cancelling one that has not begun
+     * @description The lessons that would come back, the ones whose time is taken since, and how the package extensions change. Nothing is saved.
+     */
+    post: operations['PausesController_endPreview'];
     delete?: never;
     options?: never;
     head?: never;
@@ -389,7 +433,7 @@ export interface paths {
     put?: never;
     /**
      * End a pause now, or cancel one that has not begun
-     * @description Brings its lessons from now on back (checked for teacher conflicts unless force) and keeps only the package extension it used.
+     * @description Brings its lessons from now on back and keeps only the package extension it used. Returning lessons are checked for teacher and student conflicts unless force; skipConflicts brings back only the free ones.
      */
     post: operations['PausesController_end'];
     delete?: never;
@@ -1748,6 +1792,7 @@ export interface components {
       /** Format: uuid */
       studentId: string;
       lowCreditThreshold: number;
+      cancellationDeadlineHours: number;
       directions: {
         /** Format: uuid */
         enrollmentId: string;
@@ -1764,8 +1809,15 @@ export interface components {
           purchasedAt: string;
           /** Format: date-time */
           expiresAt: string | null;
+          /** Format: date-time */
+          validFrom: string | null;
+          lessonsTotal: number;
           remainingCredits: number;
           usable: boolean;
+          totalPriceMinor: number;
+          paidMinor: number;
+          /** @enum {string} */
+          paymentStatus: 'PENDING' | 'PARTIAL' | 'PAID';
         }[];
         creditsLeft: number;
         debtLessons: number;
@@ -1775,6 +1827,13 @@ export interface components {
           debtMinor: number;
           advanceMinor: number;
           unpaidLessons: number;
+          unpaid: {
+            /** Format: uuid */
+            lessonId: string;
+            /** Format: date-time */
+            startsAt: string;
+            outstandingMinor: number;
+          }[];
         };
         /** @enum {string|null} */
         warning: 'ON_DEBT' | 'NO_CREDITS' | 'LOW_CREDITS' | null;
@@ -1784,12 +1843,27 @@ export interface components {
           /** Format: uuid */
           id: string;
           name: string;
+          /** @enum {string|null} */
+          avatarKey:
+            | 'user-1'
+            | 'user-2'
+            | 'user-3'
+            | 'user-4'
+            | 'user-5'
+            | 'user-6'
+            | 'user-7'
+            | 'user-8'
+            | 'user-9'
+            | 'user-10'
+            | null;
+          subjects: string[];
         };
         group: {
           /** Format: uuid */
           id: string;
           name: string;
         } | null;
+        cancellationDeadlineHours: number | null;
       }[];
       totals: {
         /** @enum {string} */
@@ -1945,6 +2019,105 @@ export interface components {
       createdAt: string;
       /** Format: date-time */
       updatedAt: string;
+    };
+    PausePreviewDto: {
+      /** Format: uuid */
+      studentId: string;
+      /** Format: uuid */
+      enrollmentId?: string | null;
+      /** Format: date-time */
+      startsAt?: string;
+      /** Format: date-time */
+      endsAt?: string | null;
+      reason?: string | null;
+      /** Format: uuid */
+      replacesPauseId?: string;
+    };
+    PausePreviewResponseDto: {
+      /** Format: date-time */
+      startsAt: string;
+      /** Format: date-time */
+      endsAt: string | null;
+      directions: {
+        /** Format: uuid */
+        enrollmentId: string;
+        removedLessons: number;
+        groupLessons: number;
+      }[];
+      extensions: {
+        /** Format: uuid */
+        packageId: string;
+        name: string | null;
+        /** Format: date-time */
+        expiresAt: string;
+        /** Format: date-time */
+        nextExpiresAt: string;
+      }[];
+      holdsStudent: boolean;
+    };
+    UpdatePauseDto: {
+      /** Format: uuid */
+      enrollmentId?: string | null;
+      /** Format: date-time */
+      startsAt?: string;
+      /** Format: date-time */
+      endsAt?: string | null;
+      reason?: string | null;
+    };
+    PauseEndPreviewDto: {
+      /** @enum {string} */
+      action: 'END' | 'CANCEL';
+      lessons: {
+        /** Format: date-time */
+        startsAtUtc: string;
+        durationMin: number;
+        /** Format: uuid */
+        enrollmentId: string | null;
+        /** Format: uuid */
+        groupId: string | null;
+      }[];
+      conflicts: {
+        /** Format: date-time */
+        candidateStartsAtUtc: string;
+        /** Format: uuid */
+        lessonId: string;
+        /** Format: date-time */
+        startsAtUtc: string;
+        durationMin: number;
+        /** @enum {string} */
+        kind: 'REGULAR' | 'MAKEUP';
+        /** @enum {string} */
+        reason: 'TEACHER' | 'STUDENT';
+        teacher: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+        };
+        student: {
+          /** Format: uuid */
+          id: string;
+          fullName: string;
+        } | null;
+        group: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+        } | null;
+        students: {
+          /** Format: uuid */
+          id: string;
+          fullName: string;
+        }[];
+      }[];
+      extensions: {
+        /** Format: uuid */
+        packageId: string;
+        name: string | null;
+        /** Format: date-time */
+        expiresAt: string;
+        /** Format: date-time */
+        nextExpiresAt: string;
+      }[];
     };
     ParentListDto: {
       items: {
@@ -2716,8 +2889,15 @@ export interface components {
         purchasedAt: string;
         /** Format: date-time */
         expiresAt: string | null;
+        /** Format: date-time */
+        validFrom: string | null;
+        lessonsTotal: number;
         remainingCredits: number;
         usable: boolean;
+        totalPriceMinor: number;
+        paidMinor: number;
+        /** @enum {string} */
+        paymentStatus: 'PENDING' | 'PARTIAL' | 'PAID';
       }[];
       creditsLeft: number;
       debtLessons: number;
@@ -2727,6 +2907,13 @@ export interface components {
         debtMinor: number;
         advanceMinor: number;
         unpaidLessons: number;
+        unpaid: {
+          /** Format: uuid */
+          lessonId: string;
+          /** Format: date-time */
+          startsAt: string;
+          outstandingMinor: number;
+        }[];
       };
       /** @enum {string|null} */
       warning: 'ON_DEBT' | 'NO_CREDITS' | 'LOW_CREDITS' | null;
@@ -5243,6 +5430,55 @@ export interface operations {
       };
     };
   };
+  PausesController_preview: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PausePreviewDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PausePreviewResponseDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      /** @description PAUSE_OVERLAP, PAUSE_ENDED or PAUSE_RUNNING */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
   PausesController_get: {
     parameters: {
       query?: never;
@@ -5281,10 +5517,112 @@ export interface operations {
       };
     };
   };
+  PausesController_update: {
+    parameters: {
+      query?: {
+        force?: boolean | 'true' | 'false';
+        skipConflicts?: boolean | 'true' | 'false';
+      };
+      header?: never;
+      path: {
+        pauseId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdatePauseDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PauseDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      /** @description PAUSE_ENDED, PAUSE_RUNNING, PAUSE_OVERLAP or SCHEDULE_CONFLICT (details.conflicts) */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  PausesController_endPreview: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        pauseId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PauseEndPreviewDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      /** @description PAUSE_ENDED */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
   PausesController_end: {
     parameters: {
       query?: {
         force?: boolean | 'true' | 'false';
+        skipConflicts?: boolean | 'true' | 'false';
       };
       header?: never;
       path: {
@@ -5319,7 +5657,7 @@ export interface operations {
           'application/json': components['schemas']['ApiErrorDto'];
         };
       };
-      /** @description PAUSE_ENDED or SCHEDULE_CONFLICT */
+      /** @description PAUSE_ENDED or SCHEDULE_CONFLICT (details.conflicts) */
       409: {
         headers: {
           [name: string]: unknown;

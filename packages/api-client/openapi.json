@@ -1141,6 +1141,72 @@
         "tags": ["pauses"]
       }
     },
+    "/api/pauses/preview": {
+      "post": {
+        "description": "Per paused direction, the individual lessons it takes out and the group lessons the student misses, and how it pushes the packages. With replacesPauseId, the pause being changed is released first, as the change does. Nothing is saved.",
+        "operationId": "PausesController_preview",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PausePreviewDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PausePreviewResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "PAUSE_OVERLAP, PAUSE_ENDED or PAUSE_RUNNING",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Preview a pause before it is saved",
+        "tags": ["pauses"]
+      }
+    },
     "/api/pauses/{pauseId}": {
       "get": {
         "operationId": "PausesController_get",
@@ -1193,11 +1259,191 @@
         ],
         "summary": "Get a pause",
         "tags": ["pauses"]
+      },
+      "patch": {
+        "description": "A scheduled pause takes a new window, direction and reason; a running one a new end and reason. The pause ends and its replacement starts in one step, and the replacement is returned. The lessons that come back outside the new window are checked for conflicts unless force; skipConflicts leaves the overlapping ones off.",
+        "operationId": "PausesController_update",
+        "parameters": [
+          {
+            "name": "pauseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "force",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": false,
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string",
+                  "enum": ["true"]
+                },
+                {
+                  "type": "string",
+                  "enum": ["false"]
+                }
+              ]
+            }
+          },
+          {
+            "name": "skipConflicts",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": false,
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string",
+                  "enum": ["true"]
+                },
+                {
+                  "type": "string",
+                  "enum": ["false"]
+                }
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePauseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PauseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "PAUSE_ENDED, PAUSE_RUNNING, PAUSE_OVERLAP or SCHEDULE_CONFLICT (details.conflicts)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Change a pause",
+        "tags": ["pauses"]
+      }
+    },
+    "/api/pauses/{pauseId}/end/preview": {
+      "post": {
+        "description": "The lessons that would come back, the ones whose time is taken since, and how the package extensions change. Nothing is saved.",
+        "operationId": "PausesController_endPreview",
+        "parameters": [
+          {
+            "name": "pauseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PauseEndPreviewDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "PAUSE_ENDED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Preview ending a pause now, or cancelling one that has not begun",
+        "tags": ["pauses"]
       }
     },
     "/api/pauses/{pauseId}/end": {
       "post": {
-        "description": "Brings its lessons from now on back (checked for teacher conflicts unless force) and keeps only the package extension it used.",
+        "description": "Brings its lessons from now on back and keeps only the package extension it used. Returning lessons are checked for teacher and student conflicts unless force; skipConflicts brings back only the free ones.",
         "operationId": "PausesController_end",
         "parameters": [
           {
@@ -1210,6 +1456,27 @@
           },
           {
             "name": "force",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": false,
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string",
+                  "enum": ["true"]
+                },
+                {
+                  "type": "string",
+                  "enum": ["false"]
+                }
+              ]
+            }
+          },
+          {
+            "name": "skipConflicts",
             "required": false,
             "in": "query",
             "schema": {
@@ -1262,7 +1529,7 @@
             }
           },
           "409": {
-            "description": "PAUSE_ENDED or SCHEDULE_CONFLICT",
+            "description": "PAUSE_ENDED or SCHEDULE_CONFLICT (details.conflicts)",
             "content": {
               "application/json": {
                 "schema": {
@@ -7210,6 +7477,11 @@
             "maximum": 50,
             "exclusiveMaximum": false
           },
+          "cancellationDeadlineHours": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
           "directions": {
             "type": "array",
             "items": {
@@ -7254,11 +7526,33 @@
                         "format": "date-time",
                         "nullable": true
                       },
+                      "validFrom": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                      },
+                      "lessonsTotal": {
+                        "type": "integer"
+                      },
                       "remainingCredits": {
                         "type": "integer"
                       },
                       "usable": {
                         "type": "boolean"
+                      },
+                      "totalPriceMinor": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "exclusiveMinimum": false
+                      },
+                      "paidMinor": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "exclusiveMinimum": false
+                      },
+                      "paymentStatus": {
+                        "type": "string",
+                        "enum": ["PENDING", "PARTIAL", "PAID"]
                       }
                     },
                     "required": [
@@ -7266,8 +7560,13 @@
                       "name",
                       "purchasedAt",
                       "expiresAt",
+                      "validFrom",
+                      "lessonsTotal",
                       "remainingCredits",
-                      "usable"
+                      "usable",
+                      "totalPriceMinor",
+                      "paidMinor",
+                      "paymentStatus"
                     ]
                   }
                 },
@@ -7306,6 +7605,28 @@
                       "type": "integer",
                       "minimum": 0,
                       "exclusiveMinimum": false
+                    },
+                    "unpaid": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "lessonId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "startsAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "outstandingMinor": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "exclusiveMinimum": true
+                          }
+                        },
+                        "required": ["lessonId", "startsAt", "outstandingMinor"]
+                      }
                     }
                   },
                   "required": [
@@ -7313,7 +7634,8 @@
                     "paidMinor",
                     "debtMinor",
                     "advanceMinor",
-                    "unpaidLessons"
+                    "unpaidLessons",
+                    "unpaid"
                   ]
                 },
                 "warning": {
@@ -7334,9 +7656,31 @@
                     },
                     "name": {
                       "type": "string"
+                    },
+                    "avatarKey": {
+                      "type": "string",
+                      "enum": [
+                        "user-1",
+                        "user-2",
+                        "user-3",
+                        "user-4",
+                        "user-5",
+                        "user-6",
+                        "user-7",
+                        "user-8",
+                        "user-9",
+                        "user-10"
+                      ],
+                      "nullable": true
+                    },
+                    "subjects": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
                     }
                   },
-                  "required": ["id", "name"]
+                  "required": ["id", "name", "avatarKey", "subjects"]
                 },
                 "group": {
                   "type": "object",
@@ -7350,6 +7694,12 @@
                     }
                   },
                   "required": ["id", "name"],
+                  "nullable": true
+                },
+                "cancellationDeadlineHours": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false,
                   "nullable": true
                 }
               },
@@ -7365,7 +7715,8 @@
                 "warning",
                 "status",
                 "teacher",
-                "group"
+                "group",
+                "cancellationDeadlineHours"
               ]
             }
           },
@@ -7415,7 +7766,13 @@
             }
           }
         },
-        "required": ["studentId", "lowCreditThreshold", "directions", "totals"]
+        "required": [
+          "studentId",
+          "lowCreditThreshold",
+          "cancellationDeadlineHours",
+          "directions",
+          "totals"
+        ]
       },
       "UpdateStudentDto": {
         "type": "object",
@@ -7877,6 +8234,296 @@
           "createdAt",
           "updatedAt"
         ]
+      },
+      "PausePreviewDto": {
+        "type": "object",
+        "properties": {
+          "studentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "enrollmentId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 2000,
+            "nullable": true
+          },
+          "replacesPauseId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": ["studentId"]
+      },
+      "PausePreviewResponseDto": {
+        "type": "object",
+        "properties": {
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "directions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "enrollmentId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "removedLessons": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                },
+                "groupLessons": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                }
+              },
+              "required": ["enrollmentId", "removedLessons", "groupLessons"]
+            }
+          },
+          "extensions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "packageId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "expiresAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "nextExpiresAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": ["packageId", "name", "expiresAt", "nextExpiresAt"]
+            }
+          },
+          "holdsStudent": {
+            "type": "boolean"
+          }
+        },
+        "required": ["startsAt", "endsAt", "directions", "extensions", "holdsStudent"]
+      },
+      "UpdatePauseDto": {
+        "type": "object",
+        "properties": {
+          "enrollmentId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 2000,
+            "nullable": true
+          }
+        }
+      },
+      "PauseEndPreviewDto": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": ["END", "CANCEL"]
+          },
+          "lessons": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "startsAtUtc": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "durationMin": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": true
+                },
+                "enrollmentId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "nullable": true
+                },
+                "groupId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "nullable": true
+                }
+              },
+              "required": ["startsAtUtc", "durationMin", "enrollmentId", "groupId"]
+            }
+          },
+          "conflicts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "candidateStartsAtUtc": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "lessonId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "startsAtUtc": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "durationMin": {
+                  "type": "integer",
+                  "minimum": 5,
+                  "exclusiveMinimum": false,
+                  "maximum": 720,
+                  "exclusiveMaximum": false
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": ["REGULAR", "MAKEUP"]
+                },
+                "reason": {
+                  "type": "string",
+                  "enum": ["TEACHER", "STUDENT"]
+                },
+                "teacher": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["id", "name"]
+                },
+                "student": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "fullName": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["id", "fullName"],
+                  "nullable": true
+                },
+                "group": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["id", "name"],
+                  "nullable": true
+                },
+                "students": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "fullName": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["id", "fullName"]
+                  }
+                }
+              },
+              "required": [
+                "candidateStartsAtUtc",
+                "lessonId",
+                "startsAtUtc",
+                "durationMin",
+                "kind",
+                "reason",
+                "teacher",
+                "student",
+                "group",
+                "students"
+              ]
+            }
+          },
+          "extensions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "packageId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "expiresAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "nextExpiresAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": ["packageId", "name", "expiresAt", "nextExpiresAt"]
+            }
+          }
+        },
+        "required": ["action", "lessons", "conflicts", "extensions"]
       },
       "ParentListDto": {
         "type": "object",
@@ -10168,14 +10815,48 @@
                   "format": "date-time",
                   "nullable": true
                 },
+                "validFrom": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                },
+                "lessonsTotal": {
+                  "type": "integer"
+                },
                 "remainingCredits": {
                   "type": "integer"
                 },
                 "usable": {
                   "type": "boolean"
+                },
+                "totalPriceMinor": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                },
+                "paidMinor": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                },
+                "paymentStatus": {
+                  "type": "string",
+                  "enum": ["PENDING", "PARTIAL", "PAID"]
                 }
               },
-              "required": ["id", "name", "purchasedAt", "expiresAt", "remainingCredits", "usable"]
+              "required": [
+                "id",
+                "name",
+                "purchasedAt",
+                "expiresAt",
+                "validFrom",
+                "lessonsTotal",
+                "remainingCredits",
+                "usable",
+                "totalPriceMinor",
+                "paidMinor",
+                "paymentStatus"
+              ]
             }
           },
           "creditsLeft": {
@@ -10213,9 +10894,38 @@
                 "type": "integer",
                 "minimum": 0,
                 "exclusiveMinimum": false
+              },
+              "unpaid": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "lessonId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "startsAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "outstandingMinor": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": true
+                    }
+                  },
+                  "required": ["lessonId", "startsAt", "outstandingMinor"]
+                }
               }
             },
-            "required": ["chargedMinor", "paidMinor", "debtMinor", "advanceMinor", "unpaidLessons"]
+            "required": [
+              "chargedMinor",
+              "paidMinor",
+              "debtMinor",
+              "advanceMinor",
+              "unpaidLessons",
+              "unpaid"
+            ]
           },
           "warning": {
             "type": "string",
