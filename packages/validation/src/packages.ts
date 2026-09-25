@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import {
+  avatarKeySchema,
   currencyCodeSchema,
   isoDateTimeSchema,
   notesSchema,
@@ -8,7 +9,7 @@ import {
 } from './common';
 import { priceMinorSchema } from './enrollments';
 import { paginatedResponseSchema, paginationQuerySchema } from './pagination';
-import { durationMinSchema, localTimeSchema, weekdaySchema } from './scheduling';
+import { lessonStatusSchema } from './scheduling';
 
 // ---------------------------------------------------------------------------
 // Shared package primitives
@@ -61,62 +62,6 @@ export const lessonsTotalSchema = z.number().int().min(1).max(500);
 // ---------------------------------------------------------------------------
 // Create
 // ---------------------------------------------------------------------------
-
-// The optional recurring schedule that a package can provision: this is what
-// actually creates the LessonSeries (and therefore the lessons) behind it.
-export const packageScheduleSchema = z
-  .object({
-    slots: z
-      .array(
-        z
-          .object({
-            weekday: weekdaySchema,
-            localTime: localTimeSchema,
-          })
-          .strict(),
-      )
-      .min(1)
-      .max(7)
-      .superRefine((slots, ctx) => {
-        const weekdays = new Set<number>();
-        slots.forEach((slot, index) => {
-          if (weekdays.has(slot.weekday)) {
-            ctx.addIssue({
-              code: z.ZodIssueCode.custom,
-              message: 'Each weekday can only have one package slot',
-              path: [index, 'weekday'],
-            });
-          }
-          weekdays.add(slot.weekday);
-        });
-      }),
-    timezone: z.string().min(1),
-    durationMin: durationMinSchema,
-    startDate: isoDateTimeSchema,
-  })
-  .strict();
-
-export type PackageScheduleDto = z.infer<typeof packageScheduleSchema>;
-
-export const initialPackagePaymentSchema = z
-  .object({
-    amountMinor: priceMinorSchema.refine((value) => value > 0, {
-      message: 'An initial payment must be greater than zero',
-    }),
-    paidAt: isoDateTimeSchema,
-  })
-  .strict()
-  .superRefine((value, ctx) => {
-    if (new Date(value.paidAt).getTime() > Date.now()) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Payment date cannot be in the future',
-        path: ['paidAt'],
-      });
-    }
-  });
-
-export type InitialPackagePaymentDto = z.infer<typeof initialPackagePaymentSchema>;
 
 /** Lessons a week in a flexible period package. */
 export const lessonsPerWeekSchema = z.number().int().min(1).max(14);
@@ -220,9 +165,8 @@ function refinePackageSpec(value: PackageSpec, ctx: z.RefinementCtx): void {
 /**
  * Buying a package for one direction of a student (L-80): their lessons with
  * one teacher (`teacherId`, needed only when they have several), or their
- * membership of a group (`groupId`). `schedule` and `initialPayment` serve
- * the current package form only; a sale never creates a schedule or records a
- * payment by itself in the new sale flow (L-87).
+ * membership of a group (`groupId`). A sale never creates a schedule or
+ * records a payment by itself (L-87): those are the next actions.
  */
 export const createPackageSchema = z
   .object({
@@ -230,8 +174,6 @@ export const createPackageSchema = z
     groupId: uuidSchema.nullable().optional(),
     teacherId: uuidSchema.nullable().optional(),
     ...packageSpecShape,
-    schedule: packageScheduleSchema.nullable().optional(),
-    initialPayment: initialPackagePaymentSchema.nullable().optional(),
   })
   .strict()
   .superRefine((value, ctx) => {
@@ -273,6 +215,13 @@ export const packagePreviewResponseSchema = z.object({
   expiresAt: isoDateTimeSchema.nullable(),
   /** Lessons the direction's schedule has in the window; null without one. */
   scheduleLessons: z.number().int().nonnegative().nullable(),
+  /** Lessons held on debt that the new credits pay for first (L-82). */
+  debtLessons: z.number().int().nonnegative(),
+  /**
+   * The direction's live package whose credits go first (L-81): the new one
+   * starts once it is used up. Null when there is none.
+   */
+  ahead: z.object({ id: uuidSchema, name: z.string().nullable() }).nullable(),
 });
 
 export type PackagePreviewResponse = z.infer<typeof packagePreviewResponseSchema>;
@@ -357,11 +306,29 @@ export type RecordPaymentDto = z.infer<typeof recordPaymentSchema>;
 // Queries
 // ---------------------------------------------------------------------------
 
+/**
+ * The «Пакети» page tabs: live packages with credits in their window, the
+ * ones running out (few credits left or the window closing), those with money
+ * still owed, and the used up or expired ones.
+ */
+export const packageListStatusSchema = z.enum(['ACTIVE', 'ENDING', 'UNPAID', 'FINISHED']);
+export type PackageListStatusDto = z.infer<typeof packageListStatusSchema>;
+
+/** Newest sale first, or the ones running out first. */
+export const packageListSortSchema = z.enum(['newest', 'ending']);
+export type PackageListSortDto = z.infer<typeof packageListSortSchema>;
+
 export const listPackagesQuerySchema = paginationQuerySchema
   .extend({
     studentId: uuidSchema.optional(),
     groupId: uuidSchema.optional(),
+    teacherId: uuidSchema.optional(),
+    sizingMode: packageSizingModeSchema.optional(),
     paymentStatus: packagePaymentStatusSchema.optional(),
+    status: packageListStatusSchema.optional(),
+    /** The student's name, the group's name or the package's name. */
+    search: z.string().trim().min(1).max(120).optional(),
+    sort: packageListSortSchema.default('newest'),
     state: recordStateSchema.default('active'),
   })
   .strict();
@@ -385,11 +352,31 @@ export type ListPaymentsQueryDto = z.infer<typeof listPaymentsQuerySchema>;
 const studentRefSchema = z.object({ id: uuidSchema, fullName: z.string() });
 const groupRefSchema = z.object({ id: uuidSchema, name: z.string() });
 
+/**
+ * Who teaches the package's direction. An individual direction is named by
+ * the teacher's first subject, a group membership by its group.
+ */
+const packageTeacherSchema = z.object({
+  id: uuidSchema,
+  name: z.string(),
+  avatarKey: avatarKeySchema.nullable(),
+  subjects: z.array(z.string()),
+});
+
 export const creditEntryResponseSchema = z.object({
   id: uuidSchema,
   packageId: uuidSchema,
   // The lesson a `lesson` entry paid for.
   lessonId: uuidSchema.nullable(),
+  /** That lesson's time and status, for the package's lesson rows. */
+  lesson: z
+    .object({
+      id: uuidSchema,
+      startsAt: isoDateTimeSchema,
+      durationMin: z.number().int().positive(),
+      status: lessonStatusSchema,
+    })
+    .nullable(),
   delta: z.number().int(),
   type: creditEntryTypeSchema,
   note: z.string().nullable(),
@@ -428,8 +415,10 @@ export const packageResponseSchema = z.object({
   purchasedAt: isoDateTimeSchema,
   expiresAt: isoDateTimeSchema.nullable(),
   notes: z.string().nullable(),
-  student: studentRefSchema,
+  student: studentRefSchema.extend({ avatarKey: avatarKeySchema.nullable() }),
   group: groupRefSchema.nullable(),
+  /** The direction's teacher. */
+  teacher: packageTeacherSchema,
   createdAt: isoDateTimeSchema,
   updatedAt: isoDateTimeSchema,
   deletedAt: isoDateTimeSchema.nullable(),
@@ -437,8 +426,59 @@ export const packageResponseSchema = z.object({
 
 export type PackageResponse = z.infer<typeof packageResponseSchema>;
 
-export const packageListResponseSchema = paginatedResponseSchema(packageResponseSchema);
+/** Money still owed on the listed packages, per currency, never summed across. */
+const owedByCurrencySchema = z.object({
+  currency: currencyCodeSchema,
+  amountMinor: z.number().int().nonnegative(),
+  packages: z.number().int().nonnegative(),
+});
+
+export const packageListResponseSchema = paginatedResponseSchema(packageResponseSchema).extend({
+  /** How many packages each tab shows with the other filters applied. */
+  counts: z.object({
+    active: z.number().int().nonnegative(),
+    ending: z.number().int().nonnegative(),
+    unpaid: z.number().int().nonnegative(),
+    finished: z.number().int().nonnegative(),
+    all: z.number().int().nonnegative(),
+  }),
+  /** What the unpaid packages still owe (the page header). */
+  owed: z.array(owedByCurrencySchema),
+  /** "Running out" is this many credits left or fewer (L-120). */
+  lowCreditThreshold: z.number().int().nonnegative(),
+});
 export type PackageListResponse = z.infer<typeof packageListResponseSchema>;
+
+/**
+ * One package with what the ticket explains (S07): the package that goes
+ * first (L-81) and the pauses that moved its end (L-102).
+ */
+export const packageDetailResponseSchema = packageResponseSchema.extend({
+  /**
+   * The older live packages of the direction with credits left, which pay
+   * first: the one just ahead, their credits, and when the direction's
+   * booked lessons use the last of them (null when not booked that far).
+   */
+  ahead: z
+    .object({
+      id: uuidSchema,
+      name: z.string().nullable(),
+      remainingCredits: z.number().int().positive(),
+      lastLessonAt: isoDateTimeSchema.nullable(),
+    })
+    .nullable(),
+  /** Each pause that pushed the end later, oldest first. */
+  pauseExtensions: z.array(
+    z.object({
+      pauseId: uuidSchema,
+      startsAt: isoDateTimeSchema,
+      /** When the pause ended or will end; null while it runs open-ended. */
+      endsAt: isoDateTimeSchema.nullable(),
+      extendedBySeconds: z.number().int().nonnegative(),
+    }),
+  ),
+});
+export type PackageDetailResponse = z.infer<typeof packageDetailResponseSchema>;
 
 export const packageTransferResponseSchema = z.object({
   source: packageResponseSchema,

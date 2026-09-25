@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   createPackageSchema,
+  listPackagesQuerySchema,
   recordPaymentSchema,
   refundPackageSchema,
   sellToMembersSchema,
@@ -9,28 +10,17 @@ import { forceQuerySchema } from './scheduling';
 
 const STUDENT_ID = '11111111-1111-4111-8111-111111111111';
 const GROUP_ID = '22222222-2222-4222-8222-222222222222';
-const schedule = {
-  slots: [
-    { weekday: 1, localTime: '09:00' },
-    { weekday: 4, localTime: '18:30' },
-  ],
-  timezone: 'Europe/Paris',
-  durationMin: 60,
-  startDate: '2026-08-01T00:00:00.000Z',
-};
-
 describe('createPackageSchema', () => {
-  it('accepts fixed and period schedules with independent slot times', () => {
-    expect(
-      createPackageSchema.safeParse({
-        studentId: STUDENT_ID,
-        sizingMode: 'FIXED_COUNT',
-        lessonsTotal: 8,
-        pricePerLessonMinor: 50000,
-        currency: 'UAH',
-        schedule,
-      }).success,
-    ).toBe(true);
+  const sale = {
+    studentId: STUDENT_ID,
+    sizingMode: 'FIXED_COUNT' as const,
+    lessonsTotal: 8,
+    pricePerLessonMinor: 50000,
+    currency: 'UAH' as const,
+  };
+
+  it('accepts a count sale and a group period sale', () => {
+    expect(createPackageSchema.safeParse(sale).success).toBe(true);
     expect(
       createPackageSchema.safeParse({
         studentId: STUDENT_ID,
@@ -39,45 +29,26 @@ describe('createPackageSchema', () => {
         endDate: '2026-10-01T00:00:00.000Z',
         pricePerLessonMinor: 50000,
         currency: 'UAH',
-        schedule,
       }).success,
     ).toBe(true);
   });
 
-  it('rejects duplicate weekdays and partial initial group payment', () => {
+  it('no longer takes a schedule or a first payment (L-87)', () => {
     expect(
       createPackageSchema.safeParse({
-        studentId: STUDENT_ID,
-        groupId: GROUP_ID,
-        sizingMode: 'FIXED_COUNT',
-        lessonsTotal: 8,
-        pricePerLessonMinor: 50000,
-        currency: 'UAH',
+        ...sale,
         schedule: {
-          ...schedule,
-          slots: [
-            { weekday: 1, localTime: '09:00' },
-            { weekday: 1, localTime: '10:00' },
-          ],
-        },
-        initialPayment: {
-          amountMinor: 10000,
-          paidAt: '2026-08-01T00:00:00.000Z',
+          slots: [{ weekday: 1, localTime: '09:00' }],
+          timezone: 'Europe/Kyiv',
+          durationMin: 60,
+          startDate: '2026-08-01T00:00:00.000Z',
         },
       }).success,
     ).toBe(false);
-  });
-
-  it('rejects future payment dates', () => {
-    const tomorrow = new Date(Date.now() + 86_400_000).toISOString();
     expect(
       createPackageSchema.safeParse({
-        studentId: STUDENT_ID,
-        sizingMode: 'FIXED_COUNT',
-        lessonsTotal: 8,
-        pricePerLessonMinor: 50000,
-        currency: 'UAH',
-        initialPayment: { amountMinor: 50000, paidAt: tomorrow },
+        ...sale,
+        initialPayment: { amountMinor: 50000, paidAt: '2026-08-01T00:00:00.000Z' },
       }).success,
     ).toBe(false);
   });
@@ -151,5 +122,27 @@ describe('package kinds and operations (L-80, L-85, L-86)', () => {
     expect(
       sellToMembersSchema.safeParse({ ...sale, studentIds: [STUDENT_ID, STUDENT_ID] }).success,
     ).toBe(false);
+  });
+});
+
+describe('listPackagesQuerySchema (S07)', () => {
+  it('takes the page tabs, a search, a teacher, a kind and the order', () => {
+    const parsed = listPackagesQuerySchema.parse({
+      status: 'ENDING',
+      search: ' Anna ',
+      teacherId: STUDENT_ID,
+      sizingMode: 'BY_PERIOD_WEEKLY',
+      sort: 'ending',
+    });
+    expect(parsed).toMatchObject({
+      status: 'ENDING',
+      search: 'Anna',
+      sort: 'ending',
+      state: 'active',
+      page: 1,
+    });
+    expect(listPackagesQuerySchema.parse({}).sort).toBe('newest');
+    expect(listPackagesQuerySchema.safeParse({ status: 'LOW' }).success).toBe(false);
+    expect(listPackagesQuerySchema.safeParse({ sort: 'name' }).success).toBe(false);
   });
 });
