@@ -9,6 +9,9 @@ import {
   type QueryClient,
 } from '@tanstack/react-query';
 import type {
+  BulkCancelDto,
+  BulkCancelPreview,
+  BulkCancelResult,
   CreateLessonDto,
   CreateMakeupDto,
   CreateScheduleDto,
@@ -50,7 +53,7 @@ export { useStudentQuery, useStudentsQuery, useStudentsSummaryQuery } from '@/li
  * balance refreshes: lessons (lists, the panel, attendance), schedules, the
  * packages and directions it drew on, the groups and students that list it.
  */
-function invalidateLessonGraph(queryClient: QueryClient) {
+export function invalidateLessonGraph(queryClient: QueryClient) {
   for (const queryKey of [
     queryKeys.lessons.all,
     queryKeys.series.all,
@@ -333,6 +336,34 @@ export function useApplyScheduleChangeMutation() {
         `/api/backend/schedules/${scheduleId}/changes${force(forced)}`,
         { method: 'POST', body: JSON.stringify(dto) },
       ),
+    onSuccess: () => invalidateLessonGraph(queryClient),
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Bulk cancel (S04, L-54)
+// ---------------------------------------------------------------------------
+
+/** What a bulk cancel would call off, exactly as the apply would. A read, not a save. */
+export function useBulkCancelPreviewMutation() {
+  return useMutation<BulkCancelPreview, GatewayError, BulkCancelDto>({
+    mutationFn: (dto) =>
+      gatewayFetch<BulkCancelPreview>('/api/backend/lessons/bulk-cancel/preview', {
+        method: 'POST',
+        body: JSON.stringify(dto),
+      }),
+  });
+}
+
+/** Cancels every scheduled lesson of the period, free and by the teacher (L-54). */
+export function useBulkCancelMutation() {
+  const queryClient = useQueryClient();
+  return useMutation<BulkCancelResult, GatewayError, BulkCancelDto>({
+    mutationFn: (dto) =>
+      gatewayFetch<BulkCancelResult>('/api/backend/lessons/bulk-cancel', {
+        method: 'POST',
+        body: JSON.stringify(dto),
+      }),
     onSuccess: () => invalidateLessonGraph(queryClient),
   });
 }

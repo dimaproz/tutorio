@@ -49,6 +49,15 @@ import type { LessonPanelIntent } from './use-lesson-panel';
 
 type DialogKind = 'cancel' | 'fixStatus' | 'makeup' | 'attendance' | 'delete';
 
+/** Every command the panel offers now: the footer's and the menu's enabled ones. */
+function offeredActions({ primary, secondary, menu }: ReturnType<typeof panelActions>) {
+  return new Set<string>([
+    ...(primary ? [primary] : []),
+    ...(secondary ? [secondary] : []),
+    ...menu.filter((item) => !item.disabled).map((item) => item.action),
+  ]);
+}
+
 export type LessonPanelLinks = {
   /** The student profile a lesson row links to. */
   studentHref?: (studentId: string) => string;
@@ -241,13 +250,17 @@ function LessonPanelContent({
   const dates = useLessonDates();
   const money = useMoney();
   const showError = useErrorToast();
-  const [mode, setMode] = useState<'view' | 'edit'>('view');
-  // An intent opens its dialog only while the panel itself would offer it.
-  const [dialog, setDialog] = useState<DialogKind | null>(() =>
-    intent === 'markAttendance' && panelActions(lesson, now).primary === 'markAttendance'
-      ? 'attendance'
-      : null,
+  // An intent runs only while the panel itself would offer it.
+  const [offered] = useState(() => offeredActions(panelActions(lesson, now)));
+  const [mode, setMode] = useState<'view' | 'edit'>(() =>
+    intent === 'move' && offered.has('move') ? 'edit' : 'view',
   );
+  const [dialog, setDialog] = useState<DialogKind | null>(() => {
+    if (intent === 'markAttendance' && offered.has('markAttendance')) return 'attendance';
+    if (intent === 'cancel' && offered.has('cancel')) return 'cancel';
+    if (intent === 'makeup' && offered.has('makeup')) return 'makeup';
+    return null;
+  });
 
   const group = lesson.groupId !== null;
   const student = useStudentQuery(lesson.student?.id ?? '', !group && Boolean(lesson.student));

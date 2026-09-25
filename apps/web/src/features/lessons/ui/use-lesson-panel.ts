@@ -7,8 +7,11 @@ import { useUpdateSearchParams } from '@/components/shared/list-controls';
 /** The query parameter that opens the lesson panel on any page (S01 deep link). */
 export const LESSON_PARAM = 'lesson';
 
-/** A command the panel runs as soon as the lesson has loaded. */
-export type LessonPanelIntent = 'markAttendance';
+/**
+ * A command the panel runs as soon as the lesson has loaded — from the next
+ * lesson ticket or a list's row menu — if the panel would offer it.
+ */
+export type LessonPanelIntent = 'markAttendance' | 'move' | 'makeup' | 'cancel';
 
 /**
  * The lesson panel's own URL: `?lesson=<id>` on the page that opened it, so a

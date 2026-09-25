@@ -236,7 +236,12 @@
     "priceNegative": "The price can't be negative",
     "lessonStudentRequired": "Pick a student to create the lesson",
     "lessonGroupRequired": "Pick a group to create the lesson",
-    "memberPriceRequired": "Enter a price or go back to the group price"
+    "memberPriceRequired": "Enter a price or go back to the group price",
+    "periodStartRequired": "Pick the first day",
+    "periodEndRequired": "Pick the last day",
+    "periodEndBeforeStart": "The end is before the start",
+    "periodTooLong": "366 days at most",
+    "teacherPick": "Pick a teacher from the list"
   },
   "pagination": {
     "label": "Pagination",
@@ -294,6 +299,8 @@
       "label": "Main navigation",
       "menuLabel": "Menu",
       "calendar": "Calendar",
+      "lessons": "Lessons",
+      "schedules": "Schedules",
       "students": "Students",
       "parents": "Parents",
       "groups": "Groups",
@@ -2042,6 +2049,64 @@
       },
       "change": "Change the time",
       "saveAnyway": "Save anyway"
+    },
+    "bulkCancel": {
+      "open": "Cancel lessons",
+      "title": "Cancel lessons",
+      "description": "A holiday, sick leave, a break — every lesson on these days is cancelled free of charge.",
+      "from": "From",
+      "to": "To",
+      "whose": "Whose lessons",
+      "studio": "The whole studio",
+      "studioHint": "Every teacher and group",
+      "oneTeacher": "One teacher",
+      "oneTeacherHint": "Only their lessons",
+      "teacher": "Teacher",
+      "teacherPlaceholder": "Pick a teacher",
+      "teacherSearch": "Search teachers",
+      "teacherEmpty": "Nobody found",
+      "reason": "Reason",
+      "reasons": {
+        "holiday": "Holiday",
+        "sickLeave": "Sick leave",
+        "vacation": "School break",
+        "teacherLeave": "Teacher's leave"
+      },
+      "ownReason": "Your own reason",
+      "ownReasonPlaceholder": "For example: classroom repairs",
+      "freeNote": "Free for students",
+      "close": "Close",
+      "next": "Next",
+      "back": "Back",
+      "checkTitle": "{count, plural, one {Cancel # lesson?} other {Cancel # lessons?}}",
+      "checkDescription": "Check the list — a cancellation cannot be undone in one click.",
+      "willCancel": "{count, plural, one {lesson will be cancelled} other {lessons will be cancelled}}",
+      "split": "{individual} individual · {group} group",
+      "wholeStudio": "The whole studio",
+      "wholeStudioLower": "the whole studio",
+      "impactLabel": "What changes",
+      "impactFree": "Free for every student",
+      "impactFreeText": "Cancelled by the teacher: no package credit is used, no debt arises",
+      "impactMakeups": "Makeups — by hand",
+      "impactMakeupsText": "{count, plural, one {# individual lesson appears} other {# individual lessons appear}} under “No makeup”",
+      "impactMakeupsTextAll": "Individual lessons appear under “No makeup”",
+      "impactHeld": "Held lessons stay as they are",
+      "impactHeldText": "Only scheduled lessons are cancelled",
+      "listLabel": "Lessons to be cancelled",
+      "dayCount": "{count, plural, one {# lesson} other {# lessons}}",
+      "lessonMeta": "{teacher} · {kind}",
+      "kindIndividual": "individual",
+      "kindGroup": "group",
+      "more": "{count, plural, one {And # more lesson} other {And # more lessons}}",
+      "confirm": "{count, plural, one {Cancel # lesson} other {Cancel # lessons}}",
+      "confirmShort": "Cancel {count}",
+      "applying": "Cancelling…",
+      "nothingTitle": "Nothing to cancel",
+      "nothingDescription": "Change the period or the teacher.",
+      "nothingEmptyTitle": "No lessons are scheduled on these days",
+      "nothingEmptyText": "{who} · {period}. Held and already cancelled lessons do not count.",
+      "done": "{count, plural, one {Cancelled # lesson on {period} · free} other {Cancelled # lessons on {period} · free}}",
+      "show": "Show"
     }
   },
   "packages": {
@@ -2064,6 +2129,7 @@
   "calendar": {
     "title": "Calendar",
     "newLesson": "New lesson",
+    "bulkCancel": "Cancel lessons",
     "today": "Today",
     "previous": "{view, select, day {Previous day} week {Previous week} other {Previous month}}",
     "next": "{view, select, day {Next day} week {Next week} other {Next month}}",
@@ -2173,5 +2239,148 @@
       "retry": "Try again"
     },
     "gridLabel": "Lessons by time"
+  },
+  "lessonList": {
+    "title": "Lessons",
+    "newLesson": "New lesson",
+    "newShort": "New",
+    "bulkCancel": "Cancel lessons",
+    "subtitle": {
+      "counts": "{total, plural, one {# lesson} other {# lessons}} · {week} this week · {unpaid} unpaid",
+      "short": "{total, plural, one {# lesson} other {# lessons}} · {unpaid} unpaid",
+      "filtered": "{count, plural, one {# lesson} other {# lessons}} match the filters · {total} in all",
+      "empty": "No lessons yet"
+    },
+    "quick": {
+      "label": "Quick filters",
+      "all": "All",
+      "unpaid": "Unpaid",
+      "cancelled": "Cancelled",
+      "no_show": "No-shows",
+      "needs_makeup": "No makeup"
+    },
+    "summary": {
+      "unpaid": "unpaid",
+      "cancelled": "cancelled",
+      "no_show": "no-shows",
+      "needs_makeup": "no makeup"
+    },
+    "search": "Student, group or teacher",
+    "periods": {
+      "heading": "Period",
+      "current": "Period: {value}",
+      "quick": "Quick pick",
+      "custom": "Own period",
+      "week": "This week",
+      "month": "This month",
+      "lastMonth": "Last month",
+      "last3Months": "Last 3 months",
+      "all": "All time",
+      "from": "First day",
+      "to": "Last day",
+      "weekShort": "Week",
+      "monthShort": "Month",
+      "customShort": "Own"
+    },
+    "filters": {
+      "teacher": "Teacher",
+      "teacherSearch": "Search teachers",
+      "allTeachers": "All teachers",
+      "who": "Student or group",
+      "whoSearch": "Student's name or group",
+      "allWho": "All students and groups",
+      "students": "Students",
+      "groups": "Groups",
+      "whoHint": "A student: their own lessons and their groups' lessons",
+      "nobody": "Nobody found",
+      "status": "Status",
+      "reset": "Reset",
+      "done": "Done",
+      "open": "Filters",
+      "openWithCount": "Filters, {count} on"
+    },
+    "statuses": {
+      "SCHEDULED": "Scheduled",
+      "COMPLETED": "Held",
+      "CANCELLED": "Cancelled",
+      "NO_SHOW": "No-shows"
+    },
+    "sort": {
+      "desc": "Newest first",
+      "asc": "Oldest first",
+      "descShort": "Newest",
+      "ascShort": "Oldest",
+      "current": "Order: {value}"
+    },
+    "sheet": {
+      "title": "Filters",
+      "description": "The period, teacher, student or group and status of the lessons.",
+      "reset": "Reset",
+      "period": "Period",
+      "teacher": "Teacher",
+      "allTeachers": "All teachers",
+      "who": "Student or group",
+      "status": "Status",
+      "show": "{count, plural, =0 {No lessons} one {Show # lesson} other {Show # lessons}}",
+      "showPending": "Show"
+    },
+    "columns": {
+      "when": "Date and time",
+      "who": "Student or group",
+      "teacher": "Teacher",
+      "status": "Status",
+      "payment": "Payment",
+      "price": "Price",
+      "actions": "Actions"
+    },
+    "kind": {
+      "individual": "Individual",
+      "group": "Group",
+      "makeup": "Makeup"
+    },
+    "chips": {
+      "makeup": "Makeup",
+      "noMakeup": "No makeup"
+    },
+    "payment": {
+      "paid": "Paid",
+      "unpaid": "Unpaid",
+      "debt": "Debt",
+      "package": "Package",
+      "groupPaid": "{paid} of {total} paid",
+      "later": "Paid after",
+      "free": "Free",
+      "noCharge": "Not charged"
+    },
+    "perStudent": "per student",
+    "assign": "Assign",
+    "openLesson": "Open the lesson: {who}, {when}",
+    "menu": {
+      "label": "Lesson actions",
+      "open": "Open the lesson",
+      "move": "Move",
+      "makeup": "Assign a makeup",
+      "cancel": "Cancel"
+    },
+    "tableCaption": "The studio's lessons",
+    "showing": "Showing {shown} of {total}",
+    "empty": {
+      "title": "Every lesson will be here",
+      "text": "Create the first lesson or a schedule — the list shows every lesson with its payment and status.",
+      "textShort": "Create the first lesson or a schedule.",
+      "openCalendar": "Open the calendar",
+      "newLesson": "New lesson"
+    },
+    "noResults": {
+      "title": "No lessons match these filters",
+      "text": "Try another period or reset the filters.",
+      "textWith": "{summary}. Try another period or reset the filters.",
+      "reset": "Reset the filters"
+    },
+    "error": {
+      "title": "The lessons could not be loaded",
+      "text": "Check the connection and try again.",
+      "retry": "Try again"
+    }
   }
 }
