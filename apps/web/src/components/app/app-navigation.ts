@@ -4,14 +4,15 @@ import {
   ClipboardListIcon,
   HeartIcon,
   LayersIcon,
+  PackageIcon,
   RepeatIcon,
   UsersIcon,
 } from 'lucide-react';
 
-// The rebuilt destinations only; packages, teachers, home and settings
-// return with their new screens.
+// The rebuilt destinations only; teachers, home and settings return with
+// their new screens.
 export type NavigationKey =
-  'calendar' | 'lessons' | 'schedules' | 'students' | 'groups' | 'parents';
+  'calendar' | 'lessons' | 'schedules' | 'packages' | 'students' | 'groups' | 'parents';
 
 export type NavigationItem = {
   key: NavigationKey;
@@ -43,6 +44,7 @@ const navigationItems: NavigationItem[] = [
   { key: 'calendar', href: '/app/calendar', icon: CalendarDaysIcon, ownerOnly: true },
   { key: 'lessons', href: '/app/lessons', icon: ClipboardListIcon, ownerOnly: true },
   { key: 'schedules', href: '/app/schedules', icon: RepeatIcon, ownerOnly: true },
+  { key: 'packages', href: '/app/packages', icon: PackageIcon, ownerOnly: true },
   { key: 'students', href: '/app/students', icon: UsersIcon, ownerOnly: true },
   { key: 'groups', href: '/app/groups', icon: LayersIcon, ownerOnly: true },
   { key: 'parents', href: '/app/parents', icon: HeartIcon, ownerOnly: true },

@@ -248,7 +248,17 @@
     "amountOverPackage": "More than is left to pay for the package",
     "pauseStartRequired": "Enter the first day",
     "pauseEndBeforeStart": "The end is before the start",
-    "directionRequired": "Choose a direction"
+    "directionRequired": "Choose a direction",
+    "lessonsAtLeastOne": "Enter how many lessons — at least 1",
+    "dateIsPast": "The date has passed",
+    "amountAboveZero": "More than 0",
+    "amountOverLeft": "No more than is left to pay for the package",
+    "dateAfterToday": "Choose a date after today",
+    "dateAfterCurrentEnd": "The new end is later than the current one",
+    "creditsRange": "From 1 to the lessons available",
+    "refundNothing": "Choose what to refund: lessons, money or both",
+    "refundOverPaid": "No more than was paid for the unused lessons",
+    "deltaBelowZero": "You cannot remove more than is left"
   },
   "pagination": {
     "label": "Pagination",
@@ -315,7 +325,8 @@
       "detail": "Details",
       "toggle": "Toggle sidebar",
       "tabsLabel": "Quick navigation",
-      "more": "More"
+      "more": "More",
+      "packages": "Packages"
     },
     "header": {
       "search": "Search students, lessons, payments",
@@ -708,7 +719,8 @@
       "balanceDebt": "Debt",
       "balanceAdvance": "Advance",
       "balanceClear": "Nothing owed",
-      "unpaidLessons": "{count, plural, one {# lesson not paid} other {# lessons not paid}}"
+      "unpaidLessons": "{count, plural, one {# lesson not paid} other {# lessons not paid}}",
+      "label": "Student metrics"
     },
     "sections": {
       "label": "Student sections",
@@ -869,8 +881,11 @@
         "pause": "Pause this direction",
         "return": "Bring back from the pause",
         "end": "End learning",
-        "close": "Close"
-      }
+        "close": "Close",
+        "sell": "Sell a package"
+      },
+      "sell": "Sell a package",
+      "openPackage": "Open the package «{name}»"
     },
     "payment": {
       "title": "Record a payment",
@@ -2437,6 +2452,397 @@
       "PAID": "Paid",
       "PARTIAL": "Partial",
       "PENDING": "Unpaid"
+    },
+    "title": {
+      "count": "{count, plural, one {Package of # lesson} other {Package of # lessons}}",
+      "period": "Package {range}"
+    },
+    "kinds": {
+      "FIXED_COUNT": "By count",
+      "BY_PERIOD": "Period",
+      "BY_PERIOD_WEEKLY": "Weekly",
+      "weekly": "{count} a week",
+      "long": {
+        "FIXED_COUNT": "Number of lessons",
+        "BY_PERIOD": "Period from the schedule",
+        "BY_PERIOD_WEEKLY": "Period, N a week"
+      }
+    },
+    "methods": {
+      "BANK_TRANSFER": "Transfer",
+      "CASH": "Cash",
+      "OTHER": "Other",
+      "CARD": "Card"
+    },
+    "ticket": {
+      "close": "Close",
+      "description": "A lesson package: what is left, the payment, the lessons and the history",
+      "loading": "Loading the package",
+      "errorTitle": "Could not open the package",
+      "errorText": "Check the connection and try again.",
+      "retry": "Try again",
+      "state": {
+        "new": "New",
+        "active": "Active",
+        "used": "Used up",
+        "expired": "Expired"
+      },
+      "ofTotal": "{count, plural, one {of # lesson} other {of # lessons}}",
+      "caption": {
+        "new": "none used yet · {price} a lesson · {total} in total",
+        "active": "{count} used · {price} a lesson · {total} in total",
+        "used": "all used · {price} a lesson · {total} in total",
+        "expired": "{count} unused · {price} a lesson · {total} in total"
+      },
+      "actions": {
+        "pay": "Record payment",
+        "sell": "Sell a package",
+        "extend": "Extend",
+        "transfer": "Transfer",
+        "refund": "Refund",
+        "more": "More package actions",
+        "adjust": "Correct lessons",
+        "delete": "Delete",
+        "openStudent": "Open student"
+      },
+      "validUntil": "Valid until",
+      "noEnd": "No end date",
+      "noEndSub": "no date",
+      "daysLeft": "{count, plural, =0 {last day} one {# day left} other {# days left}}",
+      "daysAgo": "{count, plural, one {ended # day ago} other {ended # days ago}}",
+      "from": "from {date}",
+      "fromPause": "from {date} · +{days} days for a pause",
+      "badgeExpired": "Expired",
+      "badgeExtended": "Extended",
+      "paid": "Paid",
+      "paidOf": "of {total}",
+      "payments": "{count, plural, =0 {no payments yet} one {# payment} other {# payments}}",
+      "badgeLeft": "{amount} left",
+      "badgePaid": "Paid",
+      "notice": {
+        "expiredTitle": "{count, plural, one {Expired on {date} · # lesson unused} other {Expired on {date} · # lessons unused}}",
+        "expiredText": "Lessons are no longer taken from this package. Extend it, move the lessons to another direction or refund them.",
+        "usedTitle": "{count, plural, one {The # lesson is used} other {All # lessons are used}}",
+        "usedText": "The next lessons go on debt until there is a new package.",
+        "pausedTitle": "{days, plural, one {Extended by # day for a pause} other {Extended by # days for a pause}}",
+        "pausedText": "{name}'s pause ran {range}, so the end moved from {before} to {after}.",
+        "aheadTitle": "Starts once «{name}» runs out",
+        "aheadTitleUnnamed": "Starts once the previous package runs out",
+        "aheadUntil": "{count, plural, one {It has # lesson left — {date}.} other {It has # lessons left — the last {date}.}}",
+        "aheadText": "{count, plural, one {It has # lesson left.} other {It has # lessons left.}}"
+      },
+      "tabs": {
+        "label": "The package's lessons and history",
+        "lessons": "Lessons",
+        "lessonsCount": "Lessons · {count}",
+        "history": "History"
+      },
+      "lessonsEmpty": "No lesson has been taken from this package yet.",
+      "lessonCharged": "1 used",
+      "lessonLate": "late cancellation",
+      "lessonNoShow": "no-show",
+      "history": {
+        "label": "Package history",
+        "empty": "No history yet",
+        "purchase": "{count, plural, one {Sold · # lesson} other {Sold · # lessons}}",
+        "adjustment": "Correction {delta}",
+        "transferOut": "{count, plural, one {Moved # lesson to another direction} other {Moved # lessons to another direction}}",
+        "transferIn": "{count, plural, one {Received # lesson from another package} other {Received # lessons from another package}}",
+        "refundCredits": "{count, plural, one {Refunded # lesson} other {Refunded # lessons}}",
+        "payment": "Payment {amount}",
+        "refund": "Refund {amount}",
+        "pause": "{days, plural, one {Extended by # day for a pause} other {Extended by # days for a pause}}",
+        "showAll": "Show all · {count}",
+        "collapse": "Collapse"
+      }
+    },
+    "dialogs": {
+      "close": "Close",
+      "cancel": "Cancel",
+      "method": "Method",
+      "subtitle": "{name} · {student}",
+      "payment": {
+        "title": "Package payment",
+        "leftLabel": "Left to pay",
+        "paidLabel": "paid",
+        "ofTotal": "of {total}",
+        "amount": "Amount",
+        "amountHint": "It can be paid in parts",
+        "date": "Date",
+        "note": "Comment",
+        "notePlaceholder": "Optional",
+        "impactLabel": "What changes",
+        "impactFull": "The package will be paid in full",
+        "impactFullText": "Its state becomes «Paid»",
+        "impactLeft": "{amount} will be left to pay",
+        "impactLeftText": "The rest can be recorded later",
+        "confirm": "Record",
+        "confirmAmount": "Record {amount}",
+        "done": "Payment of {amount} recorded"
+      },
+      "extend": {
+        "title": "Extend the package",
+        "subtitle": "{count, plural, one {{name} · {student} · # lesson left} other {{name} · {student} · # lessons left}}",
+        "current": "Valid until now",
+        "next": "New end",
+        "nextHint": "Any date after today",
+        "quick": "Quick choice",
+        "quickChip": {
+          "week": "+1 week",
+          "twoWeeks": "+2 weeks",
+          "month": "+1 month"
+        },
+        "impactLabel": "What changes",
+        "impactCredits": "{count, plural, one {# lesson can be used again} other {# lessons can be used again}}",
+        "impactCreditsText": "until {date}",
+        "impactMoney": "The price and payments stay",
+        "confirm": "Extend",
+        "confirmDate": "Extend to {date}",
+        "done": "Package extended to {date}"
+      },
+      "transfer": {
+        "title": "Transfer lessons",
+        "credits": "How many lessons",
+        "creditsOf": "of {count} available",
+        "to": "To",
+        "toHint": "Only {name}'s directions in the same currency",
+        "toPlaceholder": "Choose a direction",
+        "toSearch": "Search directions",
+        "toEmpty": "No other directions",
+        "toOption": "{teacher} · {price} a lesson",
+        "otherCurrency": "another currency",
+        "recalc": "Recalculated by price",
+        "perLesson": "{price} a lesson",
+        "lessonsWord": "{count, plural, one {lesson} other {lessons}}",
+        "remainder": "{amount} left over",
+        "remainderText": "Rounded down to a whole lesson. It can be refunded separately.",
+        "tooLittle": "These lessons are worth less than one lesson of the other direction.",
+        "footer": "This package closes and {name} gets a new one",
+        "confirm": "{count, plural, one {Transfer # lesson} other {Transfer # lessons}}",
+        "confirmShort": "Transfer {count}",
+        "done": "{count, plural, one {# lesson moved to {name}} other {# lessons moved to {name}}}"
+      },
+      "refund": {
+        "title": "Refund",
+        "subtitle": "{count, plural, one {{name} · {student} · # lesson, {paid} paid} other {{name} · {student} · # lessons, {paid} paid}}",
+        "takeCredits": "Take back the unused lessons",
+        "takeCreditsText": "{count, plural, one {# lesson leaves the package} other {# lessons leave the package}}",
+        "takeCreditsNone": "No unused lessons",
+        "returnMoney": "Return money",
+        "returnMoneyFor": "{count, plural, one {For # lesson — {amount}} other {For # lessons — {amount}}}",
+        "returnMoneyPaid": "No more than was paid — {amount}",
+        "returnMoneyNone": "Nothing has been paid for the package yet",
+        "amount": "Refund amount",
+        "amountHint": "No more than was paid for the unused lessons",
+        "date": "Date",
+        "reason": "Reason",
+        "reasonPlaceholder": "For example, moving away",
+        "confirm": "Refund",
+        "confirmAmount": "Refund {amount}",
+        "done": "Refund recorded"
+      },
+      "adjust": {
+        "title": "Correct lessons",
+        "subtitle": "{name} · {student} · now {left} of {total}",
+        "becomes": "Becomes",
+        "ofTotal": "{count, plural, one {of # lesson} other {of # lessons}}",
+        "stepper": "How many to add or remove",
+        "minus": "Remove one",
+        "plus": "Add one",
+        "legendLeft": "{count} left",
+        "legendAdded": "{delta} correction",
+        "legendUsed": "{count} used",
+        "why": "Why",
+        "whyPlaceholder": "For example, a lesson cancelled by the teacher",
+        "impactTitle": "History is not rewritten",
+        "impactText": "A «Correction {delta}» entry is added with your reason",
+        "confirm": "Save",
+        "done": "Correction {delta} saved"
+      },
+      "delete": {
+        "title": "Delete the package?",
+        "gone": "The package «{name}» disappears",
+        "goneText": "No lesson was taken from it and nothing was paid",
+        "final": "This cannot be undone",
+        "confirm": "Delete",
+        "done": "Package «{name}» deleted",
+        "blockedTitle": "Cannot delete",
+        "blockedCharged": "{count, plural, one {# lesson has been taken from the package} other {# lessons have been taken from the package}}",
+        "blockedPaid": "A payment has been recorded for the package",
+        "blockedText": "Only a package with no lessons taken and no payments can be deleted. Refund what is unused instead.",
+        "refund": "Refund the unused"
+      }
+    },
+    "sale": {
+      "title": "New package",
+      "subtitle": "Selling creates no schedule and records no payment",
+      "description": "Sell a lesson package: the kind, the count or period, the price",
+      "close": "Close",
+      "pickStudent": "Who is the package for",
+      "pickStudentHint": "Pick a student, then their direction",
+      "noDirections": "This student has no directions yet",
+      "otherDirection": "Another direction",
+      "otherStudent": "Another student",
+      "change": "Change",
+      "directionOption": "{teacher} · {price} a lesson",
+      "individual": "Individual · {teacher}",
+      "group": "Group · {teacher}",
+      "rate": "{price} a lesson",
+      "noSchedule": "No schedule",
+      "current": "Now: {left} of {total} in the package",
+      "footer": "Add the payment and the schedule after the sale",
+      "cancel": "Cancel",
+      "submit": "Sell package",
+      "lessons": "{count, plural, one {# lesson} other {# lessons}}",
+      "lessonsWord": "{count, plural, one {lesson} other {lessons}}",
+      "search": {
+        "placeholder": "Student's name",
+        "heading": "Students",
+        "clear": "Clear",
+        "close": "Close the search",
+        "escape": "Esc",
+        "emptyTitle": "Nobody found",
+        "emptyText": "Try another name"
+      },
+      "kind": {
+        "label": "Kind of package",
+        "FIXED_COUNT": "Number of lessons",
+        "FIXED_COUNT_hint": "8 lessons, optionally with an end date",
+        "BY_PERIOD": "Period from the schedule",
+        "BY_PERIOD_hint": "The lessons are counted from the schedule",
+        "BY_PERIOD_WEEKLY": "Period, N a week",
+        "BY_PERIOD_WEEKLY_hint": "No schedule: how many a week"
+      },
+      "size": {
+        "count": "How many lessons",
+        "lessonsSuffix": "lessons",
+        "until": "Valid until",
+        "untilHint": "Optional · no date — no end",
+        "noEnd": "No date",
+        "from": "From",
+        "to": "To",
+        "periodCount": "Lessons in the package",
+        "fromSchedule": "From the schedule",
+        "periodCountHint": "By the schedule {days} · can be changed",
+        "periodCountNoSchedule": "No schedule — enter how many lessons",
+        "perWeek": "Lessons a week",
+        "perWeekHint": "No schedule needed — add lessons as it suits"
+      },
+      "price": {
+        "label": "Price",
+        "perLesson": "Per lesson",
+        "total": "Per package",
+        "rateHint": "The direction's rate",
+        "totalHint": "{count} × {price}"
+      },
+      "preview": {
+        "heading": "It will look like this",
+        "label": "New package",
+        "empty": "Enter the count and the price — the package appears here",
+        "until": "until {date}",
+        "untilShort": "until {date}",
+        "noEnd": "no end date",
+        "perLesson": "Price per lesson",
+        "total": "Total",
+        "debt": "{count, plural, one {First covers # lesson on debt} other {First covers # lessons on debt}}",
+        "after": "Starts once «{name}» runs out",
+        "afterUnnamed": "Starts once the current package runs out"
+      }
+    },
+    "sold": {
+      "title": "Package sold",
+      "close": "Close",
+      "label": "Sold",
+      "lessonsWord": "{count, plural, one {lesson} other {lessons}}",
+      "until": "until {date}",
+      "noEnd": "no end date",
+      "perLesson": "Per lesson",
+      "total": "Total",
+      "paid": "Paid",
+      "notPaid": "No payment recorded yet",
+      "paidPart": "Paid in part",
+      "paidFull": "Paid in full",
+      "next": "What's next",
+      "scheduleExists": "There is a schedule: {schedule} — its lessons will be taken from this package.",
+      "scheduleNone": "There is no schedule yet — add one and its lessons will be taken from this package.",
+      "pay": "Record payment · {amount}",
+      "openSchedule": "Open schedule",
+      "addSchedule": "Add a schedule",
+      "done": "Done"
+    },
+    "list": {
+      "title": "Packages",
+      "caption": "The studio's packages",
+      "subtitle": "{active} active · {ending} running out · {unpaid} unpaid for {owed}",
+      "subtitlePaid": "{active} active · {ending} running out · all paid",
+      "subtitleShort": "{active} active · {unpaid} unpaid",
+      "subtitleEmpty": "Packages of every student and group",
+      "sell": "Sell a package",
+      "sellShort": "Sell",
+      "showing": "Showing {shown} of {total}",
+      "open": "Open {name}'s package",
+      "groupLine": "{name} · group",
+      "individualLine": "{name} · {teacher}",
+      "creditsOf": "{left} of {total}",
+      "until": "until {date}",
+      "noEnd": "no end date",
+      "paid": "Paid",
+      "paidOf": "{paid} of {total}",
+      "unpaid": "Unpaid",
+      "kindSummary": {
+        "FIXED_COUNT": "by count",
+        "BY_PERIOD": "period",
+        "BY_PERIOD_WEEKLY": "weekly"
+      },
+      "columns": {
+        "who": "Student and direction",
+        "kind": "Kind",
+        "credits": "Lessons",
+        "window": "Valid",
+        "payment": "Payment",
+        "price": "Price",
+        "actions": "Actions"
+      },
+      "menu": {
+        "label": "Actions for {name}'s package",
+        "open": "Open package",
+        "openStudent": "Open student"
+      },
+      "toolbar": {
+        "tabs": "Package states",
+        "tab": {
+          "ACTIVE": "Active",
+          "ENDING": "Running out",
+          "UNPAID": "Unpaid",
+          "FINISHED": "Finished",
+          "all": "All"
+        },
+        "search": "Student, group or package",
+        "kind": "Kind",
+        "kindAll": "All kinds",
+        "sort": {
+          "ending": "Running out first",
+          "newest": "Newest first",
+          "current": "Order: {value}"
+        },
+        "reset": "Reset"
+      },
+      "empty": {
+        "title": "No packages yet",
+        "text": "Sell a package to a student from their profile — every package of the studio, the ones running out and the unpaid ones show up here.",
+        "students": "Open students"
+      },
+      "noResults": {
+        "title": "Nothing found",
+        "text": "No package matches the filters.",
+        "textWith": "No package matches: {summary}.",
+        "reset": "Reset filters"
+      },
+      "error": {
+        "title": "Could not load the packages",
+        "text": "Check the connection and try again.",
+        "retry": "Try again"
+      }
     }
   },
   "datePicker": {

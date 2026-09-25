@@ -15,14 +15,15 @@ describe('application navigation', () => {
       'calendar',
       'lessons',
       'schedules',
+      'packages',
       'students',
       'groups',
       'parents',
     ]);
     expect(
-      isNavigationActive('/app/students/83d4d4e3-5e9b-4fd0-b9cc-8d6e5f3d0e8e', items[3]!),
+      isNavigationActive('/app/students/83d4d4e3-5e9b-4fd0-b9cc-8d6e5f3d0e8e', items[4]!),
     ).toBe(true);
-    expect(isNavigationActive('/app/groups', items[3]!)).toBe(false);
+    expect(isNavigationActive('/app/groups', items[4]!)).toBe(false);
   });
 
   it('gives a non-owner no destinations at all, matching the owner-only API', () => {

@@ -23,6 +23,7 @@ import {
 } from './lesson-create-story-backend';
 import { createLessonListRoutes, type LessonListStoryOptions } from './lesson-list-story-backend';
 import { createLessonRoutes, type LessonStoryOptions } from './lesson-story-backend';
+import { createPackagesRoutes, type PackagesStoryOptions } from './packages-story-backend';
 import { createSchedulesRoutes, type SchedulesStoryOptions } from './schedules-story-backend';
 import {
   createProfileBillingRoutes,
@@ -267,8 +268,9 @@ function pkg(
     purchasedAt: '2026-09-01T10:00:00.000Z',
     expiresAt: null,
     notes: null,
-    student: { id: studentId, fullName: '' },
+    student: { id: studentId, fullName: '', avatarKey: null },
     group: null,
+    teacher: { id: TEACHER_A.id, name: TEACHER_A.name, avatarKey: null, subjects: ['English'] },
     createdAt: '2026-09-01T10:00:00.000Z',
     updatedAt: '2026-09-01T10:00:00.000Z',
     deletedAt: null,
@@ -358,7 +360,8 @@ export type StoryBackendOptions = GroupStoryOptions &
   SchedulesStoryOptions &
   LessonStoryOptions &
   LessonCreateStoryOptions &
-  ProfileBillingOptions & {
+  ProfileBillingOptions &
+  PackagesStoryOptions & {
     students?: SampleStudent[];
     packages?: PackageResponse[];
     lessons?: LessonResponse[];
@@ -499,6 +502,7 @@ function createHandler(options: StoryBackendOptions) {
   const lessonRoutes = createLessonRoutes(options);
   const lessonCreateRoutes = createLessonCreateRoutes(options);
   const profileBillingRoutes = createProfileBillingRoutes(options);
+  const packagesRoutes = createPackagesRoutes(options);
   const settle = () =>
     options.saveDelayMs
       ? new Promise((resolve) => setTimeout(resolve, options.saveDelayMs))
@@ -524,6 +528,8 @@ function createHandler(options: StoryBackendOptions) {
     }
 
     const readBody = () => JSON.parse(String(init?.body ?? '{}'));
+    const packagesResponse = await packagesRoutes(path, method, query, readBody);
+    if (packagesResponse) return packagesResponse;
     const billingResponse = await profileBillingRoutes(path, method, query, readBody);
     if (billingResponse) return billingResponse;
     const schedulesResponse = await schedulesRoutes(path, method, query, readBody);

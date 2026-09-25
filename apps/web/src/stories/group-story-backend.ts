@@ -470,7 +470,12 @@ function b2Packages(): PackageResponse[] {
     notes: null,
     student: { id: studentId(n), fullName: member(n).fullName, avatarKey: null },
     group: { id: storyGroupId(1), name: 'B2 prep · evening' },
-    teacher: { id: '55555555-5555-4555-8555-555555555555', name: 'Dmytro Tutor', avatarKey: null, subjects: ['English'] },
+    teacher: {
+      id: '55555555-5555-4555-8555-555555555555',
+      name: 'Dmytro Tutor',
+      avatarKey: null,
+      subjects: ['English'],
+    },
     createdAt: '2026-09-01T10:00:00.000Z',
     updatedAt: '2026-09-01T10:00:00.000Z',
     deletedAt: null,

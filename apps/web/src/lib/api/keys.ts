@@ -105,6 +105,8 @@ export const queryKeys = {
     all: ['students'] as const,
     lists: (filters: StudentListFilters) => ['students', 'list', filters] as const,
     detail: (studentId: string) => ['students', 'detail', studentId] as const,
+    /** A student's directions with how each is paid (S06). */
+    billing: (studentId: string) => ['students', 'billing', studentId] as const,
   },
   groups: {
     all: ['groups'] as const,

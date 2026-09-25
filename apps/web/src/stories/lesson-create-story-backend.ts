@@ -167,7 +167,12 @@ function packageFixture(left: number): PackageResponse {
     notes: null,
     student: { id: CREATE_STUDENT_ID, fullName: 'Anna Shevchenko', avatarKey: null },
     group: null,
-    teacher: { id: '55555555-5555-4555-8555-555555555555', name: 'Dmytro Tutor', avatarKey: null, subjects: ['English'] },
+    teacher: {
+      id: '55555555-5555-4555-8555-555555555555',
+      name: 'Dmytro Tutor',
+      avatarKey: null,
+      subjects: ['English'],
+    },
     createdAt: '2026-09-01T10:00:00.000Z',
     updatedAt: '2026-09-01T10:00:00.000Z',
     deletedAt: null,

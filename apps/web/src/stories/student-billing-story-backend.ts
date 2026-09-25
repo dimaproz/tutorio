@@ -479,8 +479,9 @@ function historyPackage(
     purchasedAt: kyiv(9, 1, 10),
     expiresAt: kyiv(10, 31),
     notes: null,
-    student: STUDENT,
+    student: { ...STUDENT, avatarKey: 'user-1' },
     group: null,
+    teacher: { ...DMYTRO, avatarKey: null, subjects: ['English'] },
     createdAt: kyiv(9, 1, 10),
     updatedAt: kyiv(9, 1, 10),
     deletedAt: null,
@@ -488,7 +489,8 @@ function historyPackage(
   } as PackageResponse;
 }
 
-const PACKAGES: PackageResponse[] = [
+/** Anna's package history (the «Пакети» tab); the S07 stories open these tickets too. */
+export const BILLING_PACKAGES: PackageResponse[] = [
   historyPackage(1, 'B2 preparation', {}),
   historyPackage(2, 'Starter', {
     lessonsTotal: 4,
@@ -647,7 +649,7 @@ export function createProfileBillingRoutes(options: ProfileBillingOptions) {
     }
     if (path === '/pauses' && method === 'GET') return json(page(pauses));
     if (path === '/payments' && method === 'GET') return json(page(PAYMENTS));
-    if (path === '/packages' && method === 'GET') return json(page(PACKAGES));
+    if (path === '/packages' && method === 'GET') return json(page(BILLING_PACKAGES));
     if (path === '/schedules' && method === 'GET') {
       const group = query.get('groupId');
       if (group)
