@@ -224,11 +224,13 @@ describe('Work Packet 6.4 phase 6: pauses (e2e)', () => {
       endsAt: new Date(windowStart.getTime() + WEEK_MS).toISOString(),
     });
     expect(future.state).toBe('SCHEDULED');
+    // 06:00: no other lesson of the suite's teacher starts then, whatever
+    // weekday the suite runs on (the bookings above sit at 10:00).
     await post('/schedules')
       .send({
         studentId,
         teacherId,
-        slots: [{ weekday: 1, localTime: '10:00' }],
+        slots: [{ weekday: 1, localTime: '06:00' }],
         durationMin: 60,
         timezone: 'UTC',
         startDate: nextMonday.toISOString(),
@@ -247,9 +249,9 @@ describe('Work Packet 6.4 phase 6: pauses (e2e)', () => {
           orderBy: { startsAtUtc: 'asc' },
         })
       ).map((row) => row.startsAtUtc.getTime());
-    const pausedMonday = windowStart.getTime() + 10 * 60 * 60 * 1000;
+    const pausedMonday = windowStart.getTime() + 6 * 60 * 60 * 1000;
     const generated = await mondays();
-    expect(generated).toContain(nextMonday.getTime() + 10 * 60 * 60 * 1000);
+    expect(generated).toContain(nextMonday.getTime() + 6 * 60 * 60 * 1000);
     expect(generated).toContain(pausedMonday + WEEK_MS);
     expect(generated).not.toContain(pausedMonday);
 
