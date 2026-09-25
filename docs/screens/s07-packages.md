@@ -172,6 +172,9 @@ now refuses to delete a used package.
 
 ## Open questions
 
-- **The sale's dates use the browser's time zone** (the known S02 issue):
-  «Діє до 30.10» ends at the browser's midnight, while the studio shows
-  dates in its own time zone.
+None. Closed on 2026-09-25: **the sale's dates are the studio's**. «Діє до
+30.10» ends at the studio's midnight after the 30th (`2026-10-30T22:00Z` in
+Kyiv), a period runs between the studio's midnights, an extension ends at
+the studio's midnight and a payment on an earlier day is recorded at the
+studio's noon — whatever the browser's zone. «Сьогодні» and «ще 35 днів»
+count the studio's days.

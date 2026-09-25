@@ -1,7 +1,7 @@
 # Tutorio Current State
 
-Last verified: 2026-09-25 after screen step S07 (see "Packages: sale,
-ticket and operations").
+Last verified: 2026-09-25 after the studio time zone for the web (see "Dates
+on the studio's clock").
 
 This is the first project document to read before planning or implementing
 work. It reports the repository as it exists; [`mvp-plan.md`](./mvp-plan.md)
@@ -19,6 +19,33 @@ they used were deleted; `/app` opens the students. The rebuilt screens show
 lessons, packages and directions read-only — scheduling, lesson actions, sales
 and direction edits come back with the new screens (Work Packet 6.4 screens,
 6.2, 6.5, 6.6 and 7). Every backend route stays available.
+
+## Dates on the studio's clock (2026-09-25)
+
+Every date and time the web shows or takes is the studio's wall clock
+(`Workspace.timezone`), wherever the browser is. `packages/domain`
+(`wall-clock.ts`) converts a date and a time to an instant and back in a
+given IANA zone, with the offsets read from `Intl` (not `date-fns-tz`, whose
+offsets are wrong within an hour of a DST switch); `apps/web/src/lib/datetime`
+exposes them and `useStudioTimeZone` gives the zone. The session provider
+hands the studio's zone to next-intl, so every formatter, «сьогодні», the
+calendar's days and weeks, the Lessons periods, «ще 35 днів» and the forms
+(lesson create, edit and makeup, schedules, bulk cancel, the sale, extend,
+payments, refunds and pauses) use it; before a session the default is
+`Europe/Kyiv`. The API is unchanged: it already takes instants. The S02 and
+S07 time-zone questions are closed.
+
+Gate on 2026-09-25: domain 170 tests (the helpers under several process
+zones, the Kyiv DST switches, and a two-year comparison with `Intl` in odd
+zones); web lint, typecheck, 382 unit tests (run with the process in
+`America/New_York`; the lesson and sale forms send the same instants from
+UTC, UTC+4, Warsaw and New York), build, the Storybook browser tests (375 in
+93 files, Chromium set to `America/New_York`; a full run shows an occasional
+single timeout, the same on the code before this change) and the Storybook
+build. Not yet checked by hand in the running app under an emulated zone.
+Found on the way, not fixed: the API's schedule expansion
+(`packages/domain/src/recurrence.ts`) uses `date-fns-tz` and drops a lesson
+at 02:00–02:59 on the spring-switch day in Kyiv.
 
 ## Packages: sale, ticket and operations — screen step S07 (2026-09-25)
 

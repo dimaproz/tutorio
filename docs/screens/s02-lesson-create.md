@@ -234,6 +234,9 @@ calendar multi-pick; «Щотижня» lives in this form and never opens S05.
   nothing picked): the price is editable only once a student is picked, so
   the errors story shows the missing student and date; the price error is in
   `Shared/Form/PriceField`.
-- **Dates are the browser's wall clock** (as every form, `lib/datetime`)
-  while the app shows times in the studio's zone: a browser outside the
-  studio's zone sees the edit form and the busy marks shifted.
+
+Closed on 2026-09-25: **dates and times are the studio's wall clock**
+(`Workspace.timezone`), wherever the browser is. The form reads «2026-10-30»
+and «17:00» on the studio's clock (`lib/datetime`), the busy marks, past
+rows and the edit form's date and time use the same clock, and next-intl
+shows every date in the studio's zone (the session provider sets it).

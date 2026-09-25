@@ -145,9 +145,10 @@ The brief's open questions are answered by decisions 1 and 2.
   choice), while the panel's edit keeps «Це і наступні».
 - **The undo toast is for a plain move**; a schedule lesson's move ends with
   a confirmation toast only.
-- **Times are a 24-hour clock in both locales** and read in the browser's
-  zone, the clock the grid places lessons by (the forms' known zone issue
-  applies: a browser outside the studio's zone sees its own wall clock).
+- **Times are a 24-hour clock in both locales** and read in the studio's
+  zone, the clock the grid places lessons by: days, weeks and months are cut
+  at the studio's midnights and «сьогодні» is the studio's day, wherever the
+  browser is (since 2026-09-25).
 - **Free windows** in the day summary are the gaps of 30 minutes or more
   between the day's lessons; nothing before the first or after the last
   lesson, since working hours are out of scope (L-121). The board's

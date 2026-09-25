@@ -152,8 +152,9 @@ Checked at 1440 and 390, light and dark, Ukrainian and English.
 
 ## Decided while building (for the owner's confirmation)
 
-- **Times are a 24-hour clock in the browser's zone**, the calendar's clock
-  (its formatter moved to `lib/i18n/local-formatter` for both screens).
+- **Times are a 24-hour clock in the studio's zone**, the calendar's clock
+  (its formatter moved to `lib/i18n/local-formatter` for both screens); the
+  periods run between the studio's midnights (since 2026-09-25).
 - **The default period is this month**; a custom period includes its last
   day. «Скинути фільтри» on the empty result also resets the quick filter,
   the search and the period.
