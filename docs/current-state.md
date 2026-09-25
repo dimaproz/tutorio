@@ -1,6 +1,6 @@
 # Tutorio Current State
 
-Last verified: 2026-09-25 after the new schedule preview (see "Lesson create form").
+Last verified: 2026-09-25 after screen step S03 (see "Calendar").
 
 This is the first project document to read before planning or implementing
 work. It reports the repository as it exists; [`mvp-plan.md`](./mvp-plan.md)
@@ -18,6 +18,26 @@ they used were deleted; `/app` opens the students. The rebuilt screens show
 lessons, packages and directions read-only — scheduling, lesson actions, sales
 and direction edits come back with the new screens (Work Packet 6.4 screens,
 6.2, 6.5, 6.6 and 7). Every backend route stays available.
+
+## Calendar — screen step S03 (2026-09-25)
+
+«Календар» (`/app/calendar`) is the first navigation item. The week (default
+on desktop), day (default on phones) and month views show the studio's
+lessons, coloured by type (individual, group, makeup) and filled by time
+(upcoming, past, running, cancelled), with held, no-show, makeup and unpaid
+marks; several teachers add their initials and a legend. Teacher and status
+filters count the period's lessons; the phone has a filter sheet. A click or
+drag on empty time opens the lesson form with that date, time and length; a
+lesson opens the S01 panel; dragging a scheduled lesson moves it (15-minute
+snap, the overlap named while dragging) through the S01 scope and conflict
+dialogs, with an undo toast for a plain move. Empty, loading and error states
+sit over the grid. The API's lesson list now carries the student's avatar.
+Brief, decisions and open questions:
+[`screens/s03-calendar.md`](./screens/s03-calendar.md).
+
+Gate on 2026-09-25: root lint, typecheck and tests (API 241 unit tests, web
+unit tests), the API E2E suite on an isolated database (119 tests), the web
+build and the Storybook browser tests (288 in 87 files).
 
 ## Group member prices (2026-09-25)
 

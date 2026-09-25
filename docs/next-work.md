@@ -1,6 +1,6 @@
 # Active Work Queue
 
-Last verified: 2026-09-25 (S02 follow-up).
+Last verified: 2026-09-25 (S03).
 
 This is the short-lived execution queue for Stage 4.1. It answers “what should I
 work on next?” without requiring a developer to re-derive priorities from the
@@ -394,6 +394,11 @@ and 7 (S07) and 6.6 (S10, S11).
   interim attendance dialog is gone. Decisions and open questions (payment
   method, recording a payment and offering a package from the panel, the
   group makeup on board 02) are in the [brief](./screens/s01-lesson-panel.md).
+- **S03 — calendar: done 2026-09-25**: `/app/calendar` with week, day and
+  month, teacher and status filters, create by click or drag, move by drag
+  through the S01 dialogs, the phone day grid, agenda, dot month and filter
+  sheet. Decisions for the owner and open questions are in the
+  [brief](./screens/s03-calendar.md).
 - **Group member prices: done 2026-09-25** (S08's member rate dialog, ahead
   of the step): `Enrollment.ownPrice`, the roster's price column, «Ціна для
   учня», the group form's price impact and the S02 group pill.

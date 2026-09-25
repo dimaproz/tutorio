@@ -133,8 +133,10 @@ Acceptance:
   primitive filenames. Its narrow raw-color allowlist is: `globals.css` for
   semantic token definitions, `components/ui/chart.tsx` for upstream Recharts
   SVG selectors, `lib/theme/user-colors.ts` for the teacher scheduling data
-  default, `app/layout.tsx` for browser theme-color metadata, and the existing
-  `lib/auth/gateway.test.ts` color fixture. The duplicate-primitive allowlist
+  default and the ink it reads on (with its test), `app/layout.tsx` for browser
+  theme-color metadata, the existing `lib/auth/gateway.test.ts` color fixture,
+  and `stories/calendar-story-backend.ts` for the calendar stories' teacher
+  colours (user data, S03). The duplicate-primitive allowlist
   contains only `lib/pagination.ts`, which is a data helper rather than UI.
 - Independent review corrected the initial registry and generated-utility
   regressions. Generation, lint, typecheck, unit tests, API E2E, production
