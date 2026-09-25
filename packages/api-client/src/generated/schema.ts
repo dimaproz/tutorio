@@ -3024,6 +3024,7 @@ export interface components {
           name: string;
           color: string | null;
         };
+        subject: string | null;
         /** Format: date-time */
         createdAt: string;
         /** Format: date-time */
@@ -3128,6 +3129,7 @@ export interface components {
           name: string;
           color: string | null;
         };
+        subject: string | null;
         /** Format: date-time */
         createdAt: string;
         /** Format: date-time */
@@ -3250,6 +3252,7 @@ export interface components {
         name: string;
         color: string | null;
       };
+      subject: string | null;
       /** Format: date-time */
       createdAt: string;
       /** Format: date-time */
@@ -3503,6 +3506,7 @@ export interface components {
         name: string;
         color: string | null;
       };
+      subject: string | null;
       /** Format: date-time */
       createdAt: string;
       /** Format: date-time */
@@ -4611,6 +4615,7 @@ export interface components {
           id: string;
           fullName: string;
         };
+        settledLessons: number | null;
         /** Format: date-time */
         createdAt: string;
         /** Format: date-time */
@@ -4665,6 +4670,7 @@ export interface components {
         id: string;
         fullName: string;
       };
+      settledLessons: number | null;
       /** Format: date-time */
       createdAt: string;
       /** Format: date-time */

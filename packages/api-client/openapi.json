@@ -11244,6 +11244,10 @@
                   },
                   "required": ["id", "name", "color"]
                 },
+                "subject": {
+                  "type": "string",
+                  "nullable": true
+                },
                 "createdAt": {
                   "type": "string",
                   "format": "date-time"
@@ -11289,6 +11293,7 @@
                 "student",
                 "group",
                 "teacher",
+                "subject",
                 "createdAt",
                 "updatedAt",
                 "deletedAt"
@@ -11565,6 +11570,10 @@
                   },
                   "required": ["id", "name", "color"]
                 },
+                "subject": {
+                  "type": "string",
+                  "nullable": true
+                },
                 "createdAt": {
                   "type": "string",
                   "format": "date-time"
@@ -11610,6 +11619,7 @@
                 "student",
                 "group",
                 "teacher",
+                "subject",
                 "createdAt",
                 "updatedAt",
                 "deletedAt"
@@ -11957,6 +11967,10 @@
             },
             "required": ["id", "name", "color"]
           },
+          "subject": {
+            "type": "string",
+            "nullable": true
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -12162,6 +12176,7 @@
           "student",
           "group",
           "teacher",
+          "subject",
           "createdAt",
           "updatedAt",
           "deletedAt",
@@ -12717,6 +12732,10 @@
             },
             "required": ["id", "name", "color"]
           },
+          "subject": {
+            "type": "string",
+            "nullable": true
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -12762,6 +12781,7 @@
           "student",
           "group",
           "teacher",
+          "subject",
           "createdAt",
           "updatedAt",
           "deletedAt"
@@ -16283,6 +16303,12 @@
                   },
                   "required": ["id", "fullName"]
                 },
+                "settledLessons": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false,
+                  "nullable": true
+                },
                 "createdAt": {
                   "type": "string",
                   "format": "date-time"
@@ -16306,6 +16332,7 @@
                 "paidAt",
                 "note",
                 "student",
+                "settledLessons",
                 "createdAt",
                 "updatedAt"
               ]
@@ -16442,6 +16469,12 @@
             },
             "required": ["id", "fullName"]
           },
+          "settledLessons": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "nullable": true
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -16465,6 +16498,7 @@
           "paidAt",
           "note",
           "student",
+          "settledLessons",
           "createdAt",
           "updatedAt"
         ]
