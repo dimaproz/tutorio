@@ -1,6 +1,6 @@
 # S04 — Lessons List and Bulk Cancel
 
-- Status: In progress (mockups in, 2026-09-25)
+- Status: Done (2026-09-25, commits `8dfe70f`…`c34c0c8`)
 - Work packet: 6.4 (screens)
 - Depends on: S01 (panel), S03 (the calendar header)
 
@@ -67,6 +67,31 @@ desktop states, 10 phone states), «BulkCancel» (7 states) and
 «CalendarBulkEntry» (desktop and phone), 1440 and 390, light and dark, with
 the canvas source. The repository does not keep mockups.
 
+| NN              | State                              | Story (`Lessons/Screens/LessonsList`)                |
+| --------------- | ---------------------------------- | ---------------------------------------------------- |
+| 01              | Список                             | Playground                                           |
+| 02              | Швидкий фільтр · Без оплати        | QuickUnpaid (QuickFilter writes the URL)             |
+| 03              | Швидкий фільтр · Без відпрац.      | QuickNeedsMakeup                                     |
+| 04              | Період · меню                      | PeriodMenu                                           |
+| 05              | Викладач · меню                    | TeacherMenu                                          |
+| 06              | Учень або група · меню             | WhoMenu                                              |
+| 07              | Статус · меню                      | StatusMenu                                           |
+| 08              | Фільтри застосовано                | FiltersApplied                                       |
+| 09              | Меню рядка                         | RowMenu                                              |
+| 10              | Нічого не знайдено                 | NoResults                                            |
+| 11              | Ще немає занять                    | Empty                                                |
+| 12              | Завантаження                       | Loading                                              |
+| 13              | Помилка                            | LoadError                                            |
+| 14              | Соло-режим                         | Solo                                                 |
+| Bulk 01–02      | Форма                              | BulkCancelForm                                       |
+| Bulk 03         | Помилки                            | BulkCancelErrors                                     |
+| Bulk 04, 06, 07 | Перевірка, скасовуємо, готово      | BulkCancelApply                                      |
+| Bulk 05         | Нічого скасовувати                 | BulkCancelNothing                                    |
+| Phone 01–10     | List, filters, states, bulk cancel | PhoneList, PhoneFilters (and the toolbar's viewport) |
+| Calendar entry  | Button in the calendar header      | `Calendar/Screens/Calendar` (header)                 |
+
+Checked at 1440 and 390, light and dark, Ukrainian and English.
+
 ## Decisions (with the owner, from the handoff)
 
 1. **Lessons and Schedules are separate pages.** The brief's tabs «Список /
@@ -121,6 +146,25 @@ the canvas source. The repository does not keep mockups.
    the reason chips fill `reason`. **«27 учнів» has no read** and is dropped.
 6. **The row menu's «Позначити оплату»** needs the payment form (S06) and
    is left out.
+
+## Decided while building (for the owner's confirmation)
+
+- **Times are a 24-hour clock in the browser's zone**, the calendar's clock
+  (its formatter moved to `lib/i18n/local-formatter` for both screens).
+- **The default period is this month**; a custom period includes its last
+  day. «Скинути фільтри» on the empty result also resets the quick filter,
+  the search and the period.
+- **The row menu offers only what the panel offers** for that lesson: «Перенести»
+  and «Скасувати» for a scheduled one, «Призначити відпрацювання» for a missed
+  or cancelled individual one; each opens the S01 panel with that dialog.
+- **A student filter replaces a group filter** in the URL (one «Учень або
+  група» pill).
+- **The bulk cancel's «Показати»** opens the Lessons page on the cancelled
+  period (from the calendar too).
+- **The split «10 індивідуальних · 4 групових»** is left out when the preview
+  names only its first 200 lessons.
+- **The status menu's lines**: Заплановані, Завершені, Скасовані (both
+  cancelled statuses), Не прийшли.
 
 ## Open questions
 

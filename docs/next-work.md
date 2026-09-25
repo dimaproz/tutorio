@@ -1,6 +1,6 @@
 # Active Work Queue
 
-Last verified: 2026-09-25 (S03).
+Last verified: 2026-09-25 (S04, S05).
 
 This is the short-lived execution queue for Stage 4.1. It answers “what should I
 work on next?” without requiring a developer to re-derive priorities from the
@@ -394,6 +394,20 @@ and 7 (S07) and 6.6 (S10, S11).
   interim attendance dialog is gone. Decisions and open questions (payment
   method, recording a payment and offering a package from the panel, the
   group makeup on board 02) are in the [brief](./screens/s01-lesson-panel.md).
+- **S04 — Lessons list and bulk cancel: done 2026-09-25**
+  (`8dfe70f`…`c34c0c8`): `/app/lessons` with quick filters and counts,
+  period, teacher, student or group and status filters, search and order in
+  the URL, the S01 panel and its dialogs from the rows, phone cards and the
+  filter sheet; «Скасування занять» in two steps from the page and the
+  calendar header. Decisions and open questions (menu counts, the package
+  credit number, «Позначити оплату») are in the
+  [brief](./screens/s04-lessons-list.md).
+- **S05 — Schedules: done 2026-09-25** (`8dfe70f`…`395ac42`):
+  `/app/schedules` with state tabs and counts, filters, search and order; the
+  new schedule form with its check step and conflicts, the change with its
+  consequences, stop and weeks ahead, exported for S06 and S08. The API gained
+  the list reads and the previews' lessons. See the
+  [brief](./screens/s05-schedules.md).
 - **S03 — calendar: done 2026-09-25**: `/app/calendar` with week, day and
   month, teacher and status filters, create by click or drag, move by drag
   through the S01 dialogs, the phone day grid, agenda, dot month and filter

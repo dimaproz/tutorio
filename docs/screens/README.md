@@ -1,6 +1,6 @@
 # Screen Delivery Plan
 
-Last verified: 2026-09-25 (S01, S02 and S03 done; S08's member prices built ahead).
+Last verified: 2026-09-25 (S01–S05 done; S08's member prices built ahead).
 
 The backend of Work Packet 6.4 is complete (phases 1–7, see
 [`next-work.md`](../next-work.md)); the web app holds only the rebuilt
@@ -41,8 +41,8 @@ make, and becomes the acceptance list for that step.
 | [S01](./s01-lesson-panel.md)              | Lesson side panel and every action on one lesson (status, edit, move, makeup, attendance)      | 6.4         | Done                |
 | [S02](./s02-lesson-create.md)             | Lesson create form: one-off, several dates, past lessons, "Repeat"                             | 6.4         | Done                |
 | [S03](./s03-calendar.md)                  | Calendar: week, day and month, filters, create by click, move by drag                          | 6.4         | Done                |
-| [S04](./s04-lessons-list.md)              | Lessons list with quick filters, and the bulk cancel dialog                                    | 6.4         | In progress         |
-| [S05](./s05-schedules.md)                 | Schedules page, schedule form, change, stop and horizon dialogs                                | 6.4         | In progress         |
+| [S04](./s04-lessons-list.md)              | Lessons list with quick filters, and the bulk cancel dialog                                    | 6.4         | Done                |
+| [S05](./s05-schedules.md)                 | Schedules page, schedule form, change, stop and horizon dialogs                                | 6.4         | Done                |
 | [S06](./s06-student-billing-and-pause.md) | Student profile: directions and billing, schedules, pause, recording a payment                 | 6.4         | Waiting for mockups |
 | [S07](./s07-packages.md)                  | Package sale form and package operations: detail, extend, transfer, refund, pay                | 6.5, 7      | Waiting for mockups |
 | [S08](./s08-group-page-operations.md)     | Group page: editable schedule, attendance, sell to members, members' billing                   | 6.4         | Waiting for mockups |

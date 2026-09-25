@@ -1,6 +1,6 @@
 # S05 — Schedules
 
-- Status: In progress (mockups in, 2026-09-25)
+- Status: Done (2026-09-25, commits `8dfe70f`…`395ac42`)
 - Work packet: 6.4 (screens)
 - Depends on: S02 (the form language), S04 (navigation)
 
@@ -79,6 +79,31 @@ desktop states, 11 phone states), «ScheduleForm» (6 states) and
 «ScheduleChange» (7 states), 1440 and 390, light and dark, with the canvas
 source. The repository does not keep mockups.
 
+| NN               | State                          | Story (`Schedules/Screens/Schedules`)          |
+| ---------------- | ------------------------------ | ---------------------------------------------- |
+| List 01          | Активні                        | Playground                                     |
+| List 02          | Зі змінами                     | ChangingTab                                    |
+| List 03          | Завершені                      | Ended                                          |
+| List 04          | Меню рядка                     | RowMenu                                        |
+| List 05          | Нічого не знайдено             | NoResults                                      |
+| List 06          | Ще немає розкладів             | Empty                                          |
+| List 07          | Завантаження                   | Loading                                        |
+| List 08          | Помилка                        | LoadError                                      |
+| List 09          | Соло-режим                     | Solo                                           |
+| Form 01          | Новий · учень                  | NewForStudent                                  |
+| Form 02          | Новий · група                  | NewForGroup                                    |
+| Form 03          | Розклад уже є                  | NewExists                                      |
+| Form 04          | Помилки                        | NewErrors                                      |
+| Form 05          | Перевірка · нові заняття       | NewCreate                                      |
+| Form 06          | Перевірка · накладки           | NewConflicts                                   |
+| Change 01–03, 07 | Зміна · форма, наслідки, після | Change                                         |
+| Change 04        | Зміна · накладка               | ChangeConflict                                 |
+| Change 05        | Зупинка                        | Stop                                           |
+| Change 06        | Заняття наперед                | Horizon                                        |
+| Phone 01–11      | Cards, form, sheets            | PhoneList, PhoneNew (and the viewport toolbar) |
+
+Checked at 1440 and 390, light and dark, Ukrainian and English.
+
 ## Decisions (with the owner, from the handoff)
 
 1. **Own page and navigation item** «Розклади» (`/app/schedules`) after
@@ -122,6 +147,28 @@ source. The repository does not keep mockups.
 8. **Conflict pairs**: the conflicts carry the candidate time, the teacher,
    the student or group and the booked lesson's time.
 
+## Decided while building (for the owner's confirmation)
+
+- **The dialogs live in `@/features/lessons`** next to the lesson form whose
+  band and weekly block they reuse; the page is `@/features/schedules`.
+- **A new schedule starts next Monday** (today on a Monday), with the studio's
+  horizon; the price comes from the direction or the group (no price field).
+- **«Відкрити розклад»** in the «already exists» callout opens that schedule's
+  change dialog.
+- **The page sorts by the next lesson by default**; «Спочатку нові» is the
+  other order. Ended rows are dimmed and show «—» for the next lesson.
+- **«38 занять цього тижня»** counts every lesson of the current week, not
+  only the schedules' ones.
+- **Row click does nothing**; the row menu carries the actions (as on the
+  board).
+- **A change from today** says «З сьогодні: минулі заняття не зміняться»; a
+  later date says «Заняття до … не зміняться».
+- **The planned change caption** lists every weekday it touches («ВТ 17:00 →
+  18:00», «+ СР 16:00», «− ПТ 18:30»).
+
 ## Open questions
 
-- None yet.
+- The «ВЖЕ Є · ВІДПРАЦЮВАННЯ» label of a conflict pair needs the booked
+  lesson's kind in the conflict; the pair says «Вже є».
+- The phone form stacks «Перше заняття з» and «До» on the board; they stay
+  side by side as in the lesson form.

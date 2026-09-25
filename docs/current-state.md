@@ -1,6 +1,7 @@
 # Tutorio Current State
 
-Last verified: 2026-09-25 after screen step S03 (see "Calendar").
+Last verified: 2026-09-25 after screen steps S04 and S05 (see "Lessons and
+Schedules").
 
 This is the first project document to read before planning or implementing
 work. It reports the repository as it exists; [`mvp-plan.md`](./mvp-plan.md)
@@ -10,7 +11,7 @@ order.
 ## Frontend reset (2026-09-24)
 
 At the owner's request the web app keeps only the rebuilt screens: sign-in and
-registration, the application shell (navigation: Students, Groups, Parents),
+registration, the application shell (navigation since: see the steps below),
 and the Students, Parents and Groups screens. The dashboard, calendar, lesson
 patterns, packages and payments, teachers and settings pages, the old lesson,
 schedule, package, payment and enrollment dialogs, and the shared helpers only
@@ -18,6 +19,46 @@ they used were deleted; `/app` opens the students. The rebuilt screens show
 lessons, packages and directions read-only — scheduling, lesson actions, sales
 and direction edits come back with the new screens (Work Packet 6.4 screens,
 6.2, 6.5, 6.6 and 7). Every backend route stays available.
+
+## Lessons and Schedules — screen steps S04 and S05 (2026-09-25)
+
+Navigation: Календар · Заняття · Розклади · Учні · Групи · Батьки; the phone
+tab bar is Календар · Заняття · Учні · Групи · Ще.
+
+«Заняття» (`/app/lessons`, S04) lists every lesson of the studio, paged,
+with the quick filters and their counts (all, unpaid, cancelled, no-shows, no
+makeup), the period, teacher, student or group and status filters, a search
+and the order — all in the URL. Rows show the date and time, who with the
+kind, the teacher (hidden in solo mode), the status with the makeup chip, the
+payment from the charges and the price; they open the S01 panel, and the row
+menu opens its move, makeup and cancel dialogs. Phones get cards and a filter
+sheet. «Скасування занять» (here and in the calendar header) cancels a period
+for the studio or one teacher in two steps, free and by the teacher (L-54).
+
+«Розклади» (`/app/schedules`, S05) lists the schedules by state (active, with
+a planned change, ended, all) with counts, teacher, student or group and type
+filters, a search and the order: slot chips, the state with its caption, the
+next lesson and how far ahead it is booked. The shared dialogs — «Новий
+розклад» (the lesson form's band and weekly block, a length and a horizon,
+then the check with the dates and the overlapping lessons, forced after
+conflicts; an existing schedule as a callout), «Змінити розклад» (form, then
+consequences), stop and weeks ahead — are exported from `@/features/lessons`
+for the student profile (S06) and the group page (S08).
+
+API reads added for the screens: the lesson page takes several statuses, a
+name search and counts every lesson; the schedule list takes a changing
+state, a kind, a search and a sort by the next lesson, counts each state and
+returns the start, the last booked lesson, the student's avatar and the
+group's size; the create, change and stop previews name their lessons and why
+each is kept; `POST /schedules/:id/horizon/preview` says what a horizon adds.
+Briefs, decisions and open questions:
+[`screens/s04-lessons-list.md`](./screens/s04-lessons-list.md),
+[`screens/s05-schedules.md`](./screens/s05-schedules.md).
+
+Gate on 2026-09-25: root lint, typecheck and tests (API 242 unit tests, web
+308 unit tests), the API E2E suite on an isolated database (120 tests), the
+web build, the Storybook browser tests (330 in 89 files) and the Storybook
+build.
 
 ## Calendar — screen step S03 (2026-09-25)
 
