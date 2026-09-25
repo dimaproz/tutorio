@@ -1,6 +1,6 @@
 # Tutorio Current State
 
-Last verified: 2026-09-24 after screen step S02 (see "Lesson create form").
+Last verified: 2026-09-25 after the new schedule preview (see "Lesson create form").
 
 This is the first project document to read before planning or implementing
 work. It reports the repository as it exists; [`mvp-plan.md`](./mvp-plan.md)
@@ -41,6 +41,16 @@ Gate on 2026-09-24: web lint, typecheck, 267 unit tests in 44 files, build,
 the Storybook browser tests (238 tests in 85 files, with accessibility checks)
 and the Storybook static build. The API, domain and validation packages are
 unchanged by this step.
+
+Follow-up on 2026-09-25: a new schedule is previewed too.
+`POST /schedules/preview` answers what `POST /schedules` would create and
+overlap without writing anything (a student with no direction with the
+teacher is checked as that student), and «Щотижня» shows «Конфліктів немає»
+or the overlaps before saving; the save still checks again. Gate: root lint,
+typecheck and tests (API 241 unit tests), the API E2E suite on an isolated
+database (118 tests in 13 files; the pauses suite's schedule moved to 06:00
+so it no longer overlaps its own 10:00 bookings on Fridays), the web build
+and the Storybook browser tests (238 in 85 files).
 
 ## Lesson panel — screen step S01 (2026-09-24)
 

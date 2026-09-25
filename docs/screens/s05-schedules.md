@@ -34,7 +34,8 @@ group page (S08).
 
 - `GET /schedules?state=&teacherId=&studentId=&groupId=` — paged;
   `slots`, `nextChange`, `nextLessonAt`, `horizonWeeks`, `endsAt`, `state`.
-- `POST /schedules` (`?force=true`), `GET /schedules/:id`,
+- `POST /schedules/preview` (what a new schedule creates and overlaps,
+  writing nothing), `POST /schedules` (`?force=true`), `GET /schedules/:id`,
   `PATCH /schedules/:id` (horizon).
 - `POST /schedules/:id/changes/preview` and `/changes`,
   `POST /schedules/:id/stop/preview` and `/stop`.

@@ -1,6 +1,6 @@
 # Active Work Queue
 
-Last verified: 2026-09-24 (S02).
+Last verified: 2026-09-25 (S02 follow-up).
 
 This is the short-lived execution queue for Stage 4.1. It answers “what should I
 work on next?” without requiring a developer to re-derive priorities from the
@@ -394,7 +394,9 @@ and 7 (S07) and 6.6 (S10, S11).
   interim attendance dialog is gone. Decisions and open questions (payment
   method, recording a payment and offering a package from the panel, the
   group makeup on board 02) are in the [brief](./screens/s01-lesson-panel.md).
-- **S02 — lesson create form: done 2026-09-24** (`6b9d8cd`…`6c237a3`).
+- **S02 — lesson create form: done 2026-09-24** (`6b9d8cd`…`6c237a3`;
+  2026-09-25: `POST /schedules/preview` shows a new schedule's lessons and
+  «Конфліктів немає» or its overlaps before saving).
   «Додати заняття» on the student profile and the group page opens the form
   (layout B): who in the indigo band with search, the teacher with the
   substitute strip, one or several dates each with its own time, «Щотижня»

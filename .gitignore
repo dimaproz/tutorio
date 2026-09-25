@@ -37,6 +37,3 @@ coverage/
 # misc
 *.tsbuildinfo
 .sentryclirc
-
-# design handoffs (mockups are not kept in the repository)
-design/

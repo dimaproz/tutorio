@@ -37,8 +37,9 @@ direction's schedule).
   `startsAt[]` (up to 50), `durationMin`, `priceMinor`, `currency`, `status`
   (`?force=true` after a conflict). A student without a direction with that
   teacher gets one, paid per lesson until a package is sold (L-10).
-- Repeat: `POST /schedules` (new) or `POST /schedules/:id/changes/preview` and
-  `POST /schedules/:id/changes` (add a day to the existing one);
+- Repeat: `POST /schedules/preview` and `POST /schedules` (new) or
+  `POST /schedules/:id/changes/preview` and `POST /schedules/:id/changes`
+  (add a day to the existing one);
   `GET /schedules?studentId=&teacherId=` or `?groupId=` to find it.
 - Pickers: `GET /students`, `GET /groups`, `GET /teachers`.
 
@@ -82,9 +83,7 @@ Editing a schedule on its own (S05); packages (S07).
 The owner's handoff `tutorio-s02-lesson-create`: board 01 «NewLesson» (15
 states), the four field boards, and the changed S01 boards (01 Main, 02
 PanelGroup, 03 PanelEdit with a new group state, 07 Makeup), desktop 1440 and
-phone 390, light and dark, with the canvas source of every board. Unpacked
-under `design/s02-handoff/` for reference; the repository does not keep
-mockups.
+phone 390, light and dark, with the canvas source of every board. The repository does not keep mockups.
 
 | NN  | State                    | Story (`Lessons/Screens/NewLesson`)     |
 | --- | ------------------------ | --------------------------------------- |
@@ -209,11 +208,18 @@ calendar multi-pick; «Щотижня» lives in this form and never opens S05.
    («на паузі до 12 жовтня»); a member on hold without a pause read counts as
    paused without a date. «Візьмуть участь 5 з 6» shows only when someone is
    paused.
-6. **The first lessons of a new schedule**: computed from the studio's
-   horizon (`scheduleHorizonWeeks`, L-120) as the API generates them — from
-   the later of the start and now to the earlier of the end and now plus the
-   horizon. Days added to an existing schedule take the preview's `created`
-   and conflicts.
+6. **The first lessons of a new schedule and «Конфліктів немає»**:
+   `POST /schedules/preview` (added 2026-09-25 at the owner's request) takes
+   the create body and answers what `POST /schedules` would do, writing
+   nothing: the lessons generated at once, the first one, an active schedule
+   of the same direction or group, and the teacher or student overlaps. A
+   student without a direction with the teacher is checked as that student,
+   and no direction is opened. «Що буде» shows its count and «Конфліктів
+   немає» or the overlaps while the form is filled in; until it answers the
+   count is worked out locally from the studio's horizon
+   (`scheduleHorizonWeeks`, L-120). The save still checks again and opens the
+   conflict dialog (L-111). Days added to an existing schedule take the
+   change preview's `created` and conflicts.
 
 ## Open questions (left out rather than invented)
 
@@ -224,9 +230,6 @@ calendar multi-pick; «Щотижня» lives in this form and never opens S05.
 - **Subjects** («English», «English · Deutsch» in the teacher list and the
   card's meta): no teacher or direction carries a subject. The regular
   teacher's row says «викладач Anna» instead.
-- **«Конфліктів немає» for a new schedule**: no preview exists for a new
-  schedule, so only the 409 on save reports overlaps; the added-days preview
-  does show conflicts.
 - **The price field's error on the errors board** (state 13 shows «−50» with
   nothing picked): the price is editable only once a student is picked, so
   the errors story shows the missing student and date; the price error is in
