@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   allocatePayments,
+  settledLessonsByPayment,
   coverDebts,
   creditWarning,
   initialSource,
@@ -164,5 +165,35 @@ describe('creditWarning', () => {
 
   it('turns the low warning off with a zero threshold', () => {
     expect(creditWarning(packageMode(1), 0)).toBeNull();
+  });
+});
+
+describe('settledLessonsByPayment', () => {
+  const charges = [
+    { id: 'c1', lessonAt: day(1), amountMinor: 50000 },
+    { id: 'c2', lessonAt: day(2), amountMinor: 50000 },
+    { id: 'c3', lessonAt: day(3), amountMinor: 50000 },
+  ];
+  const payment = (id: string, at: number, amountMinor: number) => ({
+    id,
+    paidAt: day(at),
+    amountMinor,
+  });
+
+  it('counts a lesson for the payment that finished paying it, oldest first (L-90)', () => {
+    const settled = settledLessonsByPayment(charges, [
+      payment('p2', 5, 70000),
+      payment('p1', 4, 30000),
+      payment('p3', 6, 100000),
+    ]);
+    // p1 pays 300 of the first lesson; p2 finishes it and pays the second;
+    // p3 pays the third and runs ahead.
+    expect(Object.fromEntries(settled)).toEqual({ p1: 0, p2: 2, p3: 1 });
+  });
+
+  it('settles nothing with an advance only', () => {
+    expect(Object.fromEntries(settledLessonsByPayment([], [payment('p', 1, 50000)]))).toEqual({
+      p: 0,
+    });
   });
 });

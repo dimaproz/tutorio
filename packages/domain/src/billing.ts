@@ -185,6 +185,44 @@ export function allocatePayments(
   };
 }
 
+export interface BalancePayment {
+  id: string;
+  paidAt: Date;
+  amountMinor: number;
+}
+
+/**
+ * How many lessons each payment settled in full (L-90): payments pay the
+ * lessons oldest first in the order they were made, so a lesson counts for
+ * the payment that finished paying it. A payment that only runs ahead of the
+ * lessons, or only pays part of one, settles none.
+ */
+export function settledLessonsByPayment(
+  charges: readonly BalanceCharge[],
+  payments: readonly BalancePayment[],
+): Map<string, number> {
+  const lessons = [...charges].sort(
+    (a, b) => a.lessonAt.getTime() - b.lessonAt.getTime() || a.id.localeCompare(b.id),
+  );
+  const ordered = [...payments].sort(
+    (a, b) => a.paidAt.getTime() - b.paidAt.getTime() || a.id.localeCompare(b.id),
+  );
+  const settled = new Map(ordered.map((payment) => [payment.id, 0]));
+  let next = 0;
+  let owedOnNext = lessons[0]?.amountMinor ?? 0;
+  for (const payment of ordered) {
+    let available = payment.amountMinor;
+    while (next < lessons.length && available >= owedOnNext) {
+      available -= owedOnNext;
+      settled.set(payment.id, (settled.get(payment.id) ?? 0) + 1);
+      next += 1;
+      owedOnNext = lessons[next]?.amountMinor ?? 0;
+    }
+    if (next < lessons.length) owedOnNext -= available;
+  }
+  return settled;
+}
+
 /** Why a direction paid by packages needs the tutor's attention (L-82). */
 export type CreditWarning = 'ON_DEBT' | 'NO_CREDITS' | 'LOW_CREDITS';
 
