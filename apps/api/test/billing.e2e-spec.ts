@@ -347,15 +347,40 @@ describe('Work Packet 6.4 phase 3: billing core (e2e)', () => {
     });
   });
 
-  it('keeps pay-per-lesson money as money after the switch to packages (L-91)', async () => {
+  it('closes unpaid pay-per-lesson lessons with the first package, oldest first (L-91)', async () => {
     const studentId = await newStudent('Switch');
-    const before = await held(studentId, -2);
-    const pkg = await sell({ studentId, lessonsTotal: 2 });
-    const summary = await billing(before.enrollmentId);
-    expect(summary).toMatchObject({
+    const first = await held(studentId, -3);
+    const second = await held(studentId, -2);
+    const enrollmentId = first.enrollmentId;
+    // Half of the first lesson is paid.
+    await post('/payments')
+      .send({ enrollmentId, amountMinor: 20000, currency: 'UAH' })
+      .expect(201);
+
+    const preview = await post('/packages/preview')
+      .send({
+        studentId,
+        teacherId,
+        sizingMode: 'FIXED_COUNT',
+        lessonsTotal: 3,
+        pricePerLessonMinor: 40000,
+        currency: 'UAH',
+      })
+      .expect(200);
+    expect(preview.body.debtLessons).toBe(2);
+
+    const pkg = await sell({ studentId, teacherId, lessonsTotal: 3 });
+    for (const lesson of [first, second]) {
+      expect(await chargesOf(lesson.id)).toEqual([
+        expect.objectContaining({ source: 'PACKAGE', packageId: pkg.id }),
+      ]);
+    }
+    // Nothing is owed any more; the money paid stays money, paid ahead.
+    expect(await billing(enrollmentId)).toMatchObject({
       billingType: 'PACKAGE',
-      creditsLeft: 2,
-      balance: { debtMinor: 40000, unpaidLessons: 1 },
+      creditsLeft: 1,
+      debtLessons: 0,
+      balance: { debtMinor: 0, advanceMinor: 20000, unpaidLessons: 0 },
     });
     const after = await held(studentId, -1);
     expect(after.charges[0]).toMatchObject({

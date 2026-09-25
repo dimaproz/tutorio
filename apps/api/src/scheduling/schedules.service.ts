@@ -34,6 +34,7 @@ import {
   groupNotFound,
   groupTeacherRequired,
   noPlannedChange,
+  noPlannedStop,
   scheduleConflict,
   scheduleEnded,
   scheduleExists,
@@ -1391,6 +1392,139 @@ export class SchedulesService {
       rows,
       removes: removable.map((lesson) => lesson.id),
     };
+  }
+
+  /**
+   * Takes back a stop planned for later (S08): the schedule runs on with the
+   * rule in force before the stop date. The removed lessons stay in the
+   * history; the rule continues as a new version from that date and
+   * generates its lessons again up to the horizon, checked for overlaps
+   * (L-110, SCHEDULE_CONFLICT unless `force`).
+   */
+  async cancelStop(
+    auth: AuthenticatedUser,
+    scheduleId: string,
+    force: boolean,
+  ): Promise<ScheduleChangeResult> {
+    const summary = await this.prisma.$transaction(async (tx) => {
+      const schedule = await this.activeSchedule(tx, auth, scheduleId);
+      const now = new Date();
+      const from = schedule.endsAt;
+      if (!from || from <= now) throw noPlannedStop();
+      if (schedule.groupId) {
+        await lockGroupSchedule(tx, auth.workspaceId, schedule.groupId);
+      }
+      await lockTeacherSchedules(tx, auth.workspaceId, [schedule.teacherId]);
+      const rows = await tx.lessonSeries.findMany({
+        where: { scheduleId: schedule.id, ...liveRowWhere },
+      });
+      const before = currentVersionRows(rows, new Date(from.getTime() - 1));
+      if (before.length === 0) throw noPlannedStop();
+      const slots = slotsOf(before);
+      const durationMin = before[0].durationMin;
+      const until = this.materializer.horizonUntil(now, schedule.horizonWeeks);
+      const occurrences =
+        until > from
+          ? expandSchedule(slots, {
+              timezone: schedule.timezone,
+              startDate: from,
+              from,
+              until,
+            })
+          : [];
+      const conflicts = await detectScheduleConflicts(
+        tx,
+        auth.workspaceId,
+        occurrences.map((occurrence, index) => ({
+          id: `new:${index}`,
+          startsAtUtc: occurrence.startsAtUtc,
+          durationMin,
+          teacherId: schedule.teacherId,
+          enrollmentId: schedule.enrollmentId,
+          groupId: schedule.groupId,
+        })),
+      );
+      if (conflicts.length > 0 && !force) {
+        throw scheduleConflict(
+          [...new Set(conflicts.map((conflict) => conflict.lessonId))],
+          conflicts,
+        );
+      }
+
+      await tx.schedule.update({
+        where: { id: schedule.id },
+        data: { endsAt: null },
+      });
+      // A suspended schedule (empty group, paused student) stays suspended.
+      const suspension = before.find((row) => row.scheduleSuspensionToken);
+      const created: Date[] = [];
+      for (const rule of rowsByTime(slots)) {
+        const row = await tx.lessonSeries.create({
+          data: {
+            workspaceId: auth.workspaceId,
+            scheduleId: schedule.id,
+            enrollmentId: schedule.enrollmentId,
+            groupId: schedule.groupId,
+            teacherId: schedule.teacherId,
+            weekdays: rule.weekdays,
+            localTime: rule.localTime,
+            timezone: schedule.timezone,
+            durationMin,
+            priceMinor: before[0].priceMinor,
+            currency: before[0].currency,
+            startDate: from,
+            endsAt: null,
+            horizonMaterializedUntil: from,
+            ...(suspension
+              ? {
+                  deletedAt: suspension.deletedAt,
+                  scheduleSuspensionToken: suspension.scheduleSuspensionToken,
+                }
+              : {}),
+          },
+        });
+        if (!suspension) {
+          created.push(
+            ...(await this.materializer.materializeSeries(
+              tx,
+              row,
+              until,
+              from,
+              true,
+            )),
+          );
+        }
+      }
+      await this.audit.record(tx, {
+        workspaceId: auth.workspaceId,
+        actorId: auth.userId,
+        action: 'UPDATE',
+        entity: 'SCHEDULE',
+        entityId: schedule.id,
+        changes: this.audit.buildChanges(
+          { endsAt: from },
+          { endsAt: null, created: created.length },
+        ),
+      });
+      const preview: ScheduleChangePreview = {
+        effectiveFrom: from.toISOString(),
+        moved: 0,
+        unchanged: 0,
+        created: created.length,
+        removed: 0,
+        kept: 0,
+        moves: [],
+        removals: [],
+        creates: created
+          .sort((a, b) => a.getTime() - b.getTime())
+          .map((date) => date.toISOString()),
+        keptLessons: [],
+        notesLost: [],
+        conflicts,
+      };
+      return preview;
+    });
+    return { schedule: await this.getDetail(auth, scheduleId), summary };
   }
 
   // -------------------------------------------------------------------------

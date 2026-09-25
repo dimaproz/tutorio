@@ -229,6 +229,13 @@ export const noPlannedChange = () =>
     HttpStatus.CONFLICT,
   );
 
+export const noPlannedStop = () =>
+  new BusinessApiException(
+    'NO_PLANNED_STOP',
+    'This schedule has no stop planned for later',
+    HttpStatus.CONFLICT,
+  );
+
 export const scheduleEnded = () =>
   new BusinessApiException(
     'SCHEDULE_ENDED',

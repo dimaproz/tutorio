@@ -219,6 +219,26 @@ export class SchedulesController {
     return this.schedules.cancelChange(user, scheduleId, query.force);
   }
 
+  @Post(':scheduleId/stop/cancel')
+  @Roles('OWNER')
+  @ApiOperation({
+    summary: 'Cancel the stop planned for later',
+    description:
+      'The schedule runs on with the rule in force before the stop date and ' +
+      'generates its lessons from that date again. NO_PLANNED_STOP without ' +
+      'one; SCHEDULE_CONFLICT unless force=true.',
+  })
+  @ApiCreatedResponse({ type: ScheduleChangeResultDto })
+  @ApiConflictResponse({ type: ApiErrorDto })
+  @ZodSerializerDto(ScheduleChangeResultDto)
+  cancelStop(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('scheduleId', ParseUUIDPipe) scheduleId: string,
+    @Query() query: ForceQueryDto,
+  ): Promise<ScheduleChangeResultDto> {
+    return this.schedules.cancelStop(user, scheduleId, query.force);
+  }
+
   @Post(':scheduleId/stop/preview')
   @HttpCode(HttpStatus.OK)
   @Roles('OWNER')

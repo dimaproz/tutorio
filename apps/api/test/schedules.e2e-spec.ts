@@ -629,4 +629,48 @@ describe('Work Packet 6.4 phase 2: schedules (e2e)', () => {
     ).expect(409);
     expect(again.body.code).toBe('NO_PLANNED_CHANGE');
   });
+
+  it('cancels a planned stop and books the lessons after it again (S08)', async () => {
+    const studentId = (
+      await post('/students')
+        .send({ fullName: 'Eva S', timezone: 'UTC' })
+        .expect(201)
+    ).body.id as string;
+    const created = await createSchedule({
+      studentId,
+      teacherId: teacherB,
+      slots: [{ weekday: 3, localTime: '08:00' }],
+    }).expect(201);
+    const scheduleId = created.body.id as string;
+    const before = await lessonsOf(studentId);
+    expect(before.length).toBeGreaterThan(2);
+
+    // Stop from week 2: the lessons from then on go.
+    const from = slotAt(2, 1, 0);
+    await post(`/schedules/${scheduleId}/stop`).send({ from }).expect(201);
+    const stopped = await get(`/schedules/${scheduleId}`).expect(200);
+    expect(stopped.body).toMatchObject({ state: 'ACTIVE', endsAt: from });
+    const kept = before.filter((lesson) => lesson.startsAtUtc < from);
+    expect((await lessonsOf(studentId)).map((lesson) => lesson.id)).toEqual(
+      kept.map((lesson) => lesson.id),
+    );
+
+    const cancelled = await post(`/schedules/${scheduleId}/stop/cancel`).expect(
+      201,
+    );
+    expect(cancelled.body.schedule).toMatchObject({
+      endsAt: null,
+      nextChange: null,
+    });
+    expect(cancelled.body.summary.created).toBe(before.length - kept.length);
+    const after = await lessonsOf(studentId);
+    expect(after.map((lesson) => lesson.startsAtUtc)).toEqual(
+      before.map((lesson) => lesson.startsAtUtc),
+    );
+
+    const again = await post(`/schedules/${scheduleId}/stop/cancel`).expect(
+      409,
+    );
+    expect(again.body.code).toBe('NO_PLANNED_STOP');
+  });
 });

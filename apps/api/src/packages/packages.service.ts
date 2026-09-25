@@ -465,7 +465,7 @@ export class PackagesService {
     const direction = await this.findDirection(this.prisma, auth, dto);
     const plan = await this.planSale(this.prisma, direction, dto);
     const queue = direction
-      ? await this.saleQueue(direction.id)
+      ? await this.saleQueue(direction, plan.lessonsTotal, dto.currency)
       : { debtLessons: 0, ahead: null };
     return {
       lessonsTotal: plan.lessonsTotal,
@@ -479,20 +479,28 @@ export class PackagesService {
   }
 
   /**
-   * Where a new package of the direction stands: the lessons on debt its
-   * credits pay first (L-82), and the newest live package with credits,
+   * Where a new package of the direction stands: the owed lessons its credits
+   * pay first, up to its size — on debt (L-82) or unpaid per lesson in the
+   * package's currency (L-91) —, and the newest live package with credits,
    * which the new one follows (L-81).
    */
   private async saleQueue(
-    enrollmentId: string,
+    direction: Direction,
+    lessonsTotal: number,
+    currency: string,
   ): Promise<Pick<PackagePreviewResponse, 'debtLessons' | 'ahead'>> {
     const now = new Date();
-    const [debtLessons, packages] = await Promise.all([
-      this.prisma.lessonCharge.count({
-        where: { enrollmentId, voidedAt: null, source: 'DEBT' },
-      }),
+    const enrollmentId = direction.id;
+    const [owed, packages] = await Promise.all([
+      this.billing.owedLessons(this.prisma, direction),
       this.billing.creditPackages(this.prisma, enrollmentId),
     ]);
+    const debtLessons = Math.min(
+      owed.filter(
+        (row) => row.source === 'DEBT' || currency === direction.currency,
+      ).length,
+      lessonsTotal,
+    );
     const last = packages
       .filter(
         (pkg) =>
@@ -580,7 +588,11 @@ export class PackagesService {
         memberSpec(dto, studentId),
       );
       window = plan;
-      const queue = await this.saleQueue(direction.id);
+      const queue = await this.saleQueue(
+        direction,
+        plan.lessonsTotal,
+        dto.currency,
+      );
       const pause = pauses.get(direction.id);
       // A pause matters to the sale when it covers the package's start or
       // begins before its end.
@@ -711,7 +723,17 @@ export class PackagesService {
       },
     });
     const switched = await this.usePackages(tx, direction);
-    const covered = await this.billing.coverDebtsOf(tx, direction.id);
+    // The new credits pay for the direction's owed lessons first (L-82, L-91).
+    const covered = await this.billing.coverOwedBySale(
+      tx,
+      auth.workspaceId,
+      direction,
+      {
+        id: created.id,
+        credits: plan.lessonsTotal,
+        currency: spec.currency,
+      },
+    );
     await this.audit.record(tx, {
       workspaceId: auth.workspaceId,
       actorId: auth.userId,

@@ -264,6 +264,68 @@ export class BillingService {
   }
 
   /**
+   * The lessons a direction owes, oldest first: held on debt in package mode
+   * (L-82) and, in its currency, pay-per-lesson lessons not yet (fully) paid
+   * (L-90). What a new package pays for first (L-91).
+   */
+  async owedLessons(
+    db: Db,
+    direction: Direction,
+  ): Promise<{ id: string; lessonAt: Date; source: 'DEBT' | 'BALANCE' }[]> {
+    const [debts, balance] = await Promise.all([
+      db.lessonCharge.findMany({
+        where: { enrollmentId: direction.id, voidedAt: null, source: 'DEBT' },
+        select: { id: true, lesson: { select: { startsAtUtc: true } } },
+      }),
+      this.balanceOf(db, direction),
+    ]);
+    return [
+      ...debts.map((debt) => ({
+        id: debt.id,
+        lessonAt: debt.lesson.startsAtUtc,
+        source: 'DEBT' as const,
+      })),
+      ...balance.unpaid.map((charge) => ({
+        id: charge.id,
+        lessonAt: charge.lessonAt,
+        source: 'BALANCE' as const,
+      })),
+    ].sort(
+      (a, b) =>
+        a.lessonAt.getTime() - b.lessonAt.getTime() || a.id.localeCompare(b.id),
+    );
+  }
+
+  /**
+   * A package just sold pays for the direction's owed lessons first (L-82,
+   * L-91; owner decision of 2026-09-25): lessons on debt and pay-per-lesson
+   * lessons not yet paid, oldest first, up to its credits and whatever its
+   * window. Money already paid for a lesson it takes over stays as money
+   * paid ahead. Takes the direction's lock.
+   */
+  async coverOwedBySale(
+    tx: Db,
+    workspaceId: string,
+    direction: Direction,
+    pkg: { id: string; credits: number; currency: string },
+  ): Promise<number> {
+    await lockEnrollmentBilling(tx, workspaceId, [direction.id]);
+    // A package in another currency takes over lessons on debt, not money owed.
+    const covered = (await this.owedLessons(tx, direction))
+      .filter(
+        (row) => row.source === 'DEBT' || pkg.currency === direction.currency,
+      )
+      .slice(0, Math.max(pkg.credits, 0));
+    for (const charge of covered) {
+      await tx.lessonCharge.update({
+        where: { id: charge.id },
+        data: { source: 'PACKAGE', packageId: pkg.id },
+      });
+    }
+    return covered.length;
+  }
+
+  /**
    * The pay-per-lesson balance of a direction (L-90): its balance charges in
    * the direction's currency against the payments made without a package.
    */

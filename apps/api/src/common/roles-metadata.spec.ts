@@ -106,6 +106,7 @@ const ownerRoutes = new Set([
   'SchedulesController.previewCreate',
   'SchedulesController.previewHorizon',
   'SchedulesController.cancelChange',
+  'SchedulesController.cancelStop',
   'SchedulesController.previewStop',
   'SchedulesController.stop',
   'SchedulesController.update',
