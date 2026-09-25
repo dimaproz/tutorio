@@ -69,9 +69,9 @@ always know who has paid for what — without doing bookkeeping by hand."
   defaults to the studio setting (**4 weeks**) and can be changed per
   schedule.
 - **L-23** A schedule is created from the student profile, the group page
-  and form, the lesson form ("Repeat"), or the Schedules tab of the Lessons
-  page. "Repeat" for a student who already has a schedule with that teacher
-  **adds the day to that schedule** after showing what it becomes.
+  and form, the lesson form ("Repeat"), or the Schedules page. "Repeat" for
+  a student who already has a schedule with that teacher **adds the day to
+  that schedule** after showing what it becomes.
 - **L-24** **Stop** ends a schedule from a chosen date: its lessons from that
   date are removed. Lessons moved by hand are kept, and the confirmation says
   so.
@@ -217,14 +217,14 @@ always know who has paid for what — without doing bookkeeping by hand."
 
 ## Pages
 
-| Page                | Route                                  | Purpose                                                                                                                                                  |
-| ------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Calendar            | `/app/calendar`                        | Week (Day on phones, remembered per browser), month and day views; create by click/drag, move by drag (L-41), filters by teacher and status.             |
-| Lessons — List      | `/app/lessons`                         | Every lesson with filters: unpaid, cancelled, no-show, needs a makeup; teacher, student, group, period; bulk cancel.                                     |
-| Lessons — Schedules | `/app/lessons/schedules`               | Every schedule: who, teacher, slots ("Mon 17:00 · Thu 18:30 · 60 min"), horizon, end date, state; create, change, stop. Replaces "Lesson Patterns".      |
-| Lesson side panel   | `?lesson=<id>` on Calendar and Lessons | A side panel (a sheet on phones) with its own URL: details, topic and notes, edit, hold/cancel/no-show, makeup link, group attendance, charges, history. |
-| Student profile     | `/app/students/[id]`                   | Schedules per teacher; billing per direction (mode, rate, packages, debt, warnings); pause; transfer and refund.                                         |
-| Group page          | `/app/groups/[id]`                     | Editable schedule (L-25 confirmation); attendance, present by default; sell to members; each member's billing state.                                     |
+| Page              | Route                                  | Purpose                                                                                                                                                  |
+| ----------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Calendar          | `/app/calendar`                        | Week (Day on phones, remembered per browser), month and day views; create by click/drag, move by drag (L-41), filters by teacher and status.             |
+| Lessons — List    | `/app/lessons`                         | Every lesson with filters: unpaid, cancelled, no-show, needs a makeup; teacher, student, group, period; bulk cancel.                                     |
+| Schedules         | `/app/schedules`                       | Every schedule: who, teacher, slots ("Mon 17:00 · Thu 18:30 · 60 min"), horizon, end date, state; create, change, stop. Replaces "Lesson Patterns".      |
+| Lesson side panel | `?lesson=<id>` on Calendar and Lessons | A side panel (a sheet on phones) with its own URL: details, topic and notes, edit, hold/cancel/no-show, makeup link, group attendance, charges, history. |
+| Student profile   | `/app/students/[id]`                   | Schedules per teacher; billing per direction (mode, rate, packages, debt, warnings); pause; transfer and refund.                                         |
+| Group page        | `/app/groups/[id]`                     | Editable schedule (L-25 confirmation); attendance, present by default; sell to members; each member's billing state.                                     |
 
 Required states for every page: loading, empty, error with retry, and the
 phone layout. Destructive consequences (rebuilt lessons, cancellations,

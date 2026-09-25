@@ -1,8 +1,8 @@
 # S05 — Schedules
 
-- Status: Waiting for mockups
+- Status: In progress (mockups in, 2026-09-25)
 - Work packet: 6.4 (screens)
-- Depends on: S04 (the Lessons page and its tabs)
+- Depends on: S02 (the form language), S04 (navigation)
 
 ## User job
 
@@ -11,34 +11,40 @@ times from a date knowing exactly which lessons move, and stop it.
 
 ## Route
 
-`/app/lessons/schedules` — the second tab of the Lessons page. The schedule
-form and its dialogs are also opened from the student profile (S06) and the
-group page (S08).
+`/app/schedules`, its own page and navigation item («Розклади»,
+`RepeatIcon`, after «Заняття»; under «Ще» on phones). The schedule form and
+its dialogs are shared: the student profile (S06) and the group page (S08)
+open them too.
 
 ## Screens and dialogs
 
-1. **Schedules list**: who (student or group), teacher, slots ("Mon 17:00 ·
-   Thu 18:30 · 60 min"), horizon, end date, state, next lesson, a planned
-   change; filter by state (active, ended, all), teacher, student, group.
-2. **Schedule form**: student or group, teacher, weekdays each with its own
-   time, one duration, start date, optional end date, horizon in weeks
-   (studio default 4) (L-20…L-22).
-3. **Change consequence dialog**: "changes take effect from" (default today)
-   and the preview — moved, unchanged, created, removed, kept, lessons whose
-   topic or notes would be lost, conflicts (L-25…L-27).
-4. **Stop dialog**: from a date, the preview of removed and kept lessons
-   (L-24).
-5. **Horizon change** (weeks ahead).
+1. **Schedules list**: who (student or group), teacher, slots ("ВТ 18:00"
+   chips with the length), state with a caption (since, until, the planned
+   change), the next lesson and how far ahead lessons are booked; state tabs
+   (active, with a change, ended, all) with counts, teacher, student or
+   group, type; search; sort.
+2. **Schedule form** «Новий розклад»: student or group, teacher, weekdays
+   each with its own time, one duration, the horizon (studio default 4
+   weeks), the first lesson and an optional end (L-20…L-22); a check step
+   with the dates and the conflicts.
+3. **Change** «Змінити розклад»: the form with «Зміни діють з» (default
+   today), then the consequences — moved, removed, created, untouched, lost
+   topics and notes, conflicts (L-25…L-27).
+4. **Stop** «Зупинити розклад»: from a date, removed and kept lessons (L-24).
+5. **Horizon** «Заняття наперед» (weeks ahead).
 
 ## Data available
 
-- `GET /schedules?state=&teacherId=&studentId=&groupId=` — paged;
-  `slots`, `nextChange`, `nextLessonAt`, `horizonWeeks`, `endsAt`, `state`.
-- `POST /schedules/preview` (what a new schedule creates and overlaps,
-  writing nothing), `POST /schedules` (`?force=true`), `GET /schedules/:id`,
-  `PATCH /schedules/:id` (horizon).
+- `GET /schedules?state=&teacherId=&studentId=&groupId=&kind=&search=&sort=`
+  — paged with `counts`; `slots`, `nextChange`, `nextLessonAt`,
+  `lastLessonAt`, `startsAt`, `horizonWeeks`, `endsAt`, `state`.
+- `POST /schedules/preview` (`created`, `dates`, `firstLessonAt`,
+  `existingScheduleId`, `conflicts`), `POST /schedules` (`?force=true`),
+  `GET /schedules/:id`, `PATCH /schedules/:id` (horizon),
+  `POST /schedules/:id/horizon/preview`.
 - `POST /schedules/:id/changes/preview` and `/changes`,
-  `POST /schedules/:id/stop/preview` and `/stop`.
+  `POST /schedules/:id/stop/preview` and `/stop` — counts with `moves`,
+  `removals`, `creates`, `keptLessons`, `notesLost`, `conflicts`.
 - Errors: `SCHEDULE_EXISTS` (one active per direction and per group),
   `SCHEDULE_ENDED`, `SCHEDULE_CONFLICT`.
 
@@ -48,22 +54,74 @@ L-20…L-27, L-110, L-111, L-120.
 
 ## Reuse
 
-`CollectionFrame`, `DataTable`, `WeekdayPicker`, `TextField`, `EntityPicker`,
-`AdaptiveDialog`, `Notice`, `StatBlock` (preview numbers).
+`CollectionFrame`, `DataTable`, `Segmented`, `FilterPill`, `StatusBadge`,
+`WeekdayPicker`, `TimeField`, `DurationField`, `DateField`, `TextField`,
+`EntityPicker`, `AdaptiveDialog`, `Notice`, `ImpactList`, `DateTile`, the S02
+band and weekly fields, the S01 conflict wording.
 
 ## What the mockups must show
 
-- [ ] List on desktop and phone, with an ended schedule and a planned change.
-- [ ] Form with different times per day; "a schedule already exists" state.
-- [ ] Change preview with moved and removed lessons, lost notes, a conflict.
-- [ ] Stop preview.
-- [ ] Empty, loading, error.
+- [x] List on desktop and phone, with an ended schedule and a planned change.
+- [x] Form with different times per day; "a schedule already exists" state.
+- [x] Change preview with moved and removed lessons, lost notes, a conflict.
+- [x] Stop preview.
+- [x] Empty, loading, error.
 
 ## Out of scope
 
 Package sale (S07); group-specific schedule presentation (S08 reuses this
 step's form and dialogs).
 
+## Mockups
+
+The owner's handoff `tutorio-s05-schedules`: boards «SchedulesList» (9
+desktop states, 11 phone states), «ScheduleForm» (6 states) and
+«ScheduleChange» (7 states), 1440 and 390, light and dark, with the canvas
+source. The repository does not keep mockups.
+
+## Decisions (with the owner, from the handoff)
+
+1. **Own page and navigation item** «Розклади» (`/app/schedules`) after
+   «Заняття»; under «Ще» on phones. The brief's route
+   `/app/lessons/schedules` is dropped.
+2. **List = table** (chosen over a week strip and cards): slots are chips
+   «ВТ 18:00» with the length under them; the state with a caption; the next
+   lesson with «заплановано до <date>».
+3. **Change is two steps**: form, then consequences (the brief's open
+   question).
+4. **Conflicts always name what they overlap**: each conflicting date shows
+   the new lesson and the existing one side by side, the teacher named in the
+   explanation.
+5. **«Already exists»** is a warning callout inside the form with «Відкрити
+   розклад» as its action (`Notice`); «Далі» is disabled.
+6. **Dates in the check step** are cards with `DateTile`, the time and the
+   month in the nominative.
+
+## Data (answers to the handoff's section 4)
+
+1. **Tab counts, «Тип», search and sort**: added to `GET /schedules` in this
+   step (with API tests): `state=CHANGING` (active with a change planned),
+   `counts` (active, changing, ended, all, with the other filters applied),
+   `kind` (individual or group), `search` (student, group or teacher name)
+   and `sort=next` (by the next lesson).
+2. **«заплановано до <date>»**: `lastLessonAt`, the last lesson booked; the
+   caption «з 1 вер» reads `startsAt`. Avatars and «Група · 6 учнів» read
+   `student.avatarKey` and `group.memberCount`, added too.
+3. **Header subtitle**: `counts` and this week's lessons (the Lessons list
+   read for the current week, one row).
+4. **The dates of a new schedule**: `POST /schedules/preview` returns them
+   (`dates`), computed as the create would.
+5. **The package line** of the check step: the student billing read the
+   form already uses.
+6. **Dates of moved, removed and kept lessons**: the change and stop
+   previews return `moves`, `removals`, `creates` and `keptLessons` (with
+   why each is kept: held, cancelled, no-show, moved by hand, marked).
+7. **Horizon**: `POST /schedules/:id/horizon/preview` saves the horizon in a
+   transaction it rolls back and returns the lessons it would add and the
+   last lesson booked then.
+8. **Conflict pairs**: the conflicts carry the candidate time, the teacher,
+   the student or group and the booked lesson's time.
+
 ## Open questions
 
-- Is the change dialog one step (form and preview together) or two?
+- None yet.

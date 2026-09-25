@@ -1,8 +1,8 @@
 # S04 — Lessons List and Bulk Cancel
 
-- Status: Waiting for mockups
+- Status: In progress (mockups in, 2026-09-25)
 - Work packet: 6.4 (screens)
-- Depends on: S01 (panel)
+- Depends on: S01 (panel), S03 (the calendar header)
 
 ## User job
 
@@ -12,27 +12,28 @@ period at once (holiday, illness).
 
 ## Route
 
-`/app/lessons` with two tabs: **List** (this step) and **Schedules** (S05) —
-replaces the former "Lesson patterns" item (page map). `?lesson=<id>` opens the
-S01 panel.
+`/app/lessons`, the second navigation item («Заняття», `ClipboardListIcon`).
+Schedules are a page of their own (`/app/schedules`, S05), not a tab here.
+`?lesson=<id>` opens the S01 panel.
 
 ## Screens and dialogs
 
-1. **List**: date and time, student or group, teacher, status, kind, price and
-   paid state; paged; newest first with a sort switch.
-2. **Quick filters** with counts: unpaid, cancelled, no-show, needs a makeup.
+1. **List**: date and time, student or group with the kind, teacher, status,
+   payment and price; paged; newest first with a sort switch.
+2. **Quick filters** with counts: all, unpaid, cancelled, no-show, needs a
+   makeup.
 3. **Filters**: period, teacher, student (their own and their groups'
-   lessons), group, status.
-4. **Bulk cancel dialog**: a period, one teacher or the whole studio, a
-   reason; a preview "18 lessons will be cancelled" with the list; free,
-   cancelled by the teacher (L-54).
-5. Empty (no lessons, no match for the filters), loading, error.
+   lessons) or group, status; a name search.
+4. **Bulk cancel dialog** «Скасування занять»: a period, one teacher or the
+   whole studio, a reason; the check step lists what is cancelled by day;
+   free, cancelled by the teacher (L-54).
+5. Empty (no lessons, no match for the filters), loading, error, solo mode.
 
 ## Data available
 
-- `GET /lessons/list?page=&pageSize=&from=&to=&teacherId=&studentId=&groupId=&status=&filter=&order=`
-  — paged items (with `charges[].paid`) and `counts` (`unpaid`, `cancelled`,
-  `noShow`, `needsMakeup`).
+- `GET /lessons/list?page=&pageSize=&from=&to=&teacherId=&studentId=&groupId=&status=&filter=&order=&search=`
+  — paged items (with `charges[].paid`) and `counts` (`all`, `unpaid`,
+  `cancelled`, `noShow`, `needsMakeup`).
 - `POST /lessons/bulk-cancel/preview` and `POST /lessons/bulk-cancel` —
   `from`, `to`, `teacherId?`, `reason`.
 
@@ -42,23 +43,88 @@ L-51, L-52, L-54, L-60, L-82, L-90, page map "Lessons — List".
 
 ## Reuse
 
-`PageHeader`, `CollectionFrame`, `DataTable` (desktop), `LessonItem` rows
-(phone), `SearchField`, `FilterPill`, `Segmented` (tabs), `ListPagination`,
-`EmptyState`, `AdaptiveDialog`, `Notice`.
+`PageHeader`, `CollectionFrame`, `DataTable` (desktop), `DateTile` (phone
+cards), `SearchField`, `FilterPill`, `Segmented`, `ListPagination`,
+`EmptyState`, `AdaptiveDialog`, `ChoiceCardGroup`, `ImpactList`,
+`DateField`, `EntityPicker`, `Notice`, the S01 panel and its dialogs.
 
 ## What the mockups must show
 
-- [ ] Desktop table and phone rows.
-- [ ] Each quick filter with its count, and the active filter state.
-- [ ] Filters panel on the phone.
-- [ ] Bulk cancel: form, preview with numbers, done.
-- [ ] Empty, no results for filters, loading, error.
+- [x] Desktop table and phone rows.
+- [x] Each quick filter with its count, and the active filter state.
+- [x] Filters panel on the phone.
+- [x] Bulk cancel: form, preview with numbers, done.
+- [x] Empty, no results for filters, loading, error.
 
 ## Out of scope
 
-The Schedules tab (S05); the calendar (S03).
+Schedules (S05); the calendar (S03); recording a payment (S06).
+
+## Mockups
+
+The owner's handoff `tutorio-s04-lessons-list`: boards «LessonsList» (14
+desktop states, 10 phone states), «BulkCancel» (7 states) and
+«CalendarBulkEntry» (desktop and phone), 1440 and 390, light and dark, with
+the canvas source. The repository does not keep mockups.
+
+## Decisions (with the owner, from the handoff)
+
+1. **Lessons and Schedules are separate pages.** The brief's tabs «Список /
+   Розклади» are dropped: `/app/lessons` is the list, `/app/schedules` is
+   S05.
+2. **Navigation.** Sidebar: Календар · Заняття · Розклади · Учні · Групи ·
+   Батьки. Phone tab bar: Календар · Заняття · Учні · Групи · Ще; «Батьки»
+   and «Розклади» are under «Ще».
+3. **Quick filters** are the standard `Segmented` (surface) with counts: Усі
+   · Без оплати · Скасовані · Не прийшли · Без відпрацювання, as on Students.
+4. **Filters** are `FilterPill`s: period (always set, pressed), teacher,
+   student or group, status; the sort «Спочатку нові» on the right; the
+   search on the quick filter row.
+5. **Table** (the `DataTable` rows look): date and time · student or group
+   (avatar or the group tile) with the kind · teacher · status (plus a
+   «Відпрацювання» or «Без відпрацювання» chip) · payment · price (a group's
+   with «з учня») · row menu. Rows open the S01 panel.
+6. **Payment cell** from `charges[].paid`.
+7. **Bulk cancel** is the outline «Скасування занять» (`CircleSlash`) next to
+   «Нове заняття», an icon button on phones, and the same in the calendar
+   header.
+8. **Bulk cancel is two steps**: form → check. The check lists the lessons by
+   day and says makeups are assigned by hand and appear under «Без
+   відпрацювання».
+9. **Paging** in the table card's footer on desktop, under the cards on
+   phones.
+10. **Solo mode** hides the teacher column and the teacher filter.
+
+## Data (answers to the handoff's section 4)
+
+1. **The list, quick filters and paging**: `GET /lessons/list`. This step
+   adds to the API: several statuses at once (`status=A,B` — the status menu
+   is a multi-select), a name search (`search`: the student's, the group's or
+   the teacher's name) and `counts.all` («Усі» keeps its number while a quick
+   filter narrows the page).
+2. **Header subtitle**: all lessons of the period (`counts.all`), this week's
+   (`total` of the same read for the current week, one row) and the unpaid
+   ones (`counts.unpaid`).
+3. **Menus**: `GET /teachers`, `GET /students`, `GET /groups` (search inside
+   the menu). **The per-item counts of the teacher, student and status menus
+   have no read** and are left out.
+4. **Payment cell**: held and paid «Оплачено»; `DEBT` «Борг»; a balance
+   charge not reached by payments «Не оплачено»; a group «N з M оплатили»
+   from its charges; a package credit «Пакет»; a scheduled lesson «Оплата
+   після»; price 0 «Безкоштовне»; cancelled free «Без списання». **The
+   credit's place in its package («3 з 8») and a scheduled group's head
+   count («6 учнів») have no read** and are left out.
+5. **Bulk cancel**: `POST /lessons/bulk-cancel/preview` (`count`,
+   `byTeacher`, `lessons` ≤ 200, `truncated`) and `POST /lessons/bulk-cancel`;
+   the split «10 індивідуальних · 4 групових» is counted from `lessons`; the
+   period is `[from, to)` (the «По» day is included) and at most 366 days;
+   the reason chips fill `reason`. **«27 учнів» has no read** and is dropped.
+6. **The row menu's «Позначити оплату»** needs the payment form (S06) and
+   is left out.
 
 ## Open questions
 
-- Is bulk cancel on this page only, or also on the calendar?
-- Do rows show the teacher when the studio is in solo mode?
+- Per-item counts in the teacher, student and status menus.
+- The package credit number in the payment cell and a scheduled group's head
+  count.
+- «Позначити оплату» in the row menu (with S06).
