@@ -13,3 +13,4 @@ export * from './schedule';
 export * from './billing';
 export * from './pause';
 export * from './wall-clock';
+export * from './teacher-load';
