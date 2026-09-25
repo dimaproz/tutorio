@@ -5409,6 +5409,82 @@
         "tags": ["scheduling"]
       }
     },
+    "/api/schedules/{scheduleId}/stop/cancel": {
+      "post": {
+        "description": "The schedule runs on with the rule in force before the stop date and generates its lessons from that date again. NO_PLANNED_STOP without one; SCHEDULE_CONFLICT unless force=true.",
+        "operationId": "SchedulesController_cancelStop",
+        "parameters": [
+          {
+            "name": "scheduleId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "force",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": false,
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string",
+                  "enum": ["true"]
+                },
+                {
+                  "type": "string",
+                  "enum": ["false"]
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleChangeResultDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cancel the stop planned for later",
+        "tags": ["scheduling"]
+      }
+    },
     "/api/schedules/{scheduleId}/stop/preview": {
       "post": {
         "operationId": "SchedulesController_previewStop",

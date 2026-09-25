@@ -1170,6 +1170,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/schedules/{scheduleId}/stop/cancel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Cancel the stop planned for later
+     * @description The schedule runs on with the rule in force before the stop date and generates its lessons from that date again. NO_PLANNED_STOP without one; SCHEDULE_CONFLICT unless force=true.
+     */
+    post: operations['SchedulesController_cancelStop'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/schedules/{scheduleId}/stop/preview': {
     parameters: {
       query?: never;
@@ -8277,6 +8297,46 @@ export interface operations {
     };
   };
   SchedulesController_cancelChange: {
+    parameters: {
+      query?: {
+        force?: boolean | 'true' | 'false';
+      };
+      header?: never;
+      path: {
+        scheduleId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ScheduleChangeResultDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  SchedulesController_cancelStop: {
     parameters: {
       query?: {
         force?: boolean | 'true' | 'false';
