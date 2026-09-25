@@ -187,6 +187,23 @@ export const scheduleChangePreviewSchema = z.object({
 
 export type ScheduleChangePreview = z.infer<typeof scheduleChangePreviewSchema>;
 
+/**
+ * What creating a schedule would do (L-22, L-110), computed exactly as the
+ * create would, before anything is written: the lessons it generates at once
+ * within the horizon and what they overlap. A direction or group that already
+ * has an active schedule is named, since creating would be refused.
+ */
+export const scheduleCreatePreviewSchema = z.object({
+  /** Lessons generated at once, from the later of the start and now to the horizon or the end. */
+  created: z.number().int().nonnegative(),
+  firstLessonAt: isoDateTimeSchema.nullable(),
+  /** The active schedule of the same direction or group (create answers SCHEDULE_EXISTS). */
+  existingScheduleId: uuidSchema.nullable(),
+  conflicts: z.array(scheduleConflictSchema),
+});
+
+export type ScheduleCreatePreview = z.infer<typeof scheduleCreatePreviewSchema>;
+
 export const scheduleChangeResultSchema = z.object({
   schedule: scheduleResponseSchema,
   summary: scheduleChangePreviewSchema,
