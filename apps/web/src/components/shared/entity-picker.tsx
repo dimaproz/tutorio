@@ -32,6 +32,8 @@ export interface EntityPickerOption {
   media?: ReactNode;
   /** The heading this option is listed under («Учні», «Групи»), in option order. */
   section?: string;
+  /** Listed but not selectable, e.g. a direction in another currency (its `trail` says why). */
+  disabled?: boolean;
 }
 
 /** Options by their section, keeping the order they came in. */
@@ -52,7 +54,8 @@ function sectionsOf(options: EntityPickerOption[]) {
  * lock instead of the chevrons, for a value that cannot change here. Options
  * with a `section` are listed under their headings; `onSearchChange` hands
  * the search to the caller (a server-side search) instead of filtering here;
- * `footer` adds a note under the list.
+ * `footer` adds a note under the list; a `disabled` option is listed but
+ * cannot be picked.
  */
 export function EntityPicker({
   id,
@@ -222,6 +225,7 @@ export function EntityPicker({
                     <CommandItem
                       key={option.value}
                       value={option.label}
+                      disabled={option.disabled}
                       data-checked={value === option.value}
                       className="min-h-14 gap-3 rounded-control px-2.5 py-2 font-normal data-[checked=true]:font-normal"
                       onSelect={() => {
@@ -253,6 +257,7 @@ export function EntityPicker({
                     <CommandItem
                       key={option.value}
                       value={option.label}
+                      disabled={option.disabled}
                       className="flex items-center gap-2 rounded-md px-2 py-1.5"
                       onSelect={() => {
                         onChange(option.value);
