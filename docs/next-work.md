@@ -412,8 +412,9 @@ and 7 (S07) and 6.6 (S10, S11).
   pairs. The API gained the package money and unpaid dates in the billing
   read, `POST /pauses/preview`, `POST /pauses/:id/end/preview`,
   `PATCH /pauses/:id` and `skipConflicts` with described conflicts on the
-  end. Decisions for the owner («Повернути без них» is `skipConflicts`, not
-  `force`) and the open questions are in the
+  end. The owner's answers (both «Повернути без них» and «Повернути все
+  одно», this month's money, «закрито N заняття», the subject on lessons)
+  and the open questions are in the
   [brief](./screens/s06-student-billing-and-pause.md).
 - **S05 — Schedules: done 2026-09-25** (`8dfe70f`…`395ac42`):
   `/app/schedules` with state tabs and counts, filters, search and order; the

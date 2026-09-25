@@ -1,6 +1,7 @@
 # S06 — Student Profile: Directions, Billing, Schedules and Pause
 
-- Status: Done (2026-09-25, commits `babec39`…`a9f3aa3`)
+- Status: Done (2026-09-25, commits `babec39`…`a9f3aa3`; the owner's answers
+  `30145da`…`1654c66`)
 - Work packet: 6.4 (screens)
 - Depends on: S05 (schedule form), S07 for the package sale button target
   (until then the button is hidden)
@@ -177,21 +178,37 @@ three-direction, two-currency student.
    `avatarKey` and `subjects` (an individual direction is named by its
    subject: «English · пакет …»).
 
-## Decided while building (for the owner's confirmation)
+## Confirmed with the owner after the build (2026-09-25)
 
-- **«Повернути без них» is not `force`.** The screenshot says the
-  overlapping lessons do not come back; `force` would double-book them. The
-  end and the change take `skipConflicts=true`, which brings back only the
-  free lessons; `force` stays for «save anyway» (L-111) but no screen offers
-  it on a pause return. This departs from L-111's «Save anyway» for this one
-  path; the owner may want both buttons.
-- **The currency field is locked** to the direction's currency (the API
+- **A pause return with overlaps offers both**: «Повернути без них»
+  (`skipConflicts=true`: only the free lessons come back) as the main action
+  and «Повернути все одно» (`force=true`: every lesson back on top of the
+  others, L-111) as the quieter one; a changed pause the same with «Зберегти
+  без них» / «Зберегти все одно».
+- **The currency field stays locked** to the direction's currency (the API
   rejects any other, `CURRENCY_MISMATCH`), where the board draws a select.
-- **The low-credit field is left out** of direction settings: the threshold
-  is studio-wide (`lowCreditThreshold`, L-120, S10).
 - **«+ Напрям»** opens «Новий розклад» for the student: a schedule with a new
   teacher opens the direction (L-2). «Змінити розклад» in the ⋯ opens the
   direction's schedule change, or a new schedule when it has none.
+- **Row menus** of the package and payment rows stay empty until S07.
+- **«закрито N заняття»** under a pay-per-lesson payment, without the dates:
+  `GET /payments` returns `settledLessons` — how many lessons each payment
+  finished paying, oldest first (L-90, `settledLessonsByPayment` in the
+  domain).
+- **«Оплачено цього місяця»**: the money metric counts this calendar month's
+  payments, refunds taken off, with the owed badge; «Цього місяця оплат не
+  було» when there are none.
+- **The subject names an individual lesson**: the lesson read returns
+  `subject` (the teacher's first subject; null for a group), so the lesson
+  rows and the next-lesson card read «English» instead of «Індивідуальне
+  заняття».
+- **Used and expired packages are muted** by their grey icon tile and a muted
+  name and price (the board's row opacity failed the contrast checks).
+
+## Decided while building
+
+- **The low-credit field is left out** of direction settings: the threshold
+  is studio-wide (`lowCreditThreshold`, L-120, S10).
 - **«Завершити навчання»** archives the direction (`status: ARCHIVED`, kept
   in history) after a confirmation; an archived direction stays in the block
   only while money is owed or paid ahead on it.
@@ -203,23 +220,10 @@ three-direction, two-currency student.
   direction with money owed first.
 - **The ledger's summary** sums on the client from `GET /payments?studentId=`
   (up to 100 rows), refunds from the `REFUNDED` payments.
-- **Rows dimmed on the board** (used or expired packages) are not dimmed:
-  the opacity failed the contrast checks; the icon tile and the state badge
-  carry the difference.
 
 ## Open questions
 
-- **Row menus** of the package and payment rows (⋯ on board 01, states 12–13)
-  have no actions until S07 (package operations) and a payment correction
-  command exist; the column is kept empty.
-- **«закрито 2: пн 21 і ср 23 вер»** under a ledger row: which lessons a
-  payment settled is not stored per payment; the row names its direction
-  instead. A read would need the allocation per payment.
 - **«1 невикористане»** under a refund: the refunded credits are a separate
   credit entry, not on the payment; the row names the package only.
-- **«Оплачено цього семестру»**: there is no term; the metric sums every
-  settled payment (refunds taken off) and names the last payment's date.
-- **The lesson rows** still read «Індивідуальне заняття» where the board
-  writes the subject; the lesson read has no subject.
 - **«Продати пакет»** stays hidden until S07 (the card, the ⋯ and the
   «Пакети» tab keep its place).

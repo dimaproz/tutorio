@@ -36,8 +36,8 @@ pause has its banner above the hero. «Пакети» is the package history and
 оплату» (oldest lessons first, the advance, part of a package), «Налаштування
 напряму» (mode switch with its impact), «Пауза» (whole student or one
 direction, with what it takes off and extends), «Скасувати паузу» and
-«Повернути з паузи» with the overlapping lessons' pairs and «Повернути без
-них». The status control's «На паузі» (renamed from «На канікулах») opens the
+«Повернути з паузи» with the overlapping lessons' pairs, «Повернути без
+них» and «Повернути все одно». The status control's «На паузі» (renamed from «На канікулах») opens the
 pause dialog; the hold dialog and the old learning card are gone. The next
 lesson ticket opens or moves the lesson.
 
@@ -45,7 +45,8 @@ API: the billing read carries each package's price, paid amount and state,
 the unpaid lessons oldest first, the cancellation windows and the teacher's
 avatar and subjects; `POST /pauses/preview`, `POST /pauses/:id/end/preview`
 and `PATCH /pauses/:id` are new; ending a pause describes its conflicts and
-takes `skipConflicts`. Brief, decisions and open questions:
+takes `skipConflicts`; payments say how many lessons they settled
+(`settledLessons`) and an individual lesson names its `subject`. Brief, decisions and open questions:
 [`screens/s06-student-billing-and-pause.md`](./screens/s06-student-billing-and-pause.md).
 
 Gate on 2026-09-25: web lint, typecheck, 336 unit tests, build, the
