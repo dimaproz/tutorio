@@ -135,10 +135,13 @@ Checked at 1440 and 390, light and dark, Ukrainian and English.
    have no read** and are left out.
 4. **Payment cell**: held and paid «Оплачено»; `DEBT` «Борг»; a balance
    charge not reached by payments «Не оплачено»; a group «N з M оплатили»
-   from its charges; a package credit «Пакет»; a scheduled lesson «Оплата
-   після»; price 0 «Безкоштовне»; cancelled free «Без списання». **The
-   credit's place in its package («3 з 8») and a scheduled group's head
-   count («6 учнів») have no read** and are left out.
+   from its charges; a package credit, and a scheduled lesson of a
+   package-paid direction, «Пакет · 3 з 8» — the state of the package the
+   direction pays with now (the owner, 2026-09-25: 3 left of 8), from the
+   page read's `packages` (the oldest valid package with a credit left,
+   else the latest valid one); any other scheduled lesson «Оплата після»;
+   price 0 «Безкоштовне»; cancelled free «Без списання». **A scheduled
+   group's head count («6 учнів») has no read** and is left out.
 5. **Bulk cancel**: `POST /lessons/bulk-cancel/preview` (`count`,
    `byTeacher`, `lessons` ≤ 200, `truncated`) and `POST /lessons/bulk-cancel`;
    the split «10 індивідуальних · 4 групових» is counted from `lessons`; the
@@ -169,6 +172,5 @@ Checked at 1440 and 390, light and dark, Ukrainian and English.
 ## Open questions
 
 - Per-item counts in the teacher, student and status menus.
-- The package credit number in the payment cell and a scheduled group's head
-  count.
+- A scheduled group's head count («6 учнів») in the payment cell.
 - «Позначити оплату» in the row menu (with S06).

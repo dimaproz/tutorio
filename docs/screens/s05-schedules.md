@@ -145,7 +145,9 @@ Checked at 1440 and 390, light and dark, Ukrainian and English.
    transaction it rolls back and returns the lessons it would add and the
    last lesson booked then.
 8. **Conflict pairs**: the conflicts carry the candidate time, the teacher,
-   the student or group and the booked lesson's time.
+   the student or group, the booked lesson's time and (added in this step)
+   its kind, so a makeup reads «Вже є · відпрацювання» (the S01 conflict
+   dialog names it too).
 
 ## Decided while building (for the owner's confirmation)
 
@@ -168,7 +170,5 @@ Checked at 1440 and 390, light and dark, Ukrainian and English.
 
 ## Open questions
 
-- The «ВЖЕ Є · ВІДПРАЦЮВАННЯ» label of a conflict pair needs the booked
-  lesson's kind in the conflict; the pair says «Вже є».
 - The phone form stacks «Перше заняття з» and «До» on the board; they stay
   side by side as in the lesson form.
