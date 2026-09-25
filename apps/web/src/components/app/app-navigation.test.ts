@@ -19,11 +19,21 @@ describe('application navigation', () => {
       'students',
       'groups',
       'parents',
+      'teachers',
     ]);
     expect(
       isNavigationActive('/app/students/83d4d4e3-5e9b-4fd0-b9cc-8d6e5f3d0e8e', items[4]!),
     ).toBe(true);
     expect(isNavigationActive('/app/groups', items[4]!)).toBe(false);
+  });
+
+  it('shows the teachers to a studio only', () => {
+    const solo = getNavigationItems({ isOwner: true, isSolo: true }).map((item) => item.key);
+    expect(solo).not.toContain('teachers');
+    expect(getRouteContext('/app/teachers/83d4d4e3-5e9b-4fd0-b9cc-8d6e5f3d0e8e')).toEqual([
+      { key: 'teachers', href: '/app/teachers' },
+      { key: 'detail' },
+    ]);
   });
 
   it('gives a non-owner no destinations at all, matching the owner-only API', () => {

@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react';
 import {
   CalendarDaysIcon,
   ClipboardListIcon,
+  GraduationCapIcon,
   HeartIcon,
   LayersIcon,
   PackageIcon,
@@ -9,10 +10,17 @@ import {
   UsersIcon,
 } from 'lucide-react';
 
-// The rebuilt destinations only; teachers, home and settings return with
-// their new screens.
+// The rebuilt destinations only; home and settings return with their new
+// screens.
 export type NavigationKey =
-  'calendar' | 'lessons' | 'schedules' | 'packages' | 'students' | 'groups' | 'parents';
+  | 'calendar'
+  | 'lessons'
+  | 'schedules'
+  | 'packages'
+  | 'students'
+  | 'groups'
+  | 'parents'
+  | 'teachers';
 
 export type NavigationItem = {
   key: NavigationKey;
@@ -48,6 +56,14 @@ const navigationItems: NavigationItem[] = [
   { key: 'students', href: '/app/students', icon: UsersIcon, ownerOnly: true },
   { key: 'groups', href: '/app/groups', icon: LayersIcon, ownerOnly: true },
   { key: 'parents', href: '/app/parents', icon: HeartIcon, ownerOnly: true },
+  // A solo tutor is the only teacher: the page answers, but has no place in the menu.
+  {
+    key: 'teachers',
+    href: '/app/teachers',
+    icon: GraduationCapIcon,
+    ownerOnly: true,
+    schoolOnly: true,
+  },
 ];
 
 function isVisible(item: NavigationItem, { isOwner, isSolo }: NavigationAccess): boolean {

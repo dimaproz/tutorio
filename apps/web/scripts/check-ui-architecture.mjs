@@ -101,6 +101,7 @@ const rawColorAllowlist = new Set([
   'lib/auth/gateway.test.ts',
   // Teacher colours are user data; the calendar stories give each teacher one.
   'stories/calendar-story-backend.ts',
+  'stories/teachers-story-backend.ts',
 ]);
 const removedUtilityPattern = /\b(?:bg|text|border|ring)-light(?:-|[a-z])/;
 

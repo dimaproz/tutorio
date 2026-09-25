@@ -25,6 +25,7 @@ import { createLessonListRoutes, type LessonListStoryOptions } from './lesson-li
 import { createLessonRoutes, type LessonStoryOptions } from './lesson-story-backend';
 import { createPackagesRoutes, type PackagesStoryOptions } from './packages-story-backend';
 import { createSchedulesRoutes, type SchedulesStoryOptions } from './schedules-story-backend';
+import { createTeacherRoutes, type TeacherStoryOptions } from './teachers-story-backend';
 import {
   createProfileBillingRoutes,
   type ProfileBillingOptions,
@@ -361,7 +362,8 @@ export type StoryBackendOptions = GroupStoryOptions &
   LessonStoryOptions &
   LessonCreateStoryOptions &
   ProfileBillingOptions &
-  PackagesStoryOptions & {
+  PackagesStoryOptions &
+  TeacherStoryOptions & {
     students?: SampleStudent[];
     packages?: PackageResponse[];
     lessons?: LessonResponse[];
@@ -503,6 +505,7 @@ function createHandler(options: StoryBackendOptions) {
   const lessonCreateRoutes = createLessonCreateRoutes(options);
   const profileBillingRoutes = createProfileBillingRoutes(options);
   const packagesRoutes = createPackagesRoutes(options);
+  const teacherRoutes = createTeacherRoutes(options);
   const settle = () =>
     options.saveDelayMs
       ? new Promise((resolve) => setTimeout(resolve, options.saveDelayMs))
@@ -528,6 +531,8 @@ function createHandler(options: StoryBackendOptions) {
     }
 
     const readBody = () => JSON.parse(String(init?.body ?? '{}'));
+    const teacherResponse = await teacherRoutes(path, method, query, readBody);
+    if (teacherResponse) return teacherResponse;
     const packagesResponse = await packagesRoutes(path, method, query, readBody);
     if (packagesResponse) return packagesResponse;
     const billingResponse = await profileBillingRoutes(path, method, query, readBody);

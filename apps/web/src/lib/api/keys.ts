@@ -62,6 +62,8 @@ export interface TeacherListFilters {
   search?: string;
   state?: 'active' | 'deleted' | 'all';
   status?: string;
+  subject?: string;
+  sort?: 'name' | 'workload' | 'created';
   pageSize?: number;
 }
 
@@ -139,6 +141,11 @@ export const queryKeys = {
     all: ['teachers'] as const,
     lists: (filters: TeacherListFilters) => ['teachers', 'list', filters] as const,
     detail: (teacherId: string) => ['teachers', 'detail', teacherId] as const,
+    summary: (teacherId: string) => ['teachers', 'summary', teacherId] as const,
+    students: (teacherId: string, pageSize: number) =>
+      ['teachers', 'students', teacherId, pageSize] as const,
+    archivePreview: (teacherId: string, transferTo: string | null) =>
+      ['teachers', 'archive-preview', teacherId, transferTo] as const,
   },
   lessons: {
     all: ['lessons'] as const,

@@ -52,6 +52,18 @@ const SCREENS = [
   { id: 'groups-screens-form--playground', file: 'GroupFormCreate' },
   { id: 'groups-screens-form--edit-with-schedule', file: 'GroupFormEdit' },
   { id: 'groups-screens-form--archive-dialog', file: 'GroupArchive' },
+  // S09: the handoff's desktop board names (tutorio-s09-teachers).
+  { id: 'teachers-screens-collection--playground', file: '01-TeachersList-01-tablytsia' },
+  { id: 'teachers-screens-collection--archive', file: '01-TeachersList-04-arkhiv' },
+  { id: 'teachers-screens-collection--only-owner', file: '01-TeachersList-05-lyshe-vlasnytsia' },
+  { id: 'teachers-screens-collection--tutor-mode', file: '01-TeachersList-06-rezhym-repetytora' },
+  { id: 'teachers-screens-profile--playground', file: '02-TeacherProfile-01-profil' },
+  {
+    id: 'teachers-screens-profile--own-profile',
+    file: '02-TeacherProfile-03-mii-profil-vlasnytsia',
+  },
+  { id: 'teachers-screens-form--playground', file: '03-TeacherForm-01-novyi-vykladach' },
+  { id: 'teachers-screens-form--own-profile', file: '03-TeacherForm-04-mii-profil-vlasnytsia' },
 ];
 
 function arg(name, fallback) {

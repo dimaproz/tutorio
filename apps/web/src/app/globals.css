@@ -66,6 +66,10 @@
   --color-tint-danger: var(--tint-danger);
   --color-tint-danger-foreground: var(--tint-danger-foreground);
   --color-danger-mark: var(--danger-mark);
+  /* The owner's crown over a teacher avatar (S09): gold in both themes. */
+  --color-crown: var(--crown);
+  --color-crown-line: var(--crown-line);
+  --color-crown-base: var(--crown-base);
   /* Lesson types on the calendar (S03): an event's colour is its kind. */
   --color-lesson-group: var(--lesson-group);
   --color-lesson-makeup: var(--lesson-makeup);
@@ -220,6 +224,9 @@
   --tint-danger: #ffede6;
   --tint-danger-foreground: #b23c16;
   --danger-mark: #ff8a65;
+  --crown: #f5b400;
+  --crown-line: #b7791f;
+  --crown-base: #e0a100;
   --lesson-group: #0e9f8e;
   --lesson-makeup: #e07a1f;
   --hatch: #e3e6ef;
@@ -383,6 +390,9 @@
 
   /* Marks and lifecycle --------------------------------------------------- */
   --danger-mark: #ff9b7a;
+  --crown: #f5b400;
+  --crown-line: #b7791f;
+  --crown-base: #e0a100;
   --lesson-group: #34c3b0;
   --lesson-makeup: #f59d52;
   --hatch: #2c3150;

@@ -98,7 +98,11 @@ export function parentInvalidations(change: ParentChange): Invalidation[] {
 }
 
 export type TeacherChange =
-  { kind: 'create' } | { kind: 'update'; dto: UpdateTeacherDto } | { kind: 'delete' };
+  | { kind: 'create' }
+  | { kind: 'update'; dto: UpdateTeacherDto }
+  | { kind: 'delete' }
+  | { kind: 'archive' }
+  | { kind: 'restore' };
 
 /**
  * What a teacher mutation outdates. Names and colours surface on enrollments,
@@ -106,6 +110,16 @@ export type TeacherChange =
  */
 export function teacherInvalidations(change: TeacherChange): Invalidation[] {
   const invalidations = [refetch(queryKeys.teachers.all)];
+  // An archive hands lessons, schedules and groups to someone else; they are
+  // on the profile the archive runs from.
+  if (change.kind === 'archive' || change.kind === 'restore') {
+    invalidations.push(
+      refetch(queryKeys.lessons.all),
+      refetch(queryKeys.schedules.all),
+      refetch(queryKeys.groups.all),
+      stale(queryKeys.enrollments.all),
+    );
+  }
   const shown =
     change.kind === 'delete' ||
     (change.kind === 'update' && touchesMoreThan(change.dto, ['bio', 'notes']));

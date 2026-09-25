@@ -45,6 +45,7 @@ export function forceMobileMediaQuery() {
 
 /** Storybook viewport globals for the handoff's two frame widths. */
 export const MOBILE_VIEWPORT = { viewport: { value: 'handoffMobile', isRotated: false } } as const;
+export const TABLET_VIEWPORT = { viewport: { value: 'handoffTablet', isRotated: false } } as const;
 export const DESKTOP_VIEWPORT = {
   viewport: { value: 'handoffDesktop', isRotated: false },
 } as const;
