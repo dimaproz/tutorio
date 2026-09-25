@@ -460,4 +460,356 @@ describe('Work Packet 6.4 phase 6: pauses (e2e)', () => {
       'ON_HOLD',
     );
   });
+
+  describe('S06: previews, conflicts on return and changes', () => {
+    const sell = async (studentId: string, expiresAt: string) =>
+      (
+        await post('/packages')
+          .send({
+            studentId,
+            teacherId,
+            sizingMode: 'FIXED_COUNT',
+            lessonsTotal: 8,
+            pricePerLessonMinor: 40000,
+            currency: 'UAH',
+            expiresAt,
+          })
+          .expect(201)
+      ).body as { id: string; enrollmentId: string };
+
+    const expiresAtOf = async (packageId: string) =>
+      (
+        await prisma.lessonPackage.findUniqueOrThrow({
+          where: { id: packageId },
+          select: { expiresAt: true },
+        })
+      ).expiresAt!.getTime();
+
+    it('previews a pause of the whole student and of one group direction, and one that replaces a pause', async () => {
+      const [studentId, mate] = await Promise.all([
+        newStudent('Preview'),
+        newStudent('Preview mate'),
+      ]);
+      const lessons = [
+        await book({ studentId, startsAt: [at(3, 8)] }),
+        await book({ studentId, startsAt: [at(5, 8)] }),
+      ];
+      const individual = lessons[0].enrollmentId;
+      const group = (
+        await post('/groups')
+          .send({
+            name: `Pauses P ${runId}`,
+            teacherId,
+            pricePerLesson: 30000,
+            currency: 'UAH',
+            students: { studentIds: [studentId, mate] },
+          })
+          .expect(201)
+      ).body;
+      const membership = await prisma.enrollment.findFirstOrThrow({
+        where: { groupId: group.id, studentId },
+        select: { id: true },
+      });
+      for (const day of [4, 6, 12]) {
+        await book({
+          groupId: group.id,
+          priceMinor: 30000,
+          startsAt: [at(day, 15)],
+        });
+      }
+      const pkg = await sell(studentId, at(30, 0));
+      expect(pkg.enrollmentId).toBe(individual);
+
+      const whole = (
+        await post('/pauses/preview')
+          .send({ studentId, endsAt: at(10, 0) })
+          .expect(200)
+      ).body;
+      const length =
+        Math.round(
+          (Date.parse(whole.endsAt) - Date.parse(whole.startsAt)) / 1000,
+        ) * 1000;
+      expect(whole).toMatchObject({
+        endsAt: at(10, 0),
+        holdsStudent: true,
+        extensions: [
+          {
+            packageId: pkg.id,
+            expiresAt: at(30, 0),
+            nextExpiresAt: new Date(
+              Date.parse(at(30, 0)) + length,
+            ).toISOString(),
+          },
+        ],
+      });
+      expect(whole.directions).toEqual(
+        expect.arrayContaining([
+          { enrollmentId: individual, removedLessons: 2, groupLessons: 0 },
+          { enrollmentId: membership.id, removedLessons: 0, groupLessons: 2 },
+        ]),
+      );
+      expect(whole.directions).toHaveLength(2);
+      // Nothing was saved.
+      expect(
+        (await get(`/pauses?studentId=${studentId}`).expect(200)).body.items,
+      ).toEqual([]);
+      expect(await liveLessonIds(lessons.map((lesson) => lesson.id))).toEqual(
+        lessons.map((lesson) => lesson.id).sort(),
+      );
+      expect(await expiresAtOf(pkg.id)).toBe(Date.parse(at(30, 0)));
+      expect(
+        (await get(`/students/${studentId}`).expect(200)).body.status,
+      ).toBe('ACTIVE');
+
+      const groupOnly = (
+        await post('/pauses/preview')
+          .send({ studentId, enrollmentId: membership.id, endsAt: at(10, 0) })
+          .expect(200)
+      ).body;
+      expect(groupOnly).toMatchObject({
+        holdsStudent: false,
+        directions: [
+          { enrollmentId: membership.id, removedLessons: 0, groupLessons: 2 },
+        ],
+        extensions: [],
+      });
+
+      // A scheduled pause of the individual direction, then a wider window
+      // for it: on its own it overlaps, as a replacement it does not.
+      const scheduled = await pause({
+        studentId,
+        enrollmentId: individual,
+        startsAt: at(2, 0),
+        endsAt: at(4, 0),
+      });
+      expect(scheduled.removedLessons).toBe(1);
+      const extended = await expiresAtOf(pkg.id);
+      expect(extended).toBe(Date.parse(at(30, 0)) + 2 * DAY_MS);
+      const wider = {
+        studentId,
+        enrollmentId: individual,
+        startsAt: at(3, 0),
+        endsAt: at(7, 0),
+      };
+      await post('/pauses/preview')
+        .send(wider)
+        .expect(409, /PAUSE_OVERLAP/);
+      const replaced = (
+        await post('/pauses/preview')
+          .send({ ...wider, replacesPauseId: scheduled.id })
+          .expect(200)
+      ).body;
+      expect(replaced).toEqual({
+        startsAt: at(3, 0),
+        endsAt: at(7, 0),
+        directions: [
+          { enrollmentId: individual, removedLessons: 2, groupLessons: 0 },
+        ],
+        extensions: [
+          {
+            packageId: pkg.id,
+            name: null,
+            expiresAt: new Date(extended).toISOString(),
+            nextExpiresAt: new Date(
+              Date.parse(at(30, 0)) + 4 * DAY_MS,
+            ).toISOString(),
+          },
+        ],
+        holdsStudent: false,
+      });
+      // The replaced pause is untouched.
+      expect(
+        (await get(`/pauses/${scheduled.id}`).expect(200)).body,
+      ).toMatchObject({ state: 'SCHEDULED', removedLessons: 1 });
+      expect(await expiresAtOf(pkg.id)).toBe(extended);
+    });
+
+    it('previews the end of a pause with the conflicts its lessons meet, and ends it without them', async () => {
+      const studentId = await newStudent('Return');
+      const other = await newStudent('Return other');
+      const lessons = [
+        await book({ studentId, startsAt: [at(3, 20)] }),
+        await book({ studentId, startsAt: [at(4, 20)] }),
+        await book({ studentId, startsAt: [at(5, 20)] }),
+      ];
+      const ids = lessons.map((lesson) => lesson.id);
+      const pkg = await sell(studentId, at(30, 0));
+      const running = await pause({ studentId, endsAt: at(10, 0) });
+      expect(running.removedLessons).toBe(3);
+      const pushed = await expiresAtOf(pkg.id);
+      // Another student takes the teacher's slot meanwhile.
+      const taken = await book({ studentId: other, startsAt: [at(4, 20)] });
+
+      const preview = (
+        await post(`/pauses/${running.id}/end/preview`).expect(200)
+      ).body;
+      expect(preview).toMatchObject({
+        action: 'END',
+        lessons: [3, 4, 5].map((day) => ({
+          startsAtUtc: at(day, 20),
+          durationMin: 60,
+          enrollmentId: lessons[0].enrollmentId,
+          groupId: null,
+        })),
+        conflicts: [
+          {
+            candidateStartsAtUtc: at(4, 20),
+            lessonId: taken.id,
+            reason: 'TEACHER',
+            student: { id: other },
+          },
+        ],
+        extensions: [
+          { packageId: pkg.id, expiresAt: new Date(pushed).toISOString() },
+        ],
+      });
+      expect(
+        Date.parse(preview.extensions[0].nextExpiresAt) - Date.parse(at(30, 0)),
+      ).toBeLessThan(5000);
+      // Nothing was saved.
+      expect((await get(`/pauses/${running.id}`).expect(200)).body.state).toBe(
+        'ACTIVE',
+      );
+      expect(await liveLessonIds(ids)).toEqual([]);
+      expect(await expiresAtOf(pkg.id)).toBe(pushed);
+
+      // Checked by default: refused with the pair described.
+      const refused = await post(`/pauses/${running.id}/end`).expect(409);
+      expect(refused.body).toMatchObject({
+        code: 'SCHEDULE_CONFLICT',
+        details: {
+          conflictIds: [taken.id],
+          conflicts: [
+            {
+              candidateStartsAtUtc: at(4, 20),
+              lessonId: taken.id,
+              reason: 'TEACHER',
+            },
+          ],
+        },
+      });
+      expect(await liveLessonIds(ids)).toEqual([]);
+
+      // Without the overlapping one: the free ones come back.
+      const ended = (
+        await post(`/pauses/${running.id}/end?skipConflicts=true`).expect(200)
+      ).body;
+      expect(ended).toMatchObject({ state: 'ENDED', removedLessons: 1 });
+      expect(await liveLessonIds(ids)).toEqual([ids[0], ids[2]].sort());
+      const left = await prisma.lesson.findUniqueOrThrow({
+        where: { id: ids[1] },
+        select: { deletedAt: true },
+      });
+      expect(left.deletedAt).not.toBeNull();
+      await post(`/pauses/${running.id}/end/preview`).expect(
+        409,
+        /PAUSE_ENDED/,
+      );
+    });
+
+    it('brings every lesson back when forced (L-111)', async () => {
+      const studentId = await newStudent('Forced');
+      const other = await newStudent('Forced other');
+      const lessons = [
+        await book({ studentId, startsAt: [at(3, 21)] }),
+        await book({ studentId, startsAt: [at(4, 21)] }),
+      ];
+      const running = await pause({ studentId, endsAt: at(10, 0) });
+      await book({ studentId: other, startsAt: [at(4, 21)] });
+      await post(`/pauses/${running.id}/end`).expect(409, /SCHEDULE_CONFLICT/);
+      await post(`/pauses/${running.id}/end?force=true`).expect(200);
+      expect(await liveLessonIds(lessons.map((lesson) => lesson.id))).toEqual(
+        lessons.map((lesson) => lesson.id).sort(),
+      );
+    });
+
+    it('changes a scheduled pause to a new window', async () => {
+      const studentId = await newStudent('Moved');
+      const lessons = [
+        await book({ studentId, startsAt: [at(3, 22)] }),
+        await book({ studentId, startsAt: [at(6, 22)] }),
+        await book({ studentId, startsAt: [at(9, 22)] }),
+      ];
+      const ids = lessons.map((lesson) => lesson.id);
+      const pkg = await sell(studentId, at(30, 0));
+      const scheduled = await pause({
+        studentId,
+        startsAt: at(2, 0),
+        endsAt: at(4, 0),
+        reason: 'Trip',
+      });
+      expect(await liveLessonIds(ids)).toEqual([ids[1], ids[2]].sort());
+
+      const moved = (
+        await patch(`/pauses/${scheduled.id}`)
+          .send({ startsAt: at(5, 0), endsAt: at(7, 0) })
+          .expect(200)
+      ).body;
+      expect(moved.id).not.toBe(scheduled.id);
+      expect(moved).toMatchObject({
+        state: 'SCHEDULED',
+        enrollmentId: null,
+        startsAt: at(5, 0),
+        endsAt: at(7, 0),
+        reason: 'Trip',
+        removedLessons: 1,
+        extensions: [{ packageId: pkg.id, extendedBySeconds: 2 * 86_400 }],
+      });
+      expect(await liveLessonIds(ids)).toEqual([ids[0], ids[2]].sort());
+      expect(
+        (await get(`/pauses/${scheduled.id}`).expect(200)).body,
+      ).toMatchObject({ state: 'CANCELLED', removedLessons: 0 });
+      // The cancelled pause gave its extension back; the new one adds its own.
+      expect(await expiresAtOf(pkg.id)).toBe(
+        Date.parse(at(30, 0)) + 2 * DAY_MS,
+      );
+      await patch(`/pauses/${scheduled.id}`)
+        .send({ endsAt: at(8, 0) })
+        .expect(409, /PAUSE_ENDED/);
+    });
+
+    it('changes the end of a running pause, keeping its start', async () => {
+      const studentId = await newStudent('Shortened');
+      const lessons = [
+        await book({ studentId, startsAt: [at(3, 23)] }),
+        await book({ studentId, startsAt: [at(8, 23)] }),
+      ];
+      const ids = lessons.map((lesson) => lesson.id);
+      const pkg = await sell(studentId, at(30, 0));
+      const running = await pause({ studentId, endsAt: at(10, 0) });
+      expect(await liveLessonIds(ids)).toEqual([]);
+
+      await patch(`/pauses/${running.id}`)
+        .send({ startsAt: at(1, 0) })
+        .expect(409, /PAUSE_RUNNING/);
+      await patch(`/pauses/${running.id}`)
+        .send({ enrollmentId: lessons[0].enrollmentId })
+        .expect(409, /PAUSE_RUNNING/);
+
+      const shorter = (
+        await patch(`/pauses/${running.id}`)
+          .send({ endsAt: at(5, 0), reason: 'Back sooner' })
+          .expect(200)
+      ).body;
+      expect(shorter).toMatchObject({
+        state: 'ACTIVE',
+        enrollmentId: null,
+        endsAt: at(5, 0),
+        reason: 'Back sooner',
+        removedLessons: 1,
+      });
+      expect(await liveLessonIds(ids)).toEqual([ids[1]]);
+      expect((await get(`/pauses/${running.id}`).expect(200)).body.state).toBe(
+        'ENDED',
+      );
+      expect(
+        (await get(`/students/${studentId}`).expect(200)).body.status,
+      ).toBe('ON_HOLD');
+      // Net: the packages are pushed by the whole window, old start to new end.
+      const net = (await expiresAtOf(pkg.id)) - Date.parse(at(30, 0));
+      expect(
+        Math.abs(net - (Date.parse(at(5, 0)) - Date.parse(running.startsAt))),
+      ).toBeLessThan(5000);
+    });
+  });
 });

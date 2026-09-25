@@ -74,6 +74,12 @@ const activeMembershipWhere = {
   student: { deletedAt: null, status: { not: 'ARCHIVED' } },
 } satisfies Prisma.EnrollmentWhereInput;
 
+/** One overlap, with the id of the candidate it belongs to. */
+export interface ScheduleConflictMatch {
+  candidateId: string;
+  conflict: ScheduleConflict;
+}
+
 /**
  * Every overlap of the candidates with booked lessons, or with each other
  * (product/scheduling.md L-110): the same teacher, or a student taking part
@@ -87,6 +93,25 @@ export async function detectScheduleConflicts(
   candidates: readonly ConflictCandidate[],
   options: { excludeIds?: Iterable<string> } = {},
 ): Promise<ScheduleConflict[]> {
+  const matches = await detectScheduleConflictMatches(
+    tx,
+    workspaceId,
+    candidates,
+    options,
+  );
+  return matches.map((match) => match.conflict);
+}
+
+/**
+ * `detectScheduleConflicts`, naming the candidate of each overlap, for a
+ * caller that treats the overlapping candidates apart from the free ones.
+ */
+export async function detectScheduleConflictMatches(
+  tx: Prisma.TransactionClient,
+  workspaceId: string,
+  candidates: readonly ConflictCandidate[],
+  options: { excludeIds?: Iterable<string> } = {},
+): Promise<ScheduleConflictMatch[]> {
   if (candidates.length === 0) return [];
 
   const own = await participantsOf(tx, workspaceId, {
@@ -195,25 +220,28 @@ export async function detectScheduleConflicts(
 
   // A clash between two candidates of one request has no booked lesson to
   // point at; `assertNoScheduleConflicts` reports it separately.
-  return matches.flatMap((match): ScheduleConflict[] => {
+  return matches.flatMap((match): ScheduleConflictMatch[] => {
     const candidate = candidateById.get(match.candidateId)!;
     const booked = byId.get(match.busyId);
     if (!booked) return [];
     return [
       {
-        candidateStartsAtUtc: candidate.start.toISOString(),
-        lessonId: booked.id,
-        startsAtUtc: booked.startsAtUtc.toISOString(),
-        durationMin: booked.durationMin,
-        kind: booked.kind,
-        reason: match.reason,
-        teacher: { id: booked.teacher.id, name: booked.teacher.fullName },
-        student: booked.enrollment?.student ?? null,
-        group: booked.group,
-        students: match.studentIds.flatMap((id) => {
-          const row = nameOf.get(id);
-          return row ? [row] : [];
-        }),
+        candidateId: match.candidateId,
+        conflict: {
+          candidateStartsAtUtc: candidate.start.toISOString(),
+          lessonId: booked.id,
+          startsAtUtc: booked.startsAtUtc.toISOString(),
+          durationMin: booked.durationMin,
+          kind: booked.kind,
+          reason: match.reason,
+          teacher: { id: booked.teacher.id, name: booked.teacher.fullName },
+          student: booked.enrollment?.student ?? null,
+          group: booked.group,
+          students: match.studentIds.flatMap((id) => {
+            const row = nameOf.get(id);
+            return row ? [row] : [];
+          }),
+        },
       },
     ];
   });

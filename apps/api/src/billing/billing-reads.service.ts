@@ -14,6 +14,7 @@ import type {
 } from '@tutorio/validation';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { enrollmentNotFound, studentNotFound } from '../common/business.errors';
+import { packageInclude, packageMoney } from '../packages/packages.shared';
 import { PrismaService } from '../prisma/prisma.service';
 
 type Db = Prisma.TransactionClient | PrismaService;
@@ -56,8 +57,12 @@ export class BillingReadsService {
       select: directionSelect,
     });
     if (!direction) throw enrollmentNotFound();
-    const threshold = await this.thresholdOf(auth.workspaceId);
-    const billing = await this.billingOf(this.prisma, [direction], threshold);
+    const { lowCreditThreshold } = await this.settingsOf(auth.workspaceId);
+    const billing = await this.billingOf(
+      this.prisma,
+      [direction],
+      lowCreditThreshold,
+    );
     return billing.get(direction.id)!;
   }
 
@@ -71,25 +76,41 @@ export class BillingReadsService {
       select: { id: true },
     });
     if (!student) throw studentNotFound();
-    const [threshold, rows] = await Promise.all([
-      this.thresholdOf(auth.workspaceId),
+    const [settings, rows] = await Promise.all([
+      this.settingsOf(auth.workspaceId),
       this.prisma.enrollment.findMany({
         where: { studentId: student.id, deletedAt: null },
         orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
         select: {
           ...directionSelect,
           status: true,
-          teacher: { select: { id: true, fullName: true } },
+          cancellationDeadlineHours: true,
+          teacher: {
+            select: {
+              id: true,
+              fullName: true,
+              avatarKey: true,
+              subjects: true,
+            },
+          },
           group: { select: { id: true, name: true } },
         },
       }),
     ]);
+    const threshold = settings.lowCreditThreshold;
     const billing = await this.billingOf(this.prisma, rows, threshold);
     const directions = rows.map((row) => ({
       ...billing.get(row.id)!,
       status: row.status,
-      teacher: { id: row.teacher.id, name: row.teacher.fullName },
+      teacher: {
+        id: row.teacher.id,
+        name: row.teacher.fullName,
+        avatarKey: row.teacher
+          .avatarKey as StudentBillingResponse['directions'][number]['teacher']['avatarKey'],
+        subjects: row.teacher.subjects,
+      },
       group: row.group,
+      cancellationDeadlineHours: row.cancellationDeadlineHours,
     }));
 
     const totals = new Map<string, StudentBillingResponse['totals'][number]>();
@@ -112,6 +133,7 @@ export class BillingReadsService {
     return {
       studentId: student.id,
       lowCreditThreshold: threshold,
+      cancellationDeadlineHours: settings.cancellationDeadlineHours,
       directions,
       totals: [...totals.values()].sort((a, b) =>
         a.currency.localeCompare(b.currency),
@@ -126,8 +148,8 @@ export class BillingReadsService {
   async listCreditWarnings(
     auth: AuthenticatedUser,
   ): Promise<CreditWarningListResponse> {
-    const [threshold, rows] = await Promise.all([
-      this.thresholdOf(auth.workspaceId),
+    const [{ lowCreditThreshold: threshold }, rows] = await Promise.all([
+      this.settingsOf(auth.workspaceId),
       this.prisma.enrollment.findMany({
         where: {
           workspaceId: auth.workspaceId,
@@ -294,12 +316,15 @@ export class BillingReadsService {
     });
   }
 
-  private async thresholdOf(workspaceId: string): Promise<number> {
-    const workspace = await this.prisma.workspace.findUniqueOrThrow({
+  /** The studio settings billing reads show: the credit threshold and the free-cancellation window. */
+  private settingsOf(workspaceId: string): Promise<{
+    lowCreditThreshold: number;
+    cancellationDeadlineHours: number;
+  }> {
+    return this.prisma.workspace.findUniqueOrThrow({
       where: { id: workspaceId },
-      select: { lowCreditThreshold: true },
+      select: { lowCreditThreshold: true, cancellationDeadlineHours: true },
     });
-    return workspace.lowCreditThreshold;
   }
 
   /** How each direction is paid now, in a fixed number of queries. */
@@ -320,8 +345,13 @@ export class BillingReadsService {
           purchasedAt: true,
           validFrom: true,
           expiresAt: true,
+          lessonsTotal: true,
+          totalPriceMinorSnapshot: true,
           creditEntries: { select: { delta: true } },
           _count: { select: { charges: { where: { voidedAt: null } } } },
+          // Every package's money in one batched query, counted as the
+          // package read model counts it.
+          payments: packageInclude.payments,
         },
       }),
       db.lessonCharge.groupBy({
@@ -339,16 +369,24 @@ export class BillingReadsService {
     for (const direction of directions) {
       const items = packages
         .filter((pkg) => pkg.enrollmentId === direction.id)
-        .map((pkg) => ({
-          id: pkg.id,
-          name: pkg.name,
-          purchasedAt: pkg.purchasedAt.toISOString(),
-          expiresAt: pkg.expiresAt?.toISOString() ?? null,
-          remainingCredits:
-            pkg.creditEntries.reduce((sum, entry) => sum + entry.delta, 0) -
-            pkg._count.charges,
-          usable: isPackageValidAt(pkg, now),
-        }));
+        .map((pkg) => {
+          const money = packageMoney(pkg.totalPriceMinorSnapshot, pkg.payments);
+          return {
+            id: pkg.id,
+            name: pkg.name,
+            purchasedAt: pkg.purchasedAt.toISOString(),
+            expiresAt: pkg.expiresAt?.toISOString() ?? null,
+            validFrom: pkg.validFrom?.toISOString() ?? null,
+            lessonsTotal: pkg.lessonsTotal,
+            remainingCredits:
+              pkg.creditEntries.reduce((sum, entry) => sum + entry.delta, 0) -
+              pkg._count.charges,
+            usable: isPackageValidAt(pkg, now),
+            totalPriceMinor: pkg.totalPriceMinorSnapshot,
+            paidMinor: Math.max(0, money.paidMinor),
+            paymentStatus: money.paymentStatus,
+          };
+        });
       const creditsLeft = items
         .filter((pkg) => pkg.usable)
         .reduce((sum, pkg) => sum + Math.max(0, pkg.remainingCredits), 0);
@@ -369,6 +407,19 @@ export class BillingReadsService {
           debtMinor: balance.debtMinor,
           advanceMinor: balance.advanceMinor,
           unpaidLessons: balance.unpaid.length,
+          // Oldest first: what the next payment settles (L-90).
+          unpaid: balance.unpaid.flatMap((charge) => {
+            const lessonId = balances.lessonOf.get(charge.id);
+            return lessonId
+              ? [
+                  {
+                    lessonId,
+                    startsAt: charge.lessonAt.toISOString(),
+                    outstandingMinor: charge.outstandingMinor,
+                  },
+                ]
+              : [];
+          }),
         },
         warning: creditWarning(
           { mode: direction.billingType, creditsLeft, debtLessons: debt },

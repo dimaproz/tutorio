@@ -114,7 +114,7 @@ function buildService() {
     audit,
     pauses as unknown as PausesService,
   );
-  return { prisma, audit, recordSpy, service };
+  return { prisma, audit, recordSpy, service, pauses };
 }
 
 async function expectBusinessError(
@@ -438,6 +438,25 @@ describe('StudentsService.update', () => {
         },
       },
     });
+  });
+
+  it('ends the running whole-student pause, checking the lessons that come back (L-104)', async () => {
+    const { prisma, service, pauses } = buildService();
+    prisma.student.findFirst.mockResolvedValue({
+      ...studentRow,
+      status: 'ON_HOLD',
+    });
+    prisma.student.update.mockResolvedValue(studentRow);
+    pauses.activeWholePause.mockResolvedValue('pause-1');
+
+    await service.update(owner, STUDENT_ID, { status: 'ACTIVE' });
+
+    expect(pauses.endInTx).toHaveBeenCalledWith(
+      prisma,
+      owner,
+      'pause-1',
+      'check',
+    );
   });
 
   it('404s on cross-workspace updates without touching anything', async () => {

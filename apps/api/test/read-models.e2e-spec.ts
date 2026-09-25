@@ -418,4 +418,91 @@ describe('Work Packet 6.4 phase 7: read APIs (e2e)', () => {
       .send({ lowCreditThreshold: -1 })
       .expect(400);
   });
+
+  it('shows package money, unpaid lessons oldest first and the cancellation windows (S06)', async () => {
+    // A package paid in part.
+    const buyer = await newStudent('Buyer');
+    const pkg = await sell(buyer, 3);
+    await post('/payments')
+      .send({
+        enrollmentId: pkg.enrollmentId,
+        packageId: pkg.id,
+        amountMinor: 50000,
+        currency: 'UAH',
+      })
+      .expect(201);
+    const teacher = await prisma.teacher.findUniqueOrThrow({
+      where: { id: teacherId },
+      select: { avatarKey: true, subjects: true },
+    });
+    const bought = (await get(`/students/${buyer}/billing`).expect(200)).body;
+    expect(bought).toMatchObject({
+      cancellationDeadlineHours: 24,
+      directions: [
+        {
+          teacher: {
+            id: teacherId,
+            avatarKey: teacher.avatarKey,
+            subjects: teacher.subjects,
+          },
+          cancellationDeadlineHours: null,
+          packages: [
+            {
+              id: pkg.id,
+              validFrom: pkg.validFrom,
+              lessonsTotal: 3,
+              totalPriceMinor: 120000,
+              paidMinor: 50000,
+              paymentStatus: 'PARTIAL',
+            },
+          ],
+        },
+      ],
+    });
+
+    // Pay per lesson: a payment settles the oldest lessons first (L-90).
+    const payer = await newStudent('Per lesson');
+    const lessons = [
+      await book(payer, at(-3, 13), 'COMPLETED'),
+      await book(payer, at(-2, 13), 'COMPLETED'),
+      await book(payer, at(-1, 13), 'COMPLETED'),
+    ];
+    const enrollmentId = lessons[0].enrollmentId;
+    await post('/payments')
+      .send({ enrollmentId, amountMinor: 60000, currency: 'UAH' })
+      .expect(201);
+    const owing = (await get(`/students/${payer}/billing`).expect(200)).body;
+    expect(owing.directions[0].balance).toMatchObject({
+      debtMinor: 60000,
+      unpaidLessons: 2,
+      unpaid: [
+        {
+          lessonId: lessons[1].id,
+          startsAt: at(-2, 13),
+          outstandingMinor: 20000,
+        },
+        {
+          lessonId: lessons[2].id,
+          startsAt: at(-1, 13),
+          outstandingMinor: 40000,
+        },
+      ],
+    });
+    // The direction read carries the same list.
+    expect(
+      (await get(`/enrollments/${enrollmentId}/billing`).expect(200)).body
+        .balance.unpaid,
+    ).toEqual(owing.directions[0].balance.unpaid);
+
+    await post('/payments')
+      .send({ enrollmentId, amountMinor: 100000, currency: 'UAH' })
+      .expect(201);
+    const ahead = (await get(`/students/${payer}/billing`).expect(200)).body;
+    expect(ahead.directions[0].balance).toMatchObject({
+      debtMinor: 0,
+      advanceMinor: 40000,
+      unpaidLessons: 0,
+      unpaid: [],
+    });
+  });
 });

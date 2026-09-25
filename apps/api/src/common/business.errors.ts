@@ -343,6 +343,15 @@ export const pauseEnded = () =>
     HttpStatus.CONFLICT,
   );
 
+// A running pause keeps its start and direction; only its end and reason
+// change.
+export const pauseRunning = () =>
+  new BusinessApiException(
+    'PAUSE_RUNNING',
+    'The pause has begun: only its end and reason can change',
+    HttpStatus.CONFLICT,
+  );
+
 export const overpayment = () =>
   new BusinessApiException(
     'OVERPAYMENT',

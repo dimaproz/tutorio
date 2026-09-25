@@ -384,7 +384,7 @@ export class StudentsService {
       }
       if (scalarDto.status === 'ACTIVE' && before.status === 'ON_HOLD') {
         const pauseId = await this.pauses.activeWholePause(tx, before.id);
-        if (pauseId) await this.pauses.endInTx(tx, auth, pauseId, false);
+        if (pauseId) await this.pauses.endInTx(tx, auth, pauseId, 'check');
       }
 
       if (parentIds !== undefined) {
