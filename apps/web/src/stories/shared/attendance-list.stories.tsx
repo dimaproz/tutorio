@@ -6,7 +6,9 @@ import {
   type AttendanceCellState,
   type AttendanceListRow,
 } from '@/components/shared/attendance-list';
+import type { AttendanceTipContent } from '@/components/shared/attendance-tip';
 import { EmptyState } from '@/components/shared/empty-state';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 type Scenario = 'risk' | 'allGood' | 'hold' | 'cancelledWindow' | 'short';
 
@@ -42,8 +44,22 @@ const SCENARIOS: Record<Scenario, { rows: AttendanceListRow[]; rate: string; mis
     rate: '88%',
     misses: 4,
     rows: [
-      row('artem', 'Artem Lysenko', [C, P, P, P, P, C, A, A], '67%', '2 absences in a row · last came 16.09', 'risk'),
-      row('kate', 'Kateryna Shevchuk', [C, P, P, P, P, C, U, U], '—', 'On a break since 18.09 · not counted', 'hold'),
+      row(
+        'artem',
+        'Artem Lysenko',
+        [C, P, P, P, P, C, A, A],
+        '67%',
+        '2 absences in a row · last came 16.09',
+        'risk',
+      ),
+      row(
+        'kate',
+        'Kateryna Shevchuk',
+        [C, P, P, P, P, C, U, U],
+        '—',
+        'On a break since 18.09 · not counted',
+        'hold',
+      ),
       row('anna', 'Anna Shevchenko', [C, P, P, P, P, C, P, A], '83%', '1 absence · 25.09'),
       row('mark', 'Mark Shevchenko', [C, P, P, P, P, C, P, P], '100%', 'no absences'),
     ],
@@ -60,7 +76,14 @@ const SCENARIOS: Record<Scenario, { rows: AttendanceListRow[]; rate: string; mis
     rate: '92%',
     misses: 1,
     rows: [
-      row('kate', 'Kateryna Shevchuk', [P, P, P, P, U, U, U, U], '—', 'On a break · not counted', 'hold'),
+      row(
+        'kate',
+        'Kateryna Shevchuk',
+        [P, P, P, P, U, U, U, U],
+        '—',
+        'On a break · not counted',
+        'hold',
+      ),
       row('anna', 'Anna Shevchenko', [P, P, A, P, P, P, P, P], '88%', '1 absence · 25.09'),
     ],
   },
@@ -79,7 +102,28 @@ const SCENARIOS: Record<Scenario, { rows: AttendanceListRow[]; rate: string; mis
   },
 };
 
-type Args = { scenario: Scenario; compact: boolean; empty: boolean };
+type Args = {
+  scenario: Scenario;
+  compact: boolean;
+  empty: boolean;
+  /** Each cell opens its tooltip (S08). */
+  tooltips: boolean;
+};
+
+/** A tooltip per cell: the lesson, and whether the student came. */
+function tipsOf(item: AttendanceListRow): AttendanceTipContent[] {
+  const first = item.name.split(' ')[0];
+  return item.cells.map((cell, index) => ({
+    title: `Lesson ${index + 1} · Speaking practice`,
+    lines: [
+      cell === 'present'
+        ? { tone: 'present', text: `${first} came` }
+        : cell === 'absent'
+          ? { tone: 'absent', text: `${first} missed` }
+          : { tone: 'muted', text: cell === 'cancelled' ? 'Lesson cancelled' : 'Not marked yet' },
+    ],
+  }));
+}
 
 /**
  * Attendance over the last held lessons. `scenario` covers the design's
@@ -87,8 +131,9 @@ type Args = { scenario: Scenario; compact: boolean; empty: boolean };
  * cancelled lessons and fewer lessons than the window — and `compact` is the
  * phone layout with two tiles and "all students".
  */
-function AttendanceListStory({ scenario, compact, empty }: Args) {
+function AttendanceListStory({ scenario, compact, empty, tooltips }: Args) {
   const data = SCENARIOS[scenario];
+  const rows = tooltips ? data.rows.map((item) => ({ ...item, tips: tipsOf(item) })) : data.rows;
   const [all, setAll] = useState(false);
   return (
     <div className={compact ? 'w-90 max-w-full' : 'w-170 max-w-full'}>
@@ -98,8 +143,18 @@ function AttendanceListStory({ scenario, compact, empty }: Args) {
         compact={compact}
         stats={{
           lessons: { label: 'Lessons', value: 8, note: '6 taught' },
-          rate: { label: 'Attendance', value: data.rate, note: 'group average', good: scenario === 'allGood' },
-          misses: { label: 'Absences', value: data.misses, note: 'of 34 visits', warn: data.misses > 0 },
+          rate: {
+            label: 'Attendance',
+            value: data.rate,
+            note: 'group average',
+            good: scenario === 'allGood',
+          },
+          misses: {
+            label: 'Absences',
+            value: data.misses,
+            note: 'of 34 visits',
+            warn: data.misses > 0,
+          },
           cancelled: {
             label: 'Cancelled',
             value: 2,
@@ -107,7 +162,7 @@ function AttendanceListStory({ scenario, compact, empty }: Args) {
             free: { value: 1, label: 'free' },
           },
         }}
-        rows={data.rows}
+        rows={rows}
         visibleRows={compact && !all ? 3 : undefined}
         onShowAll={() => setAll(true)}
         showAllLabel={`All ${data.rows.length} students`}
@@ -128,8 +183,16 @@ function AttendanceListStory({ scenario, compact, empty }: Args) {
 
 const meta = {
   title: 'Shared/Lists/AttendanceList',
+  // The app provides the tooltip timing; a story on its own does it here.
+  decorators: [
+    (Story) => (
+      <TooltipProvider>
+        <Story />
+      </TooltipProvider>
+    ),
+  ],
   component: AttendanceListStory,
-  args: { scenario: 'risk', compact: false, empty: false },
+  args: { scenario: 'risk', compact: false, empty: false, tooltips: false },
   argTypes: {
     scenario: {
       control: 'inline-radio',
@@ -152,5 +215,17 @@ export const PhoneShowsAll: Story = {
     await expect(canvas.getByText('Artem L.')).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: 'All 4 students' }));
     await expect(canvas.getAllByRole('listitem')).toHaveLength(4);
+  },
+};
+
+/** Every cell opens its tooltip (S08 decision 7): the lesson, came or missed. */
+export const CellTooltips: Story = {
+  args: { tooltips: true },
+  play: async ({ canvasElement }) => {
+    // Artem, at risk, leads the rows.
+    const row = within(canvasElement).getAllByRole('group')[0]!;
+    await userEvent.hover(within(row).getAllByRole('button')[6]!);
+    const tip = await within(document.body).findByRole('tooltip');
+    await expect(tip).toHaveTextContent('Artem missed');
   },
 };

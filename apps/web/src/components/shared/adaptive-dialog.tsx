@@ -27,6 +27,8 @@ const WIDTH_CLASS = {
   md: 'sm:max-w-120',
   lg: 'sm:max-w-150',
   xl: 'sm:max-w-180',
+  // A result with a row per student and its action, e.g. packages sold to members.
+  '2xl': 'sm:max-w-240',
 } as const;
 
 function Heading({

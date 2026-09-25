@@ -9,6 +9,8 @@ const WIDTH = {
   md: 'max-h-[calc(100dvh-48px)] w-160 max-w-[calc(100%-2rem)] rounded-hero sm:max-w-160',
   // The package sale with its preview column (S07).
   lg: 'max-h-[calc(100dvh-48px)] w-225 max-w-[calc(100%-2rem)] rounded-hero sm:max-w-225',
+  // A sale to several group members, with its member picker (S08).
+  xl: 'max-h-[calc(100dvh-48px)] w-260 max-w-[calc(100%-2rem)] rounded-hero sm:max-w-260',
   // A "not found" state.
   compact: 'w-130 max-w-[calc(100%-2rem)] rounded-hero p-5 sm:max-w-130',
 } as const;
@@ -16,7 +18,7 @@ const WIDTH = {
 /**
  * The dialog of a window headed by the indigo band (the lesson windows, the
  * package sale): on desktop one centred column with the hero radius over the
- * scrim — 640px, 900px (`lg`) or the 520px `compact` — as tall as its
+ * scrim — 640px, 900px (`lg`), 1040px (`xl`) or the 520px `compact` — as tall as its
  * content up to the viewport less 48px; on phones a full-screen sheet. The
  * content owns the title as a `DialogTitle`.
  */

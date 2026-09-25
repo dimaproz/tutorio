@@ -17,6 +17,7 @@ export function CreditMeter({
   usedLabel,
   leftLabel,
   inline = false,
+  tone = 'default',
   className,
 }: {
   left: number;
@@ -32,12 +33,15 @@ export function CreditMeter({
   leftLabel?: ReactNode;
   /** `sm`: the caption sits beside the pills, in the foreground colour. */
   inline?: boolean;
+  /** `sm`: `paused` greys the credits of a package that waits for a return. */
+  tone?: 'default' | 'paused';
   className?: string;
 }) {
   const safeTotal = Math.max(total, 0);
   const safeLeft = Math.min(Math.max(left, 0), safeTotal);
   const used = safeTotal - safeLeft;
-  const low = safeTotal > 0 && safeLeft <= lowThreshold;
+  const paused = tone === 'paused';
+  const low = !paused && safeTotal > 0 && safeLeft <= lowThreshold;
   const segments = Array.from({ length: safeTotal }, (_, index) => index);
 
   if (size === 'lg') {
@@ -78,7 +82,15 @@ export function CreditMeter({
               style={{ width: segmentWidth }}
               className={cn(
                 'h-2 rounded-[4px]',
-                index < safeLeft ? (low ? 'bg-danger-mark' : 'bg-brand') : 'bg-tint-foreground/15',
+                index < safeLeft
+                  ? paused
+                    ? 'bg-muted-foreground/55'
+                    : low
+                      ? 'bg-danger-mark'
+                      : 'bg-brand'
+                  : paused
+                    ? 'bg-border'
+                    : 'bg-tint-foreground/15',
               )}
             />
           ))}

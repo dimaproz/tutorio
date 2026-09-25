@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { ArrowRightIcon } from 'lucide-react';
+import { AttendanceTip, type AttendanceTipContent } from '@/components/shared/attendance-tip';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -89,7 +90,12 @@ export type StatBlockProps = {
 type StatBlockChart =
   | { chart: 'bars'; data: number[] }
   | { chart: 'ring'; percent: number }
-  | { chart: 'segments'; data: StatBlockSegment[] };
+  | {
+      chart: 'segments';
+      data: StatBlockSegment[];
+      /** One attendance tooltip per segment (S08); the segments stay decorative without. */
+      tips?: AttendanceTipContent[];
+    };
 
 const RING_RADIUS = 26;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
@@ -328,19 +334,34 @@ function StatBlockChartVisual(
     );
   }
 
+  const segmentClass = (segment: StatBlockSegment) =>
+    cn(
+      'size-3.5 rounded-[4px]',
+      segment === 'ok' && 'bg-success',
+      segment === 'miss' && 'bg-danger-mark',
+      segment === 'planned' && theme.track,
+    );
+  const tips = props.tips;
+  if (tips) {
+    return (
+      <div className="grid w-fit grid-cols-6 gap-[5px]">
+        {props.data.map((segment, index) => {
+          const tip = tips[index];
+          return tip ? (
+            // Attendance cells are positional, so the index is the identity.
+            <AttendanceTip key={index} tip={tip} className={segmentClass(segment)} />
+          ) : (
+            <span key={index} aria-hidden="true" className={segmentClass(segment)} />
+          );
+        })}
+      </div>
+    );
+  }
   return (
     <div aria-hidden="true" className="grid w-fit grid-cols-6 gap-[5px]">
       {props.data.map((segment, index) => (
-        <span
-          // Attendance cells are positional, so the index is the identity.
-          key={index}
-          className={cn(
-            'size-3.5 rounded-[4px]',
-            segment === 'ok' && 'bg-success',
-            segment === 'miss' && 'bg-danger-mark',
-            segment === 'planned' && theme.track,
-          )}
-        />
+        // Attendance cells are positional, so the index is the identity.
+        <span key={index} className={segmentClass(segment)} />
       ))}
     </div>
   );

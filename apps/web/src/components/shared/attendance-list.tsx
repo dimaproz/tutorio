@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { ChevronDownIcon } from 'lucide-react';
+import { AttendanceTip, type AttendanceTipContent } from '@/components/shared/attendance-tip';
 import { EntityAvatar } from '@/components/shared/entity-avatar';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -24,6 +25,8 @@ export type AttendanceListRow = {
   note: string;
   /** Spoken summary of the cells, e.g. "Came to 5 of 6". */
   cellsLabel: string;
+  /** One tooltip per cell (the date, the topic, came or missed); none keeps the cells still. */
+  tips?: AttendanceTipContent[];
   tone?: AttendanceRowTone;
 };
 
@@ -55,10 +58,11 @@ const ROW_CLASS: Record<AttendanceRowTone, { row: string; note: string; rate: st
     note: 'text-tint-danger-foreground',
     rate: 'text-tint-danger-foreground',
   },
+  // Paused means grey (S08 decision 5), as on the member's roster card.
   hold: {
-    row: 'bg-tint-warning',
-    note: 'text-tint-warning-foreground',
-    rate: 'text-tint-warning-foreground',
+    row: 'bg-secondary',
+    note: 'text-muted-foreground',
+    rate: 'text-muted-foreground',
   },
 };
 
@@ -225,19 +229,38 @@ export function AttendanceList({
                           {row.note}
                         </span>
                       </span>
-                      <span
-                        role="img"
-                        aria-label={row.cellsLabel}
-                        className="flex shrink-0 items-center gap-[3px]"
-                      >
-                        {row.cells.map((cell, index) => (
-                          <span
-                            // Cells are positional samples of one window.
-                            key={index}
-                            className={cn('h-4.5 w-2.5 rounded-[3px]', CELL_CLASS[cell])}
-                          />
-                        ))}
-                      </span>
+                      {row.tips ? (
+                        <span
+                          role="group"
+                          aria-label={row.cellsLabel}
+                          className="flex shrink-0 items-center gap-[3px]"
+                        >
+                          {row.cells.map((cell, index) => {
+                            const tip = row.tips?.[index];
+                            const cellClass = cn('h-4.5 w-2.5 rounded-[3px]', CELL_CLASS[cell]);
+                            return tip ? (
+                              // Cells are positional samples of one window.
+                              <AttendanceTip key={index} tip={tip} className={cellClass} />
+                            ) : (
+                              <span key={index} className={cellClass} />
+                            );
+                          })}
+                        </span>
+                      ) : (
+                        <span
+                          role="img"
+                          aria-label={row.cellsLabel}
+                          className="flex shrink-0 items-center gap-[3px]"
+                        >
+                          {row.cells.map((cell, index) => (
+                            <span
+                              // Cells are positional samples of one window.
+                              key={index}
+                              className={cn('h-4.5 w-2.5 rounded-[3px]', CELL_CLASS[cell])}
+                            />
+                          ))}
+                        </span>
+                      )}
                       <span
                         className={cn(
                           'w-12 shrink-0 text-right font-mono text-[13px] font-semibold',

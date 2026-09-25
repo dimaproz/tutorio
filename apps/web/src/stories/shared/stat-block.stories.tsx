@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { fn } from 'storybook/test';
+import { expect, fn, userEvent, within } from 'storybook/test';
+import type { AttendanceTipContent } from '@/components/shared/attendance-tip';
 import { StatBlock, type StatBlockSegment } from '@/components/shared/stat-block';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 const ATTENDANCE: StatBlockSegment[] = [
   'ok',
@@ -16,6 +18,17 @@ const ATTENDANCE: StatBlockSegment[] = [
   'ok',
   'ok',
 ];
+/** One tooltip per lesson: the date, the topic, who came and who missed. */
+const ATTENDANCE_TIPS: AttendanceTipContent[] = ATTENDANCE.map((segment, index) => ({
+  title: `Lesson ${index + 1} · Speaking practice`,
+  lines:
+    segment === 'miss'
+      ? [
+          { tone: 'present', text: 'Came 5 of 6' },
+          { tone: 'absent', text: 'Missed: Anna Shevchenko' },
+        ]
+      : [{ tone: 'present', text: 'Came 6 of 6' }],
+}));
 const TREND = [28, 30, 29, 32, 31, 33, 35, 34, 36, 37, 38, 39];
 const SKILLS = [
   { label: 'Reading', value: 'B2', percent: 82 },
@@ -42,6 +55,8 @@ type Args = {
   detail: string;
   actionLabel: string;
   onAction: () => void;
+  /** Segments: each cell opens its attendance tooltip (S08). */
+  tooltips: boolean;
 };
 
 /**
@@ -77,7 +92,14 @@ function StatBlockStory(args: Args) {
     ) : args.chart === 'ring' ? (
       <StatBlock {...common} type="chart" chart="ring" value={args.value} percent={args.percent} />
     ) : args.chart === 'segments' ? (
-      <StatBlock {...common} type="chart" chart="segments" value={args.value} data={ATTENDANCE} />
+      <StatBlock
+        {...common}
+        type="chart"
+        chart="segments"
+        value={args.value}
+        data={ATTENDANCE}
+        tips={args.tooltips ? ATTENDANCE_TIPS : undefined}
+      />
     ) : (
       <StatBlock {...common} type="chart" chart="bars" value={args.value} data={TREND} />
     );
@@ -87,6 +109,14 @@ function StatBlockStory(args: Args) {
 
 const meta = {
   title: 'Shared/Cards/StatBlock',
+  // The app provides the tooltip timing; a story on its own does it here.
+  decorators: [
+    (Story) => (
+      <TooltipProvider>
+        <Story />
+      </TooltipProvider>
+    ),
+  ],
   component: StatBlockStory,
   args: {
     type: 'amount',
@@ -106,8 +136,10 @@ const meta = {
     detail: '+4 000 ₴',
     actionLabel: '',
     onAction: fn(),
+    tooltips: false,
   },
   argTypes: {
+    tooltips: { if: { arg: 'chart', eq: 'segments' } },
     type: { control: 'inline-radio', options: ['amount', 'date', 'chart', 'custom'] },
     chart: {
       control: 'inline-radio',
@@ -158,5 +190,16 @@ export const WithAction: Story = {
     caption: '',
     detail: '',
     actionLabel: 'Offer a top-up',
+  },
+};
+
+/** Attendance segments with a tooltip per lesson (S08 decision 7): hover, focus or tap. */
+export const SegmentTooltips: Story = {
+  args: { type: 'chart', chart: 'segments', value: '88%', tooltips: true, badge: '' },
+  play: async ({ canvasElement }) => {
+    const cells = within(canvasElement).getAllByRole('button');
+    await userEvent.hover(cells[7]!);
+    const tip = await within(document.body).findByRole('tooltip');
+    await expect(tip).toHaveTextContent('Missed: Anna Shevchenko');
   },
 };
