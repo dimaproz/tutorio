@@ -261,6 +261,10 @@ describe('Work Packet 6.4 phase 5: package kinds and operations (e2e)', () => {
       expiresAt: at(30),
       remainingCredits: 3,
     });
+    // The extension by hand is in the ticket's history (S07).
+    expect(
+      (await get(`/packages/${pkg.id}`).expect(200)).body.manualExtensions,
+    ).toEqual([{ at: expect.any(String), from: at(-5), to: at(30) }]);
     expect(await chargeOf(late.id)).toEqual({
       source: 'PACKAGE',
       packageId: pkg.id,

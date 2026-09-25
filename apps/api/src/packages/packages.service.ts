@@ -253,7 +253,7 @@ export class PackagesService {
     packageId: string,
   ): Promise<PackageDetailResponse> {
     const pkg = await this.getOne(auth, packageId);
-    const [ahead, extensions] = await Promise.all([
+    const [ahead, extensions, audits] = await Promise.all([
       this.aheadOf(pkg),
       this.prisma.pausePackageExtension.findMany({
         where: { packageId: pkg.id },
@@ -265,10 +265,37 @@ export class PackagesService {
         },
         orderBy: { pause: { startsAt: 'asc' } },
       }),
+      // An extension by hand has no credit entry: its audit row is the record.
+      this.prisma.auditLog.findMany({
+        where: {
+          workspaceId: auth.workspaceId,
+          entity: 'LESSON_PACKAGE',
+          entityId: pkg.id,
+          action: 'UPDATE',
+        },
+        orderBy: { createdAt: 'asc' },
+        select: { createdAt: true, diff: true },
+      }),
     ]);
     return {
       ...pkg,
       ahead,
+      manualExtensions: audits.flatMap(({ createdAt, diff }) => {
+        const change = (
+          diff as {
+            fields?: Record<string, { before: unknown; after: unknown }>;
+          } | null
+        )?.fields?.expiresAt;
+        return change && typeof change.after === 'string'
+          ? [
+              {
+                at: createdAt.toISOString(),
+                from: typeof change.before === 'string' ? change.before : null,
+                to: change.after,
+              },
+            ]
+          : [];
+      }),
       pauseExtensions: extensions.map(({ pause, extendedBySeconds }) => ({
         pauseId: pause.id,
         startsAt: pause.startsAt.toISOString(),
