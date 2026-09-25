@@ -5389,6 +5389,7 @@
     },
     "/api/packages": {
       "get": {
+        "description": "Filters by student, group, teacher, kind, payment status, a tab (active, running out, unpaid, finished) and a name search; counts each tab and sums what the unpaid ones owe per currency.",
         "operationId": "PackagesController_list",
         "parameters": [
           {
@@ -5434,12 +5435,59 @@
             }
           },
           {
+            "name": "teacherId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sizingMode",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["FIXED_COUNT", "BY_PERIOD", "BY_PERIOD_WEEKLY"]
+            }
+          },
+          {
             "name": "paymentStatus",
             "required": false,
             "in": "query",
             "schema": {
               "type": "string",
               "enum": ["PENDING", "PARTIAL", "PAID"]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["ACTIVE", "ENDING", "UNPAID", "FINISHED"]
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minLength": 1,
+              "maxLength": 120,
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "newest",
+              "type": "string",
+              "enum": ["newest", "ending"]
             }
           },
           {
@@ -5484,31 +5532,9 @@
         "tags": ["packages"]
       },
       "post": {
-        "description": "Creates the package, its opening purchase entry, per-member shares for a group, and (with a schedule) the recurring series behind it.",
+        "description": "Creates the package and its opening purchase entry for one direction; lessons on debt are covered first. Never creates a schedule or records a payment (L-87).",
         "operationId": "PackagesController_create",
-        "parameters": [
-          {
-            "name": "force",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "default": false,
-              "oneOf": [
-                {
-                  "type": "boolean"
-                },
-                {
-                  "type": "string",
-                  "enum": ["true"]
-                },
-                {
-                  "type": "string",
-                  "enum": ["false"]
-                }
-              ]
-            }
-          }
-        ],
+        "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
@@ -5549,16 +5575,6 @@
                 }
               }
             }
-          },
-          "409": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
           }
         },
         "security": [
@@ -5566,7 +5582,7 @@
             "bearer": []
           }
         ],
-        "summary": "Buy a lesson package",
+        "summary": "Sell a lesson package",
         "tags": ["packages"]
       }
     },
@@ -5877,7 +5893,7 @@
     },
     "/api/packages/{packageId}": {
       "get": {
-        "description": "Balances, the effective total and payment status are derived from the credit ledger and recorded payments, never from a stored counter.",
+        "description": "Balances, the effective total and payment status are derived from the credit ledger and recorded payments, never from a stored counter. Also names the older package that pays first and the pauses that moved its end.",
         "operationId": "PackagesController_getDetail",
         "parameters": [
           {
@@ -5895,7 +5911,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PackageDto"
+                  "$ref": "#/components/schemas/PackageDetailDto"
                 }
               }
             }
@@ -5930,7 +5946,7 @@
         "tags": ["packages"]
       },
       "delete": {
-        "description": "Idempotent. Stops owned series and future scheduled lessons; financial history is retained.",
+        "description": "Only a package with no charged lessons and no payments (409 PACKAGE_IN_USE otherwise; refund it instead). Idempotent; the row is archived with its audit trail.",
         "operationId": "PackagesController_remove",
         "parameters": [
           {
@@ -5955,6 +5971,16 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5962,7 +5988,7 @@
             "bearer": []
           }
         ],
-        "summary": "Archive a package",
+        "summary": "Delete an unused package",
         "tags": ["packages"]
       }
     },
@@ -15045,9 +15071,25 @@
                     },
                     "fullName": {
                       "type": "string"
+                    },
+                    "avatarKey": {
+                      "type": "string",
+                      "enum": [
+                        "user-1",
+                        "user-2",
+                        "user-3",
+                        "user-4",
+                        "user-5",
+                        "user-6",
+                        "user-7",
+                        "user-8",
+                        "user-9",
+                        "user-10"
+                      ],
+                      "nullable": true
                     }
                   },
-                  "required": ["id", "fullName"]
+                  "required": ["id", "fullName", "avatarKey"]
                 },
                 "group": {
                   "type": "object",
@@ -15062,6 +15104,41 @@
                   },
                   "required": ["id", "name"],
                   "nullable": true
+                },
+                "teacher": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "avatarKey": {
+                      "type": "string",
+                      "enum": [
+                        "user-1",
+                        "user-2",
+                        "user-3",
+                        "user-4",
+                        "user-5",
+                        "user-6",
+                        "user-7",
+                        "user-8",
+                        "user-9",
+                        "user-10"
+                      ],
+                      "nullable": true
+                    },
+                    "subjects": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": ["id", "name", "avatarKey", "subjects"]
                 },
                 "createdAt": {
                   "type": "string",
@@ -15103,6 +15180,7 @@
                 "notes",
                 "student",
                 "group",
+                "teacher",
                 "createdAt",
                 "updatedAt",
                 "deletedAt"
@@ -15128,9 +15206,77 @@
             "type": "integer",
             "minimum": 0,
             "exclusiveMinimum": false
+          },
+          "counts": {
+            "type": "object",
+            "properties": {
+              "active": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "ending": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "unpaid": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "finished": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "all": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              }
+            },
+            "required": ["active", "ending", "unpaid", "finished", "all"]
+          },
+          "owed": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "currency": {
+                  "type": "string",
+                  "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
+                },
+                "amountMinor": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                },
+                "packages": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                }
+              },
+              "required": ["currency", "amountMinor", "packages"]
+            }
+          },
+          "lowCreditThreshold": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
           }
         },
-        "required": ["items", "page", "pageSize", "total", "totalPages"]
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "total",
+          "totalPages",
+          "counts",
+          "owed",
+          "lowCreditThreshold"
+        ]
       },
       "CreatePackageDto": {
         "type": "object",
@@ -15213,68 +15359,6 @@
             "type": "string",
             "maxLength": 2000,
             "nullable": true
-          },
-          "schedule": {
-            "type": "object",
-            "properties": {
-              "slots": {
-                "type": "array",
-                "minItems": 1,
-                "maxItems": 7,
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "weekday": {
-                      "type": "integer",
-                      "minimum": 0,
-                      "exclusiveMinimum": false,
-                      "maximum": 6,
-                      "exclusiveMaximum": false
-                    },
-                    "localTime": {
-                      "type": "string",
-                      "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
-                    }
-                  },
-                  "required": ["weekday", "localTime"]
-                }
-              },
-              "timezone": {
-                "type": "string",
-                "minLength": 1
-              },
-              "durationMin": {
-                "type": "integer",
-                "minimum": 5,
-                "exclusiveMinimum": false,
-                "maximum": 720,
-                "exclusiveMaximum": false
-              },
-              "startDate": {
-                "type": "string",
-                "format": "date-time"
-              }
-            },
-            "required": ["slots", "timezone", "durationMin", "startDate"],
-            "nullable": true
-          },
-          "initialPayment": {
-            "type": "object",
-            "properties": {
-              "amountMinor": {
-                "type": "integer",
-                "minimum": 0,
-                "exclusiveMinimum": false,
-                "maximum": 2147483647,
-                "exclusiveMaximum": false
-              },
-              "paidAt": {
-                "type": "string",
-                "format": "date-time"
-              }
-            },
-            "required": ["amountMinor", "paidAt"],
-            "nullable": true
           }
         },
         "required": ["studentId", "currency"]
@@ -15312,6 +15396,26 @@
             "minimum": 0,
             "exclusiveMinimum": false,
             "nullable": true
+          },
+          "debtLessons": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "ahead": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "name": {
+                "type": "string",
+                "nullable": true
+              }
+            },
+            "required": ["id", "name"],
+            "nullable": true
           }
         },
         "required": [
@@ -15320,7 +15424,9 @@
           "totalPriceMinor",
           "validFrom",
           "expiresAt",
-          "scheduleLessons"
+          "scheduleLessons",
+          "debtLessons",
+          "ahead"
         ]
       },
       "SellToMembersDto": {
@@ -15516,9 +15622,25 @@
                     },
                     "fullName": {
                       "type": "string"
+                    },
+                    "avatarKey": {
+                      "type": "string",
+                      "enum": [
+                        "user-1",
+                        "user-2",
+                        "user-3",
+                        "user-4",
+                        "user-5",
+                        "user-6",
+                        "user-7",
+                        "user-8",
+                        "user-9",
+                        "user-10"
+                      ],
+                      "nullable": true
                     }
                   },
-                  "required": ["id", "fullName"]
+                  "required": ["id", "fullName", "avatarKey"]
                 },
                 "group": {
                   "type": "object",
@@ -15533,6 +15655,41 @@
                   },
                   "required": ["id", "name"],
                   "nullable": true
+                },
+                "teacher": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "avatarKey": {
+                      "type": "string",
+                      "enum": [
+                        "user-1",
+                        "user-2",
+                        "user-3",
+                        "user-4",
+                        "user-5",
+                        "user-6",
+                        "user-7",
+                        "user-8",
+                        "user-9",
+                        "user-10"
+                      ],
+                      "nullable": true
+                    },
+                    "subjects": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": ["id", "name", "avatarKey", "subjects"]
                 },
                 "createdAt": {
                   "type": "string",
@@ -15574,6 +15731,7 @@
                 "notes",
                 "student",
                 "group",
+                "teacher",
                 "createdAt",
                 "updatedAt",
                 "deletedAt"
@@ -15697,9 +15855,25 @@
               },
               "fullName": {
                 "type": "string"
+              },
+              "avatarKey": {
+                "type": "string",
+                "enum": [
+                  "user-1",
+                  "user-2",
+                  "user-3",
+                  "user-4",
+                  "user-5",
+                  "user-6",
+                  "user-7",
+                  "user-8",
+                  "user-9",
+                  "user-10"
+                ],
+                "nullable": true
               }
             },
-            "required": ["id", "fullName"]
+            "required": ["id", "fullName", "avatarKey"]
           },
           "group": {
             "type": "object",
@@ -15714,6 +15888,41 @@
             },
             "required": ["id", "name"],
             "nullable": true
+          },
+          "teacher": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "name": {
+                "type": "string"
+              },
+              "avatarKey": {
+                "type": "string",
+                "enum": [
+                  "user-1",
+                  "user-2",
+                  "user-3",
+                  "user-4",
+                  "user-5",
+                  "user-6",
+                  "user-7",
+                  "user-8",
+                  "user-9",
+                  "user-10"
+                ],
+                "nullable": true
+              },
+              "subjects": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": ["id", "name", "avatarKey", "subjects"]
           },
           "createdAt": {
             "type": "string",
@@ -15755,6 +15964,7 @@
           "notes",
           "student",
           "group",
+          "teacher",
           "createdAt",
           "updatedAt",
           "deletedAt"
@@ -15889,9 +16099,25 @@
                   },
                   "fullName": {
                     "type": "string"
+                  },
+                  "avatarKey": {
+                    "type": "string",
+                    "enum": [
+                      "user-1",
+                      "user-2",
+                      "user-3",
+                      "user-4",
+                      "user-5",
+                      "user-6",
+                      "user-7",
+                      "user-8",
+                      "user-9",
+                      "user-10"
+                    ],
+                    "nullable": true
                   }
                 },
-                "required": ["id", "fullName"]
+                "required": ["id", "fullName", "avatarKey"]
               },
               "group": {
                 "type": "object",
@@ -15906,6 +16132,41 @@
                 },
                 "required": ["id", "name"],
                 "nullable": true
+              },
+              "teacher": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "avatarKey": {
+                    "type": "string",
+                    "enum": [
+                      "user-1",
+                      "user-2",
+                      "user-3",
+                      "user-4",
+                      "user-5",
+                      "user-6",
+                      "user-7",
+                      "user-8",
+                      "user-9",
+                      "user-10"
+                    ],
+                    "nullable": true
+                  },
+                  "subjects": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": ["id", "name", "avatarKey", "subjects"]
               },
               "createdAt": {
                 "type": "string",
@@ -15947,6 +16208,7 @@
               "notes",
               "student",
               "group",
+              "teacher",
               "createdAt",
               "updatedAt",
               "deletedAt"
@@ -16056,9 +16318,25 @@
                   },
                   "fullName": {
                     "type": "string"
+                  },
+                  "avatarKey": {
+                    "type": "string",
+                    "enum": [
+                      "user-1",
+                      "user-2",
+                      "user-3",
+                      "user-4",
+                      "user-5",
+                      "user-6",
+                      "user-7",
+                      "user-8",
+                      "user-9",
+                      "user-10"
+                    ],
+                    "nullable": true
                   }
                 },
-                "required": ["id", "fullName"]
+                "required": ["id", "fullName", "avatarKey"]
               },
               "group": {
                 "type": "object",
@@ -16073,6 +16351,41 @@
                 },
                 "required": ["id", "name"],
                 "nullable": true
+              },
+              "teacher": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "avatarKey": {
+                    "type": "string",
+                    "enum": [
+                      "user-1",
+                      "user-2",
+                      "user-3",
+                      "user-4",
+                      "user-5",
+                      "user-6",
+                      "user-7",
+                      "user-8",
+                      "user-9",
+                      "user-10"
+                    ],
+                    "nullable": true
+                  },
+                  "subjects": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": ["id", "name", "avatarKey", "subjects"]
               },
               "createdAt": {
                 "type": "string",
@@ -16114,6 +16427,7 @@
               "notes",
               "student",
               "group",
+              "teacher",
               "createdAt",
               "updatedAt",
               "deletedAt"
@@ -16165,6 +16479,279 @@
         },
         "required": ["credits", "amountMinor", "note"]
       },
+      "PackageDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "enrollmentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "studentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "groupId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "sizingMode": {
+            "type": "string",
+            "enum": ["FIXED_COUNT", "BY_PERIOD", "BY_PERIOD_WEEKLY"]
+          },
+          "lessonsTotal": {
+            "type": "integer"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "pricePerLessonMinorSnapshot": {
+            "type": "integer"
+          },
+          "totalPriceMinorSnapshot": {
+            "type": "integer"
+          },
+          "lessonsPerWeek": {
+            "type": "integer",
+            "nullable": true
+          },
+          "validFrom": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "transferredFromPackageId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "remainingCredits": {
+            "type": "integer"
+          },
+          "consumedCredits": {
+            "type": "integer"
+          },
+          "paidMinor": {
+            "type": "integer"
+          },
+          "refundedMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "currency": {
+            "type": "string",
+            "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
+          },
+          "paymentStatus": {
+            "type": "string",
+            "enum": ["PENDING", "PARTIAL", "PAID"]
+          },
+          "purchasedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "student": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "fullName": {
+                "type": "string"
+              },
+              "avatarKey": {
+                "type": "string",
+                "enum": [
+                  "user-1",
+                  "user-2",
+                  "user-3",
+                  "user-4",
+                  "user-5",
+                  "user-6",
+                  "user-7",
+                  "user-8",
+                  "user-9",
+                  "user-10"
+                ],
+                "nullable": true
+              }
+            },
+            "required": ["id", "fullName", "avatarKey"]
+          },
+          "group": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": ["id", "name"],
+            "nullable": true
+          },
+          "teacher": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "name": {
+                "type": "string"
+              },
+              "avatarKey": {
+                "type": "string",
+                "enum": [
+                  "user-1",
+                  "user-2",
+                  "user-3",
+                  "user-4",
+                  "user-5",
+                  "user-6",
+                  "user-7",
+                  "user-8",
+                  "user-9",
+                  "user-10"
+                ],
+                "nullable": true
+              },
+              "subjects": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": ["id", "name", "avatarKey", "subjects"]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "ahead": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "name": {
+                "type": "string",
+                "nullable": true
+              },
+              "remainingCredits": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true
+              },
+              "lastLessonAt": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              }
+            },
+            "required": ["id", "name", "remainingCredits", "lastLessonAt"],
+            "nullable": true
+          },
+          "pauseExtensions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "pauseId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "startsAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "endsAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                },
+                "extendedBySeconds": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                }
+              },
+              "required": ["pauseId", "startsAt", "endsAt", "extendedBySeconds"]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "workspaceId",
+          "enrollmentId",
+          "studentId",
+          "groupId",
+          "name",
+          "sizingMode",
+          "lessonsTotal",
+          "endDate",
+          "pricePerLessonMinorSnapshot",
+          "totalPriceMinorSnapshot",
+          "lessonsPerWeek",
+          "validFrom",
+          "transferredFromPackageId",
+          "remainingCredits",
+          "consumedCredits",
+          "paidMinor",
+          "refundedMinor",
+          "currency",
+          "paymentStatus",
+          "purchasedAt",
+          "expiresAt",
+          "notes",
+          "student",
+          "group",
+          "teacher",
+          "createdAt",
+          "updatedAt",
+          "deletedAt",
+          "ahead",
+          "pauseExtensions"
+        ]
+      },
       "CreditLedgerDto": {
         "type": "object",
         "properties": {
@@ -16184,6 +16771,36 @@
                 "lessonId": {
                   "type": "string",
                   "format": "uuid",
+                  "nullable": true
+                },
+                "lesson": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "startsAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "durationMin": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": true
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "SCHEDULED",
+                        "COMPLETED",
+                        "CANCELLED_CHARGED",
+                        "CANCELLED_UNCHARGED",
+                        "NO_SHOW"
+                      ]
+                    }
+                  },
+                  "required": ["id", "startsAt", "durationMin", "status"],
                   "nullable": true
                 },
                 "delta": {
@@ -16209,7 +16826,16 @@
                   "format": "date-time"
                 }
               },
-              "required": ["id", "packageId", "lessonId", "delta", "type", "note", "createdAt"]
+              "required": [
+                "id",
+                "packageId",
+                "lessonId",
+                "lesson",
+                "delta",
+                "type",
+                "note",
+                "createdAt"
+              ]
             }
           },
           "balance": {

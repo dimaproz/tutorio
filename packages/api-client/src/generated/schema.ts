@@ -1174,12 +1174,15 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** List lesson packages */
+    /**
+     * List lesson packages
+     * @description Filters by student, group, teacher, kind, payment status, a tab (active, running out, unpaid, finished) and a name search; counts each tab and sums what the unpaid ones owe per currency.
+     */
     get: operations['PackagesController_list'];
     put?: never;
     /**
-     * Buy a lesson package
-     * @description Creates the package, its opening purchase entry, per-member shares for a group, and (with a schedule) the recurring series behind it.
+     * Sell a lesson package
+     * @description Creates the package and its opening purchase entry for one direction; lessons on debt are covered first. Never creates a schedule or records a payment (L-87).
      */
     post: operations['PackagesController_create'];
     delete?: never;
@@ -1291,14 +1294,14 @@ export interface paths {
     };
     /**
      * Get a package
-     * @description Balances, the effective total and payment status are derived from the credit ledger and recorded payments, never from a stored counter.
+     * @description Balances, the effective total and payment status are derived from the credit ledger and recorded payments, never from a stored counter. Also names the older package that pays first and the pauses that moved its end.
      */
     get: operations['PackagesController_getDetail'];
     put?: never;
     post?: never;
     /**
-     * Archive a package
-     * @description Idempotent. Stops owned series and future scheduled lessons; financial history is retained.
+     * Delete an unused package
+     * @description Only a package with no charged lessons and no payments (409 PACKAGE_IN_USE otherwise; refund it instead). Idempotent; the row is archived with its audit trail.
      */
     delete: operations['PackagesController_remove'];
     options?: never;
@@ -4224,12 +4227,44 @@ export interface components {
           /** Format: uuid */
           id: string;
           fullName: string;
+          /** @enum {string|null} */
+          avatarKey:
+            | 'user-1'
+            | 'user-2'
+            | 'user-3'
+            | 'user-4'
+            | 'user-5'
+            | 'user-6'
+            | 'user-7'
+            | 'user-8'
+            | 'user-9'
+            | 'user-10'
+            | null;
         };
         group: {
           /** Format: uuid */
           id: string;
           name: string;
         } | null;
+        teacher: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+          /** @enum {string|null} */
+          avatarKey:
+            | 'user-1'
+            | 'user-2'
+            | 'user-3'
+            | 'user-4'
+            | 'user-5'
+            | 'user-6'
+            | 'user-7'
+            | 'user-8'
+            | 'user-9'
+            | 'user-10'
+            | null;
+          subjects: string[];
+        };
         /** Format: date-time */
         createdAt: string;
         /** Format: date-time */
@@ -4241,6 +4276,20 @@ export interface components {
       pageSize: number;
       total: number;
       totalPages: number;
+      counts: {
+        active: number;
+        ending: number;
+        unpaid: number;
+        finished: number;
+        all: number;
+      };
+      owed: {
+        /** @enum {string} */
+        currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+        amountMinor: number;
+        packages: number;
+      }[];
+      lowCreditThreshold: number;
     };
     CreatePackageDto: {
       /** Format: uuid */
@@ -4270,21 +4319,6 @@ export interface components {
       /** Format: date-time */
       expiresAt?: string | null;
       notes?: string | null;
-      schedule?: {
-        slots: {
-          weekday: number;
-          localTime: string;
-        }[];
-        timezone: string;
-        durationMin: number;
-        /** Format: date-time */
-        startDate: string;
-      } | null;
-      initialPayment?: {
-        amountMinor: number;
-        /** Format: date-time */
-        paidAt: string;
-      } | null;
     };
     PackagePreviewDto: {
       lessonsTotal: number;
@@ -4295,6 +4329,12 @@ export interface components {
       /** Format: date-time */
       expiresAt: string | null;
       scheduleLessons: number | null;
+      debtLessons: number;
+      ahead: {
+        /** Format: uuid */
+        id: string;
+        name: string | null;
+      } | null;
     };
     SellToMembersDto: {
       /** Format: uuid */
@@ -4364,12 +4404,44 @@ export interface components {
           /** Format: uuid */
           id: string;
           fullName: string;
+          /** @enum {string|null} */
+          avatarKey:
+            | 'user-1'
+            | 'user-2'
+            | 'user-3'
+            | 'user-4'
+            | 'user-5'
+            | 'user-6'
+            | 'user-7'
+            | 'user-8'
+            | 'user-9'
+            | 'user-10'
+            | null;
         };
         group: {
           /** Format: uuid */
           id: string;
           name: string;
         } | null;
+        teacher: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+          /** @enum {string|null} */
+          avatarKey:
+            | 'user-1'
+            | 'user-2'
+            | 'user-3'
+            | 'user-4'
+            | 'user-5'
+            | 'user-6'
+            | 'user-7'
+            | 'user-8'
+            | 'user-9'
+            | 'user-10'
+            | null;
+          subjects: string[];
+        };
         /** Format: date-time */
         createdAt: string;
         /** Format: date-time */
@@ -4423,12 +4495,44 @@ export interface components {
         /** Format: uuid */
         id: string;
         fullName: string;
+        /** @enum {string|null} */
+        avatarKey:
+          | 'user-1'
+          | 'user-2'
+          | 'user-3'
+          | 'user-4'
+          | 'user-5'
+          | 'user-6'
+          | 'user-7'
+          | 'user-8'
+          | 'user-9'
+          | 'user-10'
+          | null;
       };
       group: {
         /** Format: uuid */
         id: string;
         name: string;
       } | null;
+      teacher: {
+        /** Format: uuid */
+        id: string;
+        name: string;
+        /** @enum {string|null} */
+        avatarKey:
+          | 'user-1'
+          | 'user-2'
+          | 'user-3'
+          | 'user-4'
+          | 'user-5'
+          | 'user-6'
+          | 'user-7'
+          | 'user-8'
+          | 'user-9'
+          | 'user-10'
+          | null;
+        subjects: string[];
+      };
       /** Format: date-time */
       createdAt: string;
       /** Format: date-time */
@@ -4484,12 +4588,44 @@ export interface components {
           /** Format: uuid */
           id: string;
           fullName: string;
+          /** @enum {string|null} */
+          avatarKey:
+            | 'user-1'
+            | 'user-2'
+            | 'user-3'
+            | 'user-4'
+            | 'user-5'
+            | 'user-6'
+            | 'user-7'
+            | 'user-8'
+            | 'user-9'
+            | 'user-10'
+            | null;
         };
         group: {
           /** Format: uuid */
           id: string;
           name: string;
         } | null;
+        teacher: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+          /** @enum {string|null} */
+          avatarKey:
+            | 'user-1'
+            | 'user-2'
+            | 'user-3'
+            | 'user-4'
+            | 'user-5'
+            | 'user-6'
+            | 'user-7'
+            | 'user-8'
+            | 'user-9'
+            | 'user-10'
+            | null;
+          subjects: string[];
+        };
         /** Format: date-time */
         createdAt: string;
         /** Format: date-time */
@@ -4538,12 +4674,44 @@ export interface components {
           /** Format: uuid */
           id: string;
           fullName: string;
+          /** @enum {string|null} */
+          avatarKey:
+            | 'user-1'
+            | 'user-2'
+            | 'user-3'
+            | 'user-4'
+            | 'user-5'
+            | 'user-6'
+            | 'user-7'
+            | 'user-8'
+            | 'user-9'
+            | 'user-10'
+            | null;
         };
         group: {
           /** Format: uuid */
           id: string;
           name: string;
         } | null;
+        teacher: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+          /** @enum {string|null} */
+          avatarKey:
+            | 'user-1'
+            | 'user-2'
+            | 'user-3'
+            | 'user-4'
+            | 'user-5'
+            | 'user-6'
+            | 'user-7'
+            | 'user-8'
+            | 'user-9'
+            | 'user-10'
+            | null;
+          subjects: string[];
+        };
         /** Format: date-time */
         createdAt: string;
         /** Format: date-time */
@@ -4566,6 +4734,109 @@ export interface components {
       paidAt?: string;
       note: string;
     };
+    PackageDetailDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      workspaceId: string;
+      /** Format: uuid */
+      enrollmentId: string;
+      /** Format: uuid */
+      studentId: string;
+      /** Format: uuid */
+      groupId: string | null;
+      name: string | null;
+      /** @enum {string} */
+      sizingMode: 'FIXED_COUNT' | 'BY_PERIOD' | 'BY_PERIOD_WEEKLY';
+      lessonsTotal: number;
+      /** Format: date-time */
+      endDate: string | null;
+      pricePerLessonMinorSnapshot: number;
+      totalPriceMinorSnapshot: number;
+      lessonsPerWeek: number | null;
+      /** Format: date-time */
+      validFrom: string | null;
+      /** Format: uuid */
+      transferredFromPackageId: string | null;
+      remainingCredits: number;
+      consumedCredits: number;
+      paidMinor: number;
+      refundedMinor: number;
+      /** @enum {string} */
+      currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+      /** @enum {string} */
+      paymentStatus: 'PENDING' | 'PARTIAL' | 'PAID';
+      /** Format: date-time */
+      purchasedAt: string;
+      /** Format: date-time */
+      expiresAt: string | null;
+      notes: string | null;
+      student: {
+        /** Format: uuid */
+        id: string;
+        fullName: string;
+        /** @enum {string|null} */
+        avatarKey:
+          | 'user-1'
+          | 'user-2'
+          | 'user-3'
+          | 'user-4'
+          | 'user-5'
+          | 'user-6'
+          | 'user-7'
+          | 'user-8'
+          | 'user-9'
+          | 'user-10'
+          | null;
+      };
+      group: {
+        /** Format: uuid */
+        id: string;
+        name: string;
+      } | null;
+      teacher: {
+        /** Format: uuid */
+        id: string;
+        name: string;
+        /** @enum {string|null} */
+        avatarKey:
+          | 'user-1'
+          | 'user-2'
+          | 'user-3'
+          | 'user-4'
+          | 'user-5'
+          | 'user-6'
+          | 'user-7'
+          | 'user-8'
+          | 'user-9'
+          | 'user-10'
+          | null;
+        subjects: string[];
+      };
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+      /** Format: date-time */
+      deletedAt: string | null;
+      ahead: {
+        /** Format: uuid */
+        id: string;
+        name: string | null;
+        remainingCredits: number;
+        /** Format: date-time */
+        lastLessonAt: string | null;
+      } | null;
+      pauseExtensions: {
+        /** Format: uuid */
+        pauseId: string;
+        /** Format: date-time */
+        startsAt: string;
+        /** Format: date-time */
+        endsAt: string | null;
+        extendedBySeconds: number;
+      }[];
+    };
     CreditLedgerDto: {
       items: {
         /** Format: uuid */
@@ -4574,6 +4845,16 @@ export interface components {
         packageId: string;
         /** Format: uuid */
         lessonId: string | null;
+        lesson: {
+          /** Format: uuid */
+          id: string;
+          /** Format: date-time */
+          startsAt: string;
+          durationMin: number;
+          /** @enum {string} */
+          status:
+            'SCHEDULED' | 'COMPLETED' | 'CANCELLED_CHARGED' | 'CANCELLED_UNCHARGED' | 'NO_SHOW';
+        } | null;
         delta: number;
         /** @enum {string} */
         type:
@@ -7866,7 +8147,12 @@ export interface operations {
         pageSize?: number;
         studentId?: string;
         groupId?: string;
+        teacherId?: string;
+        sizingMode?: 'FIXED_COUNT' | 'BY_PERIOD' | 'BY_PERIOD_WEEKLY';
         paymentStatus?: 'PENDING' | 'PARTIAL' | 'PAID';
+        status?: 'ACTIVE' | 'ENDING' | 'UNPAID' | 'FINISHED';
+        search?: string;
+        sort?: 'newest' | 'ending';
         state?: 'active' | 'deleted' | 'all';
       };
       header?: never;
@@ -7896,9 +8182,7 @@ export interface operations {
   };
   PackagesController_create: {
     parameters: {
-      query?: {
-        force?: boolean | 'true' | 'false';
-      };
+      query?: never;
       header?: never;
       path?: never;
       cookie?: never;
@@ -7927,14 +8211,6 @@ export interface operations {
       };
       /** @description OWNER role required */
       403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiErrorDto'];
-        };
-      };
-      409: {
         headers: {
           [name: string]: unknown;
         };
@@ -8166,7 +8442,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['PackageDto'];
+          'application/json': components['schemas']['PackageDetailDto'];
         };
       };
       /** @description OWNER role required */
@@ -8207,6 +8483,14 @@ export interface operations {
       };
       /** @description OWNER role required */
       403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      409: {
         headers: {
           [name: string]: unknown;
         };
