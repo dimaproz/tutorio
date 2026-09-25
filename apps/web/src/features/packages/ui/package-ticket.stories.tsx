@@ -171,6 +171,10 @@ export const Extend: Story = {
     await userEvent.click(extend.getByRole('button', { name: /Extend to/ }));
     await wrote(args.onWrite, /\/extend$/);
     await expect(bodyOf(args.onWrite, /\/extend$/)).toHaveProperty('expiresAt');
+    // Back on the ticket, the history names the extension.
+    const view = await ticket();
+    await userEvent.click(view.getByRole('radio', { name: 'History' }));
+    await expect(await view.findByText(/Extended to/, {}, { timeout: 5000 })).toBeVisible();
   },
 };
 

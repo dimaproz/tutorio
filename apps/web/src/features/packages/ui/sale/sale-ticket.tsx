@@ -60,6 +60,7 @@ export function SalePreview({
   ready,
   emptyText,
   label,
+  name,
   lessons,
   lessonsWord,
   window,
@@ -70,6 +71,8 @@ export function SalePreview({
   ready: boolean;
   emptyText: string;
   label: string;
+  /** The package's name, over the prices. */
+  name: string;
   lessons: number;
   lessonsWord: string;
   window: string;
@@ -91,7 +94,8 @@ export function SalePreview({
             window={window}
           />
           <div aria-hidden="true" className="mx-5 border-t-2 border-dashed border-border" />
-          <dl className="flex flex-col gap-2.5 px-6 pt-4">
+          <span className="truncate px-6 pt-4 text-[15px] font-semibold">{name}</span>
+          <dl className="flex flex-col gap-2.5 px-6 pt-3">
             {rows.map((row, index) => (
               <div
                 key={row.label}

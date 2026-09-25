@@ -3,7 +3,7 @@ import {
   isPackageEnding,
   packageLifecycle,
   transferCredits,
-  weeksInPeriod,
+  weeklyLessons,
 } from '@tutorio/domain';
 import type {
   CreditEntryResponse,
@@ -107,6 +107,7 @@ function pkg(n: number, fields: Partial<PackageDetailResponse>): PackageDetailRe
     deletedAt: null,
     ahead: null,
     pauseExtensions: [],
+    manualExtensions: [],
     ...fields,
   };
 }
@@ -410,7 +411,7 @@ function previewOf(body: SaleBody): PackagePreviewResponse {
       : body.sizingMode === 'BY_PERIOD'
         ? (body.lessonsTotal ?? fromSchedule ?? 1)
         : from && until
-          ? weeksInPeriod(from, until) * (body.lessonsPerWeek ?? 1)
+          ? weeklyLessons(from, until, body.lessonsPerWeek ?? 1)
           : 1;
   const perLesson =
     body.pricePerLessonMinor ?? Math.round((body.totalPriceMinor ?? 0) / Math.max(lessons, 1));
@@ -434,7 +435,7 @@ export function createPackagesRoutes(options: PackagesStoryOptions) {
   const scenario = options.packagesStory;
   const packages = [...ticketPackages(), ...studioPackages()];
   const billing = BILLING_PACKAGES.map((item) =>
-    pkg(0, { ...item, ahead: null, pauseExtensions: [] }),
+    pkg(0, { ...item, ahead: null, pauseExtensions: [], manualExtensions: [] }),
   );
   const payments: PaymentResponse[] = [];
   for (const item of packages) {
@@ -617,6 +618,14 @@ export function createPackagesRoutes(options: PackagesStoryOptions) {
       const body = readBody() as Record<string, unknown>;
       write(body);
       if (operation[2] === 'extend') {
+        found.manualExtensions = [
+          ...found.manualExtensions,
+          {
+            at: new Date(PACKAGES_CLOCK).toISOString(),
+            from: found.expiresAt,
+            to: String(body.expiresAt),
+          },
+        ];
         found.expiresAt = String(body.expiresAt);
       }
       if (operation[2] === 'adjust') {

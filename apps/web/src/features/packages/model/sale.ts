@@ -39,6 +39,10 @@ export function saleFormSchema(today: string) {
       perLesson: z.string(),
       total: z.string(),
       priceSource: z.enum(['perLesson', 'total']),
+      /** The package's name as typed; empty until the tutor types one. */
+      name: z.string(),
+      /** Whether the tutor typed the name: until then it follows the default. */
+      nameEdited: z.boolean(),
     })
     .superRefine((values, ctx) => {
       const issue = (path: string, key: string) =>
@@ -62,6 +66,7 @@ export function saleFormSchema(today: string) {
       if (values[field].trim() === '') issue(field, 'priceRequired');
       else if (price === null) issue(field, 'priceInvalid');
       else if (price <= 0) issue(field, 'amountAboveZero');
+      if (values.name.trim().length > 120) issue('name', 'packageNameTooLong');
     });
 }
 
@@ -98,6 +103,8 @@ export function saleFormDefaults(direction: SaleDirection | null, now: Date): Sa
     perLesson: direction && direction.rateMinor > 0 ? moneyText(direction.rateMinor) : '',
     total: '',
     priceSource: 'perLesson',
+    name: '',
+    nameEdited: false,
   };
 }
 
@@ -132,12 +139,29 @@ export function typedLessons(values: Pick<SaleFormValues, 'kind' | 'lessons'>): 
 }
 
 /**
+ * The name the package is sold with: the tutor's, or — untouched or cleared
+ * — the default the form suggests («English · 8 занять»).
+ */
+export function saleName(
+  values: Pick<SaleFormValues, 'name' | 'nameEdited'>,
+  suggested: string,
+): string {
+  const typed = values.name.trim();
+  return values.nameEdited && typed ? typed : suggested;
+}
+
+/**
  * The sale request: the direction (its group, or its teacher), the kind with
  * its count or window, and exactly one price. A period runs from the first
  * day's midnight to the last day's end; a count package's «Діє до» ends
  * after that day. A period's count is sent only when the tutor typed one.
  */
-export function saleDto(values: SaleFormValues, direction: SaleDirection, studentId: string) {
+export function saleDto(
+  values: SaleFormValues,
+  direction: SaleDirection,
+  studentId: string,
+  name?: string,
+) {
   const price =
     values.priceSource === 'perLesson'
       ? { pricePerLessonMinor: parsePriceInput(values.perLesson) ?? 0 }
@@ -164,6 +188,7 @@ export function saleDto(values: SaleFormValues, direction: SaleDirection, studen
   return {
     studentId,
     ...target,
+    ...(name ? { name } : {}),
     sizingMode: values.kind,
     currency: direction.currency,
     ...kind,

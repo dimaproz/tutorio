@@ -52,6 +52,7 @@ function pkg(patch: Partial<PackageDetailResponse> = {}): PackageDetailResponse 
     deletedAt: null,
     ahead: null,
     pauseExtensions: [],
+    manualExtensions: [],
     ...patch,
   };
 }
@@ -169,7 +170,17 @@ describe('the ticket (S07 board 02)', () => {
       amountMinor: 200000,
       method: 'BANK_TRANSFER',
     } as PaymentResponse;
-    expect(ticketHistory(ledger, [payment], pkg()).map((event) => event.kind)).toEqual([
+    const extended = pkg({
+      manualExtensions: [
+        {
+          at: '2026-09-22T10:00:00.000Z',
+          from: '2026-09-21T00:00:00.000Z',
+          to: '2026-10-31T00:00:00.000Z',
+        },
+      ],
+    });
+    expect(ticketHistory(ledger, [payment], extended).map((event) => event.kind)).toEqual([
+      'extend',
       'adjustment',
       'payment',
       'purchase',

@@ -278,3 +278,28 @@ export function SalePriceFields({
     </div>
   );
 }
+
+/**
+ * «Назва пакета»: filled with the suggestion («English · 8 занять») until the
+ * tutor types their own; left empty, the suggestion shows as the placeholder
+ * and the package is sold with it.
+ */
+export function SaleNameField({ suggested }: { suggested: string }) {
+  const t = useTranslations('packages.sale.name');
+  const form = useFormContext<SaleFormValues>();
+  const [name, edited] = useWatch({ control: form.control, name: ['name', 'nameEdited'] });
+  return (
+    <TextField
+      label={t('label')}
+      autoComplete="off"
+      hint={t('hint')}
+      placeholder={suggested}
+      error={form.formState.errors.name?.message}
+      value={edited ? name : suggested}
+      onChange={(event) => {
+        form.setValue('name', event.currentTarget.value, { shouldDirty: true });
+        form.setValue('nameEdited', true);
+      }}
+    />
+  );
+}

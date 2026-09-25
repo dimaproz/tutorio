@@ -103,6 +103,8 @@ export const SellByCount: Story = {
       lessonsTotal: 8,
       pricePerLessonMinor: 50000,
       currency: 'UAH',
+      // Named by default after what it is for and its size.
+      name: 'English · 8 lessons',
     });
     await expect(await body().findByRole('dialog', { name: 'Package sold' })).toBeDefined();
   },
@@ -151,6 +153,20 @@ export const TotalPrice: Story = {
     const sent = soldBody(args.onWrite);
     await expect(sent).toMatchObject({ totalPriceMinor: 360000 });
     await expect(sent).not.toHaveProperty('pricePerLessonMinor');
+  },
+};
+
+/** The name: suggested, and the tutor's own once typed. */
+export const Name: Story = {
+  play: async ({ args }) => {
+    const form = await sale();
+    const name = form.getByLabelText('Package name');
+    await waitFor(() => expect(name).toHaveValue('English · 8 lessons'), { timeout: 5000 });
+    await userEvent.clear(name);
+    await userEvent.type(name, 'Autumn intensive');
+    await userEvent.click(form.getByRole('button', { name: 'Sell package' }));
+    await sold(args.onWrite);
+    await expect(soldBody(args.onWrite)).toMatchObject({ name: 'Autumn intensive' });
   },
 };
 

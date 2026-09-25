@@ -258,7 +258,8 @@
     "creditsRange": "From 1 to the lessons available",
     "refundNothing": "Choose what to refund: lessons, money or both",
     "refundOverPaid": "No more than was paid for the unused lessons",
-    "deltaBelowZero": "You cannot remove more than is left"
+    "deltaBelowZero": "You cannot remove more than is left",
+    "packageNameTooLong": "The name is at most 120 characters"
   },
   "pagination": {
     "label": "Pagination",
@@ -2553,7 +2554,9 @@
         "refund": "Refund {amount}",
         "pause": "{days, plural, one {Extended by # day for a pause} other {Extended by # days for a pause}}",
         "showAll": "Show all · {count}",
-        "collapse": "Collapse"
+        "collapse": "Collapse",
+        "extend": "Extended to {date}",
+        "extendFrom": "was until {date}"
       }
     },
     "dialogs": {
@@ -2747,6 +2750,12 @@
         "debt": "{count, plural, one {First covers # lesson on debt} other {First covers # lessons on debt}}",
         "after": "Starts once «{name}» runs out",
         "afterUnnamed": "Starts once the current package runs out"
+      },
+      "name": {
+        "label": "Package name",
+        "hint": "How the package shows in the profile and lists · can be changed",
+        "count": "{name} · {count, plural, one {# lesson} other {# lessons}}",
+        "period": "{name} · {range}"
       }
     },
     "sold": {

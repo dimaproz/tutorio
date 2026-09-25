@@ -5,6 +5,7 @@ import {
   ArrowLeftIcon,
   ArrowRightIcon,
   BanknoteIcon,
+  CalendarPlusIcon,
   CirclePauseIcon,
   PackageIcon,
   RotateCcwIcon,
@@ -137,6 +138,7 @@ const HISTORY_ICON: Record<HistoryEvent['kind'], ReactNode> = {
   payment: <BanknoteIcon />,
   refund: <RotateCcwIcon />,
   pause: <CirclePauseIcon />,
+  extend: <CalendarPlusIcon />,
 };
 
 const HISTORY_TONE: Record<HistoryEvent['kind'], TimelineItem['tone']> = {
@@ -148,6 +150,7 @@ const HISTORY_TONE: Record<HistoryEvent['kind'], TimelineItem['tone']> = {
   payment: 'success',
   refund: 'danger',
   pause: 'system',
+  extend: 'indigo',
 };
 
 function HistoryTimeline({
@@ -195,6 +198,14 @@ function HistoryTimeline({
           ...base,
           title: t(event.kind, { amount: format.money(event.amountMinor, currency) }),
           meta: tMethod(event.method),
+        };
+      case 'extend':
+        return {
+          ...base,
+          title: t('extend', { date: format.dayMonth(new Date(Date.parse(event.to) - 1)) }),
+          meta: event.from
+            ? t('extendFrom', { date: format.dayMonth(new Date(Date.parse(event.from) - 1)) })
+            : undefined,
         };
       case 'pause':
         return {

@@ -4,6 +4,7 @@ import {
   saleDto,
   saleFormDefaults,
   saleFormSchema,
+  saleName,
   salePreviewDto,
   type SaleDirection,
   type SaleFormValues,
@@ -144,5 +145,13 @@ describe('the sale form (S07 board 01)', () => {
     expect(salePreviewDto(values(), direction(), STUDENT, TODAY)).not.toBeNull();
     expect(salePreviewDto(values({ lessons: '' }), direction(), STUDENT, TODAY)).toBeNull();
     expect(salePreviewDto(values(), null, STUDENT, TODAY)).toBeNull();
+  });
+
+  it("sells with the tutor's name, or the suggestion when untouched or empty", () => {
+    const suggested = 'English · 8 занять';
+    expect(saleName(values(), suggested)).toBe(suggested);
+    expect(saleName(values({ name: '  ', nameEdited: true }), suggested)).toBe(suggested);
+    expect(saleName(values({ name: ' Autumn ', nameEdited: true }), suggested)).toBe('Autumn');
+    expect(saleDto(values(), direction(), STUDENT, 'Autumn')).toMatchObject({ name: 'Autumn' });
   });
 });

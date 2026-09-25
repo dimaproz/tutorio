@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { weeksInPeriod } from '@tutorio/domain';
+import { weeklyLessons } from '@tutorio/domain';
 import type { CreatePackageDto, PackageResponse } from '@tutorio/validation';
 import { useNow, useTranslations } from 'next-intl';
 import { FormProvider, useWatch } from 'react-hook-form';
@@ -19,6 +19,7 @@ import {
   saleDto,
   saleFormDefaults,
   saleFormSchema,
+  saleName,
   salePreviewDto,
   typedLessons,
   type SaleFormValues,
@@ -26,10 +27,11 @@ import {
 import { FooterNote, useErrorToast, usePackageForm } from '../form-parts';
 import { usePackageFormat } from '../use-package-format';
 import { SaleBand } from './sale-band';
-import { SaleKindField, SalePriceFields, SaleSizeFields } from './sale-fields';
+import { SaleKindField, SaleNameField, SalePriceFields, SaleSizeFields } from './sale-fields';
 import { SalePreview } from './sale-ticket';
 import { SoldDialog } from './sold-dialog';
 import { useSaleData } from './use-sale-data';
+import { directionName } from '../../model/names';
 
 /**
  * «Новий пакет» (S07 board 01, decision 1): a dialog over the profile or
@@ -118,16 +120,30 @@ function SaleFlow({
         ? (typedLessons(values) ?? shownPreview?.scheduleLessons ?? null)
         : (shownPreview?.lessonsTotal ??
           (isDayKey(values.from) && isDayKey(values.to) && values.to >= values.from
-            ? Number(values.perWeek) *
-              weeksInPeriod(startOfDay(values.from), endOfDayExclusive(values.to))
+            ? weeklyLessons(
+                startOfDay(values.from),
+                endOfDayExclusive(values.to),
+                Number(values.perWeek),
+              )
             : null));
   const price = linkedPrice(values, lessons);
+  // The name the package gets unless the tutor types one: what it is for and its size.
+  const suggestedName = direction
+    ? values.kind === 'FIXED_COUNT'
+      ? t('name.count', { name: directionName(direction), count: lessons ?? 0 })
+      : isDayKey(values.from) && isDayKey(values.to)
+        ? t('name.period', {
+            name: directionName(direction),
+            range: format.shortRange(startOfDay(values.from), startOfDay(values.to)),
+          })
+        : directionName(direction)
+    : '';
   const sell = useSellPackageMutation();
   const showError = useErrorToast();
 
   const submit = form.handleSubmit((submitted) => {
     if (!direction || !studentId) return;
-    sell.mutate(saleDto(submitted, direction, studentId), {
+    sell.mutate(saleDto(submitted, direction, studentId, saleName(submitted, suggestedName)), {
       onSuccess: (pkg) => {
         onSold?.(pkg);
         setSold(pkg);
@@ -247,6 +263,7 @@ function SaleFlow({
                   format={format}
                 />
                 <SalePriceFields direction={direction} lessons={lessons} format={format} />
+                <SaleNameField suggested={suggestedName} />
               </div>
               {mobile ? null : (
                 <SalePreview
@@ -254,6 +271,7 @@ function SaleFlow({
                   ready={previewDto !== null && parseCount(String(count)) !== null && count > 0}
                   emptyText={t('preview.empty')}
                   label={t('preview.label')}
+                  name={saleName(values, suggestedName)}
                   lessons={count}
                   lessonsWord={t('lessonsWord', { count })}
                   window={windowText}

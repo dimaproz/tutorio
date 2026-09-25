@@ -175,17 +175,18 @@ export type HistoryEvent =
       amountMinor: number;
       method: PaymentResponse['method'];
     }
-  | { id: string; at: string; kind: 'pause'; days: number; from: string; to: string | null };
+  | { id: string; at: string; kind: 'pause'; days: number; from: string; to: string | null }
+  | { id: string; at: string; kind: 'extend'; from: string | null; to: string };
 
 /**
  * «Історія»: what happened to the package apart from its lessons — the sale,
- * corrections, transfers and refunds of credits, the money in and back, and
- * the pauses that moved its end — newest first.
+ * corrections, transfers and refunds of credits, the money in and back, the
+ * extensions by hand and the pauses that moved its end — newest first.
  */
 export function ticketHistory(
   ledger: readonly CreditEntryResponse[],
   payments: readonly PaymentResponse[],
-  pkg: Pick<PackageDetailResponse, 'pauseExtensions'>,
+  pkg: Pick<PackageDetailResponse, 'pauseExtensions' | 'manualExtensions'>,
 ): HistoryEvent[] {
   const events: HistoryEvent[] = [];
   for (const item of ledger) {
@@ -225,6 +226,15 @@ export function ticketHistory(
       to: extension.endsAt,
     });
   }
+  pkg.manualExtensions.forEach((extension, index) => {
+    events.push({
+      id: `extend-${index}`,
+      at: extension.at,
+      kind: 'extend',
+      from: extension.from,
+      to: extension.to,
+    });
+  });
   return events.sort((a, b) => b.at.localeCompare(a.at) || a.id.localeCompare(b.id));
 }
 

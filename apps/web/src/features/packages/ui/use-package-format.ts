@@ -27,7 +27,9 @@ export function usePackageFormat() {
       symbol: (currency: string) => formatMoneyCompact(0, currency, locale).symbol,
       /** "30 жовт": a short date without the month's period. */
       shortDay: (value: string | Date) =>
-        format.dateTime(new Date(value), { day: 'numeric', month: 'short' }).replace(/\.$/, ''),
+        format
+          .dateTime(new Date(value), { day: 'numeric', month: 'short' })
+          .replace(/\.(?=\s|$)/g, ''),
       /** "30 жовтня". */
       dayMonth: (value: string | Date) =>
         format.dateTime(new Date(value), { day: 'numeric', month: 'long' }),
@@ -41,7 +43,7 @@ export function usePackageFormat() {
       shortRange: (from: string | Date, to: string | Date) =>
         format
           .dateTimeRange(new Date(from), new Date(to), { day: 'numeric', month: 'short' })
-          .replace(/\.$/, ''),
+          .replace(/\.(?=\s|$)/g, ''),
       /** "пт, 30.10.2026" — a date field. */
       field: (date: Date) =>
         format.dateTime(date, {
