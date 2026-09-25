@@ -215,7 +215,11 @@ export const packagePreviewResponseSchema = z.object({
   expiresAt: isoDateTimeSchema.nullable(),
   /** Lessons the direction's schedule has in the window; null without one. */
   scheduleLessons: z.number().int().nonnegative().nullable(),
-  /** Lessons held on debt that the new credits pay for first (L-82). */
+  /**
+   * The direction's unpaid lessons the new credits pay for first, up to the
+   * package's size: held on debt in package mode (L-82) or not yet paid per
+   * lesson (L-91, owner decision of 2026-09-25).
+   */
   debtLessons: z.number().int().nonnegative(),
   /**
    * The direction's live package whose credits go first (L-81): the new one
