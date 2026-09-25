@@ -74,6 +74,7 @@ export const Playground: Story = {};
 export const OnHoldBanner: Story = {
   args: {
     tone: 'info',
+    icon: 'pause',
     title: 'Student is on a break',
     text: 'No new lessons are planned while the student is on a break.',
     action: 'End the break',
@@ -84,6 +85,7 @@ export const OnHoldBanner: Story = {
 export const ArchivedBanner: Story = {
   args: {
     tone: 'warning',
+    icon: 'archive',
     title: 'This student is archived',
     text: 'The profile and history stay readable. Restore the student to plan lessons again.',
     action: 'Restore',

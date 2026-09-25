@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { RotateCcwIcon, UserIcon } from 'lucide-react';
+import { ArchiveIcon, RotateCcwIcon, UserIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { FormProvider } from 'react-hook-form';
@@ -200,6 +200,7 @@ function StudentEditForm({ student }: { student: StudentDetail }) {
   const notice = archived ? (
     <Notice
       tone="warning"
+      icon={<ArchiveIcon />}
       title={t('archivedTitle')}
       text={t('archivedDescription')}
       action={

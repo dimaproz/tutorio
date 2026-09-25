@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { RotateCcwIcon } from 'lucide-react';
+import { ArchiveIcon, RotateCcwIcon } from 'lucide-react';
 import { useNow, useTranslations } from 'next-intl';
 import type {
   GroupAttendanceResponse,
@@ -159,6 +159,7 @@ export function GroupPageContent({
       {archived ? (
         <Notice
           tone="warning"
+          icon={<ArchiveIcon />}
           title={t('detail.archivedTitle')}
           text={t('detail.archivedText')}
           action={

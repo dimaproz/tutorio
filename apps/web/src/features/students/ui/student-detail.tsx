@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useState } from 'react';
-import { PlayIcon, RotateCcwIcon } from 'lucide-react';
+import { ArchiveIcon, PauseIcon, PlayIcon, RotateCcwIcon } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useNow, useTranslations } from 'next-intl';
 import type { StudentDetail } from '@tutorio/validation';
@@ -154,6 +154,7 @@ export function StudentProfileContent({
     student.status === 'ON_HOLD' ? (
       <Notice
         tone="info"
+        icon={<PauseIcon />}
         title={t('banner.holdTitle')}
         text={t('banner.holdText')}
         action={
@@ -176,6 +177,7 @@ export function StudentProfileContent({
     ) : archived ? (
       <Notice
         tone="warning"
+        icon={<ArchiveIcon />}
         title={t('detail.archivedTitle')}
         text={t('detail.archivedDescription')}
         action={

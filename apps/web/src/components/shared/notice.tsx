@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react';
-import { AlertCircleIcon, ArchiveIcon, CheckIcon, InfoIcon, PauseIcon } from 'lucide-react';
+import { AlertCircleIcon, CheckIcon, InfoIcon, TriangleAlertIcon } from 'lucide-react';
 import { Alert, AlertAction, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 
 const TONE_ICON = {
   danger: AlertCircleIcon,
-  warning: ArchiveIcon,
-  info: PauseIcon,
+  warning: TriangleAlertIcon,
+  info: InfoIcon,
   success: CheckIcon,
   indigo: InfoIcon,
   neutral: InfoIcon,
@@ -32,7 +32,8 @@ export type NoticeAppearance = 'banner' | 'callout';
  * danger, warning, info and success tones. The `callout` is the explanation
  * inside a decision dialog — a 36px white icon tile, a title in the tone's
  * colour and a short text — and also knows `indigo` and `neutral`. Each tone
- * brings its default glyph; `icon` overrides it. The action is a caller-owned
+ * brings a plain glyph (info, warning triangle, alert, check); a caller whose
+ * context has its own sign — a pause, an archive — passes it as `icon`. The action is a caller-owned
  * control, typically a white `xs` button.
  */
 export function Notice({
