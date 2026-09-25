@@ -1636,6 +1636,7 @@ export interface components {
                 priceMinor: number;
                 /** @enum {string} */
                 currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+                ownPrice: boolean;
                 cancellationDeadlineHours: number | null;
                 effectiveCancellationDeadlineHours: number;
                 /** Format: date-time */
@@ -2202,6 +2203,7 @@ export interface components {
                 priceMinor: number;
                 /** @enum {string} */
                 currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+                ownPrice: boolean;
                 cancellationDeadlineHours: number | null;
                 student: {
                     /** Format: uuid */
@@ -2340,6 +2342,7 @@ export interface components {
                 priceMinor: number;
                 /** @enum {string} */
                 currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+                ownPrice: boolean;
                 cancellationDeadlineHours: number | null;
                 effectiveCancellationDeadlineHours: number;
                 /** Format: date-time */
@@ -2405,6 +2408,7 @@ export interface components {
             priceMinor: number;
             /** @enum {string} */
             currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
+            ownPrice: boolean;
             cancellationDeadlineHours: number | null;
             effectiveCancellationDeadlineHours: number;
             /** Format: date-time */

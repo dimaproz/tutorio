@@ -7562,6 +7562,9 @@
                     "GBP"
                   ]
                 },
+                "ownPrice": {
+                  "type": "boolean"
+                },
                 "cancellationDeadlineHours": {
                   "type": "integer",
                   "minimum": 0,
@@ -7600,6 +7603,7 @@
                 "billingType",
                 "priceMinor",
                 "currency",
+                "ownPrice",
                 "cancellationDeadlineHours",
                 "effectiveCancellationDeadlineHours",
                 "createdAt",
@@ -10028,6 +10032,9 @@
                     "GBP"
                   ]
                 },
+                "ownPrice": {
+                  "type": "boolean"
+                },
                 "cancellationDeadlineHours": {
                   "type": "integer",
                   "minimum": 0,
@@ -10120,6 +10127,7 @@
                 "billingType",
                 "priceMinor",
                 "currency",
+                "ownPrice",
                 "cancellationDeadlineHours",
                 "student",
                 "teacher"
@@ -10673,6 +10681,9 @@
                     "GBP"
                   ]
                 },
+                "ownPrice": {
+                  "type": "boolean"
+                },
                 "cancellationDeadlineHours": {
                   "type": "integer",
                   "minimum": 0,
@@ -10711,6 +10722,7 @@
                 "billingType",
                 "priceMinor",
                 "currency",
+                "ownPrice",
                 "cancellationDeadlineHours",
                 "effectiveCancellationDeadlineHours",
                 "createdAt",
@@ -10915,6 +10927,9 @@
               "GBP"
             ]
           },
+          "ownPrice": {
+            "type": "boolean"
+          },
           "cancellationDeadlineHours": {
             "type": "integer",
             "minimum": 0,
@@ -10953,6 +10968,7 @@
           "billingType",
           "priceMinor",
           "currency",
+          "ownPrice",
           "cancellationDeadlineHours",
           "effectiveCancellationDeadlineHours",
           "createdAt",
