@@ -184,7 +184,8 @@
     "PAUSE_NOT_FOUND": "Паузу не знайдено.",
     "PAUSE_OVERLAP": "У учня вже є пауза на цей час.",
     "PAUSE_ENDED": "Ця пауза вже завершилася.",
-    "PAUSE_RUNNING": "У паузи, що вже триває, можна змінити лише кінець і причину."
+    "PAUSE_RUNNING": "У паузи, що вже триває, можна змінити лише кінець і причину.",
+    "NO_PLANNED_CHANGE": "Зміни в розкладі вже немає — оновіть сторінку."
   },
   "validation": {
     "noShowIndividualOnly": "Для групового заняття пропуски відмічають у присутності",
@@ -1271,8 +1272,20 @@
       "openLesson": "Відкрити урок",
       "noNext": "Найближчих занять немає",
       "emptyTitle": "Розкладу ще немає",
-      "emptyText": "Додайте дні й час — заняття створяться на 12 тижнів уперед.",
-      "setUp": "Налаштувати розклад"
+      "emptyText": "Оберіть дні й час — заняття групи з’являться в календарі на місяць уперед.",
+      "setUp": "Налаштувати розклад",
+      "create": "Створити розклад",
+      "menu": "Дії з розкладом",
+      "menuChange": "Змінити дні або час",
+      "menuChangeHint": "Покажемо, які заняття переїдуть",
+      "menuAddDay": "Додати день",
+      "menuStop": "Зупинити розклад",
+      "menuStopHint": "Майбутні заняття приберемо з дати",
+      "plannedFrom": "З {date}",
+      "plannedMoves": "{count, plural, one {# заняття переїде} few {# заняття переїдуть} many {# занять переїдуть} other {# заняття переїдуть}} на {range}",
+      "plannedMovesNoTime": "{count, plural, one {# заняття переїде} few {# заняття переїдуть} many {# занять переїдуть} other {# заняття переїдуть}} на новий час",
+      "plannedNone": "З цієї дати заняття підуть за новим розкладом",
+      "cancelChange": "Скасувати зміну"
     },
     "stats": {
       "students": "Учнів у групі",
@@ -1296,7 +1309,10 @@
       "heldCaption": "від початку групи",
       "packagesPaid": "Оплачені пакети",
       "packagesPaidValue": "{paid} з {total}",
-      "packagesPaidCaption": "{paid} з {total}"
+      "packagesPaidCaption": "{paid} з {total}",
+      "tipCame": "Прийшли {present} з {counted}",
+      "tipMissed": "Пропуски: {names}",
+      "tipNoMisses": "Без пропусків"
     },
     "lessons": {
       "title": "Уроки групи",
@@ -1310,7 +1326,6 @@
       "loading": "Завантажуємо уроки…",
       "fallbackTitle": "Заняття групи",
       "next": "Далі",
-      "attended": "були {present} із {marked}",
       "emptyTitle": "Занять ще немає",
       "emptyText": "Налаштуйте розклад — і заняття з’являться тут автоматично.",
       "emptyTextScheduled": "Заняття з’являться тут, щойно в групі буде учень.",
@@ -1319,7 +1334,10 @@
       "openOn": "Відкрити урок {date}",
       "and": "і",
       "openLesson": "Відкрити заняття {date}",
-      "addLesson": "Додати заняття"
+      "addLesson": "Додати заняття",
+      "notMarked": "присутність не відмічена",
+      "mark": "Відмітити",
+      "markLesson": "Відмітити присутність {date}"
     },
     "attendance": {
       "title": "Відвідуваність",
@@ -1343,7 +1361,13 @@
       "emptyTitle": "Відвідуваності ще немає",
       "emptyText": "Відмітьте присутність на проведеному занятті — і тут з’явиться картина по групі.",
       "showAll": "Усі {count, plural, one {# учень} few {# учні} many {# учнів} other {# учня}}",
-      "cellsLabel": "Був на {present} з {counted} занять"
+      "cellsLabel": "Був на {present} з {counted} занять",
+      "tipPresent": "{name} на занятті",
+      "tipAbsent": "{name} — пропуск",
+      "tipExcused": "{name} — з поважної причини",
+      "tipCancelled": "Заняття скасовано",
+      "tipUnmarked": "Ще не відмічено",
+      "tipStreak": "Пропуск {index} з {count} поспіль"
     },
     "roster": {
       "title": "Склад групи",
@@ -1364,17 +1388,36 @@
       "saved": "Склад групи збережено",
       "removed": "Учня прибрано з групи",
       "changePrice": "Змінити ціну",
-      "columnStudent": "Учень",
-      "columnPrice": "Ціна за заняття"
-    },
-    "package": {
-      "title": "Пакети учасників",
-      "lessonsLeft": "{left} з {total} занять",
-      "paid": "Оплачено",
-      "pending": "Очікує",
-      "partial": "Частково",
-      "emptyText": "Ще ні в кого з учасників немає пакета для цієї групи. Уроки записуються на баланс кожного учасника.",
-      "paidCount": "{paid} з {total} оплачено"
+      "summaryNeedPayment": "{count, plural, one {# потребує оплати} few {# потребують оплати} many {# потребують оплати} other {# потребують оплати}}",
+      "summaryPaused": "{count} на паузі",
+      "summaryDebt": "борг {amount}",
+      "badge": {
+        "debt": "Борг {amount}",
+        "low": "Закінчується",
+        "partial": "Частково",
+        "unpaid": "Не оплачено",
+        "noPackage": "Без пакета",
+        "paid": "Оплачено",
+        "paused": "На паузі"
+      },
+      "meterUntil": "{left} з {total} · до {date}",
+      "meterNoEnd": "{left} з {total}",
+      "meterPaid": "{left} з {total} · сплачено {amount}",
+      "meterUnpaid": "{left} з {total} · не оплачено",
+      "meterPaused": "{left} з {total} · чекає до {date}",
+      "meterPausedOpen": "{left} з {total} · чекає повернення",
+      "lineDebtBalance": "{count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}} без оплати",
+      "lineDebtCredits": "{count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}} в борг",
+      "linePerLesson": "Платить за заняття",
+      "lineNoCredits": "Пакет закінчився",
+      "linePaused": "На паузі до {date}",
+      "linePausedOpen": "На паузі",
+      "actionPay": "Записати оплату",
+      "actionSell": "Продати пакет",
+      "actionReturn": "Повернути",
+      "ownPrice": "своя ціна",
+      "sellTitle": "Продати пакети кільком учням",
+      "sellText": "Один пакет — одразу для всіх, кого оберете"
     },
     "notes": {
       "title": "Нотатки",
@@ -2852,6 +2895,64 @@
         "text": "Перевірте зʼєднання та спробуйте ще раз.",
         "retry": "Спробувати ще"
       }
+    },
+    "memberSale": {
+      "title": "Продати пакет учасникам",
+      "subtitle": "Один пакет для кількох учнів групи · продаж не записує оплату",
+      "description": "Один пакет занять для кількох учасників групи",
+      "close": "Закрити",
+      "group": "Група · {teacher}",
+      "members": "{count, plural, one {# учень} few {# учні} many {# учнів} other {# учня}}",
+      "priceLabel": "Ціна для всіх",
+      "rateHint": "Ціна групи",
+      "who": "Кому · {picked} з {total}",
+      "selectAll": "Обрати всіх",
+      "clearAll": "Зняти всіх",
+      "whoHint": "Позначили тих, кому пакет потрібен: закінчується, немає або є борг",
+      "pick": "Продати {name}",
+      "state": {
+        "low": "пакет {left} з {total} закінчується",
+        "debtBalance": "борг {amount} · {count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}}",
+        "debtCredits": "{count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}} в борг",
+        "noPackage": "без пакета",
+        "paid": "пакет {left} з {total} · до {date}",
+        "paidNoEnd": "пакет {left} з {total}",
+        "partial": "пакет {left} з {total} · сплачено {amount}",
+        "unpaid": "пакет {left} з {total} · не оплачено",
+        "paused": "на паузі до {date}",
+        "pausedOpen": "на паузі"
+      },
+      "result": "+{count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}}",
+      "debtNote": "{count, plural, one {Спершу закриє # заняття в борг} few {Спершу закриє # заняття в борг} many {Спершу закриє # занять у борг} other {Спершу закриє # заняття в борг}} — у пакеті лишиться {left}",
+      "ownHint": "Своя ціна {rate} · {lessons} × {rateShort} = {total}",
+      "apply": "Застосувати",
+      "ownApplied": "Своя ціна: {rate} за заняття",
+      "reset": "Як у групи",
+      "pauseNote": "На паузі до {date} — перші заняття пакета спишуться після повернення",
+      "pauseNoteOpen": "На паузі — заняття пакета спишуться після повернення",
+      "total": "Разом",
+      "packages": "{count, plural, one {# пакет} few {# пакети} many {# пакетів} other {# пакета}}",
+      "each": "{count, plural, one {по # заняттю} few {по # заняття} many {по # занять} other {по # заняття}}",
+      "totalEmpty": "Позначте, кому продати пакет",
+      "footer": "Або всім, або нікому — якщо щось не вийде, нічого не продасться",
+      "cancel": "Скасувати",
+      "submit": "Продати {count, plural, one {# пакет} few {# пакети} many {# пакетів} other {# пакета}} · {total}",
+      "submitShort": "Продати {count, plural, one {# пакет} few {# пакети} many {# пакетів} other {# пакета}}",
+      "submitNone": "Продати"
+    },
+    "membersSold": {
+      "title": "Продано {count, plural, one {# пакет} few {# пакети} many {# пакетів} other {# пакета}}",
+      "close": "Закрити",
+      "summary": "{packages} · {each}",
+      "window": "{window} · {price} за заняття · разом {total}",
+      "notPaid": "Оплату ще не записано",
+      "heading": "Кому продано",
+      "left": "{left} з {total}",
+      "covered": "{left} з {total} · {count, plural, one {закрито # заняття в борг} few {закрито # заняття в борг} many {закрито # занять у борг} other {закрито # заняття в борг}}",
+      "pay": "Записати оплату",
+      "payFor": "Записати оплату · {name}",
+      "footer": "Оплату записуйте окремо — кожному учню",
+      "done": "Готово"
     }
   },
   "datePicker": {
@@ -3321,6 +3422,9 @@
       "cancel": "Скасувати",
       "save": "Зберегти",
       "done": "Розклад {name}: заняття на {count, plural, one {# тиждень} few {# тижні} many {# тижнів} other {# тижня}} наперед"
+    },
+    "cancelChange": {
+      "done": "Зміну скасовано — заняття повернулися на свій час"
     }
   }
 }

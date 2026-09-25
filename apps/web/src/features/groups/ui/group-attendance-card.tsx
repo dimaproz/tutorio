@@ -6,13 +6,11 @@ import { useFormatter, useTranslations } from 'next-intl';
 import type { GroupAttendanceResponse } from '@tutorio/validation';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  AttendanceList,
-  type AttendanceListRow,
-} from '@/components/shared/attendance-list';
+import { AttendanceList, type AttendanceListRow } from '@/components/shared/attendance-list';
 import { EmptyState } from '@/components/shared/empty-state';
 import { shortName } from '@/features/groups/model/presentation';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAttendanceTips } from './use-attendance-tips';
 
 /** Phones show this many rows before "all students". */
 const PHONE_ROWS = 3;
@@ -43,8 +41,8 @@ export function GroupAttendanceCard({
   const format = useFormatter();
   const mobile = useIsMobile();
   const [all, setAll] = useState(false);
-  const day = (iso: string) =>
-    format.dateTime(new Date(iso), { day: '2-digit', month: '2-digit' });
+  const { rowTips } = useAttendanceTips(attendance);
+  const day = (iso: string) => format.dateTime(new Date(iso), { day: '2-digit', month: '2-digit' });
 
   const note = (row: Row): string => {
     if (row.hold) return t('hold');
@@ -77,6 +75,7 @@ export function GroupAttendanceCard({
       rate: row.hold || row.rate === null ? '—' : `${Math.round(row.rate * 100)}%`,
       note: note(row),
       cellsLabel: t('cellsLabel', { present, counted: present + row.misses }),
+      tips: rowTips(row),
       tone: row.risk ? 'risk' : row.hold ? 'hold' : 'plain',
     };
   });

@@ -41,6 +41,27 @@ function savedMarks(sheet: LessonAttendanceResponse | undefined): AttendanceForm
 }
 
 /**
+ * What the sheet opens with: the saved marks, and — for a lesson nobody has
+ * marked yet — everyone present who is not paused (L-72), so the tutor marks
+ * only the exceptions.
+ */
+function startingMarks(
+  sheet: LessonAttendanceResponse | undefined,
+  confirming: boolean,
+): AttendanceFormValues {
+  const saved = savedMarks(sheet);
+  if (!confirming) return saved;
+  return {
+    marks: Object.fromEntries(
+      (sheet?.participants ?? []).map((row) => [
+        row.enrollmentId,
+        saved.marks[row.enrollmentId] || (row.paused ? '' : 'PRESENT'),
+      ]),
+    ),
+  };
+}
+
+/**
  * Who came to a group lesson (L-71…L-74): present, absent or excused per
  * member, "everyone came", and a paused member shown on pause and not
  * markable (L-73). A summary says how many are charged. Only changed marks
@@ -63,11 +84,14 @@ export function AttendanceDialog({
   const mobile = useIsMobile();
   const sheet = useLessonAttendanceQuery(lesson.id, open);
   const save = useSetAttendanceMutation(lesson.id);
+  // Marks nobody confirmed yet (the automation's «everyone present», L-72)
+  // are all sent, so saving confirms them even when nothing changed (S08).
+  const confirming = lesson.attendance?.confirmed !== true;
   // The sheet arrives after the dialog opens: the form follows its saved marks.
   const form = useLessonForm<AttendanceFormValues>(
     attendanceFormSchema,
-    savedMarks(sheet.data),
-    sheet.data ? savedMarks(sheet.data) : undefined,
+    startingMarks(sheet.data, confirming),
+    sheet.data ? startingMarks(sheet.data, confirming) : undefined,
   );
   const marks = useWatch({ control: form.control, name: 'marks' }) ?? {};
 
@@ -89,15 +113,18 @@ export function AttendanceDialog({
   );
 
   const close = (next: boolean) => {
-    if (!next) form.reset(savedMarks(sheet.data));
+    if (!next) form.reset(startingMarks(sheet.data, confirming));
     onOpenChange(next);
   };
   const submit = form.handleSubmit(async (values) => {
     const payload = active
-      .map((row) => ({ enrollmentId: row.enrollmentId, status: values.marks[row.enrollmentId] }))
+      .map((row) => ({
+        enrollmentId: row.enrollmentId,
+        status: values.marks[row.enrollmentId] || (confirming ? 'PRESENT' : ''),
+      }))
       .filter(
         (mark): mark is { enrollmentId: string; status: AttendanceStatusDto } =>
-          Boolean(mark.status) && mark.status !== (saved[mark.enrollmentId] ?? ''),
+          Boolean(mark.status) && (confirming || mark.status !== (saved[mark.enrollmentId] ?? '')),
       );
     if (payload.length === 0) {
       close(false);

@@ -119,3 +119,49 @@ export function attendanceSegments(
 export function percent(part: number, total: number): number {
   return total > 0 ? Math.round((part / total) * 100) : 0;
 }
+
+/** Who came to one window lesson, for the metric's tooltip (S08 decision 7). */
+export type WindowLessonFacts = {
+  lesson: GroupAttendanceResponse['lessons'][number];
+  /** Participants not on hold who came, of those counted (came or missed). */
+  present: number;
+  counted: number;
+  /** Who missed it, by name. */
+  missed: string[];
+};
+
+/** Per window lesson: who came and who missed; participants on hold do not count. */
+export function windowLessonFacts(
+  attendance: Pick<GroupAttendanceResponse, 'lessons' | 'rows'>,
+): WindowLessonFacts[] {
+  const counted = attendance.rows.filter((row) => !row.hold);
+  return attendance.lessons.map((lesson, index) => {
+    const cells = counted.map((row) => ({ name: row.student.fullName, cell: row.cells[index] }));
+    const present = cells.filter((item) => item.cell === 'present').length;
+    const missed = cells.filter((item) => item.cell === 'absent').map((item) => item.name);
+    return { lesson, present, counted: present + missed.length, missed };
+  });
+}
+
+/**
+ * For each cell of a participant's row, its place in a run of two or more
+ * absences in a row — cancelled lessons are nobody's, so they neither break
+ * nor extend a run —, else null: «Пропуск 1 з 2 поспіль».
+ */
+export function missStreaks(
+  cells: readonly GroupAttendanceResponse['rows'][number]['cells'][number][],
+): ({ index: number; count: number } | null)[] {
+  const result: ({ index: number; count: number } | null)[] = cells.map(() => null);
+  let run: number[] = [];
+  const close = () => {
+    if (run.length >= 2)
+      run.forEach((cell, index) => (result[cell] = { index: index + 1, count: run.length }));
+    run = [];
+  };
+  cells.forEach((cell, index) => {
+    if (cell === 'absent') run.push(index);
+    else if (cell !== 'cancelled') close();
+  });
+  close();
+  return result;
+}

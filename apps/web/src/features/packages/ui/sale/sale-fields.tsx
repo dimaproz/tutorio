@@ -13,7 +13,6 @@ import {
   LESSONS_PER_WEEK,
   linkedPrice,
   moneyText,
-  type SaleDirection,
   type SaleFormValues,
 } from '../../model/sale';
 import { DayField } from '../form-parts';
@@ -207,18 +206,25 @@ export function SaleSizeFields({
 
 /**
  * «Ціна»: «За заняття» ⇄ «За пакет» (decision 2) — the one typed last wins
- * and the other follows from the package's lessons. The hints say the rate
- * is the direction's and how the total is made.
+ * and the other follows from the package's lessons. The hints say the price
+ * is the usual rate — the direction's, or the group's in a sale to members
+ * («Ціна для всіх», S08) — and how the total is made.
  */
 export function SalePriceFields({
-  direction,
+  rate,
   lessons,
   format,
+  label,
+  rateHint,
 }: {
-  direction: SaleDirection | null;
+  /** The usual rate and the currency: a direction's (S07) or a group's (S08). */
+  rate: { rateMinor: number; currency: string } | null;
   /** The package's lessons, for the derived field. */
   lessons: number | null;
   format: PackageFormat;
+  label?: string;
+  /** Under the per-lesson price while it is the usual rate. */
+  rateHint?: string;
 }) {
   const t = useTranslations('packages.sale.price');
   const form = useFormContext<SaleFormValues>();
@@ -227,7 +233,7 @@ export function SalePriceFields({
     name: ['perLesson', 'total', 'priceSource'],
   });
   const derived = linkedPrice({ perLesson, total, priceSource }, lessons);
-  const currency = direction?.currency ?? 'UAH';
+  const currency = rate?.currency ?? 'UAH';
   const symbol = format.symbol(currency);
   const errors = form.formState.errors;
   const shown = (field: 'perLesson' | 'total') => {
@@ -240,8 +246,8 @@ export function SalePriceFields({
     form.setValue('priceSource', field);
     if (form.formState.isSubmitted) void form.trigger(field);
   };
-  const rateHint =
-    direction && derived.perLessonMinor === direction.rateMinor ? t('rateHint') : undefined;
+  const usualRate =
+    rate && derived.perLessonMinor === rate.rateMinor ? (rateHint ?? t('rateHint')) : undefined;
   const totalHint =
     lessons && derived.perLessonMinor !== null
       ? t('totalHint', { count: lessons, price: format.money(derived.perLessonMinor, currency) })
@@ -249,14 +255,14 @@ export function SalePriceFields({
 
   return (
     <div className="flex flex-col gap-2">
-      <span className="text-[15px] leading-5 font-semibold">{t('label')}</span>
+      <span className="text-[15px] leading-5 font-semibold">{label ?? t('label')}</span>
       <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-2 sm:gap-3">
         <TextField
           label={t('perLesson')}
           inputMode="decimal"
           autoComplete="off"
           suffix={symbol}
-          hint={rateHint}
+          hint={usualRate}
           error={priceSource === 'perLesson' ? errors.perLesson?.message : undefined}
           value={shown('perLesson')}
           onChange={(event) => type('perLesson', event.currentTarget.value)}

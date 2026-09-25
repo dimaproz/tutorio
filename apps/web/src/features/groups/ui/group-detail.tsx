@@ -6,9 +6,11 @@ import { ArchiveIcon, RotateCcwIcon } from 'lucide-react';
 import { useNow, useTranslations } from 'next-intl';
 import type {
   GroupAttendanceResponse,
+  GroupBillingResponse,
   GroupDetail,
   LessonResponse,
   PackageResponse,
+  ScheduleResponse,
 } from '@tutorio/validation';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -18,8 +20,7 @@ import { Notice } from '@/components/shared/notice';
 import { useSetPageCrumb } from '@/components/shared/page-crumb';
 import { QueryErrorAlert } from '@/components/shared/page-shell';
 import { memberPackages } from '@/features/groups/model/presentation';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { useGroupAttendanceQuery, useGroupQuery } from '@/lib/api/groups';
+import { useGroupAttendanceQuery, useGroupBillingQuery, useGroupQuery } from '@/lib/api/groups';
 import { usePackagesQuery } from '@/lib/api/packages';
 import { useLessonsQuery } from '@/lib/api/scheduling';
 import { addCalendarDays, dayStartIso, zonedDate } from '@/lib/datetime';
@@ -28,6 +29,7 @@ import {
   LessonCreateDialog,
   LessonPanel,
   useLessonPanel,
+  useSchedulesQuery,
   type LessonPanelLinks,
 } from '@/features/lessons';
 import { useGroupArchive } from './group-archive';
@@ -35,10 +37,11 @@ import { GroupAttendanceCard } from './group-attendance-card';
 import { GroupHero } from './group-hero';
 import { GroupLessonsCard } from './group-lessons-card';
 import { GroupNotesCard } from './group-notes-card';
-import { GroupPackageCard } from './group-package-card';
 import { GroupPageMetrics } from './group-page-metrics';
 import { GroupRosterCard } from './group-roster-card';
 import { GroupScheduleCard } from './group-schedule-card';
+import { useGroupPageActions } from './use-group-page-actions';
+import { useMemberStates } from './use-member-states';
 
 /** Where the lesson panel links a student and a group. */
 const LESSON_LINKS: LessonPanelLinks = {
@@ -63,7 +66,8 @@ function lessonWindow(now: number, timeZone: string) {
 
 /**
  * The group page. Every read starts together, keyed by the id in the URL:
- * the group, its lessons, its packages and its attendance.
+ * the group, its lessons, its packages, its attendance, its members' billing
+ * and its schedule (S08).
  */
 export function GroupDetailView({ groupId }: { groupId: string }) {
   const t = useTranslations('groups');
@@ -75,6 +79,8 @@ export function GroupDetailView({ groupId }: { groupId: string }) {
   const lessons = useLessonsQuery({ ...window, groupId });
   const packages = usePackagesQuery({ page: 1, pageSize: 100, groupId, state: 'active' });
   const attendance = useGroupAttendanceQuery(groupId, ATTENDANCE_WINDOW);
+  const billing = useGroupBillingQuery(groupId);
+  const schedules = useSchedulesQuery({ groupId });
 
   if (group.isPending) return <DetailFrame loading={<LoadingPanel size="lg" />} />;
   // A failed background refresh keeps the page; only a first load that never
@@ -108,15 +114,18 @@ export function GroupDetailView({ groupId }: { groupId: string }) {
         failed: attendance.isError,
         retry: () => void attendance.refetch(),
       }}
+      billing={billing.data}
+      schedule={schedules.data?.items[0] ?? null}
     />
   );
 }
 
 /**
  * The page itself: the hero beside the schedule card, four metrics, then the
- * lessons and attendance on the left and the roster, package and notes on
- * the right. Phones stack it in the same order. An archived group reads the
- * same, with a banner, no editing and "Restore" as its command.
+ * lessons and attendance on the left and the roster (with each member's
+ * billing, S08) and notes on the right. Phones stack it in the same order.
+ * An archived group reads the same, with a banner, no editing and "Restore"
+ * as its command.
  */
 export function GroupPageContent({
   group,
@@ -124,6 +133,8 @@ export function GroupPageContent({
   lessons,
   packages,
   attendance,
+  billing,
+  schedule,
 }: {
   group: GroupDetail;
   now: number;
@@ -135,11 +146,14 @@ export function GroupPageContent({
     failed: boolean;
     retry: () => void;
   };
+  /** How each member pays the group; undefined while it loads or cannot be read. */
+  billing?: GroupBillingResponse;
+  /** The group's schedule itself, for its planned change and the S05 dialogs. */
+  schedule: ScheduleResponse | null;
 }) {
   const t = useTranslations('groups');
   const router = useRouter();
   const searchParams = useSearchParams();
-  const mobile = useIsMobile();
   useSetPageCrumb(t('detail.pageLabel'));
   const archived = Boolean(group.deletedAt);
   const lifecycle = archived ? 'ARCHIVED' : group.status;
@@ -151,6 +165,8 @@ export function GroupPageContent({
   const members = useMemo(() => memberPackages(packages.items, now), [packages.items, now]);
   const archiving = useGroupArchive({ onArchived: () => router.push('/app/groups') });
   const [restoring, setRestoring] = useState(false);
+  const states = useMemberStates(group, billing, now);
+  const actions = useGroupPageActions({ group, schedule, states, now });
   const restore = () => {
     setRestoring(true);
     void archiving.restore(group.id).finally(() => setRestoring(false));
@@ -197,7 +213,12 @@ export function GroupPageContent({
           onRestore={restore}
           restoring={restoring}
         />
-        <GroupScheduleCard group={group} archived={archived} />
+        <GroupScheduleCard
+          group={group}
+          schedule={schedule}
+          lessons={lessons.items}
+          actions={archived ? undefined : actions.scheduleActions}
+        />
       </div>
     </div>
   );
@@ -223,7 +244,9 @@ export function GroupPageContent({
               now={now}
               archived={archived}
               onOpenLesson={lessonPanel.open}
+              onMarkLesson={(lessonId) => lessonPanel.open(lessonId, 'markAttendance')}
               onAddLesson={archived ? undefined : () => setCreating(true)}
+              onCreateSchedule={archived ? undefined : actions.scheduleActions.onCreate}
             />
             {/* A group with no students and no lessons yet has nothing to count;
                 the design leaves the block out until it does. */}
@@ -245,13 +268,16 @@ export function GroupPageContent({
               readOnly={archived}
               pickerOpen={pickerOpen}
               onPickerOpenChange={setPickerOpen}
+              states={states}
+              onMemberAction={actions.onMemberAction}
+              onSellToMembers={actions.onSellToMembers}
             />
-            <GroupPackageCard packages={members} loading={packages.loading} compact={mobile} />
             <GroupNotesCard group={group} readOnly={archived} />
           </>
         }
       />
       {archiving.dialog}
+      {actions.dialogs}
       <LessonCreateDialog
         open={creating}
         onOpenChange={setCreating}
@@ -259,6 +285,7 @@ export function GroupPageContent({
       />
       <LessonPanel
         lessonId={lessonPanel.lessonId}
+        intent={lessonPanel.intent}
         onClose={lessonPanel.close}
         onOpenLesson={lessonPanel.open}
         linkTo={lessonPanel.linkTo}

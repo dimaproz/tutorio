@@ -10,6 +10,7 @@ import {
   onHoldCount,
 } from '@/features/groups/model/presentation';
 import { formatMoneyCompact } from '@/lib/money';
+import { useAttendanceTips } from './use-attendance-tips';
 
 type Read<T> = { data?: T | null; loading: boolean };
 
@@ -39,12 +40,14 @@ export function GroupPageMetrics({
   const money = (minor: number) =>
     memberPackages[0] ? formatMoneyCompact(minor, memberPackages[0].currency, locale).text : '';
   const rate = attendance.data?.stats.rate ?? null;
+  const { lessonTips } = useAttendanceTips(attendance.data ?? undefined);
 
   const studentsBlock: StatBlockProps = {
     type: 'amount',
     label: t('students'),
     value: String(students),
-    badge: onHold > 0 ? { label: t('onHoldBadge', { count: onHold }), tone: 'warning' } : undefined,
+    // Paused means grey (S08 decision 5).
+    badge: onHold > 0 ? { label: t('onHoldBadge', { count: onHold }), tone: 'neutral' } : undefined,
     caption:
       group.capacity !== null
         ? t('freeSeats', { count: Math.max(0, group.capacity - students) })
@@ -69,6 +72,7 @@ export function GroupPageMetrics({
           label: t('attendance'),
           value: `${Math.round(rate * 100)}%`,
           data: attendanceSegments(attendance.data),
+          tips: lessonTips(),
           caption: t('attendanceCaption', { count: attendance.data.stats.lessons }),
         }
       : {

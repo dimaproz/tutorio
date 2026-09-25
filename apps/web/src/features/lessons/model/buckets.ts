@@ -33,3 +33,28 @@ export function isLessonRunning(
 ): boolean {
   return lesson.status === 'SCHEDULED' && lessonMoment(lesson, now) === 'running';
 }
+
+type MarkLesson = Pick<
+  LessonResponse,
+  'groupId' | 'status' | 'startsAtUtc' | 'durationMin' | 'attendance'
+>;
+
+/** A group lesson whose attendance can be marked: started and not cancelled (L-74). */
+export function canMarkAttendance(lesson: MarkLesson, now: number): boolean {
+  if (lesson.groupId === null) return false;
+  if (lesson.status === 'COMPLETED') return true;
+  return lesson.status === 'SCHEDULED' && lessonMoment(lesson, now) !== 'upcoming';
+}
+
+/**
+ * A group lesson that is over and nobody has marked yet: no marks, or only
+ * the ones the automation set when it held the lesson (everyone present,
+ * L-72). The group page asks «Відмітити» for it.
+ */
+export function awaitsAttendance(lesson: MarkLesson, now: number): boolean {
+  return (
+    canMarkAttendance(lesson, now) &&
+    lessonMoment(lesson, now) === 'ended' &&
+    lesson.attendance?.confirmed !== true
+  );
+}

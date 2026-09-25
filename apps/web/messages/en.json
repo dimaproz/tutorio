@@ -184,7 +184,8 @@
     "PAUSE_NOT_FOUND": "The pause was not found.",
     "PAUSE_OVERLAP": "The student already has a pause covering this time.",
     "PAUSE_ENDED": "This pause is already over.",
-    "PAUSE_RUNNING": "A pause that has begun can only change its end and reason."
+    "PAUSE_RUNNING": "A pause that has begun can only change its end and reason.",
+    "NO_PLANNED_CHANGE": "There is no planned change any more — refresh the page."
   },
   "validation": {
     "noShowIndividualOnly": "A group lesson records absences through attendance",
@@ -1271,8 +1272,20 @@
       "openLesson": "Open lesson",
       "noNext": "No upcoming lessons",
       "emptyTitle": "No schedule yet",
-      "emptyText": "Add the days and the time — lessons are created 12 weeks ahead.",
-      "setUp": "Set up schedule"
+      "emptyText": "Pick the days and time — the group's lessons appear in the calendar a month ahead.",
+      "setUp": "Set up schedule",
+      "create": "Create a schedule",
+      "menu": "Schedule actions",
+      "menuChange": "Change days or time",
+      "menuChangeHint": "We'll show which lessons move",
+      "menuAddDay": "Add a day",
+      "menuStop": "Stop the schedule",
+      "menuStopHint": "Future lessons are removed from a date",
+      "plannedFrom": "From {date}",
+      "plannedMoves": "{count, plural, one {# lesson moves} other {# lessons move}} to {range}",
+      "plannedMovesNoTime": "{count, plural, one {# lesson moves} other {# lessons move}} to the new times",
+      "plannedNone": "From this date the lessons follow the new schedule",
+      "cancelChange": "Cancel the change"
     },
     "stats": {
       "students": "Students in the group",
@@ -1296,7 +1309,10 @@
       "heldCaption": "since the group started",
       "packagesPaid": "Packages paid",
       "packagesPaidValue": "{paid} of {total}",
-      "packagesPaidCaption": "{paid} of {total}"
+      "packagesPaidCaption": "{paid} of {total}",
+      "tipCame": "Came {present} of {counted}",
+      "tipMissed": "Missed: {names}",
+      "tipNoMisses": "No misses"
     },
     "lessons": {
       "title": "Group lessons",
@@ -1310,7 +1326,6 @@
       "loading": "Loading lessons…",
       "fallbackTitle": "Group lesson",
       "next": "Next",
-      "attended": "{present} of {marked} came",
       "emptyTitle": "No lessons yet",
       "emptyText": "Set up the schedule and the lessons appear here on their own.",
       "emptyTextScheduled": "Lessons appear here as soon as the group has a student.",
@@ -1319,7 +1334,10 @@
       "openOn": "Open the lesson on {date}",
       "and": "and",
       "openLesson": "Open the lesson of {date}",
-      "addLesson": "Add a lesson"
+      "addLesson": "Add a lesson",
+      "notMarked": "attendance not marked",
+      "mark": "Mark",
+      "markLesson": "Mark attendance of {date}"
     },
     "attendance": {
       "title": "Attendance",
@@ -1343,7 +1361,13 @@
       "emptyTitle": "No attendance yet",
       "emptyText": "Mark who came to a taught lesson and the group picture appears here.",
       "showAll": "All {count, plural, one {# student} other {# students}}",
-      "cellsLabel": "Came to {present} of {counted} lessons"
+      "cellsLabel": "Came to {present} of {counted} lessons",
+      "tipPresent": "{name} came",
+      "tipAbsent": "{name} missed",
+      "tipExcused": "{name} excused",
+      "tipCancelled": "Lesson cancelled",
+      "tipUnmarked": "Not marked yet",
+      "tipStreak": "Miss {index} of {count} in a row"
     },
     "roster": {
       "title": "Roster",
@@ -1364,17 +1388,36 @@
       "saved": "Roster saved",
       "removed": "Student removed from the group",
       "changePrice": "Change price",
-      "columnStudent": "Student",
-      "columnPrice": "Price per lesson"
-    },
-    "package": {
-      "title": "Members' packages",
-      "lessonsLeft": "{left} of {total} lessons",
-      "paid": "Paid",
-      "pending": "Pending",
-      "partial": "Partial",
-      "emptyText": "No member has a package for this group yet. Their lessons go on each member's balance.",
-      "paidCount": "{paid} of {total} paid"
+      "summaryNeedPayment": "{count, plural, one {# needs payment} other {# need payment}}",
+      "summaryPaused": "{count} on pause",
+      "summaryDebt": "owes {amount}",
+      "badge": {
+        "debt": "Owes {amount}",
+        "low": "Running low",
+        "partial": "Part paid",
+        "unpaid": "Not paid",
+        "noPackage": "No package",
+        "paid": "Paid",
+        "paused": "On pause"
+      },
+      "meterUntil": "{left} of {total} · until {date}",
+      "meterNoEnd": "{left} of {total}",
+      "meterPaid": "{left} of {total} · {amount} paid",
+      "meterUnpaid": "{left} of {total} · not paid",
+      "meterPaused": "{left} of {total} · waits until {date}",
+      "meterPausedOpen": "{left} of {total} · waits for the return",
+      "lineDebtBalance": "{count, plural, one {# lesson} other {# lessons}} unpaid",
+      "lineDebtCredits": "{count, plural, one {# lesson} other {# lessons}} on debt",
+      "linePerLesson": "Pays per lesson",
+      "lineNoCredits": "The package is used up",
+      "linePaused": "On pause until {date}",
+      "linePausedOpen": "On pause",
+      "actionPay": "Record payment",
+      "actionSell": "Sell a package",
+      "actionReturn": "Bring back",
+      "ownPrice": "own price",
+      "sellTitle": "Sell packages to several students",
+      "sellText": "One package for everyone you pick, at once"
     },
     "notes": {
       "title": "Notes",
@@ -2852,6 +2895,64 @@
         "text": "Check the connection and try again.",
         "retry": "Try again"
       }
+    },
+    "memberSale": {
+      "title": "Sell a package to members",
+      "subtitle": "One package for several students of the group · the sale records no payment",
+      "description": "One lesson package for several members of the group",
+      "close": "Close",
+      "group": "Group · {teacher}",
+      "members": "{count, plural, one {# student} other {# students}}",
+      "priceLabel": "Price for everyone",
+      "rateHint": "Group price",
+      "who": "To whom · {picked} of {total}",
+      "selectAll": "Select all",
+      "clearAll": "Clear all",
+      "whoHint": "We ticked those who need a package: running low, none, or owing",
+      "pick": "Sell to {name}",
+      "state": {
+        "low": "package {left} of {total} running low",
+        "debtBalance": "owes {amount} · {count, plural, one {# lesson} other {# lessons}}",
+        "debtCredits": "{count, plural, one {# lesson} other {# lessons}} on debt",
+        "noPackage": "no package",
+        "paid": "package {left} of {total} · until {date}",
+        "paidNoEnd": "package {left} of {total}",
+        "partial": "package {left} of {total} · {amount} paid",
+        "unpaid": "package {left} of {total} · not paid",
+        "paused": "on pause until {date}",
+        "pausedOpen": "on pause"
+      },
+      "result": "+{count, plural, one {# lesson} other {# lessons}}",
+      "debtNote": "First covers {count, plural, one {# lesson} other {# lessons}} on debt — {left} stay in the package",
+      "ownHint": "Own price {rate} · {lessons} × {rateShort} = {total}",
+      "apply": "Apply",
+      "ownApplied": "Own price: {rate} a lesson",
+      "reset": "As the group",
+      "pauseNote": "On pause until {date} — the package's first lessons are charged after the return",
+      "pauseNoteOpen": "On pause — the package's lessons are charged after the return",
+      "total": "Total",
+      "packages": "{count, plural, one {# package} other {# packages}}",
+      "each": "{count, plural, one {# lesson each} other {# lessons each}}",
+      "totalEmpty": "Tick who to sell a package to",
+      "footer": "All or none — if anything fails, nothing is sold",
+      "cancel": "Cancel",
+      "submit": "Sell {count, plural, one {# package} other {# packages}} · {total}",
+      "submitShort": "Sell {count, plural, one {# package} other {# packages}}",
+      "submitNone": "Sell"
+    },
+    "membersSold": {
+      "title": "{count, plural, one {# package sold} other {# packages sold}}",
+      "close": "Close",
+      "summary": "{packages} · {each}",
+      "window": "{window} · {price} a lesson · {total} in all",
+      "notPaid": "No payment recorded yet",
+      "heading": "Sold to",
+      "left": "{left} of {total}",
+      "covered": "{left} of {total} · {count, plural, one {# lesson on debt covered} other {# lessons on debt covered}}",
+      "pay": "Record payment",
+      "payFor": "Record payment · {name}",
+      "footer": "Record payments separately — for each student",
+      "done": "Done"
     }
   },
   "datePicker": {
@@ -3321,6 +3422,9 @@
       "cancel": "Cancel",
       "save": "Save",
       "done": "{name}: lessons {count, plural, one {# week} other {# weeks}} ahead"
+    },
+    "cancelChange": {
+      "done": "Change cancelled — the lessons are back at their time"
     }
   }
 }

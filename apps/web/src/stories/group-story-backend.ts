@@ -7,7 +7,17 @@ import type {
   LessonAttendanceResponse,
   LessonResponse,
   PackageResponse,
+  SellToMembersDto,
 } from '@tutorio/validation';
+import {
+  B2_SCHEDULE_ID,
+  b2Billing,
+  b2Schedule,
+  changeSummary,
+  memberSalePreview,
+  paysPerLesson,
+  soldToMembers,
+} from './group-operations-story-backend';
 
 /**
  * Groups for the screen stories: the design boards' six groups (one of them
@@ -16,10 +26,10 @@ import type {
  * clock, Wednesday 9 September 2026, so "next lesson" is Thursday the 10th.
  */
 
-const WORKSPACE = '11111111-1111-4111-8111-111111111111';
+export const WORKSPACE = '11111111-1111-4111-8111-111111111111';
 const DAY = 24 * 60 * 60 * 1000;
 /** Kyiv wall-clock time, `days` from the story day, as a UTC instant. */
-const kyiv = (days: number, hour: number, minute = 0) =>
+export const kyiv = (days: number, hour: number, minute = 0) =>
   new Date(Date.UTC(2026, 8, 9) + days * DAY + ((hour - 3) * 60 + minute) * 60_000).toISOString();
 
 export const TEACHERS = {
@@ -47,8 +57,8 @@ export const TEACHERS = {
 type Teacher = (typeof TEACHERS)[keyof typeof TEACHERS];
 
 export const storyGroupId = (n: number) => `99999999-9999-4999-8999-${String(n).padStart(12, '0')}`;
-const studentId = (n: number) => `d6bf671d-7a0f-4cf3-8a67-${String(n).padStart(12, '0')}`;
-const enrollmentId = (group: number, n: number) =>
+export const studentId = (n: number) => `d6bf671d-7a0f-4cf3-8a67-${String(n).padStart(12, '0')}`;
+export const enrollmentId = (group: number, n: number) =>
   `44444444-4444-4444-8444-${String(group * 100 + n).padStart(12, '0')}`;
 
 type Member = {
@@ -216,7 +226,7 @@ const NEW_GROUP: SampleGroup = {
   createdAt: kyiv(0, 11),
 };
 
-const member = (n: number) => MEMBERS.find((item) => item.n === n)!;
+export const member = (n: number) => MEMBERS.find((item) => item.n === n)!;
 
 function nextLessonOf(group: SampleGroup) {
   if (group.next === null || !group.schedule) return null;
@@ -273,7 +283,8 @@ function toDetail(group: SampleGroup, members: number[]): GroupDetail {
       groupId: storyGroupId(group.n),
       teacherId: group.teacher?.id ?? TEACHERS.dmytro.id,
       status: 'ACTIVE',
-      billingType: 'PACKAGE',
+      // The B2 group's pay-per-lesson members (S08): Artem and Sofiia.
+      billingType: group.n === 1 && paysPerLesson(n) ? 'PER_LESSON' : 'PACKAGE',
       priceMinor: group.ownPrices?.[n] ?? group.price ?? 0,
       currency: 'UAH',
       ownPrice: group.ownPrices?.[n] !== undefined,
@@ -324,8 +335,15 @@ const TOPICS = [
   'Phrasal verbs',
 ];
 
-/** Tuesdays and Thursdays at 17:00, a year of them around the story day. */
-function b2Lessons(): LessonResponse[] {
+/** The first day of the planned change of the S08 story (1 October, Kyiv). */
+export const PLANNED_FROM = '2026-09-30T21:00:00.000Z';
+
+/**
+ * Tuesdays and Thursdays at 17:00, a year of them around the story day. The
+ * last held one is not marked yet (S08: «Відмітити»); with a planned change
+ * the lessons from 1 October sit at 18:00 already.
+ */
+function b2Lessons(planned = false): LessonResponse[] {
   const group = SAMPLE_GROUPS[0]!;
   const lessons: LessonResponse[] = [];
   // Past: 24 lessons back, most recent first; future: 12 ahead.
@@ -347,6 +365,7 @@ function b2Lessons(): LessonResponse[] {
           : 'CANCELLED_CHARGED'
         : 'COMPLETED';
     const startsAtUtc = kyiv(day, 17);
+    const moved = planned && upcoming && startsAtUtc >= PLANNED_FROM;
     lessons.push({
       id: upcoming && day === 1 ? lessonId(1, 0) : lessonId(1, index + 1),
       workspaceId: WORKSPACE,
@@ -354,7 +373,7 @@ function b2Lessons(): LessonResponse[] {
       groupId: storyGroupId(1),
       seriesId: null,
       teacherId: TEACHERS.dmytro.id,
-      startsAtUtc,
+      startsAtUtc: moved ? kyiv(day, 18) : startsAtUtc,
       durationMin: 60,
       priceMinor: group.price ?? 0,
       currency: 'UAH',
@@ -364,16 +383,24 @@ function b2Lessons(): LessonResponse[] {
       kind: 'REGULAR',
       originalLessonId: null,
       makeupLessonId: null,
-      topic: null,
+      topic: TOPICS[index % TOPICS.length]!,
       rescheduledAt: null,
       cancelledBy: cancelled ? 'TEACHER' : null,
       cancelledReason: null,
       cancelledAt: null,
       completedAt: status === 'COMPLETED' ? startsAtUtc : null,
       paidAt: null,
-      notes: TOPICS[index % TOPICS.length]!,
+      notes: null,
       cancellationDeadlineHours: 12,
-      attendance: status === 'COMPLETED' ? { present: index % 3 === 0 ? 5 : 6, marked: 6 } : null,
+      attendance:
+        status === 'COMPLETED'
+          ? {
+              present: index % 3 === 0 ? 5 : 6,
+              marked: 6,
+              // The automation held the last one; nobody has marked it yet.
+              confirmed: index !== past.length - 1,
+            }
+          : null,
       charges: [],
       student: null,
       group: { id: storyGroupId(1), name: group.name },
@@ -396,7 +423,12 @@ function b2Attendance(lessons: LessonResponse[]): GroupAttendanceResponse {
   const window = lessons
     .filter((lesson) => lesson.status !== 'SCHEDULED')
     .slice(-8)
-    .map((lesson) => ({ id: lesson.id, startsAtUtc: lesson.startsAtUtc, status: lesson.status }));
+    .map((lesson) => ({
+      id: lesson.id,
+      startsAtUtc: lesson.startsAtUtc,
+      status: lesson.status,
+      topic: lesson.topic,
+    }));
   const row = (
     n: number,
     cells: AttendanceCellDto[],
@@ -502,6 +534,13 @@ export type GroupStoryOptions = {
    * his own. `saving` keeps a member's price save pending.
    */
   memberPrices?: 'mixed' | 'group' | 'saving';
+  /**
+   * S08, the B2 group's schedule: `active` (default), a change `planned` from
+   * 1 October, or `none` yet.
+   */
+  groupSchedule?: 'active' | 'planned' | 'none';
+  /** S08: `fails` refuses the sale to members, so nothing is sold (all or nothing). */
+  memberSale?: 'sells' | 'fails';
 };
 
 export const NEW_GROUP_ID = storyGroupId(NEW_GROUP.n);
@@ -525,7 +564,11 @@ export function createGroupRoutes(options: GroupStoryOptions) {
           })),
           ...(options.withNewGroup ? [{ ...NEW_GROUP }] : []),
         ];
-  const lessons = b2Lessons();
+  let scheduleMode = options.groupSchedule ?? 'active';
+  const b2 = groups.find((group) => group.n === 1);
+  const b2Slots = b2?.schedule ?? null;
+  if (b2 && scheduleMode === 'none') b2.schedule = null;
+  const lessons = b2Lessons(scheduleMode === 'planned');
   const attendance = b2Attendance(lessons);
   const marks = new Map<string, Record<string, 'PRESENT' | 'ABSENT' | 'EXCUSED'>>();
   const never = () => new Promise<Response>(() => undefined);
@@ -587,6 +630,79 @@ export function createGroupRoutes(options: GroupStoryOptions) {
             },
             rows: [],
           });
+    }
+
+    // S08: how each member pays the group, and the group's schedule.
+    const billingMatch = path.match(/^\/groups\/([^/]+)\/billing$/);
+    if (billingMatch) {
+      const group = find(billingMatch[1]!);
+      if (!group) return json({ code: 'GROUP_NOT_FOUND' }, 404);
+      return group.n === 1
+        ? json(b2Billing(group.members))
+        : json({ groupId: storyGroupId(group.n), lowCreditThreshold: 2, members: [] });
+    }
+    if (path === '/schedules' && method === 'GET' && query.get('groupId')) {
+      const items =
+        query.get('groupId') === storyGroupId(1) && scheduleMode !== 'none' && b2
+          ? [b2Schedule(scheduleMode === 'planned', b2.members.length)]
+          : [];
+      return json({
+        items,
+        page: 1,
+        pageSize: 20,
+        total: items.length,
+        totalPages: 1,
+        counts: { active: items.length, changing: 0, ended: 0, all: items.length },
+      });
+    }
+    const scheduleResult = (summary: ReturnType<typeof changeSummary>) =>
+      json(
+        { schedule: b2Schedule(scheduleMode === 'planned', b2?.members.length ?? 0), summary },
+        201,
+      );
+    if (path === `/schedules/${B2_SCHEDULE_ID}/changes` && method === 'POST') {
+      const change = body() as { effectiveFrom?: string };
+      scheduleMode = 'planned';
+      return scheduleResult(changeSummary(change.effectiveFrom ?? kyiv(0, 12)));
+    }
+    if (path === `/schedules/${B2_SCHEDULE_ID}/changes/cancel` && method === 'POST') {
+      scheduleMode = 'active';
+      return scheduleResult(changeSummary(kyiv(22, 0)));
+    }
+    const stopMatch = path.match(/^\/schedules\/([^/]+)\/stop(\/preview)?$/);
+    if (stopMatch && stopMatch[1] === B2_SCHEDULE_ID && method === 'POST') {
+      const from = String(body().from ?? kyiv(0, 12));
+      const summary = changeSummary(from, 8);
+      if (stopMatch[2]) return json(summary);
+      scheduleMode = 'none';
+      if (b2) b2.schedule = null;
+      return json({ schedule: { ...b2Schedule(false, 0), state: 'ENDED' }, summary }, 201);
+    }
+    if (path === '/schedules/preview' && method === 'POST') {
+      const dates = [kyiv(1, 17), kyiv(6, 17), kyiv(8, 17)];
+      return json({
+        created: dates.length,
+        dates,
+        firstLessonAt: dates[0],
+        existingScheduleId: null,
+        conflicts: [],
+      });
+    }
+    if (path === '/schedules' && method === 'POST' && body().groupId === storyGroupId(1)) {
+      scheduleMode = 'active';
+      if (b2) b2.schedule = b2Slots ?? { weekdays: [2, 4], localTime: '17:00' };
+      return json(b2Schedule(false, b2?.members.length ?? 0), 201);
+    }
+
+    // S08: the sale to members, previewed per member and made all or nothing.
+    if (path === '/packages/members/preview' && method === 'POST') {
+      return json(
+        memberSalePreview(body() as unknown as SellToMembersDto, b2Billing(b2?.members ?? [])),
+      );
+    }
+    if (path === '/packages/members' && method === 'POST') {
+      if (options.memberSale === 'fails') return json({ code: 'ENROLLMENT_NOT_FOUND' }, 404);
+      return json({ items: soldToMembers(body() as unknown as SellToMembersDto) }, 201);
     }
 
     // A member's own price (L-11): the group's price clears it.

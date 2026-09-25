@@ -24,7 +24,8 @@ export function useConflictGuard() {
   const [busy, setBusy] = useState(false);
 
   const run = async (
-    candidate: ConflictCandidate,
+    /** The lesson being saved; or, for a save that moves many, the first that overlaps. */
+    candidate: ConflictCandidate | ((conflicts: ScheduleConflict[]) => ConflictCandidate),
     attempt: (force: boolean) => Promise<void>,
     onSaved: () => void,
   ) => {
@@ -38,7 +39,7 @@ export function useConflictGuard() {
         return;
       }
       setPending({
-        candidate,
+        candidate: typeof candidate === 'function' ? candidate(conflicts) : candidate,
         conflicts,
         retry: async () => {
           await attempt(true);

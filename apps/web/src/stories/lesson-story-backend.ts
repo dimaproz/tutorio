@@ -419,7 +419,7 @@ function groupLessons(): LessonDetailResponse[] {
     groupLesson(32, held, {
       status: 'COMPLETED',
       completedAt: kyiv(15, 19, 30),
-      attendance: { present: 3, marked: 5 },
+      attendance: { present: 3, marked: 5, confirmed: true },
       charges: heldCharges('marked'),
       history: [
         audit(kyiv(15, 19, 45), {
@@ -439,7 +439,7 @@ function groupLessons(): LessonDetailResponse[] {
     groupLesson(33, held, {
       status: 'COMPLETED',
       completedAt: kyiv(15, 19, 30),
-      attendance: { present: 5, marked: 5 },
+      attendance: { present: 5, marked: 5, confirmed: false },
       charges: heldCharges('unmarked'),
       history: [
         audit(

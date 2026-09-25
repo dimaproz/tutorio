@@ -3,6 +3,7 @@ import type {
   PackageSizingModeDto,
   StudentBillingResponse,
 } from '@tutorio/validation';
+import { weeklyLessons } from '@tutorio/domain';
 import { z } from 'zod';
 import { parsePriceInput } from '@/lib/money';
 import { addDays, addMonth, dayKey, endOfDayExclusive, isDayKey, startOfDay } from './dates';
@@ -141,6 +142,29 @@ export function typedLessons(values: Pick<SaleFormValues, 'kind' | 'lessons'>): 
 }
 
 /**
+ * The lessons the package holds, as far as the form knows them: a count
+ * package's typed count; a period from the schedule's typed count or the
+ * schedule's own (from the preview); an N-a-week period's from the preview,
+ * else counted by the days of its window (`weeklyLessons`, as the API).
+ */
+export function saleLessons(
+  values: Pick<SaleFormValues, 'kind' | 'lessons' | 'from' | 'to' | 'perWeek'>,
+  known: { scheduleLessons: number | null; previewLessons: number | null },
+  timeZone: string,
+): number | null {
+  if (values.kind === 'FIXED_COUNT') return typedLessons(values);
+  if (values.kind === 'BY_PERIOD') return typedLessons(values) ?? known.scheduleLessons;
+  if (known.previewLessons !== null) return known.previewLessons;
+  return isDayKey(values.from) && isDayKey(values.to) && values.to >= values.from
+    ? weeklyLessons(
+        startOfDay(values.from, timeZone),
+        endOfDayExclusive(values.to, timeZone),
+        Number(values.perWeek),
+      )
+    : null;
+}
+
+/**
  * The name the package is sold with: the tutor's, or — untouched or cleared
  * — the default the form suggests («English · 8 занять»).
  */
@@ -153,26 +177,17 @@ export function saleName(
 }
 
 /**
- * The sale request: the direction (its group, or its teacher), the kind with
- * its count or window, and exactly one price. A period runs from the first
- * day's midnight to the last day's end; a count package's «Діє до» ends
- * after that day — the studio's midnights, whatever the browser's zone. A
- * period's count is sent only when the tutor typed one.
+ * What is sold, whoever buys it: the kind with its count or window, and
+ * exactly one price. A period runs from the first day's midnight to the last
+ * day's end; a count package's «Діє до» ends after that day — the studio's
+ * midnights, whatever the browser's zone. A period's count is sent only when
+ * the tutor typed one.
  */
-export function saleDto(
-  values: SaleFormValues,
-  direction: SaleDirection,
-  studentId: string,
-  timeZone: string,
-  name?: string,
-) {
+export function saleSpec(values: SaleFormValues, currency: string, timeZone: string) {
   const price =
     values.priceSource === 'perLesson'
       ? { pricePerLessonMinor: parsePriceInput(values.perLesson) ?? 0 }
       : { totalPriceMinor: parsePriceInput(values.total) ?? 0 };
-  const target = direction.group
-    ? { groupId: direction.group.id }
-    : { teacherId: direction.teacher.id };
   const count = parseCount(values.lessons);
   const kind =
     values.kind === 'FIXED_COUNT'
@@ -190,13 +205,29 @@ export function saleDto(
               : {}),
         };
   return {
+    sizingMode: values.kind,
+    currency: currency as CreatePackageDto['currency'],
+    ...kind,
+    ...price,
+  };
+}
+
+/** The sale request: the direction (its group, or its teacher) and what is sold. */
+export function saleDto(
+  values: SaleFormValues,
+  direction: SaleDirection,
+  studentId: string,
+  timeZone: string,
+  name?: string,
+) {
+  const target = direction.group
+    ? { groupId: direction.group.id }
+    : { teacherId: direction.teacher.id };
+  return {
     studentId,
     ...target,
     ...(name ? { name } : {}),
-    sizingMode: values.kind,
-    currency: direction.currency,
-    ...kind,
-    ...price,
+    ...saleSpec(values, direction.currency, timeZone),
   } satisfies CreatePackageDto;
 }
 

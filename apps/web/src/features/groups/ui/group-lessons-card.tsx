@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import Link from 'next/link';
 import { CalendarIcon, PlusIcon } from 'lucide-react';
 import { useFormatter, useTranslations } from 'next-intl';
 import type { GroupDetail, LessonResponse } from '@tutorio/validation';
@@ -10,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/shared/empty-state';
 import { LessonList, type LessonListItem } from '@/components/shared/lesson-list';
 import {
+  awaitsAttendance,
   isLessonRunning,
   lessonBuckets,
   LessonRunningBadge,
@@ -26,8 +26,10 @@ const MORE = 12;
 /**
  * The group's lessons in the shared `LessonList`: what is coming up (the next
  * one highlighted), then what happened, in a fixed-height box that scrolls,
- * with "show more" filling the same box. A row opens the lesson panel, where
- * attendance is marked.
+ * with "show more" filling the same box. A row opens the lesson panel. Past
+ * rows read like the others — attendance figures live in «Відвідуваність»
+ * (S08 decision 6) —, and one nobody has marked yet reads «присутність не
+ * відмічена» with «Відмітити», opening the panel's attendance sheet.
  */
 export function GroupLessonsCard({
   group,
@@ -36,7 +38,9 @@ export function GroupLessonsCard({
   now,
   archived,
   onOpenLesson,
+  onMarkLesson,
   onAddLesson,
+  onCreateSchedule,
 }: {
   group: GroupDetail;
   lessons: LessonResponse[];
@@ -44,8 +48,12 @@ export function GroupLessonsCard({
   now: number;
   archived: boolean;
   onOpenLesson: (lessonId: string) => void;
+  /** Opens the lesson panel on its attendance sheet (S01). */
+  onMarkLesson: (lessonId: string) => void;
   /** Opens the lesson form for the group (S02); omitted for an archived group. */
   onAddLesson?: () => void;
+  /** Opens the S05 schedule form for the group; omitted for an archived group. */
+  onCreateSchedule?: () => void;
 }) {
   const t = useTranslations('groups.lessons');
   const format = useFormatter();
@@ -76,34 +84,32 @@ export function GroupLessonsCard({
     const month = format.dateTime(start, { month: 'short' });
     const end = new Date(start.getTime() + lesson.durationMin * 60_000);
     const range = `${time(start)} – ${time(end)}`;
-    const came = lesson.attendance
-      ? t('attended', { present: lesson.attendance.present, marked: lesson.attendance.marked })
-      : null;
     const teacher = lesson.teacher.name;
     const next = lesson.id === buckets.nextId;
+    const unmarked = past && awaitsAttendance(lesson, now);
     const dateLabel = format.dateTime(start, { weekday: 'short', day: 'numeric', month: 'long' });
     return {
       id: lesson.id,
       weekday: format.dateTime(start, { weekday: 'short' }),
       day: format.dateTime(start, { day: '2-digit' }),
       title: lesson.topic || lesson.notes?.split('\n')[0] || t('fallbackTitle'),
-      meta: past
-        ? [month, time(start), came ?? teacher].join(' · ')
-        : [month, range, teacher].join(' · '),
-      metaShort: past
-        ? [time(start), came].filter(Boolean).join(' · ')
-        : [range, teacher.split(' ')[0]].join(' · '),
+      meta: [month, range, unmarked ? t('notMarked') : teacher].join(' · '),
+      metaShort: [range, unmarked ? t('notMarked') : teacher.split(' ')[0]].join(' · '),
       state: next ? 'next' : past ? 'past' : 'default',
       status: isLessonRunning(lesson, now) ? (
         <LessonRunningBadge />
       ) : next ? (
         <Badge variant="brand">{t('next')}</Badge>
+      ) : unmarked ? (
+        <Badge variant="warning">{t('mark')}</Badge>
       ) : (
         <LessonStatusBadge status={lesson.status} />
       ),
       // The whole row opens the lesson panel; every action lives there.
-      onSelect: () => onOpenLesson(lesson.id),
-      selectLabel: t('openLesson', { date: dateLabel }),
+      onSelect: () => (unmarked ? onMarkLesson(lesson.id) : onOpenLesson(lesson.id)),
+      selectLabel: unmarked
+        ? t('markLesson', { date: dateLabel })
+        : t('openLesson', { date: dateLabel }),
     };
   };
 
@@ -149,11 +155,9 @@ export function GroupLessonsCard({
           title={t('emptyTitle')}
           text={group.schedules.length > 0 ? t('emptyTextScheduled') : t('emptyText')}
           action={
-            archived || group.schedules.length > 0 ? undefined : (
-              <Button asChild leading={<PlusIcon />}>
-                <Link prefetch={false} href={`/app/groups/${group.id}/edit#group-form-schedule`}>
-                  {t('setUp')}
-                </Link>
+            archived || group.schedules.length > 0 || !onCreateSchedule ? undefined : (
+              <Button type="button" leading={<PlusIcon />} onClick={onCreateSchedule}>
+                {t('setUp')}
               </Button>
             )
           }

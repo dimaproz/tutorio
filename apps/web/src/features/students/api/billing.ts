@@ -40,7 +40,8 @@ const PAGE_MAX = 100;
 /**
  * Money and pauses move lessons, credits and balances, so a change refreshes
  * the student (billing, profile), the lessons and schedules, the packages and
- * payments, the pauses and the audit trail.
+ * payments, the pauses, the groups whose members' billing shows it (S08) and
+ * the audit trail.
  */
 export function invalidateStudentBilling(queryClient: QueryClient) {
   for (const queryKey of [
@@ -51,6 +52,7 @@ export function invalidateStudentBilling(queryClient: QueryClient) {
     queryKeys.packages.all,
     queryKeys.payments.all,
     queryKeys.enrollments.all,
+    queryKeys.groups.all,
     ['pauses'],
   ]) {
     void queryClient.invalidateQueries({ queryKey });

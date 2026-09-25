@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { LessonResponse } from '@tutorio/validation';
-import { isLessonRunning, lessonBuckets } from './buckets';
+import { awaitsAttendance, canMarkAttendance, isLessonRunning, lessonBuckets } from './buckets';
 
 const NOW = Date.parse('2026-09-24T12:00:00.000Z');
 
@@ -47,6 +47,35 @@ describe('running lesson', () => {
     expect(isLessonRunning(lesson('a', '2026-09-24T12:30:00.000Z'), NOW)).toBe(false);
     expect(
       isLessonRunning(lesson('a', '2026-09-24T11:30:00.000Z', 'CANCELLED_UNCHARGED'), NOW),
+    ).toBe(false);
+  });
+});
+
+describe('attendance to mark (S08)', () => {
+  const group = (
+    iso: string,
+    status: LessonResponse['status'],
+    attendance: LessonResponse['attendance'] = null,
+  ) => ({ groupId: 'g', startsAtUtc: iso, durationMin: 60, status, attendance }) as LessonResponse;
+
+  it('asks for marks on a held group lesson nobody marked (L-72, L-74)', () => {
+    const auto = { present: 6, marked: 6, confirmed: false };
+    const tutor = { present: 5, marked: 6, confirmed: true };
+    expect(awaitsAttendance(group('2026-09-22T14:00:00.000Z', 'COMPLETED', auto), NOW)).toBe(true);
+    expect(awaitsAttendance(group('2026-09-22T14:00:00.000Z', 'COMPLETED'), NOW)).toBe(true);
+    expect(awaitsAttendance(group('2026-09-22T14:00:00.000Z', 'COMPLETED', tutor), NOW)).toBe(
+      false,
+    );
+    // Ended but not held yet by the automation.
+    expect(awaitsAttendance(group('2026-09-24T10:00:00.000Z', 'SCHEDULED'), NOW)).toBe(true);
+    // Running: marked in the panel, not flagged in the list.
+    expect(awaitsAttendance(group('2026-09-24T11:30:00.000Z', 'SCHEDULED'), NOW)).toBe(false);
+    expect(canMarkAttendance(group('2026-09-24T11:30:00.000Z', 'SCHEDULED'), NOW)).toBe(true);
+    expect(awaitsAttendance(group('2026-09-22T14:00:00.000Z', 'CANCELLED_UNCHARGED'), NOW)).toBe(
+      false,
+    );
+    expect(
+      awaitsAttendance({ ...group('2026-09-22T14:00:00.000Z', 'COMPLETED'), groupId: null }, NOW),
     ).toBe(false);
   });
 });

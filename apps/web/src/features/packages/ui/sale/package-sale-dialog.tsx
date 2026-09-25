@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { weeklyLessons } from '@tutorio/domain';
 import type { CreatePackageDto, PackageResponse } from '@tutorio/validation';
 import { useNow, useTranslations } from 'next-intl';
 import { FormProvider, useWatch } from 'react-hook-form';
@@ -12,7 +11,7 @@ import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 import { useSalePreviewQuery, useSellPackageMutation } from '../../api';
-import { dayKey, endOfDayExclusive, isDayKey, startOfDay } from '../../model/dates';
+import { dayKey, isDayKey, startOfDay } from '../../model/dates';
 import {
   linkedPrice,
   moneyText,
@@ -20,9 +19,9 @@ import {
   saleDto,
   saleFormDefaults,
   saleFormSchema,
+  saleLessons,
   saleName,
   salePreviewDto,
-  typedLessons,
   type SaleFormValues,
 } from '../../model/sale';
 import { FooterNote, useErrorToast, usePackageForm } from '../form-parts';
@@ -118,19 +117,14 @@ function SaleFlow({
   );
   const shownPreview = previewDto ? preview.data : undefined;
 
-  const lessons =
-    values.kind === 'FIXED_COUNT'
-      ? typedLessons(values)
-      : values.kind === 'BY_PERIOD'
-        ? (typedLessons(values) ?? shownPreview?.scheduleLessons ?? null)
-        : (shownPreview?.lessonsTotal ??
-          (isDayKey(values.from) && isDayKey(values.to) && values.to >= values.from
-            ? weeklyLessons(
-                startOfDay(values.from, timeZone),
-                endOfDayExclusive(values.to, timeZone),
-                Number(values.perWeek),
-              )
-            : null));
+  const lessons = saleLessons(
+    values,
+    {
+      scheduleLessons: shownPreview?.scheduleLessons ?? null,
+      previewLessons: shownPreview?.lessonsTotal ?? null,
+    },
+    timeZone,
+  );
   const price = linkedPrice(values, lessons);
   // The name the package gets unless the tutor types one: what it is for and its size.
   const suggestedName = direction
@@ -275,7 +269,7 @@ function SaleFlow({
                   scheduleLessons={shownPreview?.scheduleLessons ?? null}
                   format={format}
                 />
-                <SalePriceFields direction={direction} lessons={lessons} format={format} />
+                <SalePriceFields rate={direction} lessons={lessons} format={format} />
                 <SaleNameField suggested={suggestedName} />
               </div>
               {mobile ? null : (

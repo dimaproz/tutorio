@@ -4,9 +4,11 @@ import {
   attendanceSegments,
   memberPackages,
   memberPackagesPaid,
+  missStreaks,
   scheduleSlots,
   shortName,
   timeRange,
+  windowLessonFacts,
 } from './presentation';
 
 const NOW = Date.parse('2026-09-24T12:00:00.000Z');
@@ -88,5 +90,33 @@ describe('attendance segments', () => {
       ],
     } as unknown as GroupAttendanceResponse;
     expect(attendanceSegments(attendance)).toEqual(['ok', 'miss', 'planned', 'planned']);
+  });
+});
+
+describe('attendance tooltips (S08)', () => {
+  it('names who came and who missed each lesson, leaving holds out', () => {
+    const attendance = {
+      lessons: [{ id: 'a' }, { id: 'b' }],
+      rows: [
+        { hold: false, student: { fullName: 'Anna' }, cells: ['present', 'absent'] },
+        { hold: false, student: { fullName: 'Artem' }, cells: ['absent', 'absent'] },
+        { hold: true, student: { fullName: 'Kateryna' }, cells: ['present', 'unmarked'] },
+      ],
+    } as unknown as GroupAttendanceResponse;
+    expect(windowLessonFacts(attendance)).toEqual([
+      { lesson: { id: 'a' }, present: 1, counted: 2, missed: ['Artem'] },
+      { lesson: { id: 'b' }, present: 0, counted: 2, missed: ['Anna', 'Artem'] },
+    ]);
+  });
+
+  it('places a miss in its run of misses in a row, across cancelled lessons', () => {
+    expect(
+      missStreaks(['cancelled', 'present', 'absent', 'cancelled', 'absent', 'present', 'absent']),
+    ).toEqual([null, null, { index: 1, count: 2 }, null, { index: 2, count: 2 }, null, null]);
+    expect(missStreaks(['absent', 'absent', 'absent'])).toEqual([
+      { index: 1, count: 3 },
+      { index: 2, count: 3 },
+      { index: 3, count: 3 },
+    ]);
   });
 });

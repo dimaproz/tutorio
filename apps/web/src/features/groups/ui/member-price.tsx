@@ -18,11 +18,21 @@ export function useGroupMoney() {
  * «своя ціна»: the badge of a member who pays their own price. Its tooltip
  * names the group price — on hover and focus on desktop, on a tap on phones.
  */
-export function OwnPriceBadge({ groupPrice }: { groupPrice: string | null }) {
+export function OwnPriceBadge({
+  groupPrice,
+  appearance = 'badge',
+}: {
+  groupPrice: string | null;
+  /** `text`: indigo words in a meta line (the S08 member card) instead of a pill. */
+  appearance?: 'badge' | 'text';
+}) {
   const t = useTranslations('groups.memberPrice');
   const [open, setOpen] = useState(false);
+  const textClass = 'text-tint-indigo-foreground';
   if (groupPrice === null) {
-    return (
+    return appearance === 'text' ? (
+      <span className={textClass}>{t('ownBadge')}</span>
+    ) : (
       <Badge variant="indigo" size="sm">
         {t('ownBadge')}
       </Badge>
@@ -31,11 +41,24 @@ export function OwnPriceBadge({ groupPrice }: { groupPrice: string | null }) {
   return (
     <Tooltip open={open} onOpenChange={setOpen}>
       <TooltipTrigger asChild>
-        <Badge variant="indigo" size="sm" asChild>
-          <button type="button" onClick={() => setOpen(true)}>
+        {appearance === 'text' ? (
+          <button
+            type="button"
+            className={cn(
+              textClass,
+              'rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring',
+            )}
+            onClick={() => setOpen(true)}
+          >
             {t('ownBadge')}
           </button>
-        </Badge>
+        ) : (
+          <Badge variant="indigo" size="sm" asChild>
+            <button type="button" onClick={() => setOpen(true)}>
+              {t('ownBadge')}
+            </button>
+          </Badge>
+        )}
       </TooltipTrigger>
       <TooltipContent>{t('groupPriceTooltip', { price: groupPrice })}</TooltipContent>
     </Tooltip>

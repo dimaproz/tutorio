@@ -12,6 +12,7 @@ import type {
   CreatePackageDto,
   CreditLedgerResponse,
   ExtendPackageDto,
+  MemberSalePreviewResponse,
   PackageDetailResponse,
   PackageListResponse,
   PackagePreviewResponse,
@@ -22,6 +23,8 @@ import type {
   RecordPaymentDto,
   RefundPackageDto,
   ScheduleListResponse,
+  SellToMembersDto,
+  SoldPackagesResponse,
   StudentBillingResponse,
   TransferPackageDto,
 } from '@tutorio/validation';
@@ -134,6 +137,20 @@ export function useSalePreviewQuery(dto: CreatePackageDto | null) {
   });
 }
 
+/** What the member sale would be for each member (S08): lessons, total, debt covered, pause. */
+export function useMemberSalePreviewQuery(dto: SellToMembersDto | null) {
+  return useQuery<MemberSalePreviewResponse, GatewayError>({
+    queryKey: [...queryKeys.packages.all, 'members-preview', dto],
+    enabled: dto !== null,
+    placeholderData: keepPreviousData,
+    queryFn: () =>
+      gatewayFetch<MemberSalePreviewResponse>('/api/backend/packages/members/preview', {
+        method: 'POST',
+        body: JSON.stringify(dto),
+      }),
+  });
+}
+
 function usePackageMutation<TResult, TInput>(run: (input: TInput) => Promise<TResult>) {
   const queryClient = useQueryClient();
   return useMutation<TResult, GatewayError, TInput>({
@@ -147,6 +164,13 @@ const post = <T>(path: string, body: unknown) =>
 
 export function useSellPackageMutation() {
   return usePackageMutation((dto: CreatePackageDto) => post<PackageResponse>('/packages', dto));
+}
+
+/** One package to each selected member, all or none (L-86). */
+export function useSellToMembersMutation() {
+  return usePackageMutation((dto: SellToMembersDto) =>
+    post<SoldPackagesResponse>('/packages/members', dto),
+  );
 }
 
 export function usePackagePaymentMutation() {

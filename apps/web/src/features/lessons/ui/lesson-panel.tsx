@@ -20,7 +20,7 @@ import {
   useTransitionLessonMutation,
 } from '../api';
 import { cancellationActor, lessonHistory } from '../model/history';
-import { isLessonRunning } from '../model/buckets';
+import { canMarkAttendance, isLessonRunning } from '../model/buckets';
 import { panelActions, type FooterAction, type MenuAction } from '../model/panel-actions';
 import { priceEditability } from '../model/payment';
 import { AttendanceDialog } from './dialogs/attendance-dialog';
@@ -256,7 +256,8 @@ function LessonPanelContent({
     intent === 'move' && offered.has('move') ? 'edit' : 'view',
   );
   const [dialog, setDialog] = useState<DialogKind | null>(() => {
-    if (intent === 'markAttendance' && offered.has('markAttendance')) return 'attendance';
+    // «Відмітити» on the group page opens the sheet of a held lesson too (S08).
+    if (intent === 'markAttendance' && canMarkAttendance(lesson, now)) return 'attendance';
     if (intent === 'cancel' && offered.has('cancel')) return 'cancel';
     if (intent === 'makeup' && offered.has('makeup')) return 'makeup';
     return null;

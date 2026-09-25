@@ -342,6 +342,22 @@ export function useApplyScheduleChangeMutation() {
   });
 }
 
+/**
+ * Takes back the change planned for later (S08): the rule before it applies
+ * again from its date, and the lessons it moved move back.
+ */
+export function useCancelScheduleChangeMutation() {
+  const queryClient = useQueryClient();
+  return useMutation<ScheduleChangeResult, GatewayError, { scheduleId: string; force?: boolean }>({
+    mutationFn: ({ scheduleId, force: forced }) =>
+      gatewayFetch<ScheduleChangeResult>(
+        `/api/backend/schedules/${scheduleId}/changes/cancel${force(forced)}`,
+        { method: 'POST' },
+      ),
+    onSuccess: () => invalidateLessonGraph(queryClient),
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Bulk cancel (S04, L-54)
 // ---------------------------------------------------------------------------

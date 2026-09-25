@@ -50,7 +50,11 @@ describe('panel actions', () => {
   it('only fixes the status of a held lesson, individual or group', () => {
     for (const lesson of [
       lessonFixture({ status: 'COMPLETED' }),
-      lessonFixture({ ...GROUP, status: 'COMPLETED', attendance: { present: 3, marked: 5 } }),
+      lessonFixture({
+        ...GROUP,
+        status: 'COMPLETED',
+        attendance: { present: 3, marked: 5, confirmed: true },
+      }),
     ]) {
       const actions = panelActions(lesson, AFTER);
       expect([actions.secondary, actions.primary]).toEqual(['fixStatus', null]);

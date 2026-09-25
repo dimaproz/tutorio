@@ -10,6 +10,7 @@ import {
 import type {
   CreateGroupDto,
   GroupAttendanceResponse,
+  GroupBillingResponse,
   GroupDetail,
   GroupListResponse,
   GroupOptionsResponse,
@@ -115,6 +116,15 @@ export function useGroupAttendanceQuery(groupId: string, window: number, enabled
       gatewayFetch<GroupAttendanceResponse>(
         `/api/backend/groups/${groupId}/attendance${buildQueryString({ window })}`,
       ),
+  });
+}
+
+/** How each member pays the group (S08): billing and pause per member, one read. */
+export function useGroupBillingQuery(groupId: string, enabled = true) {
+  return useQuery<GroupBillingResponse, GatewayError>({
+    queryKey: queryKeys.groups.billing(groupId),
+    enabled: enabled && Boolean(groupId),
+    queryFn: () => gatewayFetch<GroupBillingResponse>(`/api/backend/groups/${groupId}/billing`),
   });
 }
 

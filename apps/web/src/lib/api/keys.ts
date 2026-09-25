@@ -118,6 +118,7 @@ export const queryKeys = {
     attendanceAll: ['groups', 'attendance'] as const,
     attendance: (groupId: string, window: number) =>
       ['groups', 'attendance', groupId, window] as const,
+    billing: (groupId: string) => ['groups', 'billing', groupId] as const,
   },
   parents: {
     all: ['parents'] as const,
