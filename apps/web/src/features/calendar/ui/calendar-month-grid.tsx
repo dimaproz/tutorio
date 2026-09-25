@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 import { lessonsOnDay, lessonType, type CalendarLesson } from '../model/lessons';
 import { inMonth, isSameDay } from '../model/period';
 import { CalendarEvent } from './calendar-event';
-import { useCalendarFormatter } from './use-calendar-formatter';
+import { useLocalFormatter } from '@/lib/i18n/local-formatter';
 
 /** Chips a cell shows before «+N ще». */
 const CHIPS_PER_DAY = 3;
@@ -32,7 +32,7 @@ export function TypeDots({ lessons }: { lessons: readonly CalendarLesson[] }) {
   );
 }
 
-function weekdayNames(format: ReturnType<typeof useCalendarFormatter>, days: Date[]) {
+function weekdayNames(format: ReturnType<typeof useLocalFormatter>, days: Date[]) {
   return days.slice(0, 7).map((day) => format.dateTime(day, { weekday: 'short' }));
 }
 
@@ -66,7 +66,7 @@ export function CalendarMonthGrid({
   onShowDay: (day: Date) => void;
 }) {
   const t = useTranslations('calendar.month');
-  const format = useCalendarFormatter();
+  const format = useLocalFormatter();
   const [ownOpen, setOwnOpen] = useState<Date | null>(null);
   const open = openDay !== undefined ? openDay : ownOpen;
   const setOpen = onOpenDayChange ?? setOwnOpen;
@@ -224,7 +224,7 @@ export function CalendarMonthDots({
   selected: Date;
   onSelect: (day: Date) => void;
 }) {
-  const format = useCalendarFormatter();
+  const format = useLocalFormatter();
   return (
     <div data-slot="calendar-month-dots" className="rounded-[24px] bg-card p-4">
       <div className="grid grid-cols-7 gap-y-1 text-center">

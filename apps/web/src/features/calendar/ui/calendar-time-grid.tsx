@@ -15,7 +15,7 @@ import {
 import { atMinute, clockLabel, isSameDay, minutesOfDay } from '../model/period';
 import { CalendarEvent, useEventTimes, type CalendarEventVariant } from './calendar-event';
 import { useGridPointer, type GridSelection } from './use-grid-pointer';
-import { useCalendarFormatter } from './use-calendar-formatter';
+import { useLocalFormatter } from '@/lib/i18n/local-formatter';
 
 /** Per-hour height: the week, the desktop day, the phone day. */
 export const HOUR_HEIGHT = { week: 44, day: 64, phone: 58 } as const;
@@ -98,7 +98,7 @@ export function CalendarTimeGrid({
   className?: string;
 }) {
   const t = useTranslations('calendar');
-  const format = useCalendarFormatter();
+  const format = useLocalFormatter();
   const times = useEventTimes();
   const scroller = useRef<HTMLDivElement>(null);
   const now = new Date(nowMs);

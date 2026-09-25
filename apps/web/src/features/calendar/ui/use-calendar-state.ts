@@ -18,7 +18,7 @@ import {
   startOfDay,
   type CalendarView,
 } from '../model/period';
-import { useCalendarFormatter } from './use-calendar-formatter';
+import { useLocalFormatter } from '@/lib/i18n/local-formatter';
 
 /** The live minute, or a pinned clock (stories). */
 export function useNow(pinned?: number) {
@@ -37,7 +37,7 @@ const capitalize = (text: string) => text.charAt(0).toLocaleUpperCase() + text.s
 
 /** The range title: «21 – 27 вересня 2026», «Чт, 24 вересня 2026», «Вересень 2026». */
 export function usePeriodTitle() {
-  const format = useCalendarFormatter();
+  const format = useLocalFormatter();
   return (view: CalendarView, days: Date[], anchor: Date, withYear: boolean) => {
     const year = withYear ? { year: 'numeric' as const } : {};
     if (view === 'day') {
@@ -151,7 +151,7 @@ export function useCalendarState({ mobile, nowMs }: { mobile: boolean; nowMs: nu
 /** «Dmytro Tutor · 15 занять цього тижня», and its variants. */
 export function useCalendarSubtitle() {
   const t = useTranslations('calendar.subtitle');
-  const format = useCalendarFormatter();
+  const format = useLocalFormatter();
   return ({
     state,
     teachers,

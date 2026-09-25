@@ -9,7 +9,7 @@ import { clockLabel, isSameDay } from '../model/period';
 import { daySummary, type DaySummary } from '../model/summary';
 import { CalendarEvent } from './calendar-event';
 import { TypeDots } from './calendar-month-grid';
-import { useCalendarFormatter } from './use-calendar-formatter';
+import { useLocalFormatter } from '@/lib/i18n/local-formatter';
 
 /**
  * Seven day tiles with the lesson types as dots; the picked day in a primary
@@ -28,7 +28,7 @@ export function CalendarWeekStrip({
   onSelect: (day: Date) => void;
   className?: string;
 }) {
-  const format = useCalendarFormatter();
+  const format = useLocalFormatter();
   return (
     <div data-slot="calendar-week-strip" className={cn('grid grid-cols-7 gap-1', className)}>
       {days.map((day) => {
@@ -64,13 +64,13 @@ export function CalendarWeekStrip({
 
 /** «3,5 год» from minutes. */
 function useHours() {
-  const format = useCalendarFormatter();
+  const format = useLocalFormatter();
   return (minutes: number) =>
     format.number(minutes / 60, { maximumFractionDigits: 1, minimumFractionDigits: 0 });
 }
 
 function useGapsText() {
-  const format = useCalendarFormatter();
+  const format = useLocalFormatter();
   return (gaps: DaySummary['gaps']) =>
     format.list(
       gaps.map((gap) => `${clockLabel(gap.startMin)}–${clockLabel(gap.endMin)}`),
@@ -98,7 +98,7 @@ export function CalendarDaySide({
   onSelectDay: (day: Date) => void;
 }) {
   const t = useTranslations('calendar.day');
-  const format = useCalendarFormatter();
+  const format = useLocalFormatter();
   const hours = useHours();
   const gapsText = useGapsText();
   const summary = daySummary(lessonsOnDay(lessons, day), nowMs, context);
@@ -209,7 +209,7 @@ export function CalendarAgenda({
   onOpenLesson: (lesson: CalendarLesson) => void;
 }) {
   const t = useTranslations('calendar.agenda');
-  const format = useCalendarFormatter();
+  const format = useLocalFormatter();
   return (
     <div data-slot="calendar-agenda" className="flex flex-col gap-5">
       {days.map((day) => {

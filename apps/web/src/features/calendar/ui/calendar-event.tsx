@@ -17,7 +17,7 @@ import {
   type CalendarLesson,
   type LessonTime,
 } from '../model/lessons';
-import { useCalendarFormatter } from './use-calendar-formatter';
+import { useLocalFormatter } from '@/lib/i18n/local-formatter';
 
 export type CalendarEventVariant = 'block' | 'wide' | 'chip' | 'row';
 export type CalendarEventState = 'idle' | 'ghost' | 'dragging' | 'conflict';
@@ -35,7 +35,7 @@ const TIME_TEXT =
 
 /** "10:00–11:00", or the start alone. */
 export function useEventTimes() {
-  const format = useCalendarFormatter();
+  const format = useLocalFormatter();
   const time = (ms: number) => format.time(ms);
   return {
     start: (lesson: CalendarLesson) => time(Date.parse(lesson.startsAtUtc)),
