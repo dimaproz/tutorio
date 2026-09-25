@@ -257,6 +257,8 @@ export const groupEnrollmentSummarySchema = z.object({
   billingType: billingTypeSchema,
   priceMinor: z.number().int().nonnegative(),
   currency: currencyCodeSchema,
+  /** The member's own price (L-11); false = follows the group price. */
+  ownPrice: z.boolean(),
   cancellationDeadlineHours: z.number().int().nonnegative().nullable(),
   student: z.object({
     id: uuidSchema,

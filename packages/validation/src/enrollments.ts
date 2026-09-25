@@ -99,6 +99,12 @@ export const enrollmentResponseSchema = z.object({
   billingType: billingTypeSchema,
   priceMinor: priceMinorSchema,
   currency: currencyCodeSchema,
+  /**
+   * A group member's own price (L-11); false = follows the group price. A
+   * PATCH of a member's price sets it, and a price equal to the group's
+   * clears it. Always false for a direction.
+   */
+  ownPrice: z.boolean(),
   cancellationDeadlineHours: z.number().int().nonnegative().nullable(),
   // Resolved against the CURRENT workspace default when no override is set.
   effectiveCancellationDeadlineHours: z.number().int().nonnegative(),
