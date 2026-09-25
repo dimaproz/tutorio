@@ -988,6 +988,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/schedules/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview a new schedule
+         * @description Exactly what creating the schedule would do: the lessons generated at once within the horizon, the first one, the active schedule of the same direction or group if there is one (create would answer SCHEDULE_EXISTS), and the teacher or student overlaps. Writes nothing, and never opens a direction for a student.
+         */
+        post: operations["SchedulesController_previewCreate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/schedules/{scheduleId}": {
         parameters: {
             query?: never;
@@ -3273,6 +3293,44 @@ export interface components {
             createdAt: string;
             /** Format: date-time */
             updatedAt: string;
+        };
+        ScheduleCreatePreviewDto: {
+            created: number;
+            /** Format: date-time */
+            firstLessonAt: string | null;
+            /** Format: uuid */
+            existingScheduleId: string | null;
+            conflicts: {
+                /** Format: date-time */
+                candidateStartsAtUtc: string;
+                /** Format: uuid */
+                lessonId: string;
+                /** Format: date-time */
+                startsAtUtc: string;
+                durationMin: number;
+                /** @enum {string} */
+                reason: "TEACHER" | "STUDENT";
+                teacher: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                };
+                student: {
+                    /** Format: uuid */
+                    id: string;
+                    fullName: string;
+                } | null;
+                group: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                } | null;
+                students: {
+                    /** Format: uuid */
+                    id: string;
+                    fullName: string;
+                }[];
+            }[];
         };
         UpdateScheduleDto: {
             horizonWeeks: number;
@@ -6637,6 +6695,38 @@ export interface operations {
                 };
             };
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    SchedulesController_previewCreate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateScheduleDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleCreatePreviewDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

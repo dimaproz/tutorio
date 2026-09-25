@@ -4866,6 +4866,54 @@
         ]
       }
     },
+    "/api/schedules/preview": {
+      "post": {
+        "description": "Exactly what creating the schedule would do: the lessons generated at once within the horizon, the first one, the active schedule of the same direction or group if there is one (create would answer SCHEDULE_EXISTS), and the teacher or student overlaps. Writes nothing, and never opens a direction for a student.",
+        "operationId": "SchedulesController_previewCreate",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateScheduleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleCreatePreviewDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Preview a new schedule",
+        "tags": [
+          "scheduling"
+        ]
+      }
+    },
     "/api/schedules/{scheduleId}": {
       "get": {
         "operationId": "SchedulesController_getDetail",
@@ -14327,6 +14375,146 @@
           "teacher",
           "createdAt",
           "updatedAt"
+        ]
+      },
+      "ScheduleCreatePreviewDto": {
+        "type": "object",
+        "properties": {
+          "created": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "firstLessonAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "existingScheduleId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "conflicts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "candidateStartsAtUtc": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "lessonId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "startsAtUtc": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "durationMin": {
+                  "type": "integer",
+                  "minimum": 5,
+                  "exclusiveMinimum": false,
+                  "maximum": 720,
+                  "exclusiveMaximum": false
+                },
+                "reason": {
+                  "type": "string",
+                  "enum": [
+                    "TEACHER",
+                    "STUDENT"
+                  ]
+                },
+                "teacher": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name"
+                  ]
+                },
+                "student": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "fullName": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "fullName"
+                  ],
+                  "nullable": true
+                },
+                "group": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name"
+                  ],
+                  "nullable": true
+                },
+                "students": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "fullName": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "fullName"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "candidateStartsAtUtc",
+                "lessonId",
+                "startsAtUtc",
+                "durationMin",
+                "reason",
+                "teacher",
+                "student",
+                "group",
+                "students"
+              ]
+            }
+          }
+        },
+        "required": [
+          "created",
+          "firstLessonAt",
+          "existingScheduleId",
+          "conflicts"
         ]
       },
       "UpdateScheduleDto": {
