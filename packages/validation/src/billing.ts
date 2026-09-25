@@ -138,6 +138,33 @@ export const studentBillingResponseSchema = z.object({
 
 export type StudentBillingResponse = z.infer<typeof studentBillingResponseSchema>;
 
+/** A pause now or later: from when, and until when (null: until ended). */
+export const memberPauseSchema = z.object({
+  startsAt: isoDateTimeSchema,
+  endsAt: isoDateTimeSchema.nullable(),
+});
+
+export type MemberPauseResponse = z.infer<typeof memberPauseSchema>;
+
+/**
+ * How every live member of a group pays the group (S08 «Склад групи»): the
+ * direction's billing as `GET /enrollments/:id/billing` reads it, and the
+ * member's pause now or next (L-73) — one read for the whole roster.
+ */
+export const groupBillingResponseSchema = z.object({
+  groupId: uuidSchema,
+  lowCreditThreshold: lowCreditThresholdSchema,
+  members: z.array(
+    enrollmentBillingResponseSchema.extend({
+      studentId: uuidSchema,
+      /** The member's own or whole-student pause covering now, else the next one. */
+      pause: memberPauseSchema.nullable(),
+    }),
+  ),
+});
+
+export type GroupBillingResponse = z.infer<typeof groupBillingResponseSchema>;
+
 /** Every live direction of the studio that shows a credit warning (L-82). */
 export const creditWarningListResponseSchema = z.object({
   lowCreditThreshold: lowCreditThresholdSchema,

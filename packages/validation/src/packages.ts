@@ -265,7 +265,11 @@ export const refundPackageSchema = z
 
 export type RefundPackageDto = z.infer<typeof refundPackageSchema>;
 
-/** One package spec sold to each selected member of a group (L-86). */
+/**
+ * One package spec sold to each selected member of a group (L-86). `prices`
+ * sells some of them at their own rate per lesson (L-11); the others take the
+ * shared price.
+ */
 export const sellToMembersSchema = z
   .object({
     groupId: uuidSchema,
@@ -276,12 +280,55 @@ export const sellToMembersSchema = z
       .refine((ids) => new Set(ids).size === ids.length, {
         message: 'Each student is sold one package',
       }),
+    prices: z
+      .array(z.object({ studentId: uuidSchema, pricePerLessonMinor: priceMinorSchema }).strict())
+      .max(200)
+      .optional(),
     ...packageSpecShape,
   })
   .strict()
-  .superRefine(refinePackageSpec);
+  .superRefine((value, ctx) => {
+    refinePackageSpec(value, ctx);
+    const picked = new Set(value.studentIds);
+    const priced = (value.prices ?? []).map((price) => price.studentId);
+    if (new Set(priced).size !== priced.length) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'A member has one own price',
+        path: ['prices'],
+      });
+    }
+    if (priced.some((id) => !picked.has(id))) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'An own price belongs to a selected member',
+        path: ['prices'],
+      });
+    }
+  });
 
 export type SellToMembersDto = z.infer<typeof sellToMembersSchema>;
+
+/**
+ * What the member sale would be for each selected member (S08): their
+ * lessons, price and total, the lessons on debt their credits pay first
+ * (L-82), the live package the new one follows (L-81) and the pause that
+ * holds the first lessons back (L-73).
+ */
+export const memberSalePreviewResponseSchema = z.object({
+  validFrom: isoDateTimeSchema.nullable(),
+  expiresAt: isoDateTimeSchema.nullable(),
+  items: z.array(
+    packagePreviewResponseSchema.extend({
+      studentId: uuidSchema,
+      pause: z
+        .object({ startsAt: isoDateTimeSchema, endsAt: isoDateTimeSchema.nullable() })
+        .nullable(),
+    }),
+  ),
+});
+
+export type MemberSalePreviewResponse = z.infer<typeof memberSalePreviewResponseSchema>;
 
 export const recordPaymentSchema = z
   .object({

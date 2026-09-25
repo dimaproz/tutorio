@@ -403,10 +403,13 @@ export const lessonResponseSchema = z.object({
   // is late before the tutor commits to charging.
   cancellationDeadlineHours: z.number().int(),
   // Who came, for a group lesson that has attendance marks; null otherwise.
+  // `confirmed`: a person marked or confirmed it — the marks the automation
+  // sets when it holds the lesson (everyone present, L-72) are not.
   attendance: z
     .object({
       present: z.number().int().nonnegative(),
       marked: z.number().int().nonnegative(),
+      confirmed: z.boolean(),
     })
     .nullable(),
   // What each participant owes for the lesson and what pays for it (L-70);

@@ -123,6 +123,16 @@ describe('package kinds and operations (L-80, L-85, L-86)', () => {
       sellToMembersSchema.safeParse({ ...sale, studentIds: [STUDENT_ID, STUDENT_ID] }).success,
     ).toBe(false);
   });
+
+  it('sells a selected member at their own rate, once (S08)', () => {
+    const sale = { groupId: GROUP_ID, pricePerLessonMinor: 100, studentIds: [STUDENT_ID], ...spec };
+    const own = { studentId: STUDENT_ID, pricePerLessonMinor: 80 };
+    expect(sellToMembersSchema.safeParse({ ...sale, prices: [own] }).success).toBe(true);
+    expect(sellToMembersSchema.safeParse({ ...sale, prices: [own, own] }).success).toBe(false);
+    expect(
+      sellToMembersSchema.safeParse({ ...sale, prices: [{ ...own, studentId: GROUP_ID }] }).success,
+    ).toBe(false);
+  });
 });
 
 describe('listPackagesQuerySchema (S07)', () => {

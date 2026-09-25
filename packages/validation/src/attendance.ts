@@ -82,7 +82,13 @@ const rateSchema = z.number().min(0).max(1).nullable();
 export const groupAttendanceResponseSchema = z.object({
   window: z.number().int().positive(),
   lessons: z.array(
-    z.object({ id: uuidSchema, startsAtUtc: isoDateTimeSchema, status: lessonStatusSchema }),
+    z.object({
+      id: uuidSchema,
+      startsAtUtc: isoDateTimeSchema,
+      status: lessonStatusSchema,
+      /** What the lesson was about, for the cell's tooltip. */
+      topic: z.string().nullable(),
+    }),
   ),
   stats: z.object({
     lessons: z.number().int().nonnegative(),
