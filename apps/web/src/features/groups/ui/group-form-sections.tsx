@@ -30,6 +30,7 @@ import {
 import type { StudentFormPicker } from '@/features/students';
 import { cn } from '@/lib/utils';
 import { GroupSchedulePills } from './group-parts';
+import { GroupPriceImpact, type GroupPriceImpactSource } from './group-price-impact';
 
 export const GROUP_FORM_SECTION_ICON: Record<GroupFormSectionId, ReactNode> = {
   basics: <LayersIcon />,
@@ -58,6 +59,7 @@ export function GroupFormSections({
   teacherHint,
   lockedSchedules,
   timezone,
+  priceImpact,
 }: {
   status: Record<GroupFormSectionId, GroupFormSectionStatus>;
   picker: StudentFormPicker;
@@ -70,6 +72,8 @@ export function GroupFormSections({
   /** The group's live schedule, when it already has one. */
   lockedSchedules?: readonly GroupSchedule[];
   timezone: string;
+  /** On edit: the roster a new price moves (L-11). */
+  priceImpact?: GroupPriceImpactSource;
 }) {
   const t = useTranslations('groups.form');
   const tLinks = useTranslations('links');
@@ -262,6 +266,7 @@ export function GroupFormSections({
               />
             )}
           />
+          <GroupPriceImpact source={priceImpact} />
         </div>,
       )}
 

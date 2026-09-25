@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { LayersIcon, RotateCcwIcon } from 'lucide-react';
+import { ArchiveIcon, LayersIcon, RotateCcwIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { FormProvider, useWatch } from 'react-hook-form';
@@ -76,7 +76,7 @@ export function GroupEditPage({ groupId }: { groupId: string }) {
         labels={labels}
       >
         {group.data ? (
-          <Notice tone="warning" text={t('archivedNotice')} />
+          <Notice tone="warning" icon={<ArchiveIcon />} text={t('archivedNotice')} />
         ) : (
           <Notice
             tone="danger"
@@ -291,6 +291,11 @@ function GroupEditForm({ group }: { group: GroupDetail }) {
             teacherHint={t('teacherHint')}
             lockedSchedules={scheduleLocked ? group.schedules : undefined}
             timezone={session.workspace.timezone}
+            priceImpact={{
+              members: group.enrollments,
+              initialPriceMinor: group.pricePerLesson,
+              nextLessonAt: group.nextLesson?.startsAtUtc ?? null,
+            }}
           />
           {archiving.canArchive ? (
             <DangerZone

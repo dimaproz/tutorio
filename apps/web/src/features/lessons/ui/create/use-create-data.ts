@@ -30,6 +30,8 @@ export type GroupBooking = {
   members: GroupDetail['enrollments'];
   /** Members on a pause at the first lesson (L-3, L-73). */
   paused: { name: string; endsAt: string | null }[];
+  /** Members who pay their own price instead of the group's (L-11). */
+  ownPrices: { name: string; priceMinor: number; currency: string }[];
   rateMinor: number;
   currency: string;
 };
@@ -130,6 +132,13 @@ export function useCreateData({
       target: { kind: 'group', groupId: group.data.id },
       members,
       paused,
+      ownPrices: members
+        .filter((member) => member.ownPrice)
+        .map((member) => ({
+          name: member.student.fullName,
+          priceMinor: member.priceMinor,
+          currency: member.currency,
+        })),
       rateMinor: group.data.pricePerLesson ?? 0,
       currency: group.data.currency ?? workspace.defaultCurrency,
     };

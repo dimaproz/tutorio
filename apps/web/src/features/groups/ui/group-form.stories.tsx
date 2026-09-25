@@ -75,9 +75,7 @@ export const ScheduleNeedsTeacher: Story = {
 export const EditWithSchedule: Story = {
   args: { mode: 'edit' },
   play: async ({ canvas }) => {
-    await expect(
-      await canvas.findByText('The group already has a schedule'),
-    ).toBeVisible();
+    await expect(await canvas.findByText('The group already has a schedule')).toBeVisible();
     await expect(canvas.getByDisplayValue('B2 prep · evening')).toBeVisible();
   },
 };
@@ -111,5 +109,29 @@ export const TeacherCannotArchive: Story = {
       await canvas.findByRole('heading', { level: 1, name: 'Edit group' }),
     ).toBeVisible();
     await expect(canvas.queryByRole('button', { name: 'Archive' })).toBeNull();
+  },
+};
+
+/** Board 02 · 01: the price section says a member can have their own price. */
+export const PriceUnchanged: Story = {
+  args: { mode: 'edit' },
+  play: async ({ canvas }) => {
+    await expect(
+      await canvas.findByText(/A single student can get their own in the group roster/),
+    ).toBeVisible();
+  },
+};
+
+/** Board 02 · 02–03: a new price — who follows it, who keeps their own, past lessons stay. */
+export const PriceChanged: Story = {
+  args: { mode: 'edit' },
+  play: async ({ canvas }) => {
+    const field = await canvas.findByLabelText('Price per lesson');
+    await userEvent.clear(field);
+    await userEvent.type(field, '450');
+    await expect(await canvas.findByText('Changes for 5 members')).toBeVisible();
+    await expect(canvas.getByText(/1 with an own price keeps it/)).toBeVisible();
+    await expect(canvas.getByText('keeps 350 ₴')).toBeVisible();
+    await expect(canvas.getByText(/Past lessons do not change/)).toBeVisible();
   },
 };

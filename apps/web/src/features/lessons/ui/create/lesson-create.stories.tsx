@@ -178,6 +178,10 @@ export const Group: Story = {
     const form = await dialog(canvasElement);
     await visible(await form.findByText(/will take part/));
     await expect(await form.findByLabelText('Price per member')).toBeDisabled();
+    // Mark pays his own price: the pill counts him, the hint names him.
+    await visible(await form.findByRole('button', { name: /per member, Mark Shevchenko — 350 ₴/ }));
+    await visible(form.getByText('Group price · Mark Shevchenko — own, 350 ₴'));
+    await visible(form.getByLabelText(/on pause/));
   },
 };
 

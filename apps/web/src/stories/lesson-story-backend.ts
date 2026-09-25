@@ -350,6 +350,7 @@ function groupDetail(groupId: string): GroupDetail {
       billingType: member.perLesson ? 'PER_LESSON' : 'PACKAGE',
       priceMinor: 40000,
       currency: 'UAH',
+      ownPrice: false,
       cancellationDeadlineHours: null,
       student: {
         id: studentId(member.n),

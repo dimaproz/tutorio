@@ -1,12 +1,12 @@
 'use client';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useIsFetching, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { PlusIcon, SearchIcon, UserIcon, XIcon } from 'lucide-react';
+import { BanknoteIcon, PlusIcon, SearchIcon, UserIcon, XIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { GroupDetail } from '@tutorio/validation';
+import type { GroupDetail, GroupEnrollmentSummary } from '@tutorio/validation';
 import { ConfirmDialog } from '@/components/shared/confirm-dialog';
 import { LinkedCard } from '@/components/shared/linked-card';
 import { LinkPickerDialog } from '@/components/shared/link-picker-dialog';
@@ -20,6 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
+import { hasOwnPrices } from '@/features/groups/model/member-price';
 import { useStudentLinkResults, useStudentLinkRow } from '@/features/students';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useRelationshipLinks } from '@/hooks/use-relationship-links';
@@ -27,8 +28,12 @@ import { errorMessageKey } from '@/lib/api/error-message';
 import { useUpdateGroupMutation } from '@/lib/api/groups';
 import { queryKeys } from '@/lib/api/keys';
 import type { GatewayError } from '@/lib/auth/client';
+import { MemberPriceCell, OwnPriceBadge, useGroupMoney } from './member-price';
+import { MemberPriceDialog } from './member-price-dialog';
 
 const ADD_ID = 'group-add-student';
+/** How long a saved row stays marked. */
+const HIGHLIGHT_MS = 2400;
 
 /**
  * The group's roster on the shared linking components: one `LinkedCard`, the
@@ -38,6 +43,10 @@ const ADD_ID = 'group-add-student';
  * whole roster (`PATCH /groups/:id { students }`, replace semantics) through
  * `useRelationshipLinks`, which keeps the last sent set authoritative until
  * the refetched group arrives, so two quick edits never undo each other.
+ *
+ * Prices (L-11): once a member pays their own price, the rows gain a price
+ * column — the group price muted, an own price with «своя ціна» — and
+ * «Змінити ціну» in the row menu opens «Ціна для учня».
  */
 export function GroupRosterCard({
   group,
@@ -94,44 +103,96 @@ export function GroupRosterCard({
     exclude: flow.links.linkedIds,
   });
   const picker = flow.pickerProps(results);
+  const money = useGroupMoney();
+  const [pricing, setPricing] = useState<GroupEnrollmentSummary | null>(null);
+  const [highlighted, setHighlighted] = useState<string | null>(null);
+  useEffect(() => {
+    if (!highlighted) return;
+    const timer = window.setTimeout(() => setHighlighted(null), HIGHLIGHT_MS);
+    return () => window.clearTimeout(timer);
+  }, [highlighted]);
+  const memberOf = useMemo(
+    () => new Map(group.enrollments.map((enrollment) => [enrollment.studentId, enrollment])),
+    [group.enrollments],
+  );
+  const priced = hasOwnPrices(group.enrollments);
+  const groupPrice =
+    group.pricePerLesson !== null && group.currency
+      ? money(group.pricePerLesson, group.currency)
+      : null;
   const addButton = () => document.getElementById(ADD_ID);
   const createStudent = () => router.push('/app/students/new');
 
-  const items = flow.rows.map((row) => ({
-    ...row,
-    href: `/app/students/${row.id}`,
-    hrefLabel: tLinks('openProfileOf', { name: row.name }),
-    menu: (
-      <DropdownMenu>
-        <RowActionsTrigger label={tLinks('rowActions', { name: row.name })} className="md:size-8" />
-        <DropdownMenuContent align="end">
-          <DropdownMenuGroup>
-            <DropdownMenuItem asChild>
-              <Link prefetch={false} href={`/app/students/${row.id}`}>
-                <UserIcon data-icon />
-                {t('openProfile')}
-              </Link>
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-          {readOnly ? null : (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem
-                  variant="destructive"
-                  disabled={flow.busy}
-                  onSelect={() => flow.requestUnlink(row)}
-                >
-                  <XIcon data-icon />
-                  {t('remove')}
+  const items = flow.rows.map((row) => {
+    const enrollment = memberOf.get(row.id);
+    const own = Boolean(enrollment?.ownPrice);
+    // On phones an own price shortens the meta to the level, so the name
+    // keeps its room, and the badge takes the rest of the line.
+    const meta =
+      mobile && own ? (
+        <span className="flex items-center gap-2">
+          {enrollment?.student.languageLevel ?? null}
+          <OwnPriceBadge groupPrice={groupPrice} />
+        </span>
+      ) : (
+        row.meta
+      );
+    return {
+      ...row,
+      meta,
+      aside:
+        priced && enrollment ? (
+          <MemberPriceCell
+            price={money(enrollment.priceMinor, enrollment.currency)}
+            own={own}
+            groupPrice={groupPrice}
+            withBadge={!mobile}
+          />
+        ) : undefined,
+      highlighted: enrollment ? highlighted === enrollment.id : false,
+      href: `/app/students/${row.id}`,
+      hrefLabel: tLinks('openProfileOf', { name: row.name }),
+      menu: (
+        <DropdownMenu>
+          <RowActionsTrigger
+            label={tLinks('rowActions', { name: row.name })}
+            className="md:size-8"
+          />
+          <DropdownMenuContent align="end">
+            <DropdownMenuGroup>
+              <DropdownMenuItem asChild>
+                <Link prefetch={false} href={`/app/students/${row.id}`}>
+                  <UserIcon data-icon />
+                  {t('openProfile')}
+                </Link>
+              </DropdownMenuItem>
+              {!readOnly && enrollment ? (
+                <DropdownMenuItem onSelect={() => setPricing(enrollment)}>
+                  <BanknoteIcon data-icon />
+                  {t('changePrice')}
                 </DropdownMenuItem>
-              </DropdownMenuGroup>
-            </>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    ),
-  }));
+              ) : null}
+            </DropdownMenuGroup>
+            {readOnly ? null : (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    variant="destructive"
+                    disabled={flow.busy}
+                    onSelect={() => flow.requestUnlink(row)}
+                  >
+                    <XIcon data-icon />
+                    {t('remove')}
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
+    };
+  });
 
   return (
     <>
@@ -157,6 +218,7 @@ export function GroupRosterCard({
               ]
         }
         size={mobile ? 'sm' : 'md'}
+        columns={priced ? { name: t('columnStudent'), aside: t('columnPrice') } : undefined}
       >
         {flow.links.error ? (
           <Alert variant="destructive" role="alert">
@@ -188,6 +250,13 @@ export function GroupRosterCard({
           returnFocus={addButton}
         />
       )}
+
+      <MemberPriceDialog
+        group={group}
+        member={pricing}
+        onOpenChange={(open) => (open ? undefined : setPricing(null))}
+        onSaved={setHighlighted}
+      />
 
       <ConfirmDialog
         open={flow.unlink.target !== null}

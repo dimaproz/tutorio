@@ -14,6 +14,7 @@ import { useFormatter, useTranslations } from 'next-intl';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { CreditMeter } from '@/components/shared/credit-meter';
 import { EntityAvatar } from '@/components/shared/entity-avatar';
 import { FieldNote } from '@/components/shared/field-note';
@@ -224,13 +225,33 @@ export function CreateBand({
               {booking.members.length}
             </Badge>
             {booking.paused.length > 0 ? (
-              <Badge variant="warning" dot>
-                {t('chipPausedMembers', { count: booking.paused.length })}
+              // Compact, so the chips keep to one line; the name says it all.
+              <Badge
+                variant="warning"
+                aria-label={t('chipPausedMembers', { count: booking.paused.length })}
+              >
+                <PauseIcon data-icon="inline-start" />
+                {booking.paused.length}
               </Badge>
             ) : null}
-            <Badge variant="indigo">
-              {t('chipPerMember', { price: money(booking.rateMinor, booking.currency) })}
-            </Badge>
+            <GroupPricePill
+              price={t('chipPerMember', { price: money(booking.rateMinor, booking.currency) })}
+              own={
+                booking.ownPrices.length > 0
+                  ? {
+                      label: t('chipOwnPrices', { count: booking.ownPrices.length }),
+                      names: booking.ownPrices
+                        .map((item) =>
+                          t('ownPriceOf', {
+                            name: item.name,
+                            price: money(item.priceMinor, item.currency),
+                          }),
+                        )
+                        .join(', '),
+                    }
+                  : null
+              }
+            />
           </>
         }
         action={change}
@@ -299,5 +320,34 @@ export function CreateBand({
       {body}
       {note}
     </LessonFormBand>
+  );
+}
+
+/**
+ * The group card's price: «400 ₴ з учасника», and when some members pay their
+ * own price (L-11), «│ 1 зі своєю» in the same pill, whose tooltip names them.
+ */
+function GroupPricePill({
+  price,
+  own,
+}: {
+  price: string;
+  own: { label: string; names: string } | null;
+}) {
+  const [open, setOpen] = useState(false);
+  if (!own) return <Badge variant="indigo">{price}</Badge>;
+  return (
+    <Tooltip open={open} onOpenChange={setOpen}>
+      <TooltipTrigger asChild>
+        <Badge variant="indigo" asChild>
+          <button type="button" aria-label={`${price}, ${own.names}`} onClick={() => setOpen(true)}>
+            {price}
+            <span aria-hidden="true" className="h-3 w-px bg-current opacity-30" />
+            <span className="font-medium opacity-80">{own.label}</span>
+          </button>
+        </Badge>
+      </TooltipTrigger>
+      <TooltipContent>{own.names}</TooltipContent>
+    </Tooltip>
   );
 }

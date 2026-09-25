@@ -72,7 +72,22 @@ export function CreatePriceField({
         ? t('pricePackageLeft', { left: coverage.leftAfter, total })
         : t('pricePackageLeftMany', { count: charged, left: coverage.leftAfter, total });
     }
-    if (data.priceMode === 'group') return t('priceGroup');
+    if (data.priceMode === 'group') {
+      // A member with their own price pays it, not the group's (L-11).
+      const own = data.group?.ownPrices ?? [];
+      return own.length > 0
+        ? t('priceGroupOwn', {
+            members: own
+              .map((item) =>
+                t('priceGroupOwnMember', {
+                  name: item.name,
+                  price: money(item.priceMinor, item.currency),
+                }),
+              )
+              .join(', '),
+          })
+        : t('priceGroup');
+    }
     if (data.priceMode === 'none') return t('priceEmpty');
     if (rate === null) return undefined;
     if (byHand) return t('priceByHand', { rate: money(rate, currency) });

@@ -235,7 +235,8 @@
     "lessonDateRequired": "Вкажіть дату",
     "priceNegative": "Ціна не може бути відʼємною",
     "lessonStudentRequired": "Оберіть учня, щоб створити заняття",
-    "lessonGroupRequired": "Оберіть групу, щоб створити заняття"
+    "lessonGroupRequired": "Оберіть групу, щоб створити заняття",
+    "memberPriceRequired": "Вкажіть ціну або поверніть ціну групи"
   },
   "pagination": {
     "label": "Сторінки",
@@ -1015,7 +1016,10 @@
       "removeText": "Учень залишиться у студії, історія занять і оплати збережуться. Повернути до групи можна будь-коли.",
       "removeAction": "Прибрати",
       "saved": "Склад групи збережено",
-      "removed": "Учня прибрано з групи"
+      "removed": "Учня прибрано з групи",
+      "changePrice": "Змінити ціну",
+      "columnStudent": "Учень",
+      "columnPrice": "Ціна за заняття"
     },
     "package": {
       "title": "Пакети учасників",
@@ -1123,7 +1127,14 @@
       "unavailableDescription": "Редагування з’явиться, щойно групу буде завантажено.",
       "discardTitle": "Скасувати зміни?",
       "discardDescription": "Незбережені зміни буде втрачено.",
-      "discardAction": "Скасувати зміни"
+      "discardAction": "Скасувати зміни",
+      "priceHint": "Ціна для всіх учасників. Окремому учню можна поставити свою в складі групи.",
+      "priceImpactFollowing": "Зміниться для {count, plural, one {# учасника} few {# учасників} many {# учасників} other {# учасника}}",
+      "priceImpactOwn": "{count, plural, one {# зі своєю ціною не зміниться} other {# зі своєю ціною не зміняться}}",
+      "priceImpactKeeps": "лишається {price}",
+      "ownPriceBadge": "своя ціна",
+      "priceImpactFromNextOn": "З наступного заняття, {date}. Минулі заняття не змінюються.",
+      "priceImpactFromNext": "З наступного заняття. Минулі заняття не змінюються."
     },
     "archiveDialog": {
       "title": "Архівувати «{name}»?",
@@ -1139,6 +1150,26 @@
       "archived": "Групу архівовано",
       "restored": "Групу відновлено",
       "notesSaved": "Нотатки збережено"
+    },
+    "memberPrice": {
+      "eyebrow": "Ціна для учня",
+      "close": "Закрити",
+      "groupPrice": "Ціна групи",
+      "perLesson": "<b>{price}</b> за заняття",
+      "ownPrice": "Своя ціна",
+      "lessThanGroup": "На {amount} менше за ціну групи",
+      "moreThanGroup": "На {amount} більше за ціну групи",
+      "sameAsGroup": "Як у групи — учень знову платитиме ціну групи",
+      "fromNextOn": "<b>Діє з наступного заняття</b> — {date}. Минулі заняття не змінюються.",
+      "fromNext": "<b>Діє з наступного заняття.</b> Минулі заняття не змінюються.",
+      "save": "Зберегти",
+      "saving": "Зберігаємо…",
+      "revert": "Повернути ціну групи",
+      "savedOwn": "{name} — {price} з наступного заняття",
+      "savedGroup": "{name} — ціна групи з наступного заняття",
+      "undo": "Скасувати",
+      "ownBadge": "своя ціна",
+      "groupPriceTooltip": "Ціна групи {price}"
     }
   },
   "parents": {
@@ -1703,7 +1734,9 @@
       "notes": "Нотатки",
       "addTopic": "Додати тему",
       "addNotes": "Додати нотатки",
-      "scheduleLine": "Заняття з розкладу: при зміні дати чи часу спитаємо — лише це чи й наступні"
+      "scheduleLine": "Заняття з розкладу: при зміні дати чи часу спитаємо — лише це чи й наступні",
+      "priceGroupOwn": "Ціна групи · {members}",
+      "priceGroupOwnMember": "{name} — своя, {price}"
     },
     "create": {
       "title": "Нове заняття",
@@ -1830,7 +1863,9 @@
       "footerDebt": "у борг пакета",
       "groupCancelledBy": "Група",
       "badgeMembers": "{count}",
-      "pausedChipAria": "{name} на паузі"
+      "pausedChipAria": "{name} на паузі",
+      "chipOwnPrices": "{count} зі своєю",
+      "ownPriceOf": "{name} — {price}"
     },
     "cancelDialog": {
       "title": "Скасувати заняття?",

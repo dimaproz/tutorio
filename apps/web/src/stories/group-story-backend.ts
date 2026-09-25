@@ -23,10 +23,25 @@ const kyiv = (days: number, hour: number, minute = 0) =>
   new Date(Date.UTC(2026, 8, 9) + days * DAY + ((hour - 3) * 60 + minute) * 60_000).toISOString();
 
 export const TEACHERS = {
-  dmytro: { id: '55555555-5555-4555-8555-555555555555', name: 'Dmytro Tutor', avatarKey: 'user-2', color: null },
-  olena: { id: '55555555-5555-4555-8555-555555555557', name: 'Olena Kovalenko', avatarKey: 'user-7', color: null },
+  dmytro: {
+    id: '55555555-5555-4555-8555-555555555555',
+    name: 'Dmytro Tutor',
+    avatarKey: 'user-2',
+    color: null,
+  },
+  olena: {
+    id: '55555555-5555-4555-8555-555555555557',
+    name: 'Olena Kovalenko',
+    avatarKey: 'user-7',
+    color: null,
+  },
   // The same teacher as the shared story backend's second one.
-  iryna: { id: '55555555-5555-4555-8555-555555555556', name: 'Iryna Bondar', avatarKey: 'user-9', color: null },
+  iryna: {
+    id: '55555555-5555-4555-8555-555555555556',
+    name: 'Iryna Bondar',
+    avatarKey: 'user-9',
+    color: null,
+  },
 } as const;
 
 type Teacher = (typeof TEACHERS)[keyof typeof TEACHERS];
@@ -49,12 +64,36 @@ type Member = {
 const MEMBERS: Member[] = [
   { n: 1, fullName: 'Anna Shevchenko', avatarKey: 'user-1', status: 'ACTIVE', languageLevel: 'B2' },
   { n: 2, fullName: 'Sofiia Melnyk', avatarKey: 'user-4', status: 'ACTIVE', languageLevel: 'B2' },
-  { n: 3, fullName: 'Maksym Tkachenko', avatarKey: 'user-2', status: 'ACTIVE', languageLevel: 'A2' },
+  {
+    n: 3,
+    fullName: 'Maksym Tkachenko',
+    avatarKey: 'user-2',
+    status: 'ACTIVE',
+    languageLevel: 'A2',
+  },
   { n: 5, fullName: 'Artem Lysenko', avatarKey: 'user-3', status: 'ACTIVE', languageLevel: 'B1' },
-  { n: 7, fullName: 'Kateryna Shevchuk', avatarKey: 'user-5', status: 'ON_HOLD', languageLevel: 'A2' },
+  {
+    n: 7,
+    fullName: 'Kateryna Shevchuk',
+    avatarKey: 'user-5',
+    status: 'ON_HOLD',
+    languageLevel: 'A2',
+  },
   { n: 10, fullName: 'Denys Koval', avatarKey: 'user-8', status: 'ACTIVE', languageLevel: 'B1' },
-  { n: 11, fullName: 'Mark Shevchenko', avatarKey: 'user-6', status: 'ACTIVE', languageLevel: 'A2' },
-  { n: 12, fullName: 'Oksana Petrenko', avatarKey: 'user-10', status: 'ACTIVE', languageLevel: 'B1' },
+  {
+    n: 11,
+    fullName: 'Mark Shevchenko',
+    avatarKey: 'user-6',
+    status: 'ACTIVE',
+    languageLevel: 'A2',
+  },
+  {
+    n: 12,
+    fullName: 'Oksana Petrenko',
+    avatarKey: 'user-10',
+    status: 'ACTIVE',
+    languageLevel: 'B1',
+  },
 ];
 
 type SampleGroup = {
@@ -70,6 +109,8 @@ type SampleGroup = {
   archived?: boolean;
   notes?: string | null;
   createdAt?: string;
+  /** Members who pay their own price (L-11), by member number. */
+  ownPrices?: Record<number, number>;
 };
 
 const SAMPLE_GROUPS: SampleGroup[] = [
@@ -84,6 +125,8 @@ const SAMPLE_GROUPS: SampleGroup[] = [
     next: 1,
     paymentDue: true,
     notes: 'Preparing for B2 in December. The last 20 minutes are speaking practice in pairs.',
+    // Mark Shevchenko pays his own price.
+    ownPrices: { 11: 35000 },
   },
   {
     n: 2,
@@ -182,9 +225,7 @@ function nextLessonOf(group: SampleGroup) {
 }
 
 function schedulesOf(group: SampleGroup) {
-  return group.schedule
-    ? [{ ...group.schedule, durationMin: 60, timezone: 'Europe/Kyiv' }]
-    : [];
+  return group.schedule ? [{ ...group.schedule, durationMin: 60, timezone: 'Europe/Kyiv' }] : [];
 }
 
 function toListItem(group: SampleGroup): GroupListItem {
@@ -233,8 +274,9 @@ function toDetail(group: SampleGroup, members: number[]): GroupDetail {
       teacherId: group.teacher?.id ?? TEACHERS.dmytro.id,
       status: 'ACTIVE',
       billingType: 'PACKAGE',
-      priceMinor: group.price ?? 0,
+      priceMinor: group.ownPrices?.[n] ?? group.price ?? 0,
       currency: 'UAH',
+      ownPrice: group.ownPrices?.[n] !== undefined,
       cancellationDeadlineHours: null,
       student: {
         id: studentId(n),
@@ -448,6 +490,11 @@ export type GroupStoryOptions = {
   groupList?: 'ready' | 'empty' | 'pending' | 'error';
   /** Adds the just-created group, for the "new group" page. */
   withNewGroup?: boolean;
+  /**
+   * `group`: every member pays the group price; `mixed` (default): Mark pays
+   * his own. `saving` keeps a member's price save pending.
+   */
+  memberPrices?: 'mixed' | 'group' | 'saving';
 };
 
 export const NEW_GROUP_ID = storyGroupId(NEW_GROUP.n);
@@ -464,7 +511,13 @@ export function createGroupRoutes(options: GroupStoryOptions) {
   const groups: SampleGroup[] =
     options.groupList === 'empty'
       ? []
-      : [...SAMPLE_GROUPS.map((group) => ({ ...group })), ...(options.withNewGroup ? [{ ...NEW_GROUP }] : [])];
+      : [
+          ...SAMPLE_GROUPS.map((group) => ({
+            ...group,
+            ownPrices: options.memberPrices === 'group' ? {} : { ...group.ownPrices },
+          })),
+          ...(options.withNewGroup ? [{ ...NEW_GROUP }] : []),
+        ];
   const lessons = b2Lessons();
   const attendance = b2Attendance(lessons);
   const marks = new Map<string, Record<string, 'PRESENT' | 'ABSENT' | 'EXCUSED'>>();
@@ -487,7 +540,8 @@ export function createGroupRoutes(options: GroupStoryOptions) {
         studentsInGroups: new Set(live.flatMap((group) => group.members)).size,
         studioStudents: 48,
         freeSeats: live.reduce(
-          (sum, group) => sum + (group.capacity ? Math.max(0, group.capacity - group.members.length) : 0),
+          (sum, group) =>
+            sum + (group.capacity ? Math.max(0, group.capacity - group.members.length) : 0),
           0,
         ),
         lessonsThisWeek: 9,
@@ -528,6 +582,25 @@ export function createGroupRoutes(options: GroupStoryOptions) {
           });
     }
 
+    // A member's own price (L-11): the group's price clears it.
+    const memberMatch = path.match(/^\/enrollments\/([^/]+)$/);
+    if (memberMatch && method === 'PATCH') {
+      const group = groups.find((item) =>
+        item.members.some((n) => enrollmentId(item.n, n) === memberMatch[1]),
+      );
+      if (!group) return null;
+      if (options.memberPrices === 'saving') return never();
+      const n = group.members.find((item) => enrollmentId(group.n, item) === memberMatch[1])!;
+      const priceMinor = Number(body().priceMinor);
+      const own = { ...group.ownPrices };
+      if (priceMinor === group.price) delete own[n];
+      else own[n] = priceMinor;
+      group.ownPrices = own;
+      return json(
+        toDetail(group, group.members).enrollments.find((row) => row.id === memberMatch[1]),
+      );
+    }
+
     const detailMatch = path.match(/^\/groups\/([^/]+)(\/restore)?$/);
     if (detailMatch) {
       const group = find(detailMatch[1]!);
@@ -545,6 +618,7 @@ export function createGroupRoutes(options: GroupStoryOptions) {
           students?: { studentIds: string[] };
           notes?: string | null;
           name?: string;
+          pricePerLesson?: number;
         };
         if (patch.students) {
           group.members = patch.students.studentIds
@@ -553,6 +627,7 @@ export function createGroupRoutes(options: GroupStoryOptions) {
         }
         if (patch.notes !== undefined) group.notes = patch.notes;
         if (patch.name) group.name = patch.name;
+        if (patch.pricePerLesson !== undefined) group.price = patch.pricePerLesson;
       }
       return json(toDetail(group, group.members));
     }
@@ -623,7 +698,10 @@ export function createGroupRoutes(options: GroupStoryOptions) {
       if (!lesson) return json({ code: 'LESSON_NOT_FOUND' }, 404);
       const saved = marks.get(lesson.id) ?? {};
       if (method === 'PUT') {
-        for (const mark of (body().marks ?? []) as { enrollmentId: string; status: 'PRESENT' | 'ABSENT' | 'EXCUSED' }[]) {
+        for (const mark of (body().marks ?? []) as {
+          enrollmentId: string;
+          status: 'PRESENT' | 'ABSENT' | 'EXCUSED';
+        }[]) {
           saved[mark.enrollmentId] = mark.status;
         }
         marks.set(lesson.id, saved);
@@ -635,7 +713,11 @@ export function createGroupRoutes(options: GroupStoryOptions) {
         markable: lesson.status === 'COMPLETED',
         participants: SAMPLE_GROUPS[0]!.members.map((n) => ({
           enrollmentId: enrollmentId(1, n),
-          student: { id: studentId(n), fullName: member(n).fullName, avatarKey: member(n).avatarKey },
+          student: {
+            id: studentId(n),
+            fullName: member(n).fullName,
+            avatarKey: member(n).avatarKey,
+          },
           status: saved[enrollmentId(1, n)] ?? null,
           markedAt: saved[enrollmentId(1, n)] ? lesson.startsAtUtc : null,
           paused: false,

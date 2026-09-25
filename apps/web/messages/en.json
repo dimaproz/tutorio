@@ -235,7 +235,8 @@
     "lessonDateRequired": "Enter a date",
     "priceNegative": "The price can't be negative",
     "lessonStudentRequired": "Pick a student to create the lesson",
-    "lessonGroupRequired": "Pick a group to create the lesson"
+    "lessonGroupRequired": "Pick a group to create the lesson",
+    "memberPriceRequired": "Enter a price or go back to the group price"
   },
   "pagination": {
     "label": "Pagination",
@@ -1015,7 +1016,10 @@
       "removeText": "The student stays in the studio, and their lessons and payments are kept. You can add them back any time.",
       "removeAction": "Remove",
       "saved": "Roster saved",
-      "removed": "Student removed from the group"
+      "removed": "Student removed from the group",
+      "changePrice": "Change price",
+      "columnStudent": "Student",
+      "columnPrice": "Price per lesson"
     },
     "package": {
       "title": "Members' packages",
@@ -1123,7 +1127,14 @@
       "unavailableDescription": "Editing appears once the group has loaded.",
       "discardTitle": "Discard changes?",
       "discardDescription": "Unsaved changes will be lost.",
-      "discardAction": "Discard changes"
+      "discardAction": "Discard changes",
+      "priceHint": "The price for every member. A single student can get their own in the group roster.",
+      "priceImpactFollowing": "Changes for {count, plural, one {# member} other {# members}}",
+      "priceImpactOwn": "{count, plural, one {# with an own price keeps it} other {# with own prices keep them}}",
+      "priceImpactKeeps": "keeps {price}",
+      "ownPriceBadge": "own price",
+      "priceImpactFromNextOn": "From the next lesson, {date}. Past lessons do not change.",
+      "priceImpactFromNext": "From the next lesson. Past lessons do not change."
     },
     "archiveDialog": {
       "title": "Archive “{name}”?",
@@ -1139,6 +1150,26 @@
       "archived": "Group archived",
       "restored": "Group restored",
       "notesSaved": "Notes saved"
+    },
+    "memberPrice": {
+      "eyebrow": "Price for the student",
+      "close": "Close",
+      "groupPrice": "Group price",
+      "perLesson": "<b>{price}</b> per lesson",
+      "ownPrice": "Own price",
+      "lessThanGroup": "{amount} less than the group price",
+      "moreThanGroup": "{amount} more than the group price",
+      "sameAsGroup": "Same as the group — the student will pay the group price again",
+      "fromNextOn": "<b>Applies from the next lesson</b> — {date}. Past lessons do not change.",
+      "fromNext": "<b>Applies from the next lesson.</b> Past lessons do not change.",
+      "save": "Save",
+      "saving": "Saving…",
+      "revert": "Back to the group price",
+      "savedOwn": "{name} — {price} from the next lesson",
+      "savedGroup": "{name} — the group price from the next lesson",
+      "undo": "Undo",
+      "ownBadge": "own price",
+      "groupPriceTooltip": "Group price {price}"
     }
   },
   "parents": {
@@ -1703,7 +1734,9 @@
       "notes": "Notes",
       "addTopic": "Add a topic",
       "addNotes": "Add notes",
-      "scheduleLine": "A schedule lesson: when the date or time changes we will ask — this one only or this and the following"
+      "scheduleLine": "A schedule lesson: when the date or time changes we will ask — this one only or this and the following",
+      "priceGroupOwn": "Group price · {members}",
+      "priceGroupOwnMember": "{name} — own, {price}"
     },
     "create": {
       "title": "New lesson",
@@ -1830,7 +1863,9 @@
       "footerDebt": "on the package's debt",
       "groupCancelledBy": "Group",
       "badgeMembers": "{count}",
-      "pausedChipAria": "{name} is on pause"
+      "pausedChipAria": "{name} is on pause",
+      "chipOwnPrices": "{count} own",
+      "ownPriceOf": "{name} — {price}"
     },
     "cancelDialog": {
       "title": "Cancel the lesson?",
