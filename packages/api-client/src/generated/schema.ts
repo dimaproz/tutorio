@@ -2530,6 +2530,8 @@ export interface components {
                     /** Format: uuid */
                     id: string;
                     fullName: string;
+                    /** @enum {string|null} */
+                    avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
                 } | null;
                 group: {
                     /** Format: uuid */
@@ -2621,6 +2623,8 @@ export interface components {
                     /** Format: uuid */
                     id: string;
                     fullName: string;
+                    /** @enum {string|null} */
+                    avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
                 } | null;
                 group: {
                     /** Format: uuid */
@@ -2721,6 +2725,8 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 fullName: string;
+                /** @enum {string|null} */
+                avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
             } | null;
             group: {
                 /** Format: uuid */
@@ -2949,6 +2955,8 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 fullName: string;
+                /** @enum {string|null} */
+                avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
             } | null;
             group: {
                 /** Format: uuid */
