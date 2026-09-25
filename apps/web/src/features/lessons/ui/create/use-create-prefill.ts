@@ -18,6 +18,7 @@ export function useCreatePrefill({
   data,
   picked,
   lengthGiven,
+  teacherId,
 }: {
   form: UseFormReturn<CreateFormValues>;
   data: CreateData;
@@ -25,19 +26,25 @@ export function useCreatePrefill({
   picked: string;
   /** A length came with the form (e.g. a drag on the calendar): keep it. */
   lengthGiven: boolean;
+  /**
+   * The teacher the form was opened for (a teacher's profile): used until a
+   * pick brings its own direction's or group's teacher.
+   */
+  teacherId?: string;
 }) {
   const [updatedFrom, setUpdatedFrom] = useState<number | null>(null);
 
   // The teacher follows the pick: the direction's or the group's teacher.
   const pickKey = `${picked}:${data.regularTeacherId ?? ''}`;
   const lastPick = useRef<string | null>(null);
+  const fallback = teacherId ?? data.firstTeacherId;
   useEffect(() => {
     if (lastPick.current === pickKey) return;
-    const teacher = data.regularTeacherId ?? (picked ? null : data.firstTeacherId);
-    if (!teacher && !data.firstTeacherId) return;
+    const teacher = data.regularTeacherId ?? (picked && !teacherId ? null : fallback);
+    if (!teacher && !fallback) return;
     lastPick.current = pickKey;
-    form.setValue('teacherId', teacher ?? data.firstTeacherId ?? '');
-  }, [data.firstTeacherId, data.regularTeacherId, form, pickKey, picked]);
+    form.setValue('teacherId', teacher ?? fallback ?? '');
+  }, [data.regularTeacherId, fallback, form, pickKey, picked, teacherId]);
 
   // The price follows the pick and the teacher, unless it was typed by hand.
   const rate = data.group ? data.group.rateMinor : (data.booking?.rateMinor ?? null);

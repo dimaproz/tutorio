@@ -261,11 +261,18 @@ export function useStudentBillingQuery(studentId: string | null) {
 
 /** The active schedules of a student (optionally with one teacher) or of a group (L-20). */
 export function useSchedulesQuery(
-  filters: { studentId?: string; teacherId?: string; groupId?: string },
+  filters: {
+    studentId?: string;
+    teacherId?: string;
+    groupId?: string;
+    /** The first page's length; «Показати ще» asks for a longer one (S09). */
+    pageSize?: number;
+    sort?: 'created' | 'next';
+  },
   enabled = true,
 ) {
   const query = new URLSearchParams({ page: '1', pageSize: '20', state: 'ACTIVE' });
-  for (const [key, value] of Object.entries(filters)) if (value) query.set(key, value);
+  for (const [key, value] of Object.entries(filters)) if (value) query.set(key, String(value));
   return useQuery<ScheduleListResponse, GatewayError>({
     queryKey: [...queryKeys.schedules.all, 'list', filters],
     enabled,

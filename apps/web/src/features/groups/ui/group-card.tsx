@@ -33,10 +33,13 @@ export function useGroupPrice(group: Pick<GroupListItem, 'pricePerLesson' | 'cur
 export function GroupCard({
   group,
   variant = 'grid',
+  ground = 'card',
 }: {
   group: GroupListItem;
   /** `phone` folds the next lesson beside the roster and drops the price row. */
   variant?: 'grid' | 'phone';
+  /** `paper` inside another card (a teacher's groups, S09). */
+  ground?: 'card' | 'paper';
 }) {
   const t = useTranslations('groups');
   const price = useGroupPrice(group);
@@ -48,7 +51,8 @@ export function GroupCard({
       data-slot="group-card"
       data-archived={lifecycle === 'ARCHIVED' || undefined}
       className={cn(
-        'relative flex flex-col bg-card text-card-foreground transition-colors duration-150 has-[a:hover]:bg-surface-hover data-[archived]:text-muted-foreground',
+        'relative flex flex-col text-card-foreground transition-colors duration-150 has-[a:hover]:bg-surface-hover data-[archived]:text-muted-foreground',
+        ground === 'paper' ? 'bg-background' : 'bg-card',
         phone ? 'gap-3.5 rounded-row p-4' : 'gap-4 rounded-card p-7',
       )}
     >
@@ -81,7 +85,9 @@ export function GroupCard({
           <GroupRosterStack group={group} />
           <div className="mt-auto flex items-center justify-between gap-3 border-t border-border pt-4">
             <GroupNextLesson startsAtUtc={group.nextLesson?.startsAtUtc ?? null} />
-            {price ? <span className="shrink-0 font-mono text-sm tabular-nums">{price}</span> : null}
+            {price ? (
+              <span className="shrink-0 font-mono text-sm tabular-nums">{price}</span>
+            ) : null}
           </div>
         </>
       )}

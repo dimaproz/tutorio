@@ -49,6 +49,8 @@ const firstName = (fullName: string) => fullName.split(' ')[0] ?? fullName;
 export type LessonCreateInitial = {
   studentId?: string;
   groupId?: string;
+  /** The teacher to start with (a teacher's profile, S09). */
+  teacherId?: string;
   /** "yyyy-MM-dd" of the first row; tomorrow otherwise. */
   date?: string;
   /** "HH:mm" of the first row; 17:00 otherwise. */
@@ -160,6 +162,7 @@ function LessonCreateForm({
     data,
     picked,
     lengthGiven: initial.durationMin !== undefined,
+    teacherId: initial.teacherId,
   });
 
   const dayLessons = useDayLessons(frequency === 'once' ? dates.map((row) => row.date) : []);

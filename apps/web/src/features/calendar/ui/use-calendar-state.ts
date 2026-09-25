@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useStoredChoice } from '@/hooks/use-stored-choice';
 import { useLessonsQuery, useTeachersQuery } from '../api';
@@ -18,7 +19,7 @@ import {
   startOfDay,
   type CalendarView,
 } from '../model/period';
-import { zonedDate } from '@/lib/datetime';
+import { isCalendarDate, zonedDate, zonedDayStart } from '@/lib/datetime';
 import { useLocalFormatter } from '@/lib/i18n/local-formatter';
 import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 
@@ -61,7 +62,8 @@ export function usePeriodTitle() {
 /**
  * The calendar's state: the view (remembered per browser, day on phones and
  * week on desktop), the anchor day, the teacher and status filters, and the
- * period's lessons as the grid draws them.
+ * period's lessons as the grid draws them. A link may open it on a day and
+ * one teacher (`?date=yyyy-MM-dd&teacher=<id>`, a teacher's profile).
  */
 export function useCalendarState({ mobile, nowMs }: { mobile: boolean; nowMs: number }) {
   const [desktopView, setDesktopView] = useStoredChoice<CalendarView>(
@@ -77,7 +79,13 @@ export function useCalendarState({ mobile, nowMs }: { mobile: boolean; nowMs: nu
   const view = mobile ? phoneView : desktopView;
   const setView = mobile ? setPhoneView : setDesktopView;
   const timeZone = useStudioTimeZone();
-  const [anchor, setAnchor] = useState(() => startOfDay(new Date(nowMs), timeZone));
+  const searchParams = useSearchParams();
+  const [anchor, setAnchor] = useState(() => {
+    const linked = searchParams.get('date');
+    return linked && isCalendarDate(linked)
+      ? zonedDayStart(linked, timeZone)
+      : startOfDay(new Date(nowMs), timeZone);
+  });
   const period = useMemo(() => calendarPeriod(view, anchor, timeZone), [view, anchor, timeZone]);
   // The day view reads its whole week: the strip's dots and the side panel.
   const readPeriod = useMemo(
@@ -87,7 +95,10 @@ export function useCalendarState({ mobile, nowMs }: { mobile: boolean; nowMs: nu
 
   const teachersQuery = useTeachersQuery({ page: 1, pageSize: 100, status: 'ACTIVE' });
   const teachers = useMemo(() => teachersQuery.data?.items ?? [], [teachersQuery.data]);
-  const [pickedTeachers, setPickedTeachers] = useState<string[] | null>(null);
+  const [pickedTeachers, setPickedTeachers] = useState<string[] | null>(() => {
+    const linked = searchParams.get('teacher');
+    return linked ? [linked] : null;
+  });
   // Until the tutor picks, the calendar opens on their own lessons.
   const ownTeachers = useMemo(
     () => teachers.filter((teacher) => teacher.isMe).map((teacher) => teacher.id),

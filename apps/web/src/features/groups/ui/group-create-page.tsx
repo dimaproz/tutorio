@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { RotateCcwIcon } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { FormProvider, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -25,6 +25,8 @@ import { useCreateGroupMutation } from '@/lib/api/groups';
 import { useTeachersQuery } from '@/lib/api/teachers';
 import { scrollToFirstError } from '@/lib/forms/focus-error';
 import { GroupFormSections } from './group-form-sections';
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 import { useGroupForm, useGroupFormState } from './group-form-state';
 
 /**
@@ -32,6 +34,7 @@ import { useGroupForm, useGroupFormState } from './group-form-state';
  * price, students and notes can come now or later. Like the parent form and
  * unlike the student form, nothing is kept as a draft: leaving a dirty form
  * asks once and then discards it. Success opens the new group's page.
+ * Opened from a teacher's profile (`?teacherId=`), that teacher leads it.
  */
 export function GroupCreatePage() {
   const t = useTranslations('groups.form');
@@ -47,9 +50,11 @@ export function GroupCreatePage() {
   const teachers = useTeachersQuery({ page: 1, pageSize: 100, status: 'ACTIVE' }, school);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [leavingTo, setLeavingTo] = useState<string | null>(null);
-  const [defaults] = useState(() =>
-    emptyGroupForm(session.workspace.defaultCurrency as CurrencyCode),
-  );
+  const requested = useSearchParams().get('teacherId') ?? '';
+  const [defaults] = useState(() => ({
+    ...emptyGroupForm(session.workspace.defaultCurrency as CurrencyCode),
+    teacherId: school && UUID.test(requested) ? requested : null,
+  }));
   const form = useGroupForm(defaults, { teacherRequired: school });
   const state = useGroupFormState(form);
   const { isDirty, isSubmitting } = form.formState;
@@ -141,7 +146,11 @@ export function GroupCreatePage() {
           navItems={state.navItems}
           activeSection={state.activeSection}
           onSelectSection={state.setActiveSection}
-          labels={{ sections: t('sectionsLabel'), error: t('sectionHasError'), done: t('sectionDone') }}
+          labels={{
+            sections: t('sectionsLabel'),
+            error: t('sectionHasError'),
+            done: t('sectionDone'),
+          }}
           navNote={t('sectionsNote')}
           navAside={
             <ProgressMeter

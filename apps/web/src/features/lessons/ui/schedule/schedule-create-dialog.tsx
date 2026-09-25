@@ -46,7 +46,12 @@ function nextMonday(now: number, timeZone: string): string {
   return addCalendarDays(today, (8 - calendarWeekday(today)) % 7);
 }
 
-export type ScheduleCreateInitial = { studentId?: string; groupId?: string };
+export type ScheduleCreateInitial = {
+  studentId?: string;
+  groupId?: string;
+  /** The teacher to start with (a teacher's profile, S09). */
+  teacherId?: string;
+};
 
 type Step = 'form' | 'check' | 'existing';
 
@@ -123,6 +128,7 @@ function ScheduleCreateFlow({
     data,
     picked,
     lengthGiven: false,
+    teacherId: initial.teacherId,
   });
   const [horizonSet, setHorizonSet] = useState(false);
   if (!horizonSet && data.horizonWeeks) {
