@@ -6,14 +6,23 @@ import { Button } from '@/components/ui/button';
 import { AdaptiveDialog } from '@/components/shared/adaptive-dialog';
 import { Notice } from '@/components/shared/notice';
 
-type Args = { size: 'md' | 'lg'; withClose: boolean; longBody: boolean };
+type Args = {
+  size: 'md' | 'lg';
+  withClose: boolean;
+  longBody: boolean;
+  /** The small uppercase line over the title. */
+  eyebrow: string;
+  /** A quieter third action at the footer's start (last on the sheet). */
+  withTertiary: boolean;
+};
 
 /**
  * A decision with a few fields: a dialog on desktop, a bottom sheet on phones
  * (switch the viewport in the toolbar). The body scrolls between the heading
- * and the actions; `withClose` adds the round close button on desktop.
+ * and the actions; `withClose` adds the round close button on desktop,
+ * `eyebrow` the line over the title and `withTertiary` a quieter third action.
  */
-function AdaptiveDialogStory({ size, withClose, longBody }: Args) {
+function AdaptiveDialogStory({ size, withClose, longBody, eyebrow, withTertiary }: Args) {
   const [open, setOpen] = useState(true);
   return (
     <>
@@ -27,12 +36,20 @@ function AdaptiveDialogStory({ size, withClose, longBody }: Args) {
         closeLabel={withClose ? 'Close' : undefined}
         icon={<CircleXIcon />}
         iconClassName="bg-tint-danger text-tint-danger-foreground"
+        eyebrow={eyebrow || undefined}
         title="Cancel the lesson?"
         description="Fri, 11 September · 17:00–18:00 · Anna Shevchenko"
         secondary={
           <Button type="button" variant="outline" onClick={() => setOpen(false)}>
             Keep it
           </Button>
+        }
+        tertiary={
+          withTertiary ? (
+            <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
+              Move instead
+            </Button>
+          ) : undefined
         }
         primary={
           <Button type="button" variant="destructive" onClick={() => setOpen(false)}>
@@ -58,7 +75,7 @@ function AdaptiveDialogStory({ size, withClose, longBody }: Args) {
 const meta = {
   title: 'Shared/Dialogs/AdaptiveDialog',
   component: AdaptiveDialogStory,
-  args: { size: 'md', withClose: true, longBody: false },
+  args: { size: 'md', withClose: true, longBody: false, eyebrow: '', withTertiary: false },
   argTypes: { size: { control: 'inline-radio', options: ['md', 'lg'] } },
 } satisfies Meta<typeof AdaptiveDialogStory>;
 
@@ -73,5 +90,17 @@ export const CloseButton: Story = {
     const body = within(canvasElement.ownerDocument.body);
     await userEvent.click(await body.findByRole('button', { name: 'Close' }));
     await waitFor(() => expect(body.queryByRole('dialog')).toBeNull());
+  },
+};
+
+/** The eyebrow names the kind of decision; the third action waits apart. */
+export const EyebrowAndTertiary: Story = {
+  args: { eyebrow: 'Lesson', withTertiary: true },
+  play: async ({ canvasElement }) => {
+    const body = within(canvasElement.ownerDocument.body);
+    const eyebrow = await body.findByText('Lesson');
+    // The dialog fades in; its content is visible once it has.
+    await waitFor(() => expect(eyebrow).toBeVisible());
+    await expect(body.getByRole('button', { name: 'Move instead' })).toBeVisible();
   },
 };

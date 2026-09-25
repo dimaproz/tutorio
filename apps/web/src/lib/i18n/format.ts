@@ -32,10 +32,11 @@ export interface DateTimeFormatters {
   longDate: (value: Date | string) => string;
   /** "Monday, 3 August" — a section heading for one day. */
   weekdayLongDate: (value: Date | string) => string;
+  /** "Thu, 10 September" — a date named in a sentence. */
+  weekdayDayMonth: (value: Date | string) => string;
 }
 
-const asDate = (value: Date | string): Date =>
-  value instanceof Date ? value : new Date(value);
+const asDate = (value: Date | string): Date => (value instanceof Date ? value : new Date(value));
 
 export function useDateFormatters(): DateTimeFormatters {
   const locale = useLocale();
@@ -66,12 +67,19 @@ export function useDateFormatters(): DateTimeFormatters {
       month: 'long',
     });
 
+    const weekdayDayMonth = new Intl.DateTimeFormat(locale, {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'long',
+    });
+
     return {
       time: (value) => time.format(asDate(value)),
       dayMonth: (value) => dayMonth.format(asDate(value)),
       dayMonthTime: (value) => dayMonthTime.format(asDate(value)),
       longDate: (value) => longDate.format(asDate(value)),
       weekdayLongDate: (value) => weekdayLongDate.format(asDate(value)),
+      weekdayDayMonth: (value) => weekdayDayMonth.format(asDate(value)),
     };
   }, [locale]);
 }

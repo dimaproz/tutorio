@@ -3,6 +3,7 @@ import { PlusIcon, SearchIcon, UserIcon, XIcon } from 'lucide-react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { LinkedCard, type LinkedCardItem } from '@/components/shared/linked-card';
 import { RowActionsTrigger } from '@/components/shared/row-actions-trigger';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +22,10 @@ type Args = {
   readOnly: boolean;
   size: 'md' | 'sm';
   withEmptyActions: boolean;
+  /** A value column with its captions, as the group roster's prices. */
+  withAside: boolean;
+  /** Marks the second row, as right after a save. */
+  highlighted: boolean;
   onAdd: () => void;
 };
 
@@ -28,11 +33,35 @@ type Args = {
  * The linked-records card shared by both profiles. `count` switches the
  * empty state and the one- and two-row layouts, `readOnly` drops the
  * "+ Link" command and the unlink item (an archived student), and `size`
- * is the phone density.
+ * is the phone density. `withAside` adds the value column with its captions
+ * (the group roster's prices) and `highlighted` marks a row just saved.
  */
-function LinkedCardStory({ count, readOnly, size, withEmptyActions, onAdd }: Args) {
-  const items: LinkedCardItem[] = STUDENTS.slice(0, count).map((student) => ({
+function LinkedCardStory({
+  count,
+  readOnly,
+  size,
+  withEmptyActions,
+  withAside,
+  highlighted,
+  onAdd,
+}: Args) {
+  const items: LinkedCardItem[] = STUDENTS.slice(0, count).map((student, index) => ({
     ...student,
+    aside: withAside ? (
+      <span className="flex flex-col items-end gap-1 text-sm">
+        {index === 1 ? (
+          <>
+            <span className="font-semibold">350 ₴</span>
+            <Badge variant="indigo" size="sm">
+              own price
+            </Badge>
+          </>
+        ) : (
+          <span className="text-muted-foreground">400 ₴</span>
+        )}
+      </span>
+    ) : undefined,
+    highlighted: highlighted && index === 1,
     href: `/app/students/${student.id}`,
     hrefLabel: `Open profile · ${student.name}`,
     menu: (
@@ -78,6 +107,7 @@ function LinkedCardStory({ count, readOnly, size, withEmptyActions, onAdd }: Arg
             : []
         }
         size={size}
+        columns={withAside ? { name: 'Student', aside: 'Price per lesson' } : undefined}
       />
     </div>
   );
@@ -86,7 +116,15 @@ function LinkedCardStory({ count, readOnly, size, withEmptyActions, onAdd }: Arg
 const meta = {
   title: 'Shared/Cards/LinkedCard',
   component: LinkedCardStory,
-  args: { count: 1, readOnly: false, size: 'md', withEmptyActions: false, onAdd: fn() },
+  args: {
+    count: 1,
+    readOnly: false,
+    size: 'md',
+    withEmptyActions: false,
+    withAside: false,
+    highlighted: false,
+    onAdd: fn(),
+  },
   argTypes: {
     count: { control: { type: 'range', min: 0, max: 2 } },
     size: { control: 'inline-radio', options: ['md', 'sm'] },
@@ -129,5 +167,14 @@ export const Empty: Story = {
     await expect(canvas.getByRole('heading', { name: 'Linked students' })).toBeVisible();
     await expect(canvas.getByText('No students linked yet.')).toBeVisible();
     await expect(canvas.getByRole('button', { name: 'Create new' })).toBeVisible();
+  },
+};
+
+/** A value column (the group roster's prices), with the captions over it. */
+export const WithAside: Story = {
+  args: { count: 2, withAside: true, highlighted: true },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('Price per lesson')).toBeVisible();
+    await expect(canvas.getByText('350 ₴')).toBeVisible();
   },
 };

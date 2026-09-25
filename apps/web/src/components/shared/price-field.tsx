@@ -32,6 +32,8 @@ export function PriceField({
   packageLabel,
   packageIcon,
   name,
+  disabled,
+  autoFocus,
 }: {
   id?: string;
   label: ReactNode;
@@ -49,6 +51,9 @@ export function PriceField({
   /** The `package` state's icon. */
   packageIcon?: ReactNode;
   name?: string;
+  disabled?: boolean;
+  /** Focuses the field with its value selected, ready to be typed over. */
+  autoFocus?: boolean;
 }) {
   if (state === 'package') {
     return (
@@ -76,7 +81,9 @@ export function PriceField({
       suffix={currency}
       value={state === 'empty' ? '—' : value}
       readOnly={state === 'empty'}
-      disabled={state === 'empty'}
+      disabled={state === 'empty' || disabled}
+      autoFocus={autoFocus}
+      onFocus={autoFocus ? (event) => event.currentTarget.select() : undefined}
       locked={state === 'locked'}
       onChange={(event) => onChange?.(event.target.value)}
       onBlur={onBlur}

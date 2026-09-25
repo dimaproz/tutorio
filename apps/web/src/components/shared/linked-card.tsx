@@ -10,7 +10,8 @@ import { cn } from '@/lib/utils';
 export type LinkedCardItem = {
   id: string;
   name: string;
-  meta?: string;
+  /** The line under the name; a phone row can end it with a badge. */
+  meta?: ReactNode;
   avatarKey?: string | null;
   /** The whole row links here. */
   href: string;
@@ -18,6 +19,10 @@ export type LinkedCardItem = {
   hrefLabel?: string;
   /** The row's `…` menu; the actions differ by side, so it is the caller's. */
   menu?: ReactNode;
+  /** A value column before the menu, e.g. a member's price. */
+  aside?: ReactNode;
+  /** Marks the row for a moment, e.g. right after it was saved. */
+  highlighted?: boolean;
 };
 
 export type LinkedCardAction = {
@@ -48,6 +53,7 @@ export function LinkedCard({
   size = 'md',
   avatarTint = 'indigo',
   children,
+  columns,
   className,
 }: {
   /** Heading; the count is appended as " · N". */
@@ -67,6 +73,11 @@ export function LinkedCard({
   avatarTint?: EntityAvatarTint;
   /** Feedback above the rows, such as a failed save with its retry. */
   children?: ReactNode;
+  /**
+   * Captions over the rows when they carry an `aside` column: the row's
+   * subject on the left, the column's name on the right.
+   */
+  columns?: { name: string; aside: string };
   className?: string;
 }) {
   const sm = size === 'sm';
@@ -113,6 +124,20 @@ export function LinkedCard({
 
       {children}
 
+      {items.length > 0 && columns ? (
+        <div
+          aria-hidden="true"
+          className={cn(
+            'flex items-center justify-between gap-3 text-xs leading-4 text-muted-foreground',
+            // The column caption ends where the values do, before the menu.
+            sm ? 'pr-11' : 'pr-10',
+          )}
+        >
+          <span>{columns.name}</span>
+          <span>{columns.aside}</span>
+        </div>
+      ) : null}
+
       {items.length > 0 ? (
         <ul className="flex flex-col gap-1">
           {items.map((item) => (
@@ -130,8 +155,13 @@ export function LinkedCard({
                 }
                 name={item.name}
                 subtitle={item.meta}
+                action={item.aside}
                 menu={item.menu}
-                className="grow"
+                className={cn(
+                  'grow',
+                  item.highlighted &&
+                    'bg-tint-indigo shadow-[inset_0_0_0_1px_var(--border)] transition-colors duration-700',
+                )}
               />
             </li>
           ))}

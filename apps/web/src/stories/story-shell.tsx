@@ -1,6 +1,7 @@
 'use client';
 
 import type { CSSProperties, ReactNode } from 'react';
+import { Toaster } from '@/components/ui/sonner';
 import { AppHeaderContent } from '@/components/app/app-header';
 import { AppSidebarContent } from '@/components/app/app-sidebar';
 import { MobileAppBarContent } from '@/components/app/mobile-app-bar';
@@ -55,6 +56,8 @@ export function StoryAppShell({ pathname, children }: { pathname: string; childr
       >
         <Chrome pathname={pathname}>{children}</Chrome>
       </SidebarProvider>
+      {/* As the app layout: a screen's confirmations and their undo. */}
+      <Toaster />
     </PageCrumbProvider>
   );
 }

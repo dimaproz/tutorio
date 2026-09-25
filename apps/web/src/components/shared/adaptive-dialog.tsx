@@ -31,12 +31,14 @@ const WIDTH_CLASS = {
 function Heading({
   icon,
   iconClassName,
+  eyebrow,
   title,
   description,
   mobile,
 }: {
   icon?: ReactNode;
   iconClassName?: string;
+  eyebrow?: ReactNode;
   title: ReactNode;
   description?: ReactNode;
   mobile: boolean;
@@ -58,6 +60,11 @@ function Heading({
         </span>
       ) : null}
       <div className="flex min-w-0 flex-col gap-1">
+        {eyebrow ? (
+          <span className="text-[11px] leading-4 font-semibold tracking-[0.08em] text-muted-foreground uppercase">
+            {eyebrow}
+          </span>
+        ) : null}
         <Title className="text-lg leading-6 font-semibold">{title}</Title>
         {description ? (
           <Description className="text-sm leading-5 text-muted-foreground">
@@ -85,14 +92,19 @@ export function AdaptiveDialog({
   description,
   icon,
   iconClassName,
+  eyebrow,
   children,
   primary,
   secondary,
+  tertiary,
   closeLabel,
+  initialFocus,
   size = 'md',
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** A small uppercase line over the title, naming the kind of decision. */
+  eyebrow?: ReactNode;
   title: ReactNode;
   description?: ReactNode;
   icon?: ReactNode;
@@ -101,20 +113,36 @@ export function AdaptiveDialog({
   children?: ReactNode;
   primary: ReactNode;
   secondary?: ReactNode;
+  /**
+   * A quieter action apart from the pair, e.g. «Повернути ціну групи»: at the
+   * footer's start on desktop, last on the sheet.
+   */
+  tertiary?: ReactNode;
+  /** Id of the control that takes the focus on open instead of the first one. */
+  initialFocus?: string;
   /** Accessible name of the desktop close button; omit for no button. */
   closeLabel?: string;
   size?: keyof typeof WIDTH_CLASS;
 }) {
   const mobile = useIsMobile();
+  const focusInitial = initialFocus
+    ? (event: Event) => {
+        const target = document.getElementById(initialFocus);
+        if (!target) return;
+        event.preventDefault();
+        target.focus();
+      }
+    : undefined;
 
   if (mobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent>
+        <DrawerContent onOpenAutoFocus={focusInitial}>
           <DrawerHeader className="px-5 pt-5 pb-0">
             <Heading
               icon={icon}
               iconClassName={iconClassName}
+              eyebrow={eyebrow}
               title={title}
               description={description}
               mobile
@@ -128,6 +156,7 @@ export function AdaptiveDialog({
           <DrawerFooter className="gap-2 px-5 pt-5 *:w-full">
             {primary}
             {secondary}
+            {tertiary}
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
@@ -138,12 +167,14 @@ export function AdaptiveDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
+        onOpenAutoFocus={focusInitial}
         className={cn('flex max-h-[calc(100dvh-2rem)] flex-col gap-5', WIDTH_CLASS[size])}
       >
         <DialogHeader className="flex-row items-start gap-3">
           <Heading
             icon={icon}
             iconClassName={iconClassName}
+            eyebrow={eyebrow}
             title={title}
             description={description}
             mobile={false}
@@ -160,6 +191,7 @@ export function AdaptiveDialog({
           </div>
         ) : null}
         <DialogFooter className="gap-2.5">
+          {tertiary ? <div className="mr-auto flex">{tertiary}</div> : null}
           {secondary}
           {primary}
         </DialogFooter>
