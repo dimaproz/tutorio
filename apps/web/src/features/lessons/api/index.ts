@@ -22,6 +22,7 @@ import type {
   ScheduleChangeDto,
   ScheduleChangePreview,
   ScheduleChangeResult,
+  ScheduleCreatePreview,
   ScheduleListResponse,
   ScheduleResponse,
   StudentBillingResponse,
@@ -274,6 +275,22 @@ export function useCurrentPausesQuery(enabled = true) {
     enabled,
     queryFn: () =>
       gatewayFetch<PauseListResponse>('/api/backend/pauses?page=1&pageSize=100&state=current'),
+  });
+}
+
+/**
+ * What creating a schedule would do (L-22, L-110): the lessons it generates at
+ * once and what they overlap, before anything is written. A read, not a save.
+ */
+export function useScheduleCreatePreviewQuery(dto: CreateScheduleDto | null) {
+  return useQuery<ScheduleCreatePreview, GatewayError>({
+    queryKey: [...queryKeys.schedules.all, 'createPreview', dto],
+    enabled: dto !== null,
+    queryFn: () =>
+      gatewayFetch<ScheduleCreatePreview>('/api/backend/schedules/preview', {
+        method: 'POST',
+        body: JSON.stringify(dto),
+      }),
   });
 }
 

@@ -242,7 +242,7 @@ export const PastDate: Story = {
   },
 };
 
-/** «Щотижня» for a direction without a schedule: what the new one creates (state 11). */
+/** «Щотижня» for a direction without a schedule: what the new one creates and overlaps (state 11). */
 export const WeeklyNewSchedule: Story = {
   args: { state: 'weeklyNewSchedule' },
   play: async ({ canvasElement }) => {
@@ -252,6 +252,7 @@ export const WeeklyNewSchedule: Story = {
     await userEvent.click(form.getByRole('button', { name: /Fri/ }));
     await visible(await form.findByText(/New schedule:/));
     await visible(form.getByText("We'll create 8 lessons 4 weeks ahead"));
+    await visible(await form.findByText('No conflicts'));
     await visible(form.getByRole('button', { name: 'Create the schedule' }));
   },
 };

@@ -13,7 +13,11 @@ import {
 } from 'lucide-react';
 import { useFormatter, useTranslations } from 'next-intl';
 import { useFormContext, useWatch } from 'react-hook-form';
-import type { ScheduleChangePreview, ScheduleSlotDto } from '@tutorio/validation';
+import type {
+  ScheduleChangePreview,
+  ScheduleCreatePreview,
+  ScheduleSlotDto,
+} from '@tutorio/validation';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ChoiceCardGroup } from '@/components/shared/choice-card';
@@ -197,10 +201,32 @@ function NowBecomes({
   );
 }
 
+/** «Конфліктів немає», or how many lessons overlap (L-110), from a preview. */
+function useConflictsItem() {
+  const t = useTranslations('lessons.create');
+  return (count: number): ImpactItem =>
+    count > 0
+      ? {
+          id: 'conflicts',
+          icon: <TriangleAlertIcon />,
+          tone: 'warning',
+          title: t('impactConflicts', { count }),
+          text: t('impactConflictsText'),
+        }
+      : {
+          id: 'conflicts',
+          icon: <CircleCheckIcon />,
+          tone: 'success',
+          title: t('impactNoConflicts'),
+        };
+}
+
 /**
- * «Що буде» of «Щотижня». A new schedule: the schedule and how many lessons
- * it creates within the horizon (L-22). Days added to an existing schedule:
- * the callout, «Зараз → Стане», and the preview's numbers and conflicts (L-25).
+ * «Що буде» of «Щотижня». A new schedule: the schedule, how many lessons it
+ * creates within the horizon (L-22) and what they overlap, from its preview
+ * (the count is worked out locally until the preview arrives). Days added to
+ * an existing schedule: the callout, «Зараз → Стане», and the change
+ * preview's numbers and conflicts (L-25). The save still checks again (L-111).
  */
 export function CreateWeeklyImpact({
   existing,
@@ -208,6 +234,7 @@ export function CreateWeeklyImpact({
   becomes,
   preview,
   previewPending,
+  createPreview,
   newCount,
   horizonWeeks,
   who,
@@ -219,6 +246,8 @@ export function CreateWeeklyImpact({
   becomes: readonly ScheduleSlotDto[];
   preview: ScheduleChangePreview | undefined;
   previewPending: boolean;
+  /** A new schedule's preview, once it arrives. */
+  createPreview: ScheduleCreatePreview | undefined;
   newCount: number;
   horizonWeeks: number;
   /** The student's or the group's name. */
@@ -231,6 +260,7 @@ export function CreateWeeklyImpact({
   const form = useFormContext<CreateFormValues>();
   const formDates = useFormDates();
   const slots = useSlotsLabel();
+  const conflictsItem = useConflictsItem();
   const [from, until] = useWatch({ control: form.control, name: ['from', 'until'] });
   if (added.length === 0) return null;
 
@@ -264,9 +294,13 @@ export function CreateWeeklyImpact({
         id: 'create',
         icon: <CalendarPlusIcon />,
         tone: 'info',
-        title: t('impactCreate', { count: newCount, weeks: horizonWeeks }),
+        title: t('impactCreate', {
+          count: createPreview?.created ?? newCount,
+          weeks: horizonWeeks,
+        }),
         text: t('impactCreateText'),
       },
+      ...(createPreview ? [conflictsItem(createPreview.conflicts.length)] : []),
     ];
     return (
       <section className="flex flex-col gap-3">
@@ -293,22 +327,7 @@ export function CreateWeeklyImpact({
         title: t('impactMoved', { count: preview.moved }),
       });
     }
-    items.push(
-      preview.conflicts.length > 0
-        ? {
-            id: 'conflicts',
-            icon: <TriangleAlertIcon />,
-            tone: 'warning',
-            title: t('impactConflicts', { count: preview.conflicts.length }),
-            text: t('impactConflictsText'),
-          }
-        : {
-            id: 'conflicts',
-            icon: <CircleCheckIcon />,
-            tone: 'success',
-            title: t('impactNoConflicts'),
-          },
-    );
+    items.push(conflictsItem(preview.conflicts.length));
   }
 
   return (

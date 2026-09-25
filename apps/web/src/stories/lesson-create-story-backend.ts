@@ -359,6 +359,14 @@ export function createLessonCreateRoutes(options: LessonCreateStoryOptions) {
       return json({ items, page: 1, pageSize: 20, total: items.length, totalPages: 1 });
     }
     if (path.match(/^\/schedules\/[^/]+\/changes\/preview$/)) return json(PREVIEW);
+    if (path === '/schedules/preview' && method === 'POST') {
+      return json({
+        created: 8,
+        firstLessonAt: local(10, 2, 17),
+        existingScheduleId: null,
+        conflicts: [],
+      });
+    }
 
     const forced = query.get('force') === 'true';
     const conflict = () =>

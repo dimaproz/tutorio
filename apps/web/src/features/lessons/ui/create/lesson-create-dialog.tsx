@@ -15,10 +15,12 @@ import {
   useCreateSubmit,
   type CreateSubmitContext,
 } from './use-create-submit';
+import { useScheduleCreatePreviewQuery } from '../../api';
 import { localInstant } from '../../model/busy';
 import {
   chargedCount,
   createFormDefaults,
+  createScheduleDto,
   createFormSchema,
   localDate,
   newScheduleLessonCount,
@@ -180,6 +182,19 @@ function LessonCreateForm({
       ? scheduleChangeDto(values, existing.slots)
       : null;
   const preview = useApplyScheduleChangePreview(existing?.id ?? null, change);
+  // A new schedule is previewed too: its lessons and overlaps before saving.
+  const createPreview = useScheduleCreatePreviewQuery(
+    frequency === 'weekly' &&
+      !existing &&
+      picked &&
+      added.length > 0 &&
+      /^\d{4}-\d{2}-\d{2}$/.test(values.from) &&
+      minutes >= 5 &&
+      minutes <= 480 &&
+      (who === 'group' || teacherId)
+      ? createScheduleDto(values, { priceMinor: null, currency: data.defaultCurrency })
+      : null,
+  );
   const newCount = newScheduleLessonCount({
     slots: added,
     from: values.from,
@@ -253,7 +268,7 @@ function LessonCreateForm({
     existing: Boolean(existing),
     addedSlots: added.length,
     previewCreated: preview.data?.created ?? null,
-    newCount,
+    newCount: createPreview.data?.created ?? newCount,
   });
 
   const body = (
@@ -334,6 +349,7 @@ function LessonCreateForm({
           becomes={change?.slots ?? added}
           preview={preview.data}
           previewPending={Boolean(change) && preview.isPending}
+          createPreview={createPreview.data}
           newCount={newCount}
           horizonWeeks={data.horizonWeeks}
           who={{
