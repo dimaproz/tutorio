@@ -19,6 +19,17 @@ lessons, packages and directions read-only — scheduling, lesson actions, sales
 and direction edits come back with the new screens (Work Packet 6.4 screens,
 6.2, 6.5, 6.6 and 7). Every backend route stays available.
 
+## Group member prices (2026-09-25)
+
+A group member can pay their own price (L-11): «Змінити ціну» in the group
+roster opens «Ціна для учня»; the roster shows a price column once somebody
+has one; the group form shows who a new group price moves and who keeps their
+own; the lesson form's group card counts the members with their own price.
+The API gained `Enrollment.ownPrice` (a group price change reprices only the
+others, and a charge keeps its amount, L-12). `Notice` now defaults to the
+Info and TriangleAlert glyphs. Details:
+[`screens/s08-group-page-operations.md`](./screens/s08-group-page-operations.md).
+
 ## Lesson create form — screen step S02 (2026-09-24)
 
 «Додати заняття» on the student profile and the group page opens the lesson

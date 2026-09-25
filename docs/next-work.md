@@ -394,6 +394,9 @@ and 7 (S07) and 6.6 (S10, S11).
   interim attendance dialog is gone. Decisions and open questions (payment
   method, recording a payment and offering a package from the panel, the
   group makeup on board 02) are in the [brief](./screens/s01-lesson-panel.md).
+- **Group member prices: done 2026-09-25** (S08's member rate dialog, ahead
+  of the step): `Enrollment.ownPrice`, the roster's price column, «Ціна для
+  учня», the group form's price impact and the S02 group pill.
 - **S02 — lesson create form: done 2026-09-24** (`6b9d8cd`…`6c237a3`;
   2026-09-25: `POST /schedules/preview` shows a new schedule's lessons and
   «Конфліктів немає» or its overlaps before saving).
