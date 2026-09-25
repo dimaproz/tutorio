@@ -1,5 +1,11 @@
 import { z } from 'zod';
-import { currencyCodeSchema, isoDateTimeSchema, timezoneSchema, uuidSchema } from './common';
+import {
+  avatarKeySchema,
+  currencyCodeSchema,
+  isoDateTimeSchema,
+  timezoneSchema,
+  uuidSchema,
+} from './common';
 import { priceMinorSchema } from './enrollments';
 import { paginatedResponseSchema, paginationQuerySchema } from './pagination';
 import {
@@ -115,12 +121,25 @@ export const updateScheduleSchema = z.object({ horizonWeeks: scheduleHorizonWeek
 
 export type UpdateScheduleDto = z.infer<typeof updateScheduleSchema>;
 
+/**
+ * Which schedules a list shows: active, active with a change planned for
+ * later (`CHANGING`), ended, or every one.
+ */
+export const scheduleListStateSchema = z.enum(['ACTIVE', 'CHANGING', 'ENDED', 'all']);
+export type ScheduleListStateDto = z.infer<typeof scheduleListStateSchema>;
+
 export const listSchedulesQuerySchema = paginationQuerySchema
   .extend({
     studentId: uuidSchema.optional(),
     groupId: uuidSchema.optional(),
     teacherId: uuidSchema.optional(),
-    state: z.enum(['ACTIVE', 'ENDED', 'all']).default('ACTIVE'),
+    state: scheduleListStateSchema.default('ACTIVE'),
+    /** A student's schedules or a group's. */
+    kind: z.enum(['individual', 'group']).optional(),
+    /** Part of the student's, the group's or the teacher's name. */
+    search: z.string().trim().min(1).max(120).optional(),
+    /** Newest first, or by the next lesson (soonest first, none last). */
+    sort: z.enum(['created', 'next']).default('created'),
   })
   .strict();
 
@@ -147,8 +166,15 @@ export const scheduleResponseSchema = z.object({
     .object({ effectiveFrom: isoDateTimeSchema, slots: z.array(scheduleSlotSchema) })
     .nullable(),
   nextLessonAt: isoDateTimeSchema.nullable(),
-  student: z.object({ id: uuidSchema, fullName: z.string() }).nullable(),
-  group: refSchema.nullable(),
+  /** When the schedule's first rule starts. */
+  startsAt: isoDateTimeSchema.nullable(),
+  /** The last lesson generated so far: how far ahead the schedule is booked. */
+  lastLessonAt: isoDateTimeSchema.nullable(),
+  student: z
+    .object({ id: uuidSchema, fullName: z.string(), avatarKey: avatarKeySchema.nullable() })
+    .nullable(),
+  /** The group, with how many active members it has. */
+  group: refSchema.extend({ memberCount: z.number().int().nonnegative() }).nullable(),
   teacher: refSchema,
   createdAt: isoDateTimeSchema,
   updatedAt: isoDateTimeSchema,
@@ -156,7 +182,15 @@ export const scheduleResponseSchema = z.object({
 
 export type ScheduleResponse = z.infer<typeof scheduleResponseSchema>;
 
-export const scheduleListResponseSchema = paginatedResponseSchema(scheduleResponseSchema);
+export const scheduleListResponseSchema = paginatedResponseSchema(scheduleResponseSchema).extend({
+  /** How many schedules each state shows with the other filters applied. */
+  counts: z.object({
+    active: z.number().int().nonnegative(),
+    changing: z.number().int().nonnegative(),
+    ended: z.number().int().nonnegative(),
+    all: z.number().int().nonnegative(),
+  }),
+});
 export type ScheduleListResponse = z.infer<typeof scheduleListResponseSchema>;
 
 /** A lesson that would lose its topic or notes because the change removes it. */
@@ -167,9 +201,13 @@ const lostContentSchema = z.object({
   hasNotes: z.boolean(),
 });
 
+/** Why a change or a stop leaves a lesson alone (L-27). */
+export const keptReasonSchema = z.enum(['HELD', 'CANCELLED', 'NO_SHOW', 'MOVED', 'MARKED']);
+export type KeptReasonDto = z.infer<typeof keptReasonSchema>;
+
 /**
  * What a change or a stop would do (L-24, L-25), computed exactly as the
- * apply would do it.
+ * apply would do it. The counts come with the lessons behind them.
  */
 export const scheduleChangePreviewSchema = z.object({
   effectiveFrom: isoDateTimeSchema,
@@ -183,6 +221,22 @@ export const scheduleChangePreviewSchema = z.object({
   kept: z.number().int().nonnegative(),
   notesLost: z.array(lostContentSchema),
   conflicts: z.array(scheduleConflictSchema),
+  /** The moved lessons, each with its old and new start. */
+  moves: z.array(
+    z.object({
+      lessonId: uuidSchema,
+      startsAtUtc: isoDateTimeSchema,
+      toStartsAtUtc: isoDateTimeSchema,
+    }),
+  ),
+  /** The lessons removed. */
+  removals: z.array(z.object({ lessonId: uuidSchema, startsAtUtc: isoDateTimeSchema })),
+  /** The starts of the lessons created. */
+  creates: z.array(isoDateTimeSchema),
+  /** The lessons left alone, and why. */
+  keptLessons: z.array(
+    z.object({ lessonId: uuidSchema, startsAtUtc: isoDateTimeSchema, reason: keptReasonSchema }),
+  ),
 });
 
 export type ScheduleChangePreview = z.infer<typeof scheduleChangePreviewSchema>;
@@ -196,6 +250,8 @@ export type ScheduleChangePreview = z.infer<typeof scheduleChangePreviewSchema>;
 export const scheduleCreatePreviewSchema = z.object({
   /** Lessons generated at once, from the later of the start and now to the horizon or the end. */
   created: z.number().int().nonnegative(),
+  /** The starts of those lessons, soonest first. */
+  dates: z.array(isoDateTimeSchema),
   firstLessonAt: isoDateTimeSchema.nullable(),
   /** The active schedule of the same direction or group (create answers SCHEDULE_EXISTS). */
   existingScheduleId: uuidSchema.nullable(),
@@ -203,6 +259,22 @@ export const scheduleCreatePreviewSchema = z.object({
 });
 
 export type ScheduleCreatePreview = z.infer<typeof scheduleCreatePreviewSchema>;
+
+/**
+ * What a new horizon would do (L-22), computed exactly as saving it would: the
+ * lessons generated now and how far ahead the schedule is booked then. A
+ * shorter horizon keeps what is booked and adds nothing.
+ */
+export const scheduleHorizonPreviewSchema = z.object({
+  horizonWeeks: scheduleHorizonWeeksSchema,
+  added: z.number().int().nonnegative(),
+  /** The starts of the lessons added, soonest first. */
+  dates: z.array(isoDateTimeSchema),
+  /** The last lesson booked once the horizon is saved. */
+  lastLessonAt: isoDateTimeSchema.nullable(),
+});
+
+export type ScheduleHorizonPreview = z.infer<typeof scheduleHorizonPreviewSchema>;
 
 export const scheduleChangeResultSchema = z.object({
   schedule: scheduleResponseSchema,

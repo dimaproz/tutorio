@@ -460,6 +460,15 @@ export type LessonListResponse = z.infer<typeof lessonListResponseSchema>;
 export const lessonQuickFilterSchema = z.enum(['unpaid', 'cancelled', 'no_show', 'needs_makeup']);
 export type LessonQuickFilterDto = z.infer<typeof lessonQuickFilterSchema>;
 
+/**
+ * One or more lesson statuses, as `status=A,B` or a repeated `status`; the
+ * list shows lessons in any of them.
+ */
+export const lessonStatusListSchema = z.preprocess(
+  (value) => (typeof value === 'string' ? value.split(',') : value),
+  z.array(lessonStatusSchema).min(1).max(5),
+);
+
 /** The Lessons list: every lesson, paged, newest first by default. */
 export const listLessonPageQuerySchema = paginationQuerySchema
   .extend({
@@ -468,7 +477,9 @@ export const listLessonPageQuerySchema = paginationQuerySchema
     teacherId: uuidSchema.optional(),
     studentId: uuidSchema.optional(),
     groupId: uuidSchema.optional(),
-    status: lessonStatusSchema.optional(),
+    status: lessonStatusListSchema.optional(),
+    /** Part of the student's, the group's or the teacher's name. */
+    search: z.string().trim().min(1).max(120).optional(),
     filter: lessonQuickFilterSchema.optional(),
     order: z.enum(['asc', 'desc']).default('desc'),
   })
@@ -483,6 +494,8 @@ export type ListLessonPageQueryDto = z.infer<typeof listLessonPageQuerySchema>;
 export const lessonPageResponseSchema = paginatedResponseSchema(lessonResponseSchema).extend({
   /** How many lessons each quick filter would show with the other filters applied. */
   counts: z.object({
+    /** Every lesson the other filters let through, whatever the quick filter. */
+    all: z.number().int().nonnegative(),
     unpaid: z.number().int().nonnegative(),
     cancelled: z.number().int().nonnegative(),
     noShow: z.number().int().nonnegative(),
