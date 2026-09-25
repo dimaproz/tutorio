@@ -660,6 +660,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/groups/{groupId}/billing': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * How each member pays the group
+     * @description One row per live member: their billing for the group (mode, rate, packages and credits, lessons on debt, the pay-per-lesson balance, the warning) and their pause now or next.
+     */
+    get: operations['GroupsController_getBilling'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/groups/{groupId}/restore': {
     parameters: {
       query?: never;
@@ -1130,6 +1150,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/schedules/{scheduleId}/changes/cancel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Cancel the change planned for later
+     * @description The rule in force before it applies again from its date: the lessons it moved move back and the ones it created are removed. NO_PLANNED_CHANGE without one; SCHEDULE_CONFLICT unless force=true.
+     */
+    post: operations['SchedulesController_cancelChange'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/schedules/{scheduleId}/stop/preview': {
     parameters: {
       query?: never;
@@ -1211,6 +1251,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/packages/members/preview': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Preview a sale to group members
+     * @description Per selected member: the credits, price and total they would be sold, the lessons on debt the credits pay first, the package they follow and the pause that holds the first lessons back. Writes nothing.
+     */
+    post: operations['PackagesController_previewMembers'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/packages/members': {
     parameters: {
       query?: never;
@@ -1222,7 +1282,7 @@ export interface paths {
     put?: never;
     /**
      * Sell one package to each selected group member
-     * @description One package per member, for their membership of the group; each member pays separately.
+     * @description One package per member, for their membership of the group; each member pays separately. `prices` sells some members at their own rate. All or nothing: one member that fails sells nothing.
      */
     post: operations['PackagesController_sellToMembers'];
     delete?: never;
@@ -2702,6 +2762,7 @@ export interface components {
         startsAtUtc: string;
         /** @enum {string} */
         status: 'SCHEDULED' | 'COMPLETED' | 'CANCELLED_CHARGED' | 'CANCELLED_UNCHARGED' | 'NO_SHOW';
+        topic: string | null;
       }[];
       stats: {
         lessons: number;
@@ -2743,6 +2804,64 @@ export interface components {
         lastPresentAt: string | null;
         hold: boolean;
         risk: boolean;
+      }[];
+    };
+    GroupBillingDto: {
+      /** Format: uuid */
+      groupId: string;
+      lowCreditThreshold: number;
+      members: {
+        /** Format: uuid */
+        enrollmentId: string;
+        /** @enum {string} */
+        billingType: 'PACKAGE' | 'PER_LESSON';
+        rateMinor: number;
+        /** @enum {string} */
+        currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+        packages: {
+          /** Format: uuid */
+          id: string;
+          name: string | null;
+          /** Format: date-time */
+          purchasedAt: string;
+          /** Format: date-time */
+          expiresAt: string | null;
+          /** Format: date-time */
+          validFrom: string | null;
+          lessonsTotal: number;
+          remainingCredits: number;
+          usable: boolean;
+          totalPriceMinor: number;
+          paidMinor: number;
+          /** @enum {string} */
+          paymentStatus: 'PENDING' | 'PARTIAL' | 'PAID';
+        }[];
+        creditsLeft: number;
+        debtLessons: number;
+        balance: {
+          chargedMinor: number;
+          paidMinor: number;
+          debtMinor: number;
+          advanceMinor: number;
+          unpaidLessons: number;
+          unpaid: {
+            /** Format: uuid */
+            lessonId: string;
+            /** Format: date-time */
+            startsAt: string;
+            outstandingMinor: number;
+          }[];
+        };
+        /** @enum {string|null} */
+        warning: 'ON_DEBT' | 'NO_CREDITS' | 'LOW_CREDITS' | null;
+        /** Format: uuid */
+        studentId: string;
+        pause: {
+          /** Format: date-time */
+          startsAt: string;
+          /** Format: date-time */
+          endsAt: string | null;
+        } | null;
       }[];
     };
     UpdateGroupDto: {
@@ -2978,6 +3097,7 @@ export interface components {
         attendance: {
           present: number;
           marked: number;
+          confirmed: boolean;
         } | null;
         charges: {
           /** Format: uuid */
@@ -3083,6 +3203,7 @@ export interface components {
         attendance: {
           present: number;
           marked: number;
+          confirmed: boolean;
         } | null;
         charges: {
           /** Format: uuid */
@@ -3206,6 +3327,7 @@ export interface components {
       attendance: {
         present: number;
         marked: number;
+        confirmed: boolean;
       } | null;
       charges: {
         /** Format: uuid */
@@ -3460,6 +3582,7 @@ export interface components {
       attendance: {
         present: number;
         marked: number;
+        confirmed: boolean;
       } | null;
       charges: {
         /** Format: uuid */
@@ -4340,6 +4463,11 @@ export interface components {
       /** Format: uuid */
       groupId: string;
       studentIds: string[];
+      prices?: {
+        /** Format: uuid */
+        studentId: string;
+        pricePerLessonMinor: number;
+      }[];
       name?: string | null;
       /**
        * @default FIXED_COUNT
@@ -4361,6 +4489,36 @@ export interface components {
       /** Format: date-time */
       expiresAt?: string | null;
       notes?: string | null;
+    };
+    MemberSalePreviewDto: {
+      /** Format: date-time */
+      validFrom: string | null;
+      /** Format: date-time */
+      expiresAt: string | null;
+      items: {
+        lessonsTotal: number;
+        pricePerLessonMinor: number;
+        totalPriceMinor: number;
+        /** Format: date-time */
+        validFrom: string | null;
+        /** Format: date-time */
+        expiresAt: string | null;
+        scheduleLessons: number | null;
+        debtLessons: number;
+        ahead: {
+          /** Format: uuid */
+          id: string;
+          name: string | null;
+        } | null;
+        /** Format: uuid */
+        studentId: string;
+        pause: {
+          /** Format: date-time */
+          startsAt: string;
+          /** Format: date-time */
+          endsAt: string | null;
+        } | null;
+      }[];
     };
     SoldPackagesDto: {
       items: {
@@ -6693,6 +6851,44 @@ export interface operations {
       };
     };
   };
+  GroupsController_getBilling: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        groupId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GroupBillingDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
   GroupsController_restore: {
     parameters: {
       query?: never;
@@ -8080,6 +8276,46 @@ export interface operations {
       };
     };
   };
+  SchedulesController_cancelChange: {
+    parameters: {
+      query?: {
+        force?: boolean | 'true' | 'false';
+      };
+      header?: never;
+      path: {
+        scheduleId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ScheduleChangeResultDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
   SchedulesController_previewStop: {
     parameters: {
       query?: never;
@@ -8259,6 +8495,54 @@ export interface operations {
       };
       /** @description OWNER role required */
       403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  PackagesController_previewMembers: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SellToMembersDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['MemberSalePreviewDto'];
+        };
+      };
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
         headers: {
           [name: string]: unknown;
         };
