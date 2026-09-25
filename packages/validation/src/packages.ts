@@ -467,6 +467,14 @@ export const packageDetailResponseSchema = packageResponseSchema.extend({
       lastLessonAt: isoDateTimeSchema.nullable(),
     })
     .nullable(),
+  /** Each extension by hand (L-84), oldest first: when, and the end before and after. */
+  manualExtensions: z.array(
+    z.object({
+      at: isoDateTimeSchema,
+      from: isoDateTimeSchema.nullable(),
+      to: isoDateTimeSchema,
+    }),
+  ),
   /** Each pause that pushed the end later, oldest first. */
   pauseExtensions: z.array(
     z.object({
