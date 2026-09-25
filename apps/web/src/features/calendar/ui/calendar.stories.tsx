@@ -129,7 +129,9 @@ export const StatusFilter: Story = {
       canvas.queryByRole('button', { name: /Sofiia Melnyk, individual, cancelled/ }),
     ).toBeNull();
     await userEvent.click(canvas.getByRole('button', { name: /^Status/ }));
-    await expect(await within(document.body).findByText('Show')).toBeVisible();
+    const show = await within(document.body).findByText('Show');
+    // The menu fades in: wait for it rather than catch it mid-animation.
+    await waitFor(() => expect(show).toBeVisible());
   },
 };
 

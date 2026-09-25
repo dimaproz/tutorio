@@ -55,6 +55,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const body = () => within(document.body);
+const visible = (element: HTMLElement) => waitFor(() => expect(element).toBeVisible());
 const lastUrl = () => {
   const calls = getRouter().replace.mock.calls;
   return String(calls.at(-1)?.[0] ?? '');
@@ -63,14 +64,14 @@ const lastUrl = () => {
 /** 01 · The list: this month, newest first, the quick filters' counts. */
 export const Playground: Story = {
   play: async ({ canvas }) => {
-    await expect(await canvas.findByRole('heading', { level: 1, name: 'Lessons' })).toBeVisible();
+    await visible(await canvas.findByRole('heading', { level: 1, name: 'Lessons' }));
     const table = await canvas.findByRole('table');
-    await expect(
+    await visible(
       within(table).getByRole('button', { name: /Open the lesson: Kids A1 · weekend/ }),
-    ).toBeVisible();
+    );
     await expect(within(table).getAllByText('Paid after').length).toBeGreaterThan(0);
-    await expect(canvas.getByRole('radio', { name: /Unpaid/ })).toBeVisible();
-    await expect(canvas.getByRole('button', { name: 'Period: September 2026' })).toBeVisible();
+    await visible(canvas.getByRole('radio', { name: /Unpaid/ }));
+    await visible(canvas.getByRole('button', { name: 'Period: September 2026' }));
   },
 };
 
@@ -86,7 +87,7 @@ export const QuickFilter: Story = {
 export const QuickUnpaid: Story = {
   parameters: at({ quick: 'unpaid' }),
   play: async ({ canvas }) => {
-    await expect(await canvas.findByRole('radio', { name: /Unpaid/, checked: true })).toBeVisible();
+    await visible(await canvas.findByRole('radio', { name: /Unpaid/, checked: true }));
     const table = await canvas.findByRole('table');
     await expect(within(table).getAllByText(/Unpaid|Debt|of \d paid/).length).toBeGreaterThan(0);
     await expect(within(table).queryByText('Paid after')).toBeNull();
@@ -129,7 +130,7 @@ export const WhoMenu: Story = {
   play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole('button', { name: 'Student or group' }));
     await userEvent.type(await body().findByPlaceholderText("Student's name or group"), 'So');
-    await expect(await body().findByText(/their groups' lessons/)).toBeVisible();
+    await visible(await body().findByText(/their groups' lessons/));
     await userEvent.click(await body().findByRole('option', { name: 'Sofiia Melnyk' }));
     await waitFor(() => expect(lastUrl()).toBe(`/app/lessons?student=${SOFIIA}`));
   },
@@ -151,11 +152,9 @@ export const StatusMenu: Story = {
 export const FiltersApplied: Story = {
   parameters: at({ teacher: IRYNA, student: SOFIIA }),
   play: async ({ canvas }) => {
-    await expect(
-      await canvas.findByText(/^\d+ lessons? match the filters · \d+ in all$/),
-    ).toBeVisible();
-    await expect(await canvas.findByRole('button', { name: 'Sofiia Melnyk' })).toBeVisible();
-    await expect(canvas.getByRole('button', { name: 'Iryna Bondar' })).toBeVisible();
+    await visible(await canvas.findByText(/^\d+ lessons? match the filters · \d+ in all$/));
+    await visible(await canvas.findByRole('button', { name: 'Sofiia Melnyk' }));
+    await visible(canvas.getByRole('button', { name: 'Iryna Bondar' }));
     await userEvent.click(canvas.getByRole('button', { name: 'Reset' }));
     await waitFor(() => expect(lastUrl()).toBe('/app/lessons'));
   },
@@ -171,8 +170,8 @@ export const RowMenu: Story = {
     await waitFor(() =>
       expect(menu.getByRole('menuitem', { name: 'Open the lesson' })).toBeVisible(),
     );
-    await expect(menu.getByRole('menuitem', { name: 'Move' })).toBeVisible();
-    await expect(menu.getByRole('menuitem', { name: 'Cancel' })).toBeVisible();
+    await visible(menu.getByRole('menuitem', { name: 'Move' }));
+    await visible(menu.getByRole('menuitem', { name: 'Cancel' }));
     await userEvent.click(menu.getByRole('menuitem', { name: 'Cancel' }));
     await waitFor(() => expect(lastUrl()).toMatch(/lesson=/));
   },
@@ -182,8 +181,8 @@ export const RowMenu: Story = {
 export const NoResults: Story = {
   parameters: at({ quick: 'unpaid', q: 'zzz' }),
   play: async ({ canvas }) => {
-    await expect(await canvas.findByText('No lessons match these filters')).toBeVisible();
-    await expect(canvas.getByText(/unpaid · «zzz» · September 2026/)).toBeVisible();
+    await visible(await canvas.findByText('No lessons match these filters'));
+    await visible(canvas.getByText(/unpaid · «zzz» · September 2026/));
     await userEvent.click(canvas.getByRole('button', { name: 'Reset the filters' }));
     await waitFor(() => expect(lastUrl()).toBe('/app/lessons'));
   },
@@ -193,8 +192,8 @@ export const NoResults: Story = {
 export const Empty: Story = {
   args: { lessons: 'empty' },
   play: async ({ canvas }) => {
-    await expect(await canvas.findByText('Every lesson will be here')).toBeVisible();
-    await expect(canvas.getByRole('link', { name: 'Open the calendar' })).toBeVisible();
+    await visible(await canvas.findByText('Every lesson will be here'));
+    await visible(canvas.getByRole('link', { name: 'Open the calendar' }));
     await expect(canvas.queryByRole('button', { name: 'Cancel lessons' })).toBeNull();
   },
 };
@@ -206,8 +205,8 @@ export const Loading: Story = { args: { lessons: 'pending' } };
 export const LoadError: Story = {
   args: { lessons: 'error' },
   play: async ({ canvas }) => {
-    await expect(await canvas.findByText('The lessons could not be loaded')).toBeVisible();
-    await expect(canvas.getByRole('button', { name: 'Try again' })).toBeVisible();
+    await visible(await canvas.findByText('The lessons could not be loaded'));
+    await visible(canvas.getByRole('button', { name: 'Try again' }));
   },
 };
 
@@ -253,9 +252,9 @@ export const BulkCancelForm: Story = {
       'on',
     );
     await userEvent.click(dialog.getByRole('radio', { name: /One teacher/ }));
-    await expect(await dialog.findByText('Teacher')).toBeVisible();
+    await visible(await dialog.findByText('Teacher'));
     await userEvent.click(dialog.getByRole('button', { name: 'Next' }));
-    await expect(await dialog.findByText('Pick a teacher from the list')).toBeVisible();
+    await visible(await dialog.findByText('Pick a teacher from the list'));
   },
 };
 
@@ -267,13 +266,11 @@ export const BulkCancelApply: Story = {
     await pickDay(dialog, 'To', /October 14th/);
     await userEvent.click(dialog.getByRole('button', { name: 'Next' }));
     const check = within(await body().findByRole('dialog', { name: 'Cancel 14 lessons?' }));
-    await expect(check.getByText('10 individual · 4 group')).toBeVisible();
-    await expect(check.getByText(/10 individual lessons appear under “No makeup”/)).toBeVisible();
-    await expect(check.getByText('Kids A1')).toBeVisible();
+    await visible(check.getByText('10 individual · 4 group'));
+    await visible(check.getByText(/10 individual lessons appear under “No makeup”/));
+    await visible(check.getByText('Kids A1'));
     await userEvent.click(check.getByRole('button', { name: 'Cancel 14 lessons' }));
-    await expect(
-      await body().findByText('Cancelled 14 lessons on October 14 · free'),
-    ).toBeVisible();
+    await visible(await body().findByText('Cancelled 14 lessons on October 14 · free'));
     await userEvent.click(body().getByRole('button', { name: 'Show' }));
     await waitFor(() => expect(lastUrl()).toBe('/app/lessons?from=2026-10-14'));
   },
@@ -287,9 +284,9 @@ export const BulkCancelNothing: Story = {
     await pickDay(dialog, 'To', /October 20th/);
     await userEvent.click(dialog.getByRole('button', { name: 'Next' }));
     const nothing = within(await body().findByRole('dialog', { name: 'Nothing to cancel' }));
-    await expect(nothing.getByText('No lessons are scheduled on these days')).toBeVisible();
+    await visible(nothing.getByText('No lessons are scheduled on these days'));
     await userEvent.click(nothing.getByRole('button', { name: 'Back' }));
-    await expect(await body().findByRole('dialog', { name: 'Cancel lessons' })).toBeVisible();
+    await visible(await body().findByRole('dialog', { name: 'Cancel lessons' }));
   },
 };
 
@@ -299,7 +296,7 @@ export const BulkCancelErrors: Story = {
     const dialog = await openBulkCancel(canvasElement);
     await pickDay(dialog, 'From', /October 14th/);
     await userEvent.click(dialog.getByRole('button', { name: 'Next' }));
-    await expect(await dialog.findByText('The end is before the start')).toBeVisible();
+    await visible(await dialog.findByText('The end is before the start'));
   },
 };
 
@@ -325,6 +322,6 @@ export const PhoneFilters: Story = {
     await userEvent.click(open);
     const sheet = within(await body().findByRole('dialog', { name: 'Filters' }));
     await userEvent.click(sheet.getByLabelText('Iryna Bondar'));
-    await expect(await sheet.findByRole('button', { name: /Show \d+ lessons?/ })).toBeVisible();
+    await visible(await sheet.findByRole('button', { name: /Show \d+ lessons?/ }));
   },
 };

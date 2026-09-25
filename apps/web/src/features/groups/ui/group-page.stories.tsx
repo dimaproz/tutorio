@@ -250,7 +250,9 @@ export const PriceDialogOwn: Story = {
 export const PriceDialogEmpty: Story = {
   play: async ({ canvasElement }) => {
     const dialog = await openPriceDialog(canvasElement, 'Mark Shevchenko');
-    await userEvent.clear(dialog.getByLabelText('Own price'));
+    const field = dialog.getByLabelText('Own price');
+    await waitFor(() => expect(field).toHaveFocus());
+    await userEvent.clear(field);
     await userEvent.click(dialog.getByRole('button', { name: 'Save' }));
     await expect(
       await dialog.findByText('Enter a price or go back to the group price'),
@@ -263,6 +265,8 @@ export const PriceDialogNegative: Story = {
   play: async ({ canvasElement }) => {
     const dialog = await openPriceDialog(canvasElement, 'Mark Shevchenko');
     const field = dialog.getByLabelText('Own price');
+    // The field takes the focus with its value selected: type only after that.
+    await waitFor(() => expect(field).toHaveFocus());
     await userEvent.clear(field);
     await userEvent.type(field, '-50');
     await userEvent.click(dialog.getByRole('button', { name: 'Save' }));
@@ -287,6 +291,8 @@ export const PriceSaved: Story = {
   play: async ({ canvasElement }) => {
     const dialog = await openPriceDialog(canvasElement, 'Kateryna Shevchuk');
     const field = dialog.getByLabelText('Own price');
+    // The field takes the focus with its value selected: type only after that.
+    await waitFor(() => expect(field).toHaveFocus());
     await userEvent.clear(field);
     await userEvent.type(field, '300');
     await userEvent.click(dialog.getByRole('button', { name: 'Save' }));
