@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import {
+  avatarKeySchema,
   currencyCodeSchema,
   isoDateTimeSchema,
   notesSchema,
@@ -358,6 +359,10 @@ export type ForceQueryDto = z.infer<typeof forceQuerySchema>;
 // ---------------------------------------------------------------------------
 
 const studentRefSchema = z.object({ id: uuidSchema, fullName: z.string() });
+/** The lesson's student with the avatar the calendar's cards show. */
+const lessonStudentRefSchema = studentRefSchema.extend({
+  avatarKey: avatarKeySchema.nullable(),
+});
 const groupRefSchema = z.object({ id: uuidSchema, name: z.string() });
 const teacherRefSchema = z.object({
   id: uuidSchema,
@@ -408,7 +413,7 @@ export const lessonResponseSchema = z.object({
   // empty until the lesson is held, charged-cancelled or a no-show.
   charges: z.array(lessonChargeResponseSchema),
   // Compact refs for calendar event rendering (avoids request waterfalls).
-  student: studentRefSchema.nullable(),
+  student: lessonStudentRefSchema.nullable(),
   group: groupRefSchema.nullable(),
   teacher: teacherRefSchema,
   createdAt: isoDateTimeSchema,
