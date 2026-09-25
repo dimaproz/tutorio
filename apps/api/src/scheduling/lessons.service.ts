@@ -223,6 +223,17 @@ export class LessonsService {
         count('no_show'),
         count('needs_makeup'),
       ]);
+    const packages = await this.billingReads.currentPackages(
+      this.prisma,
+      auth.workspaceId,
+      [
+        ...new Set(
+          rows.flatMap((row) =>
+            row.enrollmentId && !row.groupId ? [row.enrollmentId] : [],
+          ),
+        ),
+      ],
+    );
     return {
       ...buildPaginatedResponse(await this.respond(rows), total, query),
       counts: {
@@ -232,6 +243,7 @@ export class LessonsService {
         noShow,
         needsMakeup,
       },
+      packages,
     };
   }
 

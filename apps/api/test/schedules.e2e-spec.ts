@@ -471,6 +471,7 @@ describe('Work Packet 6.4 phase 2: schedules (e2e)', () => {
     expect(preview.body.existingScheduleId).toBeNull();
     expect(preview.body.conflicts[0]).toMatchObject({
       reason: 'STUDENT',
+      kind: 'REGULAR',
       teacher: { id: teacherB },
     });
     const directions = await get('/enrollments')

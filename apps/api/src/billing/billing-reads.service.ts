@@ -4,6 +4,7 @@ import {
   allocatePayments,
   creditWarning,
   isPackageValidAt,
+  pickPackage,
   type BalanceAllocation,
 } from '@tutorio/domain';
 import type {
@@ -226,6 +227,71 @@ export class BillingReadsService {
       }
     }
     return unpaid;
+  }
+
+  /**
+   * The package each package-paid direction uses now (L-81): the oldest valid
+   * one with a credit left, else the latest valid one (none left); with its
+   * credits left and its size. Directions paid per lesson, or with no valid
+   * package, are left out. Two queries, whatever the number of directions.
+   */
+  async currentPackages(
+    db: Db,
+    workspaceId: string,
+    enrollmentIds: readonly string[],
+  ): Promise<
+    { enrollmentId: string; packageId: string; left: number; total: number }[]
+  > {
+    if (enrollmentIds.length === 0) return [];
+    const packages = await db.lessonPackage.findMany({
+      where: {
+        workspaceId,
+        enrollmentId: { in: [...enrollmentIds] },
+        deletedAt: null,
+        enrollment: { billingType: 'PACKAGE' },
+      },
+      orderBy: [{ purchasedAt: 'asc' }, { id: 'asc' }],
+      select: {
+        id: true,
+        enrollmentId: true,
+        lessonsTotal: true,
+        purchasedAt: true,
+        validFrom: true,
+        expiresAt: true,
+        creditEntries: { select: { delta: true } },
+        _count: { select: { charges: { where: { voidedAt: null } } } },
+      },
+    });
+    const now = new Date();
+    const byDirection = new Map<string, typeof packages>();
+    for (const pkg of packages) {
+      byDirection.set(pkg.enrollmentId, [
+        ...(byDirection.get(pkg.enrollmentId) ?? []),
+        pkg,
+      ]);
+    }
+    return [...byDirection].flatMap(([enrollmentId, own]) => {
+      const valid = own
+        .map((pkg) => ({
+          ...pkg,
+          remaining:
+            pkg.creditEntries.reduce((sum, entry) => sum + entry.delta, 0) -
+            pkg._count.charges,
+        }))
+        .filter((pkg) => isPackageValidAt(pkg, now));
+      const pick =
+        valid.find((pkg) => pkg.id === pickPackage(valid, now)) ?? valid.at(-1);
+      return pick
+        ? [
+            {
+              enrollmentId,
+              packageId: pick.id,
+              left: Math.max(0, pick.remaining),
+              total: pick.lessonsTotal,
+            },
+          ]
+        : [];
+    });
   }
 
   private async thresholdOf(workspaceId: string): Promise<number> {

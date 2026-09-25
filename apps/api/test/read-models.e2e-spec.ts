@@ -183,6 +183,27 @@ describe('Work Packet 6.4 phase 7: read APIs (e2e)', () => {
       ]);
       expect(listed.body).toMatchObject({ total: 1, counts: { unpaid: 1 } });
     }
+
+    // The page names the package each package-paid direction uses now: the
+    // used-up one here (0 of 1); pay-per-lesson directions are left out.
+    const all = await page({ studentId: packaged });
+    expect(all.body.packages).toEqual([
+      {
+        enrollmentId: credited.enrollmentId,
+        packageId: expect.any(String),
+        left: 0,
+        total: 1,
+      },
+    ]);
+    expect((await page({ studentId: payer })).body.packages).toEqual([]);
+
+    // A new package pays first for the lesson on debt (L-82), then shows
+    // what is left of it: 2 of 3.
+    await sell(packaged, 3);
+    await book(packaged, at(3, 7));
+    expect((await page({ studentId: packaged })).body.packages).toMatchObject([
+      { enrollmentId: credited.enrollmentId, left: 2, total: 3 },
+    ]);
   });
 
   it('filters cancelled, no-show and lessons that need a makeup, with counts', async () => {
