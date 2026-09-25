@@ -17,7 +17,10 @@ const TITLE_SIZE = {
  * The page title block: the one `h1`, a subtitle and the page's primary
  * actions aligned to the title's baseline. `md` titles a working screen
  * (the calendar), `lg` a form page, `xl` a collection; `default` remains for
- * screens not yet migrated to Studio.
+ * screens not yet migrated to Studio. When the title and the actions do not
+ * fit one row (a tablet beside the sidebar, S09), the actions wrap under the
+ * title instead of running off the page; callers still pass a short label
+ * for narrow widths where they have one.
  */
 export function PageHeader({
   title,
@@ -36,7 +39,7 @@ export function PageHeader({
     <div
       className={cn(
         studio
-          ? 'flex flex-row items-end justify-between gap-3 md:gap-6'
+          ? 'flex flex-row flex-wrap items-end justify-between gap-3 md:gap-x-6'
           : 'flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between',
       )}
     >
