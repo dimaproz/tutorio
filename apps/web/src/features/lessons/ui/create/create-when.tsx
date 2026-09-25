@@ -1,6 +1,6 @@
 'use client';
 
-import { useId } from 'react';
+import { useId, type ReactNode } from 'react';
 import { TriangleAlertIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
@@ -103,9 +103,21 @@ function OnceDates({
 /**
  * «Щотижня»: the weekday pills across the width, a start time per picked day
  * in two columns, «З» and the optional «До» (hidden when the days are added
- * to an existing schedule: a change keeps the schedule's end).
+ * to an existing schedule: a change keeps the schedule's end). The schedule
+ * forms (S05) put their length and horizon `between` the times and the
+ * dates, name the dates their own way, or leave the dates out.
  */
-function WeeklyBlock({ addToExisting }: { addToExisting: boolean }) {
+export function WeeklyBlock({
+  addToExisting = false,
+  between,
+  dates = true,
+  labels,
+}: {
+  addToExisting?: boolean;
+  between?: ReactNode;
+  dates?: boolean;
+  labels?: { from: string; until: string; untilHint?: string };
+}) {
   const t = useTranslations('lessons.create');
   const tFields = useTranslations('lessons.fields');
   const form = useFormContext<CreateFormValues>();
@@ -200,12 +212,21 @@ function WeeklyBlock({ addToExisting }: { addToExisting: boolean }) {
           ))}
         </div>
       ) : null}
-      <div className="grid grid-cols-2 items-start gap-3">
-        {dateField('from', from, t('from'), undefined, errors.from?.message)}
-        {addToExisting
-          ? null
-          : dateField('until', until, t('until'), t('untilHint'), errors.until?.message)}
-      </div>
+      {between}
+      {dates ? (
+        <div className="grid grid-cols-2 items-start gap-3">
+          {dateField('from', from, labels?.from ?? t('from'), undefined, errors.from?.message)}
+          {addToExisting
+            ? null
+            : dateField(
+                'until',
+                until,
+                labels?.until ?? t('until'),
+                labels?.untilHint ?? t('untilHint'),
+                errors.until?.message,
+              )}
+        </div>
+      ) : null}
     </div>
   );
 }

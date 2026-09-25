@@ -2382,5 +2382,205 @@
       "text": "Check the connection and try again.",
       "retry": "Try again"
     }
+  },
+  "schedules": {
+    "title": "Schedules",
+    "new": "New schedule",
+    "newShort": "New",
+    "subtitle": {
+      "counts": "{active} active · {changing} changing · {week, plural, one {# lesson} other {# lessons}} this week",
+      "short": "{active} active · {changing} changing",
+      "empty": "Weekly lessons of students and groups"
+    },
+    "labels": {
+      "minutes": "{minutes} min each",
+      "hours": "{hours, number} h each"
+    },
+    "toolbar": {
+      "tabs": "Schedule state",
+      "tab": {
+        "ACTIVE": "Active",
+        "CHANGING": "Changing",
+        "ENDED": "Ended",
+        "all": "All"
+      },
+      "search": "Student, group or teacher",
+      "kindLabel": "Type",
+      "kind": {
+        "all": "All types",
+        "individual": "Individual",
+        "group": "Group"
+      },
+      "sort": {
+        "next": "Next lesson",
+        "created": "Newest first",
+        "current": "Order: {value}"
+      },
+      "reset": "Reset"
+    },
+    "list": {
+      "caption": "The studio's schedules",
+      "individual": "Individual",
+      "groupOf": "Group · {count, plural, one {# student} other {# students}}",
+      "today": "today {time}",
+      "bookedUntil": "booked until {date}",
+      "showing": "Showing {shown} of {total}",
+      "columns": {
+        "who": "Student or group",
+        "teacher": "Teacher",
+        "slots": "Days and time",
+        "status": "State",
+        "next": "Next",
+        "actions": "Actions"
+      }
+    },
+    "status": {
+      "active": "Active",
+      "until": "Until {date}",
+      "changing": "Changes {date}",
+      "ended": "Ended",
+      "sinceOpen": "from {from} · no end",
+      "sinceUntil": "from {from} · until {to}",
+      "endedRange": "{from} – {to}"
+    },
+    "menu": {
+      "label": "Actions for the schedule of {name}",
+      "change": "Change the schedule",
+      "horizon": "Weeks ahead",
+      "openStudent": "Open the student",
+      "openGroup": "Open the group",
+      "stop": "Stop the schedule"
+    },
+    "empty": {
+      "title": "No schedules yet",
+      "text": "A schedule creates the lessons every week, a few weeks ahead. Start with a student or a group.",
+      "new": "New schedule"
+    },
+    "noResults": {
+      "title": "No schedules match these filters",
+      "text": "Try another state or reset the filters.",
+      "textWith": "{summary}. Try another state or reset the filters.",
+      "reset": "Reset the filters"
+    },
+    "error": {
+      "title": "The schedules could not be loaded",
+      "text": "Check the connection and try again.",
+      "retry": "Try again"
+    },
+    "form": {
+      "title": "New schedule",
+      "subtitle": "Weekly lessons",
+      "description": "A student or a group, the teacher, the days with their times, the length and the first day.",
+      "noSchedule": "No schedule",
+      "teacherHint": "A schedule keeps one teacher",
+      "teacherHintGroup": "The group's teacher runs its schedule",
+      "horizon": "Weeks ahead",
+      "horizonStudio": "As in the studio",
+      "weeks": "{count, plural, one {# week} other {# weeks}}",
+      "from": "First lesson from",
+      "until": "Until",
+      "untilHint": "Optional — no end",
+      "willCreate": "Creates <strong>{count, plural, one {# lesson} other {# lessons}} until {date}</strong>",
+      "cancel": "Cancel",
+      "next": "Next",
+      "existsTitle": "{name} already has a schedule with {teacher}",
+      "existsText": "{rule} · {length}. One student, one schedule with a teacher: add the day to it.",
+      "openSchedule": "Open the schedule",
+      "created": "The schedule of {name} is created"
+    },
+    "check": {
+      "title": "Check the schedule",
+      "willCreate": "{count, plural, one {lesson will be created} other {lessons will be created}}",
+      "range": "{range} · {weeks, plural, one {# week} other {# weeks}} ahead",
+      "dates": "Dates",
+      "overlap": "overlap",
+      "new": "New",
+      "next": "What comes next",
+      "topUp": "Then — automatically",
+      "topUpText": "Every day the schedule adds lessons to keep {weeks, plural, one {# week} other {# weeks}} ahead",
+      "package": "Paid from {name}'s package",
+      "packageLeft": "{left} of {total} lessons left",
+      "packageLeftShort": "{left, plural, one {# lesson} other {# lessons}} left",
+      "packageDebt": "{left} of {total} lessons left — {debt} more go on debt unless it is extended",
+      "back": "Back",
+      "cancel": "Cancel",
+      "create": "Create the schedule",
+      "createAnyway": "Create despite overlaps",
+      "createShort": "Create"
+    },
+    "conflicts": {
+      "title": "{count, plural, one {# new lesson overlaps another one} other {# new lessons overlap others}}",
+      "explainOne": "On {date} at {time} {teacher} already teaches {kind, select, group {the group} other {a lesson with}} {name}.",
+      "explainMany": "On these days {teacher} already teaches {kind, select, group {the group} other {a lesson with}} {name} at {time}.",
+      "overlapsWith": "overlaps with",
+      "existing": "Already booked"
+    },
+    "weekdayCount": "{weekday, select, 0 {{count, plural, one {# Sunday} other {# Sundays}}} 1 {{count, plural, one {# Monday} other {# Mondays}}} 2 {{count, plural, one {# Tuesday} other {# Tuesdays}}} 3 {{count, plural, one {# Wednesday} other {# Wednesdays}}} 4 {{count, plural, one {# Thursday} other {# Thursdays}}} 5 {{count, plural, one {# Friday} other {# Fridays}}} other {{count, plural, one {# Saturday} other {# Saturdays}}}}",
+    "change": {
+      "title": "Change the schedule",
+      "now": "Now",
+      "effectiveFrom": "Changes take effect from",
+      "untouchedBefore": "Lessons before {date} stay as they are",
+      "fromToday": "From today: past lessons stay as they are",
+      "nextNote": "Next — what changes",
+      "cancel": "Cancel",
+      "next": "Next",
+      "resultTitle": "What changes from {date}",
+      "from": "From {date}",
+      "countMoved": "move",
+      "countRemoved": "are removed",
+      "countCreated": "are created",
+      "countKept": "untouched",
+      "afterChange": "After the change",
+      "impactLabel": "What the change does",
+      "movedDay": "{days} — to {time}",
+      "moved": "{count, plural, one {# lesson moves} other {# lessons move}}",
+      "movedText": "Topic, notes and history are kept",
+      "created": "{count, plural, one {# lesson is created} other {# lessons are created}}",
+      "removedDay": "{days} {count, plural, one {is removed} other {are removed}}",
+      "removed": "{count, plural, one {# lesson is removed} other {# lessons are removed}}",
+      "notesLost": "{count, plural, one {# loses its topic and notes} other {# lose their topic and notes}}",
+      "kept": "{count} untouched",
+      "back": "Back",
+      "save": "Save the changes",
+      "saveAnyway": "Save despite the overlap",
+      "saveShort": "Save",
+      "done": "The schedule of {name} changes from {date} · {moved} moved, {removed} removed"
+    },
+    "kept": {
+      "held": "held",
+      "cancelled": "cancelled",
+      "noShow": "no-show",
+      "moved": "moved by hand",
+      "marked": "marked"
+    },
+    "stop": {
+      "title": "Stop the schedule",
+      "from": "Stop from",
+      "fromHint": "Lessons before this date stay",
+      "impactLabel": "What happens",
+      "removed": "{count, plural, one {# lesson is removed} other {# lessons are removed}}",
+      "removedNone": "No lesson is removed",
+      "removedRange": "from {from} to {to}",
+      "keptMoved": "{count, plural, one {# stays — moved by hand} other {# stay — moved by hand}}",
+      "heldStay": "Held and cancelled lessons stay as they are",
+      "cancel": "Cancel",
+      "confirm": "Stop the schedule",
+      "done": "The schedule of {name} stops from {date} · {count, plural, one {# lesson removed} other {# lessons removed}}"
+    },
+    "horizon": {
+      "title": "Weeks ahead",
+      "label": "How many weeks ahead to create lessons",
+      "impactLabel": "What changes",
+      "added": "{count, plural, one {# lesson is added} other {# lessons are added}}",
+      "addedNone": "No lesson is added",
+      "bookedUntil": "The schedule is booked until {date}",
+      "studio": "The studio uses {count, plural, one {# week} other {# weeks}}",
+      "studioSame": "As in the studio",
+      "studioOwn": "This schedule gets its own horizon",
+      "cancel": "Cancel",
+      "save": "Save",
+      "done": "{name}: lessons {count, plural, one {# week} other {# weeks}} ahead"
+    }
   }
 }

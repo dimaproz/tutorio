@@ -7,3 +7,11 @@ export { useLessonMove, type LessonMoveSource } from './ui/use-lesson-move';
 export { BulkCancelDialog, type BulkCancelRange } from './ui/bulk-cancel/bulk-cancel-dialog';
 export { panelActions } from './model/panel-actions';
 export { invalidateLessonGraph } from './api';
+export {
+  ScheduleCreateDialog,
+  type ScheduleCreateInitial,
+} from './ui/schedule/schedule-create-dialog';
+export { ScheduleChangeDialog } from './ui/schedule/schedule-change-dialog';
+export { ScheduleStopDialog } from './ui/schedule/schedule-stop-dialog';
+export { ScheduleHorizonDialog } from './ui/schedule/schedule-horizon-dialog';
+export { SlotChips, useDayCode, useLengthLabel } from './ui/schedule/schedule-parts';

@@ -26,10 +26,12 @@ import type {
   ScheduleChangePreview,
   ScheduleChangeResult,
   ScheduleCreatePreview,
+  ScheduleHorizonPreview,
   ScheduleListResponse,
   ScheduleResponse,
   StudentBillingResponse,
   SetLessonAttendanceDto,
+  StopScheduleDto,
   TransitionLessonDto,
   UpdateLessonDto,
 } from '@tutorio/validation';
@@ -363,6 +365,74 @@ export function useBulkCancelMutation() {
       gatewayFetch<BulkCancelResult>('/api/backend/lessons/bulk-cancel', {
         method: 'POST',
         body: JSON.stringify(dto),
+      }),
+    onSuccess: () => invalidateLessonGraph(queryClient),
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Schedule change, stop and horizon (S05)
+// ---------------------------------------------------------------------------
+
+/** What stopping a schedule from a date would do (L-24). A read, not a save. */
+export function useScheduleStopPreviewQuery(
+  scheduleId: string | null,
+  dto: StopScheduleDto | null,
+) {
+  return useQuery<ScheduleChangePreview, GatewayError>({
+    queryKey: [...queryKeys.schedules.all, 'stopPreview', scheduleId, dto],
+    enabled: Boolean(scheduleId && dto),
+    placeholderData: (previous) => previous,
+    queryFn: () =>
+      gatewayFetch<ScheduleChangePreview>(`/api/backend/schedules/${scheduleId}/stop/preview`, {
+        method: 'POST',
+        body: JSON.stringify(dto),
+      }),
+  });
+}
+
+/** Stops a schedule from a date; its lessons from then on are removed (L-24). */
+export function useStopScheduleMutation() {
+  const queryClient = useQueryClient();
+  return useMutation<
+    ScheduleChangeResult,
+    GatewayError,
+    { scheduleId: string; dto: StopScheduleDto }
+  >({
+    mutationFn: ({ scheduleId, dto }) =>
+      gatewayFetch<ScheduleChangeResult>(`/api/backend/schedules/${scheduleId}/stop`, {
+        method: 'POST',
+        body: JSON.stringify(dto),
+      }),
+    onSuccess: () => invalidateLessonGraph(queryClient),
+  });
+}
+
+/** What a new horizon would add (L-22). A read, not a save. */
+export function useScheduleHorizonPreviewQuery(
+  scheduleId: string | null,
+  horizonWeeks: number | null,
+) {
+  return useQuery<ScheduleHorizonPreview, GatewayError>({
+    queryKey: [...queryKeys.schedules.all, 'horizonPreview', scheduleId, horizonWeeks],
+    enabled: Boolean(scheduleId && horizonWeeks),
+    placeholderData: (previous) => previous,
+    queryFn: () =>
+      gatewayFetch<ScheduleHorizonPreview>(`/api/backend/schedules/${scheduleId}/horizon/preview`, {
+        method: 'POST',
+        body: JSON.stringify({ horizonWeeks }),
+      }),
+  });
+}
+
+/** Sets how many weeks ahead a schedule keeps its lessons (L-22). */
+export function useUpdateScheduleHorizonMutation() {
+  const queryClient = useQueryClient();
+  return useMutation<ScheduleResponse, GatewayError, { scheduleId: string; horizonWeeks: number }>({
+    mutationFn: ({ scheduleId, horizonWeeks }) =>
+      gatewayFetch<ScheduleResponse>(`/api/backend/schedules/${scheduleId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ horizonWeeks }),
       }),
     onSuccess: () => invalidateLessonGraph(queryClient),
   });

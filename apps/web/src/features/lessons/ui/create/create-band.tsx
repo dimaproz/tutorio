@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import {
   BanknoteIcon,
   CalendarPlusIcon,
@@ -47,12 +47,18 @@ export function CreateBand({
   mobile,
   onClose,
   searchOnOpen = false,
+  heading,
 }: {
   data: CreateData;
   mobile: boolean;
   onClose: () => void;
   /** Opens the search at once (the "pick a student" state of the stories). */
   searchOnOpen?: boolean;
+  /**
+   * The schedule form (S05): its own title, icon and subtitle, and «Без
+   * розкладу» on a student who has no schedule with the teacher yet.
+   */
+  heading?: { title: string; subtitle: string; icon: ReactNode; noScheduleChip: string };
 }) {
   const t = useTranslations('lessons.create');
   const tLevel = useTranslations('languageLevel');
@@ -95,6 +101,8 @@ export function CreateBand({
 
   const scheduleChip = data.schedule ? (
     <WhoChip icon={<RepeatIcon />}>{slots(data.schedule.slots, { short: true })}</WhoChip>
+  ) : heading && who === 'student' && data.booking ? (
+    <WhoChip icon={<RepeatIcon />}>{heading.noScheduleChip}</WhoChip>
   ) : null;
 
   let body;
@@ -286,9 +294,9 @@ export function CreateBand({
 
   return (
     <LessonFormBand
-      icon={<CalendarPlusIcon />}
-      title={t('title')}
-      subtitle={subtitle}
+      icon={heading?.icon ?? <CalendarPlusIcon />}
+      title={heading?.title ?? t('title')}
+      subtitle={heading?.subtitle ?? subtitle}
       mobile={mobile}
       onClose={onClose}
     >

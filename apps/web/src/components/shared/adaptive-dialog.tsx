@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils';
 const WIDTH_CLASS = {
   md: 'sm:max-w-120',
   lg: 'sm:max-w-150',
+  xl: 'sm:max-w-180',
 } as const;
 
 function Heading({
@@ -168,7 +169,7 @@ export function AdaptiveDialog({
             ) : null}
           </DrawerHeader>
           {children ? (
-            <div className="scrollbar-thin flex min-h-0 flex-col gap-5 overflow-y-auto px-5 pt-5">
+            <div className="scrollbar-thin flex min-h-0 flex-col gap-5 overflow-y-auto px-5 pt-5 *:shrink-0">
               {children}
             </div>
           ) : null}
@@ -213,7 +214,7 @@ export function AdaptiveDialog({
           ) : null}
         </DialogHeader>
         {children ? (
-          <div className="scrollbar-thin -mx-1 flex min-h-0 flex-col gap-5 overflow-y-auto px-1 py-0.5">
+          <div className="scrollbar-thin -mx-1 flex min-h-0 flex-col gap-5 overflow-y-auto px-1 py-0.5 *:shrink-0">
             {children}
           </div>
         ) : null}

@@ -2382,5 +2382,205 @@
       "text": "Перевірте зʼєднання й спробуйте ще раз.",
       "retry": "Спробувати ще раз"
     }
+  },
+  "schedules": {
+    "title": "Розклади",
+    "new": "Новий розклад",
+    "newShort": "Новий",
+    "subtitle": {
+      "counts": "{active} активних · {changing} зі змінами · {week, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}} цього тижня",
+      "short": "{active} активних · {changing} зі змінами",
+      "empty": "Щотижневі заняття учнів і груп"
+    },
+    "labels": {
+      "minutes": "по {minutes} хв",
+      "hours": "по {hours, number} год"
+    },
+    "toolbar": {
+      "tabs": "Стан розкладів",
+      "tab": {
+        "ACTIVE": "Активні",
+        "CHANGING": "Зі змінами",
+        "ENDED": "Завершені",
+        "all": "Усі"
+      },
+      "search": "Учень, група або викладач",
+      "kindLabel": "Тип",
+      "kind": {
+        "all": "Усі типи",
+        "individual": "Індивідуальні",
+        "group": "Групові"
+      },
+      "sort": {
+        "next": "Наступне заняття",
+        "created": "Спочатку нові",
+        "current": "Порядок: {value}"
+      },
+      "reset": "Скинути"
+    },
+    "list": {
+      "caption": "Розклади студії",
+      "individual": "Індивідуальне",
+      "groupOf": "Група · {count, plural, one {# учень} few {# учні} many {# учнів} other {# учня}}",
+      "today": "сьогодні {time}",
+      "bookedUntil": "заплановано до {date}",
+      "showing": "Показано {shown} з {total}",
+      "columns": {
+        "who": "Учень або група",
+        "teacher": "Викладач",
+        "slots": "Дні й час",
+        "status": "Стан",
+        "next": "Наступне",
+        "actions": "Дії"
+      }
+    },
+    "status": {
+      "active": "Активний",
+      "until": "До {date}",
+      "changing": "Зміна з {date}",
+      "ended": "Завершено",
+      "sinceOpen": "з {from} · без кінця",
+      "sinceUntil": "з {from} · до {to}",
+      "endedRange": "{from} – {to}"
+    },
+    "menu": {
+      "label": "Дії з розкладом {name}",
+      "change": "Змінити розклад",
+      "horizon": "Заняття наперед",
+      "openStudent": "Відкрити учня",
+      "openGroup": "Відкрити групу",
+      "stop": "Зупинити розклад"
+    },
+    "empty": {
+      "title": "Ще немає розкладів",
+      "text": "Розклад сам створює заняття щотижня на кілька тижнів уперед. Почніть з учня чи групи.",
+      "new": "Новий розклад"
+    },
+    "noResults": {
+      "title": "Немає розкладів за цими фільтрами",
+      "text": "Спробуйте інший стан або скиньте фільтри.",
+      "textWith": "{summary}. Спробуйте інший стан або скиньте фільтри.",
+      "reset": "Скинути фільтри"
+    },
+    "error": {
+      "title": "Не вдалося завантажити розклади",
+      "text": "Перевірте зʼєднання й спробуйте ще раз.",
+      "retry": "Спробувати ще раз"
+    },
+    "form": {
+      "title": "Новий розклад",
+      "subtitle": "Щотижневі заняття",
+      "description": "Учень або група, викладач, дні з часом, тривалість і з якого дня.",
+      "noSchedule": "Без розкладу",
+      "teacherHint": "Для розкладу — постійний викладач",
+      "teacherHintGroup": "Викладач групи веде її розклад",
+      "horizon": "Заняття наперед",
+      "horizonStudio": "Як у студії",
+      "weeks": "{count, plural, one {# тиждень} few {# тижні} many {# тижнів} other {# тижня}}",
+      "from": "Перше заняття з",
+      "until": "До",
+      "untilHint": "Необовʼязково — без кінця",
+      "willCreate": "Створить <strong>{count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}} до {date}</strong>",
+      "cancel": "Скасувати",
+      "next": "Далі",
+      "existsTitle": "У {name} вже є розклад з {teacher}",
+      "existsText": "{rule} · {length}. Один учень — один розклад з викладачем: додайте день до наявного.",
+      "openSchedule": "Відкрити розклад",
+      "created": "Розклад {name} створено"
+    },
+    "check": {
+      "title": "Перевірте розклад",
+      "willCreate": "{count, plural, one {заняття буде створено} few {заняття буде створено} many {занять буде створено} other {заняття буде створено}}",
+      "range": "{range} · {weeks, plural, one {# тиждень} few {# тижні} many {# тижнів} other {# тижня}} наперед",
+      "dates": "Дати",
+      "overlap": "накладка",
+      "new": "Нове",
+      "next": "Що далі",
+      "topUp": "Далі — автоматично",
+      "topUpText": "Щодня розклад додає заняття, щоб їх було на {weeks, plural, one {# тиждень} few {# тижні} many {# тижнів} other {# тижня}} вперед",
+      "package": "Спишуться з пакета {name}",
+      "packageLeft": "{left} з {total} занять лишилось",
+      "packageLeftShort": "Лишилось {left, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}}",
+      "packageDebt": "{left} з {total} занять лишилось — ще {debt} піде в борг, якщо не продовжити",
+      "back": "Назад",
+      "cancel": "Скасувати",
+      "create": "Створити розклад",
+      "createAnyway": "Створити попри накладки",
+      "createShort": "Створити"
+    },
+    "conflicts": {
+      "title": "{count, plural, one {# нове заняття перетинається з іншим} few {# нові заняття перетинаються з іншими} many {# нових занять перетинаються з іншими} other {# нового заняття перетинаються з іншими}}",
+      "explainOne": "У {date} о {time} {teacher} уже веде {kind, select, group {групу} other {заняття з}} {name}.",
+      "explainMany": "У ці дні {teacher} уже веде {kind, select, group {групу} other {заняття з}} {name} о {time}.",
+      "overlapsWith": "перетинається з",
+      "existing": "Вже є"
+    },
+    "weekdayCount": "{weekday, select, 0 {{count, plural, one {# неділя} few {# неділі} other {# неділь}}} 1 {{count, plural, one {# понеділок} few {# понеділки} other {# понеділків}}} 2 {{count, plural, one {# вівторок} few {# вівторки} other {# вівторків}}} 3 {{count, plural, one {# середа} few {# середи} other {# серед}}} 4 {{count, plural, one {# четвер} few {# четверги} other {# четвергів}}} 5 {{count, plural, one {# пʼятниця} few {# пʼятниці} other {# пʼятниць}}} other {{count, plural, one {# субота} few {# суботи} other {# субот}}}}",
+    "change": {
+      "title": "Змінити розклад",
+      "now": "Зараз",
+      "effectiveFrom": "Зміни діють з",
+      "untouchedBefore": "Заняття до {date} не зміняться",
+      "fromToday": "З сьогодні: минулі заняття не зміняться",
+      "nextNote": "Далі — що зміниться",
+      "cancel": "Скасувати",
+      "next": "Далі",
+      "resultTitle": "Що зміниться з {date}",
+      "from": "З {date}",
+      "countMoved": "перенесуться",
+      "countRemoved": "видаляться",
+      "countCreated": "створяться",
+      "countKept": "не зачеплені",
+      "afterChange": "Після зміни",
+      "impactLabel": "Наслідки зміни",
+      "movedDay": "{days} — на {time}",
+      "moved": "{count, plural, one {# заняття перенесеться} few {# заняття перенесуться} many {# занять перенесуться} other {# заняття перенесуться}}",
+      "movedText": "Тема, нотатки й історія зберігаються",
+      "created": "{count, plural, one {# заняття створиться} few {# заняття створяться} many {# занять створяться} other {# заняття створяться}}",
+      "removedDay": "{days} {count, plural, one {видаляється} few {видаляються} many {видаляються} other {видаляються}}",
+      "removed": "{count, plural, one {# заняття видаляється} few {# заняття видаляються} many {# занять видаляються} other {# заняття видаляються}}",
+      "notesLost": "{count, plural, one {# втратить тему й нотатки} few {# втратять тему й нотатки} many {# втратять тему й нотатки} other {# втратять тему й нотатки}}",
+      "kept": "{count, plural, one {# не зачеплене} few {# не зачеплені} many {# не зачеплені} other {# не зачеплені}}",
+      "back": "Назад",
+      "save": "Зберегти зміни",
+      "saveAnyway": "Зберегти попри накладку",
+      "saveShort": "Зберегти",
+      "done": "Розклад {name} зміниться з {date} · {moved} перенесено, {removed} видалено"
+    },
+    "kept": {
+      "held": "проведене",
+      "cancelled": "скасоване",
+      "noShow": "не прийшов",
+      "moved": "перенесене вручну",
+      "marked": "з відмітками"
+    },
+    "stop": {
+      "title": "Зупинити розклад",
+      "from": "Зупинити з",
+      "fromHint": "Заняття до цієї дати лишаться",
+      "impactLabel": "Що станеться",
+      "removed": "{count, plural, one {# заняття видалиться} few {# заняття видаляться} many {# занять видаляться} other {# заняття видаляться}}",
+      "removedNone": "Жодне заняття не видалиться",
+      "removedRange": "з {from} до {to}",
+      "keptMoved": "{count, plural, one {# лишається — перенесене вручну} few {# лишаються — перенесені вручну} many {# лишаються — перенесені вручну} other {# лишаються — перенесені вручну}}",
+      "heldStay": "Проведені й скасовані не зміняться",
+      "cancel": "Скасувати",
+      "confirm": "Зупинити розклад",
+      "done": "Розклад {name} зупинено з {date} · {count, plural, one {видалено # заняття} few {видалено # заняття} many {видалено # занять} other {видалено # заняття}}"
+    },
+    "horizon": {
+      "title": "Заняття наперед",
+      "label": "Скільки тижнів наперед створювати заняття",
+      "impactLabel": "Що зміниться",
+      "added": "Додасться {count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}}",
+      "addedNone": "Нових занять не додасться",
+      "bookedUntil": "Розклад буде заповнений до {date}",
+      "studio": "У студії — {count, plural, one {# тиждень} few {# тижні} many {# тижнів} other {# тижня}}",
+      "studioSame": "Як у студії",
+      "studioOwn": "Цей розклад матиме свій горизонт",
+      "cancel": "Скасувати",
+      "save": "Зберегти",
+      "done": "Розклад {name}: заняття на {count, plural, one {# тиждень} few {# тижні} many {# тижнів} other {# тижня}} наперед"
+    }
   }
 }
