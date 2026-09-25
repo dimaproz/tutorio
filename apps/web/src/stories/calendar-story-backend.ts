@@ -274,7 +274,9 @@ const SCHEDULE: ScheduleResponse = {
   ],
   nextChange: null,
   nextLessonAt: local(9, 25, 17),
-  student: { id: STUDENTS.anna.id, fullName: STUDENTS.anna.fullName },
+  startsAt: '2026-09-01T00:00:00.000Z',
+  lastLessonAt: local(10, 23, 17),
+  student: { id: STUDENTS.anna.id, fullName: STUDENTS.anna.fullName, avatarKey: null },
   group: null,
   teacher: { id: DMYTRO.id, name: DMYTRO.name },
   createdAt: '2026-09-01T10:00:00.000Z',
@@ -290,6 +292,10 @@ const PREVIEW: ScheduleChangePreview = {
   kept: 1,
   notesLost: [],
   conflicts: [],
+  moves: [],
+  removals: [],
+  creates: [],
+  keptLessons: [],
 };
 
 /** The boards' week for the pattern stories: Dmytro's fifteen lessons, then Iryna's and Oleh's. */

@@ -169,6 +169,8 @@ const baseSchedule = {
   endsAt: null,
   state: 'ACTIVE' as const,
   nextChange: null,
+  startsAt: '2026-09-01T06:00:00.000Z',
+  lastLessonAt: null,
   teacher: DMYTRO,
   createdAt: '2026-08-25T08:00:00.000Z',
   updatedAt: '2026-09-01T06:00:00.000Z',
@@ -186,7 +188,7 @@ const ANNA_SCHEDULE: ScheduleResponse = {
     { weekday: 5, localTime: '17:00', seriesId: '13131313-1313-4131-b131-000000000002' },
   ],
   nextLessonAt: kyivAutumn(10, 2, 17),
-  student: { id: CREATE_STUDENT_ID, fullName: 'Anna Shevchenko' },
+  student: { id: CREATE_STUDENT_ID, fullName: 'Anna Shevchenko', avatarKey: null },
   group: null,
 };
 
@@ -203,7 +205,7 @@ const GROUP_SCHEDULE: ScheduleResponse = {
   ],
   nextLessonAt: kyivAutumn(10, 1, 18),
   student: null,
-  group: { id: CREATE_GROUP_ID, name: 'B2 prep · evening' },
+  group: { id: CREATE_GROUP_ID, name: 'B2 prep · evening', memberCount: 6 },
 };
 
 /** Oleksii is on a break until 12 October. */
@@ -289,6 +291,10 @@ const PREVIEW: ScheduleChangePreview = {
   kept: 0,
   notesLost: [],
   conflicts: [],
+  moves: [],
+  removals: [],
+  creates: [],
+  keptLessons: [],
 };
 
 const CONFLICTS: ScheduleConflict[] = [

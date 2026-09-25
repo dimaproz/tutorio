@@ -579,6 +579,8 @@ const SCHEDULE: ScheduleResponse = {
   ],
   nextChange: null,
   nextLessonAt: kyiv(11, 17),
+  startsAt: '2026-09-01T06:00:00.000Z',
+  lastLessonAt: kyiv(32, 17),
   student: ANNA,
   group: null,
   teacher: { id: DMYTRO.id, name: DMYTRO.name },
@@ -597,7 +599,7 @@ const GROUP_SCHEDULE: ScheduleResponse = {
     { weekday: 4, localTime: '18:00', seriesId: '13131313-1313-4131-a131-000000000004' },
   ],
   student: null,
-  group: { id: LESSON_GROUP_UPCOMING, name: 'B2 prep · evening' },
+  group: { id: LESSON_GROUP_UPCOMING, name: 'B2 prep · evening', memberCount: 6 },
 };
 
 const PREVIEW: ScheduleChangePreview = {
@@ -612,6 +614,10 @@ const PREVIEW: ScheduleChangePreview = {
     { lessonId: lessonId(41), startsAtUtc: kyiv(32, 17), topic: null, hasNotes: true },
   ],
   conflicts: [],
+  moves: [],
+  removals: [],
+  creates: [],
+  keptLessons: [],
 };
 
 /** What a move to Friday 18:30 overlaps (board 10, variant C). */
