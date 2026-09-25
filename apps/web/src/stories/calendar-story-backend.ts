@@ -405,7 +405,8 @@ export function createCalendarRoutes(options: CalendarStoryOptions) {
         pageSize: 1,
         total: next.length,
         totalPages: 1,
-        counts: { unpaid: 0, cancelled: 0, noShow: 0, needsMakeup: 0 },
+        counts: { all: next.length, unpaid: 0, cancelled: 0, noShow: 0, needsMakeup: 0 },
+        packages: [],
       });
     }
 
@@ -427,6 +428,7 @@ export function createCalendarRoutes(options: CalendarStoryOptions) {
                 startsAtUtc: other.startsAtUtc,
                 durationMin: other.durationMin,
                 reason: 'TEACHER',
+                kind: other.kind,
                 teacher: { id: other.teacher.id, name: other.teacher.name },
                 student: other.student
                   ? { id: other.student.id, fullName: other.student.fullName }

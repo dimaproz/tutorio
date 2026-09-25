@@ -6,7 +6,7 @@ import { RepeatIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import type { LessonPanelIntent } from '@/features/lessons';
-import { needsMakeup, paymentView } from '../model/payment';
+import { needsMakeup, paymentView, type PackageState } from '../model/payment';
 import {
   PaymentCell,
   PriceCell,
@@ -35,12 +35,15 @@ export function useLessonsColumns({
   now,
   quick,
   teacherAvatars,
+  packageOf,
   onOpen,
 }: {
   solo: boolean;
   now: number;
   quick: string;
   teacherAvatars: Map<string, string | null>;
+  /** The package the lesson's direction pays with now. */
+  packageOf: (lesson: ListLesson) => PackageState | null;
   onOpen: (lessonId: string, intent?: LessonPanelIntent) => void;
 }) {
   const t = useTranslations('lessonList');
@@ -109,7 +112,7 @@ export function useLessonsColumns({
               {t('assign')}
             </Button>
           ) : (
-            <PaymentCell view={paymentView(row.original)} />
+            <PaymentCell view={paymentView(row.original, packageOf(row.original))} />
           ),
       },
       {
@@ -128,5 +131,5 @@ export function useLessonsColumns({
       },
     ];
     return columns;
-  }, [now, onOpen, quick, solo, t, teacherAvatars, when]);
+  }, [now, onOpen, packageOf, quick, solo, t, teacherAvatars, when]);
 }

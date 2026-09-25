@@ -2045,7 +2045,8 @@
       "meta": "{time} · {kind} · {who}",
       "kind": {
         "individual": "індивідуальне",
-        "group": "група"
+        "group": "група",
+        "makeup": "відпрацювання"
       },
       "change": "Змінити час",
       "saveAnyway": "Зберегти все одно"
@@ -2350,7 +2351,8 @@
       "groupPaid": "{paid} з {total} оплатили",
       "later": "Оплата після",
       "free": "Безкоштовне",
-      "noCharge": "Без списання"
+      "noCharge": "Без списання",
+      "packageState": "Пакет · {left} з {total}"
     },
     "perStudent": "з учня",
     "assign": "Призначити",
@@ -2513,7 +2515,8 @@
       "explainOne": "У {date} о {time} {teacher} уже веде {kind, select, group {групу} other {заняття з}} {name}.",
       "explainMany": "У ці дні {teacher} уже веде {kind, select, group {групу} other {заняття з}} {name} о {time}.",
       "overlapsWith": "перетинається з",
-      "existing": "Вже є"
+      "existing": "Вже є",
+      "existingMakeup": "Вже є · відпрацювання"
     },
     "weekdayCount": "{weekday, select, 0 {{count, plural, one {# неділя} few {# неділі} other {# неділь}}} 1 {{count, plural, one {# понеділок} few {# понеділки} other {# понеділків}}} 2 {{count, plural, one {# вівторок} few {# вівторки} other {# вівторків}}} 3 {{count, plural, one {# середа} few {# середи} other {# серед}}} 4 {{count, plural, one {# четвер} few {# четверги} other {# четвергів}}} 5 {{count, plural, one {# пʼятниця} few {# пʼятниці} other {# пʼятниць}}} other {{count, plural, one {# субота} few {# суботи} other {# субот}}}}",
     "change": {

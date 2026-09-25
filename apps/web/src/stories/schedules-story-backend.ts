@@ -272,6 +272,7 @@ function createConflicts(dates: readonly string[]): ScheduleConflict[] {
         startsAtUtc: booked.toISOString(),
         durationMin: 90,
         reason: 'TEACHER',
+        kind: 'REGULAR',
         teacher: DMYTRO,
         student: null,
         group: B2,
@@ -320,6 +321,7 @@ function sofiiaPreview(conflicts: boolean): ScheduleChangePreview {
             startsAtUtc: local(10, 6, 18),
             durationMin: 60,
             reason: 'TEACHER',
+            kind: 'MAKEUP',
             teacher: IRYNA,
             student: { id: studentId(3), fullName: 'Maksym Tkachenko' },
             group: null,
@@ -446,6 +448,7 @@ export function createSchedulesRoutes(options: SchedulesStoryOptions) {
         total: 38,
         totalPages: 38,
         counts: { all: 38, unpaid: 0, cancelled: 0, noShow: 0, needsMakeup: 0 },
+        packages: [],
       });
     }
 

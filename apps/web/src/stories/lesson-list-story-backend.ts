@@ -106,7 +106,8 @@ function lesson(
   return {
     id: lessonId(counter),
     workspaceId: WORKSPACE,
-    enrollmentId: isGroup ? null : enrollmentId(counter),
+    // One direction per student, so a package's state reads the same on every row.
+    enrollmentId: isGroup ? null : enrollmentId(Number((who as Student).id.slice(-12))),
     groupId: isGroup ? who.id : null,
     seriesId: null,
     teacherId: teacher.id,
@@ -272,6 +273,19 @@ export type LessonListStoryOptions = {
   };
 };
 
+/** The package each package-paid direction uses now: Sofiia has 3 of 8 left. */
+const PACKAGE_STATES = [
+  { student: STUDENTS.sofiia, left: 3, total: 8 },
+  { student: STUDENTS.anna, left: 5, total: 8 },
+  { student: STUDENTS.viktoriia, left: 1, total: 8 },
+  { student: STUDENTS.taras, left: 6, total: 10 },
+].map(({ student, left, total }, index) => ({
+  enrollmentId: enrollmentId(Number(student.id.slice(-12))),
+  packageId: `77777777-7777-4777-d777-${pad(index + 1)}`,
+  left,
+  total,
+}));
+
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
 
@@ -374,8 +388,12 @@ export function createLessonListRoutes(options: LessonListStoryOptions) {
       const order = query.get('order') === 'asc' ? 1 : -1;
       rows.sort((a, b) => order * a.startsAtUtc.localeCompare(b.startsAtUtc));
       const page = Number(query.get('page') ?? 1);
+      const items = rows.slice((page - 1) * pageSize, page * pageSize);
       return json({
-        items: rows.slice((page - 1) * pageSize, page * pageSize),
+        items,
+        packages: PACKAGE_STATES.filter((state) =>
+          items.some((item) => item.enrollmentId === state.enrollmentId),
+        ),
         page,
         pageSize,
         total: rows.length,

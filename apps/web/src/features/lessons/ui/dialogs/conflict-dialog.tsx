@@ -122,7 +122,13 @@ export function ConflictDialog({
                 title={title}
                 meta={t('meta', {
                   time: range(dates, conflict),
-                  kind: t(group ? 'kind.group' : 'kind.individual'),
+                  kind: t(
+                    group
+                      ? 'kind.group'
+                      : conflict.kind === 'MAKEUP'
+                        ? 'kind.makeup'
+                        : 'kind.individual',
+                  ),
                   who: teacherDoubled || !students ? conflict.teacher.name : students,
                 })}
               />

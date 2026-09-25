@@ -182,7 +182,7 @@ export function PaymentCell({ view, className }: { view: PaymentView; className?
     case 'package':
       return (
         <Mark tone="brand" className={className}>
-          {t('package')}
+          {view.state ? t('packageState', view.state) : t('package')}
         </Mark>
       );
     case 'group':

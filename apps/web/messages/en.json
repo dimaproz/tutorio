@@ -2045,7 +2045,8 @@
       "meta": "{time} · {kind} · {who}",
       "kind": {
         "individual": "individual",
-        "group": "group"
+        "group": "group",
+        "makeup": "makeup"
       },
       "change": "Change the time",
       "saveAnyway": "Save anyway"
@@ -2350,7 +2351,8 @@
       "groupPaid": "{paid} of {total} paid",
       "later": "Paid after",
       "free": "Free",
-      "noCharge": "Not charged"
+      "noCharge": "Not charged",
+      "packageState": "Package · {left} of {total}"
     },
     "perStudent": "per student",
     "assign": "Assign",
@@ -2513,7 +2515,8 @@
       "explainOne": "On {date} at {time} {teacher} already teaches {kind, select, group {the group} other {a lesson with}} {name}.",
       "explainMany": "On these days {teacher} already teaches {kind, select, group {the group} other {a lesson with}} {name} at {time}.",
       "overlapsWith": "overlaps with",
-      "existing": "Already booked"
+      "existing": "Already booked",
+      "existingMakeup": "Already booked · makeup"
     },
     "weekdayCount": "{weekday, select, 0 {{count, plural, one {# Sunday} other {# Sundays}}} 1 {{count, plural, one {# Monday} other {# Mondays}}} 2 {{count, plural, one {# Tuesday} other {# Tuesdays}}} 3 {{count, plural, one {# Wednesday} other {# Wednesdays}}} 4 {{count, plural, one {# Thursday} other {# Thursdays}}} 5 {{count, plural, one {# Friday} other {# Fridays}}} other {{count, plural, one {# Saturday} other {# Saturdays}}}}",
     "change": {

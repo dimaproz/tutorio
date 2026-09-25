@@ -149,6 +149,7 @@ describe('schedule change (L-25, L-26)', () => {
         startsAtUtc: candidate,
         durationMin: 90,
         reason: 'TEACHER',
+        kind: 'REGULAR',
         teacher: { id: 't', name: 'Dmytro' },
         student: null,
         group: { id: 'g', name: 'B2 prep' },

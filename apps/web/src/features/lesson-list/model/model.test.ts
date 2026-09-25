@@ -138,7 +138,12 @@ describe('payment cell (S04 decision 6)', () => {
     expect(paymentView(lesson({ charges: [charge('DEBT', false)] }))).toEqual({ kind: 'debt' });
     expect(paymentView(lesson({ charges: [charge('PACKAGE', true)] }))).toEqual({
       kind: 'package',
+      state: null,
     });
+    // With the direction's package now: «Пакет · 3 з 8».
+    expect(
+      paymentView(lesson({ charges: [charge('PACKAGE', true)] }), { left: 3, total: 8 }),
+    ).toEqual({ kind: 'package', state: { left: 3, total: 8 } });
     expect(
       paymentView(
         lesson({
@@ -151,6 +156,14 @@ describe('payment cell (S04 decision 6)', () => {
 
   it('says what happens before a lesson is charged', () => {
     expect(paymentView(lesson({ status: 'SCHEDULED' }))).toEqual({ kind: 'later' });
+    // A lesson ahead in a package-paid direction shows the package that will pay.
+    expect(paymentView(lesson({ status: 'SCHEDULED' }), { left: 3, total: 8 })).toEqual({
+      kind: 'package',
+      state: { left: 3, total: 8 },
+    });
+    expect(
+      paymentView(lesson({ status: 'SCHEDULED', priceMinor: 0 }), { left: 3, total: 8 }),
+    ).toEqual({ kind: 'free' });
     expect(paymentView(lesson({ status: 'SCHEDULED', priceMinor: 0 }))).toEqual({ kind: 'free' });
     expect(paymentView(lesson({ status: 'CANCELLED_UNCHARGED' }))).toEqual({ kind: 'noCharge' });
   });

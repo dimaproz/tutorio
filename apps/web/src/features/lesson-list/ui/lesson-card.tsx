@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { DateTile } from '@/components/shared/date-tile';
 import type { LessonPanelIntent } from '@/features/lessons';
 import { useLocalFormatter } from '@/lib/i18n/local-formatter';
-import { needsMakeup, paymentView } from '../model/payment';
+import { needsMakeup, paymentView, type PackageState } from '../model/payment';
 import { dayKey } from '../model/filters';
 import { PaymentCell, PriceCell, StatusCell, useLessonWhen, type ListLesson } from './lesson-cells';
 
@@ -20,12 +20,15 @@ export function LessonCard({
   now,
   solo,
   quick,
+  pkg,
   onOpen,
 }: {
   lesson: ListLesson;
   now: number;
   solo: boolean;
   quick: string;
+  /** The package the lesson's direction pays with now. */
+  pkg: PackageState | null;
   onOpen: (lessonId: string, intent?: LessonPanelIntent) => void;
 }) {
   const t = useTranslations('lessonList');
@@ -75,7 +78,7 @@ export function LessonCard({
             {t('assign')}
           </Button>
         ) : (
-          <PaymentCell view={paymentView(lesson)} className="ml-auto" />
+          <PaymentCell view={paymentView(lesson, pkg)} className="ml-auto" />
         )}
       </div>
     </article>

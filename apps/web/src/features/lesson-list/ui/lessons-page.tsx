@@ -116,11 +116,22 @@ export function LessonsPage({ nowMs }: { nowMs?: number } = {}) {
     (lessonId: string, intent?: LessonPanelIntent) => panel.open(lessonId, intent ?? null),
     [panel],
   );
+  const pagePackages = data?.packages;
+  const packages = useMemo(
+    () => new Map((pagePackages ?? []).map((pkg) => [pkg.enrollmentId, pkg])),
+    [pagePackages],
+  );
+  const packageOf = useCallback(
+    (lesson: { enrollmentId: string | null; groupId: string | null }) =>
+      lesson.enrollmentId && !lesson.groupId ? (packages.get(lesson.enrollmentId) ?? null) : null,
+    [packages],
+  );
   const columns = useLessonsColumns({
     solo,
     now,
     quick: state.quick,
     teacherAvatars,
+    packageOf,
     onOpen: openLesson,
   });
 
@@ -262,6 +273,7 @@ export function LessonsPage({ nowMs }: { nowMs?: number } = {}) {
                   now={now}
                   solo={solo}
                   quick={state.quick}
+                  pkg={packageOf(lesson)}
                   onOpen={openLesson}
                 />
               ))

@@ -70,6 +70,8 @@ export const Playground: Story = {
       within(table).getByRole('button', { name: /Open the lesson: Kids A1 · weekend/ }),
     );
     await expect(within(table).getAllByText('Paid after').length).toBeGreaterThan(0);
+    // A package-paid direction shows what is left of its package now.
+    await expect(within(table).getAllByText('Package · 3 of 8').length).toBeGreaterThan(0);
     await visible(canvas.getByRole('radio', { name: /Unpaid/ }));
     await visible(canvas.getByRole('button', { name: 'Period: September 2026' }));
   },

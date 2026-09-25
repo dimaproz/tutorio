@@ -304,6 +304,7 @@ const CONFLICTS: ScheduleConflict[] = [
     startsAtUtc: local(10, 1, 18),
     durationMin: 90,
     reason: 'TEACHER',
+    kind: 'REGULAR',
     teacher: DMYTRO,
     student: null,
     group: { id: CREATE_GROUP_ID, name: 'B2 prep · evening' },

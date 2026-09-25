@@ -312,6 +312,8 @@ export const ChangeConflict: Story = {
       await body().findByRole('dialog', { name: 'What changes from October 1' }),
     );
     await visible(result.getByText('1 new lesson overlaps another one'));
+    // The booked lesson is a makeup, and the pair says so.
+    await visible(result.getByText('Already booked · makeup'));
     await userEvent.click(result.getByRole('button', { name: 'Save despite the overlap' }));
     await visible(await body().findByText(/changes from October 1/));
   },

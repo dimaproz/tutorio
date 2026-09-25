@@ -373,7 +373,7 @@ export function ConflictPairs({
                   {hits.map((hit) => (
                     <PairCard
                       key={hit.lessonId}
-                      label={t('existing')}
+                      label={hit.kind === 'MAKEUP' ? t('existingMakeup') : t('existing')}
                       name={nameOf(hit)}
                       time={range(hit.startsAtUtc, hit.durationMin)}
                     />

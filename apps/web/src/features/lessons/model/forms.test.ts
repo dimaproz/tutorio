@@ -179,6 +179,7 @@ describe('move', () => {
       startsAtUtc: '2026-09-11T15:00:00.000Z',
       durationMin: 90,
       reason: 'TEACHER',
+      kind: 'REGULAR',
       teacher: { id: '55555555-5555-4555-8555-555555555555', name: 'Dmytro Tutor' },
       student: null,
       group: { id: '99999999-9999-4999-8999-000000000001', name: 'B2 prep' },

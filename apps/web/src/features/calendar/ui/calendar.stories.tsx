@@ -277,7 +277,8 @@ export const MonthMore: Story = {
     const canvas = within(canvasElement);
     await userEvent.click((await canvas.findAllByRole('button', { name: /\+1 more/ }))[0]!);
     const list = within(await within(document.body).findByRole('dialog'));
-    await expect(list.getByRole('button', { name: 'Open the day' })).toBeVisible();
+    // The day list fades in: wait for it rather than catch it mid-animation.
+    await waitFor(() => expect(list.getByRole('button', { name: 'Open the day' })).toBeVisible());
     await userEvent.click(list.getByRole('button', { name: 'Open the day' }));
     await expect(await canvas.findByRole('radio', { name: 'Day', checked: true })).toBeVisible();
   },
