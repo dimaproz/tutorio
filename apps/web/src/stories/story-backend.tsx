@@ -23,6 +23,7 @@ import {
 } from './lesson-create-story-backend';
 import { createLessonListRoutes, type LessonListStoryOptions } from './lesson-list-story-backend';
 import { createLessonRoutes, type LessonStoryOptions } from './lesson-story-backend';
+import { createSchedulesRoutes, type SchedulesStoryOptions } from './schedules-story-backend';
 
 /**
  * A deterministic, in-memory backend for screen stories. It answers the same
@@ -349,6 +350,7 @@ export const SAMPLE_LESSONS: LessonResponse[] = [
 export type StoryBackendOptions = GroupStoryOptions &
   CalendarStoryOptions &
   LessonListStoryOptions &
+  SchedulesStoryOptions &
   LessonStoryOptions &
   LessonCreateStoryOptions & {
     students?: SampleStudent[];
@@ -487,6 +489,7 @@ function createHandler(options: StoryBackendOptions) {
   const groupRoutes = createGroupRoutes(options);
   const calendarRoutes = createCalendarRoutes(options);
   const lessonListRoutes = createLessonListRoutes(options);
+  const schedulesRoutes = createSchedulesRoutes(options);
   const lessonRoutes = createLessonRoutes(options);
   const lessonCreateRoutes = createLessonCreateRoutes(options);
   const settle = () =>
@@ -514,6 +517,8 @@ function createHandler(options: StoryBackendOptions) {
     }
 
     const readBody = () => JSON.parse(String(init?.body ?? '{}'));
+    const schedulesResponse = await schedulesRoutes(path, method, query, readBody);
+    if (schedulesResponse) return schedulesResponse;
     const lessonListResponse = await lessonListRoutes(path, method, query, readBody);
     if (lessonListResponse) return lessonListResponse;
     const calendarResponse = await calendarRoutes(path, method, query, readBody);
