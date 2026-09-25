@@ -434,6 +434,8 @@ export const scheduleConflictSchema = z.object({
   lessonId: uuidSchema,
   startsAtUtc: isoDateTimeSchema,
   durationMin: durationMinSchema,
+  /** The booked lesson's kind: a makeup is named so in the conflict. */
+  kind: lessonKindSchema,
   reason: z.enum(['TEACHER', 'STUDENT']),
   teacher: z.object({ id: uuidSchema, name: z.string() }),
   student: studentRefSchema.nullable(),
@@ -501,6 +503,19 @@ export const lessonPageResponseSchema = paginatedResponseSchema(lessonResponseSc
     noShow: z.number().int().nonnegative(),
     needsMakeup: z.number().int().nonnegative(),
   }),
+  /**
+   * The package each of the page's package-paid directions uses now: the
+   * oldest valid one with a credit left (L-81), else the latest valid one;
+   * its credits left and its size («Пакет · 3 з 8»).
+   */
+  packages: z.array(
+    z.object({
+      enrollmentId: uuidSchema,
+      packageId: uuidSchema,
+      left: z.number().int(),
+      total: z.number().int().nonnegative(),
+    }),
+  ),
 });
 
 export type LessonPageResponse = z.infer<typeof lessonPageResponseSchema>;
