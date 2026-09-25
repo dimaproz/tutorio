@@ -240,7 +240,21 @@ describe('Work Packet 6.4 phase 2: schedules (e2e)', () => {
       kept: 0,
       notesLost: [],
       conflicts: [],
+      creates: [],
+      keptLessons: [],
     });
+    // The counts come with the lessons behind them.
+    expect(preview.body.moves).toHaveLength(preview.body.moved);
+    expect(preview.body.moves).toContainEqual({
+      lessonId: thursday.id,
+      startsAtUtc: slotAt(0, 4, 10),
+      toStartsAtUtc: slotAt(0, 4, 12),
+    });
+    expect(
+      preview.body.removals.map(
+        (removal: { lessonId: string }) => removal.lessonId,
+      ),
+    ).toEqual(pastEdge.map((lesson) => lesson.id));
 
     const applied = await post(`/schedules/${schedules.Anna}/changes`)
       .send(change)
@@ -353,7 +367,17 @@ describe('Work Packet 6.4 phase 2: schedules (e2e)', () => {
       kept: 1,
       moved: 0,
       created: 0,
+      moves: [],
+      creates: [],
+      keptLessons: [
+        {
+          lessonId: handMoved.id,
+          startsAtUtc: slotAt(1, 3, 14),
+          reason: 'MOVED',
+        },
+      ],
     });
+    expect(preview.body.removals).toHaveLength(lessons.length - 1);
 
     const stopped = await post(`/schedules/${scheduleId}/stop`)
       .send({})
@@ -388,6 +412,23 @@ describe('Work Packet 6.4 phase 2: schedules (e2e)', () => {
       horizonWeeks: 2,
     }).expect(201);
     const short = (await lessonsOf(students.Clara)).length;
+
+    // The preview names the lessons saving would add, and writes nothing.
+    const preview = await post(`/schedules/${created.body.id}/horizon/preview`)
+      .send({ horizonWeeks: 6 })
+      .expect(200);
+    expect(preview.body).toMatchObject({ horizonWeeks: 6, added: 4 });
+    expect(preview.body.dates).toHaveLength(4);
+    expect(preview.body.lastLessonAt).toBe(preview.body.dates[3]);
+    expect((await lessonsOf(students.Clara)).length).toBe(short);
+    expect(
+      (await get(`/schedules/${created.body.id}`).expect(200)).body
+        .horizonWeeks,
+    ).toBe(2);
+    const shorter = await post(`/schedules/${created.body.id}/horizon/preview`)
+      .send({ horizonWeeks: 1 })
+      .expect(200);
+    expect(shorter.body).toMatchObject({ added: 0, dates: [] });
 
     const updated = await patch(`/schedules/${created.body.id}`)
       .send({ horizonWeeks: 6 })
@@ -424,6 +465,9 @@ describe('Work Packet 6.4 phase 2: schedules (e2e)', () => {
       .expect(200);
     expect(preview.body.created).toBeGreaterThanOrEqual(3);
     expect(preview.body.firstLessonAt).toBe(slotAt(0, 3, 16));
+    expect(preview.body.dates).toHaveLength(preview.body.created);
+    expect(preview.body.dates[0]).toBe(slotAt(0, 3, 16));
+    expect(preview.body.dates[1]).toBe(slotAt(1, 3, 16));
     expect(preview.body.existingScheduleId).toBeNull();
     expect(preview.body.conflicts[0]).toMatchObject({
       reason: 'STUDENT',
@@ -471,6 +515,77 @@ describe('Work Packet 6.4 phase 2: schedules (e2e)', () => {
       .expect(200);
     expect(listed.body.items.map((item: { id: string }) => item.id)).toContain(
       created.body.id,
+    );
+    expect(created.body.group).toEqual({
+      id: group.body.id,
+      name: 'Schedules B2',
+      memberCount: 0,
+    });
+  });
+
+  it('lists schedules by state with counts, kind, search and the next lesson', async () => {
+    type Item = {
+      id: string;
+      state: string;
+      nextLessonAt: string | null;
+      startsAt: string | null;
+      lastLessonAt: string | null;
+      student: { id: string; avatarKey: string | null } | null;
+      group: { id: string } | null;
+    };
+    const list = async (query: Record<string, string>) =>
+      (await get('/schedules').query(query).expect(200)).body as {
+        items: Item[];
+        total: number;
+        counts: Record<string, number>;
+      };
+
+    // Anna's schedule has a change planned (the previous test moved Tuesdays
+    // from week 1); Bohdan's first schedule ended.
+    const active = await list({});
+    expect(active.counts).toEqual({ active: 5, changing: 1, ended: 1, all: 6 });
+    expect(active.total).toBe(5);
+    expect(
+      (await list({ state: 'CHANGING' })).items.map((item) => item.id),
+    ).toEqual([schedules.Anna]);
+    expect((await list({ state: 'ENDED' })).items).toHaveLength(1);
+
+    const groups = await list({ kind: 'group' });
+    expect(groups.items.map((item) => item.group !== null)).toEqual([true]);
+    // Counts follow the other filters.
+    expect(groups.counts).toEqual({ active: 1, changing: 0, ended: 0, all: 1 });
+    expect((await list({ kind: 'individual', state: 'all' })).total).toBe(5);
+
+    // Search by the student's, the group's or the teacher's name.
+    const clara = await list({ search: 'clara s' });
+    expect(clara.items.map((item) => item.student?.id)).toEqual([
+      students.Clara,
+    ]);
+    expect(clara.items[0]).toMatchObject({
+      startsAt: base.toISOString(),
+      student: { avatarKey: null },
+    });
+    expect(clara.items[0].lastLessonAt! >= clara.items[0].nextLessonAt!).toBe(
+      true,
+    );
+    expect((await list({ search: 'Teacher SB', state: 'all' })).total).toBe(3);
+
+    // Soonest next lesson first; a schedule with none goes last.
+    const byNext = await list({ state: 'all', sort: 'next' });
+    const nexts = byNext.items.map((item) => item.nextLessonAt);
+    const withNext = nexts.filter((value): value is string => value !== null);
+    expect(withNext).toEqual([...withNext].sort());
+    expect(nexts.slice(withNext.length).every((value) => value === null)).toBe(
+      true,
+    );
+    const paged = await list({
+      state: 'all',
+      sort: 'next',
+      pageSize: '2',
+      page: '2',
+    });
+    expect(paged.items.map((item) => item.id)).toEqual(
+      byNext.items.slice(2, 4).map((item) => item.id),
     );
   });
 });

@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, type LessonSeries, type Schedule } from '@prisma/client';
+import {
+  Prisma,
+  type Lesson,
+  type LessonSeries,
+  type Schedule,
+} from '@prisma/client';
 import {
   expandSchedule,
   localDateStartUtc,
@@ -11,11 +16,13 @@ import {
 } from '@tutorio/domain';
 import type {
   CreateScheduleDto,
+  KeptReasonDto,
   ListSchedulesQueryDto,
   ScheduleChangeDto,
   ScheduleChangePreview,
   ScheduleChangeResult,
   ScheduleCreatePreview,
+  ScheduleHorizonPreview,
   ScheduleListResponse,
   ScheduleResponse,
   StopScheduleDto,
@@ -34,6 +41,7 @@ import {
   teacherNotFound,
 } from '../common/business.errors';
 import { buildPaginatedResponse, toSkipTake } from '../common/pagination';
+import { liveEnrollmentWhere } from '../groups/groups.shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { detectScheduleConflicts } from './conflicts';
 import {
@@ -66,11 +74,21 @@ export interface NewSchedule {
 
 const scheduleInclude = {
   enrollment: {
-    select: { student: { select: { id: true, fullName: true } } },
+    select: {
+      student: { select: { id: true, fullName: true, avatarKey: true } },
+    },
   },
-  group: { select: { id: true, name: true } },
+  group: {
+    select: {
+      id: true,
+      name: true,
+      _count: { select: { enrollments: { where: liveEnrollmentWhere } } },
+    },
+  },
   teacher: { select: { id: true, fullName: true } },
 } satisfies Prisma.ScheduleInclude;
+
+type ScheduleAvatarKey = NonNullable<ScheduleResponse['student']>['avatarKey'];
 
 type ScheduleRow = Prisma.ScheduleGetPayload<{
   include: typeof scheduleInclude;
@@ -143,26 +161,153 @@ export class SchedulesService {
     auth: AuthenticatedUser,
     query: ListSchedulesQueryDto,
   ): Promise<ScheduleListResponse> {
-    const where: Prisma.ScheduleWhereInput = {
+    const now = new Date();
+    const contains = query.search
+      ? { contains: query.search, mode: 'insensitive' as const }
+      : null;
+    // Every filter but the state: the state tabs count against it.
+    const base: Prisma.ScheduleWhereInput = {
       workspaceId: auth.workspaceId,
-      ...(query.state === 'all' ? {} : { state: query.state }),
       ...(query.teacherId ? { teacherId: query.teacherId } : {}),
       ...(query.groupId ? { groupId: query.groupId } : {}),
       ...(query.studentId
         ? { enrollment: { studentId: query.studentId } }
         : {}),
+      ...(query.kind === 'group' ? { groupId: { not: null } } : {}),
+      ...(query.kind === 'individual' ? { groupId: null } : {}),
+      ...(contains
+        ? {
+            OR: [
+              { enrollment: { student: { fullName: contains } } },
+              { group: { name: contains } },
+              { teacher: { fullName: contains } },
+            ],
+          }
+        : {}),
     };
-    const [rows, total] = await Promise.all([
-      this.prisma.schedule.findMany({
-        where,
-        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-        ...toSkipTake(query),
-        include: scheduleInclude,
-      }),
+    const changing = await this.changingScheduleIds(this.prisma, base, now);
+    const where: Prisma.ScheduleWhereInput =
+      query.state === 'all'
+        ? base
+        : query.state === 'CHANGING'
+          ? { AND: [base, { id: { in: changing } }] }
+          : { AND: [base, { state: query.state }] };
+
+    const [total, active, ended, all] = await Promise.all([
       this.prisma.schedule.count({ where }),
+      this.prisma.schedule.count({
+        where: { AND: [base, { state: 'ACTIVE' }] },
+      }),
+      this.prisma.schedule.count({
+        where: { AND: [base, { state: 'ENDED' }] },
+      }),
+      this.prisma.schedule.count({ where: base }),
     ]);
+    const rows =
+      query.sort === 'next'
+        ? await this.pageByNextLesson(where, query, now)
+        : await this.prisma.schedule.findMany({
+            where,
+            orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+            ...toSkipTake(query),
+            include: scheduleInclude,
+          });
     const items = await this.toResponses(this.prisma, rows);
-    return buildPaginatedResponse(items, total, query);
+    return {
+      ...buildPaginatedResponse(items, total, query),
+      counts: { active, changing: changing.length, ended, all },
+    };
+  }
+
+  /**
+   * The active schedules with a change planned for later: a rule that starts
+   * after the one in force now (the same reading as `nextChange`).
+   */
+  private async changingScheduleIds(
+    db: Prisma.TransactionClient,
+    where: Prisma.ScheduleWhereInput,
+    now: Date,
+  ): Promise<string[]> {
+    const rows = await db.lessonSeries.findMany({
+      where: {
+        schedule: { AND: [where, { state: 'ACTIVE' }] },
+        ...liveRowWhere,
+      },
+      select: { id: true, scheduleId: true, startDate: true, endsAt: true },
+    });
+    const bySchedule = new Map<string, typeof rows>();
+    for (const row of rows) {
+      bySchedule.set(row.scheduleId, [
+        ...(bySchedule.get(row.scheduleId) ?? []),
+        row,
+      ]);
+    }
+    return [...bySchedule]
+      .filter(([, own]) => {
+        const current = currentVersionRows(own, now);
+        return own.some(
+          (row) =>
+            row.startDate > now &&
+            !current.includes(row) &&
+            (!row.endsAt || row.endsAt > now),
+        );
+      })
+      .map(([id]) => id);
+  }
+
+  /**
+   * One page of schedules by their next lesson, soonest first; schedules with
+   * none follow, newest first. The next lesson is not a column, so the order
+   * is worked out over the ids that match (a studio has hundreds at most).
+   */
+  private async pageByNextLesson(
+    where: Prisma.ScheduleWhereInput,
+    query: ListSchedulesQueryDto,
+    now: Date,
+  ): Promise<ScheduleRow[]> {
+    const matching = await this.prisma.schedule.findMany({
+      where,
+      select: { id: true, createdAt: true },
+    });
+    const ids = matching.map((schedule) => schedule.id);
+    const [series, next] = await Promise.all([
+      this.prisma.lessonSeries.findMany({
+        where: { scheduleId: { in: ids } },
+        select: { id: true, scheduleId: true },
+      }),
+      this.prisma.lesson.groupBy({
+        by: ['seriesId'],
+        where: {
+          series: { scheduleId: { in: ids } },
+          deletedAt: null,
+          status: 'SCHEDULED',
+          startsAtUtc: { gte: now },
+        },
+        _min: { startsAtUtc: true },
+      }),
+    ]);
+    const scheduleOf = new Map(series.map((row) => [row.id, row.scheduleId]));
+    const nextOf = new Map<string, number>();
+    for (const entry of next) {
+      const scheduleId = entry.seriesId && scheduleOf.get(entry.seriesId);
+      const at = entry._min.startsAtUtc?.getTime();
+      if (!scheduleId || at === undefined) continue;
+      nextOf.set(scheduleId, Math.min(nextOf.get(scheduleId) ?? at, at));
+    }
+    const ordered = [...matching].sort((left, right) => {
+      const a = nextOf.get(left.id) ?? Infinity;
+      const b = nextOf.get(right.id) ?? Infinity;
+      if (a !== b) return a < b ? -1 : 1;
+      return right.createdAt.getTime() - left.createdAt.getTime();
+    });
+    const { skip, take } = toSkipTake(query);
+    const pageIds = ordered.slice(skip, skip + take).map((row) => row.id);
+    const rows = await this.prisma.schedule.findMany({
+      where: { id: { in: pageIds } },
+      include: scheduleInclude,
+    });
+    const byId = new Map(rows.map((row) => [row.id, row]));
+    return pageIds.flatMap((id) => byId.get(id) ?? []);
   }
 
   async getDetail(
@@ -200,6 +345,7 @@ export class SchedulesService {
           startsAtUtc: { gte: now },
         },
         _min: { startsAtUtc: true },
+        _max: { startsAtUtc: true },
       }),
     ]);
     const rows = allRows.filter(
@@ -215,6 +361,13 @@ export class SchedulesService {
     const nextBySeries = new Map(
       next.map((entry) => [entry.seriesId, entry._min.startsAtUtc]),
     );
+    const lastBySeries = new Map(
+      next.map((entry) => [entry.seriesId, entry._max.startsAtUtc]),
+    );
+    const dates = (values: (Date | null | undefined)[]) =>
+      values
+        .filter((value): value is Date => value instanceof Date)
+        .sort((a, b) => a.getTime() - b.getTime());
 
     return schedules.map((schedule) => {
       const own = rowsBySchedule.get(schedule.id) ?? [];
@@ -231,11 +384,14 @@ export class SchedulesService {
       const nextRows = later.filter(
         (row) => row.startDate.getTime() === nextStart,
       );
-      const nextLessonAt = allRows
-        .filter((row) => row.scheduleId === schedule.id)
-        .map((row) => nextBySeries.get(row.id))
-        .filter((value): value is Date => value instanceof Date)
-        .sort((a, b) => a.getTime() - b.getTime())[0];
+      const everyRow = allRows.filter((row) => row.scheduleId === schedule.id);
+      const nextLessonAt = dates(
+        everyRow.map((row) => nextBySeries.get(row.id)),
+      )[0];
+      const lastLessonAt = dates(
+        everyRow.map((row) => lastBySeries.get(row.id)),
+      ).at(-1);
+      const startsAt = dates(everyRow.map((row) => row.startDate))[0];
       return {
         id: schedule.id,
         workspaceId: schedule.workspaceId,
@@ -264,8 +420,22 @@ export class SchedulesService {
               }
             : null,
         nextLessonAt: nextLessonAt?.toISOString() ?? null,
-        student: schedule.enrollment?.student ?? null,
-        group: schedule.group,
+        startsAt: startsAt?.toISOString() ?? null,
+        lastLessonAt: lastLessonAt?.toISOString() ?? null,
+        student: schedule.enrollment
+          ? {
+              ...schedule.enrollment.student,
+              avatarKey: schedule.enrollment.student
+                .avatarKey as ScheduleAvatarKey,
+            }
+          : null,
+        group: schedule.group
+          ? {
+              id: schedule.group.id,
+              name: schedule.group.name,
+              memberCount: schedule.group._count.enrollments,
+            }
+          : null,
         teacher: { id: schedule.teacher.id, name: schedule.teacher.fullName },
         createdAt: schedule.createdAt.toISOString(),
         updatedAt: schedule.updatedAt.toISOString(),
@@ -491,6 +661,9 @@ export class SchedulesService {
       );
       return {
         created: occurrences.length,
+        dates: occurrences.map((occurrence) =>
+          occurrence.startsAtUtc.toISOString(),
+        ),
         firstLessonAt: occurrences[0]?.startsAtUtc.toISOString() ?? null,
         existingScheduleId: existing?.id ?? null,
         conflicts,
@@ -872,7 +1045,7 @@ export class SchedulesService {
         !lesson.isDetached &&
         lesson._count.attendance === 0,
     );
-    const kept = lessons.length - changeable.length;
+    const keptLessons = keptLessonsOf(lessons, changeable);
 
     const horizon = this.materializer.horizonUntil(now, schedule.horizonWeeks);
     const lastExisting = Math.max(
@@ -930,13 +1103,33 @@ export class SchedulesService {
       { excludeIds: changeable.map((lesson) => lesson.id) },
     );
 
+    const moved = plan.moves.filter((move) => {
+      const lesson = byId.get(move.lessonId)!;
+      return (
+        lesson.startsAtUtc.getTime() !== move.to.startsAtUtc.getTime() ||
+        lesson.durationMin !== dto.durationMin
+      );
+    });
     const preview: ScheduleChangePreview = {
       effectiveFrom: effectiveFrom.toISOString(),
       moved: plan.moves.length - unchanged,
       unchanged,
       created: plan.creates.length,
       removed: plan.removes.length,
-      kept,
+      kept: keptLessons.length,
+      moves: moved.map((move) => ({
+        lessonId: move.lessonId,
+        startsAtUtc: byId.get(move.lessonId)!.startsAtUtc.toISOString(),
+        toStartsAtUtc: move.to.startsAtUtc.toISOString(),
+      })),
+      removals: plan.removes.map((id) => ({
+        lessonId: id,
+        startsAtUtc: byId.get(id)!.startsAtUtc.toISOString(),
+      })),
+      creates: plan.creates.map((occurrence) =>
+        occurrence.startsAtUtc.toISOString(),
+      ),
+      keptLessons,
       notesLost: plan.removes.flatMap((id) => {
         const lesson = byId.get(id)!;
         return lesson.topic || lesson.notes
@@ -1095,13 +1288,21 @@ export class SchedulesService {
         !lesson.isDetached &&
         lesson._count.attendance === 0,
     );
+    const keptLessons = keptLessonsOf(lessons, removable);
     const preview: ScheduleChangePreview = {
       effectiveFrom: from.toISOString(),
       moved: 0,
       unchanged: 0,
       created: 0,
       removed: removable.length,
-      kept: lessons.length - removable.length,
+      kept: keptLessons.length,
+      moves: [],
+      removals: removable.map((lesson) => ({
+        lessonId: lesson.id,
+        startsAtUtc: lesson.startsAtUtc.toISOString(),
+      })),
+      creates: [],
+      keptLessons,
       notesLost: removable
         .filter((lesson) => lesson.topic || lesson.notes)
         .map((lesson) => ({
@@ -1133,28 +1334,7 @@ export class SchedulesService {
   ): Promise<ScheduleResponse> {
     await this.prisma.$transaction(async (tx) => {
       const schedule = await this.activeSchedule(tx, auth, scheduleId);
-      await tx.schedule.update({
-        where: { id: schedule.id },
-        data: { horizonWeeks: dto.horizonWeeks },
-      });
-      const now = new Date();
-      const rows = await tx.lessonSeries.findMany({
-        where: {
-          scheduleId: schedule.id,
-          deletedAt: null,
-          OR: [{ endsAt: null }, { endsAt: { gt: now } }],
-        },
-      });
-      const horizon = this.materializer.horizonUntil(now, dto.horizonWeeks);
-      for (const row of rows) {
-        await this.materializer.materializeSeries(
-          tx,
-          row,
-          horizon,
-          row.startDate > now ? row.startDate : now,
-          true,
-        );
-      }
+      await this.applyHorizon(tx, schedule, dto.horizonWeeks);
       await this.audit.record(tx, {
         workspaceId: auth.workspaceId,
         actorId: auth.userId,
@@ -1170,6 +1350,81 @@ export class SchedulesService {
     return this.getDetail(auth, scheduleId);
   }
 
+  /**
+   * What saving a horizon would add, found by saving it in a transaction that
+   * is then rolled back, so the preview can never drift from the apply.
+   */
+  async previewHorizon(
+    auth: AuthenticatedUser,
+    scheduleId: string,
+    dto: UpdateScheduleDto,
+  ): Promise<ScheduleHorizonPreview> {
+    // Filled inside the transaction that is then rolled back.
+    const result: { preview?: ScheduleHorizonPreview } = {};
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        const schedule = await this.activeSchedule(tx, auth, scheduleId);
+        const added = await this.applyHorizon(tx, schedule, dto.horizonWeeks);
+        const last = await tx.lesson.aggregate({
+          where: {
+            series: { scheduleId: schedule.id },
+            deletedAt: null,
+            status: 'SCHEDULED',
+            startsAtUtc: { gte: new Date() },
+          },
+          _max: { startsAtUtc: true },
+        });
+        result.preview = {
+          horizonWeeks: dto.horizonWeeks,
+          added: added.length,
+          dates: added.map((date) => date.toISOString()),
+          lastLessonAt: last._max.startsAtUtc?.toISOString() ?? null,
+        };
+        throw new HorizonPreviewRollback();
+      });
+    } catch (error) {
+      if (!(error instanceof HorizonPreviewRollback)) throw error;
+    }
+    return result.preview!;
+  }
+
+  /**
+   * Sets the horizon and generates the weeks it adds; a shorter horizon keeps
+   * what is booked. Returns the starts of the lessons it created.
+   */
+  private async applyHorizon(
+    tx: Prisma.TransactionClient,
+    schedule: Schedule,
+    horizonWeeks: number,
+  ): Promise<Date[]> {
+    await tx.schedule.update({
+      where: { id: schedule.id },
+      data: { horizonWeeks },
+    });
+    const now = new Date();
+    const rows = await tx.lessonSeries.findMany({
+      where: {
+        scheduleId: schedule.id,
+        deletedAt: null,
+        OR: [{ endsAt: null }, { endsAt: { gt: now } }],
+      },
+    });
+    const horizon = this.materializer.horizonUntil(now, horizonWeeks);
+    const created: Date[] = [];
+    for (const row of rows) {
+      created.push(
+        ...(await this.materializer.materializeSeries(
+          tx,
+          row,
+          horizon,
+          row.startDate > now ? row.startDate : now,
+          true,
+        )),
+      );
+    }
+    return created.sort((a, b) => a.getTime() - b.getTime());
+  }
+
   private async activeSchedule(
     tx: Prisma.TransactionClient,
     auth: AuthenticatedUser,
@@ -1182,6 +1437,37 @@ export class SchedulesService {
     if (schedule.state !== 'ACTIVE') throw scheduleEnded();
     return schedule;
   }
+}
+
+/** Thrown to roll a horizon preview's transaction back. */
+class HorizonPreviewRollback extends Error {}
+
+/**
+ * The lessons a change or a stop leaves alone, soonest first, and why (L-27):
+ * held, cancelled or missed, moved by hand, or with attendance marked.
+ */
+function keptLessonsOf<
+  T extends {
+    id: string;
+    startsAtUtc: Date;
+    status: Lesson['status'];
+    isDetached: boolean;
+  },
+>(lessons: readonly T[], touched: readonly T[]) {
+  const reasonOf = (lesson: T): KeptReasonDto => {
+    if (lesson.status === 'COMPLETED') return 'HELD';
+    if (lesson.status === 'NO_SHOW') return 'NO_SHOW';
+    if (lesson.status !== 'SCHEDULED') return 'CANCELLED';
+    return lesson.isDetached ? 'MOVED' : 'MARKED';
+  };
+  return lessons
+    .filter((lesson) => !touched.includes(lesson))
+    .sort((a, b) => a.startsAtUtc.getTime() - b.startsAtUtc.getTime())
+    .map((lesson) => ({
+      lessonId: lesson.id,
+      startsAtUtc: lesson.startsAtUtc.toISOString(),
+      reason: reasonOf(lesson),
+    }));
 }
 
 /** The calendar day after "yyyy-MM-dd": an inclusive end date's boundary. */

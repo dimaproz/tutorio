@@ -219,6 +219,29 @@ describe('Work Packet 6.4 phase 7: read APIs (e2e)', () => {
     ]);
     expect(await ids({ filter: 'cancelled' })).toEqual([cancelled.id]);
     expect(await ids({ filter: 'no_show' })).toEqual([missed.id]);
+    // "All" keeps counting every lesson while a quick filter narrows the page.
+    expect((await page({ studentId, filter: 'cancelled' })).body).toMatchObject(
+      { total: 1, counts: { all: 3, cancelled: 1 } },
+    );
+    // Several statuses at once, as a list or a repeated parameter.
+    expect(await ids({ status: 'NO_SHOW,CANCELLED_UNCHARGED' })).toEqual([
+      cancelled.id,
+      missed.id,
+    ]);
+    expect(
+      (
+        await get(
+          `/lessons/list?studentId=${studentId}&status=COMPLETED&status=NO_SHOW`,
+        ).expect(200)
+      ).body.items.map((lesson: Lesson) => lesson.id),
+    ).toEqual([missed.id, held.id]);
+    await get('/lessons/list?status=HELD').expect(400);
+    // Search by the student's name, in any case.
+    expect(
+      (await page({ search: `filters ${runId}` })).body.items.map(
+        (lesson: Lesson) => lesson.id,
+      ),
+    ).toEqual([cancelled.id, missed.id, held.id]);
     expect(await ids({ filter: 'needs_makeup' })).toEqual([
       cancelled.id,
       missed.id,

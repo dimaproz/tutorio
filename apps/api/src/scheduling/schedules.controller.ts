@@ -34,6 +34,7 @@ import {
   ScheduleChangeResultDto,
   ScheduleCreatePreviewDto,
   ScheduleDto,
+  ScheduleHorizonPreviewDto,
   ScheduleListDto,
   StopScheduleDto,
   UpdateScheduleDto,
@@ -135,6 +136,27 @@ export class SchedulesController {
     @Body() dto: UpdateScheduleDto,
   ): Promise<ScheduleDto> {
     return this.schedules.update(user, scheduleId, dto);
+  }
+
+  @Post(':scheduleId/horizon/preview')
+  @HttpCode(HttpStatus.OK)
+  @Roles('OWNER')
+  @ApiOperation({
+    summary: 'Preview a new horizon',
+    description:
+      'Exactly what saving the horizon would do: the lessons it generates ' +
+      'now and the last lesson booked then. A shorter horizon keeps what is ' +
+      'booked and adds nothing. Writes nothing.',
+  })
+  @ApiOkResponse({ type: ScheduleHorizonPreviewDto })
+  @ApiNotFoundResponse({ type: ApiErrorDto })
+  @ZodSerializerDto(ScheduleHorizonPreviewDto)
+  previewHorizon(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('scheduleId', ParseUUIDPipe) scheduleId: string,
+    @Body() dto: UpdateScheduleDto,
+  ): Promise<ScheduleHorizonPreviewDto> {
+    return this.schedules.previewHorizon(user, scheduleId, dto);
   }
 
   @Post(':scheduleId/changes/preview')

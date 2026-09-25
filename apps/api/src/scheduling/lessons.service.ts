@@ -162,8 +162,24 @@ export class LessonsService {
           }
         : {}),
       ...(query.groupId ? { groupId: query.groupId } : {}),
-      ...(query.status ? { status: query.status } : {}),
+      ...(query.status ? { status: { in: query.status } } : {}),
     };
+    if (query.search) {
+      const contains = {
+        contains: query.search,
+        mode: 'insensitive' as const,
+      };
+      // Its own AND, so it never replaces the student filter's OR.
+      base.AND = [
+        {
+          OR: [
+            { enrollment: { student: { fullName: contains } } },
+            { group: { name: contains } },
+            { teacher: { fullName: contains } },
+          ],
+        },
+      ];
+    }
     const unpaid = await this.billingReads.unpaidLessonIds(
       this.prisma,
       auth.workspaceId,
@@ -192,7 +208,7 @@ export class LessonsService {
       : base;
     const count = (filter: LessonQuickFilterDto) =>
       this.prisma.lesson.count({ where: { AND: [base, quick[filter]] } });
-    const [rows, total, unpaidCount, cancelled, noShow, needsMakeup] =
+    const [rows, total, all, unpaidCount, cancelled, noShow, needsMakeup] =
       await Promise.all([
         this.prisma.lesson.findMany({
           where,
@@ -201,6 +217,7 @@ export class LessonsService {
           include: lessonInclude,
         }),
         this.prisma.lesson.count({ where }),
+        query.filter ? this.prisma.lesson.count({ where: base }) : null,
         count('unpaid'),
         count('cancelled'),
         count('no_show'),
@@ -208,7 +225,13 @@ export class LessonsService {
       ]);
     return {
       ...buildPaginatedResponse(await this.respond(rows), total, query),
-      counts: { unpaid: unpaidCount, cancelled, noShow, needsMakeup },
+      counts: {
+        all: all ?? total,
+        unpaid: unpaidCount,
+        cancelled,
+        noShow,
+        needsMakeup,
+      },
     };
   }
 
