@@ -1,4 +1,5 @@
 import type { LessonResponse } from '@tutorio/validation';
+import { addCalendarDays, dayStartIso, zonedDateTime } from '@/lib/datetime';
 
 /** A lesson as the busy checks need it. */
 export type BusyLesson = Pick<
@@ -21,9 +22,9 @@ export type BusyScope = {
 
 const MINUTE = 60_000;
 
-/** A local wall-clock "yyyy-MM-dd" + "HH:mm" as an instant, like the forms submit it. */
-export function localInstant(date: string, time: string): number {
-  return new Date(`${date}T${time}`).getTime();
+/** A studio wall-clock "yyyy-MM-dd" + "HH:mm" as an instant, like the forms submit it. */
+export function localInstant(date: string, time: string, timeZone: string): number {
+  return zonedDateTime(date, time, timeZone).getTime();
 }
 
 /** A cancelled lesson frees its slot (the API does not count it as a conflict). */
@@ -70,11 +71,12 @@ export function busySlots(
   scope: BusyScope,
   date: string,
   slots: readonly string[],
+  timeZone: string,
 ): Record<string, string> {
   const marks: Record<string, string> = {};
   if (!date) return marks;
   for (const slot of slots) {
-    const hit = overlapping(lessons, scope, localInstant(date, slot), 1)[0];
+    const hit = overlapping(lessons, scope, localInstant(date, slot, timeZone), 1)[0];
     if (hit) marks[slot] = busyName(hit);
   }
   return marks;
@@ -94,11 +96,14 @@ export function teacherBusyAt(
 }
 
 /** The days a set of rows covers, as the one read window [first day, last day + 1). */
-export function daysWindow(dates: readonly string[]): { from: string; to: string } | null {
+export function daysWindow(
+  dates: readonly string[],
+  timeZone: string,
+): { from: string; to: string } | null {
   const valid = dates.filter((date) => /^\d{4}-\d{2}-\d{2}$/.test(date)).sort();
   if (valid.length === 0) return null;
-  const from = new Date(`${valid[0]}T00:00`);
-  const to = new Date(`${valid.at(-1)}T00:00`);
-  to.setDate(to.getDate() + 1);
-  return { from: from.toISOString(), to: to.toISOString() };
+  return {
+    from: dayStartIso(valid[0]!, timeZone),
+    to: dayStartIso(addCalendarDays(valid.at(-1)!, 1), timeZone),
+  };
 }

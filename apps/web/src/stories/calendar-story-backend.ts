@@ -5,6 +5,7 @@ import type {
   ScheduleResponse,
   TeacherResponse,
 } from '@tutorio/validation';
+import { DEFAULT_TIME_ZONE, calendarWeekday, zonedIso } from '@/lib/datetime';
 
 /**
  * The calendar's stories (S03): the boards' week of 21–27 September 2026 for
@@ -26,9 +27,10 @@ const enrollmentId = (n: number) => `66666666-6666-4666-c666-${pad(n)}`;
 const SCHEDULE_ID = '12121212-1212-4121-c121-000000000001';
 const SERIES_ID = '13131313-1313-4131-c131-000000000001';
 
-/** A wall-clock time in the browser's zone. */
+const pad2 = (n: number) => String(n).padStart(2, '0');
+/** A wall-clock time on the studio's (Kyiv) clock, as the stories' next-intl reads it. */
 const local = (month: 9 | 10, day: number, hour: number, minute = 0) =>
-  new Date(2026, month - 1, day, hour, minute).toISOString();
+  zonedIso(`2026-${pad2(month)}-${pad2(day)}`, `${pad2(hour)}:${pad2(minute)}`, DEFAULT_TIME_ZONE);
 
 /** The calendar's clock: Thursday 24 September, 18:40. */
 export const CALENDAR_CLOCK = Date.parse(local(9, 24, 18, 40));
@@ -219,7 +221,7 @@ function septemberAround(): LessonResponse[] {
   let index = 0;
   for (let day = 1; day <= 30; day += 1) {
     if (day >= 21 && day <= 27) continue;
-    const weekday = new Date(2026, 8, day).getDay();
+    const weekday = calendarWeekday(`2026-09-${pad2(day)}`);
     for (const minute of perWeekday[weekday] ?? []) {
       const who = cycle[index % cycle.length]!;
       index += 1;

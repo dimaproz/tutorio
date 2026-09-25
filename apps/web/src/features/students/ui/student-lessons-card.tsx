@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { addDays, startOfDay, subDays } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import { useFormatter, useTranslations } from 'next-intl';
 import type { LessonResponse } from '@tutorio/validation';
@@ -9,6 +8,8 @@ import { EmptyState } from '@/components/shared/empty-state';
 import { LessonList, type LessonListItem } from '@/components/shared/lesson-list';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLessonsQuery } from '@/lib/api/scheduling';
+import { addCalendarDays, dayStartIso, zonedDate } from '@/lib/datetime';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 import {
   isLessonRunning,
   lessonBuckets,
@@ -25,15 +26,15 @@ const MORE = 12;
 
 /**
  * The profile's lesson window; sharing it lets every block reuse one query.
- * Both ends are whole days, so the query key stays the same all day rather
- * than changing with each mount's clock. The upcoming/past split still uses
- * the precise `now`.
+ * Both ends are the studio's midnights, so the query key stays the same all
+ * day rather than changing with each mount's clock. The upcoming/past split
+ * still uses the precise `now`.
  */
-export function studentLessonsRange(now: number) {
-  const today = startOfDay(now);
+export function studentLessonsRange(now: number, timeZone: string) {
+  const today = zonedDate(now, timeZone);
   return {
-    from: subDays(today, PAST_DAYS).toISOString(),
-    to: addDays(today, FUTURE_DAYS + 1).toISOString(),
+    from: dayStartIso(addCalendarDays(today, -PAST_DAYS), timeZone),
+    to: dayStartIso(addCalendarDays(today, FUTURE_DAYS + 1), timeZone),
   };
 }
 
@@ -69,8 +70,9 @@ export function StudentLessonsCard({
   // Pinned once per mount: the window and the upcoming/past split must not
   // shift underneath the tutor on an unrelated re-render.
   const [now] = useState(() => nowMs ?? Date.now());
+  const timeZone = useStudioTimeZone();
 
-  const range = useMemo(() => studentLessonsRange(now), [now]);
+  const range = useMemo(() => studentLessonsRange(now, timeZone), [now, timeZone]);
   const lessons = useLessonsQuery({ ...range, studentId });
 
   // A lesson under way stays with the upcoming rows until it ends.

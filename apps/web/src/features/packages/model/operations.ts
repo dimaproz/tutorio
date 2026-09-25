@@ -9,6 +9,7 @@ import type {
   TransferPackageDto,
 } from '@tutorio/validation';
 import { z } from 'zod';
+import { zonedIso } from '@/lib/datetime';
 import { parsePriceInput } from '@/lib/money';
 import { endOfDayExclusive, isDayKey } from './dates';
 import { moneyText } from './sale';
@@ -28,9 +29,9 @@ const issuer =
   (path, key) =>
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: [path], params: { key } });
 
-/** A paid date: the moment now when it is today, else that day at noon. */
-function paidAtOf(day: string, today: string, now: Date): string {
-  return day === today ? now.toISOString() : new Date(`${day}T12:00`).toISOString();
+/** A paid date: the moment now when it is today, else that day at the studio's noon. */
+function paidAtOf(day: string, today: string, now: Date, timeZone: string): string {
+  return day === today ? now.toISOString() : zonedIso(day, '12:00', timeZone);
 }
 
 // ---------------------------------------------------------------------------
@@ -73,6 +74,7 @@ export function packagePaymentDto(
   pkg: PackageResponse,
   today: string,
   now: Date,
+  timeZone: string,
 ): RecordPaymentDto {
   return {
     enrollmentId: pkg.enrollmentId,
@@ -80,7 +82,7 @@ export function packagePaymentDto(
     amountMinor: parsePriceInput(values.amount) ?? 0,
     currency: pkg.currency,
     method: values.method,
-    paidAt: paidAtOf(values.paidAt, today, now),
+    paidAt: paidAtOf(values.paidAt, today, now, timeZone),
     ...(values.note.trim() ? { note: values.note.trim() } : {}),
   };
 }
@@ -101,8 +103,8 @@ export function extendSchema(today: string, currentLastDay: string) {
 
 export type ExtendValues = z.infer<ReturnType<typeof extendSchema>>;
 
-export function extendDto(values: ExtendValues): ExtendPackageDto {
-  return { expiresAt: endOfDayExclusive(values.until).toISOString() };
+export function extendDto(values: ExtendValues, timeZone: string): ExtendPackageDto {
+  return { expiresAt: endOfDayExclusive(values.until, timeZone).toISOString() };
 }
 
 // ---------------------------------------------------------------------------
@@ -207,12 +209,13 @@ export function refundDto(
   pkg: PackageResponse,
   today: string,
   now: Date,
+  timeZone: string,
 ): RefundPackageDto {
   return {
     credits: values.takeCredits ? Math.max(pkg.remainingCredits, 0) : 0,
     amountMinor: values.returnMoney ? (parsePriceInput(values.amount) ?? 0) : 0,
     method: values.method,
-    paidAt: paidAtOf(values.paidAt, today, now),
+    paidAt: paidAtOf(values.paidAt, today, now, timeZone),
     note: values.note.trim(),
   };
 }

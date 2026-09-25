@@ -96,9 +96,10 @@ export function isMovable(lesson: Pick<CalendarLesson, 'status'>): boolean {
 export function lessonsOnDay<T extends Pick<CalendarLesson, 'startsAtUtc'>>(
   lessons: readonly T[],
   day: Date,
+  timeZone: string,
 ): T[] {
   return lessons
-    .filter((lesson) => isSameDay(new Date(lesson.startsAtUtc), day))
+    .filter((lesson) => isSameDay(new Date(lesson.startsAtUtc), day, timeZone))
     .sort((left, right) => Date.parse(left.startsAtUtc) - Date.parse(right.startsAtUtc));
 }
 
@@ -118,10 +119,11 @@ export type PlacedLesson<T> = {
  */
 export function placeDay<T extends Pick<CalendarLesson, 'startsAtUtc' | 'durationMin'>>(
   lessons: readonly T[],
+  timeZone: string,
 ): PlacedLesson<T>[] {
   const items = lessons
     .map((lesson) => {
-      const startMin = minutesOfDay(new Date(lesson.startsAtUtc));
+      const startMin = minutesOfDay(new Date(lesson.startsAtUtc), timeZone);
       return { lesson, startMin, endMin: Math.min(1440, startMin + lesson.durationMin) };
     })
     .sort((left, right) => left.startMin - right.startMin || right.endMin - left.endMin);
@@ -170,8 +172,9 @@ export function dropConflict<T extends CalendarLesson>(
   day: Date,
   startMin: number,
   lessons: readonly T[],
+  timeZone: string,
 ): T | null {
-  const start = atMinute(day, startMin).getTime();
+  const start = atMinute(day, startMin, timeZone).getTime();
   const end = start + moving.durationMin * 60_000;
   return (
     lessons.find((other) => {

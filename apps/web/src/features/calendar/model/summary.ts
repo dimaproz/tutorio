@@ -26,6 +26,7 @@ export type DaySummary = {
 export function daySummary(
   dayLessons: readonly CalendarLesson[],
   nowMs: number,
+  timeZone: string,
   all: readonly CalendarLesson[] = dayLessons,
 ): DaySummary {
   const live = dayLessons
@@ -37,7 +38,7 @@ export function daySummary(
   const gaps: DaySummary['gaps'] = [];
   let busyUntil: number | null = null;
   for (const lesson of live) {
-    const start = minutesOfDay(new Date(lesson.startsAtUtc));
+    const start = minutesOfDay(new Date(lesson.startsAtUtc), timeZone);
     const end = Math.min(1440, start + lesson.durationMin);
     if (busyUntil !== null && start - busyUntil >= MIN_GAP) {
       gaps.push({ startMin: busyUntil, endMin: start });

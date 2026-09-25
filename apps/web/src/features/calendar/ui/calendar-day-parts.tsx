@@ -5,11 +5,12 @@ import { useTranslations } from 'next-intl';
 import { ImpactList, type ImpactItem } from '@/components/shared/impact-list';
 import { cn } from '@/lib/utils';
 import { lessonsOnDay, lessonTitle, lessonType, type CalendarLesson } from '../model/lessons';
-import { clockLabel, isSameDay } from '../model/period';
+import { clockLabel, dayOfMonth, isSameDay } from '../model/period';
 import { daySummary, type DaySummary } from '../model/summary';
 import { CalendarEvent } from './calendar-event';
 import { TypeDots } from './calendar-month-grid';
 import { useLocalFormatter } from '@/lib/i18n/local-formatter';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 
 /**
  * Seven day tiles with the lesson types as dots; the picked day in a primary
@@ -29,10 +30,11 @@ export function CalendarWeekStrip({
   className?: string;
 }) {
   const format = useLocalFormatter();
+  const timeZone = useStudioTimeZone();
   return (
     <div data-slot="calendar-week-strip" className={cn('grid grid-cols-7 gap-1', className)}>
       {days.map((day) => {
-        const active = isSameDay(day, selected);
+        const active = isSameDay(day, selected, timeZone);
         return (
           <button
             key={day.toISOString()}
@@ -53,8 +55,8 @@ export function CalendarWeekStrip({
             >
               {format.dateTime(day, { weekday: 'short' })}
             </span>
-            <span className="text-lg leading-6 font-semibold">{day.getDate()}</span>
-            <TypeDots lessons={lessonsOnDay(lessons, day)} />
+            <span className="text-lg leading-6 font-semibold">{dayOfMonth(day, timeZone)}</span>
+            <TypeDots lessons={lessonsOnDay(lessons, day, timeZone)} />
           </button>
         );
       })}
@@ -101,7 +103,8 @@ export function CalendarDaySide({
   const format = useLocalFormatter();
   const hours = useHours();
   const gapsText = useGapsText();
-  const summary = daySummary(lessonsOnDay(lessons, day), nowMs, context);
+  const timeZone = useStudioTimeZone();
+  const summary = daySummary(lessonsOnDay(lessons, day, timeZone), nowMs, timeZone, context);
 
   const items: ImpactItem[] = [
     {
@@ -175,7 +178,8 @@ export function CalendarDayLine({
 }) {
   const t = useTranslations('calendar.day');
   const hours = useHours();
-  const summary = daySummary(lessons, nowMs, context);
+  const timeZone = useStudioTimeZone();
+  const summary = daySummary(lessons, nowMs, timeZone, context);
   const gap = summary.gaps[0];
   return (
     <div className="flex items-center justify-between gap-3 px-1 text-sm leading-5 text-muted-foreground">
@@ -210,10 +214,11 @@ export function CalendarAgenda({
 }) {
   const t = useTranslations('calendar.agenda');
   const format = useLocalFormatter();
+  const timeZone = useStudioTimeZone();
   return (
     <div data-slot="calendar-agenda" className="flex flex-col gap-5">
       {days.map((day) => {
-        const dayLessons = lessonsOnDay(lessons, day);
+        const dayLessons = lessonsOnDay(lessons, day, timeZone);
         if (dayLessons.length === 0) return null;
         return (
           <section key={day.toISOString()} className="flex flex-col gap-2.5">

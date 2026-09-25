@@ -8,6 +8,8 @@ import {
 } from './pause';
 import { samplePause } from './testing';
 
+/** The studio's zone; the process runs in another one (vitest config). */
+const TZ = 'Europe/Kyiv';
 const TODAY = '2026-09-24';
 const STUDENT = 'ffffffff-0000-4000-8000-000000000001';
 
@@ -35,12 +37,12 @@ describe('pause form', () => {
     expect(keys(values({ until: '' }))).toEqual([]);
   });
 
-  it('sends the window from the first midnight to the one after the last day', () => {
-    expect(pauseCreateDto(values(), STUDENT, TODAY)).toEqual({
+  it('sends the window from the first studio midnight to the one after the last day', () => {
+    expect(pauseCreateDto(values(), STUDENT, TODAY, TZ)).toEqual({
       studentId: STUDENT,
       enrollmentId: null,
-      startsAt: new Date(2026, 9, 1).toISOString(),
-      endsAt: new Date(2026, 9, 15).toISOString(),
+      startsAt: '2026-09-30T21:00:00.000Z',
+      endsAt: '2026-10-14T21:00:00.000Z',
       reason: 'HOLIDAY',
     });
     // From today: now; no last day: until the tutor brings them back.
@@ -49,26 +51,29 @@ describe('pause form', () => {
         values({ from: TODAY, until: '', scope: 'direction', enrollmentId: 'e' }),
         STUDENT,
         TODAY,
+        TZ,
       ),
     ).toEqual({ studentId: STUDENT, enrollmentId: 'e', endsAt: null, reason: 'HOLIDAY' });
   });
 
   it('opens a change on the pause as it is', () => {
     const pause = samplePause({
-      startsAt: new Date(2026, 9, 1).toISOString(),
-      endsAt: new Date(2026, 9, 15).toISOString(),
+      startsAt: '2026-09-30T21:00:00.000Z',
+      endsAt: '2026-10-14T21:00:00.000Z',
       reason: 'ILLNESS',
     });
-    expect(pauseFormDefaults({ today: TODAY, pause })).toEqual(values({ reason: 'ILLNESS' }));
+    expect(pauseFormDefaults({ today: TODAY, pause, timeZone: TZ })).toEqual(
+      values({ reason: 'ILLNESS' }),
+    );
   });
 
   it('changes only the end and the reason of a running pause', () => {
     expect(
-      pauseUpdateDto(values({ until: '2026-10-20' }), samplePause({ state: 'ACTIVE' }), TODAY),
-    ).toEqual({ endsAt: new Date(2026, 9, 21).toISOString(), reason: 'HOLIDAY' });
-    expect(pauseUpdateDto(values(), samplePause({ state: 'SCHEDULED' }), TODAY)).toMatchObject({
+      pauseUpdateDto(values({ until: '2026-10-20' }), samplePause({ state: 'ACTIVE' }), TODAY, TZ),
+    ).toEqual({ endsAt: '2026-10-20T21:00:00.000Z', reason: 'HOLIDAY' });
+    expect(pauseUpdateDto(values(), samplePause({ state: 'SCHEDULED' }), TODAY, TZ)).toMatchObject({
       enrollmentId: null,
-      startsAt: new Date(2026, 9, 1).toISOString(),
+      startsAt: '2026-09-30T21:00:00.000Z',
     });
   });
 });

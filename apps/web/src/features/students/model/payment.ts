@@ -1,5 +1,6 @@
 import type { PaymentMethodDto, RecordPaymentDto } from '@tutorio/validation';
 import { z } from 'zod';
+import { zonedIso } from '@/lib/datetime';
 import { parsePriceInput } from '@/lib/money';
 import type { BillingDirection, BillingPackage } from './learning';
 
@@ -86,13 +87,17 @@ export function paymentFormDefaults(
   };
 }
 
-/** The request: the package when it pays for one, the date at noon unless it is today. */
+/**
+ * The request: the package when it pays for one, the date at the studio's
+ * noon unless it is today.
+ */
 export function paymentDto(
   values: PaymentFormValues,
   direction: BillingDirection,
   pkg: BillingPackage | null,
   now: Date,
   today: string,
+  timeZone: string,
 ): RecordPaymentDto {
   return {
     enrollmentId: direction.enrollmentId,
@@ -101,9 +106,7 @@ export function paymentDto(
     currency: direction.currency,
     method: values.method,
     paidAt:
-      values.paidAt === today
-        ? now.toISOString()
-        : new Date(`${values.paidAt}T12:00`).toISOString(),
+      values.paidAt === today ? now.toISOString() : zonedIso(values.paidAt, '12:00', timeZone),
     ...(values.note.trim() ? { note: values.note.trim() } : {}),
   };
 }

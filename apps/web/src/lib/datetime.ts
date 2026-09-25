@@ -1,26 +1,50 @@
 /**
- * Conversions between instants and the strings native date/time inputs expect.
+ * Dates and times on the studio's wall clock.
  *
- * `datetime-local` and `date` inputs have no timezone: they speak the browser's
- * local wall clock. These helpers are the single place that crossing is done,
- * so no component has to hand-roll an offset calculation.
+ * A date ("yyyy-MM-dd") or a time ("HH:mm") a person types or reads means the
+ * studio's clock (`Workspace.timezone`), wherever the browser is: a tutor on a
+ * trip still books 17:00 Kyiv time and «Діє до 30.10» still ends at the Kyiv
+ * midnight. Every crossing between the clock and an instant goes through
+ * these helpers with the studio's zone (`useStudioTimeZone`); nothing reads
+ * the browser's zone, its `Date#getHours` or `setDate`.
  */
 
-/** An instant → the "YYYY-MM-DDTHH:mm" a `datetime-local` input expects. */
-export function toLocalDateTimeInput(date: Date): string {
-  return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
-    .toISOString()
-    .slice(0, 16);
+import { zonedDateTime, zonedDayEnd, zonedDayStart } from '@tutorio/domain';
+
+export {
+  addCalendarDays,
+  addCalendarMonths,
+  calendarDaysBetween,
+  calendarMonthStart,
+  calendarWeekStart,
+  calendarWeekday,
+  isCalendarDate,
+  isWallTime,
+  zonedDate,
+  zonedDateTime,
+  zonedDayEnd,
+  zonedDayStart,
+  zonedMinutesOfDay,
+  zonedTime,
+  zonedWeekday,
+} from '@tutorio/domain';
+
+/** The zone a studio gets by default, and the one before a session is known. */
+export const DEFAULT_TIME_ZONE = 'Europe/Kyiv';
+
+/** A date and a time on the studio's clock → the ISO instant the API takes. */
+export function zonedIso(date: string, time: string, timeZone: string): string {
+  return zonedDateTime(date, time, timeZone).toISOString();
 }
 
-/** An instant → the "YYYY-MM-DD" a `date` input expects. */
-export function toLocalDateInput(date: Date): string {
-  return toLocalDateTimeInput(date).slice(0, 10);
+/** The studio's midnight that starts a date, as an ISO instant. */
+export function dayStartIso(date: string, timeZone: string): string {
+  return zonedDayStart(date, timeZone).toISOString();
 }
 
-/** A `datetime-local` / `date` input value → an ISO instant in UTC. */
-export function localInputToIso(value: string): string {
-  return new Date(value).toISOString();
+/** The studio's midnight that ends a date (the next one), as an ISO instant. */
+export function dayEndIso(date: string, timeZone: string): string {
+  return zonedDayEnd(date, timeZone).toISOString();
 }
 
 /** A bookable time of day, "HH:mm". */
@@ -55,38 +79,4 @@ export function buildTimeSlots({ from, to, stepMin }: TimeSlotRange): string[] {
     slots.push(toTimeString(at));
   }
   return slots;
-}
-
-/** Parses an input value back to a Date, or `undefined` when blank/invalid. */
-export function parseLocalInput(value: string): Date | undefined {
-  if (!value.trim()) {
-    return undefined;
-  }
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? undefined : parsed;
-}
-
-/**
- * Splits a "YYYY-MM-DDTHH:mm" value into its two halves, which is how the date
- * and time controls of a datetime picker are driven independently.
- */
-export function splitDateTimeInput(value: string): { date: string; time: string } {
-  const [date = '', time = ''] = value.split('T');
-  return { date, time: time.slice(0, 5) };
-}
-
-/**
- * Joins a date and a time back into a `datetime-local` value. A date with no
- * time defaults to `fallbackTime` so picking a day alone still yields a usable
- * instant; a blank date yields a blank value.
- */
-export function joinDateTimeInput(
-  date: string,
-  time: string,
-  fallbackTime = '09:00',
-): string {
-  if (!date) {
-    return '';
-  }
-  return `${date}T${time || fallbackTime}`;
 }

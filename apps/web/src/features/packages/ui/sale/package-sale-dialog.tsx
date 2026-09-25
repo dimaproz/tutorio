@@ -10,6 +10,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { BandWindow, BandWindowLayout } from '@/components/shared/band-window';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 import { useSalePreviewQuery, useSellPackageMutation } from '../../api';
 import { dayKey, endOfDayExclusive, isDayKey, startOfDay } from '../../model/dates';
 import {
@@ -88,13 +89,17 @@ function SaleFlow({
   const format = usePackageFormat();
   const clock = useNow();
   const [now] = useState(() => (nowMs ? new Date(nowMs) : clock));
-  const today = dayKey(now);
+  const timeZone = useStudioTimeZone();
+  const today = dayKey(now, timeZone);
   const [studentId, setStudentId] = useState(givenStudent);
   const [enrollmentId, setEnrollmentId] = useState(givenEnrollment);
   const [sold, setSold] = useState<PackageResponse | null>(null);
   const data = useSaleData(studentId, enrollmentId);
   const direction = data.direction;
-  const form = usePackageForm<SaleFormValues>(saleFormSchema(today), saleFormDefaults(null, now));
+  const form = usePackageForm<SaleFormValues>(
+    saleFormSchema(today),
+    saleFormDefaults(null, now, timeZone),
+  );
   const values = useWatch({ control: form.control }) as SaleFormValues;
 
   // A direction's rate is the price until the tutor types one (decision 2).
@@ -106,7 +111,7 @@ function SaleFlow({
     form.setValue('perLesson', rate > 0 ? moneyText(rate) : '');
   }, [directionKey, rate, form]);
 
-  const previewDto = salePreviewDto(values, direction, studentId, today);
+  const previewDto = salePreviewDto(values, direction, studentId, today, timeZone);
   const previewKey = useDebouncedValue(previewDto ? JSON.stringify(previewDto) : null);
   const preview = useSalePreviewQuery(
     useMemo(() => (previewKey ? (JSON.parse(previewKey) as CreatePackageDto) : null), [previewKey]),
@@ -121,8 +126,8 @@ function SaleFlow({
         : (shownPreview?.lessonsTotal ??
           (isDayKey(values.from) && isDayKey(values.to) && values.to >= values.from
             ? weeklyLessons(
-                startOfDay(values.from),
-                endOfDayExclusive(values.to),
+                startOfDay(values.from, timeZone),
+                endOfDayExclusive(values.to, timeZone),
                 Number(values.perWeek),
               )
             : null));
@@ -134,7 +139,10 @@ function SaleFlow({
       : isDayKey(values.from) && isDayKey(values.to)
         ? t('name.period', {
             name: directionName(direction),
-            range: format.shortRange(startOfDay(values.from), startOfDay(values.to)),
+            range: format.shortRange(
+              startOfDay(values.from, timeZone),
+              startOfDay(values.to, timeZone),
+            ),
           })
         : directionName(direction)
     : '';
@@ -143,13 +151,16 @@ function SaleFlow({
 
   const submit = form.handleSubmit((submitted) => {
     if (!direction || !studentId) return;
-    sell.mutate(saleDto(submitted, direction, studentId, saleName(submitted, suggestedName)), {
-      onSuccess: (pkg) => {
-        onSold?.(pkg);
-        setSold(pkg);
+    sell.mutate(
+      saleDto(submitted, direction, studentId, timeZone, saleName(submitted, suggestedName)),
+      {
+        onSuccess: (pkg) => {
+          onSold?.(pkg);
+          setSold(pkg);
+        },
+        onError: showError,
       },
-      onError: showError,
-    });
+    );
   });
 
   if (sold) {
@@ -169,10 +180,10 @@ function SaleFlow({
   const windowText =
     values.kind === 'FIXED_COUNT'
       ? values.until
-        ? t('preview.until', { date: format.dayMonth(startOfDay(values.until)) })
+        ? t('preview.until', { date: format.dayMonth(startOfDay(values.until, timeZone)) })
         : t('preview.noEnd')
       : isDayKey(values.from) && isDayKey(values.to)
-        ? format.dayRange(startOfDay(values.from), startOfDay(values.to))
+        ? format.dayRange(startOfDay(values.from, timeZone), startOfDay(values.to, timeZone))
         : '';
   const notes: { icon: 'debt' | 'queue'; text: string }[] = [];
   if (shownPreview && shownPreview.debtLessons > 0) {
@@ -195,7 +206,9 @@ function SaleFlow({
           t('lessons', { count }),
           values.kind === 'FIXED_COUNT'
             ? values.until
-              ? t('preview.untilShort', { date: format.shortDay(startOfDay(values.until)) })
+              ? t('preview.untilShort', {
+                  date: format.shortDay(startOfDay(values.until, timeZone)),
+                })
               : t('preview.noEnd')
             : windowText,
         ].join(' · ')

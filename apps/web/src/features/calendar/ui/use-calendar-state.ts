@@ -18,7 +18,9 @@ import {
   startOfDay,
   type CalendarView,
 } from '../model/period';
+import { zonedDate } from '@/lib/datetime';
 import { useLocalFormatter } from '@/lib/i18n/local-formatter';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 
 /** The live minute, or a pinned clock (stories). */
 export function useNow(pinned?: number) {
@@ -74,12 +76,13 @@ export function useCalendarState({ mobile, nowMs }: { mobile: boolean; nowMs: nu
   );
   const view = mobile ? phoneView : desktopView;
   const setView = mobile ? setPhoneView : setDesktopView;
-  const [anchor, setAnchor] = useState(() => startOfDay(new Date(nowMs)));
-  const period = useMemo(() => calendarPeriod(view, anchor), [view, anchor]);
+  const timeZone = useStudioTimeZone();
+  const [anchor, setAnchor] = useState(() => startOfDay(new Date(nowMs), timeZone));
+  const period = useMemo(() => calendarPeriod(view, anchor, timeZone), [view, anchor, timeZone]);
   // The day view reads its whole week: the strip's dots and the side panel.
   const readPeriod = useMemo(
-    () => (view === 'day' ? calendarPeriod('week', anchor) : period),
-    [anchor, period, view],
+    () => (view === 'day' ? calendarPeriod('week', anchor, timeZone) : period),
+    [anchor, period, view, timeZone],
   );
 
   const teachersQuery = useTeachersQuery({ page: 1, pageSize: 100, status: 'ACTIVE' });
@@ -126,8 +129,9 @@ export function useCalendarState({ mobile, nowMs }: { mobile: boolean; nowMs: nu
     anchor,
     setAnchor,
     period,
-    step: (direction: 1 | -1) => setAnchor(shiftAnchor(view, anchor, direction)),
-    today: () => setAnchor(startOfDay(new Date(nowMs))),
+    timeZone,
+    step: (direction: 1 | -1) => setAnchor(shiftAnchor(view, anchor, direction, timeZone)),
+    today: () => setAnchor(startOfDay(new Date(nowMs), timeZone)),
     teachers,
     selectedTeachers,
     teachersFiltered,
@@ -183,7 +187,9 @@ export function useCalendarSubtitle() {
     } else if (state.view === 'week') {
       lessons = t('week', { count });
     } else {
-      lessons = t('month', { count, month: String(state.anchor.getMonth()) });
+      // The month's index, 0 = January, on the studio's calendar.
+      const month = Number(zonedDate(state.anchor, state.timeZone).slice(5, 7)) - 1;
+      lessons = t('month', { count, month: String(month) });
     }
     return names ? `${names} · ${lessons}` : lessons;
   };

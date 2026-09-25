@@ -131,6 +131,20 @@ localized error map and shows the same English text in every locale.
   form, generated art, or an upstream shadcn file is fine when it does one
   thing. Never shorten a file by packing code onto long lines.
 
+## Dates and Times
+
+- Every date and time a person types or reads is the studio's wall clock
+  (`Workspace.timezone`), never the browser's. Take the zone from
+  `useStudioTimeZone()` and convert with `lib/datetime` (`zonedIso`,
+  `dayStartIso`, `dayEndIso`, `zonedDate`, `zonedTime`, calendar-date
+  arithmetic); model functions take the zone as a parameter.
+- Do not build dates from `new Date(y, m, d)`, `` `${day}T00:00` ``,
+  `setHours`, `setDate`, `getDate`, `getDay` or date-fns local helpers, and do
+  not read `Intl.DateTimeFormat().resolvedOptions().timeZone`. Format with
+  next-intl (it carries the studio's zone) rather than a bare `Intl` format.
+- Model tests pin `Europe/Kyiv` as the studio and run with the process in
+  another zone (`vitest.config.mts`); expect ISO literals, not local `Date`s.
+
 ## Definition of Done
 
 - Run `pnpm --filter @tutorio/web lint`, `typecheck`, `test`, and `build`.

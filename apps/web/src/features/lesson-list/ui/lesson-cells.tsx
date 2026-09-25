@@ -14,7 +14,7 @@ import { lessonKind, needsMakeup, type PaymentView } from '../model/payment';
 
 export type ListLesson = LessonResponse;
 
-/** «10:00–11:30» and «26 вер · сб», in the browser's zone like the calendar. */
+/** «10:00–11:30» and «26 вер · сб», on the studio's clock like the calendar. */
 export function useLessonWhen() {
   const format = useLocalFormatter();
   const time = (ms: number) => format.time(ms);

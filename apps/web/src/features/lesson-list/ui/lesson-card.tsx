@@ -5,9 +5,10 @@ import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { DateTile } from '@/components/shared/date-tile';
 import type { LessonPanelIntent } from '@/features/lessons';
+import { zonedDate } from '@/lib/datetime';
 import { useLocalFormatter } from '@/lib/i18n/local-formatter';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 import { needsMakeup, paymentView, type PackageState } from '../model/payment';
-import { dayKey } from '../model/filters';
 import { PaymentCell, PriceCell, StatusCell, useLessonWhen, type ListLesson } from './lesson-cells';
 
 /**
@@ -34,10 +35,11 @@ export function LessonCard({
   const t = useTranslations('lessonList');
   const format = useLocalFormatter();
   const when = useLessonWhen();
+  const timeZone = useStudioTimeZone();
   const start = new Date(lesson.startsAtUtc);
   const { range, day } = when(lesson);
   const who = lesson.group?.name ?? lesson.student?.fullName ?? '';
-  const today = dayKey(start) === dayKey(new Date(now));
+  const today = zonedDate(start, timeZone) === zonedDate(now, timeZone);
   return (
     <article className="relative flex flex-col gap-3 rounded-card bg-card p-4">
       <div className="flex items-start gap-3.5">

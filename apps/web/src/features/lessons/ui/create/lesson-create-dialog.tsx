@@ -10,6 +10,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { DurationField } from '@/components/shared/duration-field';
 import { FieldFrame, TextField } from '@/components/shared/text-field';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 import {
   useApplyScheduleChangePreview,
   useCreateSubmit,
@@ -22,7 +23,6 @@ import {
   createFormDefaults,
   createScheduleDto,
   createFormSchema,
-  localDate,
   newScheduleLessonCount,
   packageCoverage,
   pastRows,
@@ -42,8 +42,8 @@ import { CreateParticipants, CreatePast, CreateWeeklyImpact } from './create-ext
 import { CreateWhen } from './create-when';
 import { useCreateData } from './use-create-data';
 import { useCreatePrefill } from './use-create-prefill';
+import { addCalendarDays, zonedDate } from '@/lib/datetime';
 
-const DAY_MS = 24 * 60 * 60 * 1000;
 const firstName = (fullName: string) => fullName.split(' ')[0] ?? fullName;
 
 export type LessonCreateInitial = {
@@ -128,13 +128,14 @@ function LessonCreateForm({
   const durationLabels = useDurationLabels();
   const durationHint = useDurationHint();
   const teachers = useTeacherOptions();
+  const timeZone = useStudioTimeZone();
   const [now] = useState(() => nowMs ?? Date.now());
   const [defaults] = useState(() => {
     const base = createFormDefaults({
       who: initial.groupId ? 'group' : 'student',
       studentId: initial.studentId,
       groupId: initial.groupId,
-      date: initial.date ?? localDate(now + DAY_MS),
+      date: initial.date ?? addCalendarDays(zonedDate(now, timeZone), 1),
       time: initial.time ?? '17:00',
       durationMin: initial.durationMin ?? 60,
     });
@@ -149,7 +150,7 @@ function LessonCreateForm({
   const firstRow = dates.find(
     (row) => /^\d{4}-\d{2}-\d{2}$/.test(row.date) && /^\d{2}:\d{2}$/.test(row.time),
   );
-  const firstStart = firstRow ? localInstant(firstRow.date, firstRow.time) : null;
+  const firstStart = firstRow ? localInstant(firstRow.date, firstRow.time, timeZone) : null;
   const data = useCreateData({ who, studentId, groupId, teacherId, firstStart, now });
   const picked = who === 'student' ? studentId : groupId;
   const minutes = Number(durationMin);
@@ -179,7 +180,7 @@ function LessonCreateForm({
   // The query key is hashed deeply, so the change can be rebuilt every render.
   const change =
     existing && added.length > 0 && /^\d{4}-\d{2}-\d{2}$/.test(values.from) && minutes >= 5
-      ? scheduleChangeDto(values, existing.slots)
+      ? scheduleChangeDto(values, existing.slots, timeZone)
       : null;
   const preview = useApplyScheduleChangePreview(existing?.id ?? null, change);
   // A new schedule is previewed too: its lessons and overlaps before saving.
@@ -192,7 +193,7 @@ function LessonCreateForm({
       minutes >= 5 &&
       minutes <= 480 &&
       (who === 'group' || teacherId)
-      ? createScheduleDto(values, { priceMinor: null, currency: data.defaultCurrency })
+      ? createScheduleDto(values, { priceMinor: null, currency: data.defaultCurrency, timeZone })
       : null,
   );
   const newCount = newScheduleLessonCount({
@@ -201,13 +202,14 @@ function LessonCreateForm({
     until: values.until,
     horizonWeeks: data.horizonWeeks,
     now,
+    timeZone,
   });
 
   // What the save books and what it costs.
-  const past = pastRows(values, now);
+  const past = pastRows(values, now, timeZone);
   const allPast = past.length > 0 && past.every(Boolean);
   const count = dates.length;
-  const charged = chargedCount(values, now);
+  const charged = chargedCount(values, now, timeZone);
   const coverage = data.credits ? packageCoverage(charged, data.credits.left) : null;
   const typed = typedPrice(values);
   const currency = data.group?.currency ?? data.booking?.currency ?? data.defaultCurrency;
@@ -219,6 +221,7 @@ function LessonCreateForm({
     data,
     existing,
     now,
+    timeZone,
     priceMinor:
       data.priceMode === 'amount' ? (typed ?? 0) : data.group ? data.group.rateMinor : (rate ?? 0),
     currency,

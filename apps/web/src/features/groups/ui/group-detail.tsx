@@ -22,6 +22,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useGroupAttendanceQuery, useGroupQuery } from '@/lib/api/groups';
 import { usePackagesQuery } from '@/lib/api/packages';
 import { useLessonsQuery } from '@/lib/api/scheduling';
+import { addCalendarDays, dayStartIso, zonedDate } from '@/lib/datetime';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 import {
   LessonCreateDialog,
   LessonPanel,
@@ -38,7 +40,6 @@ import { GroupPageMetrics } from './group-page-metrics';
 import { GroupRosterCard } from './group-roster-card';
 import { GroupScheduleCard } from './group-schedule-card';
 
-const DAY_MS = 24 * 60 * 60 * 1000;
 /** Where the lesson panel links a student and a group. */
 const LESSON_LINKS: LessonPanelLinks = {
   studentHref: (id) => `/app/students/${id}`,
@@ -49,14 +50,14 @@ const ATTENDANCE_WINDOW = 8;
 
 /**
  * The lessons the page reads: a year back, and past the 12-week horizon the
- * schedule is generated over. Whole days, so the query key holds all day.
+ * schedule is generated over. The studio's midnights, so the query key holds
+ * all day.
  */
-function lessonWindow(now: number) {
-  const today = new Date(now);
-  today.setHours(0, 0, 0, 0);
+function lessonWindow(now: number, timeZone: string) {
+  const today = zonedDate(now, timeZone);
   return {
-    from: new Date(today.getTime() - 365 * DAY_MS).toISOString(),
-    to: new Date(today.getTime() + 92 * DAY_MS).toISOString(),
+    from: dayStartIso(addCalendarDays(today, -365), timeZone),
+    to: dayStartIso(addCalendarDays(today, 92), timeZone),
   };
 }
 
@@ -68,8 +69,9 @@ export function GroupDetailView({ groupId }: { groupId: string }) {
   const t = useTranslations('groups');
   const clock = useNow();
   const [now] = useState(() => clock.getTime());
+  const timeZone = useStudioTimeZone();
   const group = useGroupQuery(groupId);
-  const window = useMemo(() => lessonWindow(now), [now]);
+  const window = useMemo(() => lessonWindow(now, timeZone), [now, timeZone]);
   const lessons = useLessonsQuery({ ...window, groupId });
   const packages = usePackagesQuery({ page: 1, pageSize: 100, groupId, state: 'active' });
   const attendance = useGroupAttendanceQuery(groupId, ATTENDANCE_WINDOW);

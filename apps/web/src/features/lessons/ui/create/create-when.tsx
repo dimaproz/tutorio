@@ -3,6 +3,7 @@
 import { useId, type ReactNode } from 'react';
 import { TriangleAlertIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { Badge } from '@/components/ui/badge';
 import { DateField } from '@/components/shared/date-field';
@@ -46,7 +47,8 @@ function OnceDates({
   const lessonDates = useLessonDates();
   const labels = useDateRowsLabels(dates.map((row) => row.date));
   const minutes = Number(durationMin);
-  const past = pastRows({ dates }, now);
+  const timeZone = useStudioTimeZone();
+  const past = pastRows({ dates }, now, timeZone);
   const errors = form.formState.errors.dates;
   const validate = form.formState.isSubmitted;
 
@@ -59,7 +61,7 @@ function OnceDates({
       );
     }
     if (!row.date || !/^\d{2}:\d{2}$/.test(row.time)) return null;
-    const hit = overlapping(lessons, scope, localInstant(row.date, row.time), minutes)[0];
+    const hit = overlapping(lessons, scope, localInstant(row.date, row.time, timeZone), minutes)[0];
     if (!hit) return null;
     const range = `${lessonDates.time(hit.startsAtUtc)}–${lessonDates.endTime(hit)}`;
     return (
@@ -90,7 +92,7 @@ function OnceDates({
         rows.append({ date: last ? weekAfter(last.date) : '', time: last?.time ?? '' });
       }}
       onRemove={(index) => rows.remove(index)}
-      busy={dates.map((row) => busySlots(lessons, scope, row.date, STEPS))}
+      busy={dates.map((row) => busySlots(lessons, scope, row.date, STEPS, timeZone))}
       notes={notes}
       errors={dates.map((_, index) => ({
         date: errors?.[index]?.date?.message,

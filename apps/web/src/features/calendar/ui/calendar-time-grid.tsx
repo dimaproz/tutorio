@@ -12,10 +12,11 @@ import {
   placeDay,
   type CalendarLesson,
 } from '../model/lessons';
-import { atMinute, clockLabel, isSameDay, minutesOfDay } from '../model/period';
+import { atMinute, clockLabel, dayOfMonth, isSameDay, minutesOfDay } from '../model/period';
 import { CalendarEvent, useEventTimes, type CalendarEventVariant } from './calendar-event';
 import { useGridPointer, type GridSelection } from './use-grid-pointer';
 import { useLocalFormatter } from '@/lib/i18n/local-formatter';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 
 /** Per-hour height: the week, the desktop day, the phone day. */
 export const HOUR_HEIGHT = { week: 44, day: 64, phone: 58 } as const;
@@ -101,6 +102,7 @@ export function CalendarTimeGrid({
   const format = useLocalFormatter();
   const times = useEventTimes();
   const scroller = useRef<HTMLDivElement>(null);
+  const timeZone = useStudioTimeZone();
   const now = new Date(nowMs);
   const pointer = useGridPointer({
     hourHeight,
@@ -133,13 +135,13 @@ export function CalendarTimeGrid({
   const top = (minutes: number) => (minutes / 60) * hourHeight;
   const drag = pointer.drag;
   const dragConflict = drag
-    ? dropConflict(drag.lesson, days[drag.dayIndex]!, drag.startMin, context)
+    ? dropConflict(drag.lesson, days[drag.dayIndex]!, drag.startMin, context, timeZone)
     : null;
   const marked: GridSelection | null =
     pointer.selection ??
     (selection
       ? (() => {
-          const dayIndex = days.findIndex((day) => isSameDay(day, selection.day));
+          const dayIndex = days.findIndex((day) => isSameDay(day, selection.day, timeZone));
           return dayIndex === -1
             ? null
             : {
@@ -162,7 +164,7 @@ export function CalendarTimeGrid({
         <div className="flex border-b border-border">
           <div className="w-13 shrink-0" />
           {days.map((day) => {
-            const today = isSameDay(day, now);
+            const today = isSameDay(day, now, timeZone);
             return (
               <div
                 key={day.toISOString()}
@@ -183,7 +185,7 @@ export function CalendarTimeGrid({
                   )}
                   aria-current={today ? 'date' : undefined}
                 >
-                  {day.getDate()}
+                  {dayOfMonth(day, timeZone)}
                 </span>
               </div>
             );
@@ -222,8 +224,8 @@ export function CalendarTimeGrid({
               ))}
             </div>
             {days.map((day, dayIndex) => {
-              const today = isSameDay(day, now);
-              const placed = placeDay(lessonsOnDay(lessons, day));
+              const today = isSameDay(day, now, timeZone);
+              const placed = placeDay(lessonsOnDay(lessons, day, timeZone), timeZone);
               return (
                 <div
                   key={day.toISOString()}
@@ -320,7 +322,7 @@ export function CalendarTimeGrid({
                               day: 'numeric',
                               month: 'long',
                             }),
-                            time: format.dateTime(atMinute(day, drag.startMin), {
+                            time: format.dateTime(atMinute(day, drag.startMin, timeZone), {
                               hour: '2-digit',
                               minute: '2-digit',
                             }),
@@ -332,7 +334,7 @@ export function CalendarTimeGrid({
                         aria-hidden="true"
                         lesson={{
                           ...drag.lesson,
-                          startsAtUtc: atMinute(day, drag.startMin).toISOString(),
+                          startsAtUtc: atMinute(day, drag.startMin, timeZone).toISOString(),
                         }}
                         nowMs={nowMs}
                         variant={eventVariant}
@@ -362,7 +364,7 @@ export function CalendarTimeGrid({
                     <div
                       aria-hidden="true"
                       className="pointer-events-none absolute inset-x-0 z-10 h-0.5 bg-destructive"
-                      style={{ top: top(minutesOfDay(now)) }}
+                      style={{ top: top(minutesOfDay(now, timeZone)) }}
                     >
                       <span className="absolute top-1/2 -left-[5px] size-2.5 -translate-y-1/2 rounded-full bg-destructive" />
                     </div>

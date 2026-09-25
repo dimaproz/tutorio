@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { enUS, uk, type Locale } from 'date-fns/locale';
 import { useLocale } from 'next-intl';
+import { useStudioTimeZone } from './time-zone';
 
 // date-fns needs its own locale object; next-intl only hands us the tag. One
 // mapping for the whole app, so adding a product locale is a one-line change.
@@ -15,7 +16,8 @@ export function useDateFnsLocale(): Locale {
 }
 
 /**
- * Locale-aware date/time formatters, memoized per locale.
+ * Locale-aware date/time formatters on the studio's clock, memoized per
+ * locale and zone.
  *
  * `Intl.DateTimeFormat` construction is not free and its option sets are
  * product decisions, not per-component ones — so the four shapes the product
@@ -40,34 +42,41 @@ const asDate = (value: Date | string): Date => (value instanceof Date ? value : 
 
 export function useDateFormatters(): DateTimeFormatters {
   const locale = useLocale();
+  const timeZone = useStudioTimeZone();
 
   return useMemo(() => {
     const time = new Intl.DateTimeFormat(locale, {
+      timeZone,
       hour: '2-digit',
       minute: '2-digit',
     });
     const dayMonth = new Intl.DateTimeFormat(locale, {
+      timeZone,
       day: 'numeric',
       month: 'short',
     });
     const dayMonthTime = new Intl.DateTimeFormat(locale, {
+      timeZone,
       day: 'numeric',
       month: 'short',
       hour: '2-digit',
       minute: '2-digit',
     });
     const longDate = new Intl.DateTimeFormat(locale, {
+      timeZone,
       day: 'numeric',
       month: 'long',
       year: 'numeric',
     });
     const weekdayLongDate = new Intl.DateTimeFormat(locale, {
+      timeZone,
       weekday: 'long',
       day: 'numeric',
       month: 'long',
     });
 
     const weekdayDayMonth = new Intl.DateTimeFormat(locale, {
+      timeZone,
       weekday: 'short',
       day: 'numeric',
       month: 'long',
@@ -81,5 +90,5 @@ export function useDateFormatters(): DateTimeFormatters {
       weekdayLongDate: (value) => weekdayLongDate.format(asDate(value)),
       weekdayDayMonth: (value) => weekdayDayMonth.format(asDate(value)),
     };
-  }, [locale]);
+  }, [locale, timeZone]);
 }

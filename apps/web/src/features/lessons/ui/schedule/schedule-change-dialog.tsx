@@ -30,8 +30,9 @@ import { ImpactList, type ImpactItem } from '@/components/shared/impact-list';
 import { FieldFrame } from '@/components/shared/text-field';
 import { useIsMobile } from '@/hooks/use-mobile';
 import type { GatewayError } from '@/lib/auth/client';
+import { zonedDate } from '@/lib/datetime';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 import { useApplyScheduleChangeMutation, useScheduleChangePreviewQuery } from '../../api';
-import { localDate } from '../../model/create';
 import {
   movedSummary,
   removedSummary,
@@ -97,7 +98,8 @@ function ScheduleChangeFlow({
   const tPanel = useTranslations('lessons.panel');
   const mobile = useIsMobile();
   const showError = useErrorToast();
-  const [today] = useState(() => localDate(nowMs ?? Date.now()));
+  const timeZone = useStudioTimeZone();
+  const [today] = useState(() => zonedDate(nowMs ?? Date.now(), timeZone));
   const form = useLessonForm<ScheduleChangeFormValues>(
     scheduleChangeFormSchema,
     scheduleChangeDefaults(schedule, today),
@@ -110,7 +112,7 @@ function ScheduleChangeFlow({
   const subtitle = `${scheduleWho(schedule)} · ${schedule.teacher.name}`;
 
   const next = form.handleSubmit((values) => {
-    setDto(scheduleChangeFormDto(values));
+    setDto(scheduleChangeFormDto(values, timeZone));
     setStep('result');
   });
 
@@ -299,9 +301,10 @@ function ChangeResult({
   const tPanel = useTranslations('lessons.panel');
   const mobile = useIsMobile();
   const dates = useScheduleDates();
+  const timeZone = useStudioTimeZone();
   const date = dates.dayMonth(preview.effectiveFrom);
-  const moved = movedSummary(preview.moves);
-  const removed = removedSummary(preview.removals);
+  const moved = movedSummary(preview.moves, timeZone);
+  const removed = removedSummary(preview.removals, timeZone);
   const conflicts = preview.conflicts;
 
   const items: ImpactItem[] = [];

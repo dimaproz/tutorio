@@ -4,11 +4,10 @@ import {
   type CreateMakeupDto,
   type LessonDetailResponse,
 } from '@tutorio/validation';
-import { addDays } from 'date-fns';
 import { z } from 'zod';
 import { optionalText } from '@/lib/forms/helpers';
 import { lessonDateString, lessonDurationString, lessonTimeString } from './fields';
-import { localInputToIso, splitDateTimeInput, toLocalDateTimeInput } from '@/lib/datetime';
+import { addCalendarDays, zonedDate, zonedIso, zonedTime } from '@/lib/datetime';
 
 /** A makeup (L-60): when, optionally another teacher and length, and a topic. */
 export const makeupFormSchema = z.object({
@@ -23,17 +22,17 @@ export type MakeupFormValues = z.infer<typeof makeupFormSchema>;
 
 /**
  * Starts from the original: its teacher, length and topic, at the same time
- * of day on the first day after today (a makeup is booked ahead).
+ * of day on the first day after today (a makeup is booked ahead), on the
+ * studio's clock.
  */
 export function makeupFormDefaults(
   original: Pick<LessonDetailResponse, 'startsAtUtc' | 'durationMin' | 'teacherId' | 'topic'>,
   now: number,
+  timeZone: string,
 ): MakeupFormValues {
-  const { time } = splitDateTimeInput(toLocalDateTimeInput(new Date(original.startsAtUtc)));
-  const { date } = splitDateTimeInput(toLocalDateTimeInput(addDays(new Date(now), 1)));
   return {
-    date,
-    time,
+    date: addCalendarDays(zonedDate(now, timeZone), 1),
+    time: zonedTime(original.startsAtUtc, timeZone),
     durationMin: String(original.durationMin),
     teacherId: original.teacherId,
     topic: original.topic ?? '',
@@ -44,10 +43,11 @@ export function makeupFormDefaults(
 export function makeupDto(
   values: MakeupFormValues,
   original: Pick<LessonDetailResponse, 'durationMin' | 'teacherId'>,
+  timeZone: string,
 ): CreateMakeupDto {
   const durationMin = Number(values.durationMin);
   return {
-    startsAtUtc: localInputToIso(`${values.date}T${values.time}`),
+    startsAtUtc: zonedIso(values.date, values.time, timeZone),
     ...(durationMin !== original.durationMin ? { durationMin } : {}),
     ...(values.teacherId !== original.teacherId ? { teacherId: values.teacherId } : {}),
     topic: values.topic.trim() || null,

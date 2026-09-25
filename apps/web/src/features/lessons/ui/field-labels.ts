@@ -5,6 +5,8 @@ import { enUS, uk } from 'date-fns/locale';
 import type { DateRowsLabels } from '@/components/shared/date-rows-field';
 import type { DurationFieldLabels } from '@/components/shared/duration-field';
 import type { TimeFieldLabels } from '@/components/shared/time-field';
+import { isCalendarDate, zonedDayStart } from '@/lib/datetime';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 import { useWeekdayLabels } from '@/lib/i18n/weekdays';
 import { capitalizeFirst } from '@/lib/utils';
 
@@ -82,10 +84,10 @@ export function useTimeLabels(): TimeFieldLabels {
 export function useFormDates() {
   const format = useFormatter();
   const locale = useLocale();
-  const fromValue = (value: string) => {
-    const [year, month, day] = value.split('-').map(Number);
-    return year && month && day ? new Date(year, month - 1, day) : null;
-  };
+  const timeZone = useStudioTimeZone();
+  /** A "yyyy-MM-dd" as the studio's midnight that starts it, or null. */
+  const fromValue = (value: string) =>
+    isCalendarDate(value) ? zonedDayStart(value, timeZone) : null;
   return {
     locale: locale === 'uk' ? uk : enUS,
     field: (date: Date) =>

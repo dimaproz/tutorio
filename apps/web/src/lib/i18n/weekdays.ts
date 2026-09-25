@@ -20,9 +20,8 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export function useWeekdayLabels(style: 'short' | 'long' = 'short'): string[] {
   const locale = useLocale();
   return useMemo(() => {
-    const format = new Intl.DateTimeFormat(locale, { weekday: style });
-    return WEEKDAY_INDICES.map((index) =>
-      format.format(new Date(SUNDAY_UTC + index * DAY_MS)),
-    );
+    // Read in UTC: the anchors are UTC midnights, whatever the browser's zone.
+    const format = new Intl.DateTimeFormat(locale, { weekday: style, timeZone: 'UTC' });
+    return WEEKDAY_INDICES.map((index) => format.format(new Date(SUNDAY_UTC + index * DAY_MS)));
   }, [locale, style]);
 }

@@ -12,7 +12,9 @@ import type { ScheduleResponse } from '@tutorio/validation';
 import { EntityAvatar } from '@/components/shared/entity-avatar';
 import { StatusBadge } from '@/components/shared/status-badges';
 import { SlotChips, useDayCode, useLengthLabel } from '@/features/lessons';
+import { zonedDate } from '@/lib/datetime';
 import { useLocalFormatter } from '@/lib/i18n/local-formatter';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 import { cn } from '@/lib/utils';
 import { plannedChanges, scheduleStatus } from '../model/filters';
 
@@ -168,11 +170,12 @@ export function NextCell({
   const t = useTranslations('schedules.list');
   const format = useLocalFormatter();
   const short = useShortDate();
+  const timeZone = useStudioTimeZone();
   if (!schedule.nextLessonAt || schedule.state === 'ENDED') {
     return <span className="text-muted-foreground">—</span>;
   }
   const next = new Date(schedule.nextLessonAt);
-  const today = next.toDateString() === new Date(now).toDateString();
+  const today = zonedDate(next, timeZone) === zonedDate(now, timeZone);
   const time = format.time(next);
   return (
     <div className={cn('flex min-w-0 flex-col', align === 'end' ? 'items-end' : 'items-start')}>

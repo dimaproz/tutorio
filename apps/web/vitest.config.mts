@@ -1,3 +1,4 @@
+/// <reference types="@vitest/browser/providers/playwright" />
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
@@ -40,6 +41,9 @@ export default defineConfig({
           name: 'unit',
           include: ['src/**/*.test.ts'],
           environment: 'node',
+          // Not the studio's zone: every date must be read on the studio's
+          // clock (`lib/datetime`), so a model that leans on the process zone fails.
+          env: { TZ: 'America/New_York' },
         },
       },
       {
@@ -60,7 +64,9 @@ export default defineConfig({
             enabled: true,
             provider: 'playwright',
             headless: true,
-            instances: [{ browser: 'chromium' }],
+            // A browser far from the studio: the stories' dates must still read
+            // Kyiv's clock (the preview's next-intl zone), not the browser's.
+            instances: [{ browser: 'chromium', context: { timezoneId: 'America/New_York' } }],
           },
         },
       },

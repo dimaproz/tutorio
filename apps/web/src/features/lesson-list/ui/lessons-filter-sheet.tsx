@@ -17,15 +17,11 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { DateField } from '@/components/shared/date-field';
 import { EntityAvatar } from '@/components/shared/entity-avatar';
 import { Segmented } from '@/components/shared/segmented';
+import { zonedDate } from '@/lib/datetime';
 import { useLocalFormatter } from '@/lib/i18n/local-formatter';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 import { useLessonPageQuery } from '../api';
-import {
-  dayKey,
-  listQuery,
-  periodRange,
-  type LessonListState,
-  type StatusOption,
-} from '../model/filters';
+import { listQuery, periodRange, type LessonListState, type StatusOption } from '../model/filters';
 import { WhoPicker, type TeacherOption, type WhoValue } from './people-menus';
 import { StatusChecks } from './status-menu';
 
@@ -73,13 +69,14 @@ export function LessonsFilterSheet({
   const tFields = useTranslations('lessons.fields');
   const format = useLocalFormatter();
   const locale = useLocale();
+  const timeZone = useStudioTimeZone();
   const [draft, setDraft] = useState<Draft>(state);
   const [draftName, setDraftName] = useState(whoName);
   const count = useLessonPageQuery(
-    { ...listQuery({ ...state, ...draft, page: 1 }, now), pageSize: 1, page: 1 },
+    { ...listQuery({ ...state, ...draft, page: 1 }, now, timeZone), pageSize: 1, page: 1 },
     open,
   );
-  const range = periodRange(draft, now);
+  const range = periodRange(draft, now, timeZone);
   const kind = draft.period === 'week' || draft.period === 'month' ? draft.period : 'custom';
   const who: WhoValue | null = draft.studentId
     ? { kind: 'student', id: draft.studentId }
@@ -132,7 +129,7 @@ export function LessonsFilterSheet({
             value={kind}
             onValueChange={(next) => {
               if (next === 'custom') {
-                const today = dayKey(new Date(now));
+                const today = zonedDate(now, timeZone);
                 update({ period: 'custom', from: today, to: today });
               } else update({ period: next, from: null, to: null });
             }}

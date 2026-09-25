@@ -7,7 +7,10 @@ import { localSlotOf, moveChange, scheduleConflicts } from './move';
 import { defaultFixTarget, fixDto, fixImpact, fixTargets } from './status-fix';
 import { lessonFixture } from './testing';
 
+/** 17:00 on Friday 11 September in Kyiv (UTC+3). */
 const START = Date.parse('2026-09-11T14:00:00.000Z');
+/** The studio's zone; the process runs in another one (vitest config). */
+const TZ = 'Europe/Kyiv';
 const HOUR = 3_600_000;
 
 describe('cancel form', () => {
@@ -51,14 +54,20 @@ describe('edit form', () => {
   const lesson = lessonFixture({ topic: 'Past Perfect', notes: null });
 
   it('sends nothing when nothing changed', () => {
-    expect(editPlan(editFormDefaults(lesson), lesson, { priceLocked: false })).toEqual({
+    expect(
+      editPlan(editFormDefaults(lesson, TZ), lesson, { priceLocked: false, timeZone: TZ }),
+    ).toEqual({
       move: null,
       update: null,
     });
   });
 
+  it("reads the lesson's date and time on the studio's clock", () => {
+    expect(editFormDefaults(lesson, TZ)).toMatchObject({ date: '2026-09-11', time: '17:00' });
+  });
+
   it('moves the lesson with its new length and updates the rest', () => {
-    const defaults = editFormDefaults(lesson);
+    const defaults = editFormDefaults(lesson, TZ);
     const [hours, minutes] = defaults.time.split(':').map(Number);
     const later = hours! * 60 + minutes! + 90;
     const time = `${String(Math.floor(later / 60)).padStart(2, '0')}:${String(later % 60).padStart(2, '0')}`;
@@ -70,7 +79,7 @@ describe('edit form', () => {
       notes: 'Bring audio',
       price: '550',
     };
-    const plan = editPlan(values, lesson, { priceLocked: false });
+    const plan = editPlan(values, lesson, { priceLocked: false, timeZone: TZ });
     expect(plan.move?.durationMin).toBe(90);
     expect(Date.parse(plan.move!.startsAtUtc) - START).toBe(1.5 * HOUR);
     expect(plan.update).toEqual({
@@ -83,8 +92,8 @@ describe('edit form', () => {
   });
 
   it('keeps a length change in the update when the lesson stays, and drops a locked price', () => {
-    const values = { ...editFormDefaults(lesson), durationMin: '45', price: '999' };
-    expect(editPlan(values, lesson, { priceLocked: true })).toEqual({
+    const values = { ...editFormDefaults(lesson, TZ), durationMin: '45', price: '999' };
+    expect(editPlan(values, lesson, { priceLocked: true, timeZone: TZ })).toEqual({
       move: null,
       update: { durationMin: 45 },
     });
@@ -95,10 +104,11 @@ describe('makeup form', () => {
   const original = lessonFixture({ status: 'CANCELLED_CHARGED', topic: 'Past Perfect' });
 
   it('starts from the original the next day and sends only what differs', () => {
-    const values = makeupFormDefaults(original, START);
+    const values = makeupFormDefaults(original, START, TZ);
+    expect(values).toMatchObject({ date: '2026-09-12', time: '17:00' });
     expect(values.durationMin).toBe('60');
     expect(values.topic).toBe('Past Perfect');
-    const dto = makeupDto({ ...values, durationMin: '90' }, original);
+    const dto = makeupDto({ ...values, durationMin: '90' }, original, TZ);
     expect(dto).toMatchObject({ durationMin: 90, topic: 'Past Perfect' });
     expect(dto).not.toHaveProperty('teacherId');
     expect(Date.parse(dto.startsAtUtc) - START).toBe(24 * HOUR);

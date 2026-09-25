@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { BanknoteIcon, CircleCheckIcon, HourglassIcon } from 'lucide-react';
 import { useNow, useTranslations } from 'next-intl';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 import { useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -36,7 +37,8 @@ export function PackagePaymentDialog({ pkg, title, onClose, onDone }: OperationP
   const format = usePackageFormat();
   const clock = useNow();
   const [now] = useState(() => clock);
-  const today = dayKey(now);
+  const timeZone = useStudioTimeZone();
+  const today = dayKey(now, timeZone);
   // One key per opening: a repeated click records the money once.
   const [idempotencyKey] = useState(() => crypto.randomUUID());
   const left = owedMinor(pkg);
@@ -52,7 +54,7 @@ export function PackagePaymentDialog({ pkg, title, onClose, onDone }: OperationP
 
   const submit = form.handleSubmit((values) =>
     record.mutate(
-      { ...packagePaymentDto(values, pkg, today, now), idempotencyKey },
+      { ...packagePaymentDto(values, pkg, today, now, timeZone), idempotencyKey },
       {
         onSuccess: () => {
           toast.success(t('done', { amount: format.money(amount, currency) }));

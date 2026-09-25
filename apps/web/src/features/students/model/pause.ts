@@ -5,6 +5,7 @@ import type {
   UpdatePauseDto,
 } from '@tutorio/validation';
 import { z } from 'zod';
+import { dayEndIso, dayStartIso, zonedDate } from '@/lib/datetime';
 
 /**
  * The reasons offered as chips (board 02, state 08). A pause stores the key
@@ -58,23 +59,9 @@ export const pauseFormSchema = z
 
 export type PauseFormValues = z.infer<typeof pauseFormSchema>;
 
-/** "yyyy-MM-dd" of a local date. */
-export function dateKey(date: Date): string {
-  const pad = (part: number) => String(part).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-}
-
-/** The local midnight of a "yyyy-MM-dd". */
-function midnight(key: string): Date {
-  const [year, month, day] = key.split('-').map(Number);
-  return new Date(year!, month! - 1, day!);
-}
-
-/** The local midnight after a "yyyy-MM-dd": the exclusive end of that day. */
-function dayAfter(key: string): Date {
-  const date = midnight(key);
-  date.setDate(date.getDate() + 1);
-  return date;
+/** "yyyy-MM-dd": the studio's day of an instant. */
+export function dateKey(date: Date | number | string, timeZone: string): string {
+  return zonedDate(date, timeZone);
 }
 
 /** The pause's last day, from its exclusive end. */
@@ -90,17 +77,19 @@ export function pauseFormDefaults({
   today,
   enrollmentId,
   pause,
+  timeZone,
 }: {
   today: string;
   enrollmentId?: string | null;
   pause?: PauseResponse | null;
+  timeZone: string;
 }): PauseFormValues {
   if (pause) {
     return {
       scope: pause.enrollmentId ? 'direction' : 'student',
       enrollmentId: pause.enrollmentId ?? '',
-      from: dateKey(new Date(pause.startsAt)),
-      until: pause.endsAt ? dateKey(lastPauseDay(pause.endsAt)) : '',
+      from: dateKey(pause.startsAt, timeZone),
+      until: pause.endsAt ? dateKey(lastPauseDay(pause.endsAt), timeZone) : '',
       reason: isPauseReason(pause.reason) ? pause.reason : 'OTHER',
     };
   }
@@ -115,12 +104,13 @@ export function pauseFormDefaults({
 
 /**
  * The window as the API takes it: from the first day's midnight (today
- * means now) to the midnight after the last day, exclusive (L-100).
+ * means now) to the midnight after the last day, exclusive (L-100) — the
+ * studio's midnights.
  */
-function window(values: PauseFormValues, today: string) {
+function window(values: PauseFormValues, today: string, timeZone: string) {
   return {
-    ...(values.from > today ? { startsAt: midnight(values.from).toISOString() } : {}),
-    endsAt: values.until ? dayAfter(values.until).toISOString() : null,
+    ...(values.from > today ? { startsAt: dayStartIso(values.from, timeZone) } : {}),
+    endsAt: values.until ? dayEndIso(values.until, timeZone) : null,
   };
 }
 
@@ -128,11 +118,12 @@ export function pauseCreateDto(
   values: PauseFormValues,
   studentId: string,
   today: string,
+  timeZone: string,
 ): CreatePauseDto {
   return {
     studentId,
     enrollmentId: values.scope === 'direction' ? values.enrollmentId : null,
-    ...window(values, today),
+    ...window(values, today, timeZone),
     reason: values.reason,
   };
 }
@@ -141,10 +132,11 @@ export function pausePreviewDto(
   values: PauseFormValues,
   studentId: string,
   today: string,
+  timeZone: string,
   replacesPauseId?: string,
 ): PausePreviewDto {
   return {
-    ...pauseCreateDto(values, studentId, today),
+    ...pauseCreateDto(values, studentId, today, timeZone),
     ...(replacesPauseId ? { replacesPauseId } : {}),
   };
 }
@@ -157,8 +149,9 @@ export function pauseUpdateDto(
   values: PauseFormValues,
   pause: PauseResponse,
   today: string,
+  timeZone: string,
 ): UpdatePauseDto {
-  const { startsAt, endsAt } = window(values, today);
+  const { startsAt, endsAt } = window(values, today, timeZone);
   if (pause.state === 'ACTIVE') return { endsAt, reason: values.reason };
   return {
     enrollmentId: values.scope === 'direction' ? values.enrollmentId : null,

@@ -29,6 +29,7 @@ import {
 import { usePackagesQuery, usePrefetchPackagesQuery } from '@/lib/api/packages';
 import { useLessonsQuery, usePrefetchLessonsQuery } from '@/lib/api/scheduling';
 import { useStudentQuery } from '@/lib/api/students';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 import { StudentInformationCard } from './student-information-card';
 import { StudentNextLesson } from './student-next-lesson';
 import { StudentNotesCard } from './student-notes-card';
@@ -57,10 +58,11 @@ export function StudentDetailView({ studentId }: { studentId: string }) {
   // one the profile reads.
   const clock = useNow();
   const [now] = useState(() => clock.getTime());
+  const timeZone = useStudioTimeZone();
   const student = useStudentQuery(studentId);
   // The lessons and packages need only the id, so they start with the record
   // instead of after it. The keys are the ones the blocks below read.
-  usePrefetchLessonsQuery({ ...studentLessonsRange(now), studentId });
+  usePrefetchLessonsQuery({ ...studentLessonsRange(now, timeZone), studentId });
   usePrefetchPackagesQuery(studentPackagesFilters(studentId));
   if (student.isPending) return <DetailFrame ratio="wide" loading={<LoadingPanel size="lg" />} />;
   // A failed background refresh keeps the profile on screen; only a first
@@ -94,6 +96,7 @@ export function StudentProfileContent({
   nowMs?: number;
 }) {
   const t = useTranslations('students');
+  const timeZone = useStudioTimeZone();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -124,7 +127,10 @@ export function StudentProfileContent({
   const parentsSectionRef = useRef<HTMLDivElement>(null);
   const firstName = student.fullName.split(/\s+/)[0] || student.fullName;
 
-  const lessons = useLessonsQuery({ ...studentLessonsRange(now), studentId: student.id });
+  const lessons = useLessonsQuery({
+    ...studentLessonsRange(now, timeZone),
+    studentId: student.id,
+  });
   const packages = usePackagesQuery(studentPackagesFilters(student.id));
   // A failed or partial read is reported as unknown, never as an empty record:
   // "0 credits" and "no payments" would be claims the page cannot back.

@@ -21,6 +21,7 @@ import { PriceField } from '@/components/shared/price-field';
 import { FieldFrame, TextField } from '@/components/shared/text-field';
 import { timeSteps } from '@/components/shared/time-field';
 import { AvatarStack, WhoCard, WhoChip } from '@/components/shared/who-picker';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 import { capitalizeFirst } from '@/lib/utils';
 import { useRescheduleLessonMutation, useUpdateLessonMutation } from '../api';
 import { busySlots, localInstant } from '../model/busy';
@@ -169,7 +170,8 @@ export function LessonEdit({
   const update = useUpdateLessonMutation(lesson.id);
   const reschedule = useRescheduleLessonMutation(lesson.id);
   const guard = useConflictGuard();
-  const form = useLessonForm<EditFormValues>(editFormSchema, editFormDefaults(lesson));
+  const timeZone = useStudioTimeZone();
+  const form = useLessonForm<EditFormValues>(editFormSchema, editFormDefaults(lesson, timeZone));
   const [moving, setMoving] = useState<EditPlan | null>(null);
   const [date, time, durationMin, teacherId] = useWatch({
     control: form.control,
@@ -195,7 +197,7 @@ export function LessonEdit({
   };
   const start =
     /^\d{4}-\d{2}-\d{2}$/.test(date) && /^\d{2}:\d{2}$/.test(time)
-      ? localInstant(date, time)
+      ? localInstant(date, time, timeZone)
       : null;
 
   const save = (plan: EditPlan, moveScope: RescheduleScopeDto) => {
@@ -225,7 +227,7 @@ export function LessonEdit({
   };
 
   const submit = form.handleSubmit(async (values) => {
-    const plan = editPlan(values, lesson, { priceLocked });
+    const plan = editPlan(values, lesson, { priceLocked, timeZone });
     if (!plan.move && !plan.update) {
       onDone();
       return;
@@ -311,7 +313,7 @@ export function LessonEdit({
               shouldValidate: form.formState.isSubmitted,
             })
           }
-          busy={[busySlots(dayLessons, scope, date, timeSteps(15))]}
+          busy={[busySlots(dayLessons, scope, date, timeSteps(15), timeZone)]}
           errors={[{ date: errors.date?.message, time: errors.time?.message }]}
           notes={[
             !scheduled ? (

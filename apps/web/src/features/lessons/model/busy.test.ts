@@ -8,7 +8,9 @@ import {
   type BusyLesson,
 } from './busy';
 
-const iso = (date: string, time: string) => new Date(localInstant(date, time)).toISOString();
+/** The studio's zone; the process runs in another one (vitest config). */
+const TZ = 'Europe/Kyiv';
+const iso = (date: string, time: string) => new Date(localInstant(date, time, TZ)).toISOString();
 
 function lesson(fields: Partial<BusyLesson> & Pick<BusyLesson, 'id'>): BusyLesson {
   return {
@@ -39,64 +41,68 @@ const CANCELLED = lesson({
 
 describe('busySlots', () => {
   it('marks the slots that start while a lesson is on, with the name', () => {
-    const marks = busySlots([B2], { teacherId: 'dmytro' }, '2026-10-01', [
-      '17:45',
-      '18:00',
-      '18:30',
-      '19:15',
-      '19:30',
-    ]);
+    const marks = busySlots(
+      [B2],
+      { teacherId: 'dmytro' },
+      '2026-10-01',
+      ['17:45', '18:00', '18:30', '19:15', '19:30'],
+      TZ,
+    );
     expect(marks).toEqual({ '18:00': 'B2 prep', '18:30': 'B2 prep', '19:15': 'B2 prep' });
   });
 
   it('checks the student and their groups, not other teachers', () => {
     const lessons = [B2, ANNA];
     expect(
-      busySlots(lessons, { teacherId: 'oleh', studentId: 's1' }, '2026-10-01', ['10:00']),
+      busySlots(lessons, { teacherId: 'oleh', studentId: 's1' }, '2026-10-01', ['10:00'], TZ),
     ).toEqual({
       '10:00': 'Anna Shevchenko',
     });
     expect(
-      busySlots(lessons, { teacherId: 'oleh', groupIds: ['g1'] }, '2026-10-01', ['18:30']),
+      busySlots(lessons, { teacherId: 'oleh', groupIds: ['g1'] }, '2026-10-01', ['18:30'], TZ),
     ).toEqual({
       '18:30': 'B2 prep',
     });
-    expect(busySlots(lessons, { teacherId: 'oleh' }, '2026-10-01', ['10:00', '18:30'])).toEqual({});
+    expect(busySlots(lessons, { teacherId: 'oleh' }, '2026-10-01', ['10:00', '18:30'], TZ)).toEqual(
+      {},
+    );
   });
 
   it('ignores cancelled lessons and the lesson being edited', () => {
-    expect(busySlots([CANCELLED], { teacherId: 'dmytro' }, '2026-10-01', ['12:00'])).toEqual({});
+    expect(busySlots([CANCELLED], { teacherId: 'dmytro' }, '2026-10-01', ['12:00'], TZ)).toEqual(
+      {},
+    );
     expect(
-      busySlots([B2], { teacherId: 'dmytro', excludeLessonId: 'b2' }, '2026-10-01', ['18:00']),
+      busySlots([B2], { teacherId: 'dmytro', excludeLessonId: 'b2' }, '2026-10-01', ['18:00'], TZ),
     ).toEqual({});
   });
 
   it('marks nothing without a date', () => {
-    expect(busySlots([B2], { teacherId: 'dmytro' }, '', ['18:00'])).toEqual({});
+    expect(busySlots([B2], { teacherId: 'dmytro' }, '', ['18:00'], TZ)).toEqual({});
   });
 });
 
 describe('teacherBusyAt and overlapping', () => {
   it('finds the teacher lesson across the new slot', () => {
-    expect(teacherBusyAt([B2, ANNA], 'dmytro', localInstant('2026-10-01', '17:30'), 60)?.id).toBe(
-      'b2',
-    );
     expect(
-      teacherBusyAt([B2, ANNA], 'dmytro', localInstant('2026-10-01', '16:00'), 60),
+      teacherBusyAt([B2, ANNA], 'dmytro', localInstant('2026-10-01', '17:30', TZ), 60)?.id,
+    ).toBe('b2');
+    expect(
+      teacherBusyAt([B2, ANNA], 'dmytro', localInstant('2026-10-01', '16:00', TZ), 60),
     ).toBeUndefined();
     expect(
-      overlapping([B2], { teacherId: 'dmytro' }, localInstant('2026-10-01', '19:30'), 30),
+      overlapping([B2], { teacherId: 'dmytro' }, localInstant('2026-10-01', '19:30', TZ), 30),
     ).toEqual([]);
   });
 });
 
 describe('daysWindow', () => {
   it('spans the first to the day after the last date', () => {
-    const window = daysWindow(['2026-10-08', '', '2026-10-01']);
+    const window = daysWindow(['2026-10-08', '', '2026-10-01'], TZ);
     expect(window).toEqual({
-      from: new Date('2026-10-01T00:00').toISOString(),
-      to: new Date('2026-10-09T00:00').toISOString(),
+      from: '2026-09-30T21:00:00.000Z',
+      to: '2026-10-08T21:00:00.000Z',
     });
-    expect(daysWindow(['', 'x'])).toBeNull();
+    expect(daysWindow(['', 'x'], TZ)).toBeNull();
   });
 });

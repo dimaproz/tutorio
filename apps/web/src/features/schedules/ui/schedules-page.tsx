@@ -4,6 +4,8 @@ import { useCallback, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { PlusIcon } from 'lucide-react';
 import { useNow, useTranslations } from 'next-intl';
+import { addCalendarDays, calendarWeekStart, dayStartIso, zonedDate } from '@/lib/datetime';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 import { useIsSoloWorkspace } from '@/components/app/session-provider';
 import { Button } from '@/components/ui/button';
 import { CollectionFrame } from '@/components/shared/collection-frame';
@@ -38,14 +40,13 @@ import { SchedulesToolbar, type ToolbarActions } from './schedules-toolbar';
 
 const TEACHER_FILTERS = { page: 1, pageSize: 100, state: 'all' as const };
 
-/** Monday to Monday of the week `now` is in, local. */
-function weekOf(now: number) {
-  const from = new Date(now);
-  from.setHours(0, 0, 0, 0);
-  from.setDate(from.getDate() - ((from.getDay() + 6) % 7));
-  const to = new Date(from);
-  to.setDate(to.getDate() + 7);
-  return { from: from.toISOString(), to: to.toISOString() };
+/** Monday to Monday of the studio's week `now` is in. */
+function weekOf(now: number, timeZone: string) {
+  const monday = calendarWeekStart(zonedDate(now, timeZone));
+  return {
+    from: dayStartIso(monday, timeZone),
+    to: dayStartIso(addCalendarDays(monday, 7), timeZone),
+  };
 }
 
 /**
@@ -62,6 +63,7 @@ export function SchedulesPage({ nowMs }: { nowMs?: number } = {}) {
   const updateParams = useUpdateSearchParams();
   const clock = useNow();
   const [now] = useState(() => nowMs ?? clock.getTime());
+  const timeZone = useStudioTimeZone();
   const solo = useIsSoloWorkspace();
   const state = useMemo(() => readListState(params), [params]);
   const [creating, setCreating] = useState(false);
@@ -72,7 +74,7 @@ export function SchedulesPage({ nowMs }: { nowMs?: number } = {}) {
   const [picked, setPicked] = useState<{ id: string; name: string } | null>(null);
 
   const schedules = useSchedulePageQuery(listQuery(state));
-  const week = weekOf(now);
+  const week = weekOf(now, timeZone);
   const weekLessons = useWeekLessonCountQuery(week.from, week.to);
   const data = schedules.data;
   const items = data?.items ?? [];

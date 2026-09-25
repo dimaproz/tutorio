@@ -3,6 +3,7 @@
 import { LayersIcon } from 'lucide-react';
 import { useFormatter, useTranslations } from 'next-intl';
 import { EntityAvatar } from '@/components/shared/entity-avatar';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 import { capitalizeFirst } from '@/lib/utils';
 import { lessonsByDay, type BulkCancelLesson } from '../../model/bulk-cancel';
 import { useLessonDates } from '../lesson-format';
@@ -23,12 +24,13 @@ export function BulkCancelDays({
   const t = useTranslations('lessons.bulkCancel');
   const format = useFormatter();
   const dates = useLessonDates();
+  const timeZone = useStudioTimeZone();
   return (
     <section
       aria-label={t('listLabel')}
       className="flex flex-col gap-4 rounded-card bg-secondary px-4 py-4"
     >
-      {lessonsByDay(lessons).map(({ day, lessons: items }) => (
+      {lessonsByDay(lessons, timeZone).map(({ day, lessons: items }) => (
         <div key={day} className="flex flex-col gap-2">
           <h3 className="flex items-center gap-2 text-[15px] leading-5">
             <span className="font-semibold">

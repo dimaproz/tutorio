@@ -8,7 +8,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Separator } from '@/components/ui/separator';
 import { DateField } from '@/components/shared/date-field';
 import { FilterPill } from '@/components/shared/filter-pill';
+import { zonedDate } from '@/lib/datetime';
 import { useLocalFormatter } from '@/lib/i18n/local-formatter';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 import { capitalizeFirst, cn } from '@/lib/utils';
 import {
   PERIOD_PRESETS,
@@ -65,9 +67,11 @@ export function MenuOption({
 export function usePeriodLabel() {
   const t = useTranslations('lessonList.periods');
   const format = useLocalFormatter();
+  const timeZone = useStudioTimeZone();
+  const year = (date: Date) => zonedDate(date, timeZone).slice(0, 4);
   const monthYear = (date: Date, withYear: boolean) => {
     const month = capitalizeFirst(format.dateTime(date, { month: 'long' }));
-    return withYear ? `${month} ${date.getFullYear()}` : month;
+    return withYear ? `${month} ${year(date)}` : month;
   };
   const dayMonth = (date: Date) => format.dateTime(date, { day: 'numeric', month: 'long' });
   return (
@@ -75,7 +79,7 @@ export function usePeriodLabel() {
     now: number,
     { short = false }: { short?: boolean } = {},
   ) => {
-    const range = periodRange(state, now);
+    const range = periodRange(state, now, timeZone);
     if (!range) return t('all');
     const last = new Date(range.to.getTime() - 1);
     switch (state.period) {
@@ -87,10 +91,10 @@ export function usePeriodLabel() {
       case 'week':
         return format.dateTimeRange(range.from, last, { day: 'numeric', month: 'long' });
       default: {
-        const year = short ? '' : ` ${last.getFullYear()}`;
-        return range.from.getTime() === new Date(last).setHours(0, 0, 0, 0)
-          ? `${dayMonth(range.from)}${year}`
-          : `${format.dateTimeRange(range.from, last, { day: 'numeric', month: 'long' })}${year}`;
+        const suffix = short ? '' : ` ${year(last)}`;
+        return zonedDate(range.from, timeZone) === zonedDate(last, timeZone)
+          ? `${dayMonth(range.from)}${suffix}`
+          : `${format.dateTimeRange(range.from, last, { day: 'numeric', month: 'long' })}${suffix}`;
       }
     }
   };
@@ -119,11 +123,9 @@ export function PeriodMenu({
   const format = useLocalFormatter();
   const locale = useLocale();
   const label = usePeriodLabel();
-  const range = periodRange(state, now);
-  const toKey = (date: Date) =>
-    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
-      date.getDate(),
-    ).padStart(2, '0')}`;
+  const timeZone = useStudioTimeZone();
+  const range = periodRange(state, now, timeZone);
+  const toKey = (date: Date) => zonedDate(date, timeZone);
   const from = range ? toKey(range.from) : '';
   const to = range ? toKey(new Date(range.to.getTime() - 1)) : '';
   const fieldFormat = (date: Date) =>

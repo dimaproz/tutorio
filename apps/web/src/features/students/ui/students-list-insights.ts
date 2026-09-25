@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { useFormatter } from 'next-intl';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 import { deriveCollectionMetrics } from '@/features/students/model/collection-metrics';
 import {
   collectionLessonWindow,
@@ -19,10 +20,11 @@ import type { PackagesReadState } from './student-row-cells';
  */
 export function useStudentsCollectionInsights(now: number) {
   const format = useFormatter();
+  const timeZone = useStudioTimeZone();
 
   // One lesson read covers both the week and the upcoming horizon. It is a
   // flat, complete list, so the weekly count is exact.
-  const lessonWindow = useMemo(() => collectionLessonWindow(now), [now]);
+  const lessonWindow = useMemo(() => collectionLessonWindow(now, timeZone), [now, timeZone]);
   const lessons = useLessonsQuery(lessonWindow.query);
   const split = useMemo(
     () =>

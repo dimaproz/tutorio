@@ -1,5 +1,5 @@
-import { addDays, endOfWeek, startOfDay, startOfWeek } from 'date-fns';
 import type { LessonResponse } from '@tutorio/validation';
+import { addCalendarDays, calendarWeekStart, zonedDate, zonedDayStart } from '@/lib/datetime';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** How far ahead the collection looks for each student's next lesson. */
@@ -17,17 +17,20 @@ export type CollectionLessonWindow = {
   query: { from: string; to: string };
 };
 
-export function collectionLessonWindow(now: number): CollectionLessonWindow {
+/** The window on the studio's clock: its week, Monday to Monday, and its days. */
+export function collectionLessonWindow(now: number, timeZone: string): CollectionLessonWindow {
+  const today = zonedDate(now, timeZone);
+  const monday = calendarWeekStart(today);
   const week = {
-    from: startOfWeek(now, { weekStartsOn: 1 }),
-    to: endOfWeek(now, { weekStartsOn: 1 }),
+    from: zonedDayStart(monday, timeZone),
+    to: zonedDayStart(addCalendarDays(monday, 7), timeZone),
   };
   return {
     week,
     query: {
       from: week.from.toISOString(),
       // One day past the horizon, so a lesson later today + 60 days still fits.
-      to: addDays(startOfDay(now), UPCOMING_DAYS + 1).toISOString(),
+      to: zonedDayStart(addCalendarDays(today, UPCOMING_DAYS + 1), timeZone).toISOString(),
     },
   };
 }

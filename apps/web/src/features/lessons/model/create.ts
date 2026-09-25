@@ -8,7 +8,16 @@ import {
 } from '@tutorio/validation';
 import { z } from 'zod';
 import { optionalText } from '@/lib/forms/helpers';
-import { localInputToIso } from '@/lib/datetime';
+import {
+  addCalendarDays,
+  calendarWeekday,
+  dayStartIso,
+  isCalendarDate,
+  zonedDateTime,
+  zonedDayEnd,
+  zonedDayStart,
+  zonedIso,
+} from '@/lib/datetime';
 import { parsePriceInput } from '@/lib/money';
 import { lessonDurationString, lessonPriceString } from './fields';
 
@@ -96,18 +105,7 @@ export type CreateFormValues = z.infer<typeof createFormSchema>;
 
 /** The date a week after "yyyy-MM-dd": «Додати дату» adds a row seven days later. */
 export function weekAfter(date: string): string {
-  const [year, month, day] = date.split('-').map(Number);
-  if (!year || !month || !day) return '';
-  const next = new Date(year, month - 1, day + 7);
-  const pad = (part: number) => String(part).padStart(2, '0');
-  return `${next.getFullYear()}-${pad(next.getMonth() + 1)}-${pad(next.getDate())}`;
-}
-
-/** A local "yyyy-MM-dd" of an instant. */
-export function localDate(ms: number): string {
-  const date = new Date(ms);
-  const pad = (part: number) => String(part).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  return isCalendarDate(date) ? addCalendarDays(date, 7) : '';
 }
 
 export function createFormDefaults({
@@ -150,12 +148,12 @@ export function createFormDefaults({
 }
 
 /** The dates of the rows that are already over when the form is saved (L-31). */
-export function pastRows(values: Pick<CreateFormValues, 'dates'>, now: number) {
+export function pastRows(values: Pick<CreateFormValues, 'dates'>, now: number, timeZone: string) {
   return values.dates.map(
     (row) =>
       DATE_RE.test(row.date) &&
       TIME_RE.test(row.time) &&
-      Date.parse(localInputToIso(`${row.date}T${row.time}`)) < now,
+      zonedDateTime(row.date, row.time, timeZone).getTime() < now,
   );
 }
 
@@ -193,15 +191,18 @@ export function createLessonRequests(
     priceMinor,
     currency,
     now,
+    timeZone,
   }: {
     target: LessonTarget;
     priceMinor: number;
     currency: string;
     now: number;
+    /** The studio's zone: the rows are its wall clock. */
+    timeZone: string;
   },
 ): CreateLessonDto[] {
-  const past = pastRows(values, now);
-  const starts = values.dates.map((row) => localInputToIso(`${row.date}T${row.time}`));
+  const past = pastRows(values, now, timeZone);
+  const starts = values.dates.map((row) => zonedIso(row.date, row.time, timeZone));
   const group = target.kind === 'group';
   const base = {
     ...(target.kind === 'direction'
@@ -238,14 +239,18 @@ export function weeklySlots(
 /** A new schedule for the student with the teacher, or for the group (L-20). */
 export function createScheduleDto(
   values: CreateFormValues,
-  { priceMinor, currency }: { priceMinor: number | null; currency: string },
+  {
+    priceMinor,
+    currency,
+    timeZone,
+  }: { priceMinor: number | null; currency: string; timeZone: string },
 ): CreateScheduleDto {
   return {
     ...(values.who === 'group' ? { groupId: values.groupId } : { studentId: values.studentId }),
     ...(values.who === 'student' ? { teacherId: values.teacherId } : {}),
     slots: weeklySlots(values),
     durationMin: Number(values.durationMin),
-    startDate: localInputToIso(`${values.from}T00:00`),
+    startDate: dayStartIso(values.from, timeZone),
     endsOn: values.until || null,
     ...(priceMinor !== null
       ? { priceMinor, currency: currency as CreateScheduleDto['currency'] }
@@ -261,6 +266,7 @@ export function createScheduleDto(
 export function scheduleChangeDto(
   values: CreateFormValues,
   existing: readonly ScheduleSlotDto[],
+  timeZone: string,
 ): ScheduleChangeDto {
   const added = weeklySlots(values);
   const slots = [
@@ -270,7 +276,7 @@ export function scheduleChangeDto(
     ...added,
   ].sort((a, b) => ((a.weekday + 6) % 7) - ((b.weekday + 6) % 7));
   return {
-    effectiveFrom: localInputToIso(`${values.from}T00:00`),
+    effectiveFrom: dayStartIso(values.from, timeZone),
     slots,
     durationMin: Number(values.durationMin),
   };
@@ -279,7 +285,7 @@ export function scheduleChangeDto(
 /**
  * How many lessons a new schedule creates at once: its occurrences from the
  * later of the start and now to the earlier of the end day and now + the
- * horizon (L-22), as the API generates them.
+ * horizon (L-22), as the API generates them on the studio's clock.
  */
 export function newScheduleLessonCount({
   slots,
@@ -287,30 +293,30 @@ export function newScheduleLessonCount({
   until,
   horizonWeeks,
   now,
+  timeZone,
 }: {
   slots: readonly ScheduleSlotDto[];
   from: string;
   until: string;
   horizonWeeks: number;
   now: number;
+  timeZone: string;
 }): number {
-  if (!DATE_RE.test(from) || slots.length === 0) return 0;
-  const start = Math.max(Date.parse(localInputToIso(`${from}T00:00`)), now);
+  if (!isCalendarDate(from) || slots.length === 0) return 0;
+  const start = Math.max(zonedDayStart(from, timeZone).getTime(), now);
   let end = now + horizonWeeks * 7 * DAY_MS;
-  if (DATE_RE.test(until)) {
-    end = Math.min(end, Date.parse(localInputToIso(`${until}T00:00`)) + DAY_MS);
-  }
+  if (isCalendarDate(until)) end = Math.min(end, zonedDayEnd(until, timeZone).getTime());
   let count = 0;
-  const cursor = new Date(Date.parse(localInputToIso(`${from}T00:00`)));
-  while (cursor.getTime() < end) {
+  for (
+    let day = from;
+    zonedDayStart(day, timeZone).getTime() < end;
+    day = addCalendarDays(day, 1)
+  ) {
     for (const slot of slots) {
-      if (cursor.getDay() !== slot.weekday || !TIME_RE.test(slot.localTime)) continue;
-      const [hours, minutes] = slot.localTime.split(':').map(Number);
-      const at = new Date(cursor);
-      at.setHours(hours!, minutes!, 0, 0);
-      if (at.getTime() >= start && at.getTime() < end) count += 1;
+      if (calendarWeekday(day) !== slot.weekday || !TIME_RE.test(slot.localTime)) continue;
+      const at = zonedDateTime(day, slot.localTime, timeZone).getTime();
+      if (at >= start && at < end) count += 1;
     }
-    cursor.setDate(cursor.getDate() + 1);
   }
   return count;
 }
@@ -322,8 +328,8 @@ export function packageCoverage(count: number, creditsLeft: number) {
 }
 
 /** The lessons of a one-off booking that are charged (L-31): a free cancellation is not. */
-export function chargedCount(values: CreateFormValues, now: number): number {
-  const past = pastRows(values, now);
+export function chargedCount(values: CreateFormValues, now: number, timeZone: string): number {
+  const past = pastRows(values, now, timeZone);
   const behind = past.filter(Boolean).length;
   const freeBehind =
     values.pastStatus === 'CANCELLED' && values.cancelCharge === 'free' ? behind : 0;

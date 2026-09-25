@@ -7,6 +7,7 @@ import type {
   ScheduleResponse,
   StudentBillingResponse,
 } from '@tutorio/validation';
+import { DEFAULT_TIME_ZONE, zonedIso } from '@/lib/datetime';
 
 /**
  * The lesson form's stories (S02): Anna's directions in every billing state
@@ -29,13 +30,14 @@ const lessonId = (n: number) => `88888888-8888-4888-b000-${pad(n)}`;
 export const kyivAutumn = (month: 9 | 10, day: number, hour: number, minute = 0) =>
   new Date(Date.UTC(2026, month - 1, day, hour - 3, minute)).toISOString();
 
+const pad2 = (n: number) => String(n).padStart(2, '0');
 /**
- * A wall-clock time in the browser's zone, as the forms read their dates and
- * times (`lib/datetime`): the form's day read lines up with the rows in any
- * zone the stories run in.
+ * A wall-clock time on the studio's (Kyiv) clock, as the forms read their
+ * dates and times (`lib/datetime`): the form's day read lines up with the
+ * rows in any zone the browser runs in.
  */
 const local = (month: 9 | 10, day: number, hour: number, minute = 0) =>
-  new Date(2026, month - 1, day, hour, minute).toISOString();
+  zonedIso(`2026-${pad2(month)}-${pad2(day)}`, `${pad2(hour)}:${pad2(minute)}`, DEFAULT_TIME_ZONE);
 
 /** The form's clock: noon on Wednesday 30 September. */
 export const CREATE_CLOCK = Date.parse(local(9, 30, 12));

@@ -60,7 +60,7 @@ export function usePackageFormat() {
         const date = new Date(value);
         return {
           top: format.dateTime(date, { weekday: 'short' }).toLocaleUpperCase(locale),
-          day: String(date.getDate()),
+          day: format.dateTime(date, { day: 'numeric' }),
         };
       },
       /** "вер." — the month of a lesson row. */

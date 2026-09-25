@@ -2,6 +2,7 @@
 
 import { createContext, use, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { NextIntlClientProvider, useLocale } from 'next-intl';
 import type { AuthMe } from '@tutorio/validation';
 import { LoadingScreen } from '@/components/shared/loading';
 import { useSessionQuery } from '@/lib/auth/client';
@@ -21,6 +22,7 @@ export function SessionProvider({
   initialSession?: AuthMe;
 }) {
   const router = useRouter();
+  const locale = useLocale();
   const session = useSessionQuery(initialSession);
 
   const unauthenticated = session.isError && session.error.status === 401;
@@ -41,7 +43,15 @@ export function SessionProvider({
     return <LoadingScreen />;
   }
 
-  return <SessionContext value={session.data}>{children}</SessionContext>;
+  // Every date inside the app is typed and read on the studio's clock: the
+  // nested provider keeps the messages and swaps only the zone.
+  return (
+    <SessionContext value={session.data}>
+      <NextIntlClientProvider locale={locale} timeZone={session.data.workspace.timezone}>
+        {children}
+      </NextIntlClientProvider>
+    </SessionContext>
+  );
 }
 
 export function useSession(): AuthMe {

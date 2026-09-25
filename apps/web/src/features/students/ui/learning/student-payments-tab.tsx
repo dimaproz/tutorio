@@ -9,6 +9,7 @@ import {
   WalletCardsIcon,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 import type { PackageResponse, PaymentMethodDto, PaymentResponse } from '@tutorio/validation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/shared/empty-state';
@@ -54,6 +55,7 @@ export function StudentPaymentsTab({
 }) {
   const t = useTranslations('students.paymentsTab');
   const format = useLearningFormat();
+  const timeZone = useStudioTimeZone();
 
   if (error) return <QueryErrorAlert error={error} title={t('error')} onRetry={onRetry} />;
   if (loading) {
@@ -66,7 +68,7 @@ export function StudentPaymentsTab({
       </div>
     );
   }
-  const months = ledgerMonths(payments, packages);
+  const months = ledgerMonths(payments, packages, timeZone);
   if (months.length === 0) {
     return (
       <EmptyState

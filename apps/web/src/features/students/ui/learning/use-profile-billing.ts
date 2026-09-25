@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 import {
   useDirectionSchedules,
   useStudentBillingQuery,
@@ -21,6 +22,7 @@ import {
  * first two metrics and the direction a payment goes to by default.
  */
 export function useProfileBilling(studentId: string, nowMs: number) {
+  const timeZone = useStudioTimeZone();
   const billing = useStudentBillingQuery(studentId);
   const pauses = useStudentPausesQuery(studentId);
   const payments = useStudentPaymentsQuery(studentId);
@@ -55,7 +57,9 @@ export function useProfileBilling(studentId: string, nowMs: number) {
           .sort((a, b) => a.startsAt.localeCompare(b.startsAt))[0] ?? null,
       balance: billing.data ? balanceMetric(all) : undefined,
       money:
-        billing.data && payments.data ? moneyMetric(all, payments.data.items, nowMs) : undefined,
+        billing.data && payments.data
+          ? moneyMetric(all, payments.data.items, nowMs, timeZone)
+          : undefined,
       directionNames: new Map(
         all.map((direction) => [direction.enrollmentId, directionName(direction)]),
       ),
@@ -69,5 +73,5 @@ export function useProfileBilling(studentId: string, nowMs: number) {
         live[0] ??
         null,
     };
-  }, [billing, pauses, payments, schedules.items, nowMs]);
+  }, [billing, pauses, payments, schedules.items, nowMs, timeZone]);
 }

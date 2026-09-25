@@ -13,7 +13,8 @@ import { DurationField } from '@/components/shared/duration-field';
 import { Notice } from '@/components/shared/notice';
 import { FieldFrame, TextField } from '@/components/shared/text-field';
 import { timeSteps } from '@/components/shared/time-field';
-import { localInputToIso } from '@/lib/datetime';
+import { zonedIso } from '@/lib/datetime';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 import { useCreateMakeupMutation } from '../../api';
 import {
   makeupDto,
@@ -64,7 +65,8 @@ export function MakeupDialog({
   const durationHint = useDurationHint();
   const create = useCreateMakeupMutation(lesson.id);
   const guard = useConflictGuard();
-  const defaults = makeupFormDefaults(lesson, now);
+  const timeZone = useStudioTimeZone();
+  const defaults = makeupFormDefaults(lesson, now, timeZone);
   const form = useLessonForm<MakeupFormValues>(makeupFormSchema, defaults);
   const [date, time, durationMin, teacherId] = useWatch({
     control: form.control,
@@ -76,7 +78,7 @@ export function MakeupDialog({
   const scope = { teacherId, studentId: lesson.student?.id ?? null };
   const start =
     /^\d{4}-\d{2}-\d{2}$/.test(date) && /^\d{2}:\d{2}$/.test(time)
-      ? localInstant(date, time)
+      ? localInstant(date, time, timeZone)
       : null;
   const free = makeupWillBeFree(lesson);
   const original = dates.longDay(lesson.startsAtUtc);
@@ -88,13 +90,13 @@ export function MakeupDialog({
   const submit = form.handleSubmit((values) =>
     guard.run(
       {
-        startsAtUtc: localInputToIso(`${values.date}T${values.time}`),
+        startsAtUtc: zonedIso(values.date, values.time, timeZone),
         durationMin: Number(values.durationMin),
         title: lesson.student?.fullName ?? '',
         teacherName: teachers.names.get(values.teacherId) ?? lesson.teacher.name,
       },
       async (force) => {
-        await create.mutateAsync({ dto: makeupDto(values, lesson), force });
+        await create.mutateAsync({ dto: makeupDto(values, lesson, timeZone), force });
       },
       () => {
         toast.success(t('done'));
@@ -155,7 +157,7 @@ export function MakeupDialog({
               shouldValidate: form.formState.isSubmitted,
             })
           }
-          busy={[busySlots(dayLessons, scope, date, timeSteps(15))]}
+          busy={[busySlots(dayLessons, scope, date, timeSteps(15), timeZone)]}
           errors={[
             {
               date: form.formState.errors.date?.message,

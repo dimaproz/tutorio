@@ -28,6 +28,8 @@ import { EntityPicker } from '@/components/shared/entity-picker';
 import { ImpactList } from '@/components/shared/impact-list';
 import { FieldFrame, TextField } from '@/components/shared/text-field';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { isCalendarDate, zonedDate, zonedDayStart } from '@/lib/datetime';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 import { capitalizeFirst } from '@/lib/utils';
 import { useBulkCancelMutation, useBulkCancelPreviewMutation } from '../../api';
 import {
@@ -38,7 +40,6 @@ import {
   bulkCancelSplit,
   type BulkCancelFormValues,
 } from '../../model/bulk-cancel';
-import { localDate } from '../../model/create';
 import { useFormDates } from '../field-labels';
 import { useErrorToast, useLessonForm, useTeacherOptions } from '../lesson-form-parts';
 import { BulkCancelDays } from './bulk-cancel-days';
@@ -88,7 +89,10 @@ function BulkCancelFlow({
   const formDates = useFormDates();
   const teachers = useTeacherOptions();
   const showError = useErrorToast();
-  const [today] = useState(() => localDate(nowMs ?? Date.now()));
+  const timeZone = useStudioTimeZone();
+  const [today] = useState(() => zonedDate(nowMs ?? Date.now(), timeZone));
+  const parseDay = (value: string) =>
+    isCalendarDate(value) ? zonedDayStart(value, timeZone) : null;
   const form = useLessonForm<BulkCancelFormValues>(bulkCancelFormSchema, bulkCancelDefaults(today));
   const values = useWatch({ control: form.control }) as BulkCancelFormValues;
   const [step, setStep] = useState<Step>({ kind: 'form' });
@@ -116,7 +120,7 @@ function BulkCancelFlow({
 
   const next = form.handleSubmit(async (submitted) => {
     try {
-      const result = await preview.mutateAsync(bulkCancelDto(submitted, reasonLabel));
+      const result = await preview.mutateAsync(bulkCancelDto(submitted, reasonLabel, timeZone));
       setStep({ kind: 'check', preview: result });
     } catch (error) {
       showError(error);
@@ -125,7 +129,7 @@ function BulkCancelFlow({
 
   const confirm = async () => {
     try {
-      const result = await apply.mutateAsync(bulkCancelDto(values, reasonLabel));
+      const result = await apply.mutateAsync(bulkCancelDto(values, reasonLabel, timeZone));
       const range = { from: values.from, to: values.to };
       toast.success(t('done', { count: result.cancelled, period: dayMonthRange(range) }), {
         action: onShow ? { label: t('show'), onClick: () => onShow(range) } : undefined,
@@ -437,9 +441,4 @@ function BulkCancelFlow({
       />
     </AdaptiveDialog>
   );
-}
-
-function parseDay(value: string): Date | null {
-  const [year, month, day] = value.split('-').map(Number);
-  return year && month && day ? new Date(year, month - 1, day) : null;
 }

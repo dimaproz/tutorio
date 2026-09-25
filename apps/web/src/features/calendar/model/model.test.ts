@@ -10,12 +10,18 @@ import {
   snapMinutes,
   type CalendarLesson,
 } from './lessons';
-import { calendarPeriod, dayKey, shiftAnchor } from './period';
+import { zonedDateTime, zonedIso } from '@/lib/datetime';
+import { calendarPeriod, dayKey, minutesOfDay, shiftAnchor } from './period';
 import { daySummary } from './summary';
 
-/** A wall-clock time on a September 2026 day, in the test's zone. */
+/** The studio's zone; the process runs in another one (vitest config). */
+const TZ = 'Europe/Kyiv';
+const pad = (value: number) => String(value).padStart(2, '0');
+
+/** A wall-clock time on a September 2026 day, on the studio's clock. */
 const at = (day: number, hour: number, minute = 0) =>
-  new Date(2026, 8, day, hour, minute).toISOString();
+  zonedIso(`2026-09-${pad(day)}`, `${pad(hour)}:${pad(minute)}`, TZ);
+const key = (date: Date) => dayKey(date, TZ);
 
 let next = 0;
 function lesson(fields: Partial<CalendarLesson> = {}): CalendarLesson {
@@ -42,9 +48,9 @@ function lesson(fields: Partial<CalendarLesson> = {}): CalendarLesson {
 
 describe('calendarPeriod', () => {
   it('starts a week on Monday and a month grid on the Monday before the 1st', () => {
-    const thursday = new Date(2026, 8, 24, 18, 40);
-    const week = calendarPeriod('week', thursday);
-    expect(week.days.map(dayKey)).toEqual([
+    const thursday = new Date(at(24, 18, 40));
+    const week = calendarPeriod('week', thursday, TZ);
+    expect(week.days.map(key)).toEqual([
       '2026-09-21',
       '2026-09-22',
       '2026-09-23',
@@ -53,18 +59,42 @@ describe('calendarPeriod', () => {
       '2026-09-26',
       '2026-09-27',
     ]);
-    const month = calendarPeriod('month', thursday);
-    expect(dayKey(month.days[0]!)).toBe('2026-08-31');
-    expect(dayKey(month.days.at(-1)!)).toBe('2026-10-04');
+    expect(week.from.toISOString()).toBe('2026-09-20T21:00:00.000Z');
+    expect(week.to.toISOString()).toBe('2026-09-27T21:00:00.000Z');
+    const month = calendarPeriod('month', thursday, TZ);
+    expect(key(month.days[0]!)).toBe('2026-08-31');
+    expect(key(month.days.at(-1)!)).toBe('2026-10-04');
     expect(month.days).toHaveLength(35);
-    expect(calendarPeriod('day', thursday).days.map(dayKey)).toEqual(['2026-09-24']);
+    expect(calendarPeriod('day', thursday, TZ).days.map(key)).toEqual(['2026-09-24']);
+  });
+
+  it('cuts days at the studio midnight, not the browser one', () => {
+    // 23:30 on Thursday in Kyiv is already Friday in Tbilisi and still Thursday in UTC.
+    const late = new Date(at(24, 23, 30));
+    expect(calendarPeriod('day', late, TZ).days.map(key)).toEqual(['2026-09-24']);
+    expect(calendarPeriod('day', late, TZ).from.toISOString()).toBe('2026-09-23T21:00:00.000Z');
+  });
+
+  it('keeps the 25-hour day of the autumn switch and midnight after it', () => {
+    const week = calendarPeriod('week', zonedDateTime('2026-10-25', '12:00', TZ), TZ);
+    expect(week.days.map(key)).toEqual([
+      '2026-10-19',
+      '2026-10-20',
+      '2026-10-21',
+      '2026-10-22',
+      '2026-10-23',
+      '2026-10-24',
+      '2026-10-25',
+    ]);
+    expect(week.days.map((day) => minutesOfDay(day, TZ))).toEqual([0, 0, 0, 0, 0, 0, 0]);
+    expect(week.to.getTime() - week.from.getTime()).toBe((7 * 24 + 1) * 3_600_000);
   });
 
   it('steps by a day, a week or a month', () => {
-    const thursday = new Date(2026, 8, 24);
-    expect(dayKey(shiftAnchor('day', thursday, -1))).toBe('2026-09-23');
-    expect(dayKey(shiftAnchor('week', thursday, 1))).toBe('2026-10-01');
-    expect(dayKey(shiftAnchor('month', thursday, 1))).toBe('2026-10-01');
+    const thursday = new Date(at(24, 0));
+    expect(key(shiftAnchor('day', thursday, -1, TZ))).toBe('2026-09-23');
+    expect(key(shiftAnchor('week', thursday, 1, TZ))).toBe('2026-10-01');
+    expect(key(shiftAnchor('month', thursday, 1, TZ))).toBe('2026-10-01');
   });
 });
 
@@ -113,7 +143,7 @@ describe('placeDay', () => {
     const a = lesson({ startsAtUtc: at(24, 18), durationMin: 90 });
     const b = lesson({ startsAtUtc: at(24, 18, 30) });
     const c = lesson({ startsAtUtc: at(24, 19, 45) });
-    const placed = placeDay([c, b, a]);
+    const placed = placeDay([c, b, a], TZ);
     const of = (item: CalendarLesson) => placed.find((entry) => entry.lesson.id === item.id)!;
     expect(of(a)).toMatchObject({ lane: 0, lanes: 2, startMin: 1080, endMin: 1170 });
     expect(of(b)).toMatchObject({ lane: 1, lanes: 2 });
@@ -135,11 +165,11 @@ describe('dropConflict', () => {
       startsAtUtc: at(25, 18, 30),
       student: { id: 'student-2', fullName: 'Sofiia Melnyk', avatarKey: null },
     });
-    const friday = new Date(2026, 8, 25);
-    expect(dropConflict(moving, friday, 18 * 60, [moving, other])?.id).toBe(other.id);
-    expect(dropConflict(moving, friday, 14 * 60, [moving, other])).toBeNull();
+    const friday = new Date(at(25, 0));
+    expect(dropConflict(moving, friday, 18 * 60, [moving, other], TZ)?.id).toBe(other.id);
+    expect(dropConflict(moving, friday, 14 * 60, [moving, other], TZ)).toBeNull();
     const cancelled = { ...other, status: 'CANCELLED_UNCHARGED' as const };
-    expect(dropConflict(moving, friday, 18 * 60, [moving, cancelled])).toBeNull();
+    expect(dropConflict(moving, friday, 18 * 60, [moving, cancelled], TZ)).toBeNull();
   });
 });
 
@@ -187,7 +217,7 @@ describe('daySummary', () => {
       lesson({ startsAtUtc: at(24, 19, 45), kind: 'MAKEUP', originalLessonId: 'original' }),
       lesson({ startsAtUtc: at(24, 12), status: 'CANCELLED_UNCHARGED' }),
     ];
-    const summary = daySummary(day, Date.parse(at(24, 18, 40)), [...day, original]);
+    const summary = daySummary(day, Date.parse(at(24, 18, 40)), TZ, [...day, original]);
     expect(summary).toMatchObject({ count: 3, minutes: 210, held: 1, running: 1, upcoming: 1 });
     expect(summary.makeup?.original?.id).toBe('original');
     expect(summary.gaps).toEqual([{ startMin: 960, endMin: 1080 }]);

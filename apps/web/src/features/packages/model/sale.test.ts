@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   linkedPrice,
   saleDto,
@@ -40,22 +40,30 @@ function direction(patch: Partial<SaleDirection> = {}): SaleDirection {
   };
 }
 
-const NOW = new Date('2026-09-25T10:00:00');
+/** 10:00 on 25 September in Kyiv (UTC+3). */
+const NOW = new Date('2026-09-25T07:00:00.000Z');
 const TODAY = '2026-09-25';
+/** The studio's zone; the process runs in another one (vitest config). */
+const TZ = 'Europe/Kyiv';
 
 function values(patch: Partial<SaleFormValues> = {}): SaleFormValues {
-  return { ...saleFormDefaults(direction(), NOW), ...patch };
+  return { ...saleFormDefaults(direction(), NOW, TZ), ...patch };
 }
 
 describe('the sale form (S07 board 01)', () => {
   it("opens as 8 lessons at the direction's rate, valid for a month", () => {
-    expect(saleFormDefaults(direction(), NOW)).toMatchObject({
+    expect(saleFormDefaults(direction(), NOW, TZ)).toMatchObject({
       kind: 'FIXED_COUNT',
       lessons: '8',
       until: '2026-10-25',
       from: '2026-09-26',
       perLesson: '500',
       priceSource: 'perLesson',
+    });
+    // 00:30 on the 26th in Kyiv: tomorrow is the 27th, though UTC is still on the 25th.
+    expect(saleFormDefaults(direction(), new Date('2026-09-25T21:30:00.000Z'), TZ)).toMatchObject({
+      from: '2026-09-27',
+      until: '2026-10-26',
     });
   });
 
@@ -101,17 +109,18 @@ describe('the sale form (S07 board 01)', () => {
   });
 
   it('sells a count package to the teacher direction with one price and an exclusive end', () => {
-    const dto = saleDto(values(), direction(), STUDENT);
+    const dto = saleDto(values(), direction(), STUDENT, TZ);
     expect(dto).toEqual({
       studentId: STUDENT,
       teacherId: TEACHER,
       sizingMode: 'FIXED_COUNT',
       currency: 'UAH',
       lessonsTotal: 8,
-      expiresAt: new Date('2026-10-26T00:00').toISOString(),
+      // The studio's midnight after the 25th, in winter time (UTC+2).
+      expiresAt: '2026-10-25T22:00:00.000Z',
       pricePerLessonMinor: 50000,
     });
-    expect(saleDto(values({ until: '' }), direction(), STUDENT).expiresAt).toBeNull();
+    expect(saleDto(values({ until: '' }), direction(), STUDENT, TZ).expiresAt).toBeNull();
   });
 
   it('sends a period window, the schedule count unless typed, and a weekly count', () => {
@@ -123,28 +132,28 @@ describe('the sale form (S07 board 01)', () => {
       total: '4500',
       priceSource: 'total',
     });
-    const dto = saleDto(period, direction({ group: { id: GROUP, name: 'B1' } }), STUDENT);
+    const dto = saleDto(period, direction({ group: { id: GROUP, name: 'B1' } }), STUDENT, TZ);
     expect(dto).toEqual({
       studentId: STUDENT,
       groupId: GROUP,
       sizingMode: 'BY_PERIOD',
       currency: 'UAH',
-      validFrom: new Date('2026-10-01T00:00').toISOString(),
-      endDate: new Date(new Date('2026-11-01T00:00').getTime() - 1).toISOString(),
+      validFrom: '2026-09-30T21:00:00.000Z',
+      endDate: '2026-10-31T21:59:59.999Z',
       totalPriceMinor: 450000,
     });
-    expect(saleDto({ ...period, lessons: '9' }, direction(), STUDENT)).toMatchObject({
+    expect(saleDto({ ...period, lessons: '9' }, direction(), STUDENT, TZ)).toMatchObject({
       lessonsTotal: 9,
     });
     expect(
-      saleDto({ ...period, kind: 'BY_PERIOD_WEEKLY', perWeek: '3' }, direction(), STUDENT),
+      saleDto({ ...period, kind: 'BY_PERIOD_WEEKLY', perWeek: '3' }, direction(), STUDENT, TZ),
     ).toMatchObject({ sizingMode: 'BY_PERIOD_WEEKLY', lessonsPerWeek: 3 });
   });
 
   it('previews only a form that can describe a package', () => {
-    expect(salePreviewDto(values(), direction(), STUDENT, TODAY)).not.toBeNull();
-    expect(salePreviewDto(values({ lessons: '' }), direction(), STUDENT, TODAY)).toBeNull();
-    expect(salePreviewDto(values(), null, STUDENT, TODAY)).toBeNull();
+    expect(salePreviewDto(values(), direction(), STUDENT, TODAY, TZ)).not.toBeNull();
+    expect(salePreviewDto(values({ lessons: '' }), direction(), STUDENT, TODAY, TZ)).toBeNull();
+    expect(salePreviewDto(values(), null, STUDENT, TODAY, TZ)).toBeNull();
   });
 
   it("sells with the tutor's name, or the suggestion when untouched or empty", () => {
@@ -152,6 +161,42 @@ describe('the sale form (S07 board 01)', () => {
     expect(saleName(values(), suggested)).toBe(suggested);
     expect(saleName(values({ name: '  ', nameEdited: true }), suggested)).toBe(suggested);
     expect(saleName(values({ name: ' Autumn ', nameEdited: true }), suggested)).toBe('Autumn');
-    expect(saleDto(values(), direction(), STUDENT, 'Autumn')).toMatchObject({ name: 'Autumn' });
+    expect(saleDto(values(), direction(), STUDENT, TZ, 'Autumn')).toMatchObject({
+      name: 'Autumn',
+    });
   });
 });
+
+/**
+ * «Діє до 30.10» ends at the studio's midnight wherever the browser is: not
+ * at 01:00 on the 31st (a computer in Poland) nor at 23:00 on the 30th (one
+ * in Georgia).
+ */
+describe.each(['Europe/Kyiv', 'UTC', 'Europe/Warsaw', 'Asia/Tbilisi', 'America/New_York'])(
+  'the sale in a browser set to %s',
+  (browserZone) => {
+    const original = process.env.TZ;
+    beforeEach(() => {
+      process.env.TZ = browserZone;
+    });
+    afterEach(() => {
+      process.env.TZ = original;
+    });
+
+    it('sends the same instants as in Kyiv', () => {
+      expect(saleDto(values({ until: '2026-10-30' }), direction(), STUDENT, TZ).expiresAt).toBe(
+        '2026-10-30T22:00:00.000Z',
+      );
+      const period = saleDto(
+        values({ kind: 'BY_PERIOD', lessons: '', from: '2026-10-01', to: '2026-10-31' }),
+        direction(),
+        STUDENT,
+        TZ,
+      );
+      expect(period).toMatchObject({
+        validFrom: '2026-09-30T21:00:00.000Z',
+        endDate: '2026-10-31T21:59:59.999Z',
+      });
+    });
+  },
+);

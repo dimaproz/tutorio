@@ -11,6 +11,8 @@ import {
   WalletIcon,
 } from 'lucide-react';
 import { useNow, useTranslations } from 'next-intl';
+import { zonedWeekday } from '@/lib/datetime';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 import { Controller, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -83,7 +85,8 @@ function PaymentForm({
   const dateLocale = useDateFnsLocale();
   const clock = useNow();
   const [now] = useState(() => clock);
-  const today = dateKey(now);
+  const timeZone = useStudioTimeZone();
+  const today = dateKey(now, timeZone);
   // One key per opening: a repeated click records the money once.
   const [idempotencyKey] = useState(() => crypto.randomUUID());
   const record = useRecordStudentPaymentMutation();
@@ -105,7 +108,7 @@ function PaymentForm({
   const close = () => onOpenChange(false);
   const submit = form.handleSubmit((values) =>
     record.mutate(
-      { ...paymentDto(values, direction, pkg, now, today), idempotencyKey },
+      { ...paymentDto(values, direction, pkg, now, today, timeZone), idempotencyKey },
       {
         onSuccess: () => {
           toast.success(t('done', { amount: format.money(amount, currency) }));
@@ -240,7 +243,7 @@ function PaymentForm({
                 <SlotChip
                   key={lesson.lessonId}
                   tone="paper"
-                  weekday={new Date(lesson.startsAt).getDay()}
+                  weekday={zonedWeekday(lesson.startsAt, timeZone)}
                   time={format.shortDay(lesson.startsAt)}
                 />
               ))}

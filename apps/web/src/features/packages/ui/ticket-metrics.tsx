@@ -2,6 +2,7 @@
 
 import { CalendarClockIcon, CirclePauseIcon, InfoIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 import type { PackageDetailResponse } from '@tutorio/validation';
 import { Notice } from '@/components/shared/notice';
 import { StatBlock } from '@/components/shared/stat-block';
@@ -34,9 +35,10 @@ export function TicketMetrics({
   format: PackageFormat;
 }) {
   const t = useTranslations('packages.ticket');
+  const timeZone = useStudioTimeZone();
   const currency = pkg.currency;
   const lastDay = pkg.expiresAt ? lastDayOf(pkg.expiresAt) : null;
-  const days = lastDay ? daysBetween(now, lastDay) : null;
+  const days = lastDay ? daysBetween(now, lastDay, timeZone) : null;
   const addedDays = pauseDays(pkg);
   const start = pkg.validFrom ?? pkg.purchasedAt;
   const owed = owedMinor(pkg);

@@ -11,7 +11,9 @@ import { DurationField } from '@/components/shared/duration-field';
 import { Notice } from '@/components/shared/notice';
 import { FieldFrame, TextField } from '@/components/shared/text-field';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { addCalendarDays, calendarWeekday, zonedDate } from '@/lib/datetime';
 import { useLocalFormatter } from '@/lib/i18n/local-formatter';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 import type { GatewayError } from '@/lib/auth/client';
 import { useCreateScheduleMutation, useScheduleCreatePreviewQuery } from '../../api';
 import type { CreateFormValues } from '../../model/create';
@@ -35,12 +37,13 @@ import { ScheduleChangeDialog } from './schedule-change-dialog';
 import { ScheduleCheckDialog } from './schedule-check';
 import { useLengthLabel } from './schedule-parts';
 
-/** Monday of the next week (today when it is a Monday): a new schedule's first day. */
-function nextMonday(now: number): string {
-  const date = new Date(now);
-  date.setDate(date.getDate() + ((8 - date.getDay()) % 7));
-  const pad = (part: number) => String(part).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+/**
+ * Monday of the next week (today when it is a Monday) on the studio's
+ * calendar: a new schedule's first day.
+ */
+function nextMonday(now: number, timeZone: string): string {
+  const today = zonedDate(now, timeZone);
+  return addCalendarDays(today, (8 - calendarWeekday(today)) % 7);
 }
 
 export type ScheduleCreateInitial = { studentId?: string; groupId?: string };
@@ -91,6 +94,7 @@ function ScheduleCreateFlow({
 }) {
   const t = useTranslations('schedules.form');
   const mobile = useIsMobile();
+  const timeZone = useStudioTimeZone();
   const [now] = useState(() => nowMs ?? Date.now());
   const [step, setStep] = useState<Step>('form');
   const showError = useErrorToast();
@@ -100,7 +104,7 @@ function ScheduleCreateFlow({
       who: initial.groupId ? 'group' : 'student',
       studentId: initial.studentId,
       groupId: initial.groupId,
-      from: nextMonday(now),
+      from: nextMonday(now, timeZone),
       horizonWeeks: 4,
     }),
   );
@@ -129,7 +133,7 @@ function ScheduleCreateFlow({
   }
 
   const ready = scheduleFormReady(values);
-  const preview = useScheduleCreatePreviewQuery(ready ? scheduleCreateDto(values) : null);
+  const preview = useScheduleCreatePreviewQuery(ready ? scheduleCreateDto(values, timeZone) : null);
   const create = useCreateScheduleMutation();
   const existing = data.schedule;
   const slotsLabel = useSlotsLabel();
@@ -162,7 +166,10 @@ function ScheduleCreateFlow({
 
   const save = async (force: boolean) => {
     try {
-      const schedule = await create.mutateAsync({ dto: scheduleCreateDto(values), force });
+      const schedule = await create.mutateAsync({
+        dto: scheduleCreateDto(values, timeZone),
+        force,
+      });
       toast.success(t('created', { name: who }));
       onCreated?.(schedule);
       onClose();
@@ -290,7 +297,7 @@ function ScheduleCreateFlow({
           }}
           subtitle={[who, teacherName].filter(Boolean).join(' · ')}
           who={who}
-          rule={`${slotsLabel(preview.data ? scheduleCreateDto(values).slots : []) ?? ''} · ${length(
+          rule={`${slotsLabel(preview.data ? scheduleCreateDto(values, timeZone).slots : []) ?? ''} · ${length(
             Number(values.durationMin),
           )}`}
           horizonWeeks={Number(values.horizonWeeks)}

@@ -25,6 +25,8 @@ export type CreateSubmitContext = {
   /** The direction's or group's schedule «Щотижня» adds to (L-23). */
   existing: ScheduleResponse | null;
   now: number;
+  /** The studio's zone: the form's dates and times are its wall clock. */
+  timeZone: string;
   /** The price each lesson carries (a package lesson keeps the direction's rate). */
   priceMinor: number;
   currency: string;
@@ -56,11 +58,11 @@ export function useCreateSubmit({ onSaved }: { onSaved: (message: string) => voi
   const applyChange = useApplyScheduleChangeMutation();
 
   const run = async (context: CreateSubmitContext) => {
-    const { values, data, existing, candidate } = context;
+    const { values, data, existing, candidate, timeZone } = context;
 
     if (values.frequency === 'weekly') {
       if (existing) {
-        const dto = scheduleChangeDto(values, existing.slots);
+        const dto = scheduleChangeDto(values, existing.slots, timeZone);
         return guard.run(
           candidate,
           async (force) => {
@@ -72,6 +74,7 @@ export function useCreateSubmit({ onSaved }: { onSaved: (message: string) => voi
       const dto = createScheduleDto(values, {
         priceMinor: data.priceMode === 'amount' ? context.priceMinor : null,
         currency: context.currency,
+        timeZone,
       });
       return guard.run(
         candidate,
@@ -89,6 +92,7 @@ export function useCreateSubmit({ onSaved }: { onSaved: (message: string) => voi
       priceMinor: context.priceMinor,
       currency: context.currency,
       now: Date.now(),
+      timeZone,
     });
     // A retry with `force` books only what the first attempt did not.
     let done = 0;

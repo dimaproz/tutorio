@@ -10,6 +10,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { AdaptiveDialog } from '@/components/shared/adaptive-dialog';
 import { ImpactList } from '@/components/shared/impact-list';
 import { TextField } from '@/components/shared/text-field';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 import { useExtendPackageMutation } from '../../api';
 import { addDays, addMonth, dayKey, isDayKey, lastDayOf, startOfDay } from '../../model/dates';
 import { extendDto, extendSchema, type ExtendValues } from '../../model/operations';
@@ -35,8 +36,9 @@ export function ExtendDialog({ pkg, title, onClose, onDone }: OperationProps) {
   const format = usePackageFormat();
   const clock = useNow();
   const [now] = useState(() => clock);
-  const today = dayKey(now);
-  const currentLast = pkg.expiresAt ? dayKey(lastDayOf(pkg.expiresAt)) : today;
+  const timeZone = useStudioTimeZone();
+  const today = dayKey(now, timeZone);
+  const currentLast = pkg.expiresAt ? dayKey(lastDayOf(pkg.expiresAt), timeZone) : today;
   const base = currentLast > today ? currentLast : today;
   const form = usePackageForm<ExtendValues>(extendSchema(today, currentLast), {
     until: addMonth(base),
@@ -48,10 +50,10 @@ export function ExtendDialog({ pkg, title, onClose, onDone }: OperationProps) {
 
   const submit = form.handleSubmit((values) =>
     extend.mutate(
-      { packageId: pkg.id, dto: extendDto(values) },
+      { packageId: pkg.id, dto: extendDto(values, timeZone) },
       {
         onSuccess: () => {
-          toast.success(t('done', { date: format.dayMonth(startOfDay(values.until)) }));
+          toast.success(t('done', { date: format.dayMonth(startOfDay(values.until, timeZone)) }));
           onDone();
         },
         onError: showError,
@@ -78,7 +80,9 @@ export function ExtendDialog({ pkg, title, onClose, onDone }: OperationProps) {
       primary={
         <Button type="button" disabled={extend.isPending} onClick={() => void submit()}>
           {extend.isPending ? <Spinner data-icon="inline-start" /> : null}
-          {valid ? t('confirmDate', { date: format.shortDay(startOfDay(until)) }) : t('confirm')}
+          {valid
+            ? t('confirmDate', { date: format.shortDay(startOfDay(until, timeZone)) })
+            : t('confirm')}
         </Button>
       }
     >
@@ -126,7 +130,7 @@ export function ExtendDialog({ pkg, title, onClose, onDone }: OperationProps) {
               icon: <CalendarPlusIcon />,
               tone: 'indigo',
               title: t('impactCredits', { count: left }),
-              text: t('impactCreditsText', { date: format.dayMonth(startOfDay(until)) }),
+              text: t('impactCreditsText', { date: format.dayMonth(startOfDay(until, timeZone)) }),
             },
             {
               id: 'money',

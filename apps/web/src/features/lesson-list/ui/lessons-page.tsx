@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { CircleSlashIcon, PlusIcon } from 'lucide-react';
 import { useNow, useTranslations } from 'next-intl';
 import { useIsSoloWorkspace } from '@/components/app/session-provider';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 import { Button } from '@/components/ui/button';
 import { CollectionFrame } from '@/components/shared/collection-frame';
 import { DataTable } from '@/components/shared/data-table';
@@ -64,6 +65,7 @@ export function LessonsPage({ nowMs }: { nowMs?: number } = {}) {
   const updateParams = useUpdateSearchParams();
   const clock = useNow();
   const [now] = useState(() => nowMs ?? clock.getTime());
+  const timeZone = useStudioTimeZone();
   const solo = useIsSoloWorkspace();
   const state = useMemo(() => readListState(params), [params]);
   const panel = useLessonPanel();
@@ -72,10 +74,10 @@ export function LessonsPage({ nowMs }: { nowMs?: number } = {}) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [picked, setPicked] = useState<{ id: string; name: string } | null>(null);
 
-  const lessons = useLessonPageQuery(listQuery(state, now));
-  const range = periodRange(state, now);
+  const lessons = useLessonPageQuery(listQuery(state, now, timeZone));
+  const range = periodRange(state, now, timeZone);
   const periodTotal = useLessonCountQuery(range?.from.toISOString(), range?.to.toISOString());
-  const week = currentWeek(now);
+  const week = currentWeek(now, timeZone);
   const weekTotal = useLessonCountQuery(week.from.toISOString(), week.to.toISOString());
   const data = lessons.data;
   const items = data?.items ?? [];

@@ -13,6 +13,8 @@ import {
   UsersIcon,
 } from 'lucide-react';
 import { useNow, useTranslations } from 'next-intl';
+import { zonedDayStart } from '@/lib/datetime';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 import { Controller, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
 import type { PausePreviewResponse, PauseResponse, ScheduleConflict } from '@tutorio/validation';
@@ -108,7 +110,8 @@ function PauseForm({
   const dateLocale = useDateFnsLocale();
   const mobile = useIsMobile();
   const clock = useNow();
-  const [today] = useState(() => dateKey(clock));
+  const timeZone = useStudioTimeZone();
+  const [today] = useState(() => dateKey(clock, timeZone));
   const create = useCreatePauseMutation();
   const update = useUpdatePauseMutation();
   const showError = useBillingErrorToast();
@@ -117,13 +120,13 @@ function PauseForm({
   const firstName = student.fullName.split(/\s+/)[0] || student.fullName;
   const form = useBillingForm<PauseFormValues>(
     pauseFormSchema,
-    pauseFormDefaults({ today, enrollmentId, pause }),
+    pauseFormDefaults({ today, enrollmentId, pause, timeZone }),
   );
   const values = useWatch({ control: form.control }) as PauseFormValues;
   const ready = pausePreviewReady(values);
   // A key, not the object: the form hands a new object on every render.
   const previewKey = useDebouncedValue(
-    ready ? JSON.stringify(pausePreviewDto(values, student.id, today, pause?.id)) : '',
+    ready ? JSON.stringify(pausePreviewDto(values, student.id, today, timeZone, pause?.id)) : '',
   );
   const preview = usePausePreviewQuery(previewKey ? JSON.parse(previewKey) : null);
   const pending = create.isPending || update.isPending;
@@ -135,7 +138,10 @@ function PauseForm({
         toast.success(
           pause
             ? t('changed')
-            : t('done', { name: firstName, date: format.dayMonth(`${submitted.from}T12:00`) }),
+            : t('done', {
+                name: firstName,
+                date: format.dayMonth(zonedDayStart(submitted.from, timeZone)),
+              }),
         );
         close();
       };
@@ -146,11 +152,11 @@ function PauseForm({
       };
       if (pause) {
         update.mutate(
-          { pauseId: pause.id, dto: pauseUpdateDto(submitted, pause, today), mode },
+          { pauseId: pause.id, dto: pauseUpdateDto(submitted, pause, today, timeZone), mode },
           { onSuccess: done, onError: fail },
         );
       } else {
-        create.mutate(pauseCreateDto(submitted, student.id, today), {
+        create.mutate(pauseCreateDto(submitted, student.id, today, timeZone), {
           onSuccess: done,
           onError: fail,
         });

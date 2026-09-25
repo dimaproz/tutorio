@@ -6,6 +6,7 @@ import { expect, userEvent } from 'storybook/test';
 import { Badge } from '@/components/ui/badge';
 import { DateRowsField, type DateRow } from '@/components/shared/date-rows-field';
 import { FieldNote } from '@/components/shared/field-note';
+import { addCalendarDays } from '@/lib/datetime';
 import { useDateRowsLabels, useFormDates } from '@/features/lessons/ui/field-labels';
 
 const ROWS: Record<string, Omit<DateRow, 'key'>[]> = {
@@ -54,9 +55,7 @@ function DateRowsFieldStory({ state }: Args) {
         onAdd={() =>
           setRows((current) => {
             const last = current.at(-1)!;
-            const next = dates.fromValue(last.date) ?? new Date(2026, 9, 1);
-            next.setDate(next.getDate() + 7);
-            const value = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-${String(next.getDate()).padStart(2, '0')}`;
+            const value = addCalendarDays(last.date || '2026-09-24', 7);
             return [...current, { key: String(current.length), date: value, time: last.time }];
           })
         }

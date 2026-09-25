@@ -5,7 +5,7 @@ import type {
 } from '@tutorio/validation';
 import { z } from 'zod';
 import { parsePriceInput } from '@/lib/money';
-import { dayKey, endOfDayExclusive, isDayKey, startOfDay } from './dates';
+import { addDays, addMonth, dayKey, endOfDayExclusive, isDayKey, startOfDay } from './dates';
 
 /** One direction of a student, as the billing read describes it (S06). */
 export type SaleDirection = StudentBillingResponse['directions'][number];
@@ -85,20 +85,22 @@ export function parseCount(text: string): number | null {
 
 /**
  * Opens as a count package of 8 at the direction's rate, valid for a month;
- * a period runs from tomorrow to the last day of the next month's same date.
+ * a period runs from tomorrow (the studio's) to the day before the same date
+ * a month later.
  */
-export function saleFormDefaults(direction: SaleDirection | null, now: Date): SaleFormValues {
-  const from = new Date(now);
-  from.setDate(from.getDate() + 1);
-  const until = new Date(from);
-  until.setMonth(until.getMonth() + 1);
-  until.setDate(until.getDate() - 1);
+export function saleFormDefaults(
+  direction: SaleDirection | null,
+  now: Date,
+  timeZone: string,
+): SaleFormValues {
+  const from = addDays(dayKey(now, timeZone), 1);
+  const until = addDays(addMonth(from), -1);
   return {
     kind: 'FIXED_COUNT',
     lessons: '8',
-    until: dayKey(until),
-    from: dayKey(from),
-    to: dayKey(until),
+    until,
+    from,
+    to: until,
     perWeek: '2',
     perLesson: direction && direction.rateMinor > 0 ? moneyText(direction.rateMinor) : '',
     total: '',
@@ -154,12 +156,14 @@ export function saleName(
  * The sale request: the direction (its group, or its teacher), the kind with
  * its count or window, and exactly one price. A period runs from the first
  * day's midnight to the last day's end; a count package's «Діє до» ends
- * after that day. A period's count is sent only when the tutor typed one.
+ * after that day — the studio's midnights, whatever the browser's zone. A
+ * period's count is sent only when the tutor typed one.
  */
 export function saleDto(
   values: SaleFormValues,
   direction: SaleDirection,
   studentId: string,
+  timeZone: string,
   name?: string,
 ) {
   const price =
@@ -174,11 +178,11 @@ export function saleDto(
     values.kind === 'FIXED_COUNT'
       ? {
           lessonsTotal: count ?? 0,
-          expiresAt: values.until ? endOfDayExclusive(values.until).toISOString() : null,
+          expiresAt: values.until ? endOfDayExclusive(values.until, timeZone).toISOString() : null,
         }
       : {
-          validFrom: startOfDay(values.from).toISOString(),
-          endDate: new Date(endOfDayExclusive(values.to).getTime() - 1).toISOString(),
+          validFrom: startOfDay(values.from, timeZone).toISOString(),
+          endDate: new Date(endOfDayExclusive(values.to, timeZone).getTime() - 1).toISOString(),
           ...(values.kind === 'BY_PERIOD_WEEKLY'
             ? { lessonsPerWeek: Number(values.perWeek) }
             : count !== null && values.lessons.trim() !== ''
@@ -205,8 +209,9 @@ export function salePreviewDto(
   direction: SaleDirection | null,
   studentId: string | null,
   today: string,
+  timeZone: string,
 ) {
   if (!direction || !studentId) return null;
   const parsed = saleFormSchema(today).safeParse(values);
-  return parsed.success ? saleDto(parsed.data, direction, studentId) : null;
+  return parsed.success ? saleDto(parsed.data, direction, studentId, timeZone) : null;
 }

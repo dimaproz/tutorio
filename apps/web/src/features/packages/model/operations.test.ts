@@ -17,8 +17,11 @@ import {
 } from './operations';
 
 const ID = '11111111-1111-4111-8111-111111111111';
-const NOW = new Date('2026-09-25T10:00:00');
+/** 10:00 on 25 September in Kyiv (UTC+3). */
+const NOW = new Date('2026-09-25T07:00:00.000Z');
 const TODAY = '2026-09-25';
+/** The studio's zone; the process runs in another one (vitest config). */
+const TZ = 'Europe/Kyiv';
 
 const pkg = {
   id: ID,
@@ -46,7 +49,7 @@ describe('package payment (board 03, states 01–02)', () => {
     expect(keyOf(packagePaymentSchema(200000).safeParse({ ...defaults, amount: '2500' }))).toEqual([
       'amount:amountOverLeft',
     ]);
-    expect(packagePaymentDto({ ...defaults, amount: '1000' }, pkg, TODAY, NOW)).toEqual({
+    expect(packagePaymentDto({ ...defaults, amount: '1000' }, pkg, TODAY, NOW, TZ)).toEqual({
       enrollmentId: ID,
       packageId: ID,
       amountMinor: 100000,
@@ -54,6 +57,10 @@ describe('package payment (board 03, states 01–02)', () => {
       method: 'BANK_TRANSFER',
       paidAt: NOW.toISOString(),
     });
+    // An earlier day is recorded at the studio's noon.
+    expect(
+      packagePaymentDto({ ...defaults, paidAt: '2026-09-20' }, pkg, TODAY, NOW, TZ).paidAt,
+    ).toBe('2026-09-20T09:00:00.000Z');
   });
 });
 
@@ -65,8 +72,9 @@ describe('extend (board 03, state 03)', () => {
     expect(keyOf(extendSchema(TODAY, '2026-10-30').safeParse({ until: '2026-10-20' }))).toEqual([
       'until:dateAfterCurrentEnd',
     ]);
-    expect(extendDto({ until: '2026-10-31' })).toEqual({
-      expiresAt: new Date('2026-11-01T00:00').toISOString(),
+    // After the autumn switch Kyiv is UTC+2: the end is the studio's midnight.
+    expect(extendDto({ until: '2026-10-31' }, TZ)).toEqual({
+      expiresAt: '2026-10-31T22:00:00.000Z',
     });
   });
 });
@@ -103,7 +111,7 @@ describe('refund (board 03, state 05)', () => {
     expect(
       keyOf(refundSchema(pkg).safeParse({ ...defaults, takeCredits: false, returnMoney: false })),
     ).toEqual(['takeCredits:refundNothing', 'note:noteRequired']);
-    expect(refundDto({ ...defaults, note: ' Moved ' }, pkg, TODAY, NOW)).toEqual({
+    expect(refundDto({ ...defaults, note: ' Moved ' }, pkg, TODAY, NOW, TZ)).toEqual({
       credits: 2,
       amountMinor: 100000,
       method: 'BANK_TRANSFER',

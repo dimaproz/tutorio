@@ -6,6 +6,17 @@ import type {
   ScheduleResponse,
   ScheduleSlotDto,
 } from '@tutorio/validation';
+import {
+  DEFAULT_TIME_ZONE as TZ,
+  addCalendarDays,
+  calendarWeekday,
+  zonedDate,
+  zonedDateTime,
+  zonedDayEnd,
+  zonedDayStart,
+  zonedIso,
+  zonedWeekday,
+} from '@/lib/datetime';
 
 /**
  * The Schedules stories (S05): the boards' studio — sixteen active schedules
@@ -27,8 +38,10 @@ const groupId = (n: number) => `99999999-9999-4999-8999-${pad(n)}`;
 const enrollmentId = (n: number) => `66666666-6666-4666-d666-${pad(n)}`;
 const lessonId = (n: number) => `88888888-8888-4888-e000-${pad(n)}`;
 
+const pad2 = (n: number) => String(n).padStart(2, '0');
+/** A wall-clock time on the studio's (Kyiv) clock, as the stories' next-intl reads it. */
 const local = (month: number, day: number, hour = 0, minute = 0) =>
-  new Date(2026, month - 1, day, hour, minute).toISOString();
+  zonedIso(`2026-${pad2(month)}-${pad2(day)}`, `${pad2(hour)}:${pad2(minute)}`, TZ);
 
 /** The page's clock: Thursday 24 September 2026, 12:00. */
 export const SCHEDULES_CLOCK = Date.parse(local(9, 24, 12));
@@ -237,19 +250,18 @@ function occurrences(dto: CreateScheduleDto): string[] {
   const start = Date.parse(dto.startDate ?? new Date(SCHEDULES_CLOCK).toISOString());
   const from = Math.max(start, SCHEDULES_CLOCK);
   let until = SCHEDULES_CLOCK + (dto.horizonWeeks ?? 4) * 7 * DAY_MS;
-  if (dto.endsOn) until = Math.min(until, Date.parse(`${dto.endsOn}T23:59:59`));
+  if (dto.endsOn) until = Math.min(until, zonedDayEnd(dto.endsOn, TZ).getTime());
   const dates: string[] = [];
-  const cursor = new Date(start);
-  cursor.setHours(0, 0, 0, 0);
-  while (cursor.getTime() < until) {
+  for (
+    let day = zonedDate(start, TZ);
+    zonedDayStart(day, TZ).getTime() < until;
+    day = addCalendarDays(day, 1)
+  ) {
     for (const slot of dto.slots as ScheduleSlotDto[]) {
-      if (cursor.getDay() !== slot.weekday) continue;
-      const [hours, minutes] = slot.localTime.split(':').map(Number);
-      const at = new Date(cursor);
-      at.setHours(hours!, minutes!, 0, 0);
-      if (at.getTime() >= from && at.getTime() < until) dates.push(at.toISOString());
+      if (calendarWeekday(day) !== slot.weekday) continue;
+      const at = zonedDateTime(day, slot.localTime, TZ).getTime();
+      if (at >= from && at < until) dates.push(new Date(at).toISOString());
     }
-    cursor.setDate(cursor.getDate() + 1);
   }
   return dates.sort();
 }
@@ -260,12 +272,11 @@ const B2 = { id: groupId(1), name: 'B2 prep · evening' };
 function createConflicts(dates: readonly string[]): ScheduleConflict[] {
   return dates
     .filter((iso) => {
-      const date = new Date(iso);
-      return date.getDay() === 4 && (date.getDate() === 1 || date.getDate() === 15);
+      const day = zonedDate(iso, TZ).slice(8);
+      return zonedWeekday(iso, TZ) === 4 && (day === '01' || day === '15');
     })
     .map((iso, index) => {
-      const booked = new Date(iso);
-      booked.setHours(14, 30);
+      const booked = zonedDateTime(zonedDate(iso, TZ), '14:30', TZ);
       return {
         candidateStartsAtUtc: iso,
         lessonId: lessonId(index + 1),
@@ -523,8 +534,7 @@ export function createSchedulesRoutes(options: SchedulesStoryOptions) {
       const weeks = Number(body().horizonWeeks);
       const row = find(horizonMatch[1]!);
       const added = Math.max(0, weeks - (row?.horizonWeeks ?? 4)) * (row?.slots.length ?? 1);
-      const last = new Date(SCHEDULES_CLOCK + weeks * 7 * DAY_MS);
-      last.setHours(18, 0, 0, 0);
+      const last = zonedDateTime(zonedDate(SCHEDULES_CLOCK + weeks * 7 * DAY_MS, TZ), '18:00', TZ);
       return json({
         horizonWeeks: weeks,
         added,

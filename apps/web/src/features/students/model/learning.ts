@@ -1,4 +1,5 @@
 import type { PauseResponse, ScheduleResponse, StudentBillingResponse } from '@tutorio/validation';
+import { zonedDate } from '@/lib/datetime';
 
 export type BillingDirection = StudentBillingResponse['directions'][number];
 export type BillingPackage = BillingDirection['packages'][number];
@@ -245,12 +246,10 @@ export function moneyMetric(
   directions: readonly BillingDirection[],
   payments: readonly { status: string; currency: string; amountMinor: number; paidAt: string }[],
   now: number,
+  timeZone: string,
 ): MoneyMetric {
-  const today = new Date(now);
-  const thisMonth = (iso: string) => {
-    const date = new Date(iso);
-    return date.getFullYear() === today.getFullYear() && date.getMonth() === today.getMonth();
-  };
+  const month = zonedDate(now, timeZone).slice(0, 7);
+  const thisMonth = (iso: string) => zonedDate(iso, timeZone).slice(0, 7) === month;
   const settled = payments.filter(
     (payment) =>
       (payment.status === 'PAID' || payment.status === 'REFUNDED') && thisMonth(payment.paidAt),

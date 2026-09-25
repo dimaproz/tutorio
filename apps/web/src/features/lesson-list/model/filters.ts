@@ -1,4 +1,12 @@
 import type { LessonQuickFilterDto, LessonStatusDto } from '@tutorio/validation';
+import {
+  addCalendarDays,
+  addCalendarMonths,
+  calendarMonthStart,
+  calendarWeekStart,
+  zonedDate,
+  zonedDayStart,
+} from '@/lib/datetime';
 
 /**
  * The Lessons page's state (S04), all of it in the URL so a view survives a
@@ -78,62 +86,46 @@ export function readListState(params: URLSearchParams): LessonListState {
   };
 }
 
-/** A local "yyyy-MM-dd". */
-export function dayKey(date: Date): string {
-  const pad = (part: number) => String(part).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-}
-
-function parseDay(value: string): Date {
-  const [year, month, day] = value.split('-').map(Number);
-  return new Date(year!, month! - 1, day!);
-}
-
-/** Monday of the week `date` is in, at local midnight. */
-function startOfWeek(date: Date): Date {
-  const start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
-  return start;
-}
-
 /**
- * The period as the API reads it, `[from, to)` in the browser's zone (the
- * clock the list shows times by); «Увесь час» has no bounds.
+ * The period as the API reads it, `[from, to)` between the studio's
+ * midnights (the clock the list shows times by); «Увесь час» has no bounds.
  */
 export function periodRange(
   state: Pick<LessonListState, 'period' | 'from' | 'to'>,
   now: number,
+  timeZone: string,
 ): { from: Date; to: Date } | null {
-  const today = new Date(now);
-  const year = today.getFullYear();
-  const month = today.getMonth();
+  const today = zonedDate(now, timeZone);
+  const month = calendarMonthStart(today);
+  const between = (from: string, to: string) => ({
+    from: zonedDayStart(from, timeZone),
+    to: zonedDayStart(to, timeZone),
+  });
   switch (state.period) {
     case 'week': {
-      const from = startOfWeek(today);
-      return { from, to: new Date(from.getFullYear(), from.getMonth(), from.getDate() + 7) };
+      const from = calendarWeekStart(today);
+      return between(from, addCalendarDays(from, 7));
     }
     case 'month':
-      return { from: new Date(year, month, 1), to: new Date(year, month + 1, 1) };
+      return between(month, addCalendarMonths(month, 1));
     case 'lastMonth':
-      return { from: new Date(year, month - 1, 1), to: new Date(year, month, 1) };
+      return between(addCalendarMonths(month, -1), month);
     case 'last3Months':
-      return { from: new Date(year, month - 2, 1), to: new Date(year, month + 1, 1) };
+      return between(addCalendarMonths(month, -2), addCalendarMonths(month, 1));
     case 'all':
       return null;
     case 'custom': {
       if (!state.from || !state.to) return null;
       const [first, last] =
         state.from <= state.to ? [state.from, state.to] : [state.to, state.from];
-      const to = parseDay(last);
-      to.setDate(to.getDate() + 1);
-      return { from: parseDay(first), to };
+      return between(first, addCalendarDays(last, 1));
     }
   }
 }
 
 /** The current week, for the header's «12 цього тижня». */
-export function currentWeek(now: number) {
-  return periodRange({ period: 'week', from: null, to: null }, now)!;
+export function currentWeek(now: number, timeZone: string) {
+  return periodRange({ period: 'week', from: null, to: null }, now, timeZone)!;
 }
 
 const STATUS_VALUES: Record<StatusOption, LessonStatusDto[]> = {
@@ -146,8 +138,8 @@ const STATUS_VALUES: Record<StatusOption, LessonStatusDto[]> = {
 export const PAGE_SIZE = 20;
 
 /** The `GET /lessons/list` query of a state. */
-export function listQuery(state: LessonListState, now: number) {
-  const range = periodRange(state, now);
+export function listQuery(state: LessonListState, now: number, timeZone: string) {
+  const range = periodRange(state, now, timeZone);
   const statuses = state.statuses.flatMap((option) => STATUS_VALUES[option]);
   return {
     page: state.page,

@@ -10,8 +10,10 @@ import {
 } from './filters';
 import { lessonKind, needsMakeup, paymentView } from './payment';
 
-/** Thursday 24 September 2026, 18:40 local. */
-const NOW = new Date(2026, 8, 24, 18, 40).getTime();
+/** The studio's zone; the process runs in another one (vitest config). */
+const TZ = 'Europe/Kyiv';
+/** Thursday 24 September 2026, 18:40 in Kyiv (UTC+3). */
+const NOW = Date.parse('2026-09-24T15:40:00.000Z');
 const state = (query = '') => readListState(new URLSearchParams(query));
 
 describe('lessons list state (S04)', () => {
@@ -29,11 +31,11 @@ describe('lessons list state (S04)', () => {
       search: null,
       order: 'desc',
     });
-    expect(listQuery(state(), NOW)).toEqual({
+    expect(listQuery(state(), NOW, TZ)).toEqual({
       page: 1,
       pageSize: 20,
-      from: new Date(2026, 8, 1).toISOString(),
-      to: new Date(2026, 9, 1).toISOString(),
+      from: '2026-08-31T21:00:00.000Z',
+      to: '2026-09-30T21:00:00.000Z',
       teacherId: undefined,
       studentId: undefined,
       groupId: undefined,
@@ -59,7 +61,7 @@ describe('lessons list state (S04)', () => {
       order: 'asc',
       page: 3,
     });
-    expect(listQuery(read, NOW)).toMatchObject({
+    expect(listQuery(read, NOW, TZ)).toMatchObject({
       filter: 'unpaid',
       status: 'CANCELLED_CHARGED,CANCELLED_UNCHARGED,NO_SHOW',
       order: 'asc',
@@ -71,29 +73,43 @@ describe('lessons list state (S04)', () => {
     expect(sheetFilterCount(read)).toBe(3);
   });
 
-  it('turns every period into [from, to) in the local zone', () => {
-    expect(periodRange({ period: 'week', from: null, to: null }, NOW)).toEqual({
-      from: new Date(2026, 8, 21),
-      to: new Date(2026, 8, 28),
+  it("turns every period into [from, to) between the studio's midnights", () => {
+    expect(periodRange({ period: 'week', from: null, to: null }, NOW, TZ)).toEqual({
+      from: new Date('2026-09-20T21:00:00.000Z'),
+      to: new Date('2026-09-27T21:00:00.000Z'),
     });
-    expect(periodRange({ period: 'lastMonth', from: null, to: null }, NOW)).toEqual({
-      from: new Date(2026, 7, 1),
-      to: new Date(2026, 8, 1),
+    expect(periodRange({ period: 'lastMonth', from: null, to: null }, NOW, TZ)).toEqual({
+      from: new Date('2026-07-31T21:00:00.000Z'),
+      to: new Date('2026-08-31T21:00:00.000Z'),
     });
-    expect(periodRange({ period: 'last3Months', from: null, to: null }, NOW)).toEqual({
-      from: new Date(2026, 6, 1),
-      to: new Date(2026, 9, 1),
+    expect(periodRange({ period: 'last3Months', from: null, to: null }, NOW, TZ)).toEqual({
+      from: new Date('2026-06-30T21:00:00.000Z'),
+      to: new Date('2026-09-30T21:00:00.000Z'),
     });
-    expect(periodRange({ period: 'all', from: null, to: null }, NOW)).toBeNull();
+    expect(periodRange({ period: 'all', from: null, to: null }, NOW, TZ)).toBeNull();
     // A custom period includes its last day, whichever way round it was picked.
     expect(state('from=2026-10-14')).toMatchObject({
       period: 'custom',
       from: '2026-10-14',
       to: '2026-10-14',
     });
-    expect(periodRange({ period: 'custom', from: '2026-10-18', to: '2026-10-14' }, NOW)).toEqual({
-      from: new Date(2026, 9, 14),
-      to: new Date(2026, 9, 19),
+    expect(
+      periodRange({ period: 'custom', from: '2026-10-18', to: '2026-10-14' }, NOW, TZ),
+    ).toEqual({
+      from: new Date('2026-10-13T21:00:00.000Z'),
+      to: new Date('2026-10-18T21:00:00.000Z'),
+    });
+    // «Цей місяць» on the studio's 1 October starts there even while UTC is still in September.
+    expect(
+      periodRange({ period: 'month', from: null, to: null }, Date.parse('2026-09-30T21:30:00Z'), TZ)
+        ?.from,
+    ).toEqual(new Date('2026-09-30T21:00:00.000Z'));
+    // A custom period across the autumn switch ends at the winter midnight.
+    expect(
+      periodRange({ period: 'custom', from: '2026-10-25', to: '2026-10-25' }, NOW, TZ),
+    ).toEqual({
+      from: new Date('2026-10-24T21:00:00.000Z'),
+      to: new Date('2026-10-25T22:00:00.000Z'),
     });
   });
 

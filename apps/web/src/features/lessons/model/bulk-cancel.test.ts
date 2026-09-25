@@ -19,6 +19,8 @@ const keysOf = (values: unknown) => {
       ]);
 };
 
+/** The studio's zone; the process runs in another one (vitest config). */
+const TZ = 'Europe/Kyiv';
 const label = (reason: string) => ({ holiday: 'Свято', sickLeave: 'Лікарняний' })[reason] ?? '';
 
 const teacher = { id: 't1', name: 'Iryna Bondar', color: null };
@@ -73,37 +75,45 @@ describe('bulk cancel form (L-54)', () => {
         ownReason: ' flu ',
       },
       label,
+      TZ,
     );
     expect(dto).toEqual({
-      from: new Date(2026, 9, 14).toISOString(),
-      to: new Date(2026, 9, 15).toISOString(),
+      from: '2026-10-13T21:00:00.000Z',
+      to: '2026-10-14T21:00:00.000Z',
       teacherId: 't1',
       reason: 'Лікарняний · flu',
     });
     expect(
-      bulkCancelDto({ ...bulkCancelDefaults('2026-10-14'), teacherId: 't1', reason: null }, label),
+      bulkCancelDto(
+        { ...bulkCancelDefaults('2026-10-14'), teacherId: 't1', reason: null },
+        label,
+        TZ,
+      ),
     ).toEqual({
-      from: new Date(2026, 9, 14).toISOString(),
-      to: new Date(2026, 9, 15).toISOString(),
+      from: '2026-10-13T21:00:00.000Z',
+      to: '2026-10-14T21:00:00.000Z',
       reason: null,
     });
   });
 
   it('splits the lessons into individual and group and groups them by day', () => {
     const preview: BulkCancelPreview = {
-      count: 3,
-      byTeacher: [{ teacher, count: 3 }],
+      count: 4,
+      byTeacher: [{ teacher, count: 4 }],
       lessons: [
-        lesson(new Date(2026, 9, 15, 10).toISOString(), false),
-        lesson(new Date(2026, 9, 14, 17).toISOString(), true),
-        lesson(new Date(2026, 9, 14, 10).toISOString(), false),
+        lesson('2026-10-15T07:00:00.000Z', false),
+        // 23:30 in Kyiv on the 14th: the studio's day, though UTC is still on it too.
+        lesson('2026-10-14T20:30:00.000Z', true),
+        lesson('2026-10-14T07:00:00.000Z', false),
+        // 00:30 on the 15th in Kyiv, the 14th in UTC and further west.
+        lesson('2026-10-14T21:30:00.000Z', false),
       ],
       truncated: false,
     };
-    expect(bulkCancelSplit(preview)).toEqual({ individual: 2, group: 1 });
+    expect(bulkCancelSplit(preview)).toEqual({ individual: 3, group: 1 });
     expect(bulkCancelSplit({ ...preview, truncated: true })).toBeNull();
-    const days = lessonsByDay(preview.lessons);
-    expect(days.map((day) => day.lessons.length)).toEqual([2, 1]);
+    const days = lessonsByDay(preview.lessons, TZ);
+    expect(days.map((day) => day.lessons.length)).toEqual([2, 2]);
     expect(days[0]!.lessons[0]!.student?.fullName).toBe('Anna');
   });
 });

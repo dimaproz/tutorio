@@ -12,6 +12,7 @@ import {
   UserXIcon,
 } from 'lucide-react';
 import { useFormatter, useTranslations } from 'next-intl';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 import { useFormContext, useWatch } from 'react-hook-form';
 import type {
   ScheduleChangePreview,
@@ -44,12 +45,13 @@ export function CreatePast({ now, group }: { now: number; group: boolean }) {
   const t = useTranslations('lessons.create');
   const form = useFormContext<CreateFormValues>();
   const formDates = useFormDates();
+  const timeZone = useStudioTimeZone();
   const [frequency, dates, pastStatus, cancelledBy, cancelCharge] = useWatch({
     control: form.control,
     name: ['frequency', 'dates', 'pastStatus', 'cancelledBy', 'cancelCharge'],
   });
   if (frequency !== 'once') return null;
-  const past = pastRows({ dates }, now);
+  const past = pastRows({ dates }, now, timeZone);
   const first = dates.findIndex((_, index) => past[index]);
   if (first < 0) return null;
   const many = past.filter(Boolean).length > 1;

@@ -11,6 +11,7 @@ import { FieldNote } from '@/components/shared/field-note';
 import { IconButton } from '@/components/shared/icon-button';
 import { FieldFrame } from '@/components/shared/text-field';
 import { BandHeader, TintBand } from '@/components/shared/tint-band';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 import { useLessonsQuery } from '../api';
 import { daysWindow, teacherBusyAt, type BusyLesson } from '../model/busy';
 import { useLessonDates } from './lesson-format';
@@ -81,9 +82,10 @@ export function WhenHeading({ title, aside }: { title: string; aside?: ReactNode
  */
 export function useDayLessons(dates: readonly string[]): BusyLesson[] {
   const key = dates.join('|');
+  const timeZone = useStudioTimeZone();
   // The window only changes with the set of days, not on every keystroke.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const window = useMemo(() => daysWindow(dates), [key]);
+  const window = useMemo(() => daysWindow(dates, timeZone), [key, timeZone]);
   const lessons = useLessonsQuery(
     { from: window?.from ?? '', to: window?.to ?? '' },
     Boolean(window),

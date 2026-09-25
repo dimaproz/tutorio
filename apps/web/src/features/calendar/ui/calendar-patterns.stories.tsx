@@ -5,6 +5,7 @@ import {
   calendarStoryMonth,
   calendarStoryWeek,
 } from '@/stories/calendar-story-backend';
+import { DEFAULT_TIME_ZONE } from '@/lib/datetime';
 import { calendarPeriod } from '../model/period';
 import { CalendarAgenda, CalendarDaySide, CalendarWeekStrip } from './calendar-day-parts';
 import {
@@ -19,8 +20,8 @@ import { CalendarTimeGrid } from './calendar-time-grid';
 const WEEK = calendarStoryWeek(true);
 const MONTH = calendarStoryMonth();
 const ANCHOR = new Date(CALENDAR_CLOCK);
-const WEEK_DAYS = calendarPeriod('week', ANCHOR).days;
-const MONTH_DAYS = calendarPeriod('month', ANCHOR).days;
+const WEEK_DAYS = calendarPeriod('week', ANCHOR, DEFAULT_TIME_ZONE).days;
+const MONTH_DAYS = calendarPeriod('month', ANCHOR, DEFAULT_TIME_ZONE).days;
 
 /** Which of the boards' lessons the event story shows. */
 const SAMPLES = {

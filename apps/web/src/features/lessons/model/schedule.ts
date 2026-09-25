@@ -7,7 +7,7 @@ import type {
   ScheduleSlotDto,
 } from '@tutorio/validation';
 import { z } from 'zod';
-import { localInputToIso } from '@/lib/datetime';
+import { dayStartIso, zonedTime, zonedWeekday } from '@/lib/datetime';
 import { lessonDurationString } from './fields';
 import { weeklySlots } from './create';
 
@@ -99,13 +99,13 @@ export function scheduleFormDefaults({
 }
 
 /** The request of a new schedule; the price comes from the direction or the group. */
-export function scheduleCreateDto(values: ScheduleFormValues): CreateScheduleDto {
+export function scheduleCreateDto(values: ScheduleFormValues, timeZone: string): CreateScheduleDto {
   return {
     ...(values.who === 'group' ? { groupId: values.groupId } : { studentId: values.studentId }),
     ...(values.who === 'student' ? { teacherId: values.teacherId } : {}),
     slots: weeklySlots(values),
     durationMin: Number(values.durationMin),
-    startDate: localInputToIso(`${values.from}T00:00`),
+    startDate: dayStartIso(values.from, timeZone),
     endsOn: values.until || null,
     horizonWeeks: Number(values.horizonWeeks),
   };
@@ -154,17 +154,15 @@ export function scheduleChangeDefaults(
   };
 }
 
-export function scheduleChangeFormDto(values: ScheduleChangeFormValues): ScheduleChangeDto {
+export function scheduleChangeFormDto(
+  values: ScheduleChangeFormValues,
+  timeZone: string,
+): ScheduleChangeDto {
   return {
-    effectiveFrom: localInputToIso(`${values.from}T00:00`),
+    effectiveFrom: dayStartIso(values.from, timeZone),
     slots: weeklySlots(values),
     durationMin: Number(values.durationMin),
   };
-}
-
-/** A local midnight "yyyy-MM-dd" as the instant a stop takes effect from. */
-export function dayStartIso(date: string): string {
-  return localInputToIso(`${date}T00:00`);
 }
 
 /** The rule now against the rule after a change, one weekday at a time (S05 board 03). */
@@ -188,22 +186,18 @@ export function slotChanges(
     }));
 }
 
-/** Local weekday of an instant. */
-const weekdayOf = (iso: string) => new Date(iso).getDay();
-
 /**
  * The moved lessons as the consequences say them: when they all land on one
- * weekday and time, «4 вівторки — на 18:00»; otherwise just the count.
+ * weekday and time (the studio's), «4 вівторки — на 18:00»; otherwise just
+ * the count.
  */
-export function movedSummary(moves: ScheduleChangePreview['moves']) {
+export function movedSummary(moves: ScheduleChangePreview['moves'], timeZone: string) {
   if (moves.length === 0) return null;
   const targets = new Set(
-    moves.map((move) => {
-      const to = new Date(move.toStartsAtUtc);
-      return `${to.getDay()}|${String(to.getHours()).padStart(2, '0')}:${String(
-        to.getMinutes(),
-      ).padStart(2, '0')}`;
-    }),
+    moves.map(
+      (move) =>
+        `${zonedWeekday(move.toStartsAtUtc, timeZone)}|${zonedTime(move.toStartsAtUtc, timeZone)}`,
+    ),
   );
   if (targets.size !== 1) return { count: moves.length, weekday: null, time: null };
   const [weekday, time] = [...targets][0]!.split('|');
@@ -211,9 +205,9 @@ export function movedSummary(moves: ScheduleChangePreview['moves']) {
 }
 
 /** The removed lessons: one weekday («3 п'ятниці») or several, with their dates. */
-export function removedSummary(removals: ScheduleChangePreview['removals']) {
+export function removedSummary(removals: ScheduleChangePreview['removals'], timeZone: string) {
   if (removals.length === 0) return null;
-  const weekdays = new Set(removals.map((removal) => weekdayOf(removal.startsAtUtc)));
+  const weekdays = new Set(removals.map((removal) => zonedWeekday(removal.startsAtUtc, timeZone)));
   return {
     count: removals.length,
     weekday: weekdays.size === 1 ? [...weekdays][0]! : null,

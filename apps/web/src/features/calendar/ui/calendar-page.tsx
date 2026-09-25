@@ -61,6 +61,7 @@ import {
   usePeriodTitle,
 } from './use-calendar-state';
 import { useLocalFormatter } from '@/lib/i18n/local-formatter';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 
 const LESSON_LINKS: LessonPanelLinks = {
   studentHref: (id) => `/app/students/${id}`,
@@ -101,6 +102,7 @@ function useCalendarKeys(onStep: (step: 1 | -1) => void, onToday: () => void) {
 export function CalendarPage({ nowMs: pinnedNow }: { nowMs?: number } = {}) {
   const t = useTranslations('calendar');
   const format = useLocalFormatter();
+  const timeZone = useStudioTimeZone();
   const mobile = useIsMobile();
   const nowMs = useNow(pinnedNow);
   const state = useCalendarState({ mobile, nowMs });
@@ -127,19 +129,20 @@ export function CalendarPage({ nowMs: pinnedNow }: { nowMs?: number } = {}) {
 
   const openLesson = (lesson: CalendarLesson) => panel.open(lesson.id);
   const moveLesson = (lesson: CalendarLesson, day: Date, startMin: number) =>
-    void mover.move(lesson, { startsAtUtc: atMinute(day, startMin).toISOString() });
+    void mover.move(lesson, { startsAtUtc: atMinute(day, startMin, timeZone).toISOString() });
   const pickSlot = (slot: TimeGridSlot) =>
     setCreating({
       initial: {
-        date: dayKey(slot.day),
+        date: dayKey(slot.day, timeZone),
         time: clockLabel(slot.startMin),
         durationMin: slot.durationMin,
       },
       slot,
     });
-  const newLesson = (day: Date = isSameDay(anchor, new Date(nowMs)) ? new Date(nowMs) : anchor) =>
-    setCreating({ initial: { date: dayKey(day) }, slot: null });
-  const goTo = (iso: string) => state.setAnchor(startOfDay(new Date(iso)));
+  const newLesson = (
+    day: Date = isSameDay(anchor, new Date(nowMs), timeZone) ? new Date(nowMs) : anchor,
+  ) => setCreating({ initial: { date: dayKey(day, timeZone) }, slot: null });
+  const goTo = (iso: string) => state.setAnchor(startOfDay(new Date(iso), timeZone));
 
   const filterCount = statusFilterCount(state.statusFilter) + (state.teachersFiltered ? 1 : 0);
   const retry = () => void state.lessonsQuery.refetch();
@@ -189,9 +192,11 @@ export function CalendarPage({ nowMs: pinnedNow }: { nowMs?: number } = {}) {
   );
 
   if (mobile) {
-    const dayLessons = lessonsOnDay(visible, anchor);
-    const firstMinute = dayLessons[0] ? minutesOfDay(new Date(dayLessons[0].startsAtUtc)) : 480;
-    const weekDays = calendarPeriod('week', anchor).days;
+    const dayLessons = lessonsOnDay(visible, anchor, timeZone);
+    const firstMinute = dayLessons[0]
+      ? minutesOfDay(new Date(dayLessons[0].startsAtUtc), timeZone)
+      : 480;
+    const weekDays = calendarPeriod('week', anchor, timeZone).days;
     return (
       <div className="flex flex-col gap-4 pb-24">
         <CalendarPhoneBar
@@ -468,7 +473,7 @@ export function CalendarPage({ nowMs: pinnedNow }: { nowMs?: number } = {}) {
             loading={state.loading}
             overlay={overlay}
             selection={creating?.slot}
-            scrollToMinute={view === 'day' ? dayScroll(visible, anchor) : 8 * 60}
+            scrollToMinute={view === 'day' ? dayScroll(visible, anchor, timeZone) : 8 * 60}
             visibleHours={view === 'day' ? 9 : undefined}
             onOpenLesson={openLesson}
             onMoveLesson={moveLesson}
@@ -477,7 +482,7 @@ export function CalendarPage({ nowMs: pinnedNow }: { nowMs?: number } = {}) {
           />
           {view === 'day' ? (
             <CalendarDaySide
-              days={calendarPeriod('week', anchor).days}
+              days={calendarPeriod('week', anchor, timeZone).days}
               day={anchor}
               lessons={visible}
               context={all}
@@ -528,8 +533,11 @@ function nextText(
 }
 
 /** The day view opens an hour before its first lesson, else at 08:00. */
-function dayScroll(lessons: readonly CalendarLesson[], day: Date) {
-  const first = lessonsOnDay(lessons, day)[0];
+function dayScroll(lessons: readonly CalendarLesson[], day: Date, timeZone: string) {
+  const first = lessonsOnDay(lessons, day, timeZone)[0];
   if (!first) return 8 * 60;
-  return Math.max(0, Math.floor(minutesOfDay(new Date(first.startsAtUtc)) / 60) * 60 - 60);
+  return Math.max(
+    0,
+    Math.floor(minutesOfDay(new Date(first.startsAtUtc), timeZone) / 60) * 60 - 60,
+  );
 }

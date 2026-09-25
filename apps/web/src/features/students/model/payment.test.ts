@@ -8,6 +8,8 @@ import {
 } from './payment';
 import { billingDirection, billingPackage, debtDirection } from './testing';
 
+/** The studio's zone; the process runs in another one (vitest config). */
+const TZ = 'Europe/Kyiv';
 const TODAY = '2026-09-24';
 const NOW = new Date('2026-09-24T09:00:00.000Z');
 
@@ -87,6 +89,7 @@ describe('payment form', () => {
         pkg,
         NOW,
         TODAY,
+        TZ,
       ),
     ).toEqual({
       enrollmentId: direction.enrollmentId,
@@ -103,8 +106,10 @@ describe('payment form', () => {
       pkg,
       NOW,
       TODAY,
+      TZ,
     );
     expect(earlier.packageId).toBeUndefined();
-    expect(earlier.paidAt).toBe(new Date('2026-09-20T12:00').toISOString());
+    // An earlier day is recorded at the studio's noon.
+    expect(earlier.paidAt).toBe('2026-09-20T09:00:00.000Z');
   });
 });

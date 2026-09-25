@@ -13,11 +13,11 @@ import {
   lessonPriceString,
   lessonTimeString,
 } from './fields';
-import { localInputToIso, splitDateTimeInput, toLocalDateTimeInput } from '@/lib/datetime';
+import { zonedDate, zonedIso, zonedTime } from '@/lib/datetime';
 import { formatPriceInput, parsePriceInput } from '@/lib/money';
 
 /**
- * The panel's edit form (L-40): date, start and length, the teacher (a
+ * The panel's edit form (L-40): date, start and length on the studio's clock, the teacher (a
  * substitution for this lesson only), the price while it can change (L-12),
  * the topic and the notes. The price stays blank when it is locked.
  */
@@ -38,11 +38,11 @@ export function editFormDefaults(
     LessonDetailResponse,
     'startsAtUtc' | 'durationMin' | 'teacherId' | 'priceMinor' | 'topic' | 'notes'
   >,
+  timeZone: string,
 ): EditFormValues {
-  const { date, time } = splitDateTimeInput(toLocalDateTimeInput(new Date(lesson.startsAtUtc)));
   return {
-    date,
-    time,
+    date: zonedDate(lesson.startsAtUtc, timeZone),
+    time: zonedTime(lesson.startsAtUtc, timeZone),
     durationMin: String(lesson.durationMin),
     teacherId: lesson.teacherId,
     // A whole amount reads "500", as the design writes it; cents keep "500.50".
@@ -74,9 +74,9 @@ export function editPlan(
     LessonDetailResponse,
     'startsAtUtc' | 'durationMin' | 'teacherId' | 'priceMinor' | 'currency' | 'topic' | 'notes'
   >,
-  { priceLocked }: { priceLocked: boolean },
+  { priceLocked, timeZone }: { priceLocked: boolean; timeZone: string },
 ): EditPlan {
-  const startsAtUtc = localInputToIso(`${values.date}T${values.time}`);
+  const startsAtUtc = zonedIso(values.date, values.time, timeZone);
   const moved = Date.parse(startsAtUtc) !== Date.parse(lesson.startsAtUtc);
   const durationMin = Number(values.durationMin);
   const lengthChanged = durationMin !== lesson.durationMin;

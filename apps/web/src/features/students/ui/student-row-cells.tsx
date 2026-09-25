@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 import type { StudentListItem, StudentStatusDto } from '@tutorio/validation';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -160,6 +161,7 @@ export function StudentNextLessonCell({
 }) {
   const t = useTranslations('students.list');
   const format = useFormatter();
+  const timeZone = useStudioTimeZone();
   const alignClass = align === 'end' ? 'items-end text-right' : 'items-start';
 
   if (status === 'ON_HOLD' && !next) {
@@ -179,7 +181,7 @@ export function StudentNextLessonCell({
 
   return (
     <div className={cn('flex min-w-0 flex-col', alignClass)}>
-      {isSameLocalDay(next.startsAtUtc, now) ? (
+      {isSameLocalDay(next.startsAtUtc, now, timeZone) ? (
         <Badge variant="brand" dot className="mb-0.5">
           {t('today')}
         </Badge>

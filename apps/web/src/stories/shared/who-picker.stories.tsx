@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { useFormatter, useTranslations } from 'next-intl';
+import { DEFAULT_TIME_ZONE, zonedDayStart } from '@/lib/datetime';
 import {
   BanknoteIcon,
   HourglassIcon,
@@ -66,7 +67,7 @@ function WhoPickerStory({ state }: Args) {
   const tValidation = useTranslations('validation');
   const format = useFormatter();
   const slots = useSlotsLabel();
-  const pauseEnd = new Date(2026, 9, 12);
+  const pauseEnd = zonedDayStart('2026-10-12', DEFAULT_TIME_ZONE);
   const pausedShort = format.dateTime(pauseEnd, { day: 'numeric', month: 'short' });
   const pausedLong = format.dateTime(pauseEnd, { day: 'numeric', month: 'long' });
   const groupSchedule = slots([

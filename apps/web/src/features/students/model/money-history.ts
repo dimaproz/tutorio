@@ -1,4 +1,5 @@
 import type { PackageResponse, PaymentResponse } from '@tutorio/validation';
+import { zonedDate, zonedDayStart } from '@/lib/datetime';
 
 /** Sums per currency: money in several currencies is never added up (decision 3). */
 export type CurrencySums = { currency: string; amountMinor: number }[];
@@ -22,15 +23,18 @@ export type LedgerRow = {
   pkg: PackageResponse | null;
 };
 
+/** A month of the ledger: "yyyy-MM", and its first midnight to name it by. */
 export type LedgerMonth = { key: string; month: Date; rows: LedgerRow[] };
 
 /**
  * Every settled payment and refund of the student, newest first, grouped by
- * month; pending and failed online attempts are not money in hand.
+ * the studio's month; pending and failed online attempts are not money in
+ * hand.
  */
 export function ledgerMonths(
   payments: readonly PaymentResponse[],
   packages: readonly PackageResponse[],
+  timeZone: string,
 ): LedgerMonth[] {
   const byId = new Map(packages.map((pkg) => [pkg.id, pkg]));
   const months = new Map<string, LedgerMonth>();
@@ -38,11 +42,10 @@ export function ledgerMonths(
     .filter((payment) => payment.status === 'PAID' || payment.status === 'REFUNDED')
     .sort((a, b) => b.paidAt.localeCompare(a.paidAt));
   for (const payment of rows) {
-    const date = new Date(payment.paidAt);
-    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    const key = zonedDate(payment.paidAt, timeZone).slice(0, 7);
     const month = months.get(key) ?? {
       key,
-      month: new Date(date.getFullYear(), date.getMonth(), 1),
+      month: zonedDayStart(`${key}-01`, timeZone),
       rows: [],
     };
     month.rows.push({

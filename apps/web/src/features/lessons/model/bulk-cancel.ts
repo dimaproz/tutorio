@@ -5,10 +5,10 @@ import {
   type BulkCancelPreview,
 } from '@tutorio/validation';
 import { z } from 'zod';
+import { calendarDaysBetween, dayEndIso, dayStartIso, zonedDate } from '@/lib/datetime';
 import { optionalText } from '@/lib/forms/helpers';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** The reason chips of the form (L-54); each fills the reason with its words. */
 export const BULK_CANCEL_REASONS = ['holiday', 'sickLeave', 'vacation', 'teacherLeave'] as const;
@@ -55,34 +55,25 @@ export function bulkCancelDefaults(today: string, teacherId = ''): BulkCancelFor
   };
 }
 
-/** Local midnight of "yyyy-MM-dd". */
-function startOfLocalDay(date: string): Date {
-  const [year, month, day] = date.split('-').map(Number);
-  return new Date(year!, month! - 1, day!);
-}
-
 /** How many calendar days «З» to «По» covers, both included. */
 export function periodDays(from: string, to: string): number {
-  const start = startOfLocalDay(from);
-  const end = startOfLocalDay(to);
-  return Math.round((end.getTime() - start.getTime()) / DAY_MS) + 1;
+  return calendarDaysBetween(from, to) + 1;
 }
 
 /**
- * The request: `[from, to)` in the browser's zone, so the «По» day is
- * included; the chip's words and the tutor's own joined as the reason.
+ * The request: `[from, to)` between the studio's midnights, so the «По» day
+ * is included; the chip's words and the tutor's own joined as the reason.
  */
 export function bulkCancelDto(
   values: BulkCancelFormValues,
   reasonLabel: (reason: BulkCancelReason) => string,
+  timeZone: string,
 ): BulkCancelDto {
-  const end = startOfLocalDay(values.to);
-  end.setDate(end.getDate() + 1);
   const parts = [values.reason ? reasonLabel(values.reason) : null, values.ownReason?.trim()];
   const reason = parts.filter(Boolean).join(' · ');
   return {
-    from: startOfLocalDay(values.from).toISOString(),
-    to: end.toISOString(),
+    from: dayStartIso(values.from, timeZone),
+    to: dayEndIso(values.to, timeZone),
     ...(values.scope === 'teacher' && values.teacherId ? { teacherId: values.teacherId } : {}),
     reason: reason || null,
   };
@@ -97,12 +88,11 @@ export function bulkCancelSplit(preview: BulkCancelPreview) {
   return preview.truncated ? null : { individual: preview.lessons.length - group, group };
 }
 
-/** The lessons by local day, soonest first, for the check step. */
-export function lessonsByDay(lessons: readonly BulkCancelLesson[]) {
+/** The lessons by the studio's day, soonest first, for the check step. */
+export function lessonsByDay(lessons: readonly BulkCancelLesson[], timeZone: string) {
   const days = new Map<string, BulkCancelLesson[]>();
   for (const lesson of [...lessons].sort((a, b) => a.startsAtUtc.localeCompare(b.startsAtUtc))) {
-    const start = new Date(lesson.startsAtUtc);
-    const key = `${start.getFullYear()}-${start.getMonth()}-${start.getDate()}`;
+    const key = zonedDate(lesson.startsAtUtc, timeZone);
     days.set(key, [...(days.get(key) ?? []), lesson]);
   }
   return [...days.values()].map((items) => ({ day: items[0]!.startsAtUtc, lessons: items }));

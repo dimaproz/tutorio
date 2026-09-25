@@ -14,6 +14,8 @@ import {
 } from './direction-settings';
 import { billingDirection } from './testing';
 
+/** The studio's zone; the process runs in another one (vitest config). */
+const TZ = 'Europe/Kyiv';
 const NOW = Date.parse('2026-09-24T12:00:00.000Z');
 
 const payment = (overrides: Partial<PaymentResponse>) =>
@@ -53,8 +55,11 @@ describe('the payments ledger', () => {
         payment({ paidAt: '2026-09-26T10:00:00.000Z', status: 'PENDING' }),
       ],
       [pkg({})],
+      TZ,
     );
     expect(months.map((month) => month.rows.length)).toEqual([2, 1]);
+    expect(months.map((month) => month.key)).toEqual(['2026-09', '2026-08']);
+    expect(months[0]!.month.toISOString()).toBe('2026-08-31T21:00:00.000Z');
     expect(months[0]!.rows[1]!.pkg?.name).toBe('B2 preparation');
     expect(months[1]!.rows[0]!.kind).toBe('refund');
   });

@@ -12,6 +12,7 @@ import {
   scheduleFormSchema,
   slotChanges,
 } from './schedule';
+import { zonedIso } from '@/lib/datetime';
 
 const keys = (
   schema: typeof scheduleFormSchema | typeof scheduleChangeFormSchema,
@@ -26,8 +27,12 @@ const keys = (
       ]);
 };
 
+/** The studio's zone; the process runs in another one (vitest config). */
+const TZ = 'Europe/Kyiv';
+const pad = (value: number) => String(value).padStart(2, '0');
+/** A wall-clock hour of 2026 on the studio's clock. */
 const local = (month: number, day: number, hour: number) =>
-  new Date(2026, month - 1, day, hour).toISOString();
+  zonedIso(`2026-${pad(month)}-${pad(day)}`, `${pad(hour)}:00`, TZ);
 
 describe('new schedule form (L-20, L-21)', () => {
   const base = scheduleFormDefaults({ from: '2026-09-28', horizonWeeks: 4 });
@@ -69,14 +74,17 @@ describe('new schedule form (L-20, L-21)', () => {
 
   it('builds the request with a time per day and the horizon', () => {
     expect(
-      scheduleCreateDto({
-        ...base,
-        studentId: 's1',
-        teacherId: 't1',
-        weekdays: [4, 1],
-        times: { '1': '17:00', '4': '15:00' },
-        horizonWeeks: '6',
-      }),
+      scheduleCreateDto(
+        {
+          ...base,
+          studentId: 's1',
+          teacherId: 't1',
+          weekdays: [4, 1],
+          times: { '1': '17:00', '4': '15:00' },
+          horizonWeeks: '6',
+        },
+        TZ,
+      ),
     ).toEqual({
       studentId: 's1',
       teacherId: 't1',
@@ -85,7 +93,7 @@ describe('new schedule form (L-20, L-21)', () => {
         { weekday: 4, localTime: '15:00' },
       ],
       durationMin: 60,
-      startDate: new Date(2026, 8, 28).toISOString(),
+      startDate: '2026-09-27T21:00:00.000Z',
       endsOn: null,
       horizonWeeks: 6,
     });
@@ -107,8 +115,10 @@ describe('schedule change (L-25, L-26)', () => {
     expect(keys(scheduleChangeFormSchema, { ...values, weekdays: [] })).toEqual([
       ['weekdays', 'weekdaysRequired'],
     ]);
-    expect(scheduleChangeFormDto({ ...values, weekdays: [2], times: { '2': '18:00' } })).toEqual({
-      effectiveFrom: new Date(2026, 9, 1).toISOString(),
+    expect(
+      scheduleChangeFormDto({ ...values, weekdays: [2], times: { '2': '18:00' } }, TZ),
+    ).toEqual({
+      effectiveFrom: '2026-09-30T21:00:00.000Z',
       slots: [{ weekday: 2, localTime: '18:00' }],
       durationMin: 60,
     });
@@ -127,18 +137,26 @@ describe('schedule change (L-25, L-26)', () => {
       startsAtUtc: local(10, day, 17),
       toStartsAtUtc: local(10, day, 18),
     }));
-    expect(movedSummary(moves)).toEqual({ count: 4, weekday: 2, time: '18:00' });
-    expect(movedSummary([])).toBeNull();
+    expect(movedSummary(moves, TZ)).toEqual({ count: 4, weekday: 2, time: '18:00' });
+    expect(movedSummary([], TZ)).toBeNull();
     expect(
-      movedSummary([
-        ...moves,
-        { lessonId: 'x', startsAtUtc: local(10, 2, 9), toStartsAtUtc: local(10, 2, 9) },
-      ]),
+      movedSummary(
+        [...moves, { lessonId: 'x', startsAtUtc: local(10, 2, 9), toStartsAtUtc: local(10, 2, 9) }],
+        TZ,
+      ),
     ).toMatchObject({ count: 5, weekday: null });
     const removed = removedSummary(
       [2, 9, 23].map((day) => ({ lessonId: `r${day}`, startsAtUtc: local(10, day, 18) })),
+      TZ,
     );
     expect(removed).toMatchObject({ count: 3, weekday: 5 });
+    // 00:30 on a Saturday in Kyiv is still Friday in UTC: the studio's weekday wins.
+    expect(
+      movedSummary(
+        [{ lessonId: 'late', startsAtUtc: local(10, 2, 9), toStartsAtUtc: local(10, 3, 0) }],
+        TZ,
+      ),
+    ).toEqual({ count: 1, weekday: 6, time: '00:00' });
   });
 
   it('pairs every conflict with the new lesson it hits', () => {

@@ -129,7 +129,9 @@ describe('the block', () => {
 });
 
 describe('moneyMetric', () => {
-  const NOW = new Date(2026, 8, 24, 12).getTime();
+  /** Noon on 24 September in Kyiv. */
+  const NOW = Date.parse('2026-09-24T09:00:00.000Z');
+  const TZ = 'Europe/Kyiv';
   const paid = (
     amountMinor: number,
     currency = 'UAH',
@@ -159,6 +161,7 @@ describe('moneyMetric', () => {
           paid(90000, 'UAH', 'PAID', '2026-08-20T10:00:00.000Z'),
         ],
         NOW,
+        TZ,
       ),
     ).toEqual({
       kind: 'single',
@@ -171,7 +174,20 @@ describe('moneyMetric', () => {
   });
 
   it('never adds up two currencies', () => {
-    expect(moneyMetric([debtDirection()], [paid(24000, 'PLN')], NOW)).toEqual({ kind: 'mixed' });
-    expect(moneyMetric([], [], NOW)).toBeNull();
+    expect(moneyMetric([debtDirection()], [paid(24000, 'PLN')], NOW, TZ)).toEqual({
+      kind: 'mixed',
+    });
+    expect(moneyMetric([], [], NOW, TZ)).toBeNull();
+  });
+
+  it("counts the studio's month: 00:30 on 1 September in Kyiv is September", () => {
+    expect(
+      moneyMetric(
+        [debtDirection()],
+        [paid(10000, 'UAH', 'PAID', '2026-08-31T21:30:00.000Z')],
+        NOW,
+        TZ,
+      ),
+    ).toMatchObject({ paidMinor: 10000, payments: 1 });
   });
 });

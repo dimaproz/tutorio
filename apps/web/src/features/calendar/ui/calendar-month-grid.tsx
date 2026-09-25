@@ -8,9 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { lessonsOnDay, lessonType, type CalendarLesson } from '../model/lessons';
-import { inMonth, isSameDay } from '../model/period';
+import { dayOfMonth, inMonth, isSameDay } from '../model/period';
 import { CalendarEvent } from './calendar-event';
 import { useLocalFormatter } from '@/lib/i18n/local-formatter';
+import { useStudioTimeZone } from '@/lib/i18n/time-zone';
 
 /** Chips a cell shows before «+N ще». */
 const CHIPS_PER_DAY = 3;
@@ -67,6 +68,7 @@ export function CalendarMonthGrid({
 }) {
   const t = useTranslations('calendar.month');
   const format = useLocalFormatter();
+  const timeZone = useStudioTimeZone();
   const [ownOpen, setOwnOpen] = useState<Date | null>(null);
   const open = openDay !== undefined ? openDay : ownOpen;
   const setOpen = onOpenDayChange ?? setOwnOpen;
@@ -92,11 +94,11 @@ export function CalendarMonthGrid({
       </div>
       <div className="grid grid-cols-7">
         {weeks.flat().map((day, index) => {
-          const dayLessons = lessonsOnDay(lessons, day);
-          const today = isSameDay(day, now);
-          const outside = !inMonth(day, anchor);
+          const dayLessons = lessonsOnDay(lessons, day, timeZone);
+          const today = isSameDay(day, now, timeZone);
+          const outside = !inMonth(day, anchor, timeZone);
           const hidden = dayLessons.length - CHIPS_PER_DAY;
-          const isOpen = open !== null && isSameDay(open, day);
+          const isOpen = open !== null && isSameDay(open, day, timeZone);
           return (
             <div
               key={day.toISOString()}
@@ -116,7 +118,7 @@ export function CalendarMonthGrid({
                     outside && 'text-muted-foreground',
                   )}
                 >
-                  {day.getDate()}
+                  {dayOfMonth(day, timeZone)}
                 </span>
                 {dayLessons.length > 0 ? (
                   <span className="font-mono text-[11px] text-muted-foreground">
@@ -225,6 +227,7 @@ export function CalendarMonthDots({
   onSelect: (day: Date) => void;
 }) {
   const format = useLocalFormatter();
+  const timeZone = useStudioTimeZone();
   return (
     <div data-slot="calendar-month-dots" className="rounded-[24px] bg-card p-4">
       <div className="grid grid-cols-7 gap-y-1 text-center">
@@ -237,8 +240,8 @@ export function CalendarMonthDots({
           </span>
         ))}
         {days.map((day) => {
-          const active = isSameDay(day, selected);
-          const outside = !inMonth(day, anchor);
+          const active = isSameDay(day, selected, timeZone);
+          const outside = !inMonth(day, anchor, timeZone);
           return (
             <button
               key={day.toISOString()}
@@ -252,8 +255,8 @@ export function CalendarMonthDots({
               )}
               onClick={() => onSelect(day)}
             >
-              {day.getDate()}
-              <TypeDots lessons={lessonsOnDay(lessons, day)} />
+              {dayOfMonth(day, timeZone)}
+              <TypeDots lessons={lessonsOnDay(lessons, day, timeZone)} />
             </button>
           );
         })}
