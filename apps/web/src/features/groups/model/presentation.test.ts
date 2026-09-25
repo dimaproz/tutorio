@@ -53,7 +53,7 @@ function pkg(patch: Partial<PackageResponse>): PackageResponse {
 
 describe('member packages', () => {
   it("shows each member's newest running package over a newer used-up one", () => {
-    const bob = { studentId: 'bob', student: { id: 'bob', fullName: 'Bob' } };
+    const bob = { studentId: 'bob', student: { id: 'bob', fullName: 'Bob', avatarKey: null } };
     const picked = memberPackages(
       [
         pkg({ id: 'used', remainingCredits: 0, purchasedAt: '2026-09-20T00:00:00.000Z' }),

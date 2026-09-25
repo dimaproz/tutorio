@@ -527,6 +527,7 @@ function packageFixture(
     notes: null,
     student: ANNA,
     group: groupId ? { id: groupId, name: 'B2 prep · evening' } : null,
+    teacher: { ...DMYTRO, avatarKey: null, subjects: ['English'] },
     createdAt: '2026-09-01T10:00:00.000Z',
     updatedAt: '2026-09-01T10:00:00.000Z',
     deletedAt: null,

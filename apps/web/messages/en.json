@@ -180,6 +180,7 @@
     "NOT_ENOUGH_CREDITS": "The package does not have that many unused lessons.",
     "REFUND_TOO_LARGE": "A refund cannot return more than the package received.",
     "INVALID_TRANSFER_TARGET": "Lessons can move only to another direction of the same student.",
+    "PACKAGE_IN_USE": "Lessons or payments are already recorded on this package. Refund what is unused instead.",
     "PAUSE_NOT_FOUND": "The pause was not found.",
     "PAUSE_OVERLAP": "The student already has a pause covering this time.",
     "PAUSE_ENDED": "This pause is already over.",
