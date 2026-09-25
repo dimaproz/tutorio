@@ -132,8 +132,8 @@ now refuses to delete a used package.
 
 ## Decided while building
 
-- **A package sold here has no name**: the sale shows no name field, so it
-  is called «Пакет на 8 занять» / «Пакет 1–31 жовт» wherever it appears.
+- **A package without a name** (older ones) is called «Пакет на 8 занять» /
+  «Пакет 1–31 жовт» wherever it appears.
 - **The kind picker is `ChoiceCardGroup`**: it already lays out as the
   board's stacked list.
 - **The window shell is shared**: the lesson windows' dialog became
@@ -148,22 +148,30 @@ now refuses to delete a used package.
   direction (the ink button once the credits run low or out).
 - **A period from the schedule counts its own lessons**: switching to it
   clears the typed count; the field shows the schedule's with «З розкладу».
-- **A weekly package's price follows the preview's count** (the API's
-  `weeks × N`), so the two fields and the preview agree.
+- **A weekly package's price follows the preview's count**, so the two
+  fields and the preview agree.
 - **The correction stepper** stops at no credits left and at +50.
 - **The profile's phone metrics row** takes the focus (the axe
   scrollable-region rule failed on a student with several currencies).
 
+## Confirmed with the owner after the build (2026-09-25)
+
+- **N a week counts the lessons that fall in the dates**, not whole weeks:
+  N for every 7 days of the window, a part week in proportion, rounded to
+  the nearest lesson (`weeklyLessons` in the domain) — 3 a week over 1–31
+  October is 13, as on board 01.
+- **The sale has a name field**, «Назва пакета», filled with a suggestion
+  until the tutor types their own: «English · 8 занять» for a count package,
+  «English · 1–31 жовт» for a period; left empty, the package is sold with
+  the suggestion. The preview and «Пакет продано» show it.
+- **An extension by hand is in «Історія»**: the ticket's read returns
+  `manualExtensions` (from the extension's audit row) and the history shows
+  «Продовжено до 31 жовтня · було до 20 вересня».
+
 ## Open questions
 
-- **13 vs 12 lessons**: board 01 state 03 shows 13 for 3 a week over 1–31
-  October (31 days × 3 ÷ 7); the API rounds the weeks first (L-80 «X ×
-  weeks») and sells 12. Which rule does the owner want?
 - **«Спершу закриє заняття в борг, якщо вони є»** is shown only with the
   number when there are lessons on debt; the generic line is dropped.
-- **A package's name**: keep the derived title, or add an optional name to
-  the sale?
-- **An extension by hand is not in «Історія»**: `POST /packages/:id/extend`
-  writes the audit log only; the history lists the pause extensions.
 - **The sale's dates use the browser's time zone** (the known S02 issue):
-  «Діє до 30.10» ends at the browser's midnight.
+  «Діє до 30.10» ends at the browser's midnight, while the studio shows
+  dates in its own time zone.
