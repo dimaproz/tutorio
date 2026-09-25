@@ -33,6 +33,7 @@ export function StudentLearningBlock({
   actions,
   error,
   onRetry,
+  onOpenPackage,
   readOnly = false,
 }: {
   billing: StudentBillingResponse | undefined;
@@ -41,6 +42,8 @@ export function StudentLearningBlock({
   actions: LearningActions;
   error?: unknown;
   onRetry?: () => void;
+  /** Opens a package's ticket (S07). */
+  onOpenPackage?: (packageId: string) => void;
   readOnly?: boolean;
 }) {
   const t = useTranslations('students.learningBlock');
@@ -122,6 +125,8 @@ export function StudentLearningBlock({
               studioDeadlineHours={billing.cancellationDeadlineHours}
               format={format}
               onPay={readOnly ? undefined : () => actions.pay(direction.enrollmentId)}
+              onSell={readOnly ? undefined : () => actions.sell(direction.enrollmentId)}
+              onOpenPackage={onOpenPackage}
               onReturn={readOnly || !view.pause ? undefined : () => actions.endPause(view.pause!)}
               menu={
                 readOnly || direction.status === 'ARCHIVED' ? undefined : (
@@ -135,6 +140,7 @@ export function StudentLearningBlock({
                     paused={view.action === 'return'}
                     onAction={(action) => {
                       if (action === 'pay') actions.pay(direction.enrollmentId);
+                      if (action === 'sell') actions.sell(direction.enrollmentId);
                       if (action === 'settings') actions.settings(direction.enrollmentId);
                       if (action === 'schedule') actions.schedule(direction, schedule);
                       if (action === 'pause') actions.pause(direction.enrollmentId);

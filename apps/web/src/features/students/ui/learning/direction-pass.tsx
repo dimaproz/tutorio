@@ -1,7 +1,14 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { BanknoteIcon, CircleSlashIcon, LayersIcon, PlayIcon, RepeatIcon } from 'lucide-react';
+import {
+  BanknoteIcon,
+  CircleSlashIcon,
+  LayersIcon,
+  PackagePlusIcon,
+  PlayIcon,
+  RepeatIcon,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { ScheduleResponse } from '@tutorio/validation';
 import { Button } from '@/components/ui/button';
@@ -30,6 +37,8 @@ export function DirectionPass({
   menu,
   onPay,
   onReturn,
+  onSell,
+  onOpenPackage,
   pending = false,
 }: {
   view: PassView;
@@ -40,6 +49,10 @@ export function DirectionPass({
   menu?: ReactNode;
   onPay?: () => void;
   onReturn?: () => void;
+  /** «Продати пакет» (S07). */
+  onSell?: () => void;
+  /** Opens the current package's ticket from the stub (S07). */
+  onOpenPackage?: (packageId: string) => void;
   pending?: boolean;
 }) {
   const t = useTranslations('students.learningBlock');
@@ -70,6 +83,16 @@ export function DirectionPass({
         <BanknoteIcon data-icon="inline-start" />
         {t('pay')}
       </Button>
+    ) : view.action === 'sell' && onSell ? (
+      <Button
+        type="button"
+        size="sm"
+        variant={view.actionPrimary ? 'default' : 'outline'}
+        onClick={onSell}
+      >
+        <PackagePlusIcon data-icon="inline-start" />
+        {t('sell')}
+      </Button>
     ) : view.action === 'return' && onReturn ? (
       <Button type="button" size="sm" variant="outline" disabled={pending} onClick={onReturn}>
         <PlayIcon data-icon="inline-start" />
@@ -82,7 +105,15 @@ export function DirectionPass({
       aria-label={title}
       className="flex flex-col overflow-hidden rounded-block bg-card md:flex-row md:overflow-visible"
     >
-      <PassStub view={view} format={format} className="md:w-72.5 md:shrink-0 md:rounded-l-block" />
+      <PassStub
+        view={view}
+        format={format}
+        className="md:w-72.5 md:shrink-0 md:rounded-l-block"
+        openLabel={
+          current ? t('openPackage', { name: current.name ?? t('packageUnnamed') }) : undefined
+        }
+        onOpen={current && onOpenPackage ? () => onOpenPackage(current.id) : undefined}
+      />
       <Perforation />
       <div className="flex min-w-0 grow flex-col justify-center gap-4 px-4 py-4 md:py-4.5 md:pr-5 md:pl-6">
         <div className="flex items-center gap-3">

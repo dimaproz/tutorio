@@ -32,7 +32,7 @@ export type PassView = {
   /** The package still has money to take (L-80, decision 5). */
   packageOwedMinor: number;
   /** The main button on the card, before the ⋯ menu. */
-  action: 'pay' | 'return' | null;
+  action: 'pay' | 'return' | 'sell' | null;
   /** Whether that button is the ink one. */
   actionPrimary: boolean;
 };
@@ -99,7 +99,8 @@ export function passView(
 
   const owesMoney = debtMinor > 0 || packageOwedMinor > 0;
   // Paying is the next step when money is owed; a paused direction offers
-  // its return instead (a whole-student pause returns from the banner).
+  // its return instead (a whole-student pause returns from the banner); a
+  // package direction with nothing owed sells its next package (S07).
   const action: PassView['action'] =
     pause && pause.enrollmentId !== null
       ? 'return'
@@ -107,7 +108,7 @@ export function passView(
         ? null
         : !packageMode || owesMoney
           ? 'pay'
-          : null;
+          : 'sell';
 
   return {
     direction,
@@ -122,7 +123,8 @@ export function passView(
     owesWhilePaused: Boolean(pause) && debtMinor > 0,
     packageOwedMinor,
     action,
-    actionPrimary: action === 'pay' ? owesMoney : false,
+    // Selling is the next step once the credits run low or out.
+    actionPrimary: action === 'pay' ? owesMoney : action === 'sell' ? state !== 'package' : false,
   };
 }
 

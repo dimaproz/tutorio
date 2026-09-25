@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import type { PauseResponse, ScheduleResponse } from '@tutorio/validation';
 import { ConfirmDialog } from '@/components/shared/confirm-dialog';
 import { ScheduleChangeDialog, ScheduleCreateDialog } from '@/features/lessons';
+import { PackageSaleDialog } from '@/features/packages';
 import { useUpdateDirectionMutation } from '@/features/students/api';
 import { directionName, type BillingDirection } from '@/features/students/model/learning';
 import { useBillingErrorToast } from './dialog-parts';
@@ -17,6 +18,7 @@ import { PaymentDialog } from './payment-dialog';
 
 type Open =
   | { kind: 'pay'; enrollmentId: string }
+  | { kind: 'sell'; enrollmentId: string | null }
   | { kind: 'settings'; enrollmentId: string }
   | { kind: 'pause'; enrollmentId: string | null; pause: PauseResponse | null }
   | { kind: 'end'; pause: PauseResponse }
@@ -75,6 +77,14 @@ export function useLearningActions({
           onOpenChange={(next) => (next ? undefined : close())}
           studentName={student.fullName}
           direction={payDirection}
+        />
+      ) : null}
+      {open?.kind === 'sell' ? (
+        <PackageSaleDialog
+          open
+          onOpenChange={(next) => (next ? undefined : close())}
+          studentId={student.id}
+          enrollmentId={open.enrollmentId ?? undefined}
         />
       ) : null}
       {settingsDirection ? (
@@ -138,6 +148,15 @@ export function useLearningActions({
   return {
     dialogs,
     pay: (enrollmentId: string) => setOpen({ kind: 'pay', enrollmentId }),
+    /** «Продати пакет» (S07): a direction's, or the first package direction's. */
+    sell: (enrollmentId: string | null = null) =>
+      setOpen({
+        kind: 'sell',
+        enrollmentId:
+          enrollmentId ??
+          liveDirections.find((direction) => direction.billingType === 'PACKAGE')?.enrollmentId ??
+          null,
+      }),
     settings: (enrollmentId: string) => setOpen({ kind: 'settings', enrollmentId }),
     /** A new pause: the whole student, or the direction it was opened from. */
     pause: (enrollmentId: string | null = null) =>

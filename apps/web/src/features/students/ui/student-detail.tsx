@@ -18,6 +18,7 @@ import {
   useLessonPanel,
   type LessonPanelLinks,
 } from '@/features/lessons';
+import { PackageTicketModal, usePackageTicket } from '@/features/packages';
 import { StudentLessonsCard, studentLessonsRange } from './student-lessons-card';
 import { studentLifecyclePolicy } from '@/features/students/model/lifecycle';
 import { deriveStudentProfileMetrics } from '@/features/students/model/profile-metrics';
@@ -97,6 +98,7 @@ export function StudentProfileContent({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const lessonPanel = useLessonPanel();
+  const packageTicket = usePackageTicket();
   const [creating, setCreating] = useState(false);
   const policy = studentLifecyclePolicy(student.status);
   const archived = policy.readOnly;
@@ -274,6 +276,7 @@ export function StudentProfileContent({
             error={packages.isError ? packages.error : undefined}
             onRetry={() => void packages.refetch()}
             nowMs={now}
+            onOpen={packageTicket.open}
           />
         }
         payments={
@@ -286,6 +289,7 @@ export function StudentProfileContent({
             onRetry={() => void money.payments.refetch()}
           />
         }
+        onAddPackage={archived ? undefined : () => learning.sell()}
         onRecordPayment={
           archived || !money.payTarget
             ? undefined
@@ -328,6 +332,7 @@ export function StudentProfileContent({
               actions={learning}
               error={money.billing.isError ? money.billing.error : undefined}
               onRetry={() => void money.billing.refetch()}
+              onOpenPackage={packageTicket.open}
               readOnly={archived}
             />
           </>
@@ -341,6 +346,11 @@ export function StudentProfileContent({
         open={creating}
         onOpenChange={setCreating}
         initial={{ studentId: student.id }}
+      />
+      <PackageTicketModal
+        packageId={packageTicket.packageId}
+        onClose={packageTicket.close}
+        nowMs={nowMs}
       />
       <LessonPanel
         lessonId={lessonPanel.lessonId}

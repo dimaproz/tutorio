@@ -29,7 +29,7 @@ import { gatewayFetch, type GatewayError } from '@/lib/auth/client';
 
 /** The student profile's billing reads (S06): one prefix, so a change refreshes them all. */
 export const studentBillingKeys = {
-  billing: (studentId: string) => ['students', 'billing', studentId] as const,
+  billing: queryKeys.students.billing,
   pauses: (studentId: string) => ['pauses', 'student', studentId] as const,
   payments: (studentId: string) => ['payments', 'student', studentId] as const,
 };

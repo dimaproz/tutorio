@@ -29,6 +29,7 @@ const GRID = 'md:grid md:grid-cols-[minmax(0,1fr)_120px_150px_80px] md:items-cen
  * first — what it was, when it was bought and until when, its credits used,
  * its state and what is paid —, with a summary line under the list. The
  * block above shows the current state; this tab is the history (decision 11).
+ * A row opens the package's ticket (S07).
  */
 export function StudentPackagesTab({
   packages,
@@ -36,12 +37,15 @@ export function StudentPackagesTab({
   error,
   onRetry,
   nowMs,
+  onOpen,
 }: {
   packages: readonly PackageResponse[];
   loading: boolean;
   error?: unknown;
   onRetry: () => void;
   nowMs: number;
+  /** Opens a package's ticket. */
+  onOpen?: (packageId: string) => void;
 }) {
   const t = useTranslations('students.packagesTab');
   const format = useLearningFormat();
@@ -87,7 +91,11 @@ export function StudentPackagesTab({
           return (
             <li
               key={pkg.id}
-              className={cn('flex flex-col gap-2 rounded-tile px-3 py-3 md:min-h-18 md:py-0', GRID)}
+              className={cn(
+                'relative flex flex-col gap-2 rounded-tile px-3 py-3 md:min-h-18 md:py-0',
+                onOpen && 'transition-colors hover:bg-surface-hover',
+                GRID,
+              )}
             >
               <div className="flex min-w-0 items-center gap-3">
                 <span
@@ -102,14 +110,27 @@ export function StudentPackagesTab({
                   <PackageIcon />
                 </span>
                 <div className="flex min-w-0 flex-col gap-0.5">
-                  <span
-                    className={cn(
-                      'truncate text-sm font-semibold',
-                      state !== 'active' && 'text-muted-foreground',
-                    )}
-                  >
-                    {pkg.name ?? t('unnamed')}
-                  </span>
+                  {onOpen ? (
+                    <button
+                      type="button"
+                      onClick={() => onOpen(pkg.id)}
+                      className={cn(
+                        'truncate text-left text-sm font-semibold outline-none after:absolute after:inset-0 after:rounded-tile focus-visible:after:outline-2 focus-visible:after:outline-ring',
+                        state !== 'active' && 'text-muted-foreground',
+                      )}
+                    >
+                      {pkg.name ?? t('unnamed')}
+                    </button>
+                  ) : (
+                    <span
+                      className={cn(
+                        'truncate text-sm font-semibold',
+                        state !== 'active' && 'text-muted-foreground',
+                      )}
+                    >
+                      {pkg.name ?? t('unnamed')}
+                    </span>
+                  )}
                   <span className="truncate text-xs text-muted-foreground">
                     {[t('bought', { date: format.shortDay(pkg.purchasedAt) }), valid]
                       .filter(Boolean)

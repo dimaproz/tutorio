@@ -61,7 +61,14 @@ export function StudentProfileMetrics({
     : price;
 
   return (
-    <div className="-mx-4 flex gap-3 overflow-x-auto px-4 md:mx-0 md:grid md:grid-cols-2 md:gap-4 md:overflow-visible md:px-0 xl:grid-cols-4 [&>*]:w-65 [&>*]:shrink-0 md:[&>*]:w-auto">
+    // On phones the metrics scroll sideways: the row takes the focus, so the
+    // keyboard can scroll it too.
+    <div
+      role="region"
+      aria-label={t('label')}
+      tabIndex={0}
+      className="-mx-4 flex gap-3 overflow-x-auto px-4 outline-none focus-visible:outline-2 focus-visible:outline-ring md:mx-0 md:grid md:grid-cols-2 md:gap-4 md:overflow-visible md:px-0 xl:grid-cols-4 [&>*]:w-65 [&>*]:shrink-0 md:[&>*]:w-auto"
+    >
       {balance && balanceMoney ? (
         <StatBlock
           type="amount"

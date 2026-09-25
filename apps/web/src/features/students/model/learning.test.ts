@@ -14,7 +14,8 @@ describe('passView', () => {
     const view = passView(billingDirection(), [], 2);
     expect(view.state).toBe('package');
     expect(view.credits).toEqual({ left: 6, total: 8, used: 2 });
-    expect(view.action).toBeNull();
+    // Nothing is owed: the next step is the next package (S07).
+    expect(view).toMatchObject({ action: 'sell', actionPrimary: false });
   });
 
   it('asks for a payment while the package is paid in part', () => {
@@ -37,6 +38,7 @@ describe('passView', () => {
       2,
     );
     expect(view.state).toBe('low');
+    expect(view).toMatchObject({ action: 'sell', actionPrimary: true });
   });
 
   it('reads money owed and paid ahead for a pay-per-lesson direction (L-90)', () => {

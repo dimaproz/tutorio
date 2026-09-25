@@ -6,6 +6,7 @@ import {
   BanknoteIcon,
   CirclePauseIcon,
   MoreHorizontalIcon,
+  PackagePlusIcon,
   PlayIcon,
   RepeatIcon,
   SlidersHorizontalIcon,
@@ -34,14 +35,14 @@ import { RowActionsTrigger } from '@/components/shared/row-actions-trigger';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
-export type DirectionAction = 'pay' | 'settings' | 'schedule' | 'pause' | 'return' | 'end';
+export type DirectionAction = 'pay' | 'sell' | 'settings' | 'schedule' | 'pause' | 'return' | 'end';
 
 type Item = { action: DirectionAction; icon: ReactNode; label: string; destructive?: boolean };
 
 /**
- * A direction's ⋯ (board 01, state 11): record a payment, its settings, its
- * schedule, pause it (or bring it back) and end it. «Продати пакет» joins the
- * menu with the package sale (S07). A dropdown on desktop, a sheet on phones.
+ * A direction's ⋯ (board 01, state 11): record a payment, sell a package
+ * (S07), its settings, its schedule, pause it (or bring it back) and end it.
+ * A dropdown on desktop, a sheet on phones.
  */
 export function DirectionMenu({
   name,
@@ -62,6 +63,7 @@ export function DirectionMenu({
 
   const items: Item[] = [
     { action: 'pay', icon: <BanknoteIcon />, label: t('pay') },
+    { action: 'sell', icon: <PackagePlusIcon />, label: t('sell') },
     { action: 'settings', icon: <SlidersHorizontalIcon />, label: t('settings') },
     { action: 'schedule', icon: <RepeatIcon />, label: t('schedule') },
     paused

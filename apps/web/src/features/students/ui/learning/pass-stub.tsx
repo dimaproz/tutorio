@@ -87,10 +87,15 @@ const MAX_DOTS = 16;
 export function PassStub({
   view,
   format,
+  openLabel,
+  onOpen,
   className,
 }: {
   view: PassView;
   format: LearningFormat;
+  /** Names the stub as a button that opens the current package's ticket (S07). */
+  openLabel?: string;
+  onOpen?: () => void;
   className?: string;
 }) {
   const t = useTranslations('students.learningBlock.stub');
@@ -240,6 +245,14 @@ export function PassStub({
         </div>
       ) : null}
       <span className="relative text-xs text-tint-foreground">{caption}</span>
+      {onOpen ? (
+        <button
+          type="button"
+          aria-label={openLabel}
+          onClick={onOpen}
+          className="absolute inset-0 outline-none hover:bg-foreground/[0.03] focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-ring"
+        />
+      ) : null}
     </div>
   );
 }
