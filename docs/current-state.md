@@ -67,19 +67,25 @@ members sells one S07 spec to the ticked members (those who need a package
 by default), at the group price or a member's own rate applied on a click,
 all or nothing, and ends on «Продано» with «Записати оплату» per member.
 
+A stop set for a later date shows in the card with «Скасувати», which runs
+the schedule on. A package sold for a direction now pays for its unpaid
+lessons first, pay-per-lesson ones included (L-91, the owner's decision).
+
 API: `GET /groups/:id/billing` (every member's billing and pause in one
 read), `POST /packages/members/preview`, own rates (`prices`) on
 `POST /packages/members`, `POST /schedules/:id/changes/cancel`
-(`NO_PLANNED_CHANGE`), a later version equal to the one before it is no
+(`NO_PLANNED_CHANGE`), `POST /schedules/:id/stop/cancel`
+(`NO_PLANNED_STOP`), the sale closing unpaid lessons (and its previews
+counting them), a later version equal to the one before it is no
 longer a planned change, `topic` on the attendance lessons and
 `attendance.confirmed` on a lesson (a person marked it; unchanged marks sent
 again confirm the automation's). Brief, decisions and open questions:
 [`screens/s08-group-page-operations.md`](./screens/s08-group-page-operations.md).
 
-Gate on 2026-09-25: web lint, typecheck, 398 unit tests, build, the
-Storybook browser tests (392 in 94 files) and the Storybook build; API lint,
-typecheck, 249 unit tests and the API E2E suite on an isolated PostgreSQL 17
-(132 tests in 13 files); validation 64 tests.
+Gate on 2026-09-25: web lint, typecheck, 398 unit tests, build and the
+Storybook browser tests (393 in 94 files); API lint, typecheck, 250 unit
+tests and the API E2E suite on an isolated PostgreSQL 17 (133 tests in 13
+files); validation 64 tests.
 
 ## Packages: sale, ticket and operations — screen step S07 (2026-09-25)
 

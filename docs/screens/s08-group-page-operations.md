@@ -1,7 +1,7 @@
 # S08 — Group Page Operations
 
-- Status: Done (2026-09-25, commits `99fb6a5`…`a48ff3a`; this brief closes
-  it)
+- Status: Done (2026-09-25, commits `99fb6a5`…`a48ff3a`; the owner's answers
+  `f5aead9`…`5c15178`)
 - Work packet: 6.4 (screens)
 - Depends on: S01 (attendance in the lesson panel), S05 (schedule form and
   change dialog), S07 (the package spec the member sale reuses)
@@ -81,6 +81,7 @@ The page is not redesigned: only the blocks below change.
 | SellToMembers 02 · Своя ціна учасника    | SellOwnRate                                          |
 | SellToMembers 03 · Учень на паузі        | SellPausedMember                                     |
 | SellToMembers 04 · Продано               | SellSold (and SellAllOrNothing, `memberSale: fails`) |
+| (no board) · a planned stop              | PlannedStop (`schedule: stopping`)                   |
 | Phone boards                             | the same stories in the viewport toolbar             |
 
 Also MarkUnmarkedLesson («Відмітити» opens the S01 sheet) and the shared
@@ -152,13 +153,15 @@ Ukrainian and English.
 
 ## Raised against the contract
 
-- **A package does not close pay-per-lesson debt.** Board 02 shows Artem —
+- **A package did not close pay-per-lesson debt.** Board 02 shows Artem —
   who pays per lesson and owes 800 ₴ for 2 lessons — with «Спершу закриє 2
-  заняття в борг — у пакеті лишиться 7». By L-82 and L-90 new credits cover
-  only lessons held on debt in package mode; a pay-per-lesson balance stays
-  money owed. The build follows the contract: the note shows only when the
-  preview returns lessons on debt (as in S07), and Artem is still ticked by
-  default (he owes money). Open question below.
+  заняття в борг — у пакеті лишиться 7», which L-91 did not allow. **The
+  owner decided (2026-09-25): it closes them, as on the board.** L-91 now
+  reads: a package sold for a direction pays for its unpaid lessons first —
+  on debt and not yet paid per lesson —, oldest first, up to its credits and
+  whatever its window; money already paid stays as money paid ahead. The
+  sale previews count the same lessons, and «Продано» reads «7 з 9 · закрито
+  2 заняття в борг».
 
 ## Built
 
@@ -222,8 +225,8 @@ Ukrainian and English.
 - **The sold package is named** like an S07 sale («B2 prep · evening · 1–31
   жовт»).
 - **Phones**: the sale is one scrolling sheet with the total in the footer;
-  «Продано» has no per-member buttons (as on the phone board), payments are
-  recorded from the member cards.
+  «Продано» keeps «Записати оплату» under each member, full width (the
+  owner's choice after an example, 2026-09-25; the phone board had none).
 - **The page reads its schedule** through `GET /schedules?groupId=`; the
   roster card and the metric count from `GET /groups/:id/billing`; the
   «Оплачені пакети» metric still counts the members' packages as before.
@@ -233,9 +236,20 @@ Ukrainian and English.
 - The group page now passes the panel's intent (it did not), so any intent
   from the group page reaches the panel.
 
-## Left out
+## The owner's answers (2026-09-25)
 
-- Cancelling a **planned stop** (no route; not in the mockups).
+1. **A planned stop can be cancelled**, composed from our parts (no board):
+   `POST /schedules/:id/stop/cancel` (`NO_PLANNED_STOP`; `SCHEDULE_CONFLICT`
+   unless forced) runs the schedule on with the rule in force before the
+   stop date as a new version from that date and books its lessons up to
+   the horizon again; the removed ones stay in the history. The card shows
+   the stop as the warm band of a planned change with `CircleSlash`,
+   «Зупиниться з 1 жовтня», «Останнє заняття — вт, 29 вер.» and «Скасувати»
+   (named «Скасувати зупинку» for assistive technology).
+2. **A package closes the unpaid pay-per-lesson lessons**, as on the board
+   (L-91 above).
+3. **«Не оплачено»** stays.
+4. **«Продано» on phones keeps «Записати оплату»** per member.
 
 ## Member prices (done 2026-09-25)
 
@@ -283,10 +297,4 @@ Group creation and editing (done in Work Packet 6.3).
 
 ## Open questions
 
-- Should a package sold to a pay-per-lesson member close their unpaid
-  lessons (board 02, Artem), which L-82 and L-90 do not allow today? Built
-  to the contract: Artem is ticked (he owes), but no «Спершу закриє» note,
-  and «Продано» reads «9 з 9».
-- Is «Не оплачено» the right label for a package with nothing paid (the
-  mockups show only «Частково»)?
-- Should «Продано» on phones keep a per-member «Записати оплату»?
+None: the owner answered them on 2026-09-25 (above).

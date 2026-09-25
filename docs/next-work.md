@@ -438,8 +438,11 @@ and 7 (S07) and 6.6 (S10, S11).
   and «Продано». The API gained `GET /groups/:id/billing`,
   `POST /packages/members/preview`, own rates on `POST /packages/members`,
   `POST /schedules/:id/changes/cancel`, the attendance topics and
-  `attendance.confirmed`. The open question (a package closing
-  pay-per-lesson debt) is in the [brief](./screens/s08-group-page-operations.md).
+  `attendance.confirmed`. The owner's answers (`f5aead9`…`5c15178`): a
+  planned stop is cancelled with `POST /schedules/:id/stop/cancel`, a sold
+  package closes unpaid pay-per-lesson lessons too (L-91), «Не оплачено»
+  stays, «Продано» keeps «Записати оплату» on phones. See the
+  [brief](./screens/s08-group-page-operations.md).
 - **Group member prices: done 2026-09-25** (S08's member rate dialog, ahead
   of the step): `Enrollment.ownPrice`, the roster's price column, «Ціна для
   учня», the group form's price impact and the S02 group pill.

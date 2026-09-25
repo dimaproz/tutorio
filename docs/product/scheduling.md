@@ -74,7 +74,8 @@ always know who has paid for what — without doing bookkeeping by hand."
   that schedule** after showing what it becomes.
 - **L-24** **Stop** ends a schedule from a chosen date: its lessons from that
   date are removed. Lessons moved by hand are kept, and the confirmation says
-  so.
+  so. A stop set for a later date can be cancelled until then: the schedule
+  runs on and books its lessons again (S08).
 - **L-25** A **change** (days, times, duration) takes effect **from a chosen
   date** (default today). Lessons before it are untouched. Before saving, a
   confirmation shows the consequence: how many lessons are rebuilt, created
@@ -184,8 +185,12 @@ always know who has paid for what — without doing bookkeeping by hand."
 - **L-90** In pay-per-lesson mode each charged lesson adds its price to the
   direction's balance; a payment reduces it and settles the **oldest**
   lessons first. The profile shows "Debt: 1 200 ₴ · 3 lessons".
-- **L-91** A debt from a pay-per-lesson period stays money; a later package
-  covers only lessons that were on debt in package mode.
+- **L-91** A package sold for a direction pays for its **unpaid lessons
+  first** — held on debt in package mode (L-82) and pay-per-lesson lessons
+  not yet paid —, oldest first, up to its credits and whatever its window.
+  Money already paid for a lesson it takes over stays as money paid ahead.
+  (Owner decision 2026-09-25, S08; it replaced "a pay-per-lesson debt stays
+  money".)
 
 ## Pause (freeze)
 
