@@ -32,13 +32,13 @@ below disagree with this one, this one wins.
   the status or group filter is set and clears both, and the sort is a
   checked menu available on phones too.
 - **Status lives in one control**, in the profile hero and the edit header:
-  a dropdown on desktop, a bottom sheet on phones. Active → on a break opens
-  the hold dialog, which can cancel the student's upcoming *individual*
-  scheduled lessons as `CANCELLED_UNCHARGED` by the teacher (group lessons
-  keep running); on a break → active and archived → active apply at once;
-  any → archived confirms first. The row menu no longer changes status.
-  The design's optional return date is not offered: the API has no field to
-  store it and no reminder to send.
+  a dropdown on desktop, a bottom sheet on phones. Since S06 (2026-09-25)
+  Active → «На паузі» opens the pause dialog with dates (whole student or one
+  direction, from, an optional until, a reason, and what it takes off and
+  extends, L-100…L-104); paused → active opens the return dialog of the
+  running pause (the lessons that come back and their overlaps); archived →
+  active applies at once; any → archived confirms first. The row menu no
+  longer changes status. The former hold dialog is removed.
 - **Profile order**: status banner (on a break / archived) first, then the
   hero with the next-lesson ticket, four metrics, the set-up checklist for a
   fresh student, the lesson sections and the aside (notes, parents,

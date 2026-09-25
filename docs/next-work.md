@@ -1,6 +1,6 @@
 # Active Work Queue
 
-Last verified: 2026-09-25 (S04, S05).
+Last verified: 2026-09-25 (S04, S05, S06).
 
 This is the short-lived execution queue for Stage 4.1. It answers “what should I
 work on next?” without requiring a developer to re-derive priorities from the
@@ -402,6 +402,19 @@ and 7 (S07) and 6.6 (S10, S11).
   calendar header. Decisions and open questions (menu counts, the package
   credit number, «Позначити оплату») are in the
   [brief](./screens/s04-lessons-list.md).
+- **S06 — student learning, billing and pause: done 2026-09-25**
+  (`babec39`…`a9f3aa3`): «Навчання й оплата» on the profile — a pass per
+  direction (package, running low, debt, advance, paused) with its schedule,
+  price and cancellation window, currency chips and the ⋯ menu; «Баланс» and
+  «Оплачено» follow the billing mode and never add currencies; the pause
+  banners; «Пакети» (history) and «Оплати» (ledger); the payment, direction
+  settings, pause, cancel and return dialogs, the return with its conflict
+  pairs. The API gained the package money and unpaid dates in the billing
+  read, `POST /pauses/preview`, `POST /pauses/:id/end/preview`,
+  `PATCH /pauses/:id` and `skipConflicts` with described conflicts on the
+  end. Decisions for the owner («Повернути без них» is `skipConflicts`, not
+  `force`) and the open questions are in the
+  [brief](./screens/s06-student-billing-and-pause.md).
 - **S05 — Schedules: done 2026-09-25** (`8dfe70f`…`395ac42`):
   `/app/schedules` with state tabs and counts, filters, search and order; the
   new schedule form with its check step and conflicts, the change with its
@@ -520,7 +533,7 @@ optional prop, so wiring one up is a single argument.
 ### Product surfaces the design shows that are not built
 
 The teacher filter and the low-credit filter (no query support), the card view
-(no grid view), and the profile's Payments and History sections. Each renders
+(no grid view), and the profile's History section (Payments shipped with S06). Each renders
 disabled or as a named empty state rather than pretending.
 
 ### Visual follow-ups

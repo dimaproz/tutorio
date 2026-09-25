@@ -1,7 +1,7 @@
 # Tutorio Current State
 
-Last verified: 2026-09-25 after screen steps S04 and S05 (see "Lessons and
-Schedules").
+Last verified: 2026-09-25 after screen step S06 (see "Student learning,
+billing and pause").
 
 This is the first project document to read before planning or implementing
 work. It reports the repository as it exists; [`mvp-plan.md`](./mvp-plan.md)
@@ -19,6 +19,39 @@ they used were deleted; `/app` opens the students. The rebuilt screens show
 lessons, packages and directions read-only — scheduling, lesson actions, sales
 and direction edits come back with the new screens (Work Packet 6.4 screens,
 6.2, 6.5, 6.6 and 7). Every backend route stays available.
+
+## Student learning, billing and pause — screen step S06 (2026-09-25)
+
+The student profile gains «Навчання й оплата» under the metrics: one pass per
+direction — a stub in the direction's state (package with its credits,
+running low, a debt with its unpaid dates, an advance, a pause that keeps a
+debt red) and a body with the teacher or group, the schedule, the price (a
+package's whole price, or what is paid of it) and the cancellation window,
+with «Записати оплату» or «Повернути» and a ⋯ menu (payment, direction
+settings, schedule, pause, end). More than one currency shows owed and
+ahead chips per currency; «Оплачено» then reads «—», and «Баланс» replaces
+«Залишок занять» when every direction pays per lesson. A scheduled or running
+pause has its banner above the hero. «Пакети» is the package history and
+«Оплати» the payment ledger by month with its totals. Dialogs: «Записати
+оплату» (oldest lessons first, the advance, part of a package), «Налаштування
+напряму» (mode switch with its impact), «Пауза» (whole student or one
+direction, with what it takes off and extends), «Скасувати паузу» and
+«Повернути з паузи» with the overlapping lessons' pairs and «Повернути без
+них». The status control's «На паузі» (renamed from «На канікулах») opens the
+pause dialog; the hold dialog and the old learning card are gone. The next
+lesson ticket opens or moves the lesson.
+
+API: the billing read carries each package's price, paid amount and state,
+the unpaid lessons oldest first, the cancellation windows and the teacher's
+avatar and subjects; `POST /pauses/preview`, `POST /pauses/:id/end/preview`
+and `PATCH /pauses/:id` are new; ending a pause describes its conflicts and
+takes `skipConflicts`. Brief, decisions and open questions:
+[`screens/s06-student-billing-and-pause.md`](./screens/s06-student-billing-and-pause.md).
+
+Gate on 2026-09-25: web lint, typecheck, 336 unit tests, build, the
+Storybook browser tests (346 in 90 files) and the Storybook build; API lint,
+typecheck, 246 unit tests and the API E2E suite on an isolated PostgreSQL 17
+(126 tests in 13 files); validation 63 tests.
 
 ## Lessons and Schedules — screen steps S04 and S05 (2026-09-25)
 
