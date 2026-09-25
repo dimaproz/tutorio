@@ -1,6 +1,7 @@
 # S08 — Group Page Operations
 
-- Status: In progress (mockups in 2026-09-25, brief checked)
+- Status: Done (2026-09-25, commits `99fb6a5`…`a48ff3a`; this brief closes
+  it)
 - Work packet: 6.4 (screens)
 - Depends on: S01 (attendance in the lesson panel), S05 (schedule form and
   change dialog), S07 (the package spec the member sale reuses)
@@ -50,10 +51,10 @@ dialogs.
 
 ## What the mockups must show
 
-- [ ] Schedule block with and without a schedule; a planned change.
-- [ ] Members with mixed billing: package low, pay-per-lesson debt, on pause.
-- [ ] Sell to members: selection, preview, result.
-- [ ] Phone version.
+- [x] Schedule block with and without a schedule; a planned change.
+- [x] Members with mixed billing: package low, pay-per-lesson debt, on pause.
+- [x] Sell to members: selection, preview, result.
+- [x] Phone version.
 
 ## Mockups
 
@@ -67,6 +68,26 @@ for 2 lessons), Anna (package 2 of 8, running low), Denys (5 of 8, 1 600 of
 does not keep mockups.
 
 The page is not redesigned: only the blocks below change.
+
+| Board · state                            | Story (`Groups/Screens/Page`)                        |
+| ---------------------------------------- | ---------------------------------------------------- |
+| GroupPage 01 · Сторінка                  | Playground                                           |
+| GroupPage 02 · Підказка · відвідуваність | MemberAttendanceTooltip                              |
+| GroupPage 03 · Підказка · статистика     | MetricAttendanceTooltip                              |
+| GroupPage 04 · Розклад · зміна           | PlannedChange (`schedule: planned`)                  |
+| GroupPage 05 · Розклад · меню            | ScheduleMenu                                         |
+| GroupPage 06 · Розклад · ще немає        | NoSchedule (`schedule: none`)                        |
+| SellToMembers 01 · Вибір учасників       | SellToMembers                                        |
+| SellToMembers 02 · Своя ціна учасника    | SellOwnRate                                          |
+| SellToMembers 03 · Учень на паузі        | SellPausedMember                                     |
+| SellToMembers 04 · Продано               | SellSold (and SellAllOrNothing, `memberSale: fails`) |
+| Phone boards                             | the same stories in the viewport toolbar             |
+
+Also MarkUnmarkedLesson («Відмітити» opens the S01 sheet) and the shared
+`Shared/Feedback/AttendanceTip`, `Shared/Lists/AttendanceList`
+(CellTooltips), `Shared/Cards/StatBlock` (SegmentTooltips) and
+`Shared/Base/CreditMeter` (Paused). Checked at 1440 and 390, light and dark,
+Ukrainian and English.
 
 ## Decisions (the owner's, from the handoff)
 
@@ -139,6 +160,83 @@ The page is not redesigned: only the blocks below change.
   preview returns lessons on debt (as in S07), and Artem is still ticked by
   default (he owes money). Open question below.
 
+## Built
+
+- **Schedule card**: the ⋯ (36 px, `bg-feature-soft`) with «Змінити дні або
+  час» and «Додати день» (both the S05 change dialog) and «Зупинити розклад»
+  (the S05 stop dialog); a planned change as the warm band with its date, the
+  new slots, how many booked lessons it moves (they already sit at the new
+  times) and «Скасувати зміну», which goes through the conflict dialog
+  (L-111); without a schedule the empty card with the calendar art and
+  «Створити розклад» (the S05 create dialog for the group). The lessons
+  card's empty state opens the same dialog instead of the edit page.
+- **Lessons**: past rows read like future ones (date, time, teacher); a
+  group lesson that is over and nobody marked reads «присутність не
+  відмічена» with the warning «Відмітити» and opens the panel on its sheet.
+  The sheet starts with everyone present for such a lesson and sends every
+  mark, and the API confirms unchanged marks, so saving confirms them.
+- **Attendance**: tooltips on every cell of the member rows and the metric
+  (hover, focus, tap); the hold row is grey; the metric's «на паузі» badge is
+  neutral.
+- **«Склад групи»**: the outline `sm` «+ Додати учня», the summary badges,
+  one card per member (`GroupMemberCard`: the S07/S06 standing as a badge, a
+  `CreditMeter` — grey while paused — or a line, and «Записати оплату»,
+  «Продати пакет» or «Повернути»), sorted debt → running low → part paid →
+  not paid → no package → paid → paused, and the soft «Продати пакети
+  кільком учням» row. `GroupPackageCard` is removed. The picker, removal and
+  «Змінити ціну» stay in the card's ⋯.
+- **Sale to members** (`MemberSaleDialog` in `features/packages`): the band
+  with the group card, the S07 kind, size and «Ціна для всіх», the picker
+  with the default selection, each ticked member's total and «+N занять»,
+  the debt note (when the preview returns lessons on debt), the own-rate
+  hint with «Застосувати» and «Як у групи», the pause note, «Разом», the
+  all-or-nothing footer; «Продано N пакетів» with each member's credits and
+  «Записати оплату» (the S07 payment dialog). A failed sale leaves the
+  dialog as it was with the error toast.
+
+## Decided while building
+
+- **The standing of a member** comes from one model in the packages feature
+  (`memberBillingState`), used by the cards and the sale: paused first
+  (whatever is owed), then pay-per-lesson money owed or lessons on debt
+  (priced at the member's rate), then the current package running low (the
+  studio's warning), part paid, not paid, else no package or all well.
+- **«Не оплачено»** (warning) is added beside «Частково» for a package with
+  nothing paid yet; the mockups only show a part-paid one.
+- **Lessons on debt in package mode ask «Продати пакет»** on the card (the
+  next package covers them, L-82); pay-per-lesson debt asks «Записати
+  оплату».
+- **«Записати оплату» and «Повернути» on a card** open the S06 payment and
+  return dialogs (`DirectionPaymentDialog`, `DirectionPauseEndDialog` from
+  the students feature); «Продати пакет» opens the S07 sale for that member.
+- **«Додати день» opens the change dialog**, which shows what the schedule
+  becomes (L-23); there is no separate add-a-day form.
+- **The sale opens on the next calendar month** («1–31 жовт» on 9
+  September) as a period from the schedule, at the group price; a group
+  without a schedule opens on the S07 count package.
+- **The preview asks for every member**, so ticking shows a line at once;
+  the totals are worked out on the client as the tutor types, the preview
+  adds the debt, the pause and a weekly package's count.
+- **«Застосувати» also ticks the member**; the picker orders the members
+  ticked by default first, the paused ones last.
+- **The sold package is named** like an S07 sale («B2 prep · evening · 1–31
+  жовт»).
+- **Phones**: the sale is one scrolling sheet with the total in the footer;
+  «Продано» has no per-member buttons (as on the phone board), payments are
+  recorded from the member cards.
+- **The page reads its schedule** through `GET /schedules?groupId=`; the
+  roster card and the metric count from `GET /groups/:id/billing`; the
+  «Оплачені пакети» metric still counts the members' packages as before.
+- **A later schedule version identical to the one before it is no change**
+  in the API reads (`nextChange`, the «Змінюється» tab), which is what a
+  cancelled change leaves behind.
+- The group page now passes the panel's intent (it did not), so any intent
+  from the group page reaches the panel.
+
+## Left out
+
+- Cancelling a **planned stop** (no route; not in the mockups).
+
 ## Member prices (done 2026-09-25)
 
 Built from the handoff `tutorio-group-member-prices` (board 01 GroupPrices,
@@ -186,4 +284,9 @@ Group creation and editing (done in Work Packet 6.3).
 ## Open questions
 
 - Should a package sold to a pay-per-lesson member close their unpaid
-  lessons (board 02, Artem), which L-82 and L-90 do not allow today?
+  lessons (board 02, Artem), which L-82 and L-90 do not allow today? Built
+  to the contract: Artem is ticked (he owes), but no «Спершу закриє» note,
+  and «Продано» reads «9 з 9».
+- Is «Не оплачено» the right label for a package with nothing paid (the
+  mockups show only «Частково»)?
+- Should «Продано» on phones keep a per-member «Записати оплату»?

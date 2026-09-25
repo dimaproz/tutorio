@@ -1,7 +1,7 @@
 # Tutorio Current State
 
-Last verified: 2026-09-25 after the studio time zone for the web (see "Dates
-on the studio's clock").
+Last verified: 2026-09-25 after the group page operations (see "Group page
+operations — screen step S08").
 
 This is the first project document to read before planning or implementing
 work. It reports the repository as it exists; [`mvp-plan.md`](./mvp-plan.md)
@@ -46,6 +46,40 @@ build. Not yet checked by hand in the running app under an emulated zone.
 Found on the way, not fixed: the API's schedule expansion
 (`packages/domain/src/recurrence.ts`) uses `date-fns-tz` and drops a lesson
 at 02:00–02:59 on the spring-switch day in Kyiv.
+
+## Group page operations — screen step S08 (2026-09-25)
+
+The group page runs the group. The schedule card has a ⋯ — «Змінити дні або
+час» and «Додати день» open the S05 change dialog, «Зупинити розклад» the stop
+dialog —, shows a planned change as a warm band with its new slots, how many
+booked lessons it moves and «Скасувати зміну», and without a schedule offers
+«Створити розклад» (the S05 form for the group). A group lesson that is over
+and nobody marked reads «присутність не відмічена» with «Відмітити», which
+opens the S01 panel on its attendance sheet (everyone present by default);
+lesson rows no longer repeat attendance figures. Attendance cells — a
+member's and the metric's — open a tooltip with the date, the topic and who
+came or missed; a paused member is grey everywhere. «Склад групи» shows one
+card per member with their standing (owing, running low, part paid, not
+paid, no package, paid, paused), their credits or a line and one outline
+action — «Записати оплату» (S06), «Продати пакет» (S07) or «Повернути»
+(S06) —, the summary badges and «Продати пакети кільком учням». The sale to
+members sells one S07 spec to the ticked members (those who need a package
+by default), at the group price or a member's own rate applied on a click,
+all or nothing, and ends on «Продано» with «Записати оплату» per member.
+
+API: `GET /groups/:id/billing` (every member's billing and pause in one
+read), `POST /packages/members/preview`, own rates (`prices`) on
+`POST /packages/members`, `POST /schedules/:id/changes/cancel`
+(`NO_PLANNED_CHANGE`), a later version equal to the one before it is no
+longer a planned change, `topic` on the attendance lessons and
+`attendance.confirmed` on a lesson (a person marked it; unchanged marks sent
+again confirm the automation's). Brief, decisions and open questions:
+[`screens/s08-group-page-operations.md`](./screens/s08-group-page-operations.md).
+
+Gate on 2026-09-25: web lint, typecheck, 398 unit tests, build, the
+Storybook browser tests (392 in 94 files) and the Storybook build; API lint,
+typecheck, 249 unit tests and the API E2E suite on an isolated PostgreSQL 17
+(132 tests in 13 files); validation 64 tests.
 
 ## Packages: sale, ticket and operations — screen step S07 (2026-09-25)
 

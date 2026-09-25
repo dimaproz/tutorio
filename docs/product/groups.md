@@ -40,6 +40,12 @@ bulk actions, and the lesson-screen attendance write path.
 > member shares no longer exist (ADR 0007): the package card and the fourth
 > metric show each member's own package for the group, and the group page no
 > longer sells a package until "Sell to members" (`L-86`) arrives.
+>
+> **Changed by screen step S08 (2026-09-25).** The members' packages card is
+> gone: «Склад групи» shows each member's billing as an expanded card
+> (`GET /groups/:id/billing`) and sells one package to several members
+> (`L-86`); the schedule card changes, stops, creates and un-plans the group's
+> schedule. See [`screens/s08-group-page-operations.md`](../screens/s08-group-page-operations.md).
 
 Every group route is owner-only in the pilot (ADR 0004). Archive and restore
 entry points are hidden for anyone else, not disabled on click.

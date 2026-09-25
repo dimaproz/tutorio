@@ -427,6 +427,19 @@ and 7 (S07) and 6.6 (S10, S11).
   through the S01 dialogs, the phone day grid, agenda, dot month and filter
   sheet. Decisions for the owner and open questions are in the
   [brief](./screens/s03-calendar.md).
+- **S08 — group page operations: done 2026-09-25** (`99fb6a5`…`a48ff3a`):
+  the schedule card's ⋯ (change, add a day, stop — the S05 dialogs), a
+  planned change with «Скасувати зміну» and the empty card with «Створити
+  розклад»; lessons nobody marked ask «Відмітити» and open the S01 sheet;
+  attendance tooltips and the grey hold; «Склад групи» as expanded member
+  cards with each member's billing, the summary badges and the group sale
+  row (the members' packages card is gone); «Продати пакет учасникам» with
+  the S07 spec, the default selection, own rates on a click, the pause note
+  and «Продано». The API gained `GET /groups/:id/billing`,
+  `POST /packages/members/preview`, own rates on `POST /packages/members`,
+  `POST /schedules/:id/changes/cancel`, the attendance topics and
+  `attendance.confirmed`. The open question (a package closing
+  pay-per-lesson debt) is in the [brief](./screens/s08-group-page-operations.md).
 - **Group member prices: done 2026-09-25** (S08's member rate dialog, ahead
   of the step): `Enrollment.ownPrice`, the roster's price column, «Ціна для
   учня», the group form's price impact and the S02 group pill.
@@ -483,7 +496,7 @@ Delivered by S07: «Новий пакет» with the three kinds, the linked pri
 and the live ticket preview (`POST /packages/preview`, now with the debt it
 covers and the package it follows), «Пакет продано» with «Записати оплату»
 and the schedule; the legacy schedule and first-payment inputs are gone from
-`POST /packages`. Selling to group members remains S08.
+`POST /packages`. Selling to group members followed with S08 (2026-09-25).
 
 ## Work Packet 8 — Pilot Operations
 
