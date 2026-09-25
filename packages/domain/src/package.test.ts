@@ -9,7 +9,7 @@ import {
   paymentStatusOf,
   planPackage,
   transferCredits,
-  weeksInPeriod,
+  weeklyLessons,
 } from './package';
 
 describe('planPackage — fixed count', () => {
@@ -142,7 +142,7 @@ describe('planPackage — period kinds and prices (L-80)', () => {
   const start = new Date('2026-10-01T00:00:00.000Z');
   const end = new Date('2026-10-28T23:59:59.999Z');
 
-  it('sizes a weekly package as lessons a week times the weeks in the window', () => {
+  it('sizes a weekly package by the days of its window', () => {
     expect(
       planPackage({
         sizingMode: 'BY_PERIOD_WEEKLY',
@@ -183,9 +183,21 @@ describe('planPackage — period kinds and prices (L-80)', () => {
     ).toEqual({ lessonsTotal: 3, pricePerLessonMinor: 33333, totalPriceMinor: 100000 });
   });
 
-  it('counts at least one week', () => {
-    expect(weeksInPeriod(start, new Date('2026-10-02T00:00:00.000Z'))).toBe(1);
-    expect(weeksInPeriod(start, new Date('2026-11-01T00:00:00.000Z'))).toBe(4);
+  it('counts the lessons that fall in the dates, not whole weeks', () => {
+    // 3 a week over 1–31 October: 31 days × 3 ÷ 7 = 13.3.
+    expect(weeklyLessons(start, new Date('2026-11-01T00:00:00.000Z'), 3)).toBe(13);
+    // Two weeks and a half, 2 a week: 5 lessons.
+    expect(weeklyLessons(start, new Date('2026-10-18T12:00:00.000Z'), 2)).toBe(5);
+    // A clock change inside the window does not add a day.
+    expect(
+      weeklyLessons(
+        new Date('2026-10-20T00:00:00+03:00'),
+        new Date('2026-10-27T00:00:00+02:00'),
+        2,
+      ),
+    ).toBe(2);
+    // At least one lesson.
+    expect(weeklyLessons(start, new Date('2026-10-02T00:00:00.000Z'), 1)).toBe(1);
   });
 });
 

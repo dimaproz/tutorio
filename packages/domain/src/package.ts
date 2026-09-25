@@ -15,7 +15,7 @@ import { expandSeries, type RecurrenceRule } from './recurrence';
  */
 export type PackageSizingMode = 'FIXED_COUNT' | 'BY_PERIOD' | 'BY_PERIOD_WEEKLY';
 
-const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 export interface PackagePlanInput {
   sizingMode: PackageSizingMode;
@@ -108,7 +108,7 @@ function plannedLessons(input: PackagePlanInput): number {
     if (!Number.isSafeInteger(perWeek) || perWeek < 1) {
       throw new InvalidPackagePlanError('A weekly package needs lessonsPerWeek >= 1');
     }
-    return perWeek * weeksInPeriod(input.startsAt, until);
+    return weeklyLessons(input.startsAt, until, perWeek);
   }
   const rules = input.rules ?? (input.rule ? [input.rule] : []);
   if (rules.length === 0) {
@@ -123,9 +123,15 @@ function plannedLessons(input: PackagePlanInput): number {
   return counted;
 }
 
-/** Whole weeks in `[from, until)`, rounded to the nearest week, at least one. */
-export function weeksInPeriod(from: Date, until: Date): number {
-  return Math.max(1, Math.round((until.getTime() - from.getTime()) / WEEK_MS));
+/**
+ * The lessons of an N-a-week package that fall in its dates (L-80): N for
+ * every 7 days of `[from, until)`, a part week in proportion, rounded to the
+ * nearest lesson, at least one — 3 a week over 1–31 October is 13.
+ */
+export function weeklyLessons(from: Date, until: Date, perWeek: number): number {
+  // Whole days: a clock change inside the window moves the length by an hour.
+  const days = Math.round((until.getTime() - from.getTime()) / DAY_MS);
+  return Math.max(1, Math.round((days * perWeek) / 7));
 }
 
 export interface CreditTransfer {
@@ -235,8 +241,6 @@ export function packageLifecycle(pkg: PackageLifecycleInput, now: Date): Package
 /** A window closing within this many days reads as "running out". */
 export const PACKAGE_ENDING_DAYS = 7;
 
-const DAY_MS = 24 * 60 * 60 * 1000;
-
 /**
  * A live package running out: `lowCreditThreshold` credits left or fewer
  * (L-82, L-120; 0 turns that part off), or its window closing within
@@ -250,7 +254,8 @@ export function isPackageEnding(
   if (packageLifecycle(pkg, now) !== 'active') return false;
   if (lowCreditThreshold > 0 && pkg.remainingCredits <= lowCreditThreshold) return true;
   return (
-    pkg.expiresAt !== null && pkg.expiresAt.getTime() - now.getTime() <= PACKAGE_ENDING_DAYS * DAY_MS
+    pkg.expiresAt !== null &&
+    pkg.expiresAt.getTime() - now.getTime() <= PACKAGE_ENDING_DAYS * DAY_MS
   );
 }
 
