@@ -73,8 +73,12 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const body = () => within(document.body);
-const dialog = async (name: string | RegExp) =>
-  within(await body().findByRole('dialog', { name }, { timeout: 5000 }));
+/** A dialog once it has faded in: `toBeVisible` fails during the fade. */
+const dialog = async (name: string | RegExp) => {
+  const element = await body().findByRole('dialog', { name }, { timeout: 5000 });
+  await waitFor(() => expect(getComputedStyle(element).opacity).toBe('1'), { timeout: 5000 });
+  return within(element);
+};
 /** Waits until no overlay hides the page any more, so the checks see it as a reader does. */
 const overlaysClosed = () =>
   waitFor(() => expect(document.querySelector('[data-aria-hidden]')).toBeNull(), {
@@ -145,6 +149,7 @@ export const PaymentsTab: Story = {
     await expect(await canvas.findByText('Paid in total')).toBeVisible();
     await expect(canvas.getByText('7,200 ₴')).toBeVisible();
     await expect(canvas.getByText('−300 ₴')).toBeVisible();
+    await expect(canvas.getByText('2 lessons settled · English')).toBeVisible();
     await expect(canvas.getByRole('region', { name: 'September 2026' })).toBeVisible();
   },
 };
@@ -404,5 +409,23 @@ export const Phone: Story = {
     const sheet = await dialog('English');
     await userEvent.click(sheet.getByRole('button', { name: 'Record a payment' }));
     await expect(await dialog('Record a payment')).toBeDefined();
+  },
+};
+
+/** «Повернути все одно» brings every lesson back on top of the others (L-111). */
+export const ReturnAnyway: Story = {
+  args: { state: 'paused', returnConflicts: true },
+  play: async ({ canvas, args }) => {
+    await userEvent.click(
+      await canvas.findByRole('button', { name: 'Bring back now' }, { timeout: 5000 }),
+    );
+    const confirm = await dialog('Bring back from the pause now?');
+    await userEvent.click(await confirm.findByRole('button', { name: 'Bring back anyway' }));
+    await waitFor(() =>
+      expect(args.onWrite).toHaveBeenCalledWith(
+        expect.objectContaining({ body: { force: 'true', skipConflicts: null } }),
+      ),
+    );
+    await overlaysClosed();
   },
 };

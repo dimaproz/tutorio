@@ -31,6 +31,7 @@ import {
   useCreatePauseMutation,
   usePausePreviewQuery,
   useUpdatePauseMutation,
+  type PauseEndMode,
 } from '@/features/students/api';
 import { directionName, type BillingDirection } from '@/features/students/model/learning';
 import {
@@ -128,7 +129,7 @@ function PauseForm({
   const pending = create.isPending || update.isPending;
 
   const close = () => onOpenChange(false);
-  const save = (mode: 'check' | 'skip') =>
+  const save = (mode: PauseEndMode) =>
     form.handleSubmit((submitted) => {
       const done = () => {
         toast.success(
@@ -192,9 +193,15 @@ function PauseForm({
       title={pause ? t('titleChange') : t('title')}
       description={t('subtitle', { name: student.fullName, count: directions.length })}
       tertiary={
-        <FooterNote>
-          {values.scope === 'student' ? t('noteStatus') : t('noteStatusStays')}
-        </FooterNote>
+        conflicts ? (
+          <Button type="button" variant="ghost" disabled={pending} onClick={() => save('force')}>
+            {t('saveAnyway')}
+          </Button>
+        ) : (
+          <FooterNote>
+            {values.scope === 'student' ? t('noteStatus') : t('noteStatusStays')}
+          </FooterNote>
+        )
       }
       secondary={
         <Button type="button" variant="outline" onClick={close}>

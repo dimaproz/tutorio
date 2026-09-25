@@ -94,7 +94,7 @@ export function StudentLessonsCard({
       id: lesson.id,
       weekday: format.dateTime(start, { weekday: 'short' }),
       day: format.dateTime(start, { day: '2-digit' }),
-      title: lesson.group?.name ?? t('individualLesson'),
+      title: lesson.group?.name ?? lesson.subject ?? t('individualLesson'),
       meta: [format.dateTime(start, { month: 'short' }), range, lesson.teacher.name].join(' · '),
       metaShort: [range, lesson.teacher.name.split(' ')[0]].join(' · '),
       state: lesson.id === nextId ? 'next' : past ? 'past' : 'default',

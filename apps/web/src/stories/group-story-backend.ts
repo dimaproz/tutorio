@@ -378,6 +378,7 @@ function b2Lessons(): LessonResponse[] {
       student: null,
       group: { id: storyGroupId(1), name: group.name },
       teacher: { id: TEACHERS.dmytro.id, name: TEACHERS.dmytro.name, color: null },
+      subject: null,
       createdAt: '2026-06-01T10:00:00.000Z',
       updatedAt: '2026-06-01T10:00:00.000Z',
       deletedAt: null,

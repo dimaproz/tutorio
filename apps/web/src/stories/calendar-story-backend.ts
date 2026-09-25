@@ -116,6 +116,7 @@ function lesson(
     notes: null,
     cancellationDeadlineHours: 24,
     attendance: null,
+    subject: null,
     charges:
       charged && !isGroup
         ? [

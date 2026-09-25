@@ -102,14 +102,26 @@ export function StudentPackagesTab({
                   <PackageIcon />
                 </span>
                 <div className="flex min-w-0 flex-col gap-0.5">
-                  <span className="truncate text-sm font-semibold">{pkg.name ?? t('unnamed')}</span>
+                  <span
+                    className={cn(
+                      'truncate text-sm font-semibold',
+                      state !== 'active' && 'text-muted-foreground',
+                    )}
+                  >
+                    {pkg.name ?? t('unnamed')}
+                  </span>
                   <span className="truncate text-xs text-muted-foreground">
                     {[t('bought', { date: format.shortDay(pkg.purchasedAt) }), valid]
                       .filter(Boolean)
                       .join(' · ')}
                   </span>
                 </div>
-                <span className="ml-auto font-mono text-sm font-semibold md:hidden">
+                <span
+                  className={cn(
+                    'ml-auto font-mono text-sm font-semibold md:hidden',
+                    state !== 'active' && 'text-muted-foreground',
+                  )}
+                >
                   {format.money(pkg.totalPriceMinorSnapshot, pkg.currency)}
                 </span>
               </div>
@@ -138,7 +150,12 @@ export function StudentPackagesTab({
                       })}
                 </span>
               </div>
-              <span className="hidden text-right font-mono text-sm font-semibold md:block">
+              <span
+                className={cn(
+                  'hidden text-right font-mono text-sm font-semibold md:block',
+                  state !== 'active' && 'text-muted-foreground',
+                )}
+              >
                 {format.money(pkg.totalPriceMinorSnapshot, pkg.currency)}
               </span>
             </li>

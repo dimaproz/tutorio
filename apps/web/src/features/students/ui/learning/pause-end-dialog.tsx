@@ -19,7 +19,11 @@ import { AdaptiveDialog } from '@/components/shared/adaptive-dialog';
 import { ImpactList, type ImpactItem } from '@/components/shared/impact-list';
 import { Notice } from '@/components/shared/notice';
 import { ConflictPairs, scheduleConflicts } from '@/features/lessons';
-import { useEndPauseMutation, usePauseEndPreviewQuery } from '@/features/students/api';
+import {
+  useEndPauseMutation,
+  usePauseEndPreviewQuery,
+  type PauseEndMode,
+} from '@/features/students/api';
 import { lastPauseDay } from '@/features/students/model/pause';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useBillingErrorToast } from './dialog-parts';
@@ -98,9 +102,11 @@ function PauseEnd({
   const pairTitle = directionName ? `${firstName} · ${directionName}` : firstName;
 
   const close = () => onOpenChange(false);
-  const confirm = () =>
+  // With overlaps the main action leaves them off; «все одно» brings them
+  // back on top of the other lessons (L-111).
+  const confirm = (mode: PauseEndMode) =>
     end.mutate(
-      { pauseId: pause.id, mode: conflicts.length > 0 ? 'skip' : 'check' },
+      { pauseId: pause.id, mode },
       {
         onSuccess: () => {
           toast.success(cancel ? t('cancelled') : t('returned', { name: firstName }));
@@ -195,13 +201,29 @@ function PauseEnd({
       description={[cancel ? t('scheduled', { window }) : until, reason]
         .filter(Boolean)
         .join(' · ')}
+      tertiary={
+        conflicts.length > 0 ? (
+          <Button
+            type="button"
+            variant="ghost"
+            disabled={end.isPending}
+            onClick={() => confirm('force')}
+          >
+            {t('returnAnyway')}
+          </Button>
+        ) : undefined
+      }
       secondary={
         <Button type="button" variant="outline" onClick={close}>
           {cancel ? t('keep') : t('cancel')}
         </Button>
       }
       primary={
-        <Button type="button" disabled={end.isPending || preview.isPending} onClick={confirm}>
+        <Button
+          type="button"
+          disabled={end.isPending || preview.isPending}
+          onClick={() => confirm(conflicts.length > 0 ? 'skip' : 'check')}
+        >
           {end.isPending ? (
             <Spinner data-icon="inline-start" />
           ) : cancel || conflicts.length > 0 ? null : (

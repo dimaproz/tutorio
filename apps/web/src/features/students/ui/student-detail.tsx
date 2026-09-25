@@ -102,7 +102,10 @@ export function StudentProfileContent({
   const archived = policy.readOnly;
   useSetPageCrumb(t('detail.pageLabel'));
   const setupVisible = searchParams.get('setup') === '1' && !archived;
-  const money = useProfileBilling(student.id);
+  // One pinned window shared with the lessons panel, so both read one query.
+  const clock = useNow();
+  const [now] = useState(() => nowMs ?? clock.getTime());
+  const money = useProfileBilling(student.id, now);
   const learning = useLearningActions({
     student,
     directions: money.directions,
@@ -119,9 +122,6 @@ export function StudentProfileContent({
   const parentsSectionRef = useRef<HTMLDivElement>(null);
   const firstName = student.fullName.split(/\s+/)[0] || student.fullName;
 
-  // One pinned window shared with the lessons panel, so both read one query.
-  const clock = useNow();
-  const [now] = useState(() => nowMs ?? clock.getTime());
   const lessons = useLessonsQuery({ ...studentLessonsRange(now), studentId: student.id });
   const packages = usePackagesQuery(studentPackagesFilters(student.id));
   // A failed or partial read is reported as unknown, never as an empty record:

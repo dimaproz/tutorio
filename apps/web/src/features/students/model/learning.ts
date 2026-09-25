@@ -233,16 +233,25 @@ export type MoneyMetric =
   | null;
 
 /**
- * «Оплачено» (decision 6): the money received from the student's ledger and
- * what is owed now, in one currency. Several currencies never add up: the
- * metric then reads «—» with «Кілька валют». Null when there is nothing yet.
+ * «Оплачено цього місяця» (decision 6; the owner chose the calendar month):
+ * the money received this month from the student's ledger, refunds taken
+ * off, and what is owed now, in one currency. Several currencies never add
+ * up: the metric then reads «—» with «Кілька валют». Null when there is
+ * nothing yet.
  */
 export function moneyMetric(
   directions: readonly BillingDirection[],
   payments: readonly { status: string; currency: string; amountMinor: number; paidAt: string }[],
+  now: number,
 ): MoneyMetric {
+  const today = new Date(now);
+  const thisMonth = (iso: string) => {
+    const date = new Date(iso);
+    return date.getFullYear() === today.getFullYear() && date.getMonth() === today.getMonth();
+  };
   const settled = payments.filter(
-    (payment) => payment.status === 'PAID' || payment.status === 'REFUNDED',
+    (payment) =>
+      (payment.status === 'PAID' || payment.status === 'REFUNDED') && thisMonth(payment.paidAt),
   );
   const live = directions.filter((direction) => direction.status !== 'ARCHIVED');
   const currencies = new Set([

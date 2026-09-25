@@ -676,7 +676,7 @@
     },
     "profileMetrics": {
       "creditsLeft": "Залишок занять",
-      "paidThisTerm": "Оплачено цього періоду",
+      "paidThisTerm": "Оплачено цього місяця",
       "attendance": "Відвідуваність",
       "level": "Рівень",
       "levelCaption": "Рівень мови (CEFR)",
@@ -692,7 +692,7 @@
       "noDebt": "Боргів немає",
       "debt": "Борг {amount}",
       "paidCaption": "{date} · {count, plural, one {# оплата} few {# оплати} many {# оплат} other {# оплати}}",
-      "noPayments": "Оплат немає",
+      "noPayments": "Цього місяця оплат не було",
       "perLessonShort": "за заняття",
       "attendanceCaption": "{attended} відвідано · {charged, plural, one {# пізнє скасування} few {# пізні скасування} many {# пізніх скасувань} other {# пізнього скасування}}",
       "attendanceNone": "Ще немає",
@@ -1013,7 +1013,8 @@
         "schedulesKept": "Розклади збережуться",
         "backFrom": "Заняття повернуться з {date}",
         "backByHand": "Заняття повернуться, коли ви повернете учня"
-      }
+      },
+      "saveAnyway": "Зберегти все одно"
     },
     "pauseEnd": {
       "close": "Закрити",
@@ -1045,7 +1046,8 @@
       "packageShorter": "Продовження пакета скоротиться",
       "packageUntil": "«{name}» — до {date}",
       "packageInstead": "«{name}» — до {date} замість {was}",
-      "pastDaysStay": "Минулі дні паузи лишаються без занять"
+      "pastDaysStay": "Минулі дні паузи лишаються без занять",
+      "returnAnyway": "Повернути все одно"
     },
     "pauseBanner": {
       "scheduled": "Пауза {range}",
@@ -1109,7 +1111,8 @@
         "BANK_TRANSFER": "Переказ",
         "CARD": "Картка",
         "OTHER": "Інше"
-      }
+      },
+      "settledLessons": "закрито {count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}}"
     }
   },
   "groups": {

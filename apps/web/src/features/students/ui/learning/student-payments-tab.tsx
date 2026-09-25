@@ -152,7 +152,9 @@ function LedgerItem({
       ? refund
         ? t('refundOf', { name: pkg.name ?? t('unnamed') })
         : t('packageLessons', { count: pkg.lessonsTotal })
-      : null,
+      : payment.settledLessons
+        ? t('settledLessons', { count: payment.settledLessons })
+        : null,
     directionName || null,
     payment.note,
   ]

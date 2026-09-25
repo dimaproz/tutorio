@@ -37,6 +37,7 @@ export function lessonFixture(fields: Partial<LessonDetailResponse> = {}): Lesso
     },
     group: null,
     teacher: { id: '55555555-5555-4555-8555-555555555555', name: 'Dmytro Tutor', color: null },
+    subject: null,
     createdAt: '2026-08-25T08:03:00.000Z',
     updatedAt: '2026-09-09T07:12:00.000Z',
     deletedAt: null,

@@ -186,6 +186,7 @@ const baseSchedule = {
   startsAt: '2026-09-01T06:00:00.000Z',
   lastLessonAt: null,
   teacher: DMYTRO,
+  subject: null,
   createdAt: '2026-08-25T08:00:00.000Z',
   updatedAt: '2026-09-01T06:00:00.000Z',
 };
@@ -278,6 +279,7 @@ function dayLesson(
     student: null,
     group: who.group ?? null,
     teacher: { ...who.teacher, color: null },
+    subject: null,
     createdAt: '2026-09-01T10:00:00.000Z',
     updatedAt: '2026-09-01T10:00:00.000Z',
     deletedAt: null,

@@ -127,11 +127,17 @@ describe('the block', () => {
 });
 
 describe('moneyMetric', () => {
-  const paid = (amountMinor: number, currency = 'UAH', status = 'PAID') => ({
+  const NOW = new Date(2026, 8, 24, 12).getTime();
+  const paid = (
+    amountMinor: number,
+    currency = 'UAH',
+    status = 'PAID',
+    paidAt = '2026-09-01T10:00:00.000Z',
+  ) => ({
     status,
     currency,
     amountMinor,
-    paidAt: '2026-09-01T10:00:00.000Z',
+    paidAt,
   });
 
   it('sums what was received and what is owed in one currency', () => {
@@ -143,7 +149,14 @@ describe('moneyMetric', () => {
           }),
           debtDirection(),
         ],
-        [paid(200000), paid(300000), paid(30000, 'UAH', 'REFUNDED')],
+        [
+          paid(200000),
+          paid(300000),
+          paid(30000, 'UAH', 'REFUNDED'),
+          // Last month's money is not this month's.
+          paid(90000, 'UAH', 'PAID', '2026-08-20T10:00:00.000Z'),
+        ],
+        NOW,
       ),
     ).toEqual({
       kind: 'single',
@@ -156,7 +169,7 @@ describe('moneyMetric', () => {
   });
 
   it('never adds up two currencies', () => {
-    expect(moneyMetric([debtDirection()], [paid(24000, 'PLN')])).toEqual({ kind: 'mixed' });
-    expect(moneyMetric([], [])).toBeNull();
+    expect(moneyMetric([debtDirection()], [paid(24000, 'PLN')], NOW)).toEqual({ kind: 'mixed' });
+    expect(moneyMetric([], [], NOW)).toBeNull();
   });
 });

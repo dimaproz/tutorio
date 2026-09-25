@@ -135,6 +135,7 @@ function lesson(
     student: isGroup ? null : (who as Student),
     group: isGroup ? (who as Group) : null,
     teacher: { id: teacher.id, name: teacher.name, color: teacher.color },
+    subject: null,
     createdAt: '2026-08-01T10:00:00.000Z',
     updatedAt: '2026-08-01T10:00:00.000Z',
     deletedAt: null,

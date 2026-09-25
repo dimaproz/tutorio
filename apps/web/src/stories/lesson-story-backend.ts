@@ -146,6 +146,7 @@ function lesson(n: number, fields: Partial<LessonDetailResponse>): LessonDetailR
     student: ANNA,
     group: null,
     teacher: DMYTRO,
+    subject: null,
     createdAt: kyiv(25 - 31, 11, 3),
     updatedAt: kyiv(9, 10, 12),
     deletedAt: null,

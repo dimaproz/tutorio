@@ -676,7 +676,7 @@
     },
     "profileMetrics": {
       "creditsLeft": "Credits left",
-      "paidThisTerm": "Paid this term",
+      "paidThisTerm": "Paid this month",
       "attendance": "Attendance",
       "level": "Level",
       "levelCaption": "Language level (CEFR)",
@@ -692,7 +692,7 @@
       "noDebt": "Nothing due",
       "debt": "Due {amount}",
       "paidCaption": "{date} · {count, plural, one {# payment} other {# payments}}",
-      "noPayments": "No payments yet",
+      "noPayments": "No payments this month",
       "perLessonShort": "per lesson",
       "attendanceCaption": "{attended} attended · {charged, plural, one {# late cancel} other {# late cancels}}",
       "attendanceNone": "None yet",
@@ -1013,7 +1013,8 @@
         "schedulesKept": "Schedules are kept",
         "backFrom": "Lessons come back from {date}",
         "backByHand": "Lessons come back when you bring the student back"
-      }
+      },
+      "saveAnyway": "Save anyway"
     },
     "pauseEnd": {
       "close": "Close",
@@ -1045,7 +1046,8 @@
       "packageShorter": "The package extension gets shorter",
       "packageUntil": "“{name}” — until {date}",
       "packageInstead": "“{name}” — until {date} instead of {was}",
-      "pastDaysStay": "Past pause days stay without lessons"
+      "pastDaysStay": "Past pause days stay without lessons",
+      "returnAnyway": "Bring back anyway"
     },
     "pauseBanner": {
       "scheduled": "Pause {range}",
@@ -1109,7 +1111,8 @@
         "BANK_TRANSFER": "Transfer",
         "CARD": "Card",
         "OTHER": "Other"
-      }
+      },
+      "settledLessons": "{count, plural, one {# lesson} other {# lessons}} settled"
     }
   },
   "groups": {

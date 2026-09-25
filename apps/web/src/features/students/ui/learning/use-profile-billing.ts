@@ -20,7 +20,7 @@ import {
  * payments, with what the page derives from them — the banner's pause, the
  * first two metrics and the direction a payment goes to by default.
  */
-export function useProfileBilling(studentId: string) {
+export function useProfileBilling(studentId: string, nowMs: number) {
   const billing = useStudentBillingQuery(studentId);
   const pauses = useStudentPausesQuery(studentId);
   const payments = useStudentPaymentsQuery(studentId);
@@ -54,7 +54,8 @@ export function useProfileBilling(studentId: string) {
           .filter((pause) => pause.state === 'SCHEDULED')
           .sort((a, b) => a.startsAt.localeCompare(b.startsAt))[0] ?? null,
       balance: billing.data ? balanceMetric(all) : undefined,
-      money: billing.data && payments.data ? moneyMetric(all, payments.data.items) : undefined,
+      money:
+        billing.data && payments.data ? moneyMetric(all, payments.data.items, nowMs) : undefined,
       directionNames: new Map(
         all.map((direction) => [direction.enrollmentId, directionName(direction)]),
       ),
@@ -68,5 +69,5 @@ export function useProfileBilling(studentId: string) {
         live[0] ??
         null,
     };
-  }, [billing, pauses, payments, schedules.items]);
+  }, [billing, pauses, payments, schedules.items, nowMs]);
 }

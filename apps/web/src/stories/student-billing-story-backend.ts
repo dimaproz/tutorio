@@ -363,6 +363,7 @@ function lesson(
     student: who.group ? null : STUDENT,
     group: who.group ?? null,
     teacher: { ...who.teacher, color: null },
+    subject: who.group ? null : 'English',
     createdAt: kyiv(9, 1, 10),
     updatedAt: kyiv(9, 1, 10),
     deletedAt: null,
@@ -418,6 +419,7 @@ function payment(
     externalId: null,
     note: null,
     student: STUDENT,
+    settledLessons: null,
     createdAt: fields.paidAt,
     updatedAt: fields.paidAt,
     ...fields,
@@ -425,7 +427,7 @@ function payment(
 }
 
 const PAYMENTS: PaymentResponse[] = [
-  payment(1, { amountMinor: 100000, paidAt: kyiv(9, 23, 19) }),
+  payment(1, { amountMinor: 100000, paidAt: kyiv(9, 23, 19), settledLessons: 2 }),
   payment(2, {
     amountMinor: 400000,
     paidAt: kyiv(9, 1, 12),

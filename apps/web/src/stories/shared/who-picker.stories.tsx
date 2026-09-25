@@ -10,7 +10,7 @@ import {
   UserRoundIcon,
   UsersIcon,
 } from 'lucide-react';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CreditMeter } from '@/components/shared/credit-meter';
@@ -390,7 +390,9 @@ export const Search: Story = {
   play: async ({ canvasElement }) => {
     const body = within(canvasElement.ownerDocument.body);
     const input = await body.findByRole('combobox', { name: 'Name, phone or @telegram' });
-    await expect(await body.findByRole('option', { name: /Anna Shevchenko/ })).toBeVisible();
+    const anna = await body.findByRole('option', { name: /Anna Shevchenko/ });
+    // The list fades in with its popover.
+    await waitFor(() => expect(anna).toBeVisible());
     await userEvent.type(input, 'Sof');
     await expect(body.queryByRole('option', { name: /Anna Shevchenko/ })).toBeNull();
     await expect(body.getByRole('option', { name: /Sofiia Melnyk/ })).toBeVisible();

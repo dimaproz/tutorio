@@ -87,7 +87,7 @@ export function StudentNextLesson({
   const start = new Date(lesson.startsAtUtc);
   const end = new Date(start.getTime() + lesson.durationMin * 60 * 1000);
   const time = (value: Date) => format.dateTime(value, { hour: '2-digit', minute: '2-digit' });
-  const name = lesson.group?.name ?? t('individual');
+  const name = lesson.group?.name ?? lesson.subject ?? t('individual');
   const teacher = (
     <PersonItem
       tone="ink"

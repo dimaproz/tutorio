@@ -325,6 +325,7 @@ function lesson(
     student: group ? null : { id: who.id, fullName: who.fullName },
     group,
     teacher,
+    subject: null,
     createdAt: '2026-09-01T10:00:00.000Z',
     updatedAt: '2026-09-01T10:00:00.000Z',
     deletedAt: null,
