@@ -504,5 +504,34 @@ describe('Work Packet 6.4 phase 7: read APIs (e2e)', () => {
       unpaidLessons: 0,
       unpaid: [],
     });
+
+    // The ledger says how many lessons each payment settled; a package
+    // payment settles none by itself.
+    const ledger = (await get(`/payments?studentId=${payer}`).expect(200)).body
+      .items as {
+      amountMinor: number;
+      settledLessons: number | null;
+    }[];
+    expect(
+      ledger
+        .map((row) => [row.amountMinor, row.settledLessons])
+        .sort((a, b) => Number(a[0]) - Number(b[0])),
+    ).toEqual([
+      [60000, 1],
+      [100000, 2],
+    ]);
+    expect(
+      (await get(`/payments?studentId=${buyer}`).expect(200)).body.items[0]
+        .settledLessons,
+    ).toBeNull();
+
+    // An individual lesson names what its teacher teaches.
+    await prisma.teacher.update({
+      where: { id: teacherId },
+      data: { subjects: ['English'] },
+    });
+    expect(
+      (await get(`/lessons/${lessons[0].id}`).expect(200)).body.subject,
+    ).toBe('English');
   });
 });

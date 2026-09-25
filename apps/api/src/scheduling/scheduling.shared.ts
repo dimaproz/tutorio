@@ -34,7 +34,9 @@ export const lessonInclude = {
     },
   },
   group: { select: { id: true, name: true } },
-  teacher: { select: { id: true, fullName: true, color: true } },
+  teacher: {
+    select: { id: true, fullName: true, color: true, subjects: true },
+  },
   workspace: { select: { cancellationDeadlineHours: true } },
   // Only the statuses: a lesson row reports "5 of 6 came", not who.
   attendance: { select: { status: true } },
@@ -132,6 +134,7 @@ export function toLessonResponse(
       name: row.teacher.fullName,
       color: row.teacher.color,
     },
+    subject: row.groupId ? null : (row.teacher.subjects[0] ?? null),
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     deletedAt: row.deletedAt?.toISOString() ?? null,

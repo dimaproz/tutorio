@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {
   assertPaymentWithinOutstanding,
   OverpaymentError,
+  settledLessonsByPayment,
 } from '@tutorio/domain';
 import { Prisma } from '@prisma/client';
 import type {
@@ -67,7 +68,100 @@ export class PaymentsService {
       this.prisma.payment.count({ where }),
     ]);
 
-    return buildPaginatedResponse(rows.map(toPaymentResponse), total, query);
+    const settled = await this.settledLessonsOf(rows);
+    return buildPaginatedResponse(
+      rows.map((row) =>
+        toPaymentResponse(
+          row,
+          row.packageId === null && row.status === 'PAID'
+            ? (settled.get(row.id) ?? 0)
+            : null,
+        ),
+      ),
+      total,
+      query,
+    );
+  }
+
+  /**
+   * How many lessons each pay-per-lesson payment of a page settled in full
+   * (L-90): each direction's payments, oldest first, against its charged
+   * lessons, oldest first, in the direction's currency.
+   */
+  private async settledLessonsOf(
+    rows: readonly {
+      id: string;
+      enrollmentId: string;
+      packageId: string | null;
+      status: string;
+    }[],
+  ): Promise<Map<string, number>> {
+    const directionIds = [
+      ...new Set(
+        rows
+          .filter((row) => row.packageId === null && row.status === 'PAID')
+          .map((row) => row.enrollmentId),
+      ),
+    ];
+    if (directionIds.length === 0) return new Map();
+    const [directions, charges, payments] = await Promise.all([
+      this.prisma.enrollment.findMany({
+        where: { id: { in: directionIds } },
+        select: { id: true, currency: true },
+      }),
+      this.prisma.lessonCharge.findMany({
+        where: {
+          enrollmentId: { in: directionIds },
+          voidedAt: null,
+          source: 'BALANCE',
+        },
+        select: {
+          id: true,
+          enrollmentId: true,
+          amountMinor: true,
+          currency: true,
+          lesson: { select: { startsAtUtc: true } },
+        },
+      }),
+      this.prisma.payment.findMany({
+        where: {
+          enrollmentId: { in: directionIds },
+          packageId: null,
+          deletedAt: null,
+          status: 'PAID',
+        },
+        select: {
+          id: true,
+          enrollmentId: true,
+          amountMinor: true,
+          currency: true,
+          paidAt: true,
+        },
+      }),
+    ]);
+    const settled = new Map<string, number>();
+    for (const direction of directions) {
+      const byDirection = settledLessonsByPayment(
+        charges
+          .filter(
+            (charge) =>
+              charge.enrollmentId === direction.id &&
+              charge.currency === direction.currency,
+          )
+          .map((charge) => ({
+            id: charge.id,
+            lessonAt: charge.lesson.startsAtUtc,
+            amountMinor: charge.amountMinor,
+          })),
+        payments.filter(
+          (payment) =>
+            payment.enrollmentId === direction.id &&
+            payment.currency === direction.currency,
+        ),
+      );
+      for (const [id, count] of byDirection) settled.set(id, count);
+    }
+    return settled;
   }
 
   /**

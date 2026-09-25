@@ -120,7 +120,10 @@ export function toPackageResponse(row: PackageRow): PackageResponse {
   };
 }
 
-export function toPaymentResponse(row: PaymentRow): PaymentResponse {
+export function toPaymentResponse(
+  row: PaymentRow,
+  settledLessons: number | null = null,
+): PaymentResponse {
   return {
     id: row.id,
     workspaceId: row.workspaceId,
@@ -135,6 +138,7 @@ export function toPaymentResponse(row: PaymentRow): PaymentResponse {
     paidAt: row.paidAt.toISOString(),
     note: row.note,
     student: row.enrollment.student,
+    settledLessons,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
