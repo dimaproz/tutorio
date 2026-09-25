@@ -20,7 +20,6 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
-  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 import { ZodSerializerDto } from 'nestjs-zod';
@@ -34,6 +33,7 @@ import {
   CreditLedgerDto,
   ExtendPackageDto,
   ListPackagesQueryDto,
+  PackageDetailDto,
   PackageDto,
   PackageListDto,
   PackagePreviewDto,
@@ -43,7 +43,6 @@ import {
   SoldPackagesDto,
   TransferPackageDto,
 } from './dto/packages.dto';
-import { ForceQueryDto } from '../scheduling/dto/scheduling.dto';
 import { PackagesService } from './packages.service';
 
 @ApiTags('packages')
@@ -55,7 +54,13 @@ export class PackagesController {
 
   @Get()
   @Roles('OWNER')
-  @ApiOperation({ summary: 'List lesson packages' })
+  @ApiOperation({
+    summary: 'List lesson packages',
+    description:
+      'Filters by student, group, teacher, kind, payment status, a tab ' +
+      '(active, running out, unpaid, finished) and a name search; counts ' +
+      'each tab and sums what the unpaid ones owe per currency.',
+  })
   @ApiOkResponse({ type: PackageListDto })
   @ZodSerializerDto(PackageListDto)
   list(
@@ -156,15 +161,17 @@ export class PackagesController {
     summary: 'Get a package',
     description:
       'Balances, the effective total and payment status are derived from the ' +
-      'credit ledger and recorded payments, never from a stored counter.',
+      'credit ledger and recorded payments, never from a stored counter. ' +
+      'Also names the older package that pays first and the pauses that ' +
+      'moved its end.',
   })
-  @ApiOkResponse({ type: PackageDto })
+  @ApiOkResponse({ type: PackageDetailDto })
   @ApiNotFoundResponse({ type: ApiErrorDto })
-  @ZodSerializerDto(PackageDto)
+  @ZodSerializerDto(PackageDetailDto)
   getDetail(
     @CurrentUser() user: AuthenticatedUser,
     @Param('packageId', ParseUUIDPipe) packageId: string,
-  ): Promise<PackageDto> {
+  ): Promise<PackageDetailDto> {
     return this.packages.getDetail(user, packageId);
   }
 
@@ -188,22 +195,20 @@ export class PackagesController {
   @Post()
   @Roles('OWNER')
   @ApiOperation({
-    summary: 'Buy a lesson package',
+    summary: 'Sell a lesson package',
     description:
-      'Creates the package, its opening purchase entry, per-member shares for ' +
-      'a group, and (with a schedule) the recurring series behind it.',
+      'Creates the package and its opening purchase entry for one direction; ' +
+      'lessons on debt are covered first. Never creates a schedule or records ' +
+      'a payment (L-87).',
   })
   @ApiCreatedResponse({ type: PackageDto })
   @ApiBadRequestResponse({ type: ApiErrorDto })
-  @ApiConflictResponse({ type: ApiErrorDto })
-  @ApiQuery({ name: 'force', required: false, type: Boolean })
   @ZodSerializerDto(PackageDto)
   create(
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: CreatePackageDto,
-    @Query() query: ForceQueryDto,
   ): Promise<PackageDto> {
-    return this.packages.create(user, dto, query.force);
+    return this.packages.create(user, dto);
   }
 
   @Post(':packageId/adjust')
@@ -227,11 +232,14 @@ export class PackagesController {
   @Roles('OWNER')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
-    summary: 'Archive a package',
+    summary: 'Delete an unused package',
     description:
-      'Idempotent. Stops owned series and future scheduled lessons; financial history is retained.',
+      'Only a package with no charged lessons and no payments (409 ' +
+      'PACKAGE_IN_USE otherwise; refund it instead). Idempotent; the row is ' +
+      'archived with its audit trail.',
   })
   @ApiNoContentResponse()
+  @ApiConflictResponse({ type: ApiErrorDto })
   remove(
     @CurrentUser() user: AuthenticatedUser,
     @Param('packageId', ParseUUIDPipe) packageId: string,

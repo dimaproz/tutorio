@@ -313,6 +313,16 @@ export const refundTooLarge = (paidMinor: number) =>
     { paidMinor },
   );
 
+// S07: a package that paid for a lesson or took money is history; it is
+// refunded, not deleted.
+export const packageInUse = (charges: number, payments: number) =>
+  new BusinessApiException(
+    'PACKAGE_IN_USE',
+    'Only a package with no charged lessons and no payments can be deleted',
+    HttpStatus.CONFLICT,
+    { charges, payments },
+  );
+
 // L-85: credits move only to another direction of the same student.
 export const invalidTransferTarget = () =>
   new BusinessApiException(

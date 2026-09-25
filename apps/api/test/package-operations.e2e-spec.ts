@@ -71,6 +71,7 @@ describe('Work Packet 6.4 phase 5: package kinds and operations (e2e)', () => {
     (
       await post('/packages')
         .send({
+          teacherId,
           sizingMode: 'FIXED_COUNT',
           pricePerLessonMinor: 40000,
           currency: 'UAH',
@@ -78,6 +79,21 @@ describe('Work Packet 6.4 phase 5: package kinds and operations (e2e)', () => {
         })
         .expect(201)
     ).body;
+
+  const pay = (
+    pkg: { id: string; enrollmentId: string },
+    amountMinor: number,
+  ) =>
+    post('/payments')
+      .send({
+        enrollmentId: pkg.enrollmentId,
+        packageId: pkg.id,
+        amountMinor,
+        currency: 'UAH',
+        method: 'BANK_TRANSFER',
+        paidAt: at(-1),
+      })
+      .expect(201);
 
   const chargeOf = (lessonId: string) =>
     prisma.lessonCharge.findFirstOrThrow({
@@ -101,6 +117,8 @@ describe('Work Packet 6.4 phase 5: package kinds and operations (e2e)', () => {
         workspaceName: `E2E WS P ${runId}`,
         email: emailFor('owner'),
         password: 'correct horse battery staple',
+        // A school: the list test filters by a second teacher.
+        mode: 'SCHOOL',
       })
       .expect(201);
     owner = register.body.tokens.accessToken;
@@ -121,6 +139,10 @@ describe('Work Packet 6.4 phase 5: package kinds and operations (e2e)', () => {
       where,
       data: { transferredFromPackageId: null },
     });
+    await prisma.pausePackageExtension.deleteMany({
+      where: { package: { workspaceId } },
+    });
+    await prisma.pause.deleteMany({ where });
     await prisma.lessonPackage.deleteMany({ where });
     await prisma.enrollment.deleteMany({ where });
     await prisma.group.deleteMany({ where });
@@ -305,11 +327,8 @@ describe('Work Packet 6.4 phase 5: package kinds and operations (e2e)', () => {
 
   it('refunds unused credits and money without rewriting what was paid (L-85)', async () => {
     const studentId = await newStudent('Refund');
-    const pkg = await sell({
-      studentId,
-      lessonsTotal: 4,
-      initialPayment: { amountMinor: 160000, paidAt: at(-1) },
-    });
+    const pkg = await sell({ studentId, lessonsTotal: 4 });
+    await pay(pkg, 160000);
     await held(studentId, -1);
 
     expect(
@@ -401,5 +420,208 @@ describe('Work Packet 6.4 phase 5: package kinds and operations (e2e)', () => {
     ]);
     const listed = await get(`/packages?groupId=${group.body.id}`).expect(200);
     expect(listed.body.total).toBe(2);
+  });
+
+  it('names the direction, the package ahead and what each credit paid for (S07)', async () => {
+    const studentId = await newStudent('Ticket');
+    const first = await sell({
+      studentId,
+      lessonsTotal: 4,
+      purchasedAt: at(-10),
+    });
+    for (const days of [1, 2, 3]) {
+      await post('/lessons?force=true')
+        .send({
+          studentId,
+          teacherId,
+          durationMin: 60,
+          priceMinor: 40000,
+          currency: 'UAH',
+          startsAt: [at(days)],
+        })
+        .expect(201);
+    }
+    const second = await sell({ studentId, lessonsTotal: 8 });
+    const lesson = await held(studentId, -1);
+    expect(lesson.charges[0]).toMatchObject({ packageId: first.id });
+
+    const detail = await get(`/packages/${second.id}`).expect(200);
+    expect(detail.body).toMatchObject({
+      student: { id: studentId, avatarKey: null },
+      teacher: { id: teacherId, subjects: expect.any(Array) },
+      group: null,
+      // Three credits left ahead: the third booked lesson uses the last one.
+      ahead: { id: first.id, remainingCredits: 3, lastLessonAt: at(3) },
+      pauseExtensions: [],
+    });
+    expect(
+      (await get(`/packages/${first.id}`).expect(200)).body.ahead,
+    ).toBeNull();
+
+    const ledger = await get(`/packages/${first.id}/ledger`).expect(200);
+    expect(ledger.body.items[0]).toMatchObject({
+      type: 'lesson',
+      lessonId: lesson.id,
+      lesson: {
+        id: lesson.id,
+        startsAt: at(-1),
+        durationMin: 60,
+        status: 'COMPLETED',
+      },
+    });
+    expect(ledger.body.items.at(-1)).toMatchObject({
+      type: 'purchase',
+      lesson: null,
+    });
+
+    // A new sale follows the newest live package, after the debts (L-81, L-82).
+    const preview = await post('/packages/preview')
+      .send({
+        studentId,
+        sizingMode: 'FIXED_COUNT',
+        lessonsTotal: 4,
+        pricePerLessonMinor: 40000,
+        currency: 'UAH',
+      })
+      .expect(200);
+    expect(preview.body).toMatchObject({
+      debtLessons: 0,
+      ahead: { id: second.id },
+    });
+  });
+
+  it('shows the pause that moved a package end on its ticket (L-102)', async () => {
+    const studentId = await newStudent('Paused ticket');
+    const pkg = await sell({ studentId, lessonsTotal: 4, expiresAt: at(30) });
+    const pause = await post('/pauses')
+      .send({
+        studentId,
+        startsAt: at(1, 0),
+        endsAt: at(8, 0),
+        reason: 'HOLIDAY',
+      })
+      .expect(201);
+    const detail = await get(`/packages/${pkg.id}`).expect(200);
+    expect(detail.body.expiresAt).toBe(at(37));
+    expect(detail.body.pauseExtensions).toEqual([
+      {
+        pauseId: pause.body.id,
+        startsAt: at(1, 0),
+        endsAt: at(8, 0),
+        extendedBySeconds: 7 * 24 * 60 * 60,
+      },
+    ]);
+  });
+
+  it('lists packages by tab, search, teacher and kind, running out first (S07)', async () => {
+    const [ann, bob] = await Promise.all([
+      newStudent('Tabs Ann'),
+      newStudent('Tabs Bob'),
+    ]);
+    const other = (
+      await post('/teachers')
+        .send({ fullName: `Tabs Teacher ${runId}` })
+        .expect(201)
+    ).body.id as string;
+    const open = await sell({ studentId: ann, lessonsTotal: 8 });
+    const low = await sell({ studentId: ann, lessonsTotal: 2 });
+    await pay(low, 80000);
+    const expired = await sell({
+      studentId: ann,
+      lessonsTotal: 4,
+      purchasedAt: at(-30),
+      expiresAt: at(-2),
+    });
+    const euro = await sell({
+      studentId: bob,
+      teacherId: other,
+      lessonsTotal: 1,
+      currency: 'EUR',
+      pricePerLessonMinor: 4000,
+    });
+    const search = `search=${encodeURIComponent('Tabs')}`;
+
+    const all = await get(`/packages?${search}`).expect(200);
+    expect(all.body).toMatchObject({
+      total: 4,
+      counts: { active: 3, ending: 2, unpaid: 3, finished: 1, all: 4 },
+      lowCreditThreshold: 2,
+    });
+    expect(all.body.owed).toEqual(
+      expect.arrayContaining([
+        { currency: 'UAH', amountMinor: 480000, packages: 2 },
+        { currency: 'EUR', amountMinor: 4000, packages: 1 },
+      ]),
+    );
+    const ids = (body: { items: { id: string }[] }) =>
+      body.items.map((item) => item.id);
+    expect(
+      ids(
+        (await get(`/packages?${search}&status=ACTIVE&sort=ending`).expect(200))
+          .body,
+      ),
+    ).toEqual([euro.id, low.id, open.id]);
+    const paged = await get(
+      `/packages?${search}&status=ACTIVE&sort=ending&page=2&pageSize=1`,
+    );
+    expect(paged.body).toMatchObject({
+      total: 3,
+      totalPages: 3,
+      items: [{ id: low.id }],
+    });
+    expect(
+      ids((await get(`/packages?${search}&status=FINISHED`).expect(200)).body),
+    ).toEqual([expired.id]);
+    expect(
+      ids(
+        (await get(`/packages?${search}&teacherId=${other}`).expect(200)).body,
+      ),
+    ).toEqual([euro.id]);
+    expect(
+      (await get(`/packages?${search}&sizingMode=BY_PERIOD`).expect(200)).body
+        .total,
+    ).toBe(0);
+    expect(
+      ids(
+        (
+          await get(
+            `/packages?search=${encodeURIComponent('tabs bob')}`,
+          ).expect(200)
+        ).body,
+      ),
+    ).toEqual([euro.id]);
+  });
+
+  it('deletes only a package with no charged lessons and no payments (S07)', async () => {
+    const studentId = await newStudent('Delete');
+    const unused = await sell({ studentId, lessonsTotal: 4 });
+    await server()
+      .delete(`/api/packages/${unused.id}`)
+      .set('Authorization', bearer())
+      .expect(204);
+    await get(`/packages/${unused.id}`).expect(200);
+
+    const paid = await sell({ studentId, lessonsTotal: 4 });
+    await pay(paid, 40000);
+    const refused = await server()
+      .delete(`/api/packages/${paid.id}`)
+      .set('Authorization', bearer())
+      .expect(409);
+    expect(refused.body).toMatchObject({
+      code: 'PACKAGE_IN_USE',
+      details: { charges: 0, payments: 1 },
+    });
+
+    const learner = await newStudent('Delete used');
+    const used = await sell({ studentId: learner, lessonsTotal: 4 });
+    await held(learner, -1);
+    expect(
+      (
+        await server()
+          .delete(`/api/packages/${used.id}`)
+          .set('Authorization', bearer())
+          .expect(409)
+      ).body.details,
+    ).toEqual({ charges: 1, payments: 0 });
   });
 });

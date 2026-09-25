@@ -3,9 +3,15 @@ import { Prisma } from '@prisma/client';
 import type { PackageResponse, PaymentResponse } from '@tutorio/validation';
 
 export const packageInclude = {
-  student: { select: { id: true, fullName: true } },
+  student: { select: { id: true, fullName: true, avatarKey: true } },
   enrollment: {
-    select: { groupId: true, group: { select: { id: true, name: true } } },
+    select: {
+      groupId: true,
+      group: { select: { id: true, name: true } },
+      teacher: {
+        select: { id: true, fullName: true, avatarKey: true, subjects: true },
+      },
+    },
   },
   creditEntries: { select: { delta: true, type: true } },
   // The lessons it pays for: one credit each (ADR 0007).
@@ -112,8 +118,20 @@ export function toPackageResponse(row: PackageRow): PackageResponse {
     purchasedAt: row.purchasedAt.toISOString(),
     expiresAt: row.expiresAt?.toISOString() ?? null,
     notes: row.notes,
-    student: row.student,
+    student: {
+      id: row.student.id,
+      fullName: row.student.fullName,
+      avatarKey: row.student
+        .avatarKey as PackageResponse['student']['avatarKey'],
+    },
     group: row.enrollment.group,
+    teacher: {
+      id: row.enrollment.teacher.id,
+      name: row.enrollment.teacher.fullName,
+      avatarKey: row.enrollment.teacher
+        .avatarKey as PackageResponse['teacher']['avatarKey'],
+      subjects: row.enrollment.teacher.subjects,
+    },
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     deletedAt: row.deletedAt?.toISOString() ?? null,

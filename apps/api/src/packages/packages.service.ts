@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import {
+  compareEndingFirst,
   expandSeries,
   InvalidPackagePlanError,
+  isPackageEnding,
+  packageLifecycle,
   planPackage,
   transferCredits,
   type PackagePlan,
@@ -14,6 +17,7 @@ import type {
   CreditLedgerResponse,
   ExtendPackageDto,
   ListPackagesQueryDto,
+  PackageDetailResponse,
   PackageListResponse,
   PackagePreviewResponse,
   PackageResponse,
@@ -34,18 +38,14 @@ import {
   invalidPackagePlan,
   invalidTransferTarget,
   notEnoughCredits,
+  packageInUse,
   packageNotFound,
   refundTooLarge,
   studentNotFound,
 } from '../common/business.errors';
-import {
-  buildPaginatedResponse,
-  deletedAtFilter,
-  toSkipTake,
-} from '../common/pagination';
+import { buildPaginatedResponse, deletedAtFilter } from '../common/pagination';
 import { PrismaService } from '../prisma/prisma.service';
 import { lockStudentLifecycles } from '../scheduling/lifecycle-suspension';
-import { SchedulesService } from '../scheduling/schedules.service';
 import { resolveStudentTarget } from '../scheduling/scheduling.shared';
 import {
   packageInclude,
@@ -99,9 +99,14 @@ export class PackagesService {
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
     private readonly billing: BillingService,
-    private readonly schedules: SchedulesService,
   ) {}
 
+  /**
+   * The «Пакети» page (S07): the packages matching the filters, with how
+   * many each tab holds, what the unpaid ones still owe per currency, and the
+   * tab's page in the chosen order. A package's credits and money are
+   * derived, so the tabs are counted from the read rows, not in SQL.
+   */
   async list(
     auth: AuthenticatedUser,
     query: ListPackagesQueryDto,
@@ -110,29 +115,122 @@ export class PackagesService {
       throw forbidden();
     }
 
+    const search = query.search
+      ? { contains: query.search, mode: 'insensitive' as const }
+      : null;
     const where: Prisma.LessonPackageWhereInput = {
       workspaceId: auth.workspaceId,
       ...deletedAtFilter(query.state),
       ...(query.studentId ? { studentId: query.studentId } : {}),
       // A group's packages are its members' packages for the group.
-      ...(query.groupId ? { enrollment: { groupId: query.groupId } } : {}),
-      ...(query.paymentStatus ? { paymentStatus: query.paymentStatus } : {}),
+      ...(query.groupId || query.teacherId
+        ? {
+            enrollment: {
+              ...(query.groupId ? { groupId: query.groupId } : {}),
+              ...(query.teacherId ? { teacherId: query.teacherId } : {}),
+            },
+          }
+        : {}),
+      ...(query.sizingMode ? { sizingMode: query.sizingMode } : {}),
+      ...(search
+        ? {
+            OR: [
+              { name: search },
+              { student: { fullName: search } },
+              { enrollment: { group: { name: search } } },
+            ],
+          }
+        : {}),
     };
 
-    const [rows, total] = await Promise.all([
+    const [rows, workspace] = await Promise.all([
       this.prisma.lessonPackage.findMany({
         where,
         orderBy: [{ purchasedAt: 'desc' }, { id: 'desc' }],
-        ...toSkipTake(query),
         include: packageInclude,
       }),
-      this.prisma.lessonPackage.count({ where }),
+      this.prisma.workspace.findUniqueOrThrow({
+        where: { id: auth.workspaceId },
+        select: { lowCreditThreshold: true },
+      }),
     ]);
+    const now = new Date();
+    const threshold = workspace.lowCreditThreshold;
+    const packages = rows
+      .map(toPackageResponse)
+      .filter(
+        (pkg) =>
+          !query.paymentStatus || pkg.paymentStatus === query.paymentStatus,
+      )
+      .map((pkg) => {
+        const window = {
+          remainingCredits: pkg.remainingCredits,
+          expiresAt: pkg.expiresAt ? new Date(pkg.expiresAt) : null,
+        };
+        const lifecycle = packageLifecycle(window, now);
+        return {
+          pkg,
+          order: {
+            ...window,
+            id: pkg.id,
+            purchasedAt: new Date(pkg.purchasedAt),
+          },
+          tabs: {
+            ACTIVE: lifecycle === 'active',
+            ENDING: isPackageEnding(window, now, threshold),
+            UNPAID: pkg.paymentStatus !== 'PAID',
+            FINISHED: lifecycle !== 'active',
+          },
+        };
+      });
 
-    return buildPaginatedResponse(rows.map(toPackageResponse), total, query);
+    const owed = new Map<string, { amountMinor: number; packages: number }>();
+    for (const { pkg, tabs } of packages) {
+      if (!tabs.UNPAID) continue;
+      const left = Math.max(
+        pkg.totalPriceMinorSnapshot - pkg.refundedMinor - pkg.paidMinor,
+        0,
+      );
+      const sum = owed.get(pkg.currency) ?? { amountMinor: 0, packages: 0 };
+      owed.set(pkg.currency, {
+        amountMinor: sum.amountMinor + left,
+        packages: sum.packages + 1,
+      });
+    }
+
+    const count = (tab: keyof (typeof packages)[number]['tabs']) =>
+      packages.filter((row) => row.tabs[tab]).length;
+    const shown = packages.filter(
+      (row) => !query.status || row.tabs[query.status],
+    );
+    if (query.sort === 'ending') {
+      const byEnd = compareEndingFirst(now, threshold);
+      shown.sort((a, b) => byEnd(a.order, b.order));
+    }
+    const skip = (query.page - 1) * query.pageSize;
+    return {
+      ...buildPaginatedResponse(
+        shown.slice(skip, skip + query.pageSize).map((row) => row.pkg),
+        shown.length,
+        query,
+      ),
+      counts: {
+        active: count('ACTIVE'),
+        ending: count('ENDING'),
+        unpaid: count('UNPAID'),
+        finished: count('FINISHED'),
+        all: packages.length,
+      },
+      owed: [...owed.entries()].map(([currency, sum]) => ({
+        currency: currency as PackageResponse['currency'],
+        ...sum,
+      })),
+      lowCreditThreshold: threshold,
+    };
   }
 
-  async getDetail(
+  /** One package as every operation returns it. */
+  async getOne(
     auth: AuthenticatedUser,
     packageId: string,
   ): Promise<PackageResponse> {
@@ -147,6 +245,105 @@ export class PackagesService {
   }
 
   /**
+   * The package's ticket (S07): the package, the older packages that pay
+   * first (L-81) and the pauses that moved its end (L-102).
+   */
+  async getDetail(
+    auth: AuthenticatedUser,
+    packageId: string,
+  ): Promise<PackageDetailResponse> {
+    const pkg = await this.getOne(auth, packageId);
+    const [ahead, extensions] = await Promise.all([
+      this.aheadOf(pkg),
+      this.prisma.pausePackageExtension.findMany({
+        where: { packageId: pkg.id },
+        select: {
+          extendedBySeconds: true,
+          pause: {
+            select: { id: true, startsAt: true, endsAt: true, endedAt: true },
+          },
+        },
+        orderBy: { pause: { startsAt: 'asc' } },
+      }),
+    ]);
+    return {
+      ...pkg,
+      ahead,
+      pauseExtensions: extensions.map(({ pause, extendedBySeconds }) => ({
+        pauseId: pause.id,
+        startsAt: pause.startsAt.toISOString(),
+        endsAt: (pause.endedAt ?? pause.endsAt)?.toISOString() ?? null,
+        extendedBySeconds,
+      })),
+    };
+  }
+
+  /**
+   * The live packages of the direction that are older in the queue (L-81)
+   * and still have credits: the one just ahead, their credits, and the
+   * booked lesson that uses the last of them.
+   */
+  private async aheadOf(
+    pkg: PackageResponse,
+  ): Promise<PackageDetailResponse['ahead']> {
+    const now = new Date();
+    const lifecycle = packageLifecycle(
+      {
+        remainingCredits: pkg.remainingCredits,
+        expiresAt: pkg.expiresAt ? new Date(pkg.expiresAt) : null,
+      },
+      now,
+    );
+    if (pkg.deletedAt !== null || lifecycle !== 'active') return null;
+    const purchasedAt = new Date(pkg.purchasedAt).getTime();
+    const older = (
+      await this.billing.creditPackages(this.prisma, pkg.enrollmentId)
+    )
+      .filter(
+        (other) =>
+          other.id !== pkg.id &&
+          (other.purchasedAt.getTime() < purchasedAt ||
+            (other.purchasedAt.getTime() === purchasedAt &&
+              other.id < pkg.id)) &&
+          other.remaining > 0 &&
+          (other.expiresAt === null || other.expiresAt > now),
+      )
+      .sort(
+        (a, b) =>
+          a.purchasedAt.getTime() - b.purchasedAt.getTime() ||
+          a.id.localeCompare(b.id),
+      );
+    const last = older.at(-1);
+    if (!last) return null;
+    const credits = older.reduce((sum, other) => sum + other.remaining, 0);
+    const [named, lesson] = await Promise.all([
+      this.prisma.lessonPackage.findUniqueOrThrow({
+        where: { id: last.id },
+        select: { name: true },
+      }),
+      this.prisma.lesson.findFirst({
+        where: {
+          ...(pkg.groupId
+            ? { groupId: pkg.groupId }
+            : { enrollmentId: pkg.enrollmentId }),
+          status: 'SCHEDULED',
+          deletedAt: null,
+          startsAtUtc: { gte: now },
+        },
+        orderBy: [{ startsAtUtc: 'asc' }, { id: 'asc' }],
+        skip: credits - 1,
+        select: { startsAtUtc: true },
+      }),
+    ]);
+    return {
+      id: last.id,
+      name: named.name,
+      remainingCredits: credits,
+      lastLessonAt: lesson?.startsAtUtc.toISOString() ?? null,
+    };
+  }
+
+  /**
    * The "why is the balance this" view, newest first: the credits granted,
    * corrected, transferred and refunded, and one entry per lesson the package
    * pays for.
@@ -155,13 +352,23 @@ export class PackagesService {
     auth: AuthenticatedUser,
     packageId: string,
   ): Promise<CreditLedgerResponse> {
-    const pkg = await this.getDetail(auth, packageId);
+    const pkg = await this.getOne(auth, packageId);
     const [entries, charges] = await Promise.all([
       this.prisma.lessonCreditEntry.findMany({
         where: { packageId: pkg.id, workspaceId: auth.workspaceId },
       }),
       this.prisma.lessonCharge.findMany({
         where: { packageId: pkg.id, voidedAt: null },
+        include: {
+          lesson: {
+            select: {
+              id: true,
+              startsAtUtc: true,
+              durationMin: true,
+              status: true,
+            },
+          },
+        },
       }),
     ]);
     const items: CreditLedgerResponse['items'] = [
@@ -169,6 +376,7 @@ export class PackagesService {
         id: entry.id,
         packageId: entry.packageId,
         lessonId: null,
+        lesson: null,
         delta: entry.delta,
         type: entry.type,
         note: entry.note,
@@ -180,6 +388,12 @@ export class PackagesService {
         id: charge.id,
         packageId: pkg.id,
         lessonId: charge.lessonId,
+        lesson: {
+          id: charge.lesson.id,
+          startsAt: charge.lesson.startsAtUtc.toISOString(),
+          durationMin: charge.lesson.durationMin,
+          status: charge.lesson.status,
+        },
         delta: -1,
         type: 'lesson' as const,
         note: null,
@@ -206,6 +420,9 @@ export class PackagesService {
   ): Promise<PackagePreviewResponse> {
     const direction = await this.findDirection(this.prisma, auth, dto);
     const plan = await this.planSale(this.prisma, direction, dto);
+    const queue = direction
+      ? await this.saleQueue(direction.id)
+      : { debtLessons: 0, ahead: null };
     return {
       lessonsTotal: plan.lessonsTotal,
       pricePerLessonMinor: plan.pricePerLessonMinor,
@@ -213,99 +430,63 @@ export class PackagesService {
       validFrom: plan.validFrom?.toISOString() ?? null,
       expiresAt: plan.expiresAt?.toISOString() ?? null,
       scheduleLessons: plan.scheduleLessons,
+      ...queue,
     };
   }
 
   /**
-   * Sells a package for one direction of a student (L-80). The current
-   * package form may still attach a first payment and ask for the
-   * direction's schedule; the new sale flow does neither (L-87).
+   * Where a new package of the direction stands: the lessons on debt its
+   * credits pay first (L-82), and the newest live package with credits,
+   * which the new one follows (L-81).
+   */
+  private async saleQueue(
+    enrollmentId: string,
+  ): Promise<Pick<PackagePreviewResponse, 'debtLessons' | 'ahead'>> {
+    const now = new Date();
+    const [debtLessons, packages] = await Promise.all([
+      this.prisma.lessonCharge.count({
+        where: { enrollmentId, voidedAt: null, source: 'DEBT' },
+      }),
+      this.billing.creditPackages(this.prisma, enrollmentId),
+    ]);
+    const last = packages
+      .filter(
+        (pkg) =>
+          pkg.remaining > 0 && (pkg.expiresAt === null || pkg.expiresAt > now),
+      )
+      .sort(
+        (a, b) =>
+          a.purchasedAt.getTime() - b.purchasedAt.getTime() ||
+          a.id.localeCompare(b.id),
+      )
+      .at(-1);
+    if (!last) return { debtLessons, ahead: null };
+    const named = await this.prisma.lessonPackage.findUniqueOrThrow({
+      where: { id: last.id },
+      select: { name: true },
+    });
+    return { debtLessons, ahead: { id: last.id, name: named.name } };
+  }
+
+  /**
+   * Sells a package for one direction of a student (L-80). The sale creates
+   * no schedule and records no payment (L-87): those are the next actions.
    */
   async create(
     auth: AuthenticatedUser,
     dto: CreatePackageDto,
-    force = false,
   ): Promise<PackageResponse> {
     const row = await this.prisma.$transaction(
       async (tx) => {
         await lockStudentLifecycles(tx, auth.workspaceId, [dto.studentId]);
         const direction = await this.resolveDirection(tx, auth, dto);
-        if (dto.schedule && direction.groupId) {
-          throw invalidPackagePlan(
-            "A group's lessons follow the group's own schedule",
-          );
-        }
-        const legacyRules = dto.schedule
-          ? dto.schedule.slots.map((slot) => ({
-              weekdays: [slot.weekday],
-              localTime: slot.localTime,
-              timezone: dto.schedule!.timezone,
-              startDate: new Date(dto.schedule!.startDate),
-            }))
-          : null;
         const created = await this.sellInTx(
           tx,
           auth,
           dto.studentId,
           direction,
           dto,
-          legacyRules,
         );
-
-        const initialPayment = dto.initialPayment ?? null;
-        if (initialPayment) {
-          if (new Date(initialPayment.paidAt).getTime() > Date.now()) {
-            throw invalidPackagePlan('Payment date cannot be in the future');
-          }
-          if (initialPayment.amountMinor > created.totalPriceMinorSnapshot) {
-            throw invalidPackagePlan(
-              'Initial payment cannot exceed the package total',
-            );
-          }
-          await tx.payment.create({
-            data: {
-              workspaceId: auth.workspaceId,
-              enrollmentId: direction.id,
-              packageId: created.id,
-              amountMinor: initialPayment.amountMinor,
-              currency: dto.currency,
-              method: 'OTHER',
-              status: 'PAID',
-              provider: 'manual',
-              paidAt: new Date(initialPayment.paidAt),
-              createdById: auth.userId,
-            },
-          });
-          await refreshPaymentStatus(tx, created.id);
-        }
-
-        // The direction's schedule belongs to the direction and outlives the
-        // package (L-20); only the current form still asks for it here.
-        if (dto.schedule) {
-          const workspace = await tx.workspace.findUniqueOrThrow({
-            where: { id: auth.workspaceId },
-            select: { scheduleHorizonWeeks: true },
-          });
-          await this.schedules.createInTx(
-            tx,
-            auth,
-            {
-              enrollmentId: direction.id,
-              groupId: null,
-              teacherId: direction.teacherId,
-              slots: dto.schedule.slots,
-              durationMin: dto.schedule.durationMin,
-              timezone: dto.schedule.timezone,
-              startDate: new Date(dto.schedule.startDate),
-              endsAt: null,
-              horizonWeeks: workspace.scheduleHorizonWeeks,
-              priceMinor: direction.priceMinor,
-              currency: direction.currency,
-            },
-            { force },
-          );
-        }
-
         return tx.lessonPackage.findUniqueOrThrow({
           where: { id: created.id },
           include: packageInclude,
@@ -343,14 +524,7 @@ export class PackagesService {
             studentId,
             groupId: group.id,
           });
-          const pkg = await this.sellInTx(
-            tx,
-            auth,
-            studentId,
-            direction!,
-            dto,
-            null,
-          );
+          const pkg = await this.sellInTx(tx, auth, studentId, direction!, dto);
           created.push(pkg.id);
         }
         return created;
@@ -376,9 +550,8 @@ export class PackagesService {
     studentId: string,
     direction: Direction,
     spec: PackageSpec,
-    legacyRules: RecurrenceRule[] | null,
   ) {
-    const plan = await this.planSale(tx, direction, spec, legacyRules);
+    const plan = await this.planSale(tx, direction, spec);
     const created = await tx.lessonPackage.create({
       data: {
         workspaceId: auth.workspaceId,
@@ -441,7 +614,6 @@ export class PackagesService {
     db: Db,
     direction: Direction | null,
     spec: PackageSpec,
-    legacyRules: RecurrenceRule[] | null = null,
   ): Promise<SalePlan> {
     const period = spec.sizingMode !== 'FIXED_COUNT';
     const purchasedAt = spec.purchasedAt
@@ -450,7 +622,7 @@ export class PackagesService {
     const validFrom = period
       ? spec.validFrom
         ? new Date(spec.validFrom)
-        : (legacyRules?.[0]?.startDate ?? purchasedAt)
+        : purchasedAt
       : null;
     const endDate = spec.endDate ? new Date(spec.endDate) : null;
     const expiresAt = period
@@ -459,19 +631,21 @@ export class PackagesService {
         ? new Date(spec.expiresAt)
         : null;
 
-    // By period from the schedule: the lessons the direction's schedule (or
-    // the current form's own slots) has in the window, unless overridden.
+    // By period from the schedule: the lessons the direction's schedule has
+    // in the window, unless overridden.
     let scheduleLessons: number | null = null;
-    if (spec.sizingMode === 'BY_PERIOD' && validFrom && expiresAt) {
-      scheduleLessons = legacyRules
-        ? countLessons(
-            legacyRules.map((rule) => ({ rule, endsAt: null })),
-            validFrom,
-            expiresAt,
-          )
-        : direction
-          ? await this.scheduleLessonsIn(db, direction, validFrom, expiresAt)
-          : null;
+    if (
+      spec.sizingMode === 'BY_PERIOD' &&
+      validFrom &&
+      expiresAt &&
+      direction
+    ) {
+      scheduleLessons = await this.scheduleLessonsIn(
+        db,
+        direction,
+        validFrom,
+        expiresAt,
+      );
     }
     try {
       const plan = planPackage({
@@ -835,8 +1009,8 @@ export class PackagesService {
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     );
     return {
-      source: await this.getDetail(auth, result.sourceId),
-      target: await this.getDetail(auth, result.targetId),
+      source: await this.getOne(auth, result.sourceId),
+      target: await this.getOne(auth, result.targetId),
       valueMinor: result.moved.valueMinor,
       remainderMinor: result.moved.remainderMinor,
     };
@@ -928,8 +1102,9 @@ export class PackagesService {
   }
 
   /**
-   * Archives a package: it pays for no new lesson, and the lessons it paid
-   * for, its credits and its payments stay as history.
+   * Deletes a package sold by mistake (S07 decision 9): only one that paid
+   * for no lesson and took no money — PACKAGE_IN_USE otherwise, and the
+   * tutor refunds it instead. The row is archived, so its audit trail stays.
    */
   async remove(auth: AuthenticatedUser, packageId: string): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
@@ -939,10 +1114,21 @@ export class PackagesService {
           workspaceId: auth.workspaceId,
           deletedAt: null,
         },
-        select: { id: true },
+        select: {
+          id: true,
+          _count: {
+            select: {
+              charges: { where: { voidedAt: null } },
+              payments: { where: { deletedAt: null } },
+            },
+          },
+        },
       });
       if (!pkg) {
         return; // Idempotent: deleting an already-deleted package is a no-op.
+      }
+      if (pkg._count.charges > 0 || pkg._count.payments > 0) {
+        throw packageInUse(pkg._count.charges, pkg._count.payments);
       }
       await tx.lessonPackage.update({
         where: { id: pkg.id },

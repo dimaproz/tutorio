@@ -3,6 +3,7 @@ import {
   createPackageSchema,
   creditLedgerResponseSchema,
   extendPackageSchema,
+  packageDetailResponseSchema,
   packagePreviewResponseSchema,
   packageTransferResponseSchema,
   refundPackageSchema,
@@ -36,6 +37,9 @@ export class ListPaymentsQueryDto extends createZodDto(
 
 // Response DTOs — serialized through ZodSerializerInterceptor.
 export class PackageDto extends createZodDto(packageResponseSchema) {}
+export class PackageDetailDto extends createZodDto(
+  packageDetailResponseSchema,
+) {}
 export class PackageListDto extends createZodDto(packageListResponseSchema) {}
 export class CreditLedgerDto extends createZodDto(creditLedgerResponseSchema) {}
 export class PackagePreviewDto extends createZodDto(
