@@ -14,15 +14,25 @@ type Args = {
   eyebrow: string;
   /** A quieter third action at the footer's start (last on the sheet). */
   withTertiary: boolean;
+  /** The phone sheet: stacked actions, or the compact form sheet. */
+  sheetLayout: 'stack' | 'compact';
 };
 
 /**
  * A decision with a few fields: a dialog on desktop, a bottom sheet on phones
  * (switch the viewport in the toolbar). The body scrolls between the heading
  * and the actions; `withClose` adds the round close button on desktop,
- * `eyebrow` the line over the title and `withTertiary` a quieter third action.
+ * `eyebrow` the line over the title, `withTertiary` a quieter third action and
+ * `sheetLayout` the phone sheet of a working form.
  */
-function AdaptiveDialogStory({ size, withClose, longBody, eyebrow, withTertiary }: Args) {
+function AdaptiveDialogStory({
+  size,
+  withClose,
+  longBody,
+  eyebrow,
+  withTertiary,
+  sheetLayout,
+}: Args) {
   const [open, setOpen] = useState(true);
   return (
     <>
@@ -33,6 +43,7 @@ function AdaptiveDialogStory({ size, withClose, longBody, eyebrow, withTertiary 
         open={open}
         onOpenChange={setOpen}
         size={size}
+        sheetLayout={sheetLayout}
         closeLabel={withClose ? 'Close' : undefined}
         icon={<CircleXIcon />}
         iconClassName="bg-tint-danger text-tint-danger-foreground"
@@ -75,8 +86,18 @@ function AdaptiveDialogStory({ size, withClose, longBody, eyebrow, withTertiary 
 const meta = {
   title: 'Shared/Dialogs/AdaptiveDialog',
   component: AdaptiveDialogStory,
-  args: { size: 'md', withClose: true, longBody: false, eyebrow: '', withTertiary: false },
-  argTypes: { size: { control: 'inline-radio', options: ['md', 'lg'] } },
+  args: {
+    size: 'md',
+    withClose: true,
+    longBody: false,
+    eyebrow: '',
+    withTertiary: false,
+    sheetLayout: 'stack',
+  },
+  argTypes: {
+    size: { control: 'inline-radio', options: ['md', 'lg'] },
+    sheetLayout: { control: 'inline-radio', options: ['stack', 'compact'] },
+  },
 } satisfies Meta<typeof AdaptiveDialogStory>;
 
 export default meta;

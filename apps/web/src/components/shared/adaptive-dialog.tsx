@@ -82,8 +82,9 @@ function Heading({
  * scrolls between a fixed heading and fixed actions. On the sheet the actions
  * stack full width with the primary one first, and there is no close button
  * (the handle and the secondary action close it); `closeLabel` adds the round
- * close button to the desktop heading. `size="lg"` widens the desktop dialog
- * for a list, e.g. the attendance of a group.
+ * close button to the desktop heading (and, with `sheetLayout="compact"`, to
+ * the sheet). `size="lg"` widens the desktop dialog for a list, e.g. the
+ * attendance of a group.
  */
 export function AdaptiveDialog({
   open,
@@ -100,6 +101,7 @@ export function AdaptiveDialog({
   closeLabel,
   initialFocus,
   size = 'md',
+  sheetLayout = 'stack',
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -123,6 +125,13 @@ export function AdaptiveDialog({
   /** Accessible name of the desktop close button; omit for no button. */
   closeLabel?: string;
   size?: keyof typeof WIDTH_CLASS;
+  /**
+   * The phone sheet: `stack` (default) puts the actions full width, primary
+   * first; `compact` is the sheet of a working form (bulk cancel, the
+   * schedule dialogs) — no icon tile, the round close button beside the
+   * title, and the secondary and primary actions side by side.
+   */
+  sheetLayout?: 'stack' | 'compact';
 }) {
   const mobile = useIsMobile();
   const focusInitial = initialFocus
@@ -135,29 +144,47 @@ export function AdaptiveDialog({
     : undefined;
 
   if (mobile) {
+    const compact = sheetLayout === 'compact';
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
         <DrawerContent onOpenAutoFocus={focusInitial}>
-          <DrawerHeader className="px-5 pt-5 pb-0">
+          <DrawerHeader className={cn('px-5 pt-5 pb-0', compact && 'flex-row items-start gap-3')}>
             <Heading
-              icon={icon}
+              icon={compact ? undefined : icon}
               iconClassName={iconClassName}
               eyebrow={eyebrow}
               title={title}
               description={description}
               mobile
             />
+            {compact && closeLabel ? (
+              <IconButton
+                icon={<XIcon />}
+                label={closeLabel}
+                size={36}
+                tone="paper"
+                onClick={() => onOpenChange(false)}
+              />
+            ) : null}
           </DrawerHeader>
           {children ? (
             <div className="scrollbar-thin flex min-h-0 flex-col gap-5 overflow-y-auto px-5 pt-5">
               {children}
             </div>
           ) : null}
-          <DrawerFooter className="gap-2 px-5 pt-5 *:w-full">
-            {primary}
-            {secondary}
-            {tertiary}
-          </DrawerFooter>
+          {compact ? (
+            <DrawerFooter className="grid grid-cols-2 gap-2.5 px-5 pt-5 *:w-full">
+              {tertiary ? <div className="col-span-2 flex *:w-full">{tertiary}</div> : null}
+              {secondary ?? null}
+              <div className={cn('flex *:w-full', !secondary && 'col-span-2')}>{primary}</div>
+            </DrawerFooter>
+          ) : (
+            <DrawerFooter className="gap-2 px-5 pt-5 *:w-full">
+              {primary}
+              {secondary}
+              {tertiary}
+            </DrawerFooter>
+          )}
         </DrawerContent>
       </Drawer>
     );

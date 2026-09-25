@@ -28,13 +28,31 @@ export interface EntityPickerOption {
   badges?: ReactNode[];
   /** A note at the row's end, e.g. "• Зайнятий о 17:00". */
   trail?: ReactNode;
+  /** Replaces the avatar, e.g. a group's tile. */
+  media?: ReactNode;
+  /** The heading this option is listed under («Учні», «Групи»), in option order. */
+  section?: string;
+}
+
+/** Options by their section, keeping the order they came in. */
+function sectionsOf(options: EntityPickerOption[]) {
+  const sections: { heading?: string; options: EntityPickerOption[] }[] = [];
+  for (const option of options) {
+    const last = sections.at(-1);
+    if (last && last.heading === option.section) last.options.push(option);
+    else sections.push({ heading: option.section, options: [option] });
+  }
+  return sections;
 }
 
 /**
  * Searchable, avatar-aware entity picker for forms and collection filters.
  * An option with a `description`, `badges` or a `trail` renders as a rich
  * row (the lesson form's teacher list); `locked` shows the choice with a
- * lock instead of the chevrons, for a value that cannot change here.
+ * lock instead of the chevrons, for a value that cannot change here. Options
+ * with a `section` are listed under their headings; `onSearchChange` hands
+ * the search to the caller (a server-side search) instead of filtering here;
+ * `footer` adds a note under the list.
  */
 export function EntityPicker({
   id,
@@ -53,6 +71,9 @@ export function EntityPicker({
   trigger,
   appearance = 'button',
   icon,
+  onSearchChange,
+  footer,
+  contentClassName,
   'aria-describedby': describedBy,
 }: {
   id?: string;
@@ -78,14 +99,30 @@ export function EntityPicker({
   appearance?: 'button' | 'field';
   /** Leading glyph inside a `field` box, e.g. a mortarboard for a teacher. */
   icon?: ReactNode;
+  /** Takes over the search: the caller filters (or asks the server) and passes the options. */
+  onSearchChange?: (search: string) => void;
+  /** A note under the list, e.g. what the filter includes. */
+  footer?: ReactNode;
+  /** Widens the list, e.g. under a narrow filter pill. */
+  contentClassName?: string;
   'aria-describedby'?: string;
 }) {
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
   const selected = options.find((option) => option.value === value);
   const rich = options.some((option) => option.description || option.badges || option.trail);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next && onSearchChange) {
+          setSearch('');
+          onSearchChange('');
+        }
+      }}
+    >
       <PopoverTrigger asChild>
         {trigger ?? (
           <Button
@@ -141,15 +178,27 @@ export function EntityPicker({
         className={cn(
           'w-(--radix-popover-trigger-width) min-w-72 p-0',
           rich && 'rounded-row shadow-menu',
+          contentClassName,
         )}
         align="start"
       >
-        <Command>
-          <CommandInput placeholder={searchPlaceholder} />
+        <Command shouldFilter={!onSearchChange}>
+          <CommandInput
+            placeholder={searchPlaceholder}
+            {...(onSearchChange
+              ? {
+                  value: search,
+                  onValueChange: (next: string) => {
+                    setSearch(next);
+                    onSearchChange(next);
+                  },
+                }
+              : {})}
+          />
           <CommandList>
             <CommandEmpty>{emptyLabel}</CommandEmpty>
-            <CommandGroup className="p-1">
-              {clearLabel ? (
+            {clearLabel ? (
+              <CommandGroup className="p-1">
                 <CommandItem
                   value="__clear__"
                   className="rounded-md px-2 py-1.5"
@@ -160,56 +209,81 @@ export function EntityPicker({
                 >
                   {clearLabel}
                 </CommandItem>
-              ) : null}
-              {options.map((option) =>
-                rich ? (
-                  <CommandItem
-                    key={option.value}
-                    value={option.label}
-                    data-checked={value === option.value}
-                    className="min-h-14 gap-3 rounded-control px-2.5 py-2 font-normal data-[checked=true]:font-normal"
-                    onSelect={() => {
-                      onChange(option.value);
-                      setOpen(false);
-                    }}
-                  >
-                    <EntityAvatar avatarKey={option.avatarKey} fullName={option.label} size="sm" />
-                    <span className="flex min-w-0 flex-1 flex-col">
-                      <span className="flex min-w-0 items-center gap-2">
-                        <span className="truncate text-[15px] leading-5">{option.label}</span>
-                        {option.badges}
-                      </span>
-                      {option.description ? (
-                        <span className="truncate text-[13px] leading-[18px] text-muted-foreground">
-                          {option.description}
-                        </span>
-                      ) : null}
-                    </span>
-                    {option.trail ? <span className="shrink-0">{option.trail}</span> : null}
-                  </CommandItem>
-                ) : (
-                  <CommandItem
-                    key={option.value}
-                    value={option.label}
-                    className="flex items-center gap-2 rounded-md px-2 py-1.5"
-                    onSelect={() => {
-                      onChange(option.value);
-                      setOpen(false);
-                    }}
-                  >
-                    <EntityAvatar avatarKey={option.avatarKey} fullName={option.label} size="xs" />
-                    <span className="min-w-0 flex-1 truncate text-sm">{option.label}</span>
-                    <CheckIcon
-                      className={cn(
-                        'size-4 shrink-0',
-                        value === option.value ? 'opacity-100' : 'opacity-0',
+              </CommandGroup>
+            ) : null}
+            {sectionsOf(options).map((section, index) => (
+              <CommandGroup
+                key={section.heading ?? index}
+                heading={section.heading}
+                className="p-1"
+              >
+                {section.options.map((option) =>
+                  rich ? (
+                    <CommandItem
+                      key={option.value}
+                      value={option.label}
+                      data-checked={value === option.value}
+                      className="min-h-14 gap-3 rounded-control px-2.5 py-2 font-normal data-[checked=true]:font-normal"
+                      onSelect={() => {
+                        onChange(option.value);
+                        setOpen(false);
+                      }}
+                    >
+                      {option.media ?? (
+                        <EntityAvatar
+                          avatarKey={option.avatarKey}
+                          fullName={option.label}
+                          size="sm"
+                        />
                       )}
-                    />
-                  </CommandItem>
-                ),
-              )}
-            </CommandGroup>
+                      <span className="flex min-w-0 flex-1 flex-col">
+                        <span className="flex min-w-0 items-center gap-2">
+                          <span className="truncate text-[15px] leading-5">{option.label}</span>
+                          {option.badges}
+                        </span>
+                        {option.description ? (
+                          <span className="truncate text-[13px] leading-[18px] text-muted-foreground">
+                            {option.description}
+                          </span>
+                        ) : null}
+                      </span>
+                      {option.trail ? <span className="shrink-0">{option.trail}</span> : null}
+                    </CommandItem>
+                  ) : (
+                    <CommandItem
+                      key={option.value}
+                      value={option.label}
+                      className="flex items-center gap-2 rounded-md px-2 py-1.5"
+                      onSelect={() => {
+                        onChange(option.value);
+                        setOpen(false);
+                      }}
+                    >
+                      {option.media ?? (
+                        <EntityAvatar
+                          avatarKey={option.avatarKey}
+                          fullName={option.label}
+                          size="xs"
+                        />
+                      )}
+                      <span className="min-w-0 flex-1 truncate text-sm">{option.label}</span>
+                      <CheckIcon
+                        className={cn(
+                          'size-4 shrink-0',
+                          value === option.value ? 'opacity-100' : 'opacity-0',
+                        )}
+                      />
+                    </CommandItem>
+                  ),
+                )}
+              </CommandGroup>
+            ))}
           </CommandList>
+          {footer ? (
+            <p className="border-t border-border px-3 py-2.5 text-[13px] leading-[18px] text-muted-foreground">
+              {footer}
+            </p>
+          ) : null}
         </Command>
       </PopoverContent>
     </Popover>
