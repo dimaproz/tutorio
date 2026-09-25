@@ -30,7 +30,11 @@ export function lessonFixture(fields: Partial<LessonDetailResponse> = {}): Lesso
     cancellationDeadlineHours: 24,
     attendance: null,
     charges: [],
-    student: { id: 'd6bf671d-7a0f-4cf3-8a67-000000000001', fullName: 'Anna Shevchenko' },
+    student: {
+      id: 'd6bf671d-7a0f-4cf3-8a67-000000000001',
+      fullName: 'Anna Shevchenko',
+      avatarKey: 'user-1',
+    },
     group: null,
     teacher: { id: '55555555-5555-4555-8555-555555555555', name: 'Dmytro Tutor', color: null },
     createdAt: '2026-08-25T08:03:00.000Z',

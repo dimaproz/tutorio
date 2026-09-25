@@ -40,10 +40,13 @@ export function MoveDialog({
   onOpenChange,
   busy,
   onConfirm,
+  defaultScope = 'this_and_following',
 }: {
   lesson: LessonDetailResponse;
   schedule: ScheduleResponse;
   target: { startsAtUtc: string; durationMin?: number } | null;
+  /** The choice it opens on: the panel's edit asks about the schedule, a drop about one lesson. */
+  defaultScope?: RescheduleScopeDto;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   busy: boolean;
@@ -54,7 +57,7 @@ export function MoveDialog({
   const format = useFormatter();
   const dates = useLessonDates();
   const mobile = useIsMobile();
-  const [scope, setScope] = useState<RescheduleScopeDto>('this_and_following');
+  const [scope, setScope] = useState<RescheduleScopeDto>(defaultScope);
 
   const change = useMemo(
     () =>
