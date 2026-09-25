@@ -587,27 +587,36 @@ describe('Work Packet 6.4 phase 3: billing core (e2e)', () => {
     ).toBe('PAID');
   });
 
-  it('archives a package: it pays for nothing new and keeps its history', async () => {
+  it('deletes only an unused package; the deleted one pays for nothing (S07)', async () => {
     const studentId = await newStudent('Archive');
     const pkg = await sell({ studentId, lessonsTotal: 2 });
     const paid = await held(studentId, -2);
-    await server()
+    // A package that paid for a lesson is history: it is refunded, not deleted.
+    const refused = await server()
       .delete(`/api/packages/${pkg.id}`)
       .set('Authorization', bearer())
-      .expect(204);
-    const later = await held(studentId, -1);
-    expect(later.charges[0]).toMatchObject({ source: 'DEBT', packageId: null });
+      .expect(409);
+    expect(refused.body.code).toBe('PACKAGE_IN_USE');
     expect(await chargesOf(paid.id)).toEqual([
       expect.objectContaining({ source: 'PACKAGE', packageId: pkg.id }),
     ]);
+
+    const other = await newStudent('Archive unused');
+    const unused = await sell({ studentId: other, lessonsTotal: 2 });
+    await server()
+      .delete(`/api/packages/${unused.id}`)
+      .set('Authorization', bearer())
+      .expect(204);
+    const later = await held(other, -1);
+    expect(later.charges[0]).toMatchObject({ source: 'DEBT', packageId: null });
     const archived = await server()
-      .get(`/api/packages?state=deleted&studentId=${studentId}`)
+      .get(`/api/packages?state=deleted&studentId=${other}`)
       .set('Authorization', bearer())
       .expect(200);
     expect(archived.body.items[0]).toMatchObject({
-      id: pkg.id,
-      consumedCredits: 1,
-      remainingCredits: 1,
+      id: unused.id,
+      consumedCredits: 0,
+      remainingCredits: 2,
     });
   });
 
