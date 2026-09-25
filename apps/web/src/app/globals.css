@@ -66,6 +66,10 @@
   --color-tint-danger: var(--tint-danger);
   --color-tint-danger-foreground: var(--tint-danger-foreground);
   --color-danger-mark: var(--danger-mark);
+  /* Lesson types on the calendar (S03): an event's colour is its kind. */
+  --color-lesson-group: var(--lesson-group);
+  --color-lesson-makeup: var(--lesson-makeup);
+  --color-hatch: var(--hatch);
   --color-status-active: var(--status-active);
   --color-status-hold: var(--status-hold);
   --color-status-archived: var(--status-archived);
@@ -216,6 +220,9 @@
   --tint-danger: #ffede6;
   --tint-danger-foreground: #b23c16;
   --danger-mark: #ff8a65;
+  --lesson-group: #0e9f8e;
+  --lesson-makeup: #e07a1f;
+  --hatch: #e3e6ef;
   --status-active: #22a06b;
   --status-hold: #e8a33d;
   --status-archived: #aab0c4;
@@ -376,6 +383,9 @@
 
   /* Marks and lifecycle --------------------------------------------------- */
   --danger-mark: #ff9b7a;
+  --lesson-group: #34c3b0;
+  --lesson-makeup: #f59d52;
+  --hatch: #2c3150;
   --hold-mark: #f0c36a;
   --status-active: #4fd39f;
   --status-hold: #f0b95e;
@@ -484,4 +494,22 @@
   &::-webkit-scrollbar {
     display: none;
   }
+}
+
+/* A calendar event's kind (S03): individual in the brand colour, a group in
+   teal, a makeup in orange. The card reads `--lesson` for its bar, border,
+   fill and time, so one class sets them all in either theme. */
+@utility lesson-individual {
+  --lesson: var(--brand);
+}
+@utility lesson-group {
+  --lesson: var(--lesson-group);
+}
+@utility lesson-makeup {
+  --lesson: var(--lesson-makeup);
+}
+
+/* Grey diagonal hatching: a cancelled lesson on the calendar. */
+@utility bg-hatch {
+  background-image: repeating-linear-gradient(135deg, var(--hatch) 0 5px, transparent 5px 11px);
 }

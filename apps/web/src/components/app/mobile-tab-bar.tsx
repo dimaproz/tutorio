@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
+  CalendarDaysIcon,
   EllipsisVerticalIcon,
   HeartIcon,
   LayersIcon,
@@ -16,6 +17,7 @@ import { canUseBusinessRoutes, isNavigationActive, type NavigationKey } from './
 import { useSession } from './session-provider';
 
 const TABS: { key: NavigationKey; href: string; icon: LucideIcon; exact?: boolean }[] = [
+  { key: 'calendar', href: '/app/calendar', icon: CalendarDaysIcon },
   { key: 'students', href: '/app/students', icon: UsersIcon },
   { key: 'groups', href: '/app/groups', icon: LayersIcon },
   { key: 'parents', href: '/app/parents', icon: HeartIcon },

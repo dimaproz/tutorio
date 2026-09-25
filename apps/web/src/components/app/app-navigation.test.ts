@@ -11,11 +11,11 @@ describe('application navigation', () => {
   it('lists the rebuilt destinations in order and keeps detail routes active', () => {
     const items = getNavigationItems({ isOwner: true, isSolo: false });
 
-    expect(items.map((item) => item.key)).toEqual(['students', 'groups', 'parents']);
+    expect(items.map((item) => item.key)).toEqual(['calendar', 'students', 'groups', 'parents']);
     expect(
-      isNavigationActive('/app/students/83d4d4e3-5e9b-4fd0-b9cc-8d6e5f3d0e8e', items[0]!),
+      isNavigationActive('/app/students/83d4d4e3-5e9b-4fd0-b9cc-8d6e5f3d0e8e', items[1]!),
     ).toBe(true);
-    expect(isNavigationActive('/app/groups', items[0]!)).toBe(false);
+    expect(isNavigationActive('/app/groups', items[1]!)).toBe(false);
   });
 
   it('gives a non-owner no destinations at all, matching the owner-only API', () => {

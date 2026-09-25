@@ -1,9 +1,9 @@
 import type { LucideIcon } from 'lucide-react';
-import { HeartIcon, LayersIcon, UsersIcon } from 'lucide-react';
+import { CalendarDaysIcon, HeartIcon, LayersIcon, UsersIcon } from 'lucide-react';
 
-// The rebuilt destinations only; the calendar, lessons, packages, teachers,
-// home and settings return with their new screens.
-export type NavigationKey = 'students' | 'groups' | 'parents';
+// The rebuilt destinations only; lessons, packages, teachers, home and
+// settings return with their new screens.
+export type NavigationKey = 'calendar' | 'students' | 'groups' | 'parents';
 
 export type NavigationItem = {
   key: NavigationKey;
@@ -32,6 +32,7 @@ export function canUseBusinessRoutes(role: string): boolean {
 // One flat list, in the order the design reads it. Every destination reads
 // business data, so every one is owner-only.
 const navigationItems: NavigationItem[] = [
+  { key: 'calendar', href: '/app/calendar', icon: CalendarDaysIcon, ownerOnly: true },
   { key: 'students', href: '/app/students', icon: UsersIcon, ownerOnly: true },
   { key: 'groups', href: '/app/groups', icon: LayersIcon, ownerOnly: true },
   { key: 'parents', href: '/app/parents', icon: HeartIcon, ownerOnly: true },

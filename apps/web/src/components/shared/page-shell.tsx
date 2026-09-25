@@ -8,14 +8,16 @@ import { cn } from '@/lib/utils';
 
 const TITLE_SIZE = {
   default: 'text-xl font-semibold tracking-tight md:text-2xl',
+  md: 'text-[26px] leading-8 font-semibold tracking-[-0.03em] md:text-[32px] md:leading-[38px]',
   lg: 'text-[34px] leading-[38px] font-semibold tracking-[-0.035em] md:text-5xl md:leading-[52px]',
   xl: 'text-[40px] leading-[42px] font-semibold tracking-[-0.04em] md:text-[64px] md:leading-16',
 } as const;
 
 /**
  * The page title block: the one `h1`, a subtitle and the page's primary
- * actions aligned to the title's baseline. `lg` titles a form page, `xl` a
- * collection; `default` remains for screens not yet migrated to Studio.
+ * actions aligned to the title's baseline. `md` titles a working screen
+ * (the calendar), `lg` a form page, `xl` a collection; `default` remains for
+ * screens not yet migrated to Studio.
  */
 export function PageHeader({
   title,
