@@ -1026,6 +1026,26 @@ export interface paths {
         patch: operations["SchedulesController_update"];
         trace?: never;
     };
+    "/api/schedules/{scheduleId}/horizon/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview a new horizon
+         * @description Exactly what saving the horizon would do: the lessons it generates now and the last lesson booked then. A shorter horizon keeps what is booked and adds nothing. Writes nothing.
+         */
+        post: operations["SchedulesController_previewHorizon"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/schedules/{scheduleId}/changes/preview": {
         parameters: {
             query?: never;
@@ -2649,6 +2669,7 @@ export interface components {
             total: number;
             totalPages: number;
             counts: {
+                all: number;
                 unpaid: number;
                 cancelled: number;
                 noShow: number;
@@ -3204,15 +3225,22 @@ export interface components {
                 } | null;
                 /** Format: date-time */
                 nextLessonAt: string | null;
+                /** Format: date-time */
+                startsAt: string | null;
+                /** Format: date-time */
+                lastLessonAt: string | null;
                 student: {
                     /** Format: uuid */
                     id: string;
                     fullName: string;
+                    /** @enum {string|null} */
+                    avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
                 } | null;
                 group: {
                     /** Format: uuid */
                     id: string;
                     name: string;
+                    memberCount: number;
                 } | null;
                 teacher: {
                     /** Format: uuid */
@@ -3228,6 +3256,12 @@ export interface components {
             pageSize: number;
             total: number;
             totalPages: number;
+            counts: {
+                active: number;
+                changing: number;
+                ended: number;
+                all: number;
+            };
         };
         CreateScheduleDto: {
             /** Format: uuid */
@@ -3286,15 +3320,22 @@ export interface components {
             } | null;
             /** Format: date-time */
             nextLessonAt: string | null;
+            /** Format: date-time */
+            startsAt: string | null;
+            /** Format: date-time */
+            lastLessonAt: string | null;
             student: {
                 /** Format: uuid */
                 id: string;
                 fullName: string;
+                /** @enum {string|null} */
+                avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
             } | null;
             group: {
                 /** Format: uuid */
                 id: string;
                 name: string;
+                memberCount: number;
             } | null;
             teacher: {
                 /** Format: uuid */
@@ -3308,6 +3349,7 @@ export interface components {
         };
         ScheduleCreatePreviewDto: {
             created: number;
+            dates: string[];
             /** Format: date-time */
             firstLessonAt: string | null;
             /** Format: uuid */
@@ -3346,6 +3388,13 @@ export interface components {
         };
         UpdateScheduleDto: {
             horizonWeeks: number;
+        };
+        ScheduleHorizonPreviewDto: {
+            horizonWeeks: number;
+            added: number;
+            dates: string[];
+            /** Format: date-time */
+            lastLessonAt: string | null;
         };
         ScheduleChangeDto: {
             /** Format: date-time */
@@ -3403,6 +3452,29 @@ export interface components {
                     fullName: string;
                 }[];
             }[];
+            moves: {
+                /** Format: uuid */
+                lessonId: string;
+                /** Format: date-time */
+                startsAtUtc: string;
+                /** Format: date-time */
+                toStartsAtUtc: string;
+            }[];
+            removals: {
+                /** Format: uuid */
+                lessonId: string;
+                /** Format: date-time */
+                startsAtUtc: string;
+            }[];
+            creates: string[];
+            keptLessons: {
+                /** Format: uuid */
+                lessonId: string;
+                /** Format: date-time */
+                startsAtUtc: string;
+                /** @enum {string} */
+                reason: "HELD" | "CANCELLED" | "NO_SHOW" | "MOVED" | "MARKED";
+            }[];
         };
         ScheduleChangeResultDto: {
             schedule: {
@@ -3439,15 +3511,22 @@ export interface components {
                 } | null;
                 /** Format: date-time */
                 nextLessonAt: string | null;
+                /** Format: date-time */
+                startsAt: string | null;
+                /** Format: date-time */
+                lastLessonAt: string | null;
                 student: {
                     /** Format: uuid */
                     id: string;
                     fullName: string;
+                    /** @enum {string|null} */
+                    avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
                 } | null;
                 group: {
                     /** Format: uuid */
                     id: string;
                     name: string;
+                    memberCount: number;
                 } | null;
                 teacher: {
                     /** Format: uuid */
@@ -3505,6 +3584,29 @@ export interface components {
                         id: string;
                         fullName: string;
                     }[];
+                }[];
+                moves: {
+                    /** Format: uuid */
+                    lessonId: string;
+                    /** Format: date-time */
+                    startsAtUtc: string;
+                    /** Format: date-time */
+                    toStartsAtUtc: string;
+                }[];
+                removals: {
+                    /** Format: uuid */
+                    lessonId: string;
+                    /** Format: date-time */
+                    startsAtUtc: string;
+                }[];
+                creates: string[];
+                keptLessons: {
+                    /** Format: uuid */
+                    lessonId: string;
+                    /** Format: date-time */
+                    startsAtUtc: string;
+                    /** @enum {string} */
+                    reason: "HELD" | "CANCELLED" | "NO_SHOW" | "MOVED" | "MARKED";
                 }[];
             };
         };
@@ -5984,7 +6086,8 @@ export interface operations {
                 teacherId?: string;
                 studentId?: string;
                 groupId?: string;
-                status?: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED" | "NO_SHOW";
+                status?: ("SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED" | "NO_SHOW")[];
+                search?: string;
                 filter?: "unpaid" | "cancelled" | "no_show" | "needs_makeup";
                 order?: "asc" | "desc";
             };
@@ -6647,7 +6750,10 @@ export interface operations {
                 studentId?: string;
                 groupId?: string;
                 teacherId?: string;
-                state?: "ACTIVE" | "ENDED" | "all";
+                state?: "ACTIVE" | "CHANGING" | "ENDED" | "all";
+                kind?: "individual" | "group";
+                search?: string;
+                sort?: "created" | "next";
             };
             header?: never;
             path?: never;
@@ -6807,6 +6913,48 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ScheduleDto"];
+                };
+            };
+            /** @description OWNER role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    SchedulesController_previewHorizon: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                scheduleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateScheduleDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleHorizonPreviewDto"];
                 };
             };
             /** @description OWNER role required */

@@ -3516,14 +3516,29 @@
             "required": false,
             "in": "query",
             "schema": {
-              "type": "string",
-              "enum": [
-                "SCHEDULED",
-                "COMPLETED",
-                "CANCELLED_CHARGED",
-                "CANCELLED_UNCHARGED",
-                "NO_SHOW"
-              ]
+              "minItems": 1,
+              "maxItems": 5,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "SCHEDULED",
+                  "COMPLETED",
+                  "CANCELLED_CHARGED",
+                  "CANCELLED_UNCHARGED",
+                  "NO_SHOW"
+                ]
+              }
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minLength": 1,
+              "maxLength": 120,
+              "type": "string"
             }
           },
           {
@@ -4745,8 +4760,44 @@
               "type": "string",
               "enum": [
                 "ACTIVE",
+                "CHANGING",
                 "ENDED",
                 "all"
+              ]
+            }
+          },
+          {
+            "name": "kind",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "individual",
+                "group"
+              ]
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minLength": 1,
+              "maxLength": 120,
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "created",
+              "type": "string",
+              "enum": [
+                "created",
+                "next"
               ]
             }
           }
@@ -5029,6 +5080,73 @@
           }
         ],
         "summary": "Change how far ahead a schedule generates lessons",
+        "tags": [
+          "scheduling"
+        ]
+      }
+    },
+    "/api/schedules/{scheduleId}/horizon/preview": {
+      "post": {
+        "description": "Exactly what saving the horizon would do: the lessons it generates now and the last lesson booked then. A shorter horizon keeps what is booked and adds nothing. Writes nothing.",
+        "operationId": "SchedulesController_previewHorizon",
+        "parameters": [
+          {
+            "name": "scheduleId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateScheduleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleHorizonPreviewDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Preview a new horizon",
         "tags": [
           "scheduling"
         ]
@@ -11900,6 +12018,11 @@
           "counts": {
             "type": "object",
             "properties": {
+              "all": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
               "unpaid": {
                 "type": "integer",
                 "minimum": 0,
@@ -11922,6 +12045,7 @@
               }
             },
             "required": [
+              "all",
               "unpaid",
               "cancelled",
               "noShow",
@@ -14049,6 +14173,16 @@
                   "format": "date-time",
                   "nullable": true
                 },
+                "startsAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                },
+                "lastLessonAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                },
                 "student": {
                   "type": "object",
                   "properties": {
@@ -14058,11 +14192,28 @@
                     },
                     "fullName": {
                       "type": "string"
+                    },
+                    "avatarKey": {
+                      "type": "string",
+                      "enum": [
+                        "user-1",
+                        "user-2",
+                        "user-3",
+                        "user-4",
+                        "user-5",
+                        "user-6",
+                        "user-7",
+                        "user-8",
+                        "user-9",
+                        "user-10"
+                      ],
+                      "nullable": true
                     }
                   },
                   "required": [
                     "id",
-                    "fullName"
+                    "fullName",
+                    "avatarKey"
                   ],
                   "nullable": true
                 },
@@ -14075,11 +14226,17 @@
                     },
                     "name": {
                       "type": "string"
+                    },
+                    "memberCount": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": false
                     }
                   },
                   "required": [
                     "id",
-                    "name"
+                    "name",
+                    "memberCount"
                   ],
                   "nullable": true
                 },
@@ -14122,6 +14279,8 @@
                 "slots",
                 "nextChange",
                 "nextLessonAt",
+                "startsAt",
+                "lastLessonAt",
                 "student",
                 "group",
                 "teacher",
@@ -14149,6 +14308,37 @@
             "type": "integer",
             "minimum": 0,
             "exclusiveMinimum": false
+          },
+          "counts": {
+            "type": "object",
+            "properties": {
+              "active": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "changing": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "ended": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              },
+              "all": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
+              }
+            },
+            "required": [
+              "active",
+              "changing",
+              "ended",
+              "all"
+            ]
           }
         },
         "required": [
@@ -14156,7 +14346,8 @@
           "page",
           "pageSize",
           "total",
-          "totalPages"
+          "totalPages",
+          "counts"
         ]
       },
       "CreateScheduleDto": {
@@ -14381,6 +14572,16 @@
             "format": "date-time",
             "nullable": true
           },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastLessonAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "student": {
             "type": "object",
             "properties": {
@@ -14390,11 +14591,28 @@
               },
               "fullName": {
                 "type": "string"
+              },
+              "avatarKey": {
+                "type": "string",
+                "enum": [
+                  "user-1",
+                  "user-2",
+                  "user-3",
+                  "user-4",
+                  "user-5",
+                  "user-6",
+                  "user-7",
+                  "user-8",
+                  "user-9",
+                  "user-10"
+                ],
+                "nullable": true
               }
             },
             "required": [
               "id",
-              "fullName"
+              "fullName",
+              "avatarKey"
             ],
             "nullable": true
           },
@@ -14407,11 +14625,17 @@
               },
               "name": {
                 "type": "string"
+              },
+              "memberCount": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
               }
             },
             "required": [
               "id",
-              "name"
+              "name",
+              "memberCount"
             ],
             "nullable": true
           },
@@ -14454,6 +14678,8 @@
           "slots",
           "nextChange",
           "nextLessonAt",
+          "startsAt",
+          "lastLessonAt",
           "student",
           "group",
           "teacher",
@@ -14468,6 +14694,13 @@
             "type": "integer",
             "minimum": 0,
             "exclusiveMinimum": false
+          },
+          "dates": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "date-time"
+            }
           },
           "firstLessonAt": {
             "type": "string",
@@ -14596,6 +14829,7 @@
         },
         "required": [
           "created",
+          "dates",
           "firstLessonAt",
           "existingScheduleId",
           "conflicts"
@@ -14614,6 +14848,41 @@
         },
         "required": [
           "horizonWeeks"
+        ]
+      },
+      "ScheduleHorizonPreviewDto": {
+        "type": "object",
+        "properties": {
+          "horizonWeeks": {
+            "type": "integer",
+            "minimum": 1,
+            "exclusiveMinimum": false,
+            "maximum": 26,
+            "exclusiveMaximum": false
+          },
+          "added": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "dates": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "lastLessonAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "horizonWeeks",
+          "added",
+          "dates",
+          "lastLessonAt"
         ]
       },
       "ScheduleChangeDto": {
@@ -14835,6 +15104,89 @@
                 "students"
               ]
             }
+          },
+          "moves": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "lessonId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "startsAtUtc": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "toStartsAtUtc": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "lessonId",
+                "startsAtUtc",
+                "toStartsAtUtc"
+              ]
+            }
+          },
+          "removals": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "lessonId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "startsAtUtc": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "lessonId",
+                "startsAtUtc"
+              ]
+            }
+          },
+          "creates": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "keptLessons": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "lessonId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "startsAtUtc": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "reason": {
+                  "type": "string",
+                  "enum": [
+                    "HELD",
+                    "CANCELLED",
+                    "NO_SHOW",
+                    "MOVED",
+                    "MARKED"
+                  ]
+                }
+              },
+              "required": [
+                "lessonId",
+                "startsAtUtc",
+                "reason"
+              ]
+            }
           }
         },
         "required": [
@@ -14845,7 +15197,11 @@
           "removed",
           "kept",
           "notesLost",
-          "conflicts"
+          "conflicts",
+          "moves",
+          "removals",
+          "creates",
+          "keptLessons"
         ]
       },
       "ScheduleChangeResultDto": {
@@ -14975,6 +15331,16 @@
                 "format": "date-time",
                 "nullable": true
               },
+              "startsAt": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "lastLessonAt": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
               "student": {
                 "type": "object",
                 "properties": {
@@ -14984,11 +15350,28 @@
                   },
                   "fullName": {
                     "type": "string"
+                  },
+                  "avatarKey": {
+                    "type": "string",
+                    "enum": [
+                      "user-1",
+                      "user-2",
+                      "user-3",
+                      "user-4",
+                      "user-5",
+                      "user-6",
+                      "user-7",
+                      "user-8",
+                      "user-9",
+                      "user-10"
+                    ],
+                    "nullable": true
                   }
                 },
                 "required": [
                   "id",
-                  "fullName"
+                  "fullName",
+                  "avatarKey"
                 ],
                 "nullable": true
               },
@@ -15001,11 +15384,17 @@
                   },
                   "name": {
                     "type": "string"
+                  },
+                  "memberCount": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "exclusiveMinimum": false
                   }
                 },
                 "required": [
                   "id",
-                  "name"
+                  "name",
+                  "memberCount"
                 ],
                 "nullable": true
               },
@@ -15048,6 +15437,8 @@
               "slots",
               "nextChange",
               "nextLessonAt",
+              "startsAt",
+              "lastLessonAt",
               "student",
               "group",
               "teacher",
@@ -15229,6 +15620,89 @@
                     "students"
                   ]
                 }
+              },
+              "moves": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "lessonId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "startsAtUtc": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "toStartsAtUtc": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "lessonId",
+                    "startsAtUtc",
+                    "toStartsAtUtc"
+                  ]
+                }
+              },
+              "removals": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "lessonId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "startsAtUtc": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "lessonId",
+                    "startsAtUtc"
+                  ]
+                }
+              },
+              "creates": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "keptLessons": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "lessonId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "startsAtUtc": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "reason": {
+                      "type": "string",
+                      "enum": [
+                        "HELD",
+                        "CANCELLED",
+                        "NO_SHOW",
+                        "MOVED",
+                        "MARKED"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "lessonId",
+                    "startsAtUtc",
+                    "reason"
+                  ]
+                }
               }
             },
             "required": [
@@ -15239,7 +15713,11 @@
               "removed",
               "kept",
               "notesLost",
-              "conflicts"
+              "conflicts",
+              "moves",
+              "removals",
+              "creates",
+              "keptLessons"
             ]
           }
         },
