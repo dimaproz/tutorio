@@ -21,6 +21,7 @@ import {
   createLessonCreateRoutes,
   type LessonCreateStoryOptions,
 } from './lesson-create-story-backend';
+import { createLessonListRoutes, type LessonListStoryOptions } from './lesson-list-story-backend';
 import { createLessonRoutes, type LessonStoryOptions } from './lesson-story-backend';
 
 /**
@@ -347,6 +348,7 @@ export const SAMPLE_LESSONS: LessonResponse[] = [
 
 export type StoryBackendOptions = GroupStoryOptions &
   CalendarStoryOptions &
+  LessonListStoryOptions &
   LessonStoryOptions &
   LessonCreateStoryOptions & {
     students?: SampleStudent[];
@@ -484,6 +486,7 @@ function createHandler(options: StoryBackendOptions) {
   const detailOf = (item: SampleStudent) => toDetail(item, parents, links);
   const groupRoutes = createGroupRoutes(options);
   const calendarRoutes = createCalendarRoutes(options);
+  const lessonListRoutes = createLessonListRoutes(options);
   const lessonRoutes = createLessonRoutes(options);
   const lessonCreateRoutes = createLessonCreateRoutes(options);
   const settle = () =>
@@ -511,6 +514,8 @@ function createHandler(options: StoryBackendOptions) {
     }
 
     const readBody = () => JSON.parse(String(init?.body ?? '{}'));
+    const lessonListResponse = await lessonListRoutes(path, method, query, readBody);
+    if (lessonListResponse) return lessonListResponse;
     const calendarResponse = await calendarRoutes(path, method, query, readBody);
     if (calendarResponse) return calendarResponse;
     const lessonCreateResponse = await lessonCreateRoutes(path, method, query);

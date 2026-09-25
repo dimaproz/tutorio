@@ -1,12 +1,21 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ArrowRightIcon, CalendarDaysIcon, InfoIcon, PlusIcon, TreePalmIcon } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import {
+  ArrowRightIcon,
+  CalendarDaysIcon,
+  CircleSlashIcon,
+  InfoIcon,
+  PlusIcon,
+  TreePalmIcon,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { EntityAvatar } from '@/components/shared/entity-avatar';
 import { PageHeader } from '@/components/shared/page-shell';
 import { Button } from '@/components/ui/button';
 import {
+  BulkCancelDialog,
   LessonCreateDialog,
   LessonPanel,
   useLessonMove,
@@ -51,7 +60,7 @@ import {
   useNow,
   usePeriodTitle,
 } from './use-calendar-state';
-import { useCalendarFormatter } from './use-calendar-formatter';
+import { useLocalFormatter } from '@/lib/i18n/local-formatter';
 
 const LESSON_LINKS: LessonPanelLinks = {
   studentHref: (id) => `/app/students/${id}`,
@@ -91,7 +100,7 @@ function useCalendarKeys(onStep: (step: 1 | -1) => void, onToday: () => void) {
  */
 export function CalendarPage({ nowMs: pinnedNow }: { nowMs?: number } = {}) {
   const t = useTranslations('calendar');
-  const format = useCalendarFormatter();
+  const format = useLocalFormatter();
   const mobile = useIsMobile();
   const nowMs = useNow(pinnedNow);
   const state = useCalendarState({ mobile, nowMs });
@@ -102,6 +111,8 @@ export function CalendarPage({ nowMs: pinnedNow }: { nowMs?: number } = {}) {
   const [creating, setCreating] = useState<Creating | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const router = useRouter();
   useCalendarKeys(state.step, state.today);
 
   const { view, anchor, period, visible, all } = state;
@@ -164,6 +175,16 @@ export function CalendarPage({ nowMs: pinnedNow }: { nowMs?: number } = {}) {
         nowMs={pinnedNow}
       />
       {mover.dialogs}
+      <BulkCancelDialog
+        open={cancelling}
+        onOpenChange={setCancelling}
+        nowMs={pinnedNow}
+        onShow={(range) =>
+          router.push(
+            `/app/lessons?from=${range.from}${range.to === range.from ? '' : `&to=${range.to}`}`,
+          )
+        }
+      />
     </>
   );
 
@@ -181,6 +202,7 @@ export function CalendarPage({ nowMs: pinnedNow }: { nowMs?: number } = {}) {
           onStep={state.step}
           filterCount={filterCount}
           onOpenFilters={() => setFiltersOpen(true)}
+          onBulkCancel={() => setCancelling(true)}
         />
 
         {view === 'day' ? (
@@ -387,10 +409,16 @@ export function CalendarPage({ nowMs: pinnedNow }: { nowMs?: number } = {}) {
           selected: state.selectedTeachers,
         })}
         action={
-          <Button type="button" size="lg" onClick={() => newLesson()}>
-            <PlusIcon data-icon="inline-start" />
-            {t('newLesson')}
-          </Button>
+          <>
+            <Button type="button" size="lg" variant="outline" onClick={() => setCancelling(true)}>
+              <CircleSlashIcon data-icon="inline-start" />
+              {t('bulkCancel')}
+            </Button>
+            <Button type="button" size="lg" onClick={() => newLesson()}>
+              <PlusIcon data-icon="inline-start" />
+              {t('newLesson')}
+            </Button>
+          </>
         }
       />
       <CalendarToolbar

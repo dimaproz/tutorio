@@ -5,6 +5,7 @@ import {
   AlertCircleIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  CircleSlashIcon,
   RotateCcwIcon,
   SlidersHorizontalIcon,
 } from 'lucide-react';
@@ -77,8 +78,9 @@ export function CalendarToolbar({
 }
 
 /**
- * The phone's header block: «Календар» with «Сьогодні», the view switch, and
- * the date row with previous, next and the filter button.
+ * The phone's header block: «Календар» with «Скасування занять» and
+ * «Сьогодні», the view switch, and the date row with previous, next and the
+ * filter button.
  */
 export function CalendarPhoneBar({
   view,
@@ -88,6 +90,7 @@ export function CalendarPhoneBar({
   onStep,
   filterCount,
   onOpenFilters,
+  onBulkCancel,
 }: {
   view: CalendarView;
   onViewChange: (view: CalendarView) => void;
@@ -96,6 +99,8 @@ export function CalendarPhoneBar({
   onStep: (step: 1 | -1) => void;
   filterCount: number;
   onOpenFilters: () => void;
+  /** «Скасування занять» (S04): the round button left of «Сьогодні». */
+  onBulkCancel?: () => void;
 }) {
   const t = useTranslations('calendar');
   const views = useViewItems();
@@ -103,9 +108,20 @@ export function CalendarPhoneBar({
     <div data-slot="calendar-phone-bar" className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-[26px] leading-8 font-semibold tracking-[-0.03em]">{t('title')}</h1>
-        <Button type="button" variant="outline" onClick={onToday}>
-          {t('today')}
-        </Button>
+        <div className="flex items-center gap-2">
+          {onBulkCancel ? (
+            <IconButton
+              icon={<CircleSlashIcon />}
+              label={t('bulkCancel')}
+              tone="paper"
+              border
+              onClick={onBulkCancel}
+            />
+          ) : null}
+          <Button type="button" variant="outline" onClick={onToday}>
+            {t('today')}
+          </Button>
+        </div>
       </div>
       <Segmented
         label={t('viewLabel')}
