@@ -4,7641 +4,8034 @@
  */
 
 export interface paths {
-    "/api/health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["HealthController_check"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/auth/register": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Register a new account
-         * @description Creates the user, their workspace, an OWNER membership and a session in one transaction.
-         */
-        post: operations["AuthController_register"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/auth/login": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Log in with email and password
-         * @description Unknown email and wrong password return the same INVALID_CREDENTIALS response.
-         */
-        post: operations["AuthController_login"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/auth/refresh": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Rotate the refresh token
-         * @description Returns a new token pair. The token rotated away within the last 30 seconds returns the already-issued successor (parallel requests share one rotation); any other replay of a rotated token revokes the session.
-         */
-        post: operations["AuthController_refresh"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/auth/logout": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Revoke the session
-         * @description Idempotent — unknown or already revoked tokens still return 204.
-         */
-        post: operations["AuthController_logout"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/auth/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get the authenticated user, active workspace and role */
-        get: operations["AuthController_me"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/workspaces/current": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get the active workspace and the current member role */
-        get: operations["WorkspacesController_getCurrent"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/workspaces/current/settings": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Update workspace defaults
-         * @description Owner only. Existing enrollments keep their configured currency and price; enrollments without a custom deadline inherit the new default. Creates a WORKSPACE UPDATE audit entry.
-         */
-        patch: operations["WorkspacesController_updateSettings"];
-        trace?: never;
-    };
-    "/api/workspaces/current/members": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List workspace members (teacher selector)
-         * @description Read-only roster; member management is out of scope.
-         */
-        get: operations["WorkspacesController_listMembers"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/audit-logs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List workspace audit log entries (owner only)
-         * @description Newest-first, paginated. Supports filtering by entity, entityId, actor, action and a createdAt time range.
-         */
-        get: operations["AuditController_list"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/students": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List workspace students
-         * @description Paginated summaries with active enrollment counts and group names. Search covers full name, contacts and Telegram username. Students are archived, never soft-deleted: state=active lists every student that is not ARCHIVED, state=deleted the ARCHIVED ones and state=all every status; an explicit status wins. groupId matches live memberships (ACTIVE or PAUSED, group not archived). state=deleted|all is owner-only.
-         */
-        get: operations["StudentsController_list"];
-        put?: never;
-        /** Create a student */
-        post: operations["StudentsController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/students/summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Count workspace students by status
-         * @description One grouped query for the collection tabs and header: `all` counts every student that is not ARCHIVED; ACTIVE, ON_HOLD and ARCHIVED count each status.
-         */
-        get: operations["StudentsController_summary"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/students/{studentId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get a student profile with enrollment summaries */
-        get: operations["StudentsController_getDetail"];
-        put?: never;
-        post?: never;
-        /**
-         * Archive a student
-         * @description Owner-only and reversible. Keeps business history and suspends only the student's future individual schedule.
-         */
-        delete: operations["StudentsController_remove"];
-        options?: never;
-        head?: never;
-        /**
-         * Update a student
-         * @description PATCH semantics: omitted fields stay unchanged, null clears an optional field. A no-op update creates no audit entry.
-         */
-        patch: operations["StudentsController_update"];
-        trace?: never;
-    };
-    "/api/students/{studentId}/billing": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * How each of the student directions is paid
-         * @description Every direction with its mode, rate, packages and credits left, lessons on debt, the pay-per-lesson balance and the credit warning, plus what is owed and paid ahead per currency.
-         */
-        get: operations["StudentsController_getBilling"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/students/{studentId}/restore": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Restore an archived student (owner only) */
-        post: operations["StudentsController_restore"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/students/{studentId}/permanently": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * Permanently delete an unused student (owner only)
-         * @description Irreversible. Returns STUDENT_HAS_BUSINESS_HISTORY when lessons, enrollments, packages, payments, charges, or credits exist.
-         */
-        delete: operations["StudentsController_removePermanently"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/billing/warnings": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Directions that are running out of credits
-         * @description Every live direction paid by packages with lessons on debt, no credits left, or no more than the studio threshold left (L-82).
-         */
-        get: operations["BillingController_listWarnings"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/pauses": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List pauses
-         * @description Current (scheduled or running) pauses by default.
-         */
-        get: operations["PausesController_list"];
-        put?: never;
-        /**
-         * Pause a student or one direction
-         * @description Takes the individual lessons in the window out, keeps the student out of group lessons and charges, and pushes the packages valid at its start by its length (an open pause does that when it ends).
-         */
-        post: operations["PausesController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/pauses/{pauseId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get a pause */
-        get: operations["PausesController_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/pauses/{pauseId}/end": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * End a pause now, or cancel one that has not begun
-         * @description Brings its lessons from now on back (checked for teacher conflicts unless force) and keeps only the package extension it used.
-         */
-        post: operations["PausesController_end"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/parents": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List workspace parents
-         * @description Paginated summaries with each parent’s linked-student roster. Search covers full name, email, phone and Telegram username. studentId narrows to one student’s parents; linked=none keeps only parents with no live linked student and is ignored with studentId. sort=fullName|createdAt with order sorts the whole collection. state=deleted|all is owner-only.
-         */
-        get: operations["ParentsController_list"];
-        put?: never;
-        /** Create a parent */
-        post: operations["ParentsController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/parents/{parentId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get a parent with their linked-student roster */
-        get: operations["ParentsController_getDetail"];
-        put?: never;
-        post?: never;
-        /**
-         * Permanently delete a parent
-         * @description Irreversible. Removes the parent together with its student links. There is no trash and no restore.
-         */
-        delete: operations["ParentsController_remove"];
-        options?: never;
-        head?: never;
-        /**
-         * Update a parent
-         * @description PATCH semantics: omitted fields stay unchanged, null clears an optional field. A no-op update creates no audit entry. Returns the parent detail with its live student roster.
-         */
-        patch: operations["ParentsController_update"];
-        trace?: never;
-    };
-    "/api/teachers": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List workspace teachers
-         * @description Paginated; search + status filter. state=deleted|all is owner-only.
-         */
-        get: operations["TeachersController_list"];
-        put?: never;
-        /** Create a teacher profile */
-        post: operations["TeachersController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/teachers/{teacherId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get a teacher profile */
-        get: operations["TeachersController_getDetail"];
-        put?: never;
-        post?: never;
-        /**
-         * Soft-delete a teacher
-         * @description Hides the teacher from pickers; enrollments/lessons keep the reference.
-         */
-        delete: operations["TeachersController_remove"];
-        options?: never;
-        head?: never;
-        /** Update a teacher */
-        patch: operations["TeachersController_update"];
-        trace?: never;
-    };
-    "/api/teachers/{teacherId}/restore": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Restore a soft-deleted teacher */
-        post: operations["TeachersController_restore"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/groups": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List workspace groups
-         * @description Paginated rows with the live roster, schedule, teacher, next lesson and whether money is outstanding. Filters: search, state (deleted|all is owner-only), status, studentId, teacherId, weekday (0 = Sunday), payment=unpaid. Every filter is answered by the API.
-         */
-        get: operations["GroupsController_list"];
-        put?: never;
-        /**
-         * Create a group
-         * @description Optionally with a roster and a first recurring schedule, in one transaction. The teacher defaults to the roster teacher, then to the only active teacher of the workspace. A schedule needs a teacher (400 GROUP_TEACHER_REQUIRED) and a free calendar (409 SCHEDULE_CONFLICT).
-         */
-        post: operations["GroupsController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/groups/summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Group collection headline
-         * @description Tab counts (live, active, empty, archived) and the four metrics: students in groups, free seats, group lessons this week and today (workspace timezone) and groups with money outstanding.
-         */
-        get: operations["GroupsController_summary"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/groups/options": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Live groups by name
-         * @description Id and name of every live group, for filters and pickers.
-         */
-        get: operations["GroupsController_options"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/groups/{groupId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * The group page
-         * @description The group with its live roster, schedule, teacher, next lesson and lesson counts. An archived group stays readable so it can be restored.
-         */
-        get: operations["GroupsController_getDetail"];
-        put?: never;
-        post?: never;
-        /**
-         * Archive a group
-         * @description Owner-only and idempotent. Preserves the roster and financial history, then suspends related series and future scheduled lessons.
-         */
-        delete: operations["GroupsController_softDelete"];
-        options?: never;
-        head?: never;
-        /**
-         * Update a group
-         * @description PATCH semantics: omitted fields stay unchanged, null clears an optional field. A no-op update creates no audit entry. `students` carries the complete roster and is reconciled into enrollments in the same transaction — added students are enrolled, dropped ones are removed — so a roster edit never costs one request per student. A new `teacherId` moves the roster, the schedule and every upcoming lesson to that teacher after a clash check. `schedule` only creates the first schedule (409 GROUP_SCHEDULE_EXISTS otherwise).
-         */
-        patch: operations["GroupsController_update"];
-        trace?: never;
-    };
-    "/api/groups/{groupId}/attendance": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Group attendance over its last held lessons
-         * @description The current roster over the last `window` held lessons (default 8): tiles and one row per participant, worst first. Cancelled lessons are no one’s miss; participants on hold stay out of the group figures.
-         */
-        get: operations["GroupsController_getAttendance"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/groups/{groupId}/restore": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Restore an archived group (owner only) */
-        post: operations["GroupsController_restore"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/enrollments": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List workspace enrollments
-         * @description Paginated, newest first, with compact student/group/teacher refs and the effective cancellation deadline. Filterable by student, group, teacher and status. state=deleted|all is owner-only.
-         */
-        get: operations["EnrollmentsController_list"];
-        put?: never;
-        /**
-         * Enroll a student with a group or an individual teacher
-         * @description groupId null/omitted creates an individual enrollment. Student, group and teacher must be live records of the current workspace. An indistinguishable live duplicate is rejected with DUPLICATE_ENROLLMENT.
-         */
-        post: operations["EnrollmentsController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/enrollments/{enrollmentId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get an enrollment */
-        get: operations["EnrollmentsController_getDetail"];
-        put?: never;
-        post?: never;
-        /**
-         * Soft-delete an enrollment (move to trash)
-         * @description Idempotent. For a legitimately ended relationship prefer status=ARCHIVED, which stays visible in history.
-         */
-        delete: operations["EnrollmentsController_softDelete"];
-        options?: never;
-        head?: never;
-        /**
-         * Update enrollment billing rules or lifecycle status
-         * @description Student, group and teacher are immutable — archive and re-enroll instead. cancellationDeadlineHours null reverts to the workspace default. A no-op update creates no audit entry.
-         */
-        patch: operations["EnrollmentsController_update"];
-        trace?: never;
-    };
-    "/api/enrollments/{enrollmentId}/billing": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * How a direction is paid now
-         * @description Billing mode and rate, the credits each package has left, lessons held on debt in package mode, the pay-per-lesson balance with payments settling the oldest lessons first, and the credit warning.
-         */
-        get: operations["EnrollmentsController_getBilling"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/enrollments/{enrollmentId}/restore": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Restore a soft-deleted enrollment (owner only)
-         * @description Re-validates duplicate constraints; restoring next to an equivalent live enrollment is rejected with DUPLICATE_ENROLLMENT.
-         */
-        post: operations["EnrollmentsController_restore"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/lessons": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List lessons in a time window (calendar feed)
-         * @description Returns every non-deleted lesson with startsAtUtc in [from, to).
-         */
-        get: operations["LessonsController_list"];
-        put?: never;
-        /**
-         * Create one or many one-off lessons
-         * @description startsAt accepts several dates for bulk creation. Overlapping the teacher returns 409 SCHEDULE_CONFLICT unless force=true.
-         */
-        post: operations["LessonsController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/lessons/list": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * The Lessons list: every lesson, paged, with quick filters
-         * @description Filters by period, teacher, student (their own lessons and their groups'), group and status; `filter` narrows to unpaid, cancelled, no-show or needs-a-makeup lessons, and `counts` says how many each quick filter would show.
-         */
-        get: operations["LessonsController_listPage"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/lessons/{lessonId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * One lesson for the side panel
-         * @description The lesson with its charges, the lesson its makeup replaces or the makeup given for it, its schedule and its history, newest first.
-         */
-        get: operations["LessonsController_getDetail"];
-        put?: never;
-        post?: never;
-        /**
-         * Soft-delete a lesson
-         * @description Idempotent. A series lesson is also detached so it is not regenerated.
-         */
-        delete: operations["LessonsController_remove"];
-        options?: never;
-        head?: never;
-        /**
-         * Change a lesson
-         * @description Topic, notes, duration, teacher (a substitute for this lesson only), price and payment date. Sending null clears topic or notes; price and currency travel together. A new duration or teacher on an upcoming lesson is checked for teacher and student conflicts unless force=true. Moving a lesson in time uses /reschedule.
-         */
-        patch: operations["LessonsController_update"];
-        trace?: never;
-    };
-    "/api/lessons/bulk-cancel/preview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Preview cancelling every lesson of a period
-         * @description The scheduled lessons of one teacher (or of the whole studio) in [from, to): how many, per teacher, and the first 200. Writes nothing.
-         */
-        post: operations["LessonsController_previewBulkCancel"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/lessons/bulk-cancel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Cancel every lesson of a period
-         * @description Holiday or illness: the scheduled lessons of one teacher (or of the whole studio) in [from, to) become cancelled by the teacher, free, with the reason. Held, cancelled and no-show lessons stay.
-         */
-        post: operations["LessonsController_applyBulkCancel"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/lessons/{lessonId}/makeup": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Assign a makeup for a cancelled or no-show lesson
-         * @description Creates a linked individual lesson for the same student, with the original teacher and duration unless others are given. Exactly one of the pair is charged. 409 MAKEUP_NOT_ALLOWED for a group lesson or one that was not cancelled or missed, MAKEUP_EXISTS for a second makeup, SCHEDULE_CONFLICT unless force=true.
-         */
-        post: operations["LessonsController_createMakeup"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/lessons/{lessonId}/reschedule": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Reschedule a lesson
-         * @description scope=this detaches and moves a single lesson; scope=this_and_following shifts the series time onward. Conflicts return 409 unless force=true.
-         */
-        patch: operations["LessonsController_reschedule"];
-        trace?: never;
-    };
-    "/api/lessons/{lessonId}/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Change a lesson status
-         * @description Enforces the lesson state machine. Cancelling requires cancelledBy. Charged terminal states consume one package credit and restoration appends an exact compensation.
-         */
-        patch: operations["LessonsController_transition"];
-        trace?: never;
-    };
-    "/api/lessons/{lessonId}/attendance": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * A lesson's participants and their attendance marks
-         * @description Participants are everyone already marked plus, for a group lesson, the live group roster.
-         */
-        get: operations["AttendanceController_get"];
-        /**
-         * Mark attendance for a lesson
-         * @description Sets the given participants’ marks; others keep theirs. Accepted once the lesson has started, unless it was cancelled (409 ATTENDANCE_NOT_MARKABLE). An unchanged mark writes nothing.
-         */
-        put: operations["AttendanceController_set"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/lesson-series": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List recurring lesson patterns
-         * @description Paginated; state=deleted|all is owner-only.
-         */
-        get: operations["SeriesController_list"];
-        put?: never;
-        /** Create a recurring pattern and materialize its lessons */
-        post: operations["SeriesController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/lesson-series/{seriesId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get a recurring pattern */
-        get: operations["SeriesController_getDetail"];
-        put?: never;
-        post?: never;
-        /**
-         * Delete a recurring pattern
-         * @description Soft-deletes the pattern and its future scheduled lessons.
-         */
-        delete: operations["SeriesController_remove"];
-        options?: never;
-        head?: never;
-        /**
-         * Update a recurring pattern
-         * @description Changing a schedule field regenerates future SCHEDULED lessons; a price-only change leaves existing lessons untouched.
-         */
-        patch: operations["SeriesController_update"];
-        trace?: never;
-    };
-    "/api/schedules": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List schedules
-         * @description Every recurring schedule of the studio: who, teacher, the days and times in force, a planned change, the horizon, the end and the next lesson. state defaults to ACTIVE.
-         */
-        get: operations["SchedulesController_list"];
-        put?: never;
-        /**
-         * Create a schedule
-         * @description For a student with one teacher, or a group (taught by its teacher). Each weekday has its own start time; lessons are generated horizonWeeks ahead and topped up daily. 409 SCHEDULE_EXISTS names the active schedule of that direction; SCHEDULE_CONFLICT lists teacher or student overlaps unless force=true.
-         */
-        post: operations["SchedulesController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/schedules/preview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Preview a new schedule
-         * @description Exactly what creating the schedule would do: the lessons generated at once within the horizon, the first one, the active schedule of the same direction or group if there is one (create would answer SCHEDULE_EXISTS), and the teacher or student overlaps. Writes nothing, and never opens a direction for a student.
-         */
-        post: operations["SchedulesController_previewCreate"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/schedules/{scheduleId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** One schedule */
-        get: operations["SchedulesController_getDetail"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Change how far ahead a schedule generates lessons */
-        patch: operations["SchedulesController_update"];
-        trace?: never;
-    };
-    "/api/schedules/{scheduleId}/horizon/preview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Preview a new horizon
-         * @description Exactly what saving the horizon would do: the lessons it generates now and the last lesson booked then. A shorter horizon keeps what is booked and adds nothing. Writes nothing.
-         */
-        post: operations["SchedulesController_previewHorizon"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/schedules/{scheduleId}/changes/preview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Preview a change of days, times or length
-         * @description Exactly what applying the change would do: lessons moved (keeping their topic and notes), unchanged, created, removed and kept, lessons whose topic or notes would be lost, and conflicts. Writes nothing.
-         */
-        post: operations["SchedulesController_previewChange"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/schedules/{scheduleId}/changes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Change days, times or length from a date
-         * @description Lessons before effectiveFrom are untouched; the ones after it move to the new times where they can. SCHEDULE_CONFLICT unless force=true.
-         */
-        post: operations["SchedulesController_change"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/schedules/{scheduleId}/stop/preview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Preview stopping a schedule from a date */
-        post: operations["SchedulesController_previewStop"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/schedules/{scheduleId}/stop": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Stop a schedule from a date
-         * @description Its scheduled lessons from that date are removed; lessons moved by hand, held, cancelled or marked stay. A future date keeps the schedule until then.
-         */
-        post: operations["SchedulesController_stop"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/packages": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List lesson packages */
-        get: operations["PackagesController_list"];
-        put?: never;
-        /**
-         * Buy a lesson package
-         * @description Creates the package, its opening purchase entry, per-member shares for a group, and (with a schedule) the recurring series behind it.
-         */
-        post: operations["PackagesController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/packages/preview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Preview a package sale
-         * @description The credits (from the direction schedule for a by-period package), price and window a sale would have. Writes nothing.
-         */
-        post: operations["PackagesController_preview"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/packages/members": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Sell one package to each selected group member
-         * @description One package per member, for their membership of the group; each member pays separately.
-         */
-        post: operations["PackagesController_sellToMembers"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/packages/{packageId}/extend": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Move the end of a package later */
-        post: operations["PackagesController_extend"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/packages/{packageId}/transfer": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Move unused credits to another of the student's directions
-         * @description Recalculated by price and rounded down; the remainder is reported.
-         */
-        post: operations["PackagesController_transfer"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/packages/{packageId}/refund": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Take unused credits back and record the money returned */
-        post: operations["PackagesController_refund"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/packages/{packageId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get a package
-         * @description Balances, the effective total and payment status are derived from the credit ledger and recorded payments, never from a stored counter.
-         */
-        get: operations["PackagesController_getDetail"];
-        put?: never;
-        post?: never;
-        /**
-         * Archive a package
-         * @description Idempotent. Stops owned series and future scheduled lessons; financial history is retained.
-         */
-        delete: operations["PackagesController_remove"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/packages/{packageId}/ledger": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Credit ledger history
-         * @description Append-only entries explaining why the balance is what it is.
-         */
-        get: operations["PackagesController_getLedger"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/packages/{packageId}/adjust": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Manually adjust a package balance
-         * @description Appends a signed correction entry; never edits history.
-         */
-        post: operations["PackagesController_adjust"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/payments": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List recorded payments */
-        get: operations["PaymentsController_list"];
-        put?: never;
-        /**
-         * Record a payment received
-         * @description Money only. Lesson credits live in the package ledger and are not touched here. Applies the amount to the member share when a package is given.
-         */
-        post: operations["PaymentsController_record"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
+  '/api/health': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['HealthController_check'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/auth/register': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Register a new account
+     * @description Creates the user, their workspace, an OWNER membership and a session in one transaction.
+     */
+    post: operations['AuthController_register'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/auth/login': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Log in with email and password
+     * @description Unknown email and wrong password return the same INVALID_CREDENTIALS response.
+     */
+    post: operations['AuthController_login'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/auth/refresh': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Rotate the refresh token
+     * @description Returns a new token pair. The token rotated away within the last 30 seconds returns the already-issued successor (parallel requests share one rotation); any other replay of a rotated token revokes the session.
+     */
+    post: operations['AuthController_refresh'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/auth/logout': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Revoke the session
+     * @description Idempotent — unknown or already revoked tokens still return 204.
+     */
+    post: operations['AuthController_logout'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/auth/me': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get the authenticated user, active workspace and role */
+    get: operations['AuthController_me'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/workspaces/current': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get the active workspace and the current member role */
+    get: operations['WorkspacesController_getCurrent'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/workspaces/current/settings': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Update workspace defaults
+     * @description Owner only. Existing enrollments keep their configured currency and price; enrollments without a custom deadline inherit the new default. Creates a WORKSPACE UPDATE audit entry.
+     */
+    patch: operations['WorkspacesController_updateSettings'];
+    trace?: never;
+  };
+  '/api/workspaces/current/members': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List workspace members (teacher selector)
+     * @description Read-only roster; member management is out of scope.
+     */
+    get: operations['WorkspacesController_listMembers'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/audit-logs': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List workspace audit log entries (owner only)
+     * @description Newest-first, paginated. Supports filtering by entity, entityId, actor, action and a createdAt time range.
+     */
+    get: operations['AuditController_list'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/students': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List workspace students
+     * @description Paginated summaries with active enrollment counts and group names. Search covers full name, contacts and Telegram username. Students are archived, never soft-deleted: state=active lists every student that is not ARCHIVED, state=deleted the ARCHIVED ones and state=all every status; an explicit status wins. groupId matches live memberships (ACTIVE or PAUSED, group not archived). state=deleted|all is owner-only.
+     */
+    get: operations['StudentsController_list'];
+    put?: never;
+    /** Create a student */
+    post: operations['StudentsController_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/students/summary': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Count workspace students by status
+     * @description One grouped query for the collection tabs and header: `all` counts every student that is not ARCHIVED; ACTIVE, ON_HOLD and ARCHIVED count each status.
+     */
+    get: operations['StudentsController_summary'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/students/{studentId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get a student profile with enrollment summaries */
+    get: operations['StudentsController_getDetail'];
+    put?: never;
+    post?: never;
+    /**
+     * Archive a student
+     * @description Owner-only and reversible. Keeps business history and suspends only the student's future individual schedule.
+     */
+    delete: operations['StudentsController_remove'];
+    options?: never;
+    head?: never;
+    /**
+     * Update a student
+     * @description PATCH semantics: omitted fields stay unchanged, null clears an optional field. A no-op update creates no audit entry.
+     */
+    patch: operations['StudentsController_update'];
+    trace?: never;
+  };
+  '/api/students/{studentId}/billing': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * How each of the student directions is paid
+     * @description Every direction with its mode, rate, packages and credits left, lessons on debt, the pay-per-lesson balance and the credit warning, plus what is owed and paid ahead per currency.
+     */
+    get: operations['StudentsController_getBilling'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/students/{studentId}/restore': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Restore an archived student (owner only) */
+    post: operations['StudentsController_restore'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/students/{studentId}/permanently': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Permanently delete an unused student (owner only)
+     * @description Irreversible. Returns STUDENT_HAS_BUSINESS_HISTORY when lessons, enrollments, packages, payments, charges, or credits exist.
+     */
+    delete: operations['StudentsController_removePermanently'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/billing/warnings': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Directions that are running out of credits
+     * @description Every live direction paid by packages with lessons on debt, no credits left, or no more than the studio threshold left (L-82).
+     */
+    get: operations['BillingController_listWarnings'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/pauses': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List pauses
+     * @description Current (scheduled or running) pauses by default.
+     */
+    get: operations['PausesController_list'];
+    put?: never;
+    /**
+     * Pause a student or one direction
+     * @description Takes the individual lessons in the window out, keeps the student out of group lessons and charges, and pushes the packages valid at its start by its length (an open pause does that when it ends).
+     */
+    post: operations['PausesController_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/pauses/{pauseId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get a pause */
+    get: operations['PausesController_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/pauses/{pauseId}/end': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * End a pause now, or cancel one that has not begun
+     * @description Brings its lessons from now on back (checked for teacher conflicts unless force) and keeps only the package extension it used.
+     */
+    post: operations['PausesController_end'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/parents': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List workspace parents
+     * @description Paginated summaries with each parent’s linked-student roster. Search covers full name, email, phone and Telegram username. studentId narrows to one student’s parents; linked=none keeps only parents with no live linked student and is ignored with studentId. sort=fullName|createdAt with order sorts the whole collection. state=deleted|all is owner-only.
+     */
+    get: operations['ParentsController_list'];
+    put?: never;
+    /** Create a parent */
+    post: operations['ParentsController_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/parents/{parentId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get a parent with their linked-student roster */
+    get: operations['ParentsController_getDetail'];
+    put?: never;
+    post?: never;
+    /**
+     * Permanently delete a parent
+     * @description Irreversible. Removes the parent together with its student links. There is no trash and no restore.
+     */
+    delete: operations['ParentsController_remove'];
+    options?: never;
+    head?: never;
+    /**
+     * Update a parent
+     * @description PATCH semantics: omitted fields stay unchanged, null clears an optional field. A no-op update creates no audit entry. Returns the parent detail with its live student roster.
+     */
+    patch: operations['ParentsController_update'];
+    trace?: never;
+  };
+  '/api/teachers': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List workspace teachers
+     * @description Paginated; search + status filter. state=deleted|all is owner-only.
+     */
+    get: operations['TeachersController_list'];
+    put?: never;
+    /** Create a teacher profile */
+    post: operations['TeachersController_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/teachers/{teacherId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get a teacher profile */
+    get: operations['TeachersController_getDetail'];
+    put?: never;
+    post?: never;
+    /**
+     * Soft-delete a teacher
+     * @description Hides the teacher from pickers; enrollments/lessons keep the reference.
+     */
+    delete: operations['TeachersController_remove'];
+    options?: never;
+    head?: never;
+    /** Update a teacher */
+    patch: operations['TeachersController_update'];
+    trace?: never;
+  };
+  '/api/teachers/{teacherId}/restore': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Restore a soft-deleted teacher */
+    post: operations['TeachersController_restore'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/groups': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List workspace groups
+     * @description Paginated rows with the live roster, schedule, teacher, next lesson and whether money is outstanding. Filters: search, state (deleted|all is owner-only), status, studentId, teacherId, weekday (0 = Sunday), payment=unpaid. Every filter is answered by the API.
+     */
+    get: operations['GroupsController_list'];
+    put?: never;
+    /**
+     * Create a group
+     * @description Optionally with a roster and a first recurring schedule, in one transaction. The teacher defaults to the roster teacher, then to the only active teacher of the workspace. A schedule needs a teacher (400 GROUP_TEACHER_REQUIRED) and a free calendar (409 SCHEDULE_CONFLICT).
+     */
+    post: operations['GroupsController_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/groups/summary': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Group collection headline
+     * @description Tab counts (live, active, empty, archived) and the four metrics: students in groups, free seats, group lessons this week and today (workspace timezone) and groups with money outstanding.
+     */
+    get: operations['GroupsController_summary'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/groups/options': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Live groups by name
+     * @description Id and name of every live group, for filters and pickers.
+     */
+    get: operations['GroupsController_options'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/groups/{groupId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * The group page
+     * @description The group with its live roster, schedule, teacher, next lesson and lesson counts. An archived group stays readable so it can be restored.
+     */
+    get: operations['GroupsController_getDetail'];
+    put?: never;
+    post?: never;
+    /**
+     * Archive a group
+     * @description Owner-only and idempotent. Preserves the roster and financial history, then suspends related series and future scheduled lessons.
+     */
+    delete: operations['GroupsController_softDelete'];
+    options?: never;
+    head?: never;
+    /**
+     * Update a group
+     * @description PATCH semantics: omitted fields stay unchanged, null clears an optional field. A no-op update creates no audit entry. `students` carries the complete roster and is reconciled into enrollments in the same transaction — added students are enrolled, dropped ones are removed — so a roster edit never costs one request per student. A new `teacherId` moves the roster, the schedule and every upcoming lesson to that teacher after a clash check. `schedule` only creates the first schedule (409 GROUP_SCHEDULE_EXISTS otherwise).
+     */
+    patch: operations['GroupsController_update'];
+    trace?: never;
+  };
+  '/api/groups/{groupId}/attendance': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Group attendance over its last held lessons
+     * @description The current roster over the last `window` held lessons (default 8): tiles and one row per participant, worst first. Cancelled lessons are no one’s miss; participants on hold stay out of the group figures.
+     */
+    get: operations['GroupsController_getAttendance'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/groups/{groupId}/restore': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Restore an archived group (owner only) */
+    post: operations['GroupsController_restore'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/enrollments': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List workspace enrollments
+     * @description Paginated, newest first, with compact student/group/teacher refs and the effective cancellation deadline. Filterable by student, group, teacher and status. state=deleted|all is owner-only.
+     */
+    get: operations['EnrollmentsController_list'];
+    put?: never;
+    /**
+     * Enroll a student with a group or an individual teacher
+     * @description groupId null/omitted creates an individual enrollment. Student, group and teacher must be live records of the current workspace. An indistinguishable live duplicate is rejected with DUPLICATE_ENROLLMENT.
+     */
+    post: operations['EnrollmentsController_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/enrollments/{enrollmentId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get an enrollment */
+    get: operations['EnrollmentsController_getDetail'];
+    put?: never;
+    post?: never;
+    /**
+     * Soft-delete an enrollment (move to trash)
+     * @description Idempotent. For a legitimately ended relationship prefer status=ARCHIVED, which stays visible in history.
+     */
+    delete: operations['EnrollmentsController_softDelete'];
+    options?: never;
+    head?: never;
+    /**
+     * Update enrollment billing rules or lifecycle status
+     * @description Student, group and teacher are immutable — archive and re-enroll instead. cancellationDeadlineHours null reverts to the workspace default. A no-op update creates no audit entry.
+     */
+    patch: operations['EnrollmentsController_update'];
+    trace?: never;
+  };
+  '/api/enrollments/{enrollmentId}/billing': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * How a direction is paid now
+     * @description Billing mode and rate, the credits each package has left, lessons held on debt in package mode, the pay-per-lesson balance with payments settling the oldest lessons first, and the credit warning.
+     */
+    get: operations['EnrollmentsController_getBilling'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/enrollments/{enrollmentId}/restore': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Restore a soft-deleted enrollment (owner only)
+     * @description Re-validates duplicate constraints; restoring next to an equivalent live enrollment is rejected with DUPLICATE_ENROLLMENT.
+     */
+    post: operations['EnrollmentsController_restore'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/lessons': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List lessons in a time window (calendar feed)
+     * @description Returns every non-deleted lesson with startsAtUtc in [from, to).
+     */
+    get: operations['LessonsController_list'];
+    put?: never;
+    /**
+     * Create one or many one-off lessons
+     * @description startsAt accepts several dates for bulk creation. Overlapping the teacher returns 409 SCHEDULE_CONFLICT unless force=true.
+     */
+    post: operations['LessonsController_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/lessons/list': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * The Lessons list: every lesson, paged, with quick filters
+     * @description Filters by period, teacher, student (their own lessons and their groups'), group and status; `filter` narrows to unpaid, cancelled, no-show or needs-a-makeup lessons, and `counts` says how many each quick filter would show.
+     */
+    get: operations['LessonsController_listPage'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/lessons/{lessonId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * One lesson for the side panel
+     * @description The lesson with its charges, the lesson its makeup replaces or the makeup given for it, its schedule and its history, newest first.
+     */
+    get: operations['LessonsController_getDetail'];
+    put?: never;
+    post?: never;
+    /**
+     * Soft-delete a lesson
+     * @description Idempotent. A series lesson is also detached so it is not regenerated.
+     */
+    delete: operations['LessonsController_remove'];
+    options?: never;
+    head?: never;
+    /**
+     * Change a lesson
+     * @description Topic, notes, duration, teacher (a substitute for this lesson only), price and payment date. Sending null clears topic or notes; price and currency travel together. A new duration or teacher on an upcoming lesson is checked for teacher and student conflicts unless force=true. Moving a lesson in time uses /reschedule.
+     */
+    patch: operations['LessonsController_update'];
+    trace?: never;
+  };
+  '/api/lessons/bulk-cancel/preview': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Preview cancelling every lesson of a period
+     * @description The scheduled lessons of one teacher (or of the whole studio) in [from, to): how many, per teacher, and the first 200. Writes nothing.
+     */
+    post: operations['LessonsController_previewBulkCancel'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/lessons/bulk-cancel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Cancel every lesson of a period
+     * @description Holiday or illness: the scheduled lessons of one teacher (or of the whole studio) in [from, to) become cancelled by the teacher, free, with the reason. Held, cancelled and no-show lessons stay.
+     */
+    post: operations['LessonsController_applyBulkCancel'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/lessons/{lessonId}/makeup': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Assign a makeup for a cancelled or no-show lesson
+     * @description Creates a linked individual lesson for the same student, with the original teacher and duration unless others are given. Exactly one of the pair is charged. 409 MAKEUP_NOT_ALLOWED for a group lesson or one that was not cancelled or missed, MAKEUP_EXISTS for a second makeup, SCHEDULE_CONFLICT unless force=true.
+     */
+    post: operations['LessonsController_createMakeup'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/lessons/{lessonId}/reschedule': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Reschedule a lesson
+     * @description scope=this detaches and moves a single lesson; scope=this_and_following shifts the series time onward. Conflicts return 409 unless force=true.
+     */
+    patch: operations['LessonsController_reschedule'];
+    trace?: never;
+  };
+  '/api/lessons/{lessonId}/status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Change a lesson status
+     * @description Enforces the lesson state machine. Cancelling requires cancelledBy. Charged terminal states consume one package credit and restoration appends an exact compensation.
+     */
+    patch: operations['LessonsController_transition'];
+    trace?: never;
+  };
+  '/api/lessons/{lessonId}/attendance': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * A lesson's participants and their attendance marks
+     * @description Participants are everyone already marked plus, for a group lesson, the live group roster.
+     */
+    get: operations['AttendanceController_get'];
+    /**
+     * Mark attendance for a lesson
+     * @description Sets the given participants’ marks; others keep theirs. Accepted once the lesson has started, unless it was cancelled (409 ATTENDANCE_NOT_MARKABLE). An unchanged mark writes nothing.
+     */
+    put: operations['AttendanceController_set'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/lesson-series': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List recurring lesson patterns
+     * @description Paginated; state=deleted|all is owner-only.
+     */
+    get: operations['SeriesController_list'];
+    put?: never;
+    /** Create a recurring pattern and materialize its lessons */
+    post: operations['SeriesController_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/lesson-series/{seriesId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get a recurring pattern */
+    get: operations['SeriesController_getDetail'];
+    put?: never;
+    post?: never;
+    /**
+     * Delete a recurring pattern
+     * @description Soft-deletes the pattern and its future scheduled lessons.
+     */
+    delete: operations['SeriesController_remove'];
+    options?: never;
+    head?: never;
+    /**
+     * Update a recurring pattern
+     * @description Changing a schedule field regenerates future SCHEDULED lessons; a price-only change leaves existing lessons untouched.
+     */
+    patch: operations['SeriesController_update'];
+    trace?: never;
+  };
+  '/api/schedules': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List schedules
+     * @description Every recurring schedule of the studio: who, teacher, the days and times in force, a planned change, the horizon, the end and the next lesson. state defaults to ACTIVE.
+     */
+    get: operations['SchedulesController_list'];
+    put?: never;
+    /**
+     * Create a schedule
+     * @description For a student with one teacher, or a group (taught by its teacher). Each weekday has its own start time; lessons are generated horizonWeeks ahead and topped up daily. 409 SCHEDULE_EXISTS names the active schedule of that direction; SCHEDULE_CONFLICT lists teacher or student overlaps unless force=true.
+     */
+    post: operations['SchedulesController_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/schedules/preview': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Preview a new schedule
+     * @description Exactly what creating the schedule would do: the lessons generated at once within the horizon, the first one, the active schedule of the same direction or group if there is one (create would answer SCHEDULE_EXISTS), and the teacher or student overlaps. Writes nothing, and never opens a direction for a student.
+     */
+    post: operations['SchedulesController_previewCreate'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/schedules/{scheduleId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One schedule */
+    get: operations['SchedulesController_getDetail'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Change how far ahead a schedule generates lessons */
+    patch: operations['SchedulesController_update'];
+    trace?: never;
+  };
+  '/api/schedules/{scheduleId}/horizon/preview': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Preview a new horizon
+     * @description Exactly what saving the horizon would do: the lessons it generates now and the last lesson booked then. A shorter horizon keeps what is booked and adds nothing. Writes nothing.
+     */
+    post: operations['SchedulesController_previewHorizon'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/schedules/{scheduleId}/changes/preview': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Preview a change of days, times or length
+     * @description Exactly what applying the change would do: lessons moved (keeping their topic and notes), unchanged, created, removed and kept, lessons whose topic or notes would be lost, and conflicts. Writes nothing.
+     */
+    post: operations['SchedulesController_previewChange'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/schedules/{scheduleId}/changes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Change days, times or length from a date
+     * @description Lessons before effectiveFrom are untouched; the ones after it move to the new times where they can. SCHEDULE_CONFLICT unless force=true.
+     */
+    post: operations['SchedulesController_change'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/schedules/{scheduleId}/stop/preview': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Preview stopping a schedule from a date */
+    post: operations['SchedulesController_previewStop'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/schedules/{scheduleId}/stop': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Stop a schedule from a date
+     * @description Its scheduled lessons from that date are removed; lessons moved by hand, held, cancelled or marked stay. A future date keeps the schedule until then.
+     */
+    post: operations['SchedulesController_stop'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/packages': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List lesson packages */
+    get: operations['PackagesController_list'];
+    put?: never;
+    /**
+     * Buy a lesson package
+     * @description Creates the package, its opening purchase entry, per-member shares for a group, and (with a schedule) the recurring series behind it.
+     */
+    post: operations['PackagesController_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/packages/preview': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Preview a package sale
+     * @description The credits (from the direction schedule for a by-period package), price and window a sale would have. Writes nothing.
+     */
+    post: operations['PackagesController_preview'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/packages/members': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Sell one package to each selected group member
+     * @description One package per member, for their membership of the group; each member pays separately.
+     */
+    post: operations['PackagesController_sellToMembers'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/packages/{packageId}/extend': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Move the end of a package later */
+    post: operations['PackagesController_extend'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/packages/{packageId}/transfer': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Move unused credits to another of the student's directions
+     * @description Recalculated by price and rounded down; the remainder is reported.
+     */
+    post: operations['PackagesController_transfer'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/packages/{packageId}/refund': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Take unused credits back and record the money returned */
+    post: operations['PackagesController_refund'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/packages/{packageId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get a package
+     * @description Balances, the effective total and payment status are derived from the credit ledger and recorded payments, never from a stored counter.
+     */
+    get: operations['PackagesController_getDetail'];
+    put?: never;
+    post?: never;
+    /**
+     * Archive a package
+     * @description Idempotent. Stops owned series and future scheduled lessons; financial history is retained.
+     */
+    delete: operations['PackagesController_remove'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/packages/{packageId}/ledger': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Credit ledger history
+     * @description Append-only entries explaining why the balance is what it is.
+     */
+    get: operations['PackagesController_getLedger'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/packages/{packageId}/adjust': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Manually adjust a package balance
+     * @description Appends a signed correction entry; never edits history.
+     */
+    post: operations['PackagesController_adjust'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/payments': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List recorded payments */
+    get: operations['PaymentsController_list'];
+    put?: never;
+    /**
+     * Record a payment received
+     * @description Money only. Lesson credits live in the package ledger and are not touched here. Applies the amount to the member share when a package is given.
+     */
+    post: operations['PaymentsController_record'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: {
-        RegisterDto: {
-            name: string;
-            workspaceName: string;
-            /** Format: email */
-            email: string;
-            password: string;
-            /**
-             * @default SOLO
-             * @enum {string}
-             */
-            mode: "SOLO" | "SCHOOL";
-        };
-        AuthSessionDto: {
-            tokens: {
-                accessToken: string;
-                refreshToken: string;
-            };
-            user: {
-                /** Format: uuid */
-                id: string;
-                /** Format: email */
-                email: string;
-                name: string;
-            };
-            workspace: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-                /** @enum {string} */
-                plan: "FREE" | "PRO";
-                /** @enum {string} */
-                mode: "SOLO" | "SCHOOL";
-                defaultCurrency: string;
-                cancellationDeadlineHours: number;
-                timezone: string;
-                scheduleHorizonWeeks: number;
-                lowCreditThreshold: number;
-            };
-            /** @enum {string} */
-            role: "OWNER" | "TEACHER";
-        };
-        ApiErrorDto: {
-            statusCode: number;
-            code: string;
-            message: string;
-        };
-        LoginDto: {
-            /** Format: email */
-            email: string;
-            password: string;
-        };
-        RefreshDto: {
-            refreshToken: string;
-        };
-        LogoutDto: {
-            refreshToken: string;
-        };
-        AuthMeDto: {
-            user: {
-                /** Format: uuid */
-                id: string;
-                /** Format: email */
-                email: string;
-                name: string;
-            };
-            workspace: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-                /** @enum {string} */
-                plan: "FREE" | "PRO";
-                /** @enum {string} */
-                mode: "SOLO" | "SCHOOL";
-                defaultCurrency: string;
-                cancellationDeadlineHours: number;
-                timezone: string;
-                scheduleHorizonWeeks: number;
-                lowCreditThreshold: number;
-            };
-            /** @enum {string} */
-            role: "OWNER" | "TEACHER";
-        };
-        CurrentWorkspaceDto: {
-            workspace: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-                /** @enum {string} */
-                plan: "FREE" | "PRO";
-                /** @enum {string} */
-                mode: "SOLO" | "SCHOOL";
-                defaultCurrency: string;
-                cancellationDeadlineHours: number;
-                timezone: string;
-                scheduleHorizonWeeks: number;
-                lowCreditThreshold: number;
-            };
-            /** @enum {string} */
-            role: "OWNER" | "TEACHER";
-        };
-        UpdateWorkspaceSettingsDto: {
-            /** @enum {string} */
-            defaultCurrency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-            cancellationDeadlineHours?: number;
-            scheduleHorizonWeeks?: number;
-            lowCreditThreshold?: number;
-            /** @enum {string} */
-            mode?: "SOLO" | "SCHOOL";
-        };
-        WorkspaceMemberListDto: {
-            items: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                userId: string;
-                name: string;
-                email: string;
-                /** @enum {string} */
-                role: "OWNER" | "TEACHER";
-            }[];
-        };
-        AuditLogListDto: {
-            items: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                workspaceId: string;
-                /** Format: uuid */
-                actorId: string | null;
-                actor: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                    email: string;
-                } | null;
-                /** @enum {string} */
-                entity: "STUDENT" | "PARENT" | "GROUP" | "TEACHER" | "ENROLLMENT" | "WORKSPACE" | "LESSON" | "LESSON_SERIES" | "SCHEDULE" | "PAUSE" | "LESSON_PACKAGE" | "PAYMENT";
-                entityId: string;
-                /** @enum {string} */
-                action: "CREATE" | "UPDATE" | "DELETE" | "RESTORE";
-                changes: {
-                    fields: {
-                        [key: string]: {
-                            before: unknown;
-                            after: unknown;
-                        };
-                    };
-                } | null;
-                /** Format: date-time */
-                createdAt: string;
-            }[];
-            page: number;
-            pageSize: number;
-            total: number;
-            totalPages: number;
-        };
-        StudentListDto: {
-            items: {
-                /** Format: uuid */
-                id: string;
-                fullName: string;
-                email: string | null;
-                phone: string | null;
-                telegramUsername: string | null;
-                timezone: string;
-                /** @enum {string} */
-                status: "ACTIVE" | "ON_HOLD" | "ARCHIVED";
-                hourlyRateMinor: number | null;
-                /** @enum {string|null} */
-                currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
-                /** @enum {string|null} */
-                avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
-                /** Format: date-time */
-                createdAt: string;
-                /** Format: date-time */
-                deletedAt: string | null;
-                activeEnrollmentCount: number;
-                groupNames: string[];
-            }[];
-            page: number;
-            pageSize: number;
-            total: number;
-            totalPages: number;
-        };
-        StudentsSummaryDto: {
-            all: number;
-            ACTIVE: number;
-            ON_HOLD: number;
-            ARCHIVED: number;
-        };
-        CreateStudentDto: {
-            fullName: string;
-            /** Format: email */
-            email: string;
-            phone: string;
-            timezone: string;
-            telegramUsername: string;
-            hourlyRateMinor?: number;
-            /** @enum {string} */
-            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-            /**
-             * @default ACTIVE
-             * @enum {string}
-             */
-            status: "ACTIVE" | "ON_HOLD";
-            /** @enum {string} */
-            languageLevel: "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
-            /** @enum {string} */
-            knowledgeLevel: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
-            age?: number;
-            grade?: number;
-            /** @enum {string} */
-            avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10";
-            parentIds?: string[];
-            notes: string;
-        };
-        StudentDto: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            workspaceId: string;
-            fullName: string;
-            email: string | null;
-            phone: string | null;
-            timezone: string;
-            telegramUsername: string | null;
-            hourlyRateMinor: number | null;
-            /** @enum {string|null} */
-            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
-            /** @enum {string} */
-            status: "ACTIVE" | "ON_HOLD" | "ARCHIVED";
-            /** @enum {string|null} */
-            languageLevel: "A1" | "A2" | "B1" | "B2" | "C1" | "C2" | null;
-            /** @enum {string|null} */
-            knowledgeLevel: "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | null;
-            age: number | null;
-            grade: number | null;
-            /** @enum {string|null} */
-            avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
-            parents: {
-                /** Format: uuid */
-                id: string;
-                fullName: string;
-                /** @enum {string|null} */
-                avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
-                phone: string | null;
-                telegramUsername: string | null;
-            }[];
-            notes: string | null;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-            /** Format: date-time */
-            deletedAt: string | null;
-        };
-        StudentDetailDto: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            workspaceId: string;
-            fullName: string;
-            email: string | null;
-            phone: string | null;
-            timezone: string;
-            telegramUsername: string | null;
-            hourlyRateMinor: number | null;
-            /** @enum {string|null} */
-            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
-            /** @enum {string} */
-            status: "ACTIVE" | "ON_HOLD" | "ARCHIVED";
-            /** @enum {string|null} */
-            languageLevel: "A1" | "A2" | "B1" | "B2" | "C1" | "C2" | null;
-            /** @enum {string|null} */
-            knowledgeLevel: "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | null;
-            age: number | null;
-            grade: number | null;
-            /** @enum {string|null} */
-            avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
-            parents: {
-                /** Format: uuid */
-                id: string;
-                fullName: string;
-                /** @enum {string|null} */
-                avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
-                phone: string | null;
-                telegramUsername: string | null;
-            }[];
-            notes: string | null;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-            /** Format: date-time */
-            deletedAt: string | null;
-            enrollments: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                workspaceId: string;
-                /** Format: uuid */
-                studentId: string;
-                /** Format: uuid */
-                groupId: string | null;
-                /** Format: uuid */
-                teacherId: string;
-                student: {
-                    /** Format: uuid */
-                    id: string;
-                    fullName: string;
-                };
-                group: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                } | null;
-                teacher: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                    color: string | null;
-                };
-                /** @enum {string} */
-                status: "ACTIVE" | "PAUSED" | "ARCHIVED";
-                /** @enum {string} */
-                billingType: "PACKAGE" | "PER_LESSON";
-                priceMinor: number;
-                /** @enum {string} */
-                currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-                ownPrice: boolean;
-                cancellationDeadlineHours: number | null;
-                effectiveCancellationDeadlineHours: number;
-                /** Format: date-time */
-                createdAt: string;
-                /** Format: date-time */
-                updatedAt: string;
-                /** Format: date-time */
-                deletedAt: string | null;
-            }[];
-        };
-        StudentBillingDto: {
-            /** Format: uuid */
-            studentId: string;
-            lowCreditThreshold: number;
-            directions: {
-                /** Format: uuid */
-                enrollmentId: string;
-                /** @enum {string} */
-                billingType: "PACKAGE" | "PER_LESSON";
-                rateMinor: number;
-                /** @enum {string} */
-                currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-                packages: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string | null;
-                    /** Format: date-time */
-                    purchasedAt: string;
-                    /** Format: date-time */
-                    expiresAt: string | null;
-                    remainingCredits: number;
-                    usable: boolean;
-                }[];
-                creditsLeft: number;
-                debtLessons: number;
-                balance: {
-                    chargedMinor: number;
-                    paidMinor: number;
-                    debtMinor: number;
-                    advanceMinor: number;
-                    unpaidLessons: number;
-                };
-                /** @enum {string|null} */
-                warning: "ON_DEBT" | "NO_CREDITS" | "LOW_CREDITS" | null;
-                /** @enum {string} */
-                status: "ACTIVE" | "PAUSED" | "ARCHIVED";
-                teacher: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                };
-                group: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                } | null;
-            }[];
-            totals: {
-                /** @enum {string} */
-                currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-                debtMinor: number;
-                advanceMinor: number;
-                unpaidLessons: number;
-                debtLessons: number;
-                creditsLeft: number;
-            }[];
-        };
-        UpdateStudentDto: {
-            fullName?: string;
-            /** Format: email */
-            email?: string | null;
-            phone?: string | null;
-            timezone?: string;
-            telegramUsername?: string | null;
-            hourlyRateMinor?: number | null;
-            /** @enum {string|null} */
-            currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
-            /** @enum {string} */
-            status?: "ACTIVE" | "ON_HOLD";
-            /** @enum {string|null} */
-            languageLevel?: "A1" | "A2" | "B1" | "B2" | "C1" | "C2" | null;
-            /** @enum {string|null} */
-            knowledgeLevel?: "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | null;
-            age?: number | null;
-            grade?: number | null;
-            /** @enum {string|null} */
-            avatarKey?: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
-            parentIds?: string[];
-            notes?: string | null;
-        };
-        CreditWarningListDto: {
-            lowCreditThreshold: number;
-            items: {
-                /** Format: uuid */
-                enrollmentId: string;
-                /** @enum {string} */
-                warning: "ON_DEBT" | "NO_CREDITS" | "LOW_CREDITS";
-                creditsLeft: number;
-                debtLessons: number;
-                student: {
-                    /** Format: uuid */
-                    id: string;
-                    fullName: string;
-                };
-                teacher: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                };
-                group: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                } | null;
-            }[];
-        };
-        PauseListDto: {
-            items: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                workspaceId: string;
-                /** Format: uuid */
-                studentId: string;
-                /** Format: uuid */
-                enrollmentId: string | null;
-                /** Format: date-time */
-                startsAt: string;
-                /** Format: date-time */
-                endsAt: string | null;
-                /** Format: date-time */
-                endedAt: string | null;
-                /** @enum {string} */
-                state: "SCHEDULED" | "ACTIVE" | "ENDED" | "CANCELLED";
-                reason: string | null;
-                removedLessons: number;
-                extensions: {
-                    /** Format: uuid */
-                    packageId: string;
-                    extendedBySeconds: number;
-                }[];
-                student: {
-                    /** Format: uuid */
-                    id: string;
-                    fullName: string;
-                };
-                /** Format: date-time */
-                createdAt: string;
-                /** Format: date-time */
-                updatedAt: string;
-            }[];
-            page: number;
-            pageSize: number;
-            total: number;
-            totalPages: number;
-        };
-        CreatePauseDto: {
-            /** Format: uuid */
-            studentId: string;
-            /** Format: uuid */
-            enrollmentId?: string | null;
-            /** Format: date-time */
-            startsAt?: string;
-            /** Format: date-time */
-            endsAt?: string | null;
-            reason?: string | null;
-        };
-        PauseDto: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            workspaceId: string;
-            /** Format: uuid */
-            studentId: string;
-            /** Format: uuid */
-            enrollmentId: string | null;
-            /** Format: date-time */
-            startsAt: string;
-            /** Format: date-time */
-            endsAt: string | null;
-            /** Format: date-time */
-            endedAt: string | null;
-            /** @enum {string} */
-            state: "SCHEDULED" | "ACTIVE" | "ENDED" | "CANCELLED";
-            reason: string | null;
-            removedLessons: number;
-            extensions: {
-                /** Format: uuid */
-                packageId: string;
-                extendedBySeconds: number;
-            }[];
-            student: {
-                /** Format: uuid */
-                id: string;
-                fullName: string;
-            };
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-        };
-        ParentListDto: {
-            items: {
-                /** Format: uuid */
-                id: string;
-                fullName: string;
-                email: string | null;
-                phone: string | null;
-                telegramUsername: string | null;
-                /** @enum {string|null} */
-                avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
-                /** Format: date-time */
-                deletedAt: string | null;
-                students: {
-                    /** Format: uuid */
-                    id: string;
-                    fullName: string;
-                    /** @enum {string|null} */
-                    avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
-                    /** @enum {string} */
-                    status: "ACTIVE" | "ON_HOLD" | "ARCHIVED";
-                    /** @enum {string|null} */
-                    languageLevel: "A1" | "A2" | "B1" | "B2" | "C1" | "C2" | null;
-                }[];
-            }[];
-            page: number;
-            pageSize: number;
-            total: number;
-            totalPages: number;
-        };
-        CreateParentDto: {
-            fullName: string;
-            /** Format: email */
-            email: string;
-            phone: string;
-            telegramUsername: string;
-            /** @enum {string} */
-            avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10";
-            studentIds?: string[];
-            notes: string;
-        };
-        ParentDto: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            workspaceId: string;
-            fullName: string;
-            email: string | null;
-            phone: string | null;
-            telegramUsername: string | null;
-            /** @enum {string|null} */
-            avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
-            notes: string | null;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-            /** Format: date-time */
-            deletedAt: string | null;
-        };
-        ParentDetailDto: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            workspaceId: string;
-            fullName: string;
-            email: string | null;
-            phone: string | null;
-            telegramUsername: string | null;
-            /** @enum {string|null} */
-            avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
-            notes: string | null;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-            /** Format: date-time */
-            deletedAt: string | null;
-            students: {
-                /** Format: uuid */
-                id: string;
-                fullName: string;
-                /** @enum {string|null} */
-                avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
-                /** @enum {string} */
-                status: "ACTIVE" | "ON_HOLD" | "ARCHIVED";
-                /** @enum {string|null} */
-                languageLevel: "A1" | "A2" | "B1" | "B2" | "C1" | "C2" | null;
-            }[];
-        };
-        UpdateParentDto: {
-            fullName?: string;
-            /** Format: email */
-            email?: string | null;
-            phone?: string | null;
-            telegramUsername?: string | null;
-            /** @enum {string|null} */
-            avatarKey?: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
-            studentIds?: string[];
-            notes?: string | null;
-        };
-        TeacherListDto: {
-            items: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                workspaceId: string;
-                fullName: string;
-                email: string | null;
-                phone: string | null;
-                telegramUsername: string | null;
-                bio: string | null;
-                defaultRateMinor: number | null;
-                /** @enum {string|null} */
-                currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
-                color: string | null;
-                /** @enum {string|null} */
-                avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
-                /** @enum {string} */
-                status: "ACTIVE" | "ARCHIVED";
-                /** Format: uuid */
-                workspaceMemberId: string | null;
-                isMe: boolean;
-                notes: string | null;
-                /** Format: date-time */
-                createdAt: string;
-                /** Format: date-time */
-                updatedAt: string;
-                /** Format: date-time */
-                deletedAt: string | null;
-                activeEnrollmentCount: number;
-            }[];
-            page: number;
-            pageSize: number;
-            total: number;
-            totalPages: number;
-        };
-        CreateTeacherDto: {
-            fullName: string;
-            /** Format: email */
-            email?: string;
-            phone?: string;
-            telegramUsername?: string;
-            bio?: string;
-            defaultRateMinor?: number;
-            /** @enum {string} */
-            currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-            color?: string;
-            /** @enum {string} */
-            avatarKey?: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10";
-            /**
-             * @default ACTIVE
-             * @enum {string}
-             */
-            status: "ACTIVE" | "ARCHIVED";
-            /** Format: uuid */
-            workspaceMemberId?: string;
-            notes?: string;
-        };
-        TeacherDto: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            workspaceId: string;
-            fullName: string;
-            email: string | null;
-            phone: string | null;
-            telegramUsername: string | null;
-            bio: string | null;
-            defaultRateMinor: number | null;
-            /** @enum {string|null} */
-            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
-            color: string | null;
-            /** @enum {string|null} */
-            avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
-            /** @enum {string} */
-            status: "ACTIVE" | "ARCHIVED";
-            /** Format: uuid */
-            workspaceMemberId: string | null;
-            isMe: boolean;
-            notes: string | null;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-            /** Format: date-time */
-            deletedAt: string | null;
-        };
-        UpdateTeacherDto: {
-            fullName?: string;
-            /** Format: email */
-            email?: string | null;
-            phone?: string | null;
-            telegramUsername?: string | null;
-            bio?: string | null;
-            defaultRateMinor?: number | null;
-            /** @enum {string|null} */
-            currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
-            color?: string | null;
-            /** @enum {string|null} */
-            avatarKey?: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
-            /** @enum {string} */
-            status?: "ACTIVE" | "ARCHIVED";
-            /** Format: uuid */
-            workspaceMemberId?: string | null;
-            notes?: string | null;
-        };
-        GroupListDto: {
-            items: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-                teacher: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                    /** @enum {string|null} */
-                    avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
-                    color: string | null;
-                } | null;
-                capacity: number | null;
-                pricePerLesson: number | null;
-                /** @enum {string|null} */
-                currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
-                notes: string | null;
-                /** Format: date-time */
-                deletedAt: string | null;
-                /** @enum {string} */
-                status: "ACTIVE" | "EMPTY";
-                activeStudentCount: number;
-                students: {
-                    /** Format: uuid */
-                    id: string;
-                    fullName: string;
-                    /** @enum {string|null} */
-                    avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
-                }[];
-                schedules: {
-                    weekdays: number[];
-                    localTime: string;
-                    durationMin: number;
-                    timezone: string;
-                }[];
-                nextLesson: {
-                    /** Format: uuid */
-                    id: string;
-                    /** Format: date-time */
-                    startsAtUtc: string;
-                    durationMin: number;
-                } | null;
-                paymentDue: boolean;
-            }[];
-            page: number;
-            pageSize: number;
-            total: number;
-            totalPages: number;
-        };
-        GroupSummaryDto: {
-            total: number;
-            active: number;
-            empty: number;
-            archived: number;
-            studentsInGroups: number;
-            studioStudents: number;
-            freeSeats: number | null;
-            lessonsThisWeek: number;
-            lessonsToday: number;
-            unpaidGroups: number;
-            /** Format: date-time */
-            weekStart: string;
-            /** Format: date-time */
-            weekEnd: string;
-        };
-        GroupOptionsDto: {
-            items: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-            }[];
-        };
-        CreateGroupDto: {
-            name: string;
-            /** Format: uuid */
-            teacherId?: string;
-            capacity?: number;
-            pricePerLesson?: number;
-            /** @enum {string} */
-            currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-            notes?: string;
-            students?: {
-                studentIds: string[];
-                /** Format: uuid */
-                teacherId?: string;
-            };
-            schedule?: {
-                weekdays: number[];
-                localTime: string;
-                durationMin: number;
-            };
-        };
-        GroupDto: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            workspaceId: string;
-            name: string;
-            /** Format: uuid */
-            teacherId: string | null;
-            capacity: number | null;
-            pricePerLesson: number | null;
-            /** @enum {string|null} */
-            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
-            notes: string | null;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-            /** Format: date-time */
-            deletedAt: string | null;
-        };
-        GroupDetailDto: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            workspaceId: string;
-            name: string;
-            /** Format: uuid */
-            teacherId: string | null;
-            capacity: number | null;
-            pricePerLesson: number | null;
-            /** @enum {string|null} */
-            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
-            notes: string | null;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-            /** Format: date-time */
-            deletedAt: string | null;
-            /** @enum {string} */
-            status: "ACTIVE" | "EMPTY";
-            teacher: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-                /** @enum {string|null} */
-                avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
-                color: string | null;
-            } | null;
-            teacherMismatch: boolean;
-            enrollments: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                studentId: string;
-                /** Format: uuid */
-                groupId: string;
-                /** Format: uuid */
-                teacherId: string;
-                /** @enum {string} */
-                status: "ACTIVE" | "PAUSED" | "ARCHIVED";
-                /** @enum {string} */
-                billingType: "PACKAGE" | "PER_LESSON";
-                priceMinor: number;
-                /** @enum {string} */
-                currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-                ownPrice: boolean;
-                cancellationDeadlineHours: number | null;
-                student: {
-                    /** Format: uuid */
-                    id: string;
-                    fullName: string;
-                    /** @enum {string|null} */
-                    avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
-                    /** @enum {string} */
-                    status: "ACTIVE" | "ON_HOLD" | "ARCHIVED";
-                    /** @enum {string|null} */
-                    languageLevel: "A1" | "A2" | "B1" | "B2" | "C1" | "C2" | null;
-                };
-                teacher: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                    color: string | null;
-                };
-            }[];
-            schedules: {
-                weekdays: number[];
-                localTime: string;
-                durationMin: number;
-                timezone: string;
-                /** Format: uuid */
-                id: string;
-            }[];
-            nextLesson: {
-                /** Format: uuid */
-                id: string;
-                /** Format: date-time */
-                startsAtUtc: string;
-                durationMin: number;
-                notes: string | null;
-                /** @enum {string} */
-                status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED" | "NO_SHOW";
-            } | null;
-            lessonCounts: {
-                completed: number;
-                upcoming: number;
-            };
-        };
-        GroupAttendanceDto: {
-            window: number;
-            lessons: {
-                /** Format: uuid */
-                id: string;
-                /** Format: date-time */
-                startsAtUtc: string;
-                /** @enum {string} */
-                status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED" | "NO_SHOW";
-            }[];
-            stats: {
-                lessons: number;
-                held: number;
-                rate: number | null;
-                previousRate: number | null;
-                misses: number;
-                expected: number;
-                cancelled: number;
-                cancelledCharged: number;
-                cancelledFree: number;
-            };
-            rows: {
-                /** Format: uuid */
-                enrollmentId: string;
-                student: {
-                    /** Format: uuid */
-                    id: string;
-                    fullName: string;
-                    /** @enum {string|null} */
-                    avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
-                };
-                cells: ("present" | "absent" | "excused" | "cancelled" | "unmarked")[];
-                rate: number | null;
-                misses: number;
-                trailingMisses: number;
-                /** Format: date-time */
-                lastPresentAt: string | null;
-                hold: boolean;
-                risk: boolean;
-            }[];
-        };
-        UpdateGroupDto: {
-            name?: string;
-            /** Format: uuid */
-            teacherId?: string;
-            capacity?: number | null;
-            pricePerLesson?: number | null;
-            /** @enum {string|null} */
-            currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP" | null;
-            notes?: string | null;
-            students?: {
-                studentIds: string[];
-                /** Format: uuid */
-                teacherId?: string;
-            };
-            schedule?: {
-                weekdays: number[];
-                localTime: string;
-                durationMin: number;
-            };
-        };
-        EnrollmentListDto: {
-            items: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                workspaceId: string;
-                /** Format: uuid */
-                studentId: string;
-                /** Format: uuid */
-                groupId: string | null;
-                /** Format: uuid */
-                teacherId: string;
-                student: {
-                    /** Format: uuid */
-                    id: string;
-                    fullName: string;
-                };
-                group: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                } | null;
-                teacher: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                    color: string | null;
-                };
-                /** @enum {string} */
-                status: "ACTIVE" | "PAUSED" | "ARCHIVED";
-                /** @enum {string} */
-                billingType: "PACKAGE" | "PER_LESSON";
-                priceMinor: number;
-                /** @enum {string} */
-                currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-                ownPrice: boolean;
-                cancellationDeadlineHours: number | null;
-                effectiveCancellationDeadlineHours: number;
-                /** Format: date-time */
-                createdAt: string;
-                /** Format: date-time */
-                updatedAt: string;
-                /** Format: date-time */
-                deletedAt: string | null;
-            }[];
-            page: number;
-            pageSize: number;
-            total: number;
-            totalPages: number;
-        };
-        CreateEnrollmentDto: {
-            /** Format: uuid */
-            studentId: string;
-            /** Format: uuid */
-            groupId?: string | null;
-            /** Format: uuid */
-            teacherId: string;
-            /**
-             * @default PER_LESSON
-             * @enum {string}
-             */
-            billingType: "PACKAGE" | "PER_LESSON";
-            priceMinor: number;
-            /** @enum {string} */
-            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-            cancellationDeadlineHours?: number | null;
-        };
-        EnrollmentDto: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            workspaceId: string;
-            /** Format: uuid */
-            studentId: string;
-            /** Format: uuid */
-            groupId: string | null;
-            /** Format: uuid */
-            teacherId: string;
-            student: {
-                /** Format: uuid */
-                id: string;
-                fullName: string;
-            };
-            group: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-            } | null;
-            teacher: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-                color: string | null;
-            };
-            /** @enum {string} */
-            status: "ACTIVE" | "PAUSED" | "ARCHIVED";
-            /** @enum {string} */
-            billingType: "PACKAGE" | "PER_LESSON";
-            priceMinor: number;
-            /** @enum {string} */
-            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-            ownPrice: boolean;
-            cancellationDeadlineHours: number | null;
-            effectiveCancellationDeadlineHours: number;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-            /** Format: date-time */
-            deletedAt: string | null;
-        };
-        EnrollmentBillingDto: {
-            /** Format: uuid */
-            enrollmentId: string;
-            /** @enum {string} */
-            billingType: "PACKAGE" | "PER_LESSON";
-            rateMinor: number;
-            /** @enum {string} */
-            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-            packages: {
-                /** Format: uuid */
-                id: string;
-                name: string | null;
-                /** Format: date-time */
-                purchasedAt: string;
-                /** Format: date-time */
-                expiresAt: string | null;
-                remainingCredits: number;
-                usable: boolean;
-            }[];
-            creditsLeft: number;
-            debtLessons: number;
-            balance: {
-                chargedMinor: number;
-                paidMinor: number;
-                debtMinor: number;
-                advanceMinor: number;
-                unpaidLessons: number;
-            };
-            /** @enum {string|null} */
-            warning: "ON_DEBT" | "NO_CREDITS" | "LOW_CREDITS" | null;
-        };
-        UpdateEnrollmentDto: {
-            /** @enum {string} */
-            status?: "ACTIVE" | "PAUSED" | "ARCHIVED";
-            /** @enum {string} */
-            billingType?: "PACKAGE" | "PER_LESSON";
-            priceMinor?: number;
-            /** @enum {string} */
-            currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-            cancellationDeadlineHours?: number | null;
-        };
-        LessonListDto: {
-            items: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                workspaceId: string;
-                /** Format: uuid */
-                enrollmentId: string | null;
-                /** Format: uuid */
-                groupId: string | null;
-                /** Format: uuid */
-                seriesId: string | null;
-                /** Format: uuid */
-                teacherId: string;
-                /** Format: date-time */
-                startsAtUtc: string;
-                durationMin: number;
-                priceMinor: number;
-                /** @enum {string} */
-                currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-                /** @enum {string} */
-                status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED" | "NO_SHOW";
-                /** @enum {string} */
-                kind: "REGULAR" | "MAKEUP";
-                /** Format: uuid */
-                originalLessonId: string | null;
-                /** Format: uuid */
-                makeupLessonId: string | null;
-                topic: string | null;
-                isDetached: boolean;
-                rescheduledCount: number;
-                /** Format: date-time */
-                rescheduledAt: string | null;
-                /** @enum {string|null} */
-                cancelledBy: "TEACHER" | "STUDENT" | "GROUP" | null;
-                cancelledReason: string | null;
-                /** Format: date-time */
-                cancelledAt: string | null;
-                /** Format: date-time */
-                completedAt: string | null;
-                /** Format: date-time */
-                paidAt: string | null;
-                notes: string | null;
-                cancellationDeadlineHours: number;
-                attendance: {
-                    present: number;
-                    marked: number;
-                } | null;
-                charges: {
-                    /** Format: uuid */
-                    id: string;
-                    /** Format: uuid */
-                    enrollmentId: string;
-                    /** @enum {string} */
-                    source: "PACKAGE" | "DEBT" | "BALANCE";
-                    /** Format: uuid */
-                    packageId: string | null;
-                    amountMinor: number;
-                    /** @enum {string} */
-                    currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-                    paid: boolean;
-                    student: {
-                        /** Format: uuid */
-                        id: string;
-                        fullName: string;
-                    };
-                }[];
-                student: {
-                    /** Format: uuid */
-                    id: string;
-                    fullName: string;
-                    /** @enum {string|null} */
-                    avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
-                } | null;
-                group: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                } | null;
-                teacher: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                    color: string | null;
-                };
-                /** Format: date-time */
-                createdAt: string;
-                /** Format: date-time */
-                updatedAt: string;
-                /** Format: date-time */
-                deletedAt: string | null;
-            }[];
-        };
-        LessonPageDto: {
-            items: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                workspaceId: string;
-                /** Format: uuid */
-                enrollmentId: string | null;
-                /** Format: uuid */
-                groupId: string | null;
-                /** Format: uuid */
-                seriesId: string | null;
-                /** Format: uuid */
-                teacherId: string;
-                /** Format: date-time */
-                startsAtUtc: string;
-                durationMin: number;
-                priceMinor: number;
-                /** @enum {string} */
-                currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-                /** @enum {string} */
-                status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED" | "NO_SHOW";
-                /** @enum {string} */
-                kind: "REGULAR" | "MAKEUP";
-                /** Format: uuid */
-                originalLessonId: string | null;
-                /** Format: uuid */
-                makeupLessonId: string | null;
-                topic: string | null;
-                isDetached: boolean;
-                rescheduledCount: number;
-                /** Format: date-time */
-                rescheduledAt: string | null;
-                /** @enum {string|null} */
-                cancelledBy: "TEACHER" | "STUDENT" | "GROUP" | null;
-                cancelledReason: string | null;
-                /** Format: date-time */
-                cancelledAt: string | null;
-                /** Format: date-time */
-                completedAt: string | null;
-                /** Format: date-time */
-                paidAt: string | null;
-                notes: string | null;
-                cancellationDeadlineHours: number;
-                attendance: {
-                    present: number;
-                    marked: number;
-                } | null;
-                charges: {
-                    /** Format: uuid */
-                    id: string;
-                    /** Format: uuid */
-                    enrollmentId: string;
-                    /** @enum {string} */
-                    source: "PACKAGE" | "DEBT" | "BALANCE";
-                    /** Format: uuid */
-                    packageId: string | null;
-                    amountMinor: number;
-                    /** @enum {string} */
-                    currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-                    paid: boolean;
-                    student: {
-                        /** Format: uuid */
-                        id: string;
-                        fullName: string;
-                    };
-                }[];
-                student: {
-                    /** Format: uuid */
-                    id: string;
-                    fullName: string;
-                    /** @enum {string|null} */
-                    avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
-                } | null;
-                group: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                } | null;
-                teacher: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                    color: string | null;
-                };
-                /** Format: date-time */
-                createdAt: string;
-                /** Format: date-time */
-                updatedAt: string;
-                /** Format: date-time */
-                deletedAt: string | null;
-            }[];
-            page: number;
-            pageSize: number;
-            total: number;
-            totalPages: number;
-            counts: {
-                all: number;
-                unpaid: number;
-                cancelled: number;
-                noShow: number;
-                needsMakeup: number;
-            };
-        };
-        LessonDetailDto: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            workspaceId: string;
-            /** Format: uuid */
-            enrollmentId: string | null;
-            /** Format: uuid */
-            groupId: string | null;
-            /** Format: uuid */
-            seriesId: string | null;
-            /** Format: uuid */
-            teacherId: string;
-            /** Format: date-time */
-            startsAtUtc: string;
-            durationMin: number;
-            priceMinor: number;
-            /** @enum {string} */
-            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-            /** @enum {string} */
-            status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED" | "NO_SHOW";
-            /** @enum {string} */
-            kind: "REGULAR" | "MAKEUP";
-            /** Format: uuid */
-            originalLessonId: string | null;
-            /** Format: uuid */
-            makeupLessonId: string | null;
-            topic: string | null;
-            isDetached: boolean;
-            rescheduledCount: number;
-            /** Format: date-time */
-            rescheduledAt: string | null;
-            /** @enum {string|null} */
-            cancelledBy: "TEACHER" | "STUDENT" | "GROUP" | null;
-            cancelledReason: string | null;
-            /** Format: date-time */
-            cancelledAt: string | null;
-            /** Format: date-time */
-            completedAt: string | null;
-            /** Format: date-time */
-            paidAt: string | null;
-            notes: string | null;
-            cancellationDeadlineHours: number;
-            attendance: {
-                present: number;
-                marked: number;
-            } | null;
-            charges: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                enrollmentId: string;
-                /** @enum {string} */
-                source: "PACKAGE" | "DEBT" | "BALANCE";
-                /** Format: uuid */
-                packageId: string | null;
-                amountMinor: number;
-                /** @enum {string} */
-                currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-                paid: boolean;
-                student: {
-                    /** Format: uuid */
-                    id: string;
-                    fullName: string;
-                };
-            }[];
-            student: {
-                /** Format: uuid */
-                id: string;
-                fullName: string;
-                /** @enum {string|null} */
-                avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
-            } | null;
-            group: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-            } | null;
-            teacher: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-                color: string | null;
-            };
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-            /** Format: date-time */
-            deletedAt: string | null;
-            original: {
-                /** Format: uuid */
-                id: string;
-                /** Format: date-time */
-                startsAtUtc: string;
-                /** @enum {string} */
-                status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED" | "NO_SHOW";
-            } | null;
-            makeup: {
-                /** Format: uuid */
-                id: string;
-                /** Format: date-time */
-                startsAtUtc: string;
-                /** @enum {string} */
-                status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED" | "NO_SHOW";
-            } | null;
-            schedule: {
-                /** Format: uuid */
-                id: string;
-                /** @enum {string} */
-                state: "ACTIVE" | "ENDED";
-            } | null;
-            history: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                workspaceId: string;
-                /** Format: uuid */
-                actorId: string | null;
-                actor: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                    email: string;
-                } | null;
-                /** @enum {string} */
-                entity: "STUDENT" | "PARENT" | "GROUP" | "TEACHER" | "ENROLLMENT" | "WORKSPACE" | "LESSON" | "LESSON_SERIES" | "SCHEDULE" | "PAUSE" | "LESSON_PACKAGE" | "PAYMENT";
-                entityId: string;
-                /** @enum {string} */
-                action: "CREATE" | "UPDATE" | "DELETE" | "RESTORE";
-                changes: {
-                    fields: {
-                        [key: string]: {
-                            before: unknown;
-                            after: unknown;
-                        };
-                    };
-                } | null;
-                /** Format: date-time */
-                createdAt: string;
-            }[];
-        };
-        BulkCancelDto: {
-            /** Format: date-time */
-            from: string;
-            /** Format: date-time */
-            to: string;
-            /** Format: uuid */
-            teacherId?: string;
-            reason?: string | null;
-        };
-        BulkCancelPreviewDto: {
-            count: number;
-            byTeacher: {
-                teacher: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                    color: string | null;
-                };
-                count: number;
-            }[];
-            lessons: {
-                /** Format: uuid */
-                id: string;
-                /** Format: date-time */
-                startsAtUtc: string;
-                durationMin: number;
-                student: {
-                    /** Format: uuid */
-                    id: string;
-                    fullName: string;
-                } | null;
-                group: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                } | null;
-                teacher: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                    color: string | null;
-                };
-            }[];
-            truncated: boolean;
-        };
-        BulkCancelResultDto: {
-            cancelled: number;
-            lessonIds: string[];
-        };
-        CreateLessonDto: {
-            /** Format: uuid */
-            enrollmentId?: string | null;
-            /** Format: uuid */
-            studentId?: string | null;
-            /** Format: uuid */
-            groupId?: string | null;
-            /** Format: uuid */
-            teacherId?: string;
-            startsAt: string[];
-            durationMin: number;
-            priceMinor?: number;
-            /** @enum {string} */
-            currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-            /**
-             * @default SCHEDULED
-             * @enum {string}
-             */
-            status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED" | "NO_SHOW";
-            /** @enum {string} */
-            cancelledBy?: "TEACHER" | "STUDENT" | "GROUP";
-            cancelledReason?: string | null;
-            /** Format: date-time */
-            paidAt?: string | null;
-            topic?: string | null;
-            notes?: string | null;
-        };
-        UpdateLessonDto: {
-            topic?: string | null;
-            notes?: string | null;
-            durationMin?: number;
-            /** Format: uuid */
-            teacherId?: string;
-            priceMinor?: number;
-            /** @enum {string} */
-            currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-            /** Format: date-time */
-            paidAt?: string | null;
-        };
-        LessonDto: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            workspaceId: string;
-            /** Format: uuid */
-            enrollmentId: string | null;
-            /** Format: uuid */
-            groupId: string | null;
-            /** Format: uuid */
-            seriesId: string | null;
-            /** Format: uuid */
-            teacherId: string;
-            /** Format: date-time */
-            startsAtUtc: string;
-            durationMin: number;
-            priceMinor: number;
-            /** @enum {string} */
-            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-            /** @enum {string} */
-            status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED" | "NO_SHOW";
-            /** @enum {string} */
-            kind: "REGULAR" | "MAKEUP";
-            /** Format: uuid */
-            originalLessonId: string | null;
-            /** Format: uuid */
-            makeupLessonId: string | null;
-            topic: string | null;
-            isDetached: boolean;
-            rescheduledCount: number;
-            /** Format: date-time */
-            rescheduledAt: string | null;
-            /** @enum {string|null} */
-            cancelledBy: "TEACHER" | "STUDENT" | "GROUP" | null;
-            cancelledReason: string | null;
-            /** Format: date-time */
-            cancelledAt: string | null;
-            /** Format: date-time */
-            completedAt: string | null;
-            /** Format: date-time */
-            paidAt: string | null;
-            notes: string | null;
-            cancellationDeadlineHours: number;
-            attendance: {
-                present: number;
-                marked: number;
-            } | null;
-            charges: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                enrollmentId: string;
-                /** @enum {string} */
-                source: "PACKAGE" | "DEBT" | "BALANCE";
-                /** Format: uuid */
-                packageId: string | null;
-                amountMinor: number;
-                /** @enum {string} */
-                currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-                paid: boolean;
-                student: {
-                    /** Format: uuid */
-                    id: string;
-                    fullName: string;
-                };
-            }[];
-            student: {
-                /** Format: uuid */
-                id: string;
-                fullName: string;
-                /** @enum {string|null} */
-                avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
-            } | null;
-            group: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-            } | null;
-            teacher: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-                color: string | null;
-            };
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-            /** Format: date-time */
-            deletedAt: string | null;
-        };
-        CreateMakeupDto: {
-            /** Format: date-time */
-            startsAtUtc: string;
-            durationMin?: number;
-            /** Format: uuid */
-            teacherId?: string;
-            topic?: string | null;
-            notes?: string | null;
-        };
-        RescheduleLessonDto: {
-            /** Format: date-time */
-            startsAtUtc: string;
-            durationMin?: number;
-            /**
-             * @default this
-             * @enum {string}
-             */
-            scope: "this" | "this_and_following";
-        };
-        TransitionLessonDto: {
-            /** @enum {string} */
-            targetStatus: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED" | "NO_SHOW";
-            /** @enum {string} */
-            cancelledBy?: "TEACHER" | "STUDENT" | "GROUP";
-            cancelledReason?: string | null;
-        };
-        LessonAttendanceDto: {
-            /** Format: uuid */
-            lessonId: string;
-            /** Format: date-time */
-            startsAtUtc: string;
-            /** @enum {string} */
-            status: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED" | "NO_SHOW";
-            markable: boolean;
-            participants: {
-                /** Format: uuid */
-                enrollmentId: string;
-                student: {
-                    /** Format: uuid */
-                    id: string;
-                    fullName: string;
-                    /** @enum {string|null} */
-                    avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
-                };
-                /** @enum {string|null} */
-                status: "PRESENT" | "ABSENT" | "EXCUSED" | null;
-                /** Format: date-time */
-                markedAt: string | null;
-                paused: boolean;
-            }[];
-        };
-        SetLessonAttendanceDto: {
-            marks: {
-                /** Format: uuid */
-                enrollmentId: string;
-                /** @enum {string} */
-                status: "PRESENT" | "ABSENT" | "EXCUSED";
-            }[];
-        };
-        LessonSeriesListDto: {
-            items: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                workspaceId: string;
-                /** Format: uuid */
-                scheduleId: string;
-                /** Format: uuid */
-                enrollmentId: string | null;
-                /** Format: uuid */
-                groupId: string | null;
-                /** Format: uuid */
-                teacherId: string;
-                weekdays: number[];
-                localTime: string;
-                timezone: string;
-                durationMin: number;
-                priceMinor: number;
-                /** @enum {string} */
-                currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-                /** Format: date-time */
-                startDate: string;
-                /** Format: date-time */
-                endsAt: string | null;
-                /** Format: date-time */
-                horizonMaterializedUntil: string;
-                student: {
-                    /** Format: uuid */
-                    id: string;
-                    fullName: string;
-                } | null;
-                group: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                } | null;
-                teacher: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                    color: string | null;
-                };
-                /** Format: date-time */
-                createdAt: string;
-                /** Format: date-time */
-                updatedAt: string;
-                /** Format: date-time */
-                deletedAt: string | null;
-            }[];
-            page: number;
-            pageSize: number;
-            total: number;
-            totalPages: number;
-        };
-        CreateLessonSeriesDto: {
-            /** Format: uuid */
-            enrollmentId?: string | null;
-            /** Format: uuid */
-            studentId?: string | null;
-            /** Format: uuid */
-            groupId?: string | null;
-            /** Format: uuid */
-            teacherId?: string;
-            weekdays: number[];
-            localTime: string;
-            timezone: string;
-            durationMin: number;
-            priceMinor?: number;
-            /** @enum {string} */
-            currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-            /** Format: date-time */
-            startDate: string;
-        };
-        LessonSeriesDto: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            workspaceId: string;
-            /** Format: uuid */
-            scheduleId: string;
-            /** Format: uuid */
-            enrollmentId: string | null;
-            /** Format: uuid */
-            groupId: string | null;
-            /** Format: uuid */
-            teacherId: string;
-            weekdays: number[];
-            localTime: string;
-            timezone: string;
-            durationMin: number;
-            priceMinor: number;
-            /** @enum {string} */
-            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-            /** Format: date-time */
-            startDate: string;
-            /** Format: date-time */
-            endsAt: string | null;
-            /** Format: date-time */
-            horizonMaterializedUntil: string;
-            student: {
-                /** Format: uuid */
-                id: string;
-                fullName: string;
-            } | null;
-            group: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-            } | null;
-            teacher: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-                color: string | null;
-            };
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-            /** Format: date-time */
-            deletedAt: string | null;
-        };
-        UpdateLessonSeriesDto: {
-            weekdays?: number[];
-            localTime?: string;
-            timezone?: string;
-            durationMin?: number;
-            priceMinor?: number;
-            /** @enum {string} */
-            currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-            /** Format: date-time */
-            startDate?: string;
-        };
-        ScheduleListDto: {
-            items: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                workspaceId: string;
-                /** Format: uuid */
-                enrollmentId: string | null;
-                /** Format: uuid */
-                groupId: string | null;
-                /** Format: uuid */
-                teacherId: string;
-                timezone: string;
-                durationMin: number;
-                horizonWeeks: number;
-                /** Format: date-time */
-                endsAt: string | null;
-                /** @enum {string} */
-                state: "ACTIVE" | "ENDED";
-                slots: {
-                    weekday: number;
-                    localTime: string;
-                    /** Format: uuid */
-                    seriesId: string;
-                }[];
-                nextChange: {
-                    /** Format: date-time */
-                    effectiveFrom: string;
-                    slots: {
-                        weekday: number;
-                        localTime: string;
-                    }[];
-                } | null;
-                /** Format: date-time */
-                nextLessonAt: string | null;
-                /** Format: date-time */
-                startsAt: string | null;
-                /** Format: date-time */
-                lastLessonAt: string | null;
-                student: {
-                    /** Format: uuid */
-                    id: string;
-                    fullName: string;
-                    /** @enum {string|null} */
-                    avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
-                } | null;
-                group: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                    memberCount: number;
-                } | null;
-                teacher: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                };
-                /** Format: date-time */
-                createdAt: string;
-                /** Format: date-time */
-                updatedAt: string;
-            }[];
-            page: number;
-            pageSize: number;
-            total: number;
-            totalPages: number;
-            counts: {
-                active: number;
-                changing: number;
-                ended: number;
-                all: number;
-            };
-        };
-        CreateScheduleDto: {
-            /** Format: uuid */
-            studentId?: string | null;
-            /** Format: uuid */
-            enrollmentId?: string | null;
-            /** Format: uuid */
-            groupId?: string | null;
-            /** Format: uuid */
-            teacherId?: string;
-            slots: {
-                weekday: number;
-                localTime: string;
-            }[];
-            durationMin: number;
-            timezone?: string;
-            /** Format: date-time */
-            startDate?: string;
-            endsOn?: string | null;
-            horizonWeeks?: number;
-            priceMinor?: number;
-            /** @enum {string} */
-            currency?: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-        };
-        ScheduleDto: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            workspaceId: string;
-            /** Format: uuid */
-            enrollmentId: string | null;
-            /** Format: uuid */
-            groupId: string | null;
-            /** Format: uuid */
-            teacherId: string;
-            timezone: string;
-            durationMin: number;
-            horizonWeeks: number;
-            /** Format: date-time */
-            endsAt: string | null;
-            /** @enum {string} */
-            state: "ACTIVE" | "ENDED";
-            slots: {
-                weekday: number;
-                localTime: string;
-                /** Format: uuid */
-                seriesId: string;
-            }[];
-            nextChange: {
-                /** Format: date-time */
-                effectiveFrom: string;
-                slots: {
-                    weekday: number;
-                    localTime: string;
-                }[];
-            } | null;
-            /** Format: date-time */
-            nextLessonAt: string | null;
-            /** Format: date-time */
-            startsAt: string | null;
-            /** Format: date-time */
-            lastLessonAt: string | null;
-            student: {
-                /** Format: uuid */
-                id: string;
-                fullName: string;
-                /** @enum {string|null} */
-                avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
-            } | null;
-            group: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-                memberCount: number;
-            } | null;
-            teacher: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-            };
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-        };
-        ScheduleCreatePreviewDto: {
-            created: number;
-            dates: string[];
-            /** Format: date-time */
-            firstLessonAt: string | null;
-            /** Format: uuid */
-            existingScheduleId: string | null;
-            conflicts: {
-                /** Format: date-time */
-                candidateStartsAtUtc: string;
-                /** Format: uuid */
-                lessonId: string;
-                /** Format: date-time */
-                startsAtUtc: string;
-                durationMin: number;
-                /** @enum {string} */
-                reason: "TEACHER" | "STUDENT";
-                teacher: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                };
-                student: {
-                    /** Format: uuid */
-                    id: string;
-                    fullName: string;
-                } | null;
-                group: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                } | null;
-                students: {
-                    /** Format: uuid */
-                    id: string;
-                    fullName: string;
-                }[];
-            }[];
-        };
-        UpdateScheduleDto: {
-            horizonWeeks: number;
-        };
-        ScheduleHorizonPreviewDto: {
-            horizonWeeks: number;
-            added: number;
-            dates: string[];
-            /** Format: date-time */
-            lastLessonAt: string | null;
-        };
-        ScheduleChangeDto: {
-            /** Format: date-time */
-            effectiveFrom?: string;
-            slots: {
-                weekday: number;
-                localTime: string;
-            }[];
-            durationMin: number;
-        };
-        ScheduleChangePreviewDto: {
-            /** Format: date-time */
-            effectiveFrom: string;
-            moved: number;
-            unchanged: number;
-            created: number;
-            removed: number;
-            kept: number;
-            notesLost: {
-                /** Format: uuid */
-                lessonId: string;
-                /** Format: date-time */
-                startsAtUtc: string;
-                topic: string | null;
-                hasNotes: boolean;
-            }[];
-            conflicts: {
-                /** Format: date-time */
-                candidateStartsAtUtc: string;
-                /** Format: uuid */
-                lessonId: string;
-                /** Format: date-time */
-                startsAtUtc: string;
-                durationMin: number;
-                /** @enum {string} */
-                reason: "TEACHER" | "STUDENT";
-                teacher: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                };
-                student: {
-                    /** Format: uuid */
-                    id: string;
-                    fullName: string;
-                } | null;
-                group: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                } | null;
-                students: {
-                    /** Format: uuid */
-                    id: string;
-                    fullName: string;
-                }[];
-            }[];
-            moves: {
-                /** Format: uuid */
-                lessonId: string;
-                /** Format: date-time */
-                startsAtUtc: string;
-                /** Format: date-time */
-                toStartsAtUtc: string;
-            }[];
-            removals: {
-                /** Format: uuid */
-                lessonId: string;
-                /** Format: date-time */
-                startsAtUtc: string;
-            }[];
-            creates: string[];
-            keptLessons: {
-                /** Format: uuid */
-                lessonId: string;
-                /** Format: date-time */
-                startsAtUtc: string;
-                /** @enum {string} */
-                reason: "HELD" | "CANCELLED" | "NO_SHOW" | "MOVED" | "MARKED";
-            }[];
-        };
-        ScheduleChangeResultDto: {
-            schedule: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                workspaceId: string;
-                /** Format: uuid */
-                enrollmentId: string | null;
-                /** Format: uuid */
-                groupId: string | null;
-                /** Format: uuid */
-                teacherId: string;
-                timezone: string;
-                durationMin: number;
-                horizonWeeks: number;
-                /** Format: date-time */
-                endsAt: string | null;
-                /** @enum {string} */
-                state: "ACTIVE" | "ENDED";
-                slots: {
-                    weekday: number;
-                    localTime: string;
-                    /** Format: uuid */
-                    seriesId: string;
-                }[];
-                nextChange: {
-                    /** Format: date-time */
-                    effectiveFrom: string;
-                    slots: {
-                        weekday: number;
-                        localTime: string;
-                    }[];
-                } | null;
-                /** Format: date-time */
-                nextLessonAt: string | null;
-                /** Format: date-time */
-                startsAt: string | null;
-                /** Format: date-time */
-                lastLessonAt: string | null;
-                student: {
-                    /** Format: uuid */
-                    id: string;
-                    fullName: string;
-                    /** @enum {string|null} */
-                    avatarKey: "user-1" | "user-2" | "user-3" | "user-4" | "user-5" | "user-6" | "user-7" | "user-8" | "user-9" | "user-10" | null;
-                } | null;
-                group: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                    memberCount: number;
-                } | null;
-                teacher: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                };
-                /** Format: date-time */
-                createdAt: string;
-                /** Format: date-time */
-                updatedAt: string;
-            };
-            summary: {
-                /** Format: date-time */
-                effectiveFrom: string;
-                moved: number;
-                unchanged: number;
-                created: number;
-                removed: number;
-                kept: number;
-                notesLost: {
-                    /** Format: uuid */
-                    lessonId: string;
-                    /** Format: date-time */
-                    startsAtUtc: string;
-                    topic: string | null;
-                    hasNotes: boolean;
-                }[];
-                conflicts: {
-                    /** Format: date-time */
-                    candidateStartsAtUtc: string;
-                    /** Format: uuid */
-                    lessonId: string;
-                    /** Format: date-time */
-                    startsAtUtc: string;
-                    durationMin: number;
-                    /** @enum {string} */
-                    reason: "TEACHER" | "STUDENT";
-                    teacher: {
-                        /** Format: uuid */
-                        id: string;
-                        name: string;
-                    };
-                    student: {
-                        /** Format: uuid */
-                        id: string;
-                        fullName: string;
-                    } | null;
-                    group: {
-                        /** Format: uuid */
-                        id: string;
-                        name: string;
-                    } | null;
-                    students: {
-                        /** Format: uuid */
-                        id: string;
-                        fullName: string;
-                    }[];
-                }[];
-                moves: {
-                    /** Format: uuid */
-                    lessonId: string;
-                    /** Format: date-time */
-                    startsAtUtc: string;
-                    /** Format: date-time */
-                    toStartsAtUtc: string;
-                }[];
-                removals: {
-                    /** Format: uuid */
-                    lessonId: string;
-                    /** Format: date-time */
-                    startsAtUtc: string;
-                }[];
-                creates: string[];
-                keptLessons: {
-                    /** Format: uuid */
-                    lessonId: string;
-                    /** Format: date-time */
-                    startsAtUtc: string;
-                    /** @enum {string} */
-                    reason: "HELD" | "CANCELLED" | "NO_SHOW" | "MOVED" | "MARKED";
-                }[];
-            };
-        };
-        StopScheduleDto: {
-            /** Format: date-time */
-            from?: string;
-        };
-        PackageListDto: {
-            items: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                workspaceId: string;
-                /** Format: uuid */
-                enrollmentId: string;
-                /** Format: uuid */
-                studentId: string;
-                /** Format: uuid */
-                groupId: string | null;
-                name: string | null;
-                /** @enum {string} */
-                sizingMode: "FIXED_COUNT" | "BY_PERIOD" | "BY_PERIOD_WEEKLY";
-                lessonsTotal: number;
-                /** Format: date-time */
-                endDate: string | null;
-                pricePerLessonMinorSnapshot: number;
-                totalPriceMinorSnapshot: number;
-                lessonsPerWeek: number | null;
-                /** Format: date-time */
-                validFrom: string | null;
-                /** Format: uuid */
-                transferredFromPackageId: string | null;
-                remainingCredits: number;
-                consumedCredits: number;
-                paidMinor: number;
-                refundedMinor: number;
-                /** @enum {string} */
-                currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-                /** @enum {string} */
-                paymentStatus: "PENDING" | "PARTIAL" | "PAID";
-                /** Format: date-time */
-                purchasedAt: string;
-                /** Format: date-time */
-                expiresAt: string | null;
-                notes: string | null;
-                student: {
-                    /** Format: uuid */
-                    id: string;
-                    fullName: string;
-                };
-                group: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                } | null;
-                /** Format: date-time */
-                createdAt: string;
-                /** Format: date-time */
-                updatedAt: string;
-                /** Format: date-time */
-                deletedAt: string | null;
-            }[];
-            page: number;
-            pageSize: number;
-            total: number;
-            totalPages: number;
-        };
-        CreatePackageDto: {
-            /** Format: uuid */
-            studentId: string;
-            /** Format: uuid */
-            groupId?: string | null;
-            /** Format: uuid */
-            teacherId?: string | null;
-            name?: string | null;
-            /**
-             * @default FIXED_COUNT
-             * @enum {string}
-             */
-            sizingMode: "FIXED_COUNT" | "BY_PERIOD" | "BY_PERIOD_WEEKLY";
-            lessonsTotal?: number;
-            lessonsPerWeek?: number;
-            /** Format: date-time */
-            validFrom?: string;
-            /** Format: date-time */
-            endDate?: string;
-            pricePerLessonMinor?: number;
-            totalPriceMinor?: number;
-            /** @enum {string} */
-            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-            /** Format: date-time */
-            purchasedAt?: string;
-            /** Format: date-time */
-            expiresAt?: string | null;
-            notes?: string | null;
-            schedule?: {
-                slots: {
-                    weekday: number;
-                    localTime: string;
-                }[];
-                timezone: string;
-                durationMin: number;
-                /** Format: date-time */
-                startDate: string;
-            } | null;
-            initialPayment?: {
-                amountMinor: number;
-                /** Format: date-time */
-                paidAt: string;
-            } | null;
-        };
-        PackagePreviewDto: {
-            lessonsTotal: number;
-            pricePerLessonMinor: number;
-            totalPriceMinor: number;
-            /** Format: date-time */
-            validFrom: string | null;
-            /** Format: date-time */
-            expiresAt: string | null;
-            scheduleLessons: number | null;
-        };
-        SellToMembersDto: {
-            /** Format: uuid */
-            groupId: string;
-            studentIds: string[];
-            name?: string | null;
-            /**
-             * @default FIXED_COUNT
-             * @enum {string}
-             */
-            sizingMode: "FIXED_COUNT" | "BY_PERIOD" | "BY_PERIOD_WEEKLY";
-            lessonsTotal?: number;
-            lessonsPerWeek?: number;
-            /** Format: date-time */
-            validFrom?: string;
-            /** Format: date-time */
-            endDate?: string;
-            pricePerLessonMinor?: number;
-            totalPriceMinor?: number;
-            /** @enum {string} */
-            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-            /** Format: date-time */
-            purchasedAt?: string;
-            /** Format: date-time */
-            expiresAt?: string | null;
-            notes?: string | null;
-        };
-        SoldPackagesDto: {
-            items: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                workspaceId: string;
-                /** Format: uuid */
-                enrollmentId: string;
-                /** Format: uuid */
-                studentId: string;
-                /** Format: uuid */
-                groupId: string | null;
-                name: string | null;
-                /** @enum {string} */
-                sizingMode: "FIXED_COUNT" | "BY_PERIOD" | "BY_PERIOD_WEEKLY";
-                lessonsTotal: number;
-                /** Format: date-time */
-                endDate: string | null;
-                pricePerLessonMinorSnapshot: number;
-                totalPriceMinorSnapshot: number;
-                lessonsPerWeek: number | null;
-                /** Format: date-time */
-                validFrom: string | null;
-                /** Format: uuid */
-                transferredFromPackageId: string | null;
-                remainingCredits: number;
-                consumedCredits: number;
-                paidMinor: number;
-                refundedMinor: number;
-                /** @enum {string} */
-                currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-                /** @enum {string} */
-                paymentStatus: "PENDING" | "PARTIAL" | "PAID";
-                /** Format: date-time */
-                purchasedAt: string;
-                /** Format: date-time */
-                expiresAt: string | null;
-                notes: string | null;
-                student: {
-                    /** Format: uuid */
-                    id: string;
-                    fullName: string;
-                };
-                group: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                } | null;
-                /** Format: date-time */
-                createdAt: string;
-                /** Format: date-time */
-                updatedAt: string;
-                /** Format: date-time */
-                deletedAt: string | null;
-            }[];
-        };
-        ExtendPackageDto: {
-            /** Format: date-time */
-            expiresAt: string;
-        };
-        PackageDto: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            workspaceId: string;
-            /** Format: uuid */
-            enrollmentId: string;
-            /** Format: uuid */
-            studentId: string;
-            /** Format: uuid */
-            groupId: string | null;
-            name: string | null;
-            /** @enum {string} */
-            sizingMode: "FIXED_COUNT" | "BY_PERIOD" | "BY_PERIOD_WEEKLY";
-            lessonsTotal: number;
-            /** Format: date-time */
-            endDate: string | null;
-            pricePerLessonMinorSnapshot: number;
-            totalPriceMinorSnapshot: number;
-            lessonsPerWeek: number | null;
-            /** Format: date-time */
-            validFrom: string | null;
-            /** Format: uuid */
-            transferredFromPackageId: string | null;
-            remainingCredits: number;
-            consumedCredits: number;
-            paidMinor: number;
-            refundedMinor: number;
-            /** @enum {string} */
-            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-            /** @enum {string} */
-            paymentStatus: "PENDING" | "PARTIAL" | "PAID";
-            /** Format: date-time */
-            purchasedAt: string;
-            /** Format: date-time */
-            expiresAt: string | null;
-            notes: string | null;
-            student: {
-                /** Format: uuid */
-                id: string;
-                fullName: string;
-            };
-            group: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-            } | null;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-            /** Format: date-time */
-            deletedAt: string | null;
-        };
-        TransferPackageDto: {
-            /** Format: uuid */
-            toEnrollmentId: string;
-            credits?: number;
-            note?: string | null;
-        };
-        PackageTransferDto: {
-            source: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                workspaceId: string;
-                /** Format: uuid */
-                enrollmentId: string;
-                /** Format: uuid */
-                studentId: string;
-                /** Format: uuid */
-                groupId: string | null;
-                name: string | null;
-                /** @enum {string} */
-                sizingMode: "FIXED_COUNT" | "BY_PERIOD" | "BY_PERIOD_WEEKLY";
-                lessonsTotal: number;
-                /** Format: date-time */
-                endDate: string | null;
-                pricePerLessonMinorSnapshot: number;
-                totalPriceMinorSnapshot: number;
-                lessonsPerWeek: number | null;
-                /** Format: date-time */
-                validFrom: string | null;
-                /** Format: uuid */
-                transferredFromPackageId: string | null;
-                remainingCredits: number;
-                consumedCredits: number;
-                paidMinor: number;
-                refundedMinor: number;
-                /** @enum {string} */
-                currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-                /** @enum {string} */
-                paymentStatus: "PENDING" | "PARTIAL" | "PAID";
-                /** Format: date-time */
-                purchasedAt: string;
-                /** Format: date-time */
-                expiresAt: string | null;
-                notes: string | null;
-                student: {
-                    /** Format: uuid */
-                    id: string;
-                    fullName: string;
-                };
-                group: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                } | null;
-                /** Format: date-time */
-                createdAt: string;
-                /** Format: date-time */
-                updatedAt: string;
-                /** Format: date-time */
-                deletedAt: string | null;
-            };
-            target: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                workspaceId: string;
-                /** Format: uuid */
-                enrollmentId: string;
-                /** Format: uuid */
-                studentId: string;
-                /** Format: uuid */
-                groupId: string | null;
-                name: string | null;
-                /** @enum {string} */
-                sizingMode: "FIXED_COUNT" | "BY_PERIOD" | "BY_PERIOD_WEEKLY";
-                lessonsTotal: number;
-                /** Format: date-time */
-                endDate: string | null;
-                pricePerLessonMinorSnapshot: number;
-                totalPriceMinorSnapshot: number;
-                lessonsPerWeek: number | null;
-                /** Format: date-time */
-                validFrom: string | null;
-                /** Format: uuid */
-                transferredFromPackageId: string | null;
-                remainingCredits: number;
-                consumedCredits: number;
-                paidMinor: number;
-                refundedMinor: number;
-                /** @enum {string} */
-                currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-                /** @enum {string} */
-                paymentStatus: "PENDING" | "PARTIAL" | "PAID";
-                /** Format: date-time */
-                purchasedAt: string;
-                /** Format: date-time */
-                expiresAt: string | null;
-                notes: string | null;
-                student: {
-                    /** Format: uuid */
-                    id: string;
-                    fullName: string;
-                };
-                group: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                } | null;
-                /** Format: date-time */
-                createdAt: string;
-                /** Format: date-time */
-                updatedAt: string;
-                /** Format: date-time */
-                deletedAt: string | null;
-            };
-            valueMinor: number;
-            remainderMinor: number;
-        };
-        RefundPackageDto: {
-            credits: number;
-            amountMinor: number;
-            /**
-             * @default CASH
-             * @enum {string}
-             */
-            method: "CASH" | "BANK_TRANSFER" | "OTHER" | "CARD";
-            /** Format: date-time */
-            paidAt?: string;
-            note: string;
-        };
-        CreditLedgerDto: {
-            items: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                packageId: string;
-                /** Format: uuid */
-                lessonId: string | null;
-                delta: number;
-                /** @enum {string} */
-                type: "purchase" | "manual_adjustment" | "transfer_out" | "transfer_in" | "refund" | "lesson";
-                note: string | null;
-                /** Format: date-time */
-                createdAt: string;
-            }[];
-            balance: number;
-        };
-        AdjustBalanceDto: {
-            delta: number;
-            note: string;
-        };
-        PaymentListDto: {
-            items: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                workspaceId: string;
-                /** Format: uuid */
-                enrollmentId: string;
-                /** Format: uuid */
-                packageId: string | null;
-                amountMinor: number;
-                /** @enum {string} */
-                currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-                /** @enum {string} */
-                method: "CASH" | "BANK_TRANSFER" | "OTHER" | "CARD";
-                /** @enum {string} */
-                status: "PENDING" | "PAID" | "FAILED" | "REFUNDED";
-                provider: string;
-                externalId: string | null;
-                /** Format: date-time */
-                paidAt: string;
-                note: string | null;
-                student: {
-                    /** Format: uuid */
-                    id: string;
-                    fullName: string;
-                };
-                /** Format: date-time */
-                createdAt: string;
-                /** Format: date-time */
-                updatedAt: string;
-            }[];
-            page: number;
-            pageSize: number;
-            total: number;
-            totalPages: number;
-        };
-        RecordPaymentDto: {
-            /** Format: uuid */
-            enrollmentId: string;
-            /** Format: uuid */
-            packageId?: string | null;
-            amountMinor: number;
-            /** @enum {string} */
-            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-            /**
-             * @default CASH
-             * @enum {string}
-             */
-            method: "CASH" | "BANK_TRANSFER" | "OTHER" | "CARD";
-            /** Format: date-time */
-            paidAt?: string;
-            note?: string | null;
-            idempotencyKey?: string;
-        };
-        PaymentDto: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            workspaceId: string;
-            /** Format: uuid */
-            enrollmentId: string;
-            /** Format: uuid */
-            packageId: string | null;
-            amountMinor: number;
-            /** @enum {string} */
-            currency: "EUR" | "UAH" | "PLN" | "USD" | "GBP";
-            /** @enum {string} */
-            method: "CASH" | "BANK_TRANSFER" | "OTHER" | "CARD";
-            /** @enum {string} */
-            status: "PENDING" | "PAID" | "FAILED" | "REFUNDED";
-            provider: string;
-            externalId: string | null;
-            /** Format: date-time */
-            paidAt: string;
-            note: string | null;
-            student: {
-                /** Format: uuid */
-                id: string;
-                fullName: string;
-            };
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-        };
+  schemas: {
+    RegisterDto: {
+      name: string;
+      workspaceName: string;
+      /** Format: email */
+      email: string;
+      password: string;
+      /**
+       * @default SOLO
+       * @enum {string}
+       */
+      mode: 'SOLO' | 'SCHOOL';
     };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+    AuthSessionDto: {
+      tokens: {
+        accessToken: string;
+        refreshToken: string;
+      };
+      user: {
+        /** Format: uuid */
+        id: string;
+        /** Format: email */
+        email: string;
+        name: string;
+      };
+      workspace: {
+        /** Format: uuid */
+        id: string;
+        name: string;
+        /** @enum {string} */
+        plan: 'FREE' | 'PRO';
+        /** @enum {string} */
+        mode: 'SOLO' | 'SCHOOL';
+        defaultCurrency: string;
+        cancellationDeadlineHours: number;
+        timezone: string;
+        scheduleHorizonWeeks: number;
+        lowCreditThreshold: number;
+      };
+      /** @enum {string} */
+      role: 'OWNER' | 'TEACHER';
+    };
+    ApiErrorDto: {
+      statusCode: number;
+      code: string;
+      message: string;
+    };
+    LoginDto: {
+      /** Format: email */
+      email: string;
+      password: string;
+    };
+    RefreshDto: {
+      refreshToken: string;
+    };
+    LogoutDto: {
+      refreshToken: string;
+    };
+    AuthMeDto: {
+      user: {
+        /** Format: uuid */
+        id: string;
+        /** Format: email */
+        email: string;
+        name: string;
+      };
+      workspace: {
+        /** Format: uuid */
+        id: string;
+        name: string;
+        /** @enum {string} */
+        plan: 'FREE' | 'PRO';
+        /** @enum {string} */
+        mode: 'SOLO' | 'SCHOOL';
+        defaultCurrency: string;
+        cancellationDeadlineHours: number;
+        timezone: string;
+        scheduleHorizonWeeks: number;
+        lowCreditThreshold: number;
+      };
+      /** @enum {string} */
+      role: 'OWNER' | 'TEACHER';
+    };
+    CurrentWorkspaceDto: {
+      workspace: {
+        /** Format: uuid */
+        id: string;
+        name: string;
+        /** @enum {string} */
+        plan: 'FREE' | 'PRO';
+        /** @enum {string} */
+        mode: 'SOLO' | 'SCHOOL';
+        defaultCurrency: string;
+        cancellationDeadlineHours: number;
+        timezone: string;
+        scheduleHorizonWeeks: number;
+        lowCreditThreshold: number;
+      };
+      /** @enum {string} */
+      role: 'OWNER' | 'TEACHER';
+    };
+    UpdateWorkspaceSettingsDto: {
+      /** @enum {string} */
+      defaultCurrency?: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+      cancellationDeadlineHours?: number;
+      scheduleHorizonWeeks?: number;
+      lowCreditThreshold?: number;
+      /** @enum {string} */
+      mode?: 'SOLO' | 'SCHOOL';
+    };
+    WorkspaceMemberListDto: {
+      items: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        userId: string;
+        name: string;
+        email: string;
+        /** @enum {string} */
+        role: 'OWNER' | 'TEACHER';
+      }[];
+    };
+    AuditLogListDto: {
+      items: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        workspaceId: string;
+        /** Format: uuid */
+        actorId: string | null;
+        actor: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+          email: string;
+        } | null;
+        /** @enum {string} */
+        entity:
+          | 'STUDENT'
+          | 'PARENT'
+          | 'GROUP'
+          | 'TEACHER'
+          | 'ENROLLMENT'
+          | 'WORKSPACE'
+          | 'LESSON'
+          | 'LESSON_SERIES'
+          | 'SCHEDULE'
+          | 'PAUSE'
+          | 'LESSON_PACKAGE'
+          | 'PAYMENT';
+        entityId: string;
+        /** @enum {string} */
+        action: 'CREATE' | 'UPDATE' | 'DELETE' | 'RESTORE';
+        changes: {
+          fields: {
+            [key: string]: {
+              before: unknown;
+              after: unknown;
+            };
+          };
+        } | null;
+        /** Format: date-time */
+        createdAt: string;
+      }[];
+      page: number;
+      pageSize: number;
+      total: number;
+      totalPages: number;
+    };
+    StudentListDto: {
+      items: {
+        /** Format: uuid */
+        id: string;
+        fullName: string;
+        email: string | null;
+        phone: string | null;
+        telegramUsername: string | null;
+        timezone: string;
+        /** @enum {string} */
+        status: 'ACTIVE' | 'ON_HOLD' | 'ARCHIVED';
+        hourlyRateMinor: number | null;
+        /** @enum {string|null} */
+        currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP' | null;
+        /** @enum {string|null} */
+        avatarKey:
+          | 'user-1'
+          | 'user-2'
+          | 'user-3'
+          | 'user-4'
+          | 'user-5'
+          | 'user-6'
+          | 'user-7'
+          | 'user-8'
+          | 'user-9'
+          | 'user-10'
+          | null;
+        /** Format: date-time */
+        createdAt: string;
+        /** Format: date-time */
+        deletedAt: string | null;
+        activeEnrollmentCount: number;
+        groupNames: string[];
+      }[];
+      page: number;
+      pageSize: number;
+      total: number;
+      totalPages: number;
+    };
+    StudentsSummaryDto: {
+      all: number;
+      ACTIVE: number;
+      ON_HOLD: number;
+      ARCHIVED: number;
+    };
+    CreateStudentDto: {
+      fullName: string;
+      /** Format: email */
+      email: string;
+      phone: string;
+      timezone: string;
+      telegramUsername: string;
+      hourlyRateMinor?: number;
+      /** @enum {string} */
+      currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+      /**
+       * @default ACTIVE
+       * @enum {string}
+       */
+      status: 'ACTIVE' | 'ON_HOLD';
+      /** @enum {string} */
+      languageLevel: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+      /** @enum {string} */
+      knowledgeLevel: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+      age?: number;
+      grade?: number;
+      /** @enum {string} */
+      avatarKey:
+        | 'user-1'
+        | 'user-2'
+        | 'user-3'
+        | 'user-4'
+        | 'user-5'
+        | 'user-6'
+        | 'user-7'
+        | 'user-8'
+        | 'user-9'
+        | 'user-10';
+      parentIds?: string[];
+      notes: string;
+    };
+    StudentDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      workspaceId: string;
+      fullName: string;
+      email: string | null;
+      phone: string | null;
+      timezone: string;
+      telegramUsername: string | null;
+      hourlyRateMinor: number | null;
+      /** @enum {string|null} */
+      currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP' | null;
+      /** @enum {string} */
+      status: 'ACTIVE' | 'ON_HOLD' | 'ARCHIVED';
+      /** @enum {string|null} */
+      languageLevel: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' | null;
+      /** @enum {string|null} */
+      knowledgeLevel: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | null;
+      age: number | null;
+      grade: number | null;
+      /** @enum {string|null} */
+      avatarKey:
+        | 'user-1'
+        | 'user-2'
+        | 'user-3'
+        | 'user-4'
+        | 'user-5'
+        | 'user-6'
+        | 'user-7'
+        | 'user-8'
+        | 'user-9'
+        | 'user-10'
+        | null;
+      parents: {
+        /** Format: uuid */
+        id: string;
+        fullName: string;
+        /** @enum {string|null} */
+        avatarKey:
+          | 'user-1'
+          | 'user-2'
+          | 'user-3'
+          | 'user-4'
+          | 'user-5'
+          | 'user-6'
+          | 'user-7'
+          | 'user-8'
+          | 'user-9'
+          | 'user-10'
+          | null;
+        phone: string | null;
+        telegramUsername: string | null;
+      }[];
+      notes: string | null;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+      /** Format: date-time */
+      deletedAt: string | null;
+    };
+    StudentDetailDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      workspaceId: string;
+      fullName: string;
+      email: string | null;
+      phone: string | null;
+      timezone: string;
+      telegramUsername: string | null;
+      hourlyRateMinor: number | null;
+      /** @enum {string|null} */
+      currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP' | null;
+      /** @enum {string} */
+      status: 'ACTIVE' | 'ON_HOLD' | 'ARCHIVED';
+      /** @enum {string|null} */
+      languageLevel: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' | null;
+      /** @enum {string|null} */
+      knowledgeLevel: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | null;
+      age: number | null;
+      grade: number | null;
+      /** @enum {string|null} */
+      avatarKey:
+        | 'user-1'
+        | 'user-2'
+        | 'user-3'
+        | 'user-4'
+        | 'user-5'
+        | 'user-6'
+        | 'user-7'
+        | 'user-8'
+        | 'user-9'
+        | 'user-10'
+        | null;
+      parents: {
+        /** Format: uuid */
+        id: string;
+        fullName: string;
+        /** @enum {string|null} */
+        avatarKey:
+          | 'user-1'
+          | 'user-2'
+          | 'user-3'
+          | 'user-4'
+          | 'user-5'
+          | 'user-6'
+          | 'user-7'
+          | 'user-8'
+          | 'user-9'
+          | 'user-10'
+          | null;
+        phone: string | null;
+        telegramUsername: string | null;
+      }[];
+      notes: string | null;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+      /** Format: date-time */
+      deletedAt: string | null;
+      enrollments: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        workspaceId: string;
+        /** Format: uuid */
+        studentId: string;
+        /** Format: uuid */
+        groupId: string | null;
+        /** Format: uuid */
+        teacherId: string;
+        student: {
+          /** Format: uuid */
+          id: string;
+          fullName: string;
+        };
+        group: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+        } | null;
+        teacher: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+          color: string | null;
+        };
+        /** @enum {string} */
+        status: 'ACTIVE' | 'PAUSED' | 'ARCHIVED';
+        /** @enum {string} */
+        billingType: 'PACKAGE' | 'PER_LESSON';
+        priceMinor: number;
+        /** @enum {string} */
+        currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+        ownPrice: boolean;
+        cancellationDeadlineHours: number | null;
+        effectiveCancellationDeadlineHours: number;
+        /** Format: date-time */
+        createdAt: string;
+        /** Format: date-time */
+        updatedAt: string;
+        /** Format: date-time */
+        deletedAt: string | null;
+      }[];
+    };
+    StudentBillingDto: {
+      /** Format: uuid */
+      studentId: string;
+      lowCreditThreshold: number;
+      directions: {
+        /** Format: uuid */
+        enrollmentId: string;
+        /** @enum {string} */
+        billingType: 'PACKAGE' | 'PER_LESSON';
+        rateMinor: number;
+        /** @enum {string} */
+        currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+        packages: {
+          /** Format: uuid */
+          id: string;
+          name: string | null;
+          /** Format: date-time */
+          purchasedAt: string;
+          /** Format: date-time */
+          expiresAt: string | null;
+          remainingCredits: number;
+          usable: boolean;
+        }[];
+        creditsLeft: number;
+        debtLessons: number;
+        balance: {
+          chargedMinor: number;
+          paidMinor: number;
+          debtMinor: number;
+          advanceMinor: number;
+          unpaidLessons: number;
+        };
+        /** @enum {string|null} */
+        warning: 'ON_DEBT' | 'NO_CREDITS' | 'LOW_CREDITS' | null;
+        /** @enum {string} */
+        status: 'ACTIVE' | 'PAUSED' | 'ARCHIVED';
+        teacher: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+        };
+        group: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+        } | null;
+      }[];
+      totals: {
+        /** @enum {string} */
+        currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+        debtMinor: number;
+        advanceMinor: number;
+        unpaidLessons: number;
+        debtLessons: number;
+        creditsLeft: number;
+      }[];
+    };
+    UpdateStudentDto: {
+      fullName?: string;
+      /** Format: email */
+      email?: string | null;
+      phone?: string | null;
+      timezone?: string;
+      telegramUsername?: string | null;
+      hourlyRateMinor?: number | null;
+      /** @enum {string|null} */
+      currency?: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP' | null;
+      /** @enum {string} */
+      status?: 'ACTIVE' | 'ON_HOLD';
+      /** @enum {string|null} */
+      languageLevel?: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' | null;
+      /** @enum {string|null} */
+      knowledgeLevel?: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | null;
+      age?: number | null;
+      grade?: number | null;
+      /** @enum {string|null} */
+      avatarKey?:
+        | 'user-1'
+        | 'user-2'
+        | 'user-3'
+        | 'user-4'
+        | 'user-5'
+        | 'user-6'
+        | 'user-7'
+        | 'user-8'
+        | 'user-9'
+        | 'user-10'
+        | null;
+      parentIds?: string[];
+      notes?: string | null;
+    };
+    CreditWarningListDto: {
+      lowCreditThreshold: number;
+      items: {
+        /** Format: uuid */
+        enrollmentId: string;
+        /** @enum {string} */
+        warning: 'ON_DEBT' | 'NO_CREDITS' | 'LOW_CREDITS';
+        creditsLeft: number;
+        debtLessons: number;
+        student: {
+          /** Format: uuid */
+          id: string;
+          fullName: string;
+        };
+        teacher: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+        };
+        group: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+        } | null;
+      }[];
+    };
+    PauseListDto: {
+      items: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        workspaceId: string;
+        /** Format: uuid */
+        studentId: string;
+        /** Format: uuid */
+        enrollmentId: string | null;
+        /** Format: date-time */
+        startsAt: string;
+        /** Format: date-time */
+        endsAt: string | null;
+        /** Format: date-time */
+        endedAt: string | null;
+        /** @enum {string} */
+        state: 'SCHEDULED' | 'ACTIVE' | 'ENDED' | 'CANCELLED';
+        reason: string | null;
+        removedLessons: number;
+        extensions: {
+          /** Format: uuid */
+          packageId: string;
+          extendedBySeconds: number;
+        }[];
+        student: {
+          /** Format: uuid */
+          id: string;
+          fullName: string;
+        };
+        /** Format: date-time */
+        createdAt: string;
+        /** Format: date-time */
+        updatedAt: string;
+      }[];
+      page: number;
+      pageSize: number;
+      total: number;
+      totalPages: number;
+    };
+    CreatePauseDto: {
+      /** Format: uuid */
+      studentId: string;
+      /** Format: uuid */
+      enrollmentId?: string | null;
+      /** Format: date-time */
+      startsAt?: string;
+      /** Format: date-time */
+      endsAt?: string | null;
+      reason?: string | null;
+    };
+    PauseDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      workspaceId: string;
+      /** Format: uuid */
+      studentId: string;
+      /** Format: uuid */
+      enrollmentId: string | null;
+      /** Format: date-time */
+      startsAt: string;
+      /** Format: date-time */
+      endsAt: string | null;
+      /** Format: date-time */
+      endedAt: string | null;
+      /** @enum {string} */
+      state: 'SCHEDULED' | 'ACTIVE' | 'ENDED' | 'CANCELLED';
+      reason: string | null;
+      removedLessons: number;
+      extensions: {
+        /** Format: uuid */
+        packageId: string;
+        extendedBySeconds: number;
+      }[];
+      student: {
+        /** Format: uuid */
+        id: string;
+        fullName: string;
+      };
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    ParentListDto: {
+      items: {
+        /** Format: uuid */
+        id: string;
+        fullName: string;
+        email: string | null;
+        phone: string | null;
+        telegramUsername: string | null;
+        /** @enum {string|null} */
+        avatarKey:
+          | 'user-1'
+          | 'user-2'
+          | 'user-3'
+          | 'user-4'
+          | 'user-5'
+          | 'user-6'
+          | 'user-7'
+          | 'user-8'
+          | 'user-9'
+          | 'user-10'
+          | null;
+        /** Format: date-time */
+        deletedAt: string | null;
+        students: {
+          /** Format: uuid */
+          id: string;
+          fullName: string;
+          /** @enum {string|null} */
+          avatarKey:
+            | 'user-1'
+            | 'user-2'
+            | 'user-3'
+            | 'user-4'
+            | 'user-5'
+            | 'user-6'
+            | 'user-7'
+            | 'user-8'
+            | 'user-9'
+            | 'user-10'
+            | null;
+          /** @enum {string} */
+          status: 'ACTIVE' | 'ON_HOLD' | 'ARCHIVED';
+          /** @enum {string|null} */
+          languageLevel: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' | null;
+        }[];
+      }[];
+      page: number;
+      pageSize: number;
+      total: number;
+      totalPages: number;
+    };
+    CreateParentDto: {
+      fullName: string;
+      /** Format: email */
+      email: string;
+      phone: string;
+      telegramUsername: string;
+      /** @enum {string} */
+      avatarKey:
+        | 'user-1'
+        | 'user-2'
+        | 'user-3'
+        | 'user-4'
+        | 'user-5'
+        | 'user-6'
+        | 'user-7'
+        | 'user-8'
+        | 'user-9'
+        | 'user-10';
+      studentIds?: string[];
+      notes: string;
+    };
+    ParentDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      workspaceId: string;
+      fullName: string;
+      email: string | null;
+      phone: string | null;
+      telegramUsername: string | null;
+      /** @enum {string|null} */
+      avatarKey:
+        | 'user-1'
+        | 'user-2'
+        | 'user-3'
+        | 'user-4'
+        | 'user-5'
+        | 'user-6'
+        | 'user-7'
+        | 'user-8'
+        | 'user-9'
+        | 'user-10'
+        | null;
+      notes: string | null;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+      /** Format: date-time */
+      deletedAt: string | null;
+    };
+    ParentDetailDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      workspaceId: string;
+      fullName: string;
+      email: string | null;
+      phone: string | null;
+      telegramUsername: string | null;
+      /** @enum {string|null} */
+      avatarKey:
+        | 'user-1'
+        | 'user-2'
+        | 'user-3'
+        | 'user-4'
+        | 'user-5'
+        | 'user-6'
+        | 'user-7'
+        | 'user-8'
+        | 'user-9'
+        | 'user-10'
+        | null;
+      notes: string | null;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+      /** Format: date-time */
+      deletedAt: string | null;
+      students: {
+        /** Format: uuid */
+        id: string;
+        fullName: string;
+        /** @enum {string|null} */
+        avatarKey:
+          | 'user-1'
+          | 'user-2'
+          | 'user-3'
+          | 'user-4'
+          | 'user-5'
+          | 'user-6'
+          | 'user-7'
+          | 'user-8'
+          | 'user-9'
+          | 'user-10'
+          | null;
+        /** @enum {string} */
+        status: 'ACTIVE' | 'ON_HOLD' | 'ARCHIVED';
+        /** @enum {string|null} */
+        languageLevel: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' | null;
+      }[];
+    };
+    UpdateParentDto: {
+      fullName?: string;
+      /** Format: email */
+      email?: string | null;
+      phone?: string | null;
+      telegramUsername?: string | null;
+      /** @enum {string|null} */
+      avatarKey?:
+        | 'user-1'
+        | 'user-2'
+        | 'user-3'
+        | 'user-4'
+        | 'user-5'
+        | 'user-6'
+        | 'user-7'
+        | 'user-8'
+        | 'user-9'
+        | 'user-10'
+        | null;
+      studentIds?: string[];
+      notes?: string | null;
+    };
+    TeacherListDto: {
+      items: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        workspaceId: string;
+        fullName: string;
+        email: string | null;
+        phone: string | null;
+        telegramUsername: string | null;
+        bio: string | null;
+        defaultRateMinor: number | null;
+        /** @enum {string|null} */
+        currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP' | null;
+        color: string | null;
+        /** @enum {string|null} */
+        avatarKey:
+          | 'user-1'
+          | 'user-2'
+          | 'user-3'
+          | 'user-4'
+          | 'user-5'
+          | 'user-6'
+          | 'user-7'
+          | 'user-8'
+          | 'user-9'
+          | 'user-10'
+          | null;
+        /** @enum {string} */
+        status: 'ACTIVE' | 'ARCHIVED';
+        /** Format: uuid */
+        workspaceMemberId: string | null;
+        isMe: boolean;
+        notes: string | null;
+        /** Format: date-time */
+        createdAt: string;
+        /** Format: date-time */
+        updatedAt: string;
+        /** Format: date-time */
+        deletedAt: string | null;
+        activeEnrollmentCount: number;
+      }[];
+      page: number;
+      pageSize: number;
+      total: number;
+      totalPages: number;
+    };
+    CreateTeacherDto: {
+      fullName: string;
+      /** Format: email */
+      email?: string;
+      phone?: string;
+      telegramUsername?: string;
+      bio?: string;
+      defaultRateMinor?: number;
+      /** @enum {string} */
+      currency?: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+      color?: string;
+      /** @enum {string} */
+      avatarKey?:
+        | 'user-1'
+        | 'user-2'
+        | 'user-3'
+        | 'user-4'
+        | 'user-5'
+        | 'user-6'
+        | 'user-7'
+        | 'user-8'
+        | 'user-9'
+        | 'user-10';
+      /**
+       * @default ACTIVE
+       * @enum {string}
+       */
+      status: 'ACTIVE' | 'ARCHIVED';
+      /** Format: uuid */
+      workspaceMemberId?: string;
+      notes?: string;
+    };
+    TeacherDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      workspaceId: string;
+      fullName: string;
+      email: string | null;
+      phone: string | null;
+      telegramUsername: string | null;
+      bio: string | null;
+      defaultRateMinor: number | null;
+      /** @enum {string|null} */
+      currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP' | null;
+      color: string | null;
+      /** @enum {string|null} */
+      avatarKey:
+        | 'user-1'
+        | 'user-2'
+        | 'user-3'
+        | 'user-4'
+        | 'user-5'
+        | 'user-6'
+        | 'user-7'
+        | 'user-8'
+        | 'user-9'
+        | 'user-10'
+        | null;
+      /** @enum {string} */
+      status: 'ACTIVE' | 'ARCHIVED';
+      /** Format: uuid */
+      workspaceMemberId: string | null;
+      isMe: boolean;
+      notes: string | null;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+      /** Format: date-time */
+      deletedAt: string | null;
+    };
+    UpdateTeacherDto: {
+      fullName?: string;
+      /** Format: email */
+      email?: string | null;
+      phone?: string | null;
+      telegramUsername?: string | null;
+      bio?: string | null;
+      defaultRateMinor?: number | null;
+      /** @enum {string|null} */
+      currency?: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP' | null;
+      color?: string | null;
+      /** @enum {string|null} */
+      avatarKey?:
+        | 'user-1'
+        | 'user-2'
+        | 'user-3'
+        | 'user-4'
+        | 'user-5'
+        | 'user-6'
+        | 'user-7'
+        | 'user-8'
+        | 'user-9'
+        | 'user-10'
+        | null;
+      /** @enum {string} */
+      status?: 'ACTIVE' | 'ARCHIVED';
+      /** Format: uuid */
+      workspaceMemberId?: string | null;
+      notes?: string | null;
+    };
+    GroupListDto: {
+      items: {
+        /** Format: uuid */
+        id: string;
+        name: string;
+        teacher: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+          /** @enum {string|null} */
+          avatarKey:
+            | 'user-1'
+            | 'user-2'
+            | 'user-3'
+            | 'user-4'
+            | 'user-5'
+            | 'user-6'
+            | 'user-7'
+            | 'user-8'
+            | 'user-9'
+            | 'user-10'
+            | null;
+          color: string | null;
+        } | null;
+        capacity: number | null;
+        pricePerLesson: number | null;
+        /** @enum {string|null} */
+        currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP' | null;
+        notes: string | null;
+        /** Format: date-time */
+        deletedAt: string | null;
+        /** @enum {string} */
+        status: 'ACTIVE' | 'EMPTY';
+        activeStudentCount: number;
+        students: {
+          /** Format: uuid */
+          id: string;
+          fullName: string;
+          /** @enum {string|null} */
+          avatarKey:
+            | 'user-1'
+            | 'user-2'
+            | 'user-3'
+            | 'user-4'
+            | 'user-5'
+            | 'user-6'
+            | 'user-7'
+            | 'user-8'
+            | 'user-9'
+            | 'user-10'
+            | null;
+        }[];
+        schedules: {
+          weekdays: number[];
+          localTime: string;
+          durationMin: number;
+          timezone: string;
+        }[];
+        nextLesson: {
+          /** Format: uuid */
+          id: string;
+          /** Format: date-time */
+          startsAtUtc: string;
+          durationMin: number;
+        } | null;
+        paymentDue: boolean;
+      }[];
+      page: number;
+      pageSize: number;
+      total: number;
+      totalPages: number;
+    };
+    GroupSummaryDto: {
+      total: number;
+      active: number;
+      empty: number;
+      archived: number;
+      studentsInGroups: number;
+      studioStudents: number;
+      freeSeats: number | null;
+      lessonsThisWeek: number;
+      lessonsToday: number;
+      unpaidGroups: number;
+      /** Format: date-time */
+      weekStart: string;
+      /** Format: date-time */
+      weekEnd: string;
+    };
+    GroupOptionsDto: {
+      items: {
+        /** Format: uuid */
+        id: string;
+        name: string;
+      }[];
+    };
+    CreateGroupDto: {
+      name: string;
+      /** Format: uuid */
+      teacherId?: string;
+      capacity?: number;
+      pricePerLesson?: number;
+      /** @enum {string} */
+      currency?: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+      notes?: string;
+      students?: {
+        studentIds: string[];
+        /** Format: uuid */
+        teacherId?: string;
+      };
+      schedule?: {
+        weekdays: number[];
+        localTime: string;
+        durationMin: number;
+      };
+    };
+    GroupDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      workspaceId: string;
+      name: string;
+      /** Format: uuid */
+      teacherId: string | null;
+      capacity: number | null;
+      pricePerLesson: number | null;
+      /** @enum {string|null} */
+      currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP' | null;
+      notes: string | null;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+      /** Format: date-time */
+      deletedAt: string | null;
+    };
+    GroupDetailDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      workspaceId: string;
+      name: string;
+      /** Format: uuid */
+      teacherId: string | null;
+      capacity: number | null;
+      pricePerLesson: number | null;
+      /** @enum {string|null} */
+      currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP' | null;
+      notes: string | null;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+      /** Format: date-time */
+      deletedAt: string | null;
+      /** @enum {string} */
+      status: 'ACTIVE' | 'EMPTY';
+      teacher: {
+        /** Format: uuid */
+        id: string;
+        name: string;
+        /** @enum {string|null} */
+        avatarKey:
+          | 'user-1'
+          | 'user-2'
+          | 'user-3'
+          | 'user-4'
+          | 'user-5'
+          | 'user-6'
+          | 'user-7'
+          | 'user-8'
+          | 'user-9'
+          | 'user-10'
+          | null;
+        color: string | null;
+      } | null;
+      teacherMismatch: boolean;
+      enrollments: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        studentId: string;
+        /** Format: uuid */
+        groupId: string;
+        /** Format: uuid */
+        teacherId: string;
+        /** @enum {string} */
+        status: 'ACTIVE' | 'PAUSED' | 'ARCHIVED';
+        /** @enum {string} */
+        billingType: 'PACKAGE' | 'PER_LESSON';
+        priceMinor: number;
+        /** @enum {string} */
+        currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+        ownPrice: boolean;
+        cancellationDeadlineHours: number | null;
+        student: {
+          /** Format: uuid */
+          id: string;
+          fullName: string;
+          /** @enum {string|null} */
+          avatarKey:
+            | 'user-1'
+            | 'user-2'
+            | 'user-3'
+            | 'user-4'
+            | 'user-5'
+            | 'user-6'
+            | 'user-7'
+            | 'user-8'
+            | 'user-9'
+            | 'user-10'
+            | null;
+          /** @enum {string} */
+          status: 'ACTIVE' | 'ON_HOLD' | 'ARCHIVED';
+          /** @enum {string|null} */
+          languageLevel: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' | null;
+        };
+        teacher: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+          color: string | null;
+        };
+      }[];
+      schedules: {
+        weekdays: number[];
+        localTime: string;
+        durationMin: number;
+        timezone: string;
+        /** Format: uuid */
+        id: string;
+      }[];
+      nextLesson: {
+        /** Format: uuid */
+        id: string;
+        /** Format: date-time */
+        startsAtUtc: string;
+        durationMin: number;
+        notes: string | null;
+        /** @enum {string} */
+        status: 'SCHEDULED' | 'COMPLETED' | 'CANCELLED_CHARGED' | 'CANCELLED_UNCHARGED' | 'NO_SHOW';
+      } | null;
+      lessonCounts: {
+        completed: number;
+        upcoming: number;
+      };
+    };
+    GroupAttendanceDto: {
+      window: number;
+      lessons: {
+        /** Format: uuid */
+        id: string;
+        /** Format: date-time */
+        startsAtUtc: string;
+        /** @enum {string} */
+        status: 'SCHEDULED' | 'COMPLETED' | 'CANCELLED_CHARGED' | 'CANCELLED_UNCHARGED' | 'NO_SHOW';
+      }[];
+      stats: {
+        lessons: number;
+        held: number;
+        rate: number | null;
+        previousRate: number | null;
+        misses: number;
+        expected: number;
+        cancelled: number;
+        cancelledCharged: number;
+        cancelledFree: number;
+      };
+      rows: {
+        /** Format: uuid */
+        enrollmentId: string;
+        student: {
+          /** Format: uuid */
+          id: string;
+          fullName: string;
+          /** @enum {string|null} */
+          avatarKey:
+            | 'user-1'
+            | 'user-2'
+            | 'user-3'
+            | 'user-4'
+            | 'user-5'
+            | 'user-6'
+            | 'user-7'
+            | 'user-8'
+            | 'user-9'
+            | 'user-10'
+            | null;
+        };
+        cells: ('present' | 'absent' | 'excused' | 'cancelled' | 'unmarked')[];
+        rate: number | null;
+        misses: number;
+        trailingMisses: number;
+        /** Format: date-time */
+        lastPresentAt: string | null;
+        hold: boolean;
+        risk: boolean;
+      }[];
+    };
+    UpdateGroupDto: {
+      name?: string;
+      /** Format: uuid */
+      teacherId?: string;
+      capacity?: number | null;
+      pricePerLesson?: number | null;
+      /** @enum {string|null} */
+      currency?: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP' | null;
+      notes?: string | null;
+      students?: {
+        studentIds: string[];
+        /** Format: uuid */
+        teacherId?: string;
+      };
+      schedule?: {
+        weekdays: number[];
+        localTime: string;
+        durationMin: number;
+      };
+    };
+    EnrollmentListDto: {
+      items: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        workspaceId: string;
+        /** Format: uuid */
+        studentId: string;
+        /** Format: uuid */
+        groupId: string | null;
+        /** Format: uuid */
+        teacherId: string;
+        student: {
+          /** Format: uuid */
+          id: string;
+          fullName: string;
+        };
+        group: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+        } | null;
+        teacher: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+          color: string | null;
+        };
+        /** @enum {string} */
+        status: 'ACTIVE' | 'PAUSED' | 'ARCHIVED';
+        /** @enum {string} */
+        billingType: 'PACKAGE' | 'PER_LESSON';
+        priceMinor: number;
+        /** @enum {string} */
+        currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+        ownPrice: boolean;
+        cancellationDeadlineHours: number | null;
+        effectiveCancellationDeadlineHours: number;
+        /** Format: date-time */
+        createdAt: string;
+        /** Format: date-time */
+        updatedAt: string;
+        /** Format: date-time */
+        deletedAt: string | null;
+      }[];
+      page: number;
+      pageSize: number;
+      total: number;
+      totalPages: number;
+    };
+    CreateEnrollmentDto: {
+      /** Format: uuid */
+      studentId: string;
+      /** Format: uuid */
+      groupId?: string | null;
+      /** Format: uuid */
+      teacherId: string;
+      /**
+       * @default PER_LESSON
+       * @enum {string}
+       */
+      billingType: 'PACKAGE' | 'PER_LESSON';
+      priceMinor: number;
+      /** @enum {string} */
+      currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+      cancellationDeadlineHours?: number | null;
+    };
+    EnrollmentDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      workspaceId: string;
+      /** Format: uuid */
+      studentId: string;
+      /** Format: uuid */
+      groupId: string | null;
+      /** Format: uuid */
+      teacherId: string;
+      student: {
+        /** Format: uuid */
+        id: string;
+        fullName: string;
+      };
+      group: {
+        /** Format: uuid */
+        id: string;
+        name: string;
+      } | null;
+      teacher: {
+        /** Format: uuid */
+        id: string;
+        name: string;
+        color: string | null;
+      };
+      /** @enum {string} */
+      status: 'ACTIVE' | 'PAUSED' | 'ARCHIVED';
+      /** @enum {string} */
+      billingType: 'PACKAGE' | 'PER_LESSON';
+      priceMinor: number;
+      /** @enum {string} */
+      currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+      ownPrice: boolean;
+      cancellationDeadlineHours: number | null;
+      effectiveCancellationDeadlineHours: number;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+      /** Format: date-time */
+      deletedAt: string | null;
+    };
+    EnrollmentBillingDto: {
+      /** Format: uuid */
+      enrollmentId: string;
+      /** @enum {string} */
+      billingType: 'PACKAGE' | 'PER_LESSON';
+      rateMinor: number;
+      /** @enum {string} */
+      currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+      packages: {
+        /** Format: uuid */
+        id: string;
+        name: string | null;
+        /** Format: date-time */
+        purchasedAt: string;
+        /** Format: date-time */
+        expiresAt: string | null;
+        remainingCredits: number;
+        usable: boolean;
+      }[];
+      creditsLeft: number;
+      debtLessons: number;
+      balance: {
+        chargedMinor: number;
+        paidMinor: number;
+        debtMinor: number;
+        advanceMinor: number;
+        unpaidLessons: number;
+      };
+      /** @enum {string|null} */
+      warning: 'ON_DEBT' | 'NO_CREDITS' | 'LOW_CREDITS' | null;
+    };
+    UpdateEnrollmentDto: {
+      /** @enum {string} */
+      status?: 'ACTIVE' | 'PAUSED' | 'ARCHIVED';
+      /** @enum {string} */
+      billingType?: 'PACKAGE' | 'PER_LESSON';
+      priceMinor?: number;
+      /** @enum {string} */
+      currency?: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+      cancellationDeadlineHours?: number | null;
+    };
+    LessonListDto: {
+      items: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        workspaceId: string;
+        /** Format: uuid */
+        enrollmentId: string | null;
+        /** Format: uuid */
+        groupId: string | null;
+        /** Format: uuid */
+        seriesId: string | null;
+        /** Format: uuid */
+        teacherId: string;
+        /** Format: date-time */
+        startsAtUtc: string;
+        durationMin: number;
+        priceMinor: number;
+        /** @enum {string} */
+        currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+        /** @enum {string} */
+        status: 'SCHEDULED' | 'COMPLETED' | 'CANCELLED_CHARGED' | 'CANCELLED_UNCHARGED' | 'NO_SHOW';
+        /** @enum {string} */
+        kind: 'REGULAR' | 'MAKEUP';
+        /** Format: uuid */
+        originalLessonId: string | null;
+        /** Format: uuid */
+        makeupLessonId: string | null;
+        topic: string | null;
+        isDetached: boolean;
+        rescheduledCount: number;
+        /** Format: date-time */
+        rescheduledAt: string | null;
+        /** @enum {string|null} */
+        cancelledBy: 'TEACHER' | 'STUDENT' | 'GROUP' | null;
+        cancelledReason: string | null;
+        /** Format: date-time */
+        cancelledAt: string | null;
+        /** Format: date-time */
+        completedAt: string | null;
+        /** Format: date-time */
+        paidAt: string | null;
+        notes: string | null;
+        cancellationDeadlineHours: number;
+        attendance: {
+          present: number;
+          marked: number;
+        } | null;
+        charges: {
+          /** Format: uuid */
+          id: string;
+          /** Format: uuid */
+          enrollmentId: string;
+          /** @enum {string} */
+          source: 'PACKAGE' | 'DEBT' | 'BALANCE';
+          /** Format: uuid */
+          packageId: string | null;
+          amountMinor: number;
+          /** @enum {string} */
+          currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+          paid: boolean;
+          student: {
+            /** Format: uuid */
+            id: string;
+            fullName: string;
+          };
+        }[];
+        student: {
+          /** Format: uuid */
+          id: string;
+          fullName: string;
+          /** @enum {string|null} */
+          avatarKey:
+            | 'user-1'
+            | 'user-2'
+            | 'user-3'
+            | 'user-4'
+            | 'user-5'
+            | 'user-6'
+            | 'user-7'
+            | 'user-8'
+            | 'user-9'
+            | 'user-10'
+            | null;
+        } | null;
+        group: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+        } | null;
+        teacher: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+          color: string | null;
+        };
+        /** Format: date-time */
+        createdAt: string;
+        /** Format: date-time */
+        updatedAt: string;
+        /** Format: date-time */
+        deletedAt: string | null;
+      }[];
+    };
+    LessonPageDto: {
+      items: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        workspaceId: string;
+        /** Format: uuid */
+        enrollmentId: string | null;
+        /** Format: uuid */
+        groupId: string | null;
+        /** Format: uuid */
+        seriesId: string | null;
+        /** Format: uuid */
+        teacherId: string;
+        /** Format: date-time */
+        startsAtUtc: string;
+        durationMin: number;
+        priceMinor: number;
+        /** @enum {string} */
+        currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+        /** @enum {string} */
+        status: 'SCHEDULED' | 'COMPLETED' | 'CANCELLED_CHARGED' | 'CANCELLED_UNCHARGED' | 'NO_SHOW';
+        /** @enum {string} */
+        kind: 'REGULAR' | 'MAKEUP';
+        /** Format: uuid */
+        originalLessonId: string | null;
+        /** Format: uuid */
+        makeupLessonId: string | null;
+        topic: string | null;
+        isDetached: boolean;
+        rescheduledCount: number;
+        /** Format: date-time */
+        rescheduledAt: string | null;
+        /** @enum {string|null} */
+        cancelledBy: 'TEACHER' | 'STUDENT' | 'GROUP' | null;
+        cancelledReason: string | null;
+        /** Format: date-time */
+        cancelledAt: string | null;
+        /** Format: date-time */
+        completedAt: string | null;
+        /** Format: date-time */
+        paidAt: string | null;
+        notes: string | null;
+        cancellationDeadlineHours: number;
+        attendance: {
+          present: number;
+          marked: number;
+        } | null;
+        charges: {
+          /** Format: uuid */
+          id: string;
+          /** Format: uuid */
+          enrollmentId: string;
+          /** @enum {string} */
+          source: 'PACKAGE' | 'DEBT' | 'BALANCE';
+          /** Format: uuid */
+          packageId: string | null;
+          amountMinor: number;
+          /** @enum {string} */
+          currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+          paid: boolean;
+          student: {
+            /** Format: uuid */
+            id: string;
+            fullName: string;
+          };
+        }[];
+        student: {
+          /** Format: uuid */
+          id: string;
+          fullName: string;
+          /** @enum {string|null} */
+          avatarKey:
+            | 'user-1'
+            | 'user-2'
+            | 'user-3'
+            | 'user-4'
+            | 'user-5'
+            | 'user-6'
+            | 'user-7'
+            | 'user-8'
+            | 'user-9'
+            | 'user-10'
+            | null;
+        } | null;
+        group: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+        } | null;
+        teacher: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+          color: string | null;
+        };
+        /** Format: date-time */
+        createdAt: string;
+        /** Format: date-time */
+        updatedAt: string;
+        /** Format: date-time */
+        deletedAt: string | null;
+      }[];
+      page: number;
+      pageSize: number;
+      total: number;
+      totalPages: number;
+      counts: {
+        all: number;
+        unpaid: number;
+        cancelled: number;
+        noShow: number;
+        needsMakeup: number;
+      };
+      packages: {
+        /** Format: uuid */
+        enrollmentId: string;
+        /** Format: uuid */
+        packageId: string;
+        left: number;
+        total: number;
+      }[];
+    };
+    LessonDetailDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      workspaceId: string;
+      /** Format: uuid */
+      enrollmentId: string | null;
+      /** Format: uuid */
+      groupId: string | null;
+      /** Format: uuid */
+      seriesId: string | null;
+      /** Format: uuid */
+      teacherId: string;
+      /** Format: date-time */
+      startsAtUtc: string;
+      durationMin: number;
+      priceMinor: number;
+      /** @enum {string} */
+      currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+      /** @enum {string} */
+      status: 'SCHEDULED' | 'COMPLETED' | 'CANCELLED_CHARGED' | 'CANCELLED_UNCHARGED' | 'NO_SHOW';
+      /** @enum {string} */
+      kind: 'REGULAR' | 'MAKEUP';
+      /** Format: uuid */
+      originalLessonId: string | null;
+      /** Format: uuid */
+      makeupLessonId: string | null;
+      topic: string | null;
+      isDetached: boolean;
+      rescheduledCount: number;
+      /** Format: date-time */
+      rescheduledAt: string | null;
+      /** @enum {string|null} */
+      cancelledBy: 'TEACHER' | 'STUDENT' | 'GROUP' | null;
+      cancelledReason: string | null;
+      /** Format: date-time */
+      cancelledAt: string | null;
+      /** Format: date-time */
+      completedAt: string | null;
+      /** Format: date-time */
+      paidAt: string | null;
+      notes: string | null;
+      cancellationDeadlineHours: number;
+      attendance: {
+        present: number;
+        marked: number;
+      } | null;
+      charges: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        enrollmentId: string;
+        /** @enum {string} */
+        source: 'PACKAGE' | 'DEBT' | 'BALANCE';
+        /** Format: uuid */
+        packageId: string | null;
+        amountMinor: number;
+        /** @enum {string} */
+        currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+        paid: boolean;
+        student: {
+          /** Format: uuid */
+          id: string;
+          fullName: string;
+        };
+      }[];
+      student: {
+        /** Format: uuid */
+        id: string;
+        fullName: string;
+        /** @enum {string|null} */
+        avatarKey:
+          | 'user-1'
+          | 'user-2'
+          | 'user-3'
+          | 'user-4'
+          | 'user-5'
+          | 'user-6'
+          | 'user-7'
+          | 'user-8'
+          | 'user-9'
+          | 'user-10'
+          | null;
+      } | null;
+      group: {
+        /** Format: uuid */
+        id: string;
+        name: string;
+      } | null;
+      teacher: {
+        /** Format: uuid */
+        id: string;
+        name: string;
+        color: string | null;
+      };
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+      /** Format: date-time */
+      deletedAt: string | null;
+      original: {
+        /** Format: uuid */
+        id: string;
+        /** Format: date-time */
+        startsAtUtc: string;
+        /** @enum {string} */
+        status: 'SCHEDULED' | 'COMPLETED' | 'CANCELLED_CHARGED' | 'CANCELLED_UNCHARGED' | 'NO_SHOW';
+      } | null;
+      makeup: {
+        /** Format: uuid */
+        id: string;
+        /** Format: date-time */
+        startsAtUtc: string;
+        /** @enum {string} */
+        status: 'SCHEDULED' | 'COMPLETED' | 'CANCELLED_CHARGED' | 'CANCELLED_UNCHARGED' | 'NO_SHOW';
+      } | null;
+      schedule: {
+        /** Format: uuid */
+        id: string;
+        /** @enum {string} */
+        state: 'ACTIVE' | 'ENDED';
+      } | null;
+      history: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        workspaceId: string;
+        /** Format: uuid */
+        actorId: string | null;
+        actor: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+          email: string;
+        } | null;
+        /** @enum {string} */
+        entity:
+          | 'STUDENT'
+          | 'PARENT'
+          | 'GROUP'
+          | 'TEACHER'
+          | 'ENROLLMENT'
+          | 'WORKSPACE'
+          | 'LESSON'
+          | 'LESSON_SERIES'
+          | 'SCHEDULE'
+          | 'PAUSE'
+          | 'LESSON_PACKAGE'
+          | 'PAYMENT';
+        entityId: string;
+        /** @enum {string} */
+        action: 'CREATE' | 'UPDATE' | 'DELETE' | 'RESTORE';
+        changes: {
+          fields: {
+            [key: string]: {
+              before: unknown;
+              after: unknown;
+            };
+          };
+        } | null;
+        /** Format: date-time */
+        createdAt: string;
+      }[];
+    };
+    BulkCancelDto: {
+      /** Format: date-time */
+      from: string;
+      /** Format: date-time */
+      to: string;
+      /** Format: uuid */
+      teacherId?: string;
+      reason?: string | null;
+    };
+    BulkCancelPreviewDto: {
+      count: number;
+      byTeacher: {
+        teacher: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+          color: string | null;
+        };
+        count: number;
+      }[];
+      lessons: {
+        /** Format: uuid */
+        id: string;
+        /** Format: date-time */
+        startsAtUtc: string;
+        durationMin: number;
+        student: {
+          /** Format: uuid */
+          id: string;
+          fullName: string;
+        } | null;
+        group: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+        } | null;
+        teacher: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+          color: string | null;
+        };
+      }[];
+      truncated: boolean;
+    };
+    BulkCancelResultDto: {
+      cancelled: number;
+      lessonIds: string[];
+    };
+    CreateLessonDto: {
+      /** Format: uuid */
+      enrollmentId?: string | null;
+      /** Format: uuid */
+      studentId?: string | null;
+      /** Format: uuid */
+      groupId?: string | null;
+      /** Format: uuid */
+      teacherId?: string;
+      startsAt: string[];
+      durationMin: number;
+      priceMinor?: number;
+      /** @enum {string} */
+      currency?: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+      /**
+       * @default SCHEDULED
+       * @enum {string}
+       */
+      status: 'SCHEDULED' | 'COMPLETED' | 'CANCELLED_CHARGED' | 'CANCELLED_UNCHARGED' | 'NO_SHOW';
+      /** @enum {string} */
+      cancelledBy?: 'TEACHER' | 'STUDENT' | 'GROUP';
+      cancelledReason?: string | null;
+      /** Format: date-time */
+      paidAt?: string | null;
+      topic?: string | null;
+      notes?: string | null;
+    };
+    UpdateLessonDto: {
+      topic?: string | null;
+      notes?: string | null;
+      durationMin?: number;
+      /** Format: uuid */
+      teacherId?: string;
+      priceMinor?: number;
+      /** @enum {string} */
+      currency?: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+      /** Format: date-time */
+      paidAt?: string | null;
+    };
+    LessonDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      workspaceId: string;
+      /** Format: uuid */
+      enrollmentId: string | null;
+      /** Format: uuid */
+      groupId: string | null;
+      /** Format: uuid */
+      seriesId: string | null;
+      /** Format: uuid */
+      teacherId: string;
+      /** Format: date-time */
+      startsAtUtc: string;
+      durationMin: number;
+      priceMinor: number;
+      /** @enum {string} */
+      currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+      /** @enum {string} */
+      status: 'SCHEDULED' | 'COMPLETED' | 'CANCELLED_CHARGED' | 'CANCELLED_UNCHARGED' | 'NO_SHOW';
+      /** @enum {string} */
+      kind: 'REGULAR' | 'MAKEUP';
+      /** Format: uuid */
+      originalLessonId: string | null;
+      /** Format: uuid */
+      makeupLessonId: string | null;
+      topic: string | null;
+      isDetached: boolean;
+      rescheduledCount: number;
+      /** Format: date-time */
+      rescheduledAt: string | null;
+      /** @enum {string|null} */
+      cancelledBy: 'TEACHER' | 'STUDENT' | 'GROUP' | null;
+      cancelledReason: string | null;
+      /** Format: date-time */
+      cancelledAt: string | null;
+      /** Format: date-time */
+      completedAt: string | null;
+      /** Format: date-time */
+      paidAt: string | null;
+      notes: string | null;
+      cancellationDeadlineHours: number;
+      attendance: {
+        present: number;
+        marked: number;
+      } | null;
+      charges: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        enrollmentId: string;
+        /** @enum {string} */
+        source: 'PACKAGE' | 'DEBT' | 'BALANCE';
+        /** Format: uuid */
+        packageId: string | null;
+        amountMinor: number;
+        /** @enum {string} */
+        currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+        paid: boolean;
+        student: {
+          /** Format: uuid */
+          id: string;
+          fullName: string;
+        };
+      }[];
+      student: {
+        /** Format: uuid */
+        id: string;
+        fullName: string;
+        /** @enum {string|null} */
+        avatarKey:
+          | 'user-1'
+          | 'user-2'
+          | 'user-3'
+          | 'user-4'
+          | 'user-5'
+          | 'user-6'
+          | 'user-7'
+          | 'user-8'
+          | 'user-9'
+          | 'user-10'
+          | null;
+      } | null;
+      group: {
+        /** Format: uuid */
+        id: string;
+        name: string;
+      } | null;
+      teacher: {
+        /** Format: uuid */
+        id: string;
+        name: string;
+        color: string | null;
+      };
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+      /** Format: date-time */
+      deletedAt: string | null;
+    };
+    CreateMakeupDto: {
+      /** Format: date-time */
+      startsAtUtc: string;
+      durationMin?: number;
+      /** Format: uuid */
+      teacherId?: string;
+      topic?: string | null;
+      notes?: string | null;
+    };
+    RescheduleLessonDto: {
+      /** Format: date-time */
+      startsAtUtc: string;
+      durationMin?: number;
+      /**
+       * @default this
+       * @enum {string}
+       */
+      scope: 'this' | 'this_and_following';
+    };
+    TransitionLessonDto: {
+      /** @enum {string} */
+      targetStatus:
+        'SCHEDULED' | 'COMPLETED' | 'CANCELLED_CHARGED' | 'CANCELLED_UNCHARGED' | 'NO_SHOW';
+      /** @enum {string} */
+      cancelledBy?: 'TEACHER' | 'STUDENT' | 'GROUP';
+      cancelledReason?: string | null;
+    };
+    LessonAttendanceDto: {
+      /** Format: uuid */
+      lessonId: string;
+      /** Format: date-time */
+      startsAtUtc: string;
+      /** @enum {string} */
+      status: 'SCHEDULED' | 'COMPLETED' | 'CANCELLED_CHARGED' | 'CANCELLED_UNCHARGED' | 'NO_SHOW';
+      markable: boolean;
+      participants: {
+        /** Format: uuid */
+        enrollmentId: string;
+        student: {
+          /** Format: uuid */
+          id: string;
+          fullName: string;
+          /** @enum {string|null} */
+          avatarKey:
+            | 'user-1'
+            | 'user-2'
+            | 'user-3'
+            | 'user-4'
+            | 'user-5'
+            | 'user-6'
+            | 'user-7'
+            | 'user-8'
+            | 'user-9'
+            | 'user-10'
+            | null;
+        };
+        /** @enum {string|null} */
+        status: 'PRESENT' | 'ABSENT' | 'EXCUSED' | null;
+        /** Format: date-time */
+        markedAt: string | null;
+        paused: boolean;
+      }[];
+    };
+    SetLessonAttendanceDto: {
+      marks: {
+        /** Format: uuid */
+        enrollmentId: string;
+        /** @enum {string} */
+        status: 'PRESENT' | 'ABSENT' | 'EXCUSED';
+      }[];
+    };
+    LessonSeriesListDto: {
+      items: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        workspaceId: string;
+        /** Format: uuid */
+        scheduleId: string;
+        /** Format: uuid */
+        enrollmentId: string | null;
+        /** Format: uuid */
+        groupId: string | null;
+        /** Format: uuid */
+        teacherId: string;
+        weekdays: number[];
+        localTime: string;
+        timezone: string;
+        durationMin: number;
+        priceMinor: number;
+        /** @enum {string} */
+        currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+        /** Format: date-time */
+        startDate: string;
+        /** Format: date-time */
+        endsAt: string | null;
+        /** Format: date-time */
+        horizonMaterializedUntil: string;
+        student: {
+          /** Format: uuid */
+          id: string;
+          fullName: string;
+        } | null;
+        group: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+        } | null;
+        teacher: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+          color: string | null;
+        };
+        /** Format: date-time */
+        createdAt: string;
+        /** Format: date-time */
+        updatedAt: string;
+        /** Format: date-time */
+        deletedAt: string | null;
+      }[];
+      page: number;
+      pageSize: number;
+      total: number;
+      totalPages: number;
+    };
+    CreateLessonSeriesDto: {
+      /** Format: uuid */
+      enrollmentId?: string | null;
+      /** Format: uuid */
+      studentId?: string | null;
+      /** Format: uuid */
+      groupId?: string | null;
+      /** Format: uuid */
+      teacherId?: string;
+      weekdays: number[];
+      localTime: string;
+      timezone: string;
+      durationMin: number;
+      priceMinor?: number;
+      /** @enum {string} */
+      currency?: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+      /** Format: date-time */
+      startDate: string;
+    };
+    LessonSeriesDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      workspaceId: string;
+      /** Format: uuid */
+      scheduleId: string;
+      /** Format: uuid */
+      enrollmentId: string | null;
+      /** Format: uuid */
+      groupId: string | null;
+      /** Format: uuid */
+      teacherId: string;
+      weekdays: number[];
+      localTime: string;
+      timezone: string;
+      durationMin: number;
+      priceMinor: number;
+      /** @enum {string} */
+      currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+      /** Format: date-time */
+      startDate: string;
+      /** Format: date-time */
+      endsAt: string | null;
+      /** Format: date-time */
+      horizonMaterializedUntil: string;
+      student: {
+        /** Format: uuid */
+        id: string;
+        fullName: string;
+      } | null;
+      group: {
+        /** Format: uuid */
+        id: string;
+        name: string;
+      } | null;
+      teacher: {
+        /** Format: uuid */
+        id: string;
+        name: string;
+        color: string | null;
+      };
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+      /** Format: date-time */
+      deletedAt: string | null;
+    };
+    UpdateLessonSeriesDto: {
+      weekdays?: number[];
+      localTime?: string;
+      timezone?: string;
+      durationMin?: number;
+      priceMinor?: number;
+      /** @enum {string} */
+      currency?: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+      /** Format: date-time */
+      startDate?: string;
+    };
+    ScheduleListDto: {
+      items: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        workspaceId: string;
+        /** Format: uuid */
+        enrollmentId: string | null;
+        /** Format: uuid */
+        groupId: string | null;
+        /** Format: uuid */
+        teacherId: string;
+        timezone: string;
+        durationMin: number;
+        horizonWeeks: number;
+        /** Format: date-time */
+        endsAt: string | null;
+        /** @enum {string} */
+        state: 'ACTIVE' | 'ENDED';
+        slots: {
+          weekday: number;
+          localTime: string;
+          /** Format: uuid */
+          seriesId: string;
+        }[];
+        nextChange: {
+          /** Format: date-time */
+          effectiveFrom: string;
+          slots: {
+            weekday: number;
+            localTime: string;
+          }[];
+        } | null;
+        /** Format: date-time */
+        nextLessonAt: string | null;
+        /** Format: date-time */
+        startsAt: string | null;
+        /** Format: date-time */
+        lastLessonAt: string | null;
+        student: {
+          /** Format: uuid */
+          id: string;
+          fullName: string;
+          /** @enum {string|null} */
+          avatarKey:
+            | 'user-1'
+            | 'user-2'
+            | 'user-3'
+            | 'user-4'
+            | 'user-5'
+            | 'user-6'
+            | 'user-7'
+            | 'user-8'
+            | 'user-9'
+            | 'user-10'
+            | null;
+        } | null;
+        group: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+          memberCount: number;
+        } | null;
+        teacher: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+        };
+        /** Format: date-time */
+        createdAt: string;
+        /** Format: date-time */
+        updatedAt: string;
+      }[];
+      page: number;
+      pageSize: number;
+      total: number;
+      totalPages: number;
+      counts: {
+        active: number;
+        changing: number;
+        ended: number;
+        all: number;
+      };
+    };
+    CreateScheduleDto: {
+      /** Format: uuid */
+      studentId?: string | null;
+      /** Format: uuid */
+      enrollmentId?: string | null;
+      /** Format: uuid */
+      groupId?: string | null;
+      /** Format: uuid */
+      teacherId?: string;
+      slots: {
+        weekday: number;
+        localTime: string;
+      }[];
+      durationMin: number;
+      timezone?: string;
+      /** Format: date-time */
+      startDate?: string;
+      endsOn?: string | null;
+      horizonWeeks?: number;
+      priceMinor?: number;
+      /** @enum {string} */
+      currency?: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+    };
+    ScheduleDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      workspaceId: string;
+      /** Format: uuid */
+      enrollmentId: string | null;
+      /** Format: uuid */
+      groupId: string | null;
+      /** Format: uuid */
+      teacherId: string;
+      timezone: string;
+      durationMin: number;
+      horizonWeeks: number;
+      /** Format: date-time */
+      endsAt: string | null;
+      /** @enum {string} */
+      state: 'ACTIVE' | 'ENDED';
+      slots: {
+        weekday: number;
+        localTime: string;
+        /** Format: uuid */
+        seriesId: string;
+      }[];
+      nextChange: {
+        /** Format: date-time */
+        effectiveFrom: string;
+        slots: {
+          weekday: number;
+          localTime: string;
+        }[];
+      } | null;
+      /** Format: date-time */
+      nextLessonAt: string | null;
+      /** Format: date-time */
+      startsAt: string | null;
+      /** Format: date-time */
+      lastLessonAt: string | null;
+      student: {
+        /** Format: uuid */
+        id: string;
+        fullName: string;
+        /** @enum {string|null} */
+        avatarKey:
+          | 'user-1'
+          | 'user-2'
+          | 'user-3'
+          | 'user-4'
+          | 'user-5'
+          | 'user-6'
+          | 'user-7'
+          | 'user-8'
+          | 'user-9'
+          | 'user-10'
+          | null;
+      } | null;
+      group: {
+        /** Format: uuid */
+        id: string;
+        name: string;
+        memberCount: number;
+      } | null;
+      teacher: {
+        /** Format: uuid */
+        id: string;
+        name: string;
+      };
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    ScheduleCreatePreviewDto: {
+      created: number;
+      dates: string[];
+      /** Format: date-time */
+      firstLessonAt: string | null;
+      /** Format: uuid */
+      existingScheduleId: string | null;
+      conflicts: {
+        /** Format: date-time */
+        candidateStartsAtUtc: string;
+        /** Format: uuid */
+        lessonId: string;
+        /** Format: date-time */
+        startsAtUtc: string;
+        durationMin: number;
+        /** @enum {string} */
+        kind: 'REGULAR' | 'MAKEUP';
+        /** @enum {string} */
+        reason: 'TEACHER' | 'STUDENT';
+        teacher: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+        };
+        student: {
+          /** Format: uuid */
+          id: string;
+          fullName: string;
+        } | null;
+        group: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+        } | null;
+        students: {
+          /** Format: uuid */
+          id: string;
+          fullName: string;
+        }[];
+      }[];
+    };
+    UpdateScheduleDto: {
+      horizonWeeks: number;
+    };
+    ScheduleHorizonPreviewDto: {
+      horizonWeeks: number;
+      added: number;
+      dates: string[];
+      /** Format: date-time */
+      lastLessonAt: string | null;
+    };
+    ScheduleChangeDto: {
+      /** Format: date-time */
+      effectiveFrom?: string;
+      slots: {
+        weekday: number;
+        localTime: string;
+      }[];
+      durationMin: number;
+    };
+    ScheduleChangePreviewDto: {
+      /** Format: date-time */
+      effectiveFrom: string;
+      moved: number;
+      unchanged: number;
+      created: number;
+      removed: number;
+      kept: number;
+      notesLost: {
+        /** Format: uuid */
+        lessonId: string;
+        /** Format: date-time */
+        startsAtUtc: string;
+        topic: string | null;
+        hasNotes: boolean;
+      }[];
+      conflicts: {
+        /** Format: date-time */
+        candidateStartsAtUtc: string;
+        /** Format: uuid */
+        lessonId: string;
+        /** Format: date-time */
+        startsAtUtc: string;
+        durationMin: number;
+        /** @enum {string} */
+        kind: 'REGULAR' | 'MAKEUP';
+        /** @enum {string} */
+        reason: 'TEACHER' | 'STUDENT';
+        teacher: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+        };
+        student: {
+          /** Format: uuid */
+          id: string;
+          fullName: string;
+        } | null;
+        group: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+        } | null;
+        students: {
+          /** Format: uuid */
+          id: string;
+          fullName: string;
+        }[];
+      }[];
+      moves: {
+        /** Format: uuid */
+        lessonId: string;
+        /** Format: date-time */
+        startsAtUtc: string;
+        /** Format: date-time */
+        toStartsAtUtc: string;
+      }[];
+      removals: {
+        /** Format: uuid */
+        lessonId: string;
+        /** Format: date-time */
+        startsAtUtc: string;
+      }[];
+      creates: string[];
+      keptLessons: {
+        /** Format: uuid */
+        lessonId: string;
+        /** Format: date-time */
+        startsAtUtc: string;
+        /** @enum {string} */
+        reason: 'HELD' | 'CANCELLED' | 'NO_SHOW' | 'MOVED' | 'MARKED';
+      }[];
+    };
+    ScheduleChangeResultDto: {
+      schedule: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        workspaceId: string;
+        /** Format: uuid */
+        enrollmentId: string | null;
+        /** Format: uuid */
+        groupId: string | null;
+        /** Format: uuid */
+        teacherId: string;
+        timezone: string;
+        durationMin: number;
+        horizonWeeks: number;
+        /** Format: date-time */
+        endsAt: string | null;
+        /** @enum {string} */
+        state: 'ACTIVE' | 'ENDED';
+        slots: {
+          weekday: number;
+          localTime: string;
+          /** Format: uuid */
+          seriesId: string;
+        }[];
+        nextChange: {
+          /** Format: date-time */
+          effectiveFrom: string;
+          slots: {
+            weekday: number;
+            localTime: string;
+          }[];
+        } | null;
+        /** Format: date-time */
+        nextLessonAt: string | null;
+        /** Format: date-time */
+        startsAt: string | null;
+        /** Format: date-time */
+        lastLessonAt: string | null;
+        student: {
+          /** Format: uuid */
+          id: string;
+          fullName: string;
+          /** @enum {string|null} */
+          avatarKey:
+            | 'user-1'
+            | 'user-2'
+            | 'user-3'
+            | 'user-4'
+            | 'user-5'
+            | 'user-6'
+            | 'user-7'
+            | 'user-8'
+            | 'user-9'
+            | 'user-10'
+            | null;
+        } | null;
+        group: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+          memberCount: number;
+        } | null;
+        teacher: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+        };
+        /** Format: date-time */
+        createdAt: string;
+        /** Format: date-time */
+        updatedAt: string;
+      };
+      summary: {
+        /** Format: date-time */
+        effectiveFrom: string;
+        moved: number;
+        unchanged: number;
+        created: number;
+        removed: number;
+        kept: number;
+        notesLost: {
+          /** Format: uuid */
+          lessonId: string;
+          /** Format: date-time */
+          startsAtUtc: string;
+          topic: string | null;
+          hasNotes: boolean;
+        }[];
+        conflicts: {
+          /** Format: date-time */
+          candidateStartsAtUtc: string;
+          /** Format: uuid */
+          lessonId: string;
+          /** Format: date-time */
+          startsAtUtc: string;
+          durationMin: number;
+          /** @enum {string} */
+          kind: 'REGULAR' | 'MAKEUP';
+          /** @enum {string} */
+          reason: 'TEACHER' | 'STUDENT';
+          teacher: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+          };
+          student: {
+            /** Format: uuid */
+            id: string;
+            fullName: string;
+          } | null;
+          group: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+          } | null;
+          students: {
+            /** Format: uuid */
+            id: string;
+            fullName: string;
+          }[];
+        }[];
+        moves: {
+          /** Format: uuid */
+          lessonId: string;
+          /** Format: date-time */
+          startsAtUtc: string;
+          /** Format: date-time */
+          toStartsAtUtc: string;
+        }[];
+        removals: {
+          /** Format: uuid */
+          lessonId: string;
+          /** Format: date-time */
+          startsAtUtc: string;
+        }[];
+        creates: string[];
+        keptLessons: {
+          /** Format: uuid */
+          lessonId: string;
+          /** Format: date-time */
+          startsAtUtc: string;
+          /** @enum {string} */
+          reason: 'HELD' | 'CANCELLED' | 'NO_SHOW' | 'MOVED' | 'MARKED';
+        }[];
+      };
+    };
+    StopScheduleDto: {
+      /** Format: date-time */
+      from?: string;
+    };
+    PackageListDto: {
+      items: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        workspaceId: string;
+        /** Format: uuid */
+        enrollmentId: string;
+        /** Format: uuid */
+        studentId: string;
+        /** Format: uuid */
+        groupId: string | null;
+        name: string | null;
+        /** @enum {string} */
+        sizingMode: 'FIXED_COUNT' | 'BY_PERIOD' | 'BY_PERIOD_WEEKLY';
+        lessonsTotal: number;
+        /** Format: date-time */
+        endDate: string | null;
+        pricePerLessonMinorSnapshot: number;
+        totalPriceMinorSnapshot: number;
+        lessonsPerWeek: number | null;
+        /** Format: date-time */
+        validFrom: string | null;
+        /** Format: uuid */
+        transferredFromPackageId: string | null;
+        remainingCredits: number;
+        consumedCredits: number;
+        paidMinor: number;
+        refundedMinor: number;
+        /** @enum {string} */
+        currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+        /** @enum {string} */
+        paymentStatus: 'PENDING' | 'PARTIAL' | 'PAID';
+        /** Format: date-time */
+        purchasedAt: string;
+        /** Format: date-time */
+        expiresAt: string | null;
+        notes: string | null;
+        student: {
+          /** Format: uuid */
+          id: string;
+          fullName: string;
+        };
+        group: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+        } | null;
+        /** Format: date-time */
+        createdAt: string;
+        /** Format: date-time */
+        updatedAt: string;
+        /** Format: date-time */
+        deletedAt: string | null;
+      }[];
+      page: number;
+      pageSize: number;
+      total: number;
+      totalPages: number;
+    };
+    CreatePackageDto: {
+      /** Format: uuid */
+      studentId: string;
+      /** Format: uuid */
+      groupId?: string | null;
+      /** Format: uuid */
+      teacherId?: string | null;
+      name?: string | null;
+      /**
+       * @default FIXED_COUNT
+       * @enum {string}
+       */
+      sizingMode: 'FIXED_COUNT' | 'BY_PERIOD' | 'BY_PERIOD_WEEKLY';
+      lessonsTotal?: number;
+      lessonsPerWeek?: number;
+      /** Format: date-time */
+      validFrom?: string;
+      /** Format: date-time */
+      endDate?: string;
+      pricePerLessonMinor?: number;
+      totalPriceMinor?: number;
+      /** @enum {string} */
+      currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+      /** Format: date-time */
+      purchasedAt?: string;
+      /** Format: date-time */
+      expiresAt?: string | null;
+      notes?: string | null;
+      schedule?: {
+        slots: {
+          weekday: number;
+          localTime: string;
+        }[];
+        timezone: string;
+        durationMin: number;
+        /** Format: date-time */
+        startDate: string;
+      } | null;
+      initialPayment?: {
+        amountMinor: number;
+        /** Format: date-time */
+        paidAt: string;
+      } | null;
+    };
+    PackagePreviewDto: {
+      lessonsTotal: number;
+      pricePerLessonMinor: number;
+      totalPriceMinor: number;
+      /** Format: date-time */
+      validFrom: string | null;
+      /** Format: date-time */
+      expiresAt: string | null;
+      scheduleLessons: number | null;
+    };
+    SellToMembersDto: {
+      /** Format: uuid */
+      groupId: string;
+      studentIds: string[];
+      name?: string | null;
+      /**
+       * @default FIXED_COUNT
+       * @enum {string}
+       */
+      sizingMode: 'FIXED_COUNT' | 'BY_PERIOD' | 'BY_PERIOD_WEEKLY';
+      lessonsTotal?: number;
+      lessonsPerWeek?: number;
+      /** Format: date-time */
+      validFrom?: string;
+      /** Format: date-time */
+      endDate?: string;
+      pricePerLessonMinor?: number;
+      totalPriceMinor?: number;
+      /** @enum {string} */
+      currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+      /** Format: date-time */
+      purchasedAt?: string;
+      /** Format: date-time */
+      expiresAt?: string | null;
+      notes?: string | null;
+    };
+    SoldPackagesDto: {
+      items: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        workspaceId: string;
+        /** Format: uuid */
+        enrollmentId: string;
+        /** Format: uuid */
+        studentId: string;
+        /** Format: uuid */
+        groupId: string | null;
+        name: string | null;
+        /** @enum {string} */
+        sizingMode: 'FIXED_COUNT' | 'BY_PERIOD' | 'BY_PERIOD_WEEKLY';
+        lessonsTotal: number;
+        /** Format: date-time */
+        endDate: string | null;
+        pricePerLessonMinorSnapshot: number;
+        totalPriceMinorSnapshot: number;
+        lessonsPerWeek: number | null;
+        /** Format: date-time */
+        validFrom: string | null;
+        /** Format: uuid */
+        transferredFromPackageId: string | null;
+        remainingCredits: number;
+        consumedCredits: number;
+        paidMinor: number;
+        refundedMinor: number;
+        /** @enum {string} */
+        currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+        /** @enum {string} */
+        paymentStatus: 'PENDING' | 'PARTIAL' | 'PAID';
+        /** Format: date-time */
+        purchasedAt: string;
+        /** Format: date-time */
+        expiresAt: string | null;
+        notes: string | null;
+        student: {
+          /** Format: uuid */
+          id: string;
+          fullName: string;
+        };
+        group: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+        } | null;
+        /** Format: date-time */
+        createdAt: string;
+        /** Format: date-time */
+        updatedAt: string;
+        /** Format: date-time */
+        deletedAt: string | null;
+      }[];
+    };
+    ExtendPackageDto: {
+      /** Format: date-time */
+      expiresAt: string;
+    };
+    PackageDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      workspaceId: string;
+      /** Format: uuid */
+      enrollmentId: string;
+      /** Format: uuid */
+      studentId: string;
+      /** Format: uuid */
+      groupId: string | null;
+      name: string | null;
+      /** @enum {string} */
+      sizingMode: 'FIXED_COUNT' | 'BY_PERIOD' | 'BY_PERIOD_WEEKLY';
+      lessonsTotal: number;
+      /** Format: date-time */
+      endDate: string | null;
+      pricePerLessonMinorSnapshot: number;
+      totalPriceMinorSnapshot: number;
+      lessonsPerWeek: number | null;
+      /** Format: date-time */
+      validFrom: string | null;
+      /** Format: uuid */
+      transferredFromPackageId: string | null;
+      remainingCredits: number;
+      consumedCredits: number;
+      paidMinor: number;
+      refundedMinor: number;
+      /** @enum {string} */
+      currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+      /** @enum {string} */
+      paymentStatus: 'PENDING' | 'PARTIAL' | 'PAID';
+      /** Format: date-time */
+      purchasedAt: string;
+      /** Format: date-time */
+      expiresAt: string | null;
+      notes: string | null;
+      student: {
+        /** Format: uuid */
+        id: string;
+        fullName: string;
+      };
+      group: {
+        /** Format: uuid */
+        id: string;
+        name: string;
+      } | null;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+      /** Format: date-time */
+      deletedAt: string | null;
+    };
+    TransferPackageDto: {
+      /** Format: uuid */
+      toEnrollmentId: string;
+      credits?: number;
+      note?: string | null;
+    };
+    PackageTransferDto: {
+      source: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        workspaceId: string;
+        /** Format: uuid */
+        enrollmentId: string;
+        /** Format: uuid */
+        studentId: string;
+        /** Format: uuid */
+        groupId: string | null;
+        name: string | null;
+        /** @enum {string} */
+        sizingMode: 'FIXED_COUNT' | 'BY_PERIOD' | 'BY_PERIOD_WEEKLY';
+        lessonsTotal: number;
+        /** Format: date-time */
+        endDate: string | null;
+        pricePerLessonMinorSnapshot: number;
+        totalPriceMinorSnapshot: number;
+        lessonsPerWeek: number | null;
+        /** Format: date-time */
+        validFrom: string | null;
+        /** Format: uuid */
+        transferredFromPackageId: string | null;
+        remainingCredits: number;
+        consumedCredits: number;
+        paidMinor: number;
+        refundedMinor: number;
+        /** @enum {string} */
+        currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+        /** @enum {string} */
+        paymentStatus: 'PENDING' | 'PARTIAL' | 'PAID';
+        /** Format: date-time */
+        purchasedAt: string;
+        /** Format: date-time */
+        expiresAt: string | null;
+        notes: string | null;
+        student: {
+          /** Format: uuid */
+          id: string;
+          fullName: string;
+        };
+        group: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+        } | null;
+        /** Format: date-time */
+        createdAt: string;
+        /** Format: date-time */
+        updatedAt: string;
+        /** Format: date-time */
+        deletedAt: string | null;
+      };
+      target: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        workspaceId: string;
+        /** Format: uuid */
+        enrollmentId: string;
+        /** Format: uuid */
+        studentId: string;
+        /** Format: uuid */
+        groupId: string | null;
+        name: string | null;
+        /** @enum {string} */
+        sizingMode: 'FIXED_COUNT' | 'BY_PERIOD' | 'BY_PERIOD_WEEKLY';
+        lessonsTotal: number;
+        /** Format: date-time */
+        endDate: string | null;
+        pricePerLessonMinorSnapshot: number;
+        totalPriceMinorSnapshot: number;
+        lessonsPerWeek: number | null;
+        /** Format: date-time */
+        validFrom: string | null;
+        /** Format: uuid */
+        transferredFromPackageId: string | null;
+        remainingCredits: number;
+        consumedCredits: number;
+        paidMinor: number;
+        refundedMinor: number;
+        /** @enum {string} */
+        currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+        /** @enum {string} */
+        paymentStatus: 'PENDING' | 'PARTIAL' | 'PAID';
+        /** Format: date-time */
+        purchasedAt: string;
+        /** Format: date-time */
+        expiresAt: string | null;
+        notes: string | null;
+        student: {
+          /** Format: uuid */
+          id: string;
+          fullName: string;
+        };
+        group: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+        } | null;
+        /** Format: date-time */
+        createdAt: string;
+        /** Format: date-time */
+        updatedAt: string;
+        /** Format: date-time */
+        deletedAt: string | null;
+      };
+      valueMinor: number;
+      remainderMinor: number;
+    };
+    RefundPackageDto: {
+      credits: number;
+      amountMinor: number;
+      /**
+       * @default CASH
+       * @enum {string}
+       */
+      method: 'CASH' | 'BANK_TRANSFER' | 'OTHER' | 'CARD';
+      /** Format: date-time */
+      paidAt?: string;
+      note: string;
+    };
+    CreditLedgerDto: {
+      items: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        packageId: string;
+        /** Format: uuid */
+        lessonId: string | null;
+        delta: number;
+        /** @enum {string} */
+        type:
+          'purchase' | 'manual_adjustment' | 'transfer_out' | 'transfer_in' | 'refund' | 'lesson';
+        note: string | null;
+        /** Format: date-time */
+        createdAt: string;
+      }[];
+      balance: number;
+    };
+    AdjustBalanceDto: {
+      delta: number;
+      note: string;
+    };
+    PaymentListDto: {
+      items: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        workspaceId: string;
+        /** Format: uuid */
+        enrollmentId: string;
+        /** Format: uuid */
+        packageId: string | null;
+        amountMinor: number;
+        /** @enum {string} */
+        currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+        /** @enum {string} */
+        method: 'CASH' | 'BANK_TRANSFER' | 'OTHER' | 'CARD';
+        /** @enum {string} */
+        status: 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
+        provider: string;
+        externalId: string | null;
+        /** Format: date-time */
+        paidAt: string;
+        note: string | null;
+        student: {
+          /** Format: uuid */
+          id: string;
+          fullName: string;
+        };
+        /** Format: date-time */
+        createdAt: string;
+        /** Format: date-time */
+        updatedAt: string;
+      }[];
+      page: number;
+      pageSize: number;
+      total: number;
+      totalPages: number;
+    };
+    RecordPaymentDto: {
+      /** Format: uuid */
+      enrollmentId: string;
+      /** Format: uuid */
+      packageId?: string | null;
+      amountMinor: number;
+      /** @enum {string} */
+      currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+      /**
+       * @default CASH
+       * @enum {string}
+       */
+      method: 'CASH' | 'BANK_TRANSFER' | 'OTHER' | 'CARD';
+      /** Format: date-time */
+      paidAt?: string;
+      note?: string | null;
+      idempotencyKey?: string;
+    };
+    PaymentDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      workspaceId: string;
+      /** Format: uuid */
+      enrollmentId: string;
+      /** Format: uuid */
+      packageId: string | null;
+      amountMinor: number;
+      /** @enum {string} */
+      currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+      /** @enum {string} */
+      method: 'CASH' | 'BANK_TRANSFER' | 'OTHER' | 'CARD';
+      /** @enum {string} */
+      status: 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
+      provider: string;
+      externalId: string | null;
+      /** Format: date-time */
+      paidAt: string;
+      note: string | null;
+      student: {
+        /** Format: uuid */
+        id: string;
+        fullName: string;
+      };
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+  };
+  responses: never;
+  parameters: never;
+  requestBodies: never;
+  headers: never;
+  pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    HealthController_check: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Service is alive */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_register: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RegisterDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuthSessionDto"];
-                };
-            };
-            /** @description EMAIL_TAKEN */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            /** @description Rate limit exceeded */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_login: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LoginDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuthSessionDto"];
-                };
-            };
-            /** @description INVALID_CREDENTIALS */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            /** @description Rate limit exceeded */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_refresh: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RefreshDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuthSessionDto"];
-                };
-            };
-            /** @description INVALID_REFRESH_TOKEN or SESSION_EXPIRED */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            /** @description Rate limit exceeded */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_logout: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LogoutDto"];
-            };
-        };
-        responses: {
-            /** @description Session revoked (or was already invalid) */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_me: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuthMeDto"];
-                };
-            };
-            /** @description Missing or invalid access token */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WorkspacesController_getCurrent: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CurrentWorkspaceDto"];
-                };
-            };
-        };
-    };
-    WorkspacesController_updateSettings: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateWorkspaceSettingsDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CurrentWorkspaceDto"];
-                };
-            };
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    WorkspacesController_listMembers: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WorkspaceMemberListDto"];
-                };
-            };
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    AuditController_list: {
-        parameters: {
-            query?: {
-                page?: number;
-                pageSize?: number;
-                entity?: "STUDENT" | "PARENT" | "GROUP" | "TEACHER" | "ENROLLMENT" | "WORKSPACE" | "LESSON" | "LESSON_SERIES" | "SCHEDULE" | "PAUSE" | "LESSON_PACKAGE" | "PAYMENT";
-                entityId?: string;
-                actorId?: string;
-                action?: "CREATE" | "UPDATE" | "DELETE" | "RESTORE";
-                from?: string;
-                to?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuditLogListDto"];
-                };
-            };
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    StudentsController_list: {
-        parameters: {
-            query?: {
-                page?: number;
-                pageSize?: number;
-                search?: string;
-                /** @description active = every student that is not ARCHIVED; deleted = ARCHIVED students; all = every status. An explicit `status` wins over `state`. */
-                state?: "active" | "deleted" | "all";
-                status?: "ACTIVE" | "ON_HOLD" | "ARCHIVED";
-                groupId?: string;
-                sort?: "fullName" | "status" | "createdAt";
-                order?: "asc" | "desc";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StudentListDto"];
-                };
-            };
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    StudentsController_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateStudentDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StudentDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    StudentsController_summary: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StudentsSummaryDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    StudentsController_getDetail: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                studentId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StudentDetailDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    StudentsController_remove: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                studentId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    StudentsController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                studentId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateStudentDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StudentDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            /** @description Archived students must be restored through POST /students/:studentId/restore before PATCH. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    StudentsController_getBilling: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                studentId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StudentBillingDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    StudentsController_restore: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                studentId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StudentDto"];
-                };
-            };
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    StudentsController_removePermanently: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                studentId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    BillingController_listWarnings: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CreditWarningListDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    PausesController_list: {
-        parameters: {
-            query?: {
-                page?: number;
-                pageSize?: number;
-                studentId?: string;
-                state?: "current" | "all";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PauseListDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    PausesController_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreatePauseDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PauseDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            /** @description PAUSE_OVERLAP */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    PausesController_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                pauseId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PauseDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    PausesController_end: {
-        parameters: {
-            query?: {
-                force?: boolean | "true" | "false";
-            };
-            header?: never;
-            path: {
-                pauseId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PauseDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            /** @description PAUSE_ENDED or SCHEDULE_CONFLICT */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    ParentsController_list: {
-        parameters: {
-            query?: {
-                page?: number;
-                pageSize?: number;
-                search?: string;
-                state?: "active" | "deleted" | "all";
-                studentId?: string;
-                linked?: "any" | "none";
-                sort?: "fullName" | "createdAt";
-                order?: "asc" | "desc";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ParentListDto"];
-                };
-            };
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    ParentsController_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateParentDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ParentDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    ParentsController_getDetail: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                parentId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ParentDetailDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    ParentsController_remove: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                parentId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    ParentsController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                parentId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateParentDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ParentDetailDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    TeachersController_list: {
-        parameters: {
-            query?: {
-                page?: number;
-                pageSize?: number;
-                search?: string;
-                status?: "ACTIVE" | "ARCHIVED";
-                state?: "active" | "deleted" | "all";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TeacherListDto"];
-                };
-            };
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    TeachersController_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateTeacherDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TeacherDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    TeachersController_getDetail: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                teacherId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TeacherDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    TeachersController_remove: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                teacherId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    TeachersController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                teacherId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateTeacherDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TeacherDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    TeachersController_restore: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                teacherId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TeacherDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    GroupsController_list: {
-        parameters: {
-            query?: {
-                page?: number;
-                pageSize?: number;
-                search?: string;
-                state?: "active" | "deleted" | "all";
-                status?: "ACTIVE" | "EMPTY";
-                studentId?: string;
-                teacherId?: string;
-                weekday?: number;
-                payment?: "unpaid";
-                sort?: "name" | "pricePerLesson" | "activeStudentCount" | "schedule" | "createdAt";
-                order?: "asc" | "desc";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GroupListDto"];
-                };
-            };
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    GroupsController_create: {
-        parameters: {
-            query?: {
-                force?: boolean | "true" | "false";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateGroupDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GroupDto"];
-                };
-            };
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    GroupsController_summary: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GroupSummaryDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    GroupsController_options: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GroupOptionsDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    GroupsController_getDetail: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                groupId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GroupDetailDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    GroupsController_softDelete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                groupId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    GroupsController_update: {
-        parameters: {
-            query?: {
-                force?: boolean | "true" | "false";
-            };
-            header?: never;
-            path: {
-                groupId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateGroupDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GroupDto"];
-                };
-            };
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    GroupsController_getAttendance: {
-        parameters: {
-            query?: {
-                window?: number;
-            };
-            header?: never;
-            path: {
-                groupId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GroupAttendanceDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    GroupsController_restore: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                groupId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GroupDto"];
-                };
-            };
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            /** @description Legacy destructive group deletes require manual repair before restore. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    EnrollmentsController_list: {
-        parameters: {
-            query?: {
-                page?: number;
-                pageSize?: number;
-                studentId?: string;
-                groupId?: string;
-                teacherId?: string;
-                status?: "ACTIVE" | "PAUSED" | "ARCHIVED";
-                state?: "active" | "deleted" | "all";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["EnrollmentListDto"];
-                };
-            };
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    EnrollmentsController_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateEnrollmentDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["EnrollmentDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    EnrollmentsController_getDetail: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                enrollmentId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["EnrollmentDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    EnrollmentsController_softDelete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                enrollmentId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    EnrollmentsController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                enrollmentId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateEnrollmentDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["EnrollmentDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    EnrollmentsController_getBilling: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                enrollmentId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["EnrollmentBillingDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    EnrollmentsController_restore: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                enrollmentId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["EnrollmentDto"];
-                };
-            };
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    LessonsController_list: {
-        parameters: {
-            query: {
-                from: string;
-                to: string;
-                teacherId?: string;
-                enrollmentId?: string;
-                studentId?: string;
-                groupId?: string;
-                status?: "SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED" | "NO_SHOW";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LessonListDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    LessonsController_create: {
-        parameters: {
-            query?: {
-                force?: boolean | "true" | "false";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateLessonDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LessonListDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    LessonsController_listPage: {
-        parameters: {
-            query?: {
-                page?: number;
-                pageSize?: number;
-                from?: string;
-                to?: string;
-                teacherId?: string;
-                studentId?: string;
-                groupId?: string;
-                status?: ("SCHEDULED" | "COMPLETED" | "CANCELLED_CHARGED" | "CANCELLED_UNCHARGED" | "NO_SHOW")[];
-                search?: string;
-                filter?: "unpaid" | "cancelled" | "no_show" | "needs_makeup";
-                order?: "asc" | "desc";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LessonPageDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    LessonsController_getDetail: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                lessonId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LessonDetailDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    LessonsController_remove: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                lessonId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    LessonsController_update: {
-        parameters: {
-            query?: {
-                force?: boolean | "true" | "false";
-            };
-            header?: never;
-            path: {
-                lessonId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateLessonDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LessonDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    LessonsController_previewBulkCancel: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BulkCancelDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BulkCancelPreviewDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    LessonsController_applyBulkCancel: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BulkCancelDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BulkCancelResultDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    LessonsController_createMakeup: {
-        parameters: {
-            query?: {
-                force?: boolean | "true" | "false";
-            };
-            header?: never;
-            path: {
-                lessonId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateMakeupDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LessonDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    LessonsController_reschedule: {
-        parameters: {
-            query?: {
-                force?: boolean | "true" | "false";
-            };
-            header?: never;
-            path: {
-                lessonId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RescheduleLessonDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LessonDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    LessonsController_transition: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                lessonId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TransitionLessonDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LessonDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    AttendanceController_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                lessonId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LessonAttendanceDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    AttendanceController_set: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                lessonId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SetLessonAttendanceDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LessonAttendanceDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    SeriesController_list: {
-        parameters: {
-            query?: {
-                page?: number;
-                pageSize?: number;
-                enrollmentId?: string;
-                groupId?: string;
-                teacherId?: string;
-                state?: "active" | "deleted" | "all";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LessonSeriesListDto"];
-                };
-            };
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    SeriesController_create: {
-        parameters: {
-            query?: {
-                force?: boolean | "true" | "false";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateLessonSeriesDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LessonSeriesDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    SeriesController_getDetail: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                seriesId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LessonSeriesDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    SeriesController_remove: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                seriesId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    SeriesController_update: {
-        parameters: {
-            query?: {
-                force?: boolean | "true" | "false";
-            };
-            header?: never;
-            path: {
-                seriesId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateLessonSeriesDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LessonSeriesDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    SchedulesController_list: {
-        parameters: {
-            query?: {
-                page?: number;
-                pageSize?: number;
-                studentId?: string;
-                groupId?: string;
-                teacherId?: string;
-                state?: "ACTIVE" | "CHANGING" | "ENDED" | "all";
-                kind?: "individual" | "group";
-                search?: string;
-                sort?: "created" | "next";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ScheduleListDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    SchedulesController_create: {
-        parameters: {
-            query?: {
-                force?: boolean | "true" | "false";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateScheduleDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ScheduleDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    SchedulesController_previewCreate: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateScheduleDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ScheduleCreatePreviewDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    SchedulesController_getDetail: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                scheduleId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ScheduleDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    SchedulesController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                scheduleId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateScheduleDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ScheduleDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    SchedulesController_previewHorizon: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                scheduleId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateScheduleDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ScheduleHorizonPreviewDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    SchedulesController_previewChange: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                scheduleId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ScheduleChangeDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ScheduleChangePreviewDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    SchedulesController_change: {
-        parameters: {
-            query?: {
-                force?: boolean | "true" | "false";
-            };
-            header?: never;
-            path: {
-                scheduleId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ScheduleChangeDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ScheduleChangeResultDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    SchedulesController_previewStop: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                scheduleId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StopScheduleDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ScheduleChangePreviewDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    SchedulesController_stop: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                scheduleId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StopScheduleDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ScheduleChangeResultDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    PackagesController_list: {
-        parameters: {
-            query?: {
-                page?: number;
-                pageSize?: number;
-                studentId?: string;
-                groupId?: string;
-                paymentStatus?: "PENDING" | "PARTIAL" | "PAID";
-                state?: "active" | "deleted" | "all";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PackageListDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    PackagesController_create: {
-        parameters: {
-            query?: {
-                force?: boolean | "true" | "false";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreatePackageDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PackageDto"];
-                };
-            };
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    PackagesController_preview: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreatePackageDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PackagePreviewDto"];
-                };
-            };
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    PackagesController_sellToMembers: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SellToMembersDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SoldPackagesDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    PackagesController_extend: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                packageId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ExtendPackageDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PackageDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    PackagesController_transfer: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                packageId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TransferPackageDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PackageTransferDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    PackagesController_refund: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                packageId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RefundPackageDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PackageDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    PackagesController_getDetail: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                packageId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PackageDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    PackagesController_remove: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                packageId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    PackagesController_getLedger: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                packageId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CreditLedgerDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    PackagesController_adjust: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                packageId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AdjustBalanceDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PackageDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    PaymentsController_list: {
-        parameters: {
-            query?: {
-                page?: number;
-                pageSize?: number;
-                enrollmentId?: string;
-                packageId?: string;
-                studentId?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaymentListDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    PaymentsController_record: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RecordPaymentDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaymentDto"];
-                };
-            };
-            /** @description OWNER role required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
+  HealthController_check: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Service is alive */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AuthController_register: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RegisterDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AuthSessionDto'];
+        };
+      };
+      /** @description EMAIL_TAKEN */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      /** @description Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AuthController_login: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LoginDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AuthSessionDto'];
+        };
+      };
+      /** @description INVALID_CREDENTIALS */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      /** @description Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AuthController_refresh: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RefreshDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AuthSessionDto'];
+        };
+      };
+      /** @description INVALID_REFRESH_TOKEN or SESSION_EXPIRED */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      /** @description Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AuthController_logout: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LogoutDto'];
+      };
+    };
+    responses: {
+      /** @description Session revoked (or was already invalid) */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AuthController_me: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AuthMeDto'];
+        };
+      };
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  WorkspacesController_getCurrent: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CurrentWorkspaceDto'];
+        };
+      };
+    };
+  };
+  WorkspacesController_updateSettings: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateWorkspaceSettingsDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CurrentWorkspaceDto'];
+        };
+      };
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  WorkspacesController_listMembers: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['WorkspaceMemberListDto'];
+        };
+      };
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  AuditController_list: {
+    parameters: {
+      query?: {
+        page?: number;
+        pageSize?: number;
+        entity?:
+          | 'STUDENT'
+          | 'PARENT'
+          | 'GROUP'
+          | 'TEACHER'
+          | 'ENROLLMENT'
+          | 'WORKSPACE'
+          | 'LESSON'
+          | 'LESSON_SERIES'
+          | 'SCHEDULE'
+          | 'PAUSE'
+          | 'LESSON_PACKAGE'
+          | 'PAYMENT';
+        entityId?: string;
+        actorId?: string;
+        action?: 'CREATE' | 'UPDATE' | 'DELETE' | 'RESTORE';
+        from?: string;
+        to?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AuditLogListDto'];
+        };
+      };
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  StudentsController_list: {
+    parameters: {
+      query?: {
+        page?: number;
+        pageSize?: number;
+        search?: string;
+        /** @description active = every student that is not ARCHIVED; deleted = ARCHIVED students; all = every status. An explicit `status` wins over `state`. */
+        state?: 'active' | 'deleted' | 'all';
+        status?: 'ACTIVE' | 'ON_HOLD' | 'ARCHIVED';
+        groupId?: string;
+        sort?: 'fullName' | 'status' | 'createdAt';
+        order?: 'asc' | 'desc';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['StudentListDto'];
+        };
+      };
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  StudentsController_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateStudentDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['StudentDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  StudentsController_summary: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['StudentsSummaryDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  StudentsController_getDetail: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        studentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['StudentDetailDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  StudentsController_remove: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        studentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  StudentsController_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        studentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateStudentDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['StudentDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      /** @description Archived students must be restored through POST /students/:studentId/restore before PATCH. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  StudentsController_getBilling: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        studentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['StudentBillingDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  StudentsController_restore: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        studentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['StudentDto'];
+        };
+      };
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  StudentsController_removePermanently: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        studentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  BillingController_listWarnings: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CreditWarningListDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  PausesController_list: {
+    parameters: {
+      query?: {
+        page?: number;
+        pageSize?: number;
+        studentId?: string;
+        state?: 'current' | 'all';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PauseListDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  PausesController_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreatePauseDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PauseDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      /** @description PAUSE_OVERLAP */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  PausesController_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        pauseId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PauseDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  PausesController_end: {
+    parameters: {
+      query?: {
+        force?: boolean | 'true' | 'false';
+      };
+      header?: never;
+      path: {
+        pauseId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PauseDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      /** @description PAUSE_ENDED or SCHEDULE_CONFLICT */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  ParentsController_list: {
+    parameters: {
+      query?: {
+        page?: number;
+        pageSize?: number;
+        search?: string;
+        state?: 'active' | 'deleted' | 'all';
+        studentId?: string;
+        linked?: 'any' | 'none';
+        sort?: 'fullName' | 'createdAt';
+        order?: 'asc' | 'desc';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ParentListDto'];
+        };
+      };
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  ParentsController_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateParentDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ParentDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  ParentsController_getDetail: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        parentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ParentDetailDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  ParentsController_remove: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        parentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  ParentsController_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        parentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateParentDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ParentDetailDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  TeachersController_list: {
+    parameters: {
+      query?: {
+        page?: number;
+        pageSize?: number;
+        search?: string;
+        status?: 'ACTIVE' | 'ARCHIVED';
+        state?: 'active' | 'deleted' | 'all';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TeacherListDto'];
+        };
+      };
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  TeachersController_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateTeacherDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TeacherDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  TeachersController_getDetail: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        teacherId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TeacherDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  TeachersController_remove: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        teacherId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  TeachersController_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        teacherId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateTeacherDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TeacherDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  TeachersController_restore: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        teacherId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TeacherDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  GroupsController_list: {
+    parameters: {
+      query?: {
+        page?: number;
+        pageSize?: number;
+        search?: string;
+        state?: 'active' | 'deleted' | 'all';
+        status?: 'ACTIVE' | 'EMPTY';
+        studentId?: string;
+        teacherId?: string;
+        weekday?: number;
+        payment?: 'unpaid';
+        sort?: 'name' | 'pricePerLesson' | 'activeStudentCount' | 'schedule' | 'createdAt';
+        order?: 'asc' | 'desc';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GroupListDto'];
+        };
+      };
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  GroupsController_create: {
+    parameters: {
+      query?: {
+        force?: boolean | 'true' | 'false';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateGroupDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GroupDto'];
+        };
+      };
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  GroupsController_summary: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GroupSummaryDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  GroupsController_options: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GroupOptionsDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  GroupsController_getDetail: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        groupId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GroupDetailDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  GroupsController_softDelete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        groupId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  GroupsController_update: {
+    parameters: {
+      query?: {
+        force?: boolean | 'true' | 'false';
+      };
+      header?: never;
+      path: {
+        groupId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateGroupDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GroupDto'];
+        };
+      };
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  GroupsController_getAttendance: {
+    parameters: {
+      query?: {
+        window?: number;
+      };
+      header?: never;
+      path: {
+        groupId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GroupAttendanceDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  GroupsController_restore: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        groupId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GroupDto'];
+        };
+      };
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      /** @description Legacy destructive group deletes require manual repair before restore. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  EnrollmentsController_list: {
+    parameters: {
+      query?: {
+        page?: number;
+        pageSize?: number;
+        studentId?: string;
+        groupId?: string;
+        teacherId?: string;
+        status?: 'ACTIVE' | 'PAUSED' | 'ARCHIVED';
+        state?: 'active' | 'deleted' | 'all';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['EnrollmentListDto'];
+        };
+      };
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  EnrollmentsController_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateEnrollmentDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['EnrollmentDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  EnrollmentsController_getDetail: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        enrollmentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['EnrollmentDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  EnrollmentsController_softDelete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        enrollmentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  EnrollmentsController_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        enrollmentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateEnrollmentDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['EnrollmentDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  EnrollmentsController_getBilling: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        enrollmentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['EnrollmentBillingDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  EnrollmentsController_restore: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        enrollmentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['EnrollmentDto'];
+        };
+      };
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  LessonsController_list: {
+    parameters: {
+      query: {
+        from: string;
+        to: string;
+        teacherId?: string;
+        enrollmentId?: string;
+        studentId?: string;
+        groupId?: string;
+        status?:
+          'SCHEDULED' | 'COMPLETED' | 'CANCELLED_CHARGED' | 'CANCELLED_UNCHARGED' | 'NO_SHOW';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['LessonListDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  LessonsController_create: {
+    parameters: {
+      query?: {
+        force?: boolean | 'true' | 'false';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateLessonDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['LessonListDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  LessonsController_listPage: {
+    parameters: {
+      query?: {
+        page?: number;
+        pageSize?: number;
+        from?: string;
+        to?: string;
+        teacherId?: string;
+        studentId?: string;
+        groupId?: string;
+        status?: (
+          'SCHEDULED' | 'COMPLETED' | 'CANCELLED_CHARGED' | 'CANCELLED_UNCHARGED' | 'NO_SHOW'
+        )[];
+        search?: string;
+        filter?: 'unpaid' | 'cancelled' | 'no_show' | 'needs_makeup';
+        order?: 'asc' | 'desc';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['LessonPageDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  LessonsController_getDetail: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        lessonId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['LessonDetailDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  LessonsController_remove: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        lessonId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  LessonsController_update: {
+    parameters: {
+      query?: {
+        force?: boolean | 'true' | 'false';
+      };
+      header?: never;
+      path: {
+        lessonId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateLessonDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['LessonDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  LessonsController_previewBulkCancel: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['BulkCancelDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['BulkCancelPreviewDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  LessonsController_applyBulkCancel: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['BulkCancelDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['BulkCancelResultDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  LessonsController_createMakeup: {
+    parameters: {
+      query?: {
+        force?: boolean | 'true' | 'false';
+      };
+      header?: never;
+      path: {
+        lessonId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateMakeupDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['LessonDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  LessonsController_reschedule: {
+    parameters: {
+      query?: {
+        force?: boolean | 'true' | 'false';
+      };
+      header?: never;
+      path: {
+        lessonId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RescheduleLessonDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['LessonDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  LessonsController_transition: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        lessonId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TransitionLessonDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['LessonDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  AttendanceController_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        lessonId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['LessonAttendanceDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  AttendanceController_set: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        lessonId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SetLessonAttendanceDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['LessonAttendanceDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  SeriesController_list: {
+    parameters: {
+      query?: {
+        page?: number;
+        pageSize?: number;
+        enrollmentId?: string;
+        groupId?: string;
+        teacherId?: string;
+        state?: 'active' | 'deleted' | 'all';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['LessonSeriesListDto'];
+        };
+      };
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  SeriesController_create: {
+    parameters: {
+      query?: {
+        force?: boolean | 'true' | 'false';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateLessonSeriesDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['LessonSeriesDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  SeriesController_getDetail: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        seriesId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['LessonSeriesDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  SeriesController_remove: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        seriesId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  SeriesController_update: {
+    parameters: {
+      query?: {
+        force?: boolean | 'true' | 'false';
+      };
+      header?: never;
+      path: {
+        seriesId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateLessonSeriesDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['LessonSeriesDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  SchedulesController_list: {
+    parameters: {
+      query?: {
+        page?: number;
+        pageSize?: number;
+        studentId?: string;
+        groupId?: string;
+        teacherId?: string;
+        state?: 'ACTIVE' | 'CHANGING' | 'ENDED' | 'all';
+        kind?: 'individual' | 'group';
+        search?: string;
+        sort?: 'created' | 'next';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ScheduleListDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  SchedulesController_create: {
+    parameters: {
+      query?: {
+        force?: boolean | 'true' | 'false';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateScheduleDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ScheduleDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  SchedulesController_previewCreate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateScheduleDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ScheduleCreatePreviewDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  SchedulesController_getDetail: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        scheduleId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ScheduleDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  SchedulesController_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        scheduleId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateScheduleDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ScheduleDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  SchedulesController_previewHorizon: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        scheduleId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateScheduleDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ScheduleHorizonPreviewDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  SchedulesController_previewChange: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        scheduleId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ScheduleChangeDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ScheduleChangePreviewDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  SchedulesController_change: {
+    parameters: {
+      query?: {
+        force?: boolean | 'true' | 'false';
+      };
+      header?: never;
+      path: {
+        scheduleId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ScheduleChangeDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ScheduleChangeResultDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  SchedulesController_previewStop: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        scheduleId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StopScheduleDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ScheduleChangePreviewDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  SchedulesController_stop: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        scheduleId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StopScheduleDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ScheduleChangeResultDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  PackagesController_list: {
+    parameters: {
+      query?: {
+        page?: number;
+        pageSize?: number;
+        studentId?: string;
+        groupId?: string;
+        paymentStatus?: 'PENDING' | 'PARTIAL' | 'PAID';
+        state?: 'active' | 'deleted' | 'all';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PackageListDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  PackagesController_create: {
+    parameters: {
+      query?: {
+        force?: boolean | 'true' | 'false';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreatePackageDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PackageDto'];
+        };
+      };
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  PackagesController_preview: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreatePackageDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PackagePreviewDto'];
+        };
+      };
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  PackagesController_sellToMembers: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SellToMembersDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SoldPackagesDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  PackagesController_extend: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        packageId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ExtendPackageDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PackageDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  PackagesController_transfer: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        packageId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TransferPackageDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PackageTransferDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  PackagesController_refund: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        packageId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RefundPackageDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PackageDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  PackagesController_getDetail: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        packageId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PackageDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  PackagesController_remove: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        packageId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  PackagesController_getLedger: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        packageId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CreditLedgerDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  PackagesController_adjust: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        packageId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AdjustBalanceDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PackageDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  PaymentsController_list: {
+    parameters: {
+      query?: {
+        page?: number;
+        pageSize?: number;
+        enrollmentId?: string;
+        packageId?: string;
+        studentId?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PaymentListDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  PaymentsController_record: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RecordPaymentDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PaymentDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
 }

@@ -10,9 +10,7 @@
             "description": "Service is alive"
           }
         },
-        "tags": [
-          "health"
-        ]
+        "tags": ["health"]
       }
     },
     "/api/auth/register": {
@@ -56,9 +54,7 @@
           }
         },
         "summary": "Register a new account",
-        "tags": [
-          "auth"
-        ]
+        "tags": ["auth"]
       }
     },
     "/api/auth/login": {
@@ -102,9 +98,7 @@
           }
         },
         "summary": "Log in with email and password",
-        "tags": [
-          "auth"
-        ]
+        "tags": ["auth"]
       }
     },
     "/api/auth/refresh": {
@@ -148,9 +142,7 @@
           }
         },
         "summary": "Rotate the refresh token",
-        "tags": [
-          "auth"
-        ]
+        "tags": ["auth"]
       }
     },
     "/api/auth/logout": {
@@ -174,9 +166,7 @@
           }
         },
         "summary": "Revoke the session",
-        "tags": [
-          "auth"
-        ]
+        "tags": ["auth"]
       }
     },
     "/api/auth/me": {
@@ -204,9 +194,7 @@
           }
         ],
         "summary": "Get the authenticated user, active workspace and role",
-        "tags": [
-          "auth"
-        ]
+        "tags": ["auth"]
       }
     },
     "/api/workspaces/current": {
@@ -231,9 +219,7 @@
           }
         ],
         "summary": "Get the active workspace and the current member role",
-        "tags": [
-          "workspaces"
-        ]
+        "tags": ["workspaces"]
       }
     },
     "/api/workspaces/current/settings": {
@@ -279,9 +265,7 @@
           }
         ],
         "summary": "Update workspace defaults",
-        "tags": [
-          "workspaces"
-        ]
+        "tags": ["workspaces"]
       }
     },
     "/api/workspaces/current/members": {
@@ -317,9 +301,7 @@
           }
         ],
         "summary": "List workspace members (teacher selector)",
-        "tags": [
-          "workspaces"
-        ]
+        "tags": ["workspaces"]
       }
     },
     "/api/audit-logs": {
@@ -397,12 +379,7 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": [
-                "CREATE",
-                "UPDATE",
-                "DELETE",
-                "RESTORE"
-              ]
+              "enum": ["CREATE", "UPDATE", "DELETE", "RESTORE"]
             }
           },
           {
@@ -452,9 +429,7 @@
           }
         ],
         "summary": "List workspace audit log entries (owner only)",
-        "tags": [
-          "audit"
-        ]
+        "tags": ["audit"]
       }
     },
     "/api/students": {
@@ -504,11 +479,7 @@
             "schema": {
               "default": "active",
               "type": "string",
-              "enum": [
-                "active",
-                "deleted",
-                "all"
-              ]
+              "enum": ["active", "deleted", "all"]
             }
           },
           {
@@ -517,11 +488,7 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": [
-                "ACTIVE",
-                "ON_HOLD",
-                "ARCHIVED"
-              ]
+              "enum": ["ACTIVE", "ON_HOLD", "ARCHIVED"]
             }
           },
           {
@@ -540,11 +507,7 @@
             "schema": {
               "default": "fullName",
               "type": "string",
-              "enum": [
-                "fullName",
-                "status",
-                "createdAt"
-              ]
+              "enum": ["fullName", "status", "createdAt"]
             }
           },
           {
@@ -554,10 +517,7 @@
             "schema": {
               "default": "asc",
               "type": "string",
-              "enum": [
-                "asc",
-                "desc"
-              ]
+              "enum": ["asc", "desc"]
             }
           }
         ],
@@ -589,9 +549,7 @@
           }
         ],
         "summary": "List workspace students",
-        "tags": [
-          "students"
-        ]
+        "tags": ["students"]
       },
       "post": {
         "operationId": "StudentsController_create",
@@ -634,9 +592,7 @@
           }
         ],
         "summary": "Create a student",
-        "tags": [
-          "students"
-        ]
+        "tags": ["students"]
       }
     },
     "/api/students/summary": {
@@ -672,9 +628,7 @@
           }
         ],
         "summary": "Count workspace students by status",
-        "tags": [
-          "students"
-        ]
+        "tags": ["students"]
       }
     },
     "/api/students/{studentId}": {
@@ -728,9 +682,7 @@
           }
         ],
         "summary": "Get a student profile with enrollment summaries",
-        "tags": [
-          "students"
-        ]
+        "tags": ["students"]
       },
       "patch": {
         "description": "PATCH semantics: omitted fields stay unchanged, null clears an optional field. A no-op update creates no audit entry.",
@@ -803,9 +755,7 @@
           }
         ],
         "summary": "Update a student",
-        "tags": [
-          "students"
-        ]
+        "tags": ["students"]
       },
       "delete": {
         "description": "Owner-only and reversible. Keeps business history and suspends only the student's future individual schedule.",
@@ -851,9 +801,7 @@
           }
         ],
         "summary": "Archive a student",
-        "tags": [
-          "students"
-        ]
+        "tags": ["students"]
       }
     },
     "/api/students/{studentId}/billing": {
@@ -908,9 +856,7 @@
           }
         ],
         "summary": "How each of the student directions is paid",
-        "tags": [
-          "students"
-        ]
+        "tags": ["students"]
       }
     },
     "/api/students/{studentId}/restore": {
@@ -964,9 +910,7 @@
           }
         ],
         "summary": "Restore an archived student (owner only)",
-        "tags": [
-          "students"
-        ]
+        "tags": ["students"]
       }
     },
     "/api/students/{studentId}/permanently": {
@@ -1014,9 +958,7 @@
           }
         ],
         "summary": "Permanently delete an unused student (owner only)",
-        "tags": [
-          "students"
-        ]
+        "tags": ["students"]
       }
     },
     "/api/billing/warnings": {
@@ -1052,9 +994,7 @@
           }
         ],
         "summary": "Directions that are running out of credits",
-        "tags": [
-          "billing"
-        ]
+        "tags": ["billing"]
       }
     },
     "/api/pauses": {
@@ -1102,10 +1042,7 @@
             "schema": {
               "default": "current",
               "type": "string",
-              "enum": [
-                "current",
-                "all"
-              ]
+              "enum": ["current", "all"]
             }
           }
         ],
@@ -1137,9 +1074,7 @@
           }
         ],
         "summary": "List pauses",
-        "tags": [
-          "pauses"
-        ]
+        "tags": ["pauses"]
       },
       "post": {
         "description": "Takes the individual lessons in the window out, keeps the student out of group lessons and charges, and pushes the packages valid at its start by its length (an open pause does that when it ends).",
@@ -1203,9 +1138,7 @@
           }
         ],
         "summary": "Pause a student or one direction",
-        "tags": [
-          "pauses"
-        ]
+        "tags": ["pauses"]
       }
     },
     "/api/pauses/{pauseId}": {
@@ -1259,9 +1192,7 @@
           }
         ],
         "summary": "Get a pause",
-        "tags": [
-          "pauses"
-        ]
+        "tags": ["pauses"]
       }
     },
     "/api/pauses/{pauseId}/end": {
@@ -1289,15 +1220,11 @@
                 },
                 {
                   "type": "string",
-                  "enum": [
-                    "true"
-                  ]
+                  "enum": ["true"]
                 },
                 {
                   "type": "string",
-                  "enum": [
-                    "false"
-                  ]
+                  "enum": ["false"]
                 }
               ]
             }
@@ -1351,9 +1278,7 @@
           }
         ],
         "summary": "End a pause now, or cancel one that has not begun",
-        "tags": [
-          "pauses"
-        ]
+        "tags": ["pauses"]
       }
     },
     "/api/parents": {
@@ -1402,11 +1327,7 @@
             "schema": {
               "default": "active",
               "type": "string",
-              "enum": [
-                "active",
-                "deleted",
-                "all"
-              ]
+              "enum": ["active", "deleted", "all"]
             }
           },
           {
@@ -1425,10 +1346,7 @@
             "schema": {
               "default": "any",
               "type": "string",
-              "enum": [
-                "any",
-                "none"
-              ]
+              "enum": ["any", "none"]
             }
           },
           {
@@ -1438,10 +1356,7 @@
             "schema": {
               "default": "fullName",
               "type": "string",
-              "enum": [
-                "fullName",
-                "createdAt"
-              ]
+              "enum": ["fullName", "createdAt"]
             }
           },
           {
@@ -1451,10 +1366,7 @@
             "schema": {
               "default": "asc",
               "type": "string",
-              "enum": [
-                "asc",
-                "desc"
-              ]
+              "enum": ["asc", "desc"]
             }
           }
         ],
@@ -1486,9 +1398,7 @@
           }
         ],
         "summary": "List workspace parents",
-        "tags": [
-          "parents"
-        ]
+        "tags": ["parents"]
       },
       "post": {
         "operationId": "ParentsController_create",
@@ -1531,9 +1441,7 @@
           }
         ],
         "summary": "Create a parent",
-        "tags": [
-          "parents"
-        ]
+        "tags": ["parents"]
       }
     },
     "/api/parents/{parentId}": {
@@ -1587,9 +1495,7 @@
           }
         ],
         "summary": "Get a parent with their linked-student roster",
-        "tags": [
-          "parents"
-        ]
+        "tags": ["parents"]
       },
       "patch": {
         "description": "PATCH semantics: omitted fields stay unchanged, null clears an optional field. A no-op update creates no audit entry. Returns the parent detail with its live student roster.",
@@ -1652,9 +1558,7 @@
           }
         ],
         "summary": "Update a parent",
-        "tags": [
-          "parents"
-        ]
+        "tags": ["parents"]
       },
       "delete": {
         "description": "Irreversible. Removes the parent together with its student links. There is no trash and no restore.",
@@ -1700,9 +1604,7 @@
           }
         ],
         "summary": "Permanently delete a parent",
-        "tags": [
-          "parents"
-        ]
+        "tags": ["parents"]
       }
     },
     "/api/teachers": {
@@ -1750,10 +1652,7 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": [
-                "ACTIVE",
-                "ARCHIVED"
-              ]
+              "enum": ["ACTIVE", "ARCHIVED"]
             }
           },
           {
@@ -1763,11 +1662,7 @@
             "schema": {
               "default": "active",
               "type": "string",
-              "enum": [
-                "active",
-                "deleted",
-                "all"
-              ]
+              "enum": ["active", "deleted", "all"]
             }
           }
         ],
@@ -1799,9 +1694,7 @@
           }
         ],
         "summary": "List workspace teachers",
-        "tags": [
-          "teachers"
-        ]
+        "tags": ["teachers"]
       },
       "post": {
         "operationId": "TeachersController_create",
@@ -1844,9 +1737,7 @@
           }
         ],
         "summary": "Create a teacher profile",
-        "tags": [
-          "teachers"
-        ]
+        "tags": ["teachers"]
       }
     },
     "/api/teachers/{teacherId}": {
@@ -1900,9 +1791,7 @@
           }
         ],
         "summary": "Get a teacher profile",
-        "tags": [
-          "teachers"
-        ]
+        "tags": ["teachers"]
       },
       "patch": {
         "operationId": "TeachersController_update",
@@ -1964,9 +1853,7 @@
           }
         ],
         "summary": "Update a teacher",
-        "tags": [
-          "teachers"
-        ]
+        "tags": ["teachers"]
       },
       "delete": {
         "description": "Hides the teacher from pickers; enrollments/lessons keep the reference.",
@@ -2012,9 +1899,7 @@
           }
         ],
         "summary": "Soft-delete a teacher",
-        "tags": [
-          "teachers"
-        ]
+        "tags": ["teachers"]
       }
     },
     "/api/teachers/{teacherId}/restore": {
@@ -2068,9 +1953,7 @@
           }
         ],
         "summary": "Restore a soft-deleted teacher",
-        "tags": [
-          "teachers"
-        ]
+        "tags": ["teachers"]
       }
     },
     "/api/groups": {
@@ -2119,11 +2002,7 @@
             "schema": {
               "default": "active",
               "type": "string",
-              "enum": [
-                "active",
-                "deleted",
-                "all"
-              ]
+              "enum": ["active", "deleted", "all"]
             }
           },
           {
@@ -2132,10 +2011,7 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": [
-                "ACTIVE",
-                "EMPTY"
-              ]
+              "enum": ["ACTIVE", "EMPTY"]
             }
           },
           {
@@ -2174,9 +2050,7 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": [
-                "unpaid"
-              ]
+              "enum": ["unpaid"]
             }
           },
           {
@@ -2186,13 +2060,7 @@
             "schema": {
               "default": "name",
               "type": "string",
-              "enum": [
-                "name",
-                "pricePerLesson",
-                "activeStudentCount",
-                "schedule",
-                "createdAt"
-              ]
+              "enum": ["name", "pricePerLesson", "activeStudentCount", "schedule", "createdAt"]
             }
           },
           {
@@ -2202,10 +2070,7 @@
             "schema": {
               "default": "asc",
               "type": "string",
-              "enum": [
-                "asc",
-                "desc"
-              ]
+              "enum": ["asc", "desc"]
             }
           }
         ],
@@ -2237,9 +2102,7 @@
           }
         ],
         "summary": "List workspace groups",
-        "tags": [
-          "groups"
-        ]
+        "tags": ["groups"]
       },
       "post": {
         "description": "Optionally with a roster and a first recurring schedule, in one transaction. The teacher defaults to the roster teacher, then to the only active teacher of the workspace. A schedule needs a teacher (400 GROUP_TEACHER_REQUIRED) and a free calendar (409 SCHEDULE_CONFLICT).",
@@ -2257,15 +2120,11 @@
                 },
                 {
                   "type": "string",
-                  "enum": [
-                    "true"
-                  ]
+                  "enum": ["true"]
                 },
                 {
                   "type": "string",
-                  "enum": [
-                    "false"
-                  ]
+                  "enum": ["false"]
                 }
               ]
             }
@@ -2329,9 +2188,7 @@
           }
         ],
         "summary": "Create a group",
-        "tags": [
-          "groups"
-        ]
+        "tags": ["groups"]
       }
     },
     "/api/groups/summary": {
@@ -2367,9 +2224,7 @@
           }
         ],
         "summary": "Group collection headline",
-        "tags": [
-          "groups"
-        ]
+        "tags": ["groups"]
       }
     },
     "/api/groups/options": {
@@ -2405,9 +2260,7 @@
           }
         ],
         "summary": "Live groups by name",
-        "tags": [
-          "groups"
-        ]
+        "tags": ["groups"]
       }
     },
     "/api/groups/{groupId}": {
@@ -2462,9 +2315,7 @@
           }
         ],
         "summary": "The group page",
-        "tags": [
-          "groups"
-        ]
+        "tags": ["groups"]
       },
       "patch": {
         "description": "PATCH semantics: omitted fields stay unchanged, null clears an optional field. A no-op update creates no audit entry. `students` carries the complete roster and is reconciled into enrollments in the same transaction — added students are enrolled, dropped ones are removed — so a roster edit never costs one request per student. A new `teacherId` moves the roster, the schedule and every upcoming lesson to that teacher after a clash check. `schedule` only creates the first schedule (409 GROUP_SCHEDULE_EXISTS otherwise).",
@@ -2490,15 +2341,11 @@
                 },
                 {
                   "type": "string",
-                  "enum": [
-                    "true"
-                  ]
+                  "enum": ["true"]
                 },
                 {
                   "type": "string",
-                  "enum": [
-                    "false"
-                  ]
+                  "enum": ["false"]
                 }
               ]
             }
@@ -2572,9 +2419,7 @@
           }
         ],
         "summary": "Update a group",
-        "tags": [
-          "groups"
-        ]
+        "tags": ["groups"]
       },
       "delete": {
         "description": "Owner-only and idempotent. Preserves the roster and financial history, then suspends related series and future scheduled lessons.",
@@ -2630,9 +2475,7 @@
           }
         ],
         "summary": "Archive a group",
-        "tags": [
-          "groups"
-        ]
+        "tags": ["groups"]
       }
     },
     "/api/groups/{groupId}/attendance": {
@@ -2700,9 +2543,7 @@
           }
         ],
         "summary": "Group attendance over its last held lessons",
-        "tags": [
-          "groups"
-        ]
+        "tags": ["groups"]
       }
     },
     "/api/groups/{groupId}/restore": {
@@ -2766,9 +2607,7 @@
           }
         ],
         "summary": "Restore an archived group (owner only)",
-        "tags": [
-          "groups"
-        ]
+        "tags": ["groups"]
       }
     },
     "/api/enrollments": {
@@ -2833,11 +2672,7 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": [
-                "ACTIVE",
-                "PAUSED",
-                "ARCHIVED"
-              ]
+              "enum": ["ACTIVE", "PAUSED", "ARCHIVED"]
             }
           },
           {
@@ -2847,11 +2682,7 @@
             "schema": {
               "default": "active",
               "type": "string",
-              "enum": [
-                "active",
-                "deleted",
-                "all"
-              ]
+              "enum": ["active", "deleted", "all"]
             }
           }
         ],
@@ -2883,9 +2714,7 @@
           }
         ],
         "summary": "List workspace enrollments",
-        "tags": [
-          "enrollments"
-        ]
+        "tags": ["enrollments"]
       },
       "post": {
         "description": "groupId null/omitted creates an individual enrollment. Student, group and teacher must be live records of the current workspace. An indistinguishable live duplicate is rejected with DUPLICATE_ENROLLMENT.",
@@ -2949,9 +2778,7 @@
           }
         ],
         "summary": "Enroll a student with a group or an individual teacher",
-        "tags": [
-          "enrollments"
-        ]
+        "tags": ["enrollments"]
       }
     },
     "/api/enrollments/{enrollmentId}": {
@@ -3005,9 +2832,7 @@
           }
         ],
         "summary": "Get an enrollment",
-        "tags": [
-          "enrollments"
-        ]
+        "tags": ["enrollments"]
       },
       "patch": {
         "description": "Student, group and teacher are immutable — archive and re-enroll instead. cancellationDeadlineHours null reverts to the workspace default. A no-op update creates no audit entry.",
@@ -3070,9 +2895,7 @@
           }
         ],
         "summary": "Update enrollment billing rules or lifecycle status",
-        "tags": [
-          "enrollments"
-        ]
+        "tags": ["enrollments"]
       },
       "delete": {
         "description": "Idempotent. For a legitimately ended relationship prefer status=ARCHIVED, which stays visible in history.",
@@ -3118,9 +2941,7 @@
           }
         ],
         "summary": "Soft-delete an enrollment (move to trash)",
-        "tags": [
-          "enrollments"
-        ]
+        "tags": ["enrollments"]
       }
     },
     "/api/enrollments/{enrollmentId}/billing": {
@@ -3175,9 +2996,7 @@
           }
         ],
         "summary": "How a direction is paid now",
-        "tags": [
-          "enrollments"
-        ]
+        "tags": ["enrollments"]
       }
     },
     "/api/enrollments/{enrollmentId}/restore": {
@@ -3242,9 +3061,7 @@
           }
         ],
         "summary": "Restore a soft-deleted enrollment (owner only)",
-        "tags": [
-          "enrollments"
-        ]
+        "tags": ["enrollments"]
       }
     },
     "/api/lessons": {
@@ -3350,9 +3167,7 @@
           }
         ],
         "summary": "List lessons in a time window (calendar feed)",
-        "tags": [
-          "scheduling"
-        ]
+        "tags": ["scheduling"]
       },
       "post": {
         "description": "startsAt accepts several dates for bulk creation. Overlapping the teacher returns 409 SCHEDULE_CONFLICT unless force=true.",
@@ -3370,15 +3185,11 @@
                 },
                 {
                   "type": "string",
-                  "enum": [
-                    "true"
-                  ]
+                  "enum": ["true"]
                 },
                 {
                   "type": "string",
-                  "enum": [
-                    "false"
-                  ]
+                  "enum": ["false"]
                 }
               ]
             }
@@ -3432,9 +3243,7 @@
           }
         ],
         "summary": "Create one or many one-off lessons",
-        "tags": [
-          "scheduling"
-        ]
+        "tags": ["scheduling"]
       }
     },
     "/api/lessons/list": {
@@ -3547,12 +3356,7 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": [
-                "unpaid",
-                "cancelled",
-                "no_show",
-                "needs_makeup"
-              ]
+              "enum": ["unpaid", "cancelled", "no_show", "needs_makeup"]
             }
           },
           {
@@ -3562,10 +3366,7 @@
             "schema": {
               "default": "desc",
               "type": "string",
-              "enum": [
-                "asc",
-                "desc"
-              ]
+              "enum": ["asc", "desc"]
             }
           }
         ],
@@ -3597,9 +3398,7 @@
           }
         ],
         "summary": "The Lessons list: every lesson, paged, with quick filters",
-        "tags": [
-          "scheduling"
-        ]
+        "tags": ["scheduling"]
       }
     },
     "/api/lessons/{lessonId}": {
@@ -3654,9 +3453,7 @@
           }
         ],
         "summary": "One lesson for the side panel",
-        "tags": [
-          "scheduling"
-        ]
+        "tags": ["scheduling"]
       },
       "patch": {
         "description": "Topic, notes, duration, teacher (a substitute for this lesson only), price and payment date. Sending null clears topic or notes; price and currency travel together. A new duration or teacher on an upcoming lesson is checked for teacher and student conflicts unless force=true. Moving a lesson in time uses /reschedule.",
@@ -3682,15 +3479,11 @@
                 },
                 {
                   "type": "string",
-                  "enum": [
-                    "true"
-                  ]
+                  "enum": ["true"]
                 },
                 {
                   "type": "string",
-                  "enum": [
-                    "false"
-                  ]
+                  "enum": ["false"]
                 }
               ]
             }
@@ -3754,9 +3547,7 @@
           }
         ],
         "summary": "Change a lesson",
-        "tags": [
-          "scheduling"
-        ]
+        "tags": ["scheduling"]
       },
       "delete": {
         "description": "Idempotent. A series lesson is also detached so it is not regenerated.",
@@ -3792,9 +3583,7 @@
           }
         ],
         "summary": "Soft-delete a lesson",
-        "tags": [
-          "scheduling"
-        ]
+        "tags": ["scheduling"]
       }
     },
     "/api/lessons/bulk-cancel/preview": {
@@ -3840,9 +3629,7 @@
           }
         ],
         "summary": "Preview cancelling every lesson of a period",
-        "tags": [
-          "scheduling"
-        ]
+        "tags": ["scheduling"]
       }
     },
     "/api/lessons/bulk-cancel": {
@@ -3898,9 +3685,7 @@
           }
         ],
         "summary": "Cancel every lesson of a period",
-        "tags": [
-          "scheduling"
-        ]
+        "tags": ["scheduling"]
       }
     },
     "/api/lessons/{lessonId}/makeup": {
@@ -3928,15 +3713,11 @@
                 },
                 {
                   "type": "string",
-                  "enum": [
-                    "true"
-                  ]
+                  "enum": ["true"]
                 },
                 {
                   "type": "string",
-                  "enum": [
-                    "false"
-                  ]
+                  "enum": ["false"]
                 }
               ]
             }
@@ -4000,9 +3781,7 @@
           }
         ],
         "summary": "Assign a makeup for a cancelled or no-show lesson",
-        "tags": [
-          "scheduling"
-        ]
+        "tags": ["scheduling"]
       }
     },
     "/api/lessons/{lessonId}/reschedule": {
@@ -4030,15 +3809,11 @@
                 },
                 {
                   "type": "string",
-                  "enum": [
-                    "true"
-                  ]
+                  "enum": ["true"]
                 },
                 {
                   "type": "string",
-                  "enum": [
-                    "false"
-                  ]
+                  "enum": ["false"]
                 }
               ]
             }
@@ -4102,9 +3877,7 @@
           }
         ],
         "summary": "Reschedule a lesson",
-        "tags": [
-          "scheduling"
-        ]
+        "tags": ["scheduling"]
       }
     },
     "/api/lessons/{lessonId}/status": {
@@ -4179,9 +3952,7 @@
           }
         ],
         "summary": "Change a lesson status",
-        "tags": [
-          "scheduling"
-        ]
+        "tags": ["scheduling"]
       }
     },
     "/api/lessons/{lessonId}/attendance": {
@@ -4236,9 +4007,7 @@
           }
         ],
         "summary": "A lesson's participants and their attendance marks",
-        "tags": [
-          "scheduling"
-        ]
+        "tags": ["scheduling"]
       },
       "put": {
         "description": "Sets the given participants’ marks; others keep theirs. Accepted once the lesson has started, unless it was cancelled (409 ATTENDANCE_NOT_MARKABLE). An unchanged mark writes nothing.",
@@ -4311,9 +4080,7 @@
           }
         ],
         "summary": "Mark attendance for a lesson",
-        "tags": [
-          "scheduling"
-        ]
+        "tags": ["scheduling"]
       }
     },
     "/api/lesson-series": {
@@ -4379,11 +4146,7 @@
             "schema": {
               "default": "active",
               "type": "string",
-              "enum": [
-                "active",
-                "deleted",
-                "all"
-              ]
+              "enum": ["active", "deleted", "all"]
             }
           }
         ],
@@ -4415,9 +4178,7 @@
           }
         ],
         "summary": "List recurring lesson patterns",
-        "tags": [
-          "scheduling"
-        ]
+        "tags": ["scheduling"]
       },
       "post": {
         "operationId": "SeriesController_create",
@@ -4434,15 +4195,11 @@
                 },
                 {
                   "type": "string",
-                  "enum": [
-                    "true"
-                  ]
+                  "enum": ["true"]
                 },
                 {
                   "type": "string",
-                  "enum": [
-                    "false"
-                  ]
+                  "enum": ["false"]
                 }
               ]
             }
@@ -4496,9 +4253,7 @@
           }
         ],
         "summary": "Create a recurring pattern and materialize its lessons",
-        "tags": [
-          "scheduling"
-        ]
+        "tags": ["scheduling"]
       }
     },
     "/api/lesson-series/{seriesId}": {
@@ -4552,9 +4307,7 @@
           }
         ],
         "summary": "Get a recurring pattern",
-        "tags": [
-          "scheduling"
-        ]
+        "tags": ["scheduling"]
       },
       "patch": {
         "description": "Changing a schedule field regenerates future SCHEDULED lessons; a price-only change leaves existing lessons untouched.",
@@ -4580,15 +4333,11 @@
                 },
                 {
                   "type": "string",
-                  "enum": [
-                    "true"
-                  ]
+                  "enum": ["true"]
                 },
                 {
                   "type": "string",
-                  "enum": [
-                    "false"
-                  ]
+                  "enum": ["false"]
                 }
               ]
             }
@@ -4642,9 +4391,7 @@
           }
         ],
         "summary": "Update a recurring pattern",
-        "tags": [
-          "scheduling"
-        ]
+        "tags": ["scheduling"]
       },
       "delete": {
         "description": "Soft-deletes the pattern and its future scheduled lessons.",
@@ -4690,9 +4437,7 @@
           }
         ],
         "summary": "Delete a recurring pattern",
-        "tags": [
-          "scheduling"
-        ]
+        "tags": ["scheduling"]
       }
     },
     "/api/schedules": {
@@ -4758,12 +4503,7 @@
             "schema": {
               "default": "ACTIVE",
               "type": "string",
-              "enum": [
-                "ACTIVE",
-                "CHANGING",
-                "ENDED",
-                "all"
-              ]
+              "enum": ["ACTIVE", "CHANGING", "ENDED", "all"]
             }
           },
           {
@@ -4772,10 +4512,7 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": [
-                "individual",
-                "group"
-              ]
+              "enum": ["individual", "group"]
             }
           },
           {
@@ -4795,10 +4532,7 @@
             "schema": {
               "default": "created",
               "type": "string",
-              "enum": [
-                "created",
-                "next"
-              ]
+              "enum": ["created", "next"]
             }
           }
         ],
@@ -4830,9 +4564,7 @@
           }
         ],
         "summary": "List schedules",
-        "tags": [
-          "scheduling"
-        ]
+        "tags": ["scheduling"]
       },
       "post": {
         "description": "For a student with one teacher, or a group (taught by its teacher). Each weekday has its own start time; lessons are generated horizonWeeks ahead and topped up daily. 409 SCHEDULE_EXISTS names the active schedule of that direction; SCHEDULE_CONFLICT lists teacher or student overlaps unless force=true.",
@@ -4850,15 +4582,11 @@
                 },
                 {
                   "type": "string",
-                  "enum": [
-                    "true"
-                  ]
+                  "enum": ["true"]
                 },
                 {
                   "type": "string",
-                  "enum": [
-                    "false"
-                  ]
+                  "enum": ["false"]
                 }
               ]
             }
@@ -4912,9 +4640,7 @@
           }
         ],
         "summary": "Create a schedule",
-        "tags": [
-          "scheduling"
-        ]
+        "tags": ["scheduling"]
       }
     },
     "/api/schedules/preview": {
@@ -4960,9 +4686,7 @@
           }
         ],
         "summary": "Preview a new schedule",
-        "tags": [
-          "scheduling"
-        ]
+        "tags": ["scheduling"]
       }
     },
     "/api/schedules/{scheduleId}": {
@@ -5016,9 +4740,7 @@
           }
         ],
         "summary": "One schedule",
-        "tags": [
-          "scheduling"
-        ]
+        "tags": ["scheduling"]
       },
       "patch": {
         "operationId": "SchedulesController_update",
@@ -5080,9 +4802,7 @@
           }
         ],
         "summary": "Change how far ahead a schedule generates lessons",
-        "tags": [
-          "scheduling"
-        ]
+        "tags": ["scheduling"]
       }
     },
     "/api/schedules/{scheduleId}/horizon/preview": {
@@ -5147,9 +4867,7 @@
           }
         ],
         "summary": "Preview a new horizon",
-        "tags": [
-          "scheduling"
-        ]
+        "tags": ["scheduling"]
       }
     },
     "/api/schedules/{scheduleId}/changes/preview": {
@@ -5204,9 +4922,7 @@
           }
         ],
         "summary": "Preview a change of days, times or length",
-        "tags": [
-          "scheduling"
-        ]
+        "tags": ["scheduling"]
       }
     },
     "/api/schedules/{scheduleId}/changes": {
@@ -5234,15 +4950,11 @@
                 },
                 {
                   "type": "string",
-                  "enum": [
-                    "true"
-                  ]
+                  "enum": ["true"]
                 },
                 {
                   "type": "string",
-                  "enum": [
-                    "false"
-                  ]
+                  "enum": ["false"]
                 }
               ]
             }
@@ -5296,9 +5008,7 @@
           }
         ],
         "summary": "Change days, times or length from a date",
-        "tags": [
-          "scheduling"
-        ]
+        "tags": ["scheduling"]
       }
     },
     "/api/schedules/{scheduleId}/stop/preview": {
@@ -5352,9 +5062,7 @@
           }
         ],
         "summary": "Preview stopping a schedule from a date",
-        "tags": [
-          "scheduling"
-        ]
+        "tags": ["scheduling"]
       }
     },
     "/api/schedules/{scheduleId}/stop": {
@@ -5409,9 +5117,7 @@
           }
         ],
         "summary": "Stop a schedule from a date",
-        "tags": [
-          "scheduling"
-        ]
+        "tags": ["scheduling"]
       }
     },
     "/api/packages": {
@@ -5466,11 +5172,7 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": [
-                "PENDING",
-                "PARTIAL",
-                "PAID"
-              ]
+              "enum": ["PENDING", "PARTIAL", "PAID"]
             }
           },
           {
@@ -5480,11 +5182,7 @@
             "schema": {
               "default": "active",
               "type": "string",
-              "enum": [
-                "active",
-                "deleted",
-                "all"
-              ]
+              "enum": ["active", "deleted", "all"]
             }
           }
         ],
@@ -5516,9 +5214,7 @@
           }
         ],
         "summary": "List lesson packages",
-        "tags": [
-          "packages"
-        ]
+        "tags": ["packages"]
       },
       "post": {
         "description": "Creates the package, its opening purchase entry, per-member shares for a group, and (with a schedule) the recurring series behind it.",
@@ -5536,15 +5232,11 @@
                 },
                 {
                   "type": "string",
-                  "enum": [
-                    "true"
-                  ]
+                  "enum": ["true"]
                 },
                 {
                   "type": "string",
-                  "enum": [
-                    "false"
-                  ]
+                  "enum": ["false"]
                 }
               ]
             }
@@ -5608,9 +5300,7 @@
           }
         ],
         "summary": "Buy a lesson package",
-        "tags": [
-          "packages"
-        ]
+        "tags": ["packages"]
       }
     },
     "/api/packages/preview": {
@@ -5666,9 +5356,7 @@
           }
         ],
         "summary": "Preview a package sale",
-        "tags": [
-          "packages"
-        ]
+        "tags": ["packages"]
       }
     },
     "/api/packages/members": {
@@ -5724,9 +5412,7 @@
           }
         ],
         "summary": "Sell one package to each selected group member",
-        "tags": [
-          "packages"
-        ]
+        "tags": ["packages"]
       }
     },
     "/api/packages/{packageId}/extend": {
@@ -5790,9 +5476,7 @@
           }
         ],
         "summary": "Move the end of a package later",
-        "tags": [
-          "packages"
-        ]
+        "tags": ["packages"]
       }
     },
     "/api/packages/{packageId}/transfer": {
@@ -5857,9 +5541,7 @@
           }
         ],
         "summary": "Move unused credits to another of the student's directions",
-        "tags": [
-          "packages"
-        ]
+        "tags": ["packages"]
       }
     },
     "/api/packages/{packageId}/refund": {
@@ -5923,9 +5605,7 @@
           }
         ],
         "summary": "Take unused credits back and record the money returned",
-        "tags": [
-          "packages"
-        ]
+        "tags": ["packages"]
       }
     },
     "/api/packages/{packageId}": {
@@ -5980,9 +5660,7 @@
           }
         ],
         "summary": "Get a package",
-        "tags": [
-          "packages"
-        ]
+        "tags": ["packages"]
       },
       "delete": {
         "description": "Idempotent. Stops owned series and future scheduled lessons; financial history is retained.",
@@ -6018,9 +5696,7 @@
           }
         ],
         "summary": "Archive a package",
-        "tags": [
-          "packages"
-        ]
+        "tags": ["packages"]
       }
     },
     "/api/packages/{packageId}/ledger": {
@@ -6075,9 +5751,7 @@
           }
         ],
         "summary": "Credit ledger history",
-        "tags": [
-          "packages"
-        ]
+        "tags": ["packages"]
       }
     },
     "/api/packages/{packageId}/adjust": {
@@ -6142,9 +5816,7 @@
           }
         ],
         "summary": "Manually adjust a package balance",
-        "tags": [
-          "packages"
-        ]
+        "tags": ["packages"]
       }
     },
     "/api/payments": {
@@ -6231,9 +5903,7 @@
           }
         ],
         "summary": "List recorded payments",
-        "tags": [
-          "payments"
-        ]
+        "tags": ["payments"]
       },
       "post": {
         "description": "Money only. Lesson credits live in the package ledger and are not touched here. Applies the amount to the member share when a package is given.",
@@ -6297,9 +5967,7 @@
           }
         ],
         "summary": "Record a payment received",
-        "tags": [
-          "payments"
-        ]
+        "tags": ["payments"]
       }
     }
   },
@@ -6345,19 +6013,11 @@
           },
           "mode": {
             "type": "string",
-            "enum": [
-              "SOLO",
-              "SCHOOL"
-            ],
+            "enum": ["SOLO", "SCHOOL"],
             "default": "SOLO"
           }
         },
-        "required": [
-          "name",
-          "workspaceName",
-          "email",
-          "password"
-        ]
+        "required": ["name", "workspaceName", "email", "password"]
       },
       "AuthSessionDto": {
         "type": "object",
@@ -6372,10 +6032,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "accessToken",
-              "refreshToken"
-            ]
+            "required": ["accessToken", "refreshToken"]
           },
           "user": {
             "type": "object",
@@ -6392,11 +6049,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "id",
-              "email",
-              "name"
-            ]
+            "required": ["id", "email", "name"]
           },
           "workspace": {
             "type": "object",
@@ -6410,17 +6063,11 @@
               },
               "plan": {
                 "type": "string",
-                "enum": [
-                  "FREE",
-                  "PRO"
-                ]
+                "enum": ["FREE", "PRO"]
               },
               "mode": {
                 "type": "string",
-                "enum": [
-                  "SOLO",
-                  "SCHOOL"
-                ]
+                "enum": ["SOLO", "SCHOOL"]
               },
               "defaultCurrency": {
                 "type": "string"
@@ -6452,18 +6099,10 @@
           },
           "role": {
             "type": "string",
-            "enum": [
-              "OWNER",
-              "TEACHER"
-            ]
+            "enum": ["OWNER", "TEACHER"]
           }
         },
-        "required": [
-          "tokens",
-          "user",
-          "workspace",
-          "role"
-        ]
+        "required": ["tokens", "user", "workspace", "role"]
       },
       "ApiErrorDto": {
         "type": "object",
@@ -6478,11 +6117,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "statusCode",
-          "code",
-          "message"
-        ]
+        "required": ["statusCode", "code", "message"]
       },
       "LoginDto": {
         "type": "object",
@@ -6498,10 +6133,7 @@
             "maxLength": 128
           }
         },
-        "required": [
-          "email",
-          "password"
-        ]
+        "required": ["email", "password"]
       },
       "RefreshDto": {
         "type": "object",
@@ -6511,9 +6143,7 @@
             "minLength": 1
           }
         },
-        "required": [
-          "refreshToken"
-        ]
+        "required": ["refreshToken"]
       },
       "LogoutDto": {
         "type": "object",
@@ -6523,9 +6153,7 @@
             "minLength": 1
           }
         },
-        "required": [
-          "refreshToken"
-        ]
+        "required": ["refreshToken"]
       },
       "AuthMeDto": {
         "type": "object",
@@ -6545,11 +6173,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "id",
-              "email",
-              "name"
-            ]
+            "required": ["id", "email", "name"]
           },
           "workspace": {
             "type": "object",
@@ -6563,17 +6187,11 @@
               },
               "plan": {
                 "type": "string",
-                "enum": [
-                  "FREE",
-                  "PRO"
-                ]
+                "enum": ["FREE", "PRO"]
               },
               "mode": {
                 "type": "string",
-                "enum": [
-                  "SOLO",
-                  "SCHOOL"
-                ]
+                "enum": ["SOLO", "SCHOOL"]
               },
               "defaultCurrency": {
                 "type": "string"
@@ -6605,17 +6223,10 @@
           },
           "role": {
             "type": "string",
-            "enum": [
-              "OWNER",
-              "TEACHER"
-            ]
+            "enum": ["OWNER", "TEACHER"]
           }
         },
-        "required": [
-          "user",
-          "workspace",
-          "role"
-        ]
+        "required": ["user", "workspace", "role"]
       },
       "CurrentWorkspaceDto": {
         "type": "object",
@@ -6632,17 +6243,11 @@
               },
               "plan": {
                 "type": "string",
-                "enum": [
-                  "FREE",
-                  "PRO"
-                ]
+                "enum": ["FREE", "PRO"]
               },
               "mode": {
                 "type": "string",
-                "enum": [
-                  "SOLO",
-                  "SCHOOL"
-                ]
+                "enum": ["SOLO", "SCHOOL"]
               },
               "defaultCurrency": {
                 "type": "string"
@@ -6674,29 +6279,17 @@
           },
           "role": {
             "type": "string",
-            "enum": [
-              "OWNER",
-              "TEACHER"
-            ]
+            "enum": ["OWNER", "TEACHER"]
           }
         },
-        "required": [
-          "workspace",
-          "role"
-        ]
+        "required": ["workspace", "role"]
       },
       "UpdateWorkspaceSettingsDto": {
         "type": "object",
         "properties": {
           "defaultCurrency": {
             "type": "string",
-            "enum": [
-              "EUR",
-              "UAH",
-              "PLN",
-              "USD",
-              "GBP"
-            ]
+            "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
           },
           "cancellationDeadlineHours": {
             "type": "integer",
@@ -6721,10 +6314,7 @@
           },
           "mode": {
             "type": "string",
-            "enum": [
-              "SOLO",
-              "SCHOOL"
-            ]
+            "enum": ["SOLO", "SCHOOL"]
           }
         }
       },
@@ -6752,25 +6342,14 @@
                 },
                 "role": {
                   "type": "string",
-                  "enum": [
-                    "OWNER",
-                    "TEACHER"
-                  ]
+                  "enum": ["OWNER", "TEACHER"]
                 }
               },
-              "required": [
-                "id",
-                "userId",
-                "name",
-                "email",
-                "role"
-              ]
+              "required": ["id", "userId", "name", "email", "role"]
             }
           }
         },
-        "required": [
-          "items"
-        ]
+        "required": ["items"]
       },
       "AuditLogListDto": {
         "type": "object",
@@ -6807,11 +6386,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "id",
-                    "name",
-                    "email"
-                  ],
+                  "required": ["id", "name", "email"],
                   "nullable": true
                 },
                 "entity": {
@@ -6836,12 +6411,7 @@
                 },
                 "action": {
                   "type": "string",
-                  "enum": [
-                    "CREATE",
-                    "UPDATE",
-                    "DELETE",
-                    "RESTORE"
-                  ]
+                  "enum": ["CREATE", "UPDATE", "DELETE", "RESTORE"]
                 },
                 "changes": {
                   "type": "object",
@@ -6854,16 +6424,11 @@
                           "before": {},
                           "after": {}
                         },
-                        "required": [
-                          "before",
-                          "after"
-                        ]
+                        "required": ["before", "after"]
                       }
                     }
                   },
-                  "required": [
-                    "fields"
-                  ],
+                  "required": ["fields"],
                   "nullable": true
                 },
                 "createdAt": {
@@ -6905,13 +6470,7 @@
             "exclusiveMinimum": false
           }
         },
-        "required": [
-          "items",
-          "page",
-          "pageSize",
-          "total",
-          "totalPages"
-        ]
+        "required": ["items", "page", "pageSize", "total", "totalPages"]
       },
       "StudentListDto": {
         "type": "object",
@@ -6945,11 +6504,7 @@
                 },
                 "status": {
                   "type": "string",
-                  "enum": [
-                    "ACTIVE",
-                    "ON_HOLD",
-                    "ARCHIVED"
-                  ]
+                  "enum": ["ACTIVE", "ON_HOLD", "ARCHIVED"]
                 },
                 "hourlyRateMinor": {
                   "type": "integer",
@@ -6959,13 +6514,7 @@
                 },
                 "currency": {
                   "type": "string",
-                  "enum": [
-                    "EUR",
-                    "UAH",
-                    "PLN",
-                    "USD",
-                    "GBP"
-                  ],
+                  "enum": ["EUR", "UAH", "PLN", "USD", "GBP"],
                   "nullable": true
                 },
                 "avatarKey": {
@@ -7044,13 +6593,7 @@
             "exclusiveMinimum": false
           }
         },
-        "required": [
-          "items",
-          "page",
-          "pageSize",
-          "total",
-          "totalPages"
-        ]
+        "required": ["items", "page", "pageSize", "total", "totalPages"]
       },
       "StudentsSummaryDto": {
         "type": "object",
@@ -7076,12 +6619,7 @@
             "exclusiveMinimum": false
           }
         },
-        "required": [
-          "all",
-          "ACTIVE",
-          "ON_HOLD",
-          "ARCHIVED"
-        ]
+        "required": ["all", "ACTIVE", "ON_HOLD", "ARCHIVED"]
       },
       "CreateStudentDto": {
         "type": "object",
@@ -7122,40 +6660,20 @@
           },
           "currency": {
             "type": "string",
-            "enum": [
-              "EUR",
-              "UAH",
-              "PLN",
-              "USD",
-              "GBP"
-            ]
+            "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
           },
           "status": {
             "type": "string",
-            "enum": [
-              "ACTIVE",
-              "ON_HOLD"
-            ],
+            "enum": ["ACTIVE", "ON_HOLD"],
             "default": "ACTIVE"
           },
           "languageLevel": {
             "type": "string",
-            "enum": [
-              "A1",
-              "A2",
-              "B1",
-              "B2",
-              "C1",
-              "C2"
-            ]
+            "enum": ["A1", "A2", "B1", "B2", "C1", "C2"]
           },
           "knowledgeLevel": {
             "type": "string",
-            "enum": [
-              "BEGINNER",
-              "INTERMEDIATE",
-              "ADVANCED"
-            ]
+            "enum": ["BEGINNER", "INTERMEDIATE", "ADVANCED"]
           },
           "age": {
             "type": "integer",
@@ -7249,42 +6767,21 @@
           },
           "currency": {
             "type": "string",
-            "enum": [
-              "EUR",
-              "UAH",
-              "PLN",
-              "USD",
-              "GBP"
-            ],
+            "enum": ["EUR", "UAH", "PLN", "USD", "GBP"],
             "nullable": true
           },
           "status": {
             "type": "string",
-            "enum": [
-              "ACTIVE",
-              "ON_HOLD",
-              "ARCHIVED"
-            ]
+            "enum": ["ACTIVE", "ON_HOLD", "ARCHIVED"]
           },
           "languageLevel": {
             "type": "string",
-            "enum": [
-              "A1",
-              "A2",
-              "B1",
-              "B2",
-              "C1",
-              "C2"
-            ],
+            "enum": ["A1", "A2", "B1", "B2", "C1", "C2"],
             "nullable": true
           },
           "knowledgeLevel": {
             "type": "string",
-            "enum": [
-              "BEGINNER",
-              "INTERMEDIATE",
-              "ADVANCED"
-            ],
+            "enum": ["BEGINNER", "INTERMEDIATE", "ADVANCED"],
             "nullable": true
           },
           "age": {
@@ -7352,13 +6849,7 @@
                   "nullable": true
                 }
               },
-              "required": [
-                "id",
-                "fullName",
-                "avatarKey",
-                "phone",
-                "telegramUsername"
-              ]
+              "required": ["id", "fullName", "avatarKey", "phone", "telegramUsername"]
             }
           },
           "notes": {
@@ -7439,42 +6930,21 @@
           },
           "currency": {
             "type": "string",
-            "enum": [
-              "EUR",
-              "UAH",
-              "PLN",
-              "USD",
-              "GBP"
-            ],
+            "enum": ["EUR", "UAH", "PLN", "USD", "GBP"],
             "nullable": true
           },
           "status": {
             "type": "string",
-            "enum": [
-              "ACTIVE",
-              "ON_HOLD",
-              "ARCHIVED"
-            ]
+            "enum": ["ACTIVE", "ON_HOLD", "ARCHIVED"]
           },
           "languageLevel": {
             "type": "string",
-            "enum": [
-              "A1",
-              "A2",
-              "B1",
-              "B2",
-              "C1",
-              "C2"
-            ],
+            "enum": ["A1", "A2", "B1", "B2", "C1", "C2"],
             "nullable": true
           },
           "knowledgeLevel": {
             "type": "string",
-            "enum": [
-              "BEGINNER",
-              "INTERMEDIATE",
-              "ADVANCED"
-            ],
+            "enum": ["BEGINNER", "INTERMEDIATE", "ADVANCED"],
             "nullable": true
           },
           "age": {
@@ -7542,13 +7012,7 @@
                   "nullable": true
                 }
               },
-              "required": [
-                "id",
-                "fullName",
-                "avatarKey",
-                "phone",
-                "telegramUsername"
-              ]
+              "required": ["id", "fullName", "avatarKey", "phone", "telegramUsername"]
             }
           },
           "notes": {
@@ -7605,10 +7069,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "id",
-                    "fullName"
-                  ]
+                  "required": ["id", "fullName"]
                 },
                 "group": {
                   "type": "object",
@@ -7621,10 +7082,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "id",
-                    "name"
-                  ],
+                  "required": ["id", "name"],
                   "nullable": true
                 },
                 "teacher": {
@@ -7642,26 +7100,15 @@
                       "nullable": true
                     }
                   },
-                  "required": [
-                    "id",
-                    "name",
-                    "color"
-                  ]
+                  "required": ["id", "name", "color"]
                 },
                 "status": {
                   "type": "string",
-                  "enum": [
-                    "ACTIVE",
-                    "PAUSED",
-                    "ARCHIVED"
-                  ]
+                  "enum": ["ACTIVE", "PAUSED", "ARCHIVED"]
                 },
                 "billingType": {
                   "type": "string",
-                  "enum": [
-                    "PACKAGE",
-                    "PER_LESSON"
-                  ]
+                  "enum": ["PACKAGE", "PER_LESSON"]
                 },
                 "priceMinor": {
                   "type": "integer",
@@ -7672,13 +7119,7 @@
                 },
                 "currency": {
                   "type": "string",
-                  "enum": [
-                    "EUR",
-                    "UAH",
-                    "PLN",
-                    "USD",
-                    "GBP"
-                  ]
+                  "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
                 },
                 "ownPrice": {
                   "type": "boolean"
@@ -7780,10 +7221,7 @@
                 },
                 "billingType": {
                   "type": "string",
-                  "enum": [
-                    "PACKAGE",
-                    "PER_LESSON"
-                  ]
+                  "enum": ["PACKAGE", "PER_LESSON"]
                 },
                 "rateMinor": {
                   "type": "integer",
@@ -7792,13 +7230,7 @@
                 },
                 "currency": {
                   "type": "string",
-                  "enum": [
-                    "EUR",
-                    "UAH",
-                    "PLN",
-                    "USD",
-                    "GBP"
-                  ]
+                  "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
                 },
                 "packages": {
                   "type": "array",
@@ -7886,20 +7318,12 @@
                 },
                 "warning": {
                   "type": "string",
-                  "enum": [
-                    "ON_DEBT",
-                    "NO_CREDITS",
-                    "LOW_CREDITS"
-                  ],
+                  "enum": ["ON_DEBT", "NO_CREDITS", "LOW_CREDITS"],
                   "nullable": true
                 },
                 "status": {
                   "type": "string",
-                  "enum": [
-                    "ACTIVE",
-                    "PAUSED",
-                    "ARCHIVED"
-                  ]
+                  "enum": ["ACTIVE", "PAUSED", "ARCHIVED"]
                 },
                 "teacher": {
                   "type": "object",
@@ -7912,10 +7336,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "id",
-                    "name"
-                  ]
+                  "required": ["id", "name"]
                 },
                 "group": {
                   "type": "object",
@@ -7928,10 +7349,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "id",
-                    "name"
-                  ],
+                  "required": ["id", "name"],
                   "nullable": true
                 }
               },
@@ -7958,13 +7376,7 @@
               "properties": {
                 "currency": {
                   "type": "string",
-                  "enum": [
-                    "EUR",
-                    "UAH",
-                    "PLN",
-                    "USD",
-                    "GBP"
-                  ]
+                  "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
                 },
                 "debtMinor": {
                   "type": "integer",
@@ -8003,12 +7415,7 @@
             }
           }
         },
-        "required": [
-          "studentId",
-          "lowCreditThreshold",
-          "directions",
-          "totals"
-        ]
+        "required": ["studentId", "lowCreditThreshold", "directions", "totals"]
       },
       "UpdateStudentDto": {
         "type": "object",
@@ -8053,41 +7460,21 @@
           },
           "currency": {
             "type": "string",
-            "enum": [
-              "EUR",
-              "UAH",
-              "PLN",
-              "USD",
-              "GBP"
-            ],
+            "enum": ["EUR", "UAH", "PLN", "USD", "GBP"],
             "nullable": true
           },
           "status": {
             "type": "string",
-            "enum": [
-              "ACTIVE",
-              "ON_HOLD"
-            ]
+            "enum": ["ACTIVE", "ON_HOLD"]
           },
           "languageLevel": {
             "type": "string",
-            "enum": [
-              "A1",
-              "A2",
-              "B1",
-              "B2",
-              "C1",
-              "C2"
-            ],
+            "enum": ["A1", "A2", "B1", "B2", "C1", "C2"],
             "nullable": true
           },
           "knowledgeLevel": {
             "type": "string",
-            "enum": [
-              "BEGINNER",
-              "INTERMEDIATE",
-              "ADVANCED"
-            ],
+            "enum": ["BEGINNER", "INTERMEDIATE", "ADVANCED"],
             "nullable": true
           },
           "age": {
@@ -8158,11 +7545,7 @@
                 },
                 "warning": {
                   "type": "string",
-                  "enum": [
-                    "ON_DEBT",
-                    "NO_CREDITS",
-                    "LOW_CREDITS"
-                  ]
+                  "enum": ["ON_DEBT", "NO_CREDITS", "LOW_CREDITS"]
                 },
                 "creditsLeft": {
                   "type": "integer",
@@ -8185,10 +7568,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "id",
-                    "fullName"
-                  ]
+                  "required": ["id", "fullName"]
                 },
                 "teacher": {
                   "type": "object",
@@ -8201,10 +7581,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "id",
-                    "name"
-                  ]
+                  "required": ["id", "name"]
                 },
                 "group": {
                   "type": "object",
@@ -8217,10 +7594,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "id",
-                    "name"
-                  ],
+                  "required": ["id", "name"],
                   "nullable": true
                 }
               },
@@ -8236,10 +7610,7 @@
             }
           }
         },
-        "required": [
-          "lowCreditThreshold",
-          "items"
-        ]
+        "required": ["lowCreditThreshold", "items"]
       },
       "PauseListDto": {
         "type": "object",
@@ -8282,12 +7653,7 @@
                 },
                 "state": {
                   "type": "string",
-                  "enum": [
-                    "SCHEDULED",
-                    "ACTIVE",
-                    "ENDED",
-                    "CANCELLED"
-                  ]
+                  "enum": ["SCHEDULED", "ACTIVE", "ENDED", "CANCELLED"]
                 },
                 "reason": {
                   "type": "string",
@@ -8313,10 +7679,7 @@
                         "exclusiveMinimum": false
                       }
                     },
-                    "required": [
-                      "packageId",
-                      "extendedBySeconds"
-                    ]
+                    "required": ["packageId", "extendedBySeconds"]
                   }
                 },
                 "student": {
@@ -8330,10 +7693,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "id",
-                    "fullName"
-                  ]
+                  "required": ["id", "fullName"]
                 },
                 "createdAt": {
                   "type": "string",
@@ -8383,13 +7743,7 @@
             "exclusiveMinimum": false
           }
         },
-        "required": [
-          "items",
-          "page",
-          "pageSize",
-          "total",
-          "totalPages"
-        ]
+        "required": ["items", "page", "pageSize", "total", "totalPages"]
       },
       "CreatePauseDto": {
         "type": "object",
@@ -8418,9 +7772,7 @@
             "nullable": true
           }
         },
-        "required": [
-          "studentId"
-        ]
+        "required": ["studentId"]
       },
       "PauseDto": {
         "type": "object",
@@ -8458,12 +7810,7 @@
           },
           "state": {
             "type": "string",
-            "enum": [
-              "SCHEDULED",
-              "ACTIVE",
-              "ENDED",
-              "CANCELLED"
-            ]
+            "enum": ["SCHEDULED", "ACTIVE", "ENDED", "CANCELLED"]
           },
           "reason": {
             "type": "string",
@@ -8489,10 +7836,7 @@
                   "exclusiveMinimum": false
                 }
               },
-              "required": [
-                "packageId",
-                "extendedBySeconds"
-              ]
+              "required": ["packageId", "extendedBySeconds"]
             }
           },
           "student": {
@@ -8506,10 +7850,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "id",
-              "fullName"
-            ]
+            "required": ["id", "fullName"]
           },
           "createdAt": {
             "type": "string",
@@ -8615,32 +7956,15 @@
                       },
                       "status": {
                         "type": "string",
-                        "enum": [
-                          "ACTIVE",
-                          "ON_HOLD",
-                          "ARCHIVED"
-                        ]
+                        "enum": ["ACTIVE", "ON_HOLD", "ARCHIVED"]
                       },
                       "languageLevel": {
                         "type": "string",
-                        "enum": [
-                          "A1",
-                          "A2",
-                          "B1",
-                          "B2",
-                          "C1",
-                          "C2"
-                        ],
+                        "enum": ["A1", "A2", "B1", "B2", "C1", "C2"],
                         "nullable": true
                       }
                     },
-                    "required": [
-                      "id",
-                      "fullName",
-                      "avatarKey",
-                      "status",
-                      "languageLevel"
-                    ]
+                    "required": ["id", "fullName", "avatarKey", "status", "languageLevel"]
                   }
                 }
               },
@@ -8677,13 +8001,7 @@
             "exclusiveMinimum": false
           }
         },
-        "required": [
-          "items",
-          "page",
-          "pageSize",
-          "total",
-          "totalPages"
-        ]
+        "required": ["items", "page", "pageSize", "total", "totalPages"]
       },
       "CreateParentDto": {
         "type": "object",
@@ -8738,14 +8056,7 @@
             "maxLength": 2000
           }
         },
-        "required": [
-          "fullName",
-          "email",
-          "phone",
-          "telegramUsername",
-          "avatarKey",
-          "notes"
-        ]
+        "required": ["fullName", "email", "phone", "telegramUsername", "avatarKey", "notes"]
       },
       "ParentDto": {
         "type": "object",
@@ -8910,32 +8221,15 @@
                 },
                 "status": {
                   "type": "string",
-                  "enum": [
-                    "ACTIVE",
-                    "ON_HOLD",
-                    "ARCHIVED"
-                  ]
+                  "enum": ["ACTIVE", "ON_HOLD", "ARCHIVED"]
                 },
                 "languageLevel": {
                   "type": "string",
-                  "enum": [
-                    "A1",
-                    "A2",
-                    "B1",
-                    "B2",
-                    "C1",
-                    "C2"
-                  ],
+                  "enum": ["A1", "A2", "B1", "B2", "C1", "C2"],
                   "nullable": true
                 }
               },
-              "required": [
-                "id",
-                "fullName",
-                "avatarKey",
-                "status",
-                "languageLevel"
-              ]
+              "required": ["id", "fullName", "avatarKey", "status", "languageLevel"]
             }
           }
         },
@@ -9056,13 +8350,7 @@
                 },
                 "currency": {
                   "type": "string",
-                  "enum": [
-                    "EUR",
-                    "UAH",
-                    "PLN",
-                    "USD",
-                    "GBP"
-                  ],
+                  "enum": ["EUR", "UAH", "PLN", "USD", "GBP"],
                   "nullable": true
                 },
                 "color": {
@@ -9088,10 +8376,7 @@
                 },
                 "status": {
                   "type": "string",
-                  "enum": [
-                    "ACTIVE",
-                    "ARCHIVED"
-                  ]
+                  "enum": ["ACTIVE", "ARCHIVED"]
                 },
                 "workspaceMemberId": {
                   "type": "string",
@@ -9168,13 +8453,7 @@
             "exclusiveMinimum": false
           }
         },
-        "required": [
-          "items",
-          "page",
-          "pageSize",
-          "total",
-          "totalPages"
-        ]
+        "required": ["items", "page", "pageSize", "total", "totalPages"]
       },
       "CreateTeacherDto": {
         "type": "object",
@@ -9211,13 +8490,7 @@
           },
           "currency": {
             "type": "string",
-            "enum": [
-              "EUR",
-              "UAH",
-              "PLN",
-              "USD",
-              "GBP"
-            ]
+            "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
           },
           "color": {
             "type": "string",
@@ -9240,10 +8513,7 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "ACTIVE",
-              "ARCHIVED"
-            ],
+            "enum": ["ACTIVE", "ARCHIVED"],
             "default": "ACTIVE"
           },
           "workspaceMemberId": {
@@ -9255,9 +8525,7 @@
             "maxLength": 2000
           }
         },
-        "required": [
-          "fullName"
-        ]
+        "required": ["fullName"]
       },
       "TeacherDto": {
         "type": "object",
@@ -9297,13 +8565,7 @@
           },
           "currency": {
             "type": "string",
-            "enum": [
-              "EUR",
-              "UAH",
-              "PLN",
-              "USD",
-              "GBP"
-            ],
+            "enum": ["EUR", "UAH", "PLN", "USD", "GBP"],
             "nullable": true
           },
           "color": {
@@ -9329,10 +8591,7 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "ACTIVE",
-              "ARCHIVED"
-            ]
+            "enum": ["ACTIVE", "ARCHIVED"]
           },
           "workspaceMemberId": {
             "type": "string",
@@ -9421,13 +8680,7 @@
           },
           "currency": {
             "type": "string",
-            "enum": [
-              "EUR",
-              "UAH",
-              "PLN",
-              "USD",
-              "GBP"
-            ],
+            "enum": ["EUR", "UAH", "PLN", "USD", "GBP"],
             "nullable": true
           },
           "color": {
@@ -9453,10 +8706,7 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "ACTIVE",
-              "ARCHIVED"
-            ]
+            "enum": ["ACTIVE", "ARCHIVED"]
           },
           "workspaceMemberId": {
             "type": "string",
@@ -9516,12 +8766,7 @@
                       "nullable": true
                     }
                   },
-                  "required": [
-                    "id",
-                    "name",
-                    "avatarKey",
-                    "color"
-                  ],
+                  "required": ["id", "name", "avatarKey", "color"],
                   "nullable": true
                 },
                 "capacity": {
@@ -9538,13 +8783,7 @@
                 },
                 "currency": {
                   "type": "string",
-                  "enum": [
-                    "EUR",
-                    "UAH",
-                    "PLN",
-                    "USD",
-                    "GBP"
-                  ],
+                  "enum": ["EUR", "UAH", "PLN", "USD", "GBP"],
                   "nullable": true
                 },
                 "notes": {
@@ -9558,10 +8797,7 @@
                 },
                 "status": {
                   "type": "string",
-                  "enum": [
-                    "ACTIVE",
-                    "EMPTY"
-                  ]
+                  "enum": ["ACTIVE", "EMPTY"]
                 },
                 "activeStudentCount": {
                   "type": "integer",
@@ -9597,11 +8833,7 @@
                         "nullable": true
                       }
                     },
-                    "required": [
-                      "id",
-                      "fullName",
-                      "avatarKey"
-                    ]
+                    "required": ["id", "fullName", "avatarKey"]
                   }
                 },
                 "schedules": {
@@ -9631,12 +8863,7 @@
                         "type": "string"
                       }
                     },
-                    "required": [
-                      "weekdays",
-                      "localTime",
-                      "durationMin",
-                      "timezone"
-                    ]
+                    "required": ["weekdays", "localTime", "durationMin", "timezone"]
                   }
                 },
                 "nextLesson": {
@@ -9656,11 +8883,7 @@
                       "exclusiveMinimum": true
                     }
                   },
-                  "required": [
-                    "id",
-                    "startsAtUtc",
-                    "durationMin"
-                  ],
+                  "required": ["id", "startsAtUtc", "durationMin"],
                   "nullable": true
                 },
                 "paymentDue": {
@@ -9706,13 +8929,7 @@
             "exclusiveMinimum": false
           }
         },
-        "required": [
-          "items",
-          "page",
-          "pageSize",
-          "total",
-          "totalPages"
-        ]
+        "required": ["items", "page", "pageSize", "total", "totalPages"]
       },
       "GroupSummaryDto": {
         "type": "object",
@@ -9808,16 +9025,11 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "id",
-                "name"
-              ]
+              "required": ["id", "name"]
             }
           }
         },
-        "required": [
-          "items"
-        ]
+        "required": ["items"]
       },
       "CreateGroupDto": {
         "type": "object",
@@ -9847,13 +9059,7 @@
           },
           "currency": {
             "type": "string",
-            "enum": [
-              "EUR",
-              "UAH",
-              "PLN",
-              "USD",
-              "GBP"
-            ]
+            "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
           },
           "notes": {
             "type": "string",
@@ -9875,9 +9081,7 @@
                 "format": "uuid"
               }
             },
-            "required": [
-              "studentIds"
-            ]
+            "required": ["studentIds"]
           },
           "schedule": {
             "type": "object",
@@ -9906,16 +9110,10 @@
                 "exclusiveMaximum": false
               }
             },
-            "required": [
-              "weekdays",
-              "localTime",
-              "durationMin"
-            ]
+            "required": ["weekdays", "localTime", "durationMin"]
           }
         },
-        "required": [
-          "name"
-        ]
+        "required": ["name"]
       },
       "GroupDto": {
         "type": "object",
@@ -9950,13 +9148,7 @@
           },
           "currency": {
             "type": "string",
-            "enum": [
-              "EUR",
-              "UAH",
-              "PLN",
-              "USD",
-              "GBP"
-            ],
+            "enum": ["EUR", "UAH", "PLN", "USD", "GBP"],
             "nullable": true
           },
           "notes": {
@@ -10024,13 +9216,7 @@
           },
           "currency": {
             "type": "string",
-            "enum": [
-              "EUR",
-              "UAH",
-              "PLN",
-              "USD",
-              "GBP"
-            ],
+            "enum": ["EUR", "UAH", "PLN", "USD", "GBP"],
             "nullable": true
           },
           "notes": {
@@ -10052,10 +9238,7 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "ACTIVE",
-              "EMPTY"
-            ]
+            "enum": ["ACTIVE", "EMPTY"]
           },
           "teacher": {
             "type": "object",
@@ -10088,12 +9271,7 @@
                 "nullable": true
               }
             },
-            "required": [
-              "id",
-              "name",
-              "avatarKey",
-              "color"
-            ],
+            "required": ["id", "name", "avatarKey", "color"],
             "nullable": true
           },
           "teacherMismatch": {
@@ -10122,18 +9300,11 @@
                 },
                 "status": {
                   "type": "string",
-                  "enum": [
-                    "ACTIVE",
-                    "PAUSED",
-                    "ARCHIVED"
-                  ]
+                  "enum": ["ACTIVE", "PAUSED", "ARCHIVED"]
                 },
                 "billingType": {
                   "type": "string",
-                  "enum": [
-                    "PACKAGE",
-                    "PER_LESSON"
-                  ]
+                  "enum": ["PACKAGE", "PER_LESSON"]
                 },
                 "priceMinor": {
                   "type": "integer",
@@ -10142,13 +9313,7 @@
                 },
                 "currency": {
                   "type": "string",
-                  "enum": [
-                    "EUR",
-                    "UAH",
-                    "PLN",
-                    "USD",
-                    "GBP"
-                  ]
+                  "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
                 },
                 "ownPrice": {
                   "type": "boolean"
@@ -10187,32 +9352,15 @@
                     },
                     "status": {
                       "type": "string",
-                      "enum": [
-                        "ACTIVE",
-                        "ON_HOLD",
-                        "ARCHIVED"
-                      ]
+                      "enum": ["ACTIVE", "ON_HOLD", "ARCHIVED"]
                     },
                     "languageLevel": {
                       "type": "string",
-                      "enum": [
-                        "A1",
-                        "A2",
-                        "B1",
-                        "B2",
-                        "C1",
-                        "C2"
-                      ],
+                      "enum": ["A1", "A2", "B1", "B2", "C1", "C2"],
                       "nullable": true
                     }
                   },
-                  "required": [
-                    "id",
-                    "fullName",
-                    "avatarKey",
-                    "status",
-                    "languageLevel"
-                  ]
+                  "required": ["id", "fullName", "avatarKey", "status", "languageLevel"]
                 },
                 "teacher": {
                   "type": "object",
@@ -10229,11 +9377,7 @@
                       "nullable": true
                     }
                   },
-                  "required": [
-                    "id",
-                    "name",
-                    "color"
-                  ]
+                  "required": ["id", "name", "color"]
                 }
               },
               "required": [
@@ -10283,13 +9427,7 @@
                   "format": "uuid"
                 }
               },
-              "required": [
-                "weekdays",
-                "localTime",
-                "durationMin",
-                "timezone",
-                "id"
-              ]
+              "required": ["weekdays", "localTime", "durationMin", "timezone", "id"]
             }
           },
           "nextLesson": {
@@ -10323,13 +9461,7 @@
                 ]
               }
             },
-            "required": [
-              "id",
-              "startsAtUtc",
-              "durationMin",
-              "notes",
-              "status"
-            ],
+            "required": ["id", "startsAtUtc", "durationMin", "notes", "status"],
             "nullable": true
           },
           "lessonCounts": {
@@ -10346,10 +9478,7 @@
                 "exclusiveMinimum": false
               }
             },
-            "required": [
-              "completed",
-              "upcoming"
-            ]
+            "required": ["completed", "upcoming"]
           }
         },
         "required": [
@@ -10405,11 +9534,7 @@
                   ]
                 }
               },
-              "required": [
-                "id",
-                "startsAtUtc",
-                "status"
-              ]
+              "required": ["id", "startsAtUtc", "status"]
             }
           },
           "stats": {
@@ -10515,23 +9640,13 @@
                       "nullable": true
                     }
                   },
-                  "required": [
-                    "id",
-                    "fullName",
-                    "avatarKey"
-                  ]
+                  "required": ["id", "fullName", "avatarKey"]
                 },
                 "cells": {
                   "type": "array",
                   "items": {
                     "type": "string",
-                    "enum": [
-                      "present",
-                      "absent",
-                      "excused",
-                      "cancelled",
-                      "unmarked"
-                    ]
+                    "enum": ["present", "absent", "excused", "cancelled", "unmarked"]
                   }
                 },
                 "rate": {
@@ -10578,12 +9693,7 @@
             }
           }
         },
-        "required": [
-          "window",
-          "lessons",
-          "stats",
-          "rows"
-        ]
+        "required": ["window", "lessons", "stats", "rows"]
       },
       "UpdateGroupDto": {
         "type": "object",
@@ -10615,13 +9725,7 @@
           },
           "currency": {
             "type": "string",
-            "enum": [
-              "EUR",
-              "UAH",
-              "PLN",
-              "USD",
-              "GBP"
-            ],
+            "enum": ["EUR", "UAH", "PLN", "USD", "GBP"],
             "nullable": true
           },
           "notes": {
@@ -10645,9 +9749,7 @@
                 "format": "uuid"
               }
             },
-            "required": [
-              "studentIds"
-            ]
+            "required": ["studentIds"]
           },
           "schedule": {
             "type": "object",
@@ -10676,11 +9778,7 @@
                 "exclusiveMaximum": false
               }
             },
-            "required": [
-              "weekdays",
-              "localTime",
-              "durationMin"
-            ]
+            "required": ["weekdays", "localTime", "durationMin"]
           }
         }
       },
@@ -10724,10 +9822,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "id",
-                    "fullName"
-                  ]
+                  "required": ["id", "fullName"]
                 },
                 "group": {
                   "type": "object",
@@ -10740,10 +9835,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "id",
-                    "name"
-                  ],
+                  "required": ["id", "name"],
                   "nullable": true
                 },
                 "teacher": {
@@ -10761,26 +9853,15 @@
                       "nullable": true
                     }
                   },
-                  "required": [
-                    "id",
-                    "name",
-                    "color"
-                  ]
+                  "required": ["id", "name", "color"]
                 },
                 "status": {
                   "type": "string",
-                  "enum": [
-                    "ACTIVE",
-                    "PAUSED",
-                    "ARCHIVED"
-                  ]
+                  "enum": ["ACTIVE", "PAUSED", "ARCHIVED"]
                 },
                 "billingType": {
                   "type": "string",
-                  "enum": [
-                    "PACKAGE",
-                    "PER_LESSON"
-                  ]
+                  "enum": ["PACKAGE", "PER_LESSON"]
                 },
                 "priceMinor": {
                   "type": "integer",
@@ -10791,13 +9872,7 @@
                 },
                 "currency": {
                   "type": "string",
-                  "enum": [
-                    "EUR",
-                    "UAH",
-                    "PLN",
-                    "USD",
-                    "GBP"
-                  ]
+                  "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
                 },
                 "ownPrice": {
                   "type": "boolean"
@@ -10870,13 +9945,7 @@
             "exclusiveMinimum": false
           }
         },
-        "required": [
-          "items",
-          "page",
-          "pageSize",
-          "total",
-          "totalPages"
-        ]
+        "required": ["items", "page", "pageSize", "total", "totalPages"]
       },
       "CreateEnrollmentDto": {
         "type": "object",
@@ -10896,10 +9965,7 @@
           },
           "billingType": {
             "type": "string",
-            "enum": [
-              "PACKAGE",
-              "PER_LESSON"
-            ],
+            "enum": ["PACKAGE", "PER_LESSON"],
             "default": "PER_LESSON"
           },
           "priceMinor": {
@@ -10911,13 +9977,7 @@
           },
           "currency": {
             "type": "string",
-            "enum": [
-              "EUR",
-              "UAH",
-              "PLN",
-              "USD",
-              "GBP"
-            ]
+            "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
           },
           "cancellationDeadlineHours": {
             "type": "integer",
@@ -10928,12 +9988,7 @@
             "nullable": true
           }
         },
-        "required": [
-          "studentId",
-          "teacherId",
-          "priceMinor",
-          "currency"
-        ]
+        "required": ["studentId", "teacherId", "priceMinor", "currency"]
       },
       "EnrollmentDto": {
         "type": "object",
@@ -10970,10 +10025,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "id",
-              "fullName"
-            ]
+            "required": ["id", "fullName"]
           },
           "group": {
             "type": "object",
@@ -10986,10 +10038,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "id",
-              "name"
-            ],
+            "required": ["id", "name"],
             "nullable": true
           },
           "teacher": {
@@ -11007,26 +10056,15 @@
                 "nullable": true
               }
             },
-            "required": [
-              "id",
-              "name",
-              "color"
-            ]
+            "required": ["id", "name", "color"]
           },
           "status": {
             "type": "string",
-            "enum": [
-              "ACTIVE",
-              "PAUSED",
-              "ARCHIVED"
-            ]
+            "enum": ["ACTIVE", "PAUSED", "ARCHIVED"]
           },
           "billingType": {
             "type": "string",
-            "enum": [
-              "PACKAGE",
-              "PER_LESSON"
-            ]
+            "enum": ["PACKAGE", "PER_LESSON"]
           },
           "priceMinor": {
             "type": "integer",
@@ -11037,13 +10075,7 @@
           },
           "currency": {
             "type": "string",
-            "enum": [
-              "EUR",
-              "UAH",
-              "PLN",
-              "USD",
-              "GBP"
-            ]
+            "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
           },
           "ownPrice": {
             "type": "boolean"
@@ -11103,10 +10135,7 @@
           },
           "billingType": {
             "type": "string",
-            "enum": [
-              "PACKAGE",
-              "PER_LESSON"
-            ]
+            "enum": ["PACKAGE", "PER_LESSON"]
           },
           "rateMinor": {
             "type": "integer",
@@ -11115,13 +10144,7 @@
           },
           "currency": {
             "type": "string",
-            "enum": [
-              "EUR",
-              "UAH",
-              "PLN",
-              "USD",
-              "GBP"
-            ]
+            "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
           },
           "packages": {
             "type": "array",
@@ -11152,14 +10175,7 @@
                   "type": "boolean"
                 }
               },
-              "required": [
-                "id",
-                "name",
-                "purchasedAt",
-                "expiresAt",
-                "remainingCredits",
-                "usable"
-              ]
+              "required": ["id", "name", "purchasedAt", "expiresAt", "remainingCredits", "usable"]
             }
           },
           "creditsLeft": {
@@ -11199,21 +10215,11 @@
                 "exclusiveMinimum": false
               }
             },
-            "required": [
-              "chargedMinor",
-              "paidMinor",
-              "debtMinor",
-              "advanceMinor",
-              "unpaidLessons"
-            ]
+            "required": ["chargedMinor", "paidMinor", "debtMinor", "advanceMinor", "unpaidLessons"]
           },
           "warning": {
             "type": "string",
-            "enum": [
-              "ON_DEBT",
-              "NO_CREDITS",
-              "LOW_CREDITS"
-            ],
+            "enum": ["ON_DEBT", "NO_CREDITS", "LOW_CREDITS"],
             "nullable": true
           }
         },
@@ -11234,18 +10240,11 @@
         "properties": {
           "status": {
             "type": "string",
-            "enum": [
-              "ACTIVE",
-              "PAUSED",
-              "ARCHIVED"
-            ]
+            "enum": ["ACTIVE", "PAUSED", "ARCHIVED"]
           },
           "billingType": {
             "type": "string",
-            "enum": [
-              "PACKAGE",
-              "PER_LESSON"
-            ]
+            "enum": ["PACKAGE", "PER_LESSON"]
           },
           "priceMinor": {
             "type": "integer",
@@ -11256,13 +10255,7 @@
           },
           "currency": {
             "type": "string",
-            "enum": [
-              "EUR",
-              "UAH",
-              "PLN",
-              "USD",
-              "GBP"
-            ]
+            "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
           },
           "cancellationDeadlineHours": {
             "type": "integer",
@@ -11329,13 +10322,7 @@
                 },
                 "currency": {
                   "type": "string",
-                  "enum": [
-                    "EUR",
-                    "UAH",
-                    "PLN",
-                    "USD",
-                    "GBP"
-                  ]
+                  "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
                 },
                 "status": {
                   "type": "string",
@@ -11349,10 +10336,7 @@
                 },
                 "kind": {
                   "type": "string",
-                  "enum": [
-                    "REGULAR",
-                    "MAKEUP"
-                  ]
+                  "enum": ["REGULAR", "MAKEUP"]
                 },
                 "originalLessonId": {
                   "type": "string",
@@ -11383,11 +10367,7 @@
                 },
                 "cancelledBy": {
                   "type": "string",
-                  "enum": [
-                    "TEACHER",
-                    "STUDENT",
-                    "GROUP"
-                  ],
+                  "enum": ["TEACHER", "STUDENT", "GROUP"],
                   "nullable": true
                 },
                 "cancelledReason": {
@@ -11430,10 +10410,7 @@
                       "exclusiveMinimum": false
                     }
                   },
-                  "required": [
-                    "present",
-                    "marked"
-                  ],
+                  "required": ["present", "marked"],
                   "nullable": true
                 },
                 "charges": {
@@ -11451,11 +10428,7 @@
                       },
                       "source": {
                         "type": "string",
-                        "enum": [
-                          "PACKAGE",
-                          "DEBT",
-                          "BALANCE"
-                        ]
+                        "enum": ["PACKAGE", "DEBT", "BALANCE"]
                       },
                       "packageId": {
                         "type": "string",
@@ -11469,13 +10442,7 @@
                       },
                       "currency": {
                         "type": "string",
-                        "enum": [
-                          "EUR",
-                          "UAH",
-                          "PLN",
-                          "USD",
-                          "GBP"
-                        ]
+                        "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
                       },
                       "paid": {
                         "type": "boolean"
@@ -11491,10 +10458,7 @@
                             "type": "string"
                           }
                         },
-                        "required": [
-                          "id",
-                          "fullName"
-                        ]
+                        "required": ["id", "fullName"]
                       }
                     },
                     "required": [
@@ -11536,11 +10500,7 @@
                       "nullable": true
                     }
                   },
-                  "required": [
-                    "id",
-                    "fullName",
-                    "avatarKey"
-                  ],
+                  "required": ["id", "fullName", "avatarKey"],
                   "nullable": true
                 },
                 "group": {
@@ -11554,10 +10514,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "id",
-                    "name"
-                  ],
+                  "required": ["id", "name"],
                   "nullable": true
                 },
                 "teacher": {
@@ -11575,11 +10532,7 @@
                       "nullable": true
                     }
                   },
-                  "required": [
-                    "id",
-                    "name",
-                    "color"
-                  ]
+                  "required": ["id", "name", "color"]
                 },
                 "createdAt": {
                   "type": "string",
@@ -11633,9 +10586,7 @@
             }
           }
         },
-        "required": [
-          "items"
-        ]
+        "required": ["items"]
       },
       "LessonPageDto": {
         "type": "object",
@@ -11692,13 +10643,7 @@
                 },
                 "currency": {
                   "type": "string",
-                  "enum": [
-                    "EUR",
-                    "UAH",
-                    "PLN",
-                    "USD",
-                    "GBP"
-                  ]
+                  "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
                 },
                 "status": {
                   "type": "string",
@@ -11712,10 +10657,7 @@
                 },
                 "kind": {
                   "type": "string",
-                  "enum": [
-                    "REGULAR",
-                    "MAKEUP"
-                  ]
+                  "enum": ["REGULAR", "MAKEUP"]
                 },
                 "originalLessonId": {
                   "type": "string",
@@ -11746,11 +10688,7 @@
                 },
                 "cancelledBy": {
                   "type": "string",
-                  "enum": [
-                    "TEACHER",
-                    "STUDENT",
-                    "GROUP"
-                  ],
+                  "enum": ["TEACHER", "STUDENT", "GROUP"],
                   "nullable": true
                 },
                 "cancelledReason": {
@@ -11793,10 +10731,7 @@
                       "exclusiveMinimum": false
                     }
                   },
-                  "required": [
-                    "present",
-                    "marked"
-                  ],
+                  "required": ["present", "marked"],
                   "nullable": true
                 },
                 "charges": {
@@ -11814,11 +10749,7 @@
                       },
                       "source": {
                         "type": "string",
-                        "enum": [
-                          "PACKAGE",
-                          "DEBT",
-                          "BALANCE"
-                        ]
+                        "enum": ["PACKAGE", "DEBT", "BALANCE"]
                       },
                       "packageId": {
                         "type": "string",
@@ -11832,13 +10763,7 @@
                       },
                       "currency": {
                         "type": "string",
-                        "enum": [
-                          "EUR",
-                          "UAH",
-                          "PLN",
-                          "USD",
-                          "GBP"
-                        ]
+                        "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
                       },
                       "paid": {
                         "type": "boolean"
@@ -11854,10 +10779,7 @@
                             "type": "string"
                           }
                         },
-                        "required": [
-                          "id",
-                          "fullName"
-                        ]
+                        "required": ["id", "fullName"]
                       }
                     },
                     "required": [
@@ -11899,11 +10821,7 @@
                       "nullable": true
                     }
                   },
-                  "required": [
-                    "id",
-                    "fullName",
-                    "avatarKey"
-                  ],
+                  "required": ["id", "fullName", "avatarKey"],
                   "nullable": true
                 },
                 "group": {
@@ -11917,10 +10835,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "id",
-                    "name"
-                  ],
+                  "required": ["id", "name"],
                   "nullable": true
                 },
                 "teacher": {
@@ -11938,11 +10853,7 @@
                       "nullable": true
                     }
                   },
-                  "required": [
-                    "id",
-                    "name",
-                    "color"
-                  ]
+                  "required": ["id", "name", "color"]
                 },
                 "createdAt": {
                   "type": "string",
@@ -12044,23 +10955,35 @@
                 "exclusiveMinimum": false
               }
             },
-            "required": [
-              "all",
-              "unpaid",
-              "cancelled",
-              "noShow",
-              "needsMakeup"
-            ]
+            "required": ["all", "unpaid", "cancelled", "noShow", "needsMakeup"]
+          },
+          "packages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "enrollmentId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "packageId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "left": {
+                  "type": "integer"
+                },
+                "total": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                }
+              },
+              "required": ["enrollmentId", "packageId", "left", "total"]
+            }
           }
         },
-        "required": [
-          "items",
-          "page",
-          "pageSize",
-          "total",
-          "totalPages",
-          "counts"
-        ]
+        "required": ["items", "page", "pageSize", "total", "totalPages", "counts", "packages"]
       },
       "LessonDetailDto": {
         "type": "object",
@@ -12112,13 +11035,7 @@
           },
           "currency": {
             "type": "string",
-            "enum": [
-              "EUR",
-              "UAH",
-              "PLN",
-              "USD",
-              "GBP"
-            ]
+            "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
           },
           "status": {
             "type": "string",
@@ -12132,10 +11049,7 @@
           },
           "kind": {
             "type": "string",
-            "enum": [
-              "REGULAR",
-              "MAKEUP"
-            ]
+            "enum": ["REGULAR", "MAKEUP"]
           },
           "originalLessonId": {
             "type": "string",
@@ -12166,11 +11080,7 @@
           },
           "cancelledBy": {
             "type": "string",
-            "enum": [
-              "TEACHER",
-              "STUDENT",
-              "GROUP"
-            ],
+            "enum": ["TEACHER", "STUDENT", "GROUP"],
             "nullable": true
           },
           "cancelledReason": {
@@ -12213,10 +11123,7 @@
                 "exclusiveMinimum": false
               }
             },
-            "required": [
-              "present",
-              "marked"
-            ],
+            "required": ["present", "marked"],
             "nullable": true
           },
           "charges": {
@@ -12234,11 +11141,7 @@
                 },
                 "source": {
                   "type": "string",
-                  "enum": [
-                    "PACKAGE",
-                    "DEBT",
-                    "BALANCE"
-                  ]
+                  "enum": ["PACKAGE", "DEBT", "BALANCE"]
                 },
                 "packageId": {
                   "type": "string",
@@ -12252,13 +11155,7 @@
                 },
                 "currency": {
                   "type": "string",
-                  "enum": [
-                    "EUR",
-                    "UAH",
-                    "PLN",
-                    "USD",
-                    "GBP"
-                  ]
+                  "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
                 },
                 "paid": {
                   "type": "boolean"
@@ -12274,10 +11171,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "id",
-                    "fullName"
-                  ]
+                  "required": ["id", "fullName"]
                 }
               },
               "required": [
@@ -12319,11 +11213,7 @@
                 "nullable": true
               }
             },
-            "required": [
-              "id",
-              "fullName",
-              "avatarKey"
-            ],
+            "required": ["id", "fullName", "avatarKey"],
             "nullable": true
           },
           "group": {
@@ -12337,10 +11227,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "id",
-              "name"
-            ],
+            "required": ["id", "name"],
             "nullable": true
           },
           "teacher": {
@@ -12358,11 +11245,7 @@
                 "nullable": true
               }
             },
-            "required": [
-              "id",
-              "name",
-              "color"
-            ]
+            "required": ["id", "name", "color"]
           },
           "createdAt": {
             "type": "string",
@@ -12399,11 +11282,7 @@
                 ]
               }
             },
-            "required": [
-              "id",
-              "startsAtUtc",
-              "status"
-            ],
+            "required": ["id", "startsAtUtc", "status"],
             "nullable": true
           },
           "makeup": {
@@ -12428,11 +11307,7 @@
                 ]
               }
             },
-            "required": [
-              "id",
-              "startsAtUtc",
-              "status"
-            ],
+            "required": ["id", "startsAtUtc", "status"],
             "nullable": true
           },
           "schedule": {
@@ -12444,16 +11319,10 @@
               },
               "state": {
                 "type": "string",
-                "enum": [
-                  "ACTIVE",
-                  "ENDED"
-                ]
+                "enum": ["ACTIVE", "ENDED"]
               }
             },
-            "required": [
-              "id",
-              "state"
-            ],
+            "required": ["id", "state"],
             "nullable": true
           },
           "history": {
@@ -12488,11 +11357,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "id",
-                    "name",
-                    "email"
-                  ],
+                  "required": ["id", "name", "email"],
                   "nullable": true
                 },
                 "entity": {
@@ -12517,12 +11382,7 @@
                 },
                 "action": {
                   "type": "string",
-                  "enum": [
-                    "CREATE",
-                    "UPDATE",
-                    "DELETE",
-                    "RESTORE"
-                  ]
+                  "enum": ["CREATE", "UPDATE", "DELETE", "RESTORE"]
                 },
                 "changes": {
                   "type": "object",
@@ -12535,16 +11395,11 @@
                           "before": {},
                           "after": {}
                         },
-                        "required": [
-                          "before",
-                          "after"
-                        ]
+                        "required": ["before", "after"]
                       }
                     }
                   },
-                  "required": [
-                    "fields"
-                  ],
+                  "required": ["fields"],
                   "nullable": true
                 },
                 "createdAt": {
@@ -12627,10 +11482,7 @@
             "nullable": true
           }
         },
-        "required": [
-          "from",
-          "to"
-        ]
+        "required": ["from", "to"]
       },
       "BulkCancelPreviewDto": {
         "type": "object",
@@ -12660,11 +11512,7 @@
                       "nullable": true
                     }
                   },
-                  "required": [
-                    "id",
-                    "name",
-                    "color"
-                  ]
+                  "required": ["id", "name", "color"]
                 },
                 "count": {
                   "type": "integer",
@@ -12672,10 +11520,7 @@
                   "exclusiveMinimum": true
                 }
               },
-              "required": [
-                "teacher",
-                "count"
-              ]
+              "required": ["teacher", "count"]
             }
           },
           "lessons": {
@@ -12709,10 +11554,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "id",
-                    "fullName"
-                  ],
+                  "required": ["id", "fullName"],
                   "nullable": true
                 },
                 "group": {
@@ -12726,10 +11568,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "id",
-                    "name"
-                  ],
+                  "required": ["id", "name"],
                   "nullable": true
                 },
                 "teacher": {
@@ -12747,33 +11586,17 @@
                       "nullable": true
                     }
                   },
-                  "required": [
-                    "id",
-                    "name",
-                    "color"
-                  ]
+                  "required": ["id", "name", "color"]
                 }
               },
-              "required": [
-                "id",
-                "startsAtUtc",
-                "durationMin",
-                "student",
-                "group",
-                "teacher"
-              ]
+              "required": ["id", "startsAtUtc", "durationMin", "student", "group", "teacher"]
             }
           },
           "truncated": {
             "type": "boolean"
           }
         },
-        "required": [
-          "count",
-          "byTeacher",
-          "lessons",
-          "truncated"
-        ]
+        "required": ["count", "byTeacher", "lessons", "truncated"]
       },
       "BulkCancelResultDto": {
         "type": "object",
@@ -12791,10 +11614,7 @@
             }
           }
         },
-        "required": [
-          "cancelled",
-          "lessonIds"
-        ]
+        "required": ["cancelled", "lessonIds"]
       },
       "CreateLessonDto": {
         "type": "object",
@@ -12843,13 +11663,7 @@
           },
           "currency": {
             "type": "string",
-            "enum": [
-              "EUR",
-              "UAH",
-              "PLN",
-              "USD",
-              "GBP"
-            ]
+            "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
           },
           "status": {
             "type": "string",
@@ -12864,11 +11678,7 @@
           },
           "cancelledBy": {
             "type": "string",
-            "enum": [
-              "TEACHER",
-              "STUDENT",
-              "GROUP"
-            ]
+            "enum": ["TEACHER", "STUDENT", "GROUP"]
           },
           "cancelledReason": {
             "type": "string",
@@ -12891,10 +11701,7 @@
             "nullable": true
           }
         },
-        "required": [
-          "startsAt",
-          "durationMin"
-        ]
+        "required": ["startsAt", "durationMin"]
       },
       "UpdateLessonDto": {
         "type": "object",
@@ -12929,13 +11736,7 @@
           },
           "currency": {
             "type": "string",
-            "enum": [
-              "EUR",
-              "UAH",
-              "PLN",
-              "USD",
-              "GBP"
-            ]
+            "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
           },
           "paidAt": {
             "type": "string",
@@ -12994,13 +11795,7 @@
           },
           "currency": {
             "type": "string",
-            "enum": [
-              "EUR",
-              "UAH",
-              "PLN",
-              "USD",
-              "GBP"
-            ]
+            "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
           },
           "status": {
             "type": "string",
@@ -13014,10 +11809,7 @@
           },
           "kind": {
             "type": "string",
-            "enum": [
-              "REGULAR",
-              "MAKEUP"
-            ]
+            "enum": ["REGULAR", "MAKEUP"]
           },
           "originalLessonId": {
             "type": "string",
@@ -13048,11 +11840,7 @@
           },
           "cancelledBy": {
             "type": "string",
-            "enum": [
-              "TEACHER",
-              "STUDENT",
-              "GROUP"
-            ],
+            "enum": ["TEACHER", "STUDENT", "GROUP"],
             "nullable": true
           },
           "cancelledReason": {
@@ -13095,10 +11883,7 @@
                 "exclusiveMinimum": false
               }
             },
-            "required": [
-              "present",
-              "marked"
-            ],
+            "required": ["present", "marked"],
             "nullable": true
           },
           "charges": {
@@ -13116,11 +11901,7 @@
                 },
                 "source": {
                   "type": "string",
-                  "enum": [
-                    "PACKAGE",
-                    "DEBT",
-                    "BALANCE"
-                  ]
+                  "enum": ["PACKAGE", "DEBT", "BALANCE"]
                 },
                 "packageId": {
                   "type": "string",
@@ -13134,13 +11915,7 @@
                 },
                 "currency": {
                   "type": "string",
-                  "enum": [
-                    "EUR",
-                    "UAH",
-                    "PLN",
-                    "USD",
-                    "GBP"
-                  ]
+                  "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
                 },
                 "paid": {
                   "type": "boolean"
@@ -13156,10 +11931,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "id",
-                    "fullName"
-                  ]
+                  "required": ["id", "fullName"]
                 }
               },
               "required": [
@@ -13201,11 +11973,7 @@
                 "nullable": true
               }
             },
-            "required": [
-              "id",
-              "fullName",
-              "avatarKey"
-            ],
+            "required": ["id", "fullName", "avatarKey"],
             "nullable": true
           },
           "group": {
@@ -13219,10 +11987,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "id",
-              "name"
-            ],
+            "required": ["id", "name"],
             "nullable": true
           },
           "teacher": {
@@ -13240,11 +12005,7 @@
                 "nullable": true
               }
             },
-            "required": [
-              "id",
-              "name",
-              "color"
-            ]
+            "required": ["id", "name", "color"]
           },
           "createdAt": {
             "type": "string",
@@ -13325,9 +12086,7 @@
             "nullable": true
           }
         },
-        "required": [
-          "startsAtUtc"
-        ]
+        "required": ["startsAtUtc"]
       },
       "RescheduleLessonDto": {
         "type": "object",
@@ -13345,16 +12104,11 @@
           },
           "scope": {
             "type": "string",
-            "enum": [
-              "this",
-              "this_and_following"
-            ],
+            "enum": ["this", "this_and_following"],
             "default": "this"
           }
         },
-        "required": [
-          "startsAtUtc"
-        ]
+        "required": ["startsAtUtc"]
       },
       "TransitionLessonDto": {
         "type": "object",
@@ -13371,11 +12125,7 @@
           },
           "cancelledBy": {
             "type": "string",
-            "enum": [
-              "TEACHER",
-              "STUDENT",
-              "GROUP"
-            ]
+            "enum": ["TEACHER", "STUDENT", "GROUP"]
           },
           "cancelledReason": {
             "type": "string",
@@ -13383,9 +12133,7 @@
             "nullable": true
           }
         },
-        "required": [
-          "targetStatus"
-        ]
+        "required": ["targetStatus"]
       },
       "LessonAttendanceDto": {
         "type": "object",
@@ -13447,19 +12195,11 @@
                       "nullable": true
                     }
                   },
-                  "required": [
-                    "id",
-                    "fullName",
-                    "avatarKey"
-                  ]
+                  "required": ["id", "fullName", "avatarKey"]
                 },
                 "status": {
                   "type": "string",
-                  "enum": [
-                    "PRESENT",
-                    "ABSENT",
-                    "EXCUSED"
-                  ],
+                  "enum": ["PRESENT", "ABSENT", "EXCUSED"],
                   "nullable": true
                 },
                 "markedAt": {
@@ -13471,23 +12211,11 @@
                   "type": "boolean"
                 }
               },
-              "required": [
-                "enrollmentId",
-                "student",
-                "status",
-                "markedAt",
-                "paused"
-              ]
+              "required": ["enrollmentId", "student", "status", "markedAt", "paused"]
             }
           }
         },
-        "required": [
-          "lessonId",
-          "startsAtUtc",
-          "status",
-          "markable",
-          "participants"
-        ]
+        "required": ["lessonId", "startsAtUtc", "status", "markable", "participants"]
       },
       "SetLessonAttendanceDto": {
         "type": "object",
@@ -13505,23 +12233,14 @@
                 },
                 "status": {
                   "type": "string",
-                  "enum": [
-                    "PRESENT",
-                    "ABSENT",
-                    "EXCUSED"
-                  ]
+                  "enum": ["PRESENT", "ABSENT", "EXCUSED"]
                 }
               },
-              "required": [
-                "enrollmentId",
-                "status"
-              ]
+              "required": ["enrollmentId", "status"]
             }
           }
         },
-        "required": [
-          "marks"
-        ]
+        "required": ["marks"]
       },
       "LessonSeriesListDto": {
         "type": "object",
@@ -13590,13 +12309,7 @@
                 },
                 "currency": {
                   "type": "string",
-                  "enum": [
-                    "EUR",
-                    "UAH",
-                    "PLN",
-                    "USD",
-                    "GBP"
-                  ]
+                  "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
                 },
                 "startDate": {
                   "type": "string",
@@ -13622,10 +12335,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "id",
-                    "fullName"
-                  ],
+                  "required": ["id", "fullName"],
                   "nullable": true
                 },
                 "group": {
@@ -13639,10 +12349,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "id",
-                    "name"
-                  ],
+                  "required": ["id", "name"],
                   "nullable": true
                 },
                 "teacher": {
@@ -13660,11 +12367,7 @@
                       "nullable": true
                     }
                   },
-                  "required": [
-                    "id",
-                    "name",
-                    "color"
-                  ]
+                  "required": ["id", "name", "color"]
                 },
                 "createdAt": {
                   "type": "string",
@@ -13726,13 +12429,7 @@
             "exclusiveMinimum": false
           }
         },
-        "required": [
-          "items",
-          "page",
-          "pageSize",
-          "total",
-          "totalPages"
-        ]
+        "required": ["items", "page", "pageSize", "total", "totalPages"]
       },
       "CreateLessonSeriesDto": {
         "type": "object",
@@ -13793,26 +12490,14 @@
           },
           "currency": {
             "type": "string",
-            "enum": [
-              "EUR",
-              "UAH",
-              "PLN",
-              "USD",
-              "GBP"
-            ]
+            "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
           },
           "startDate": {
             "type": "string",
             "format": "date-time"
           }
         },
-        "required": [
-          "weekdays",
-          "localTime",
-          "timezone",
-          "durationMin",
-          "startDate"
-        ]
+        "required": ["weekdays", "localTime", "timezone", "durationMin", "startDate"]
       },
       "LessonSeriesDto": {
         "type": "object",
@@ -13876,13 +12561,7 @@
           },
           "currency": {
             "type": "string",
-            "enum": [
-              "EUR",
-              "UAH",
-              "PLN",
-              "USD",
-              "GBP"
-            ]
+            "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
           },
           "startDate": {
             "type": "string",
@@ -13908,10 +12587,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "id",
-              "fullName"
-            ],
+            "required": ["id", "fullName"],
             "nullable": true
           },
           "group": {
@@ -13925,10 +12601,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "id",
-              "name"
-            ],
+            "required": ["id", "name"],
             "nullable": true
           },
           "teacher": {
@@ -13946,11 +12619,7 @@
                 "nullable": true
               }
             },
-            "required": [
-              "id",
-              "name",
-              "color"
-            ]
+            "required": ["id", "name", "color"]
           },
           "createdAt": {
             "type": "string",
@@ -14030,13 +12699,7 @@
           },
           "currency": {
             "type": "string",
-            "enum": [
-              "EUR",
-              "UAH",
-              "PLN",
-              "USD",
-              "GBP"
-            ]
+            "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
           },
           "startDate": {
             "type": "string",
@@ -14098,10 +12761,7 @@
                 },
                 "state": {
                   "type": "string",
-                  "enum": [
-                    "ACTIVE",
-                    "ENDED"
-                  ]
+                  "enum": ["ACTIVE", "ENDED"]
                 },
                 "slots": {
                   "type": "array",
@@ -14124,11 +12784,7 @@
                         "format": "uuid"
                       }
                     },
-                    "required": [
-                      "weekday",
-                      "localTime",
-                      "seriesId"
-                    ]
+                    "required": ["weekday", "localTime", "seriesId"]
                   }
                 },
                 "nextChange": {
@@ -14155,17 +12811,11 @@
                             "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
                           }
                         },
-                        "required": [
-                          "weekday",
-                          "localTime"
-                        ]
+                        "required": ["weekday", "localTime"]
                       }
                     }
                   },
-                  "required": [
-                    "effectiveFrom",
-                    "slots"
-                  ],
+                  "required": ["effectiveFrom", "slots"],
                   "nullable": true
                 },
                 "nextLessonAt": {
@@ -14210,11 +12860,7 @@
                       "nullable": true
                     }
                   },
-                  "required": [
-                    "id",
-                    "fullName",
-                    "avatarKey"
-                  ],
+                  "required": ["id", "fullName", "avatarKey"],
                   "nullable": true
                 },
                 "group": {
@@ -14233,11 +12879,7 @@
                       "exclusiveMinimum": false
                     }
                   },
-                  "required": [
-                    "id",
-                    "name",
-                    "memberCount"
-                  ],
+                  "required": ["id", "name", "memberCount"],
                   "nullable": true
                 },
                 "teacher": {
@@ -14251,10 +12893,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "id",
-                    "name"
-                  ]
+                  "required": ["id", "name"]
                 },
                 "createdAt": {
                   "type": "string",
@@ -14333,22 +12972,10 @@
                 "exclusiveMinimum": false
               }
             },
-            "required": [
-              "active",
-              "changing",
-              "ended",
-              "all"
-            ]
+            "required": ["active", "changing", "ended", "all"]
           }
         },
-        "required": [
-          "items",
-          "page",
-          "pageSize",
-          "total",
-          "totalPages",
-          "counts"
-        ]
+        "required": ["items", "page", "pageSize", "total", "totalPages", "counts"]
       },
       "CreateScheduleDto": {
         "type": "object",
@@ -14391,10 +13018,7 @@
                   "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
                 }
               },
-              "required": [
-                "weekday",
-                "localTime"
-              ]
+              "required": ["weekday", "localTime"]
             }
           },
           "durationMin": {
@@ -14434,19 +13058,10 @@
           },
           "currency": {
             "type": "string",
-            "enum": [
-              "EUR",
-              "UAH",
-              "PLN",
-              "USD",
-              "GBP"
-            ]
+            "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
           }
         },
-        "required": [
-          "slots",
-          "durationMin"
-        ]
+        "required": ["slots", "durationMin"]
       },
       "ScheduleDto": {
         "type": "object",
@@ -14497,10 +13112,7 @@
           },
           "state": {
             "type": "string",
-            "enum": [
-              "ACTIVE",
-              "ENDED"
-            ]
+            "enum": ["ACTIVE", "ENDED"]
           },
           "slots": {
             "type": "array",
@@ -14523,11 +13135,7 @@
                   "format": "uuid"
                 }
               },
-              "required": [
-                "weekday",
-                "localTime",
-                "seriesId"
-              ]
+              "required": ["weekday", "localTime", "seriesId"]
             }
           },
           "nextChange": {
@@ -14554,17 +13162,11 @@
                       "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
                     }
                   },
-                  "required": [
-                    "weekday",
-                    "localTime"
-                  ]
+                  "required": ["weekday", "localTime"]
                 }
               }
             },
-            "required": [
-              "effectiveFrom",
-              "slots"
-            ],
+            "required": ["effectiveFrom", "slots"],
             "nullable": true
           },
           "nextLessonAt": {
@@ -14609,11 +13211,7 @@
                 "nullable": true
               }
             },
-            "required": [
-              "id",
-              "fullName",
-              "avatarKey"
-            ],
+            "required": ["id", "fullName", "avatarKey"],
             "nullable": true
           },
           "group": {
@@ -14632,11 +13230,7 @@
                 "exclusiveMinimum": false
               }
             },
-            "required": [
-              "id",
-              "name",
-              "memberCount"
-            ],
+            "required": ["id", "name", "memberCount"],
             "nullable": true
           },
           "teacher": {
@@ -14650,10 +13244,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "id",
-              "name"
-            ]
+            "required": ["id", "name"]
           },
           "createdAt": {
             "type": "string",
@@ -14736,12 +13327,13 @@
                   "maximum": 720,
                   "exclusiveMaximum": false
                 },
+                "kind": {
+                  "type": "string",
+                  "enum": ["REGULAR", "MAKEUP"]
+                },
                 "reason": {
                   "type": "string",
-                  "enum": [
-                    "TEACHER",
-                    "STUDENT"
-                  ]
+                  "enum": ["TEACHER", "STUDENT"]
                 },
                 "teacher": {
                   "type": "object",
@@ -14754,10 +13346,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "id",
-                    "name"
-                  ]
+                  "required": ["id", "name"]
                 },
                 "student": {
                   "type": "object",
@@ -14770,10 +13359,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "id",
-                    "fullName"
-                  ],
+                  "required": ["id", "fullName"],
                   "nullable": true
                 },
                 "group": {
@@ -14787,10 +13373,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "id",
-                    "name"
-                  ],
+                  "required": ["id", "name"],
                   "nullable": true
                 },
                 "students": {
@@ -14806,10 +13389,7 @@
                         "type": "string"
                       }
                     },
-                    "required": [
-                      "id",
-                      "fullName"
-                    ]
+                    "required": ["id", "fullName"]
                   }
                 }
               },
@@ -14818,6 +13398,7 @@
                 "lessonId",
                 "startsAtUtc",
                 "durationMin",
+                "kind",
                 "reason",
                 "teacher",
                 "student",
@@ -14827,13 +13408,7 @@
             }
           }
         },
-        "required": [
-          "created",
-          "dates",
-          "firstLessonAt",
-          "existingScheduleId",
-          "conflicts"
-        ]
+        "required": ["created", "dates", "firstLessonAt", "existingScheduleId", "conflicts"]
       },
       "UpdateScheduleDto": {
         "type": "object",
@@ -14846,9 +13421,7 @@
             "exclusiveMaximum": false
           }
         },
-        "required": [
-          "horizonWeeks"
-        ]
+        "required": ["horizonWeeks"]
       },
       "ScheduleHorizonPreviewDto": {
         "type": "object",
@@ -14878,12 +13451,7 @@
             "nullable": true
           }
         },
-        "required": [
-          "horizonWeeks",
-          "added",
-          "dates",
-          "lastLessonAt"
-        ]
+        "required": ["horizonWeeks", "added", "dates", "lastLessonAt"]
       },
       "ScheduleChangeDto": {
         "type": "object",
@@ -14911,10 +13479,7 @@
                   "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
                 }
               },
-              "required": [
-                "weekday",
-                "localTime"
-              ]
+              "required": ["weekday", "localTime"]
             }
           },
           "durationMin": {
@@ -14925,10 +13490,7 @@
             "exclusiveMaximum": false
           }
         },
-        "required": [
-          "slots",
-          "durationMin"
-        ]
+        "required": ["slots", "durationMin"]
       },
       "ScheduleChangePreviewDto": {
         "type": "object",
@@ -14983,12 +13545,7 @@
                   "type": "boolean"
                 }
               },
-              "required": [
-                "lessonId",
-                "startsAtUtc",
-                "topic",
-                "hasNotes"
-              ]
+              "required": ["lessonId", "startsAtUtc", "topic", "hasNotes"]
             }
           },
           "conflicts": {
@@ -15015,12 +13572,13 @@
                   "maximum": 720,
                   "exclusiveMaximum": false
                 },
+                "kind": {
+                  "type": "string",
+                  "enum": ["REGULAR", "MAKEUP"]
+                },
                 "reason": {
                   "type": "string",
-                  "enum": [
-                    "TEACHER",
-                    "STUDENT"
-                  ]
+                  "enum": ["TEACHER", "STUDENT"]
                 },
                 "teacher": {
                   "type": "object",
@@ -15033,10 +13591,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "id",
-                    "name"
-                  ]
+                  "required": ["id", "name"]
                 },
                 "student": {
                   "type": "object",
@@ -15049,10 +13604,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "id",
-                    "fullName"
-                  ],
+                  "required": ["id", "fullName"],
                   "nullable": true
                 },
                 "group": {
@@ -15066,10 +13618,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "id",
-                    "name"
-                  ],
+                  "required": ["id", "name"],
                   "nullable": true
                 },
                 "students": {
@@ -15085,10 +13634,7 @@
                         "type": "string"
                       }
                     },
-                    "required": [
-                      "id",
-                      "fullName"
-                    ]
+                    "required": ["id", "fullName"]
                   }
                 }
               },
@@ -15097,6 +13643,7 @@
                 "lessonId",
                 "startsAtUtc",
                 "durationMin",
+                "kind",
                 "reason",
                 "teacher",
                 "student",
@@ -15123,11 +13670,7 @@
                   "format": "date-time"
                 }
               },
-              "required": [
-                "lessonId",
-                "startsAtUtc",
-                "toStartsAtUtc"
-              ]
+              "required": ["lessonId", "startsAtUtc", "toStartsAtUtc"]
             }
           },
           "removals": {
@@ -15144,10 +13687,7 @@
                   "format": "date-time"
                 }
               },
-              "required": [
-                "lessonId",
-                "startsAtUtc"
-              ]
+              "required": ["lessonId", "startsAtUtc"]
             }
           },
           "creates": {
@@ -15172,20 +13712,10 @@
                 },
                 "reason": {
                   "type": "string",
-                  "enum": [
-                    "HELD",
-                    "CANCELLED",
-                    "NO_SHOW",
-                    "MOVED",
-                    "MARKED"
-                  ]
+                  "enum": ["HELD", "CANCELLED", "NO_SHOW", "MOVED", "MARKED"]
                 }
               },
-              "required": [
-                "lessonId",
-                "startsAtUtc",
-                "reason"
-              ]
+              "required": ["lessonId", "startsAtUtc", "reason"]
             }
           }
         },
@@ -15256,10 +13786,7 @@
               },
               "state": {
                 "type": "string",
-                "enum": [
-                  "ACTIVE",
-                  "ENDED"
-                ]
+                "enum": ["ACTIVE", "ENDED"]
               },
               "slots": {
                 "type": "array",
@@ -15282,11 +13809,7 @@
                       "format": "uuid"
                     }
                   },
-                  "required": [
-                    "weekday",
-                    "localTime",
-                    "seriesId"
-                  ]
+                  "required": ["weekday", "localTime", "seriesId"]
                 }
               },
               "nextChange": {
@@ -15313,17 +13836,11 @@
                           "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
                         }
                       },
-                      "required": [
-                        "weekday",
-                        "localTime"
-                      ]
+                      "required": ["weekday", "localTime"]
                     }
                   }
                 },
-                "required": [
-                  "effectiveFrom",
-                  "slots"
-                ],
+                "required": ["effectiveFrom", "slots"],
                 "nullable": true
               },
               "nextLessonAt": {
@@ -15368,11 +13885,7 @@
                     "nullable": true
                   }
                 },
-                "required": [
-                  "id",
-                  "fullName",
-                  "avatarKey"
-                ],
+                "required": ["id", "fullName", "avatarKey"],
                 "nullable": true
               },
               "group": {
@@ -15391,11 +13904,7 @@
                     "exclusiveMinimum": false
                   }
                 },
-                "required": [
-                  "id",
-                  "name",
-                  "memberCount"
-                ],
+                "required": ["id", "name", "memberCount"],
                 "nullable": true
               },
               "teacher": {
@@ -15409,10 +13918,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "id",
-                  "name"
-                ]
+                "required": ["id", "name"]
               },
               "createdAt": {
                 "type": "string",
@@ -15499,12 +14005,7 @@
                       "type": "boolean"
                     }
                   },
-                  "required": [
-                    "lessonId",
-                    "startsAtUtc",
-                    "topic",
-                    "hasNotes"
-                  ]
+                  "required": ["lessonId", "startsAtUtc", "topic", "hasNotes"]
                 }
               },
               "conflicts": {
@@ -15531,12 +14032,13 @@
                       "maximum": 720,
                       "exclusiveMaximum": false
                     },
+                    "kind": {
+                      "type": "string",
+                      "enum": ["REGULAR", "MAKEUP"]
+                    },
                     "reason": {
                       "type": "string",
-                      "enum": [
-                        "TEACHER",
-                        "STUDENT"
-                      ]
+                      "enum": ["TEACHER", "STUDENT"]
                     },
                     "teacher": {
                       "type": "object",
@@ -15549,10 +14051,7 @@
                           "type": "string"
                         }
                       },
-                      "required": [
-                        "id",
-                        "name"
-                      ]
+                      "required": ["id", "name"]
                     },
                     "student": {
                       "type": "object",
@@ -15565,10 +14064,7 @@
                           "type": "string"
                         }
                       },
-                      "required": [
-                        "id",
-                        "fullName"
-                      ],
+                      "required": ["id", "fullName"],
                       "nullable": true
                     },
                     "group": {
@@ -15582,10 +14078,7 @@
                           "type": "string"
                         }
                       },
-                      "required": [
-                        "id",
-                        "name"
-                      ],
+                      "required": ["id", "name"],
                       "nullable": true
                     },
                     "students": {
@@ -15601,10 +14094,7 @@
                             "type": "string"
                           }
                         },
-                        "required": [
-                          "id",
-                          "fullName"
-                        ]
+                        "required": ["id", "fullName"]
                       }
                     }
                   },
@@ -15613,6 +14103,7 @@
                     "lessonId",
                     "startsAtUtc",
                     "durationMin",
+                    "kind",
                     "reason",
                     "teacher",
                     "student",
@@ -15639,11 +14130,7 @@
                       "format": "date-time"
                     }
                   },
-                  "required": [
-                    "lessonId",
-                    "startsAtUtc",
-                    "toStartsAtUtc"
-                  ]
+                  "required": ["lessonId", "startsAtUtc", "toStartsAtUtc"]
                 }
               },
               "removals": {
@@ -15660,10 +14147,7 @@
                       "format": "date-time"
                     }
                   },
-                  "required": [
-                    "lessonId",
-                    "startsAtUtc"
-                  ]
+                  "required": ["lessonId", "startsAtUtc"]
                 }
               },
               "creates": {
@@ -15688,20 +14172,10 @@
                     },
                     "reason": {
                       "type": "string",
-                      "enum": [
-                        "HELD",
-                        "CANCELLED",
-                        "NO_SHOW",
-                        "MOVED",
-                        "MARKED"
-                      ]
+                      "enum": ["HELD", "CANCELLED", "NO_SHOW", "MOVED", "MARKED"]
                     }
                   },
-                  "required": [
-                    "lessonId",
-                    "startsAtUtc",
-                    "reason"
-                  ]
+                  "required": ["lessonId", "startsAtUtc", "reason"]
                 }
               }
             },
@@ -15721,10 +14195,7 @@
             ]
           }
         },
-        "required": [
-          "schedule",
-          "summary"
-        ]
+        "required": ["schedule", "summary"]
       },
       "StopScheduleDto": {
         "type": "object",
@@ -15770,11 +14241,7 @@
                 },
                 "sizingMode": {
                   "type": "string",
-                  "enum": [
-                    "FIXED_COUNT",
-                    "BY_PERIOD",
-                    "BY_PERIOD_WEEKLY"
-                  ]
+                  "enum": ["FIXED_COUNT", "BY_PERIOD", "BY_PERIOD_WEEKLY"]
                 },
                 "lessonsTotal": {
                   "type": "integer"
@@ -15820,21 +14287,11 @@
                 },
                 "currency": {
                   "type": "string",
-                  "enum": [
-                    "EUR",
-                    "UAH",
-                    "PLN",
-                    "USD",
-                    "GBP"
-                  ]
+                  "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
                 },
                 "paymentStatus": {
                   "type": "string",
-                  "enum": [
-                    "PENDING",
-                    "PARTIAL",
-                    "PAID"
-                  ]
+                  "enum": ["PENDING", "PARTIAL", "PAID"]
                 },
                 "purchasedAt": {
                   "type": "string",
@@ -15860,10 +14317,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "id",
-                    "fullName"
-                  ]
+                  "required": ["id", "fullName"]
                 },
                 "group": {
                   "type": "object",
@@ -15876,10 +14330,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "id",
-                    "name"
-                  ],
+                  "required": ["id", "name"],
                   "nullable": true
                 },
                 "createdAt": {
@@ -15949,13 +14400,7 @@
             "exclusiveMinimum": false
           }
         },
-        "required": [
-          "items",
-          "page",
-          "pageSize",
-          "total",
-          "totalPages"
-        ]
+        "required": ["items", "page", "pageSize", "total", "totalPages"]
       },
       "CreatePackageDto": {
         "type": "object",
@@ -15982,11 +14427,7 @@
           },
           "sizingMode": {
             "type": "string",
-            "enum": [
-              "FIXED_COUNT",
-              "BY_PERIOD",
-              "BY_PERIOD_WEEKLY"
-            ],
+            "enum": ["FIXED_COUNT", "BY_PERIOD", "BY_PERIOD_WEEKLY"],
             "default": "FIXED_COUNT"
           },
           "lessonsTotal": {
@@ -16027,13 +14468,7 @@
           },
           "currency": {
             "type": "string",
-            "enum": [
-              "EUR",
-              "UAH",
-              "PLN",
-              "USD",
-              "GBP"
-            ]
+            "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
           },
           "purchasedAt": {
             "type": "string",
@@ -16071,10 +14506,7 @@
                       "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
                     }
                   },
-                  "required": [
-                    "weekday",
-                    "localTime"
-                  ]
+                  "required": ["weekday", "localTime"]
                 }
               },
               "timezone": {
@@ -16093,12 +14525,7 @@
                 "format": "date-time"
               }
             },
-            "required": [
-              "slots",
-              "timezone",
-              "durationMin",
-              "startDate"
-            ],
+            "required": ["slots", "timezone", "durationMin", "startDate"],
             "nullable": true
           },
           "initialPayment": {
@@ -16116,17 +14543,11 @@
                 "format": "date-time"
               }
             },
-            "required": [
-              "amountMinor",
-              "paidAt"
-            ],
+            "required": ["amountMinor", "paidAt"],
             "nullable": true
           }
         },
-        "required": [
-          "studentId",
-          "currency"
-        ]
+        "required": ["studentId", "currency"]
       },
       "PackagePreviewDto": {
         "type": "object",
@@ -16196,11 +14617,7 @@
           },
           "sizingMode": {
             "type": "string",
-            "enum": [
-              "FIXED_COUNT",
-              "BY_PERIOD",
-              "BY_PERIOD_WEEKLY"
-            ],
+            "enum": ["FIXED_COUNT", "BY_PERIOD", "BY_PERIOD_WEEKLY"],
             "default": "FIXED_COUNT"
           },
           "lessonsTotal": {
@@ -16241,13 +14658,7 @@
           },
           "currency": {
             "type": "string",
-            "enum": [
-              "EUR",
-              "UAH",
-              "PLN",
-              "USD",
-              "GBP"
-            ]
+            "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
           },
           "purchasedAt": {
             "type": "string",
@@ -16264,11 +14675,7 @@
             "nullable": true
           }
         },
-        "required": [
-          "groupId",
-          "studentIds",
-          "currency"
-        ]
+        "required": ["groupId", "studentIds", "currency"]
       },
       "SoldPackagesDto": {
         "type": "object",
@@ -16305,11 +14712,7 @@
                 },
                 "sizingMode": {
                   "type": "string",
-                  "enum": [
-                    "FIXED_COUNT",
-                    "BY_PERIOD",
-                    "BY_PERIOD_WEEKLY"
-                  ]
+                  "enum": ["FIXED_COUNT", "BY_PERIOD", "BY_PERIOD_WEEKLY"]
                 },
                 "lessonsTotal": {
                   "type": "integer"
@@ -16355,21 +14758,11 @@
                 },
                 "currency": {
                   "type": "string",
-                  "enum": [
-                    "EUR",
-                    "UAH",
-                    "PLN",
-                    "USD",
-                    "GBP"
-                  ]
+                  "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
                 },
                 "paymentStatus": {
                   "type": "string",
-                  "enum": [
-                    "PENDING",
-                    "PARTIAL",
-                    "PAID"
-                  ]
+                  "enum": ["PENDING", "PARTIAL", "PAID"]
                 },
                 "purchasedAt": {
                   "type": "string",
@@ -16395,10 +14788,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "id",
-                    "fullName"
-                  ]
+                  "required": ["id", "fullName"]
                 },
                 "group": {
                   "type": "object",
@@ -16411,10 +14801,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "id",
-                    "name"
-                  ],
+                  "required": ["id", "name"],
                   "nullable": true
                 },
                 "createdAt": {
@@ -16464,9 +14851,7 @@
             }
           }
         },
-        "required": [
-          "items"
-        ]
+        "required": ["items"]
       },
       "ExtendPackageDto": {
         "type": "object",
@@ -16476,9 +14861,7 @@
             "format": "date-time"
           }
         },
-        "required": [
-          "expiresAt"
-        ]
+        "required": ["expiresAt"]
       },
       "PackageDto": {
         "type": "object",
@@ -16510,11 +14893,7 @@
           },
           "sizingMode": {
             "type": "string",
-            "enum": [
-              "FIXED_COUNT",
-              "BY_PERIOD",
-              "BY_PERIOD_WEEKLY"
-            ]
+            "enum": ["FIXED_COUNT", "BY_PERIOD", "BY_PERIOD_WEEKLY"]
           },
           "lessonsTotal": {
             "type": "integer"
@@ -16560,21 +14939,11 @@
           },
           "currency": {
             "type": "string",
-            "enum": [
-              "EUR",
-              "UAH",
-              "PLN",
-              "USD",
-              "GBP"
-            ]
+            "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
           },
           "paymentStatus": {
             "type": "string",
-            "enum": [
-              "PENDING",
-              "PARTIAL",
-              "PAID"
-            ]
+            "enum": ["PENDING", "PARTIAL", "PAID"]
           },
           "purchasedAt": {
             "type": "string",
@@ -16600,10 +14969,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "id",
-              "fullName"
-            ]
+            "required": ["id", "fullName"]
           },
           "group": {
             "type": "object",
@@ -16616,10 +14982,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "id",
-              "name"
-            ],
+            "required": ["id", "name"],
             "nullable": true
           },
           "createdAt": {
@@ -16687,9 +15050,7 @@
             "nullable": true
           }
         },
-        "required": [
-          "toEnrollmentId"
-        ]
+        "required": ["toEnrollmentId"]
       },
       "PackageTransferDto": {
         "type": "object",
@@ -16724,11 +15085,7 @@
               },
               "sizingMode": {
                 "type": "string",
-                "enum": [
-                  "FIXED_COUNT",
-                  "BY_PERIOD",
-                  "BY_PERIOD_WEEKLY"
-                ]
+                "enum": ["FIXED_COUNT", "BY_PERIOD", "BY_PERIOD_WEEKLY"]
               },
               "lessonsTotal": {
                 "type": "integer"
@@ -16774,21 +15131,11 @@
               },
               "currency": {
                 "type": "string",
-                "enum": [
-                  "EUR",
-                  "UAH",
-                  "PLN",
-                  "USD",
-                  "GBP"
-                ]
+                "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
               },
               "paymentStatus": {
                 "type": "string",
-                "enum": [
-                  "PENDING",
-                  "PARTIAL",
-                  "PAID"
-                ]
+                "enum": ["PENDING", "PARTIAL", "PAID"]
               },
               "purchasedAt": {
                 "type": "string",
@@ -16814,10 +15161,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "id",
-                  "fullName"
-                ]
+                "required": ["id", "fullName"]
               },
               "group": {
                 "type": "object",
@@ -16830,10 +15174,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "id",
-                  "name"
-                ],
+                "required": ["id", "name"],
                 "nullable": true
               },
               "createdAt": {
@@ -16911,11 +15252,7 @@
               },
               "sizingMode": {
                 "type": "string",
-                "enum": [
-                  "FIXED_COUNT",
-                  "BY_PERIOD",
-                  "BY_PERIOD_WEEKLY"
-                ]
+                "enum": ["FIXED_COUNT", "BY_PERIOD", "BY_PERIOD_WEEKLY"]
               },
               "lessonsTotal": {
                 "type": "integer"
@@ -16961,21 +15298,11 @@
               },
               "currency": {
                 "type": "string",
-                "enum": [
-                  "EUR",
-                  "UAH",
-                  "PLN",
-                  "USD",
-                  "GBP"
-                ]
+                "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
               },
               "paymentStatus": {
                 "type": "string",
-                "enum": [
-                  "PENDING",
-                  "PARTIAL",
-                  "PAID"
-                ]
+                "enum": ["PENDING", "PARTIAL", "PAID"]
               },
               "purchasedAt": {
                 "type": "string",
@@ -17001,10 +15328,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "id",
-                  "fullName"
-                ]
+                "required": ["id", "fullName"]
               },
               "group": {
                 "type": "object",
@@ -17017,10 +15341,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "id",
-                  "name"
-                ],
+                "required": ["id", "name"],
                 "nullable": true
               },
               "createdAt": {
@@ -17079,12 +15400,7 @@
             "exclusiveMinimum": false
           }
         },
-        "required": [
-          "source",
-          "target",
-          "valueMinor",
-          "remainderMinor"
-        ]
+        "required": ["source", "target", "valueMinor", "remainderMinor"]
       },
       "RefundPackageDto": {
         "type": "object",
@@ -17105,12 +15421,7 @@
           },
           "method": {
             "type": "string",
-            "enum": [
-              "CASH",
-              "BANK_TRANSFER",
-              "OTHER",
-              "CARD"
-            ],
+            "enum": ["CASH", "BANK_TRANSFER", "OTHER", "CARD"],
             "default": "CASH"
           },
           "paidAt": {
@@ -17122,11 +15433,7 @@
             "maxLength": 2000
           }
         },
-        "required": [
-          "credits",
-          "amountMinor",
-          "note"
-        ]
+        "required": ["credits", "amountMinor", "note"]
       },
       "CreditLedgerDto": {
         "type": "object",
@@ -17172,25 +15479,14 @@
                   "format": "date-time"
                 }
               },
-              "required": [
-                "id",
-                "packageId",
-                "lessonId",
-                "delta",
-                "type",
-                "note",
-                "createdAt"
-              ]
+              "required": ["id", "packageId", "lessonId", "delta", "type", "note", "createdAt"]
             }
           },
           "balance": {
             "type": "integer"
           }
         },
-        "required": [
-          "items",
-          "balance"
-        ]
+        "required": ["items", "balance"]
       },
       "AdjustBalanceDto": {
         "type": "object",
@@ -17207,10 +15503,7 @@
             "maxLength": 2000
           }
         },
-        "required": [
-          "delta",
-          "note"
-        ]
+        "required": ["delta", "note"]
       },
       "PaymentListDto": {
         "type": "object",
@@ -17242,31 +15535,15 @@
                 },
                 "currency": {
                   "type": "string",
-                  "enum": [
-                    "EUR",
-                    "UAH",
-                    "PLN",
-                    "USD",
-                    "GBP"
-                  ]
+                  "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
                 },
                 "method": {
                   "type": "string",
-                  "enum": [
-                    "CASH",
-                    "BANK_TRANSFER",
-                    "OTHER",
-                    "CARD"
-                  ]
+                  "enum": ["CASH", "BANK_TRANSFER", "OTHER", "CARD"]
                 },
                 "status": {
                   "type": "string",
-                  "enum": [
-                    "PENDING",
-                    "PAID",
-                    "FAILED",
-                    "REFUNDED"
-                  ]
+                  "enum": ["PENDING", "PAID", "FAILED", "REFUNDED"]
                 },
                 "provider": {
                   "type": "string"
@@ -17294,10 +15571,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "id",
-                    "fullName"
-                  ]
+                  "required": ["id", "fullName"]
                 },
                 "createdAt": {
                   "type": "string",
@@ -17348,13 +15622,7 @@
             "exclusiveMinimum": false
           }
         },
-        "required": [
-          "items",
-          "page",
-          "pageSize",
-          "total",
-          "totalPages"
-        ]
+        "required": ["items", "page", "pageSize", "total", "totalPages"]
       },
       "RecordPaymentDto": {
         "type": "object",
@@ -17377,22 +15645,11 @@
           },
           "currency": {
             "type": "string",
-            "enum": [
-              "EUR",
-              "UAH",
-              "PLN",
-              "USD",
-              "GBP"
-            ]
+            "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
           },
           "method": {
             "type": "string",
-            "enum": [
-              "CASH",
-              "BANK_TRANSFER",
-              "OTHER",
-              "CARD"
-            ],
+            "enum": ["CASH", "BANK_TRANSFER", "OTHER", "CARD"],
             "default": "CASH"
           },
           "paidAt": {
@@ -17410,11 +15667,7 @@
             "maxLength": 128
           }
         },
-        "required": [
-          "enrollmentId",
-          "amountMinor",
-          "currency"
-        ]
+        "required": ["enrollmentId", "amountMinor", "currency"]
       },
       "PaymentDto": {
         "type": "object",
@@ -17441,31 +15694,15 @@
           },
           "currency": {
             "type": "string",
-            "enum": [
-              "EUR",
-              "UAH",
-              "PLN",
-              "USD",
-              "GBP"
-            ]
+            "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
           },
           "method": {
             "type": "string",
-            "enum": [
-              "CASH",
-              "BANK_TRANSFER",
-              "OTHER",
-              "CARD"
-            ]
+            "enum": ["CASH", "BANK_TRANSFER", "OTHER", "CARD"]
           },
           "status": {
             "type": "string",
-            "enum": [
-              "PENDING",
-              "PAID",
-              "FAILED",
-              "REFUNDED"
-            ]
+            "enum": ["PENDING", "PAID", "FAILED", "REFUNDED"]
           },
           "provider": {
             "type": "string"
@@ -17493,10 +15730,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "id",
-              "fullName"
-            ]
+            "required": ["id", "fullName"]
           },
           "createdAt": {
             "type": "string",
