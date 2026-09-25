@@ -1,7 +1,11 @@
 import { effectiveDeadlineHours, resolveDefaultPrice } from '@tutorio/domain';
 import { Prisma } from '@prisma/client';
 import type { CurrencyCode } from '@tutorio/domain';
-import type { LessonResponse, LessonSeriesResponse } from '@tutorio/validation';
+import type {
+  AvatarKeyDto,
+  LessonResponse,
+  LessonSeriesResponse,
+} from '@tutorio/validation';
 import {
   groupNotFound,
   invalidWorkspaceRelation,
@@ -26,7 +30,7 @@ export const lessonInclude = {
     select: {
       id: true,
       cancellationDeadlineHours: true,
-      student: { select: { id: true, fullName: true } },
+      student: { select: { id: true, fullName: true, avatarKey: true } },
     },
   },
   group: { select: { id: true, name: true } },
@@ -115,7 +119,13 @@ export function toLessonResponse(
       paid: paidChargeIds.has(charge.id),
       student: charge.enrollment.student,
     })),
-    student: row.enrollment?.student ?? null,
+    student: row.enrollment
+      ? {
+          id: row.enrollment.student.id,
+          fullName: row.enrollment.student.fullName,
+          avatarKey: row.enrollment.student.avatarKey as AvatarKeyDto | null,
+        }
+      : null,
     group: row.group,
     teacher: {
       id: row.teacher.id,
