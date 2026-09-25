@@ -475,6 +475,12 @@ export const paymentResponseSchema = z.object({
   paidAt: isoDateTimeSchema,
   note: z.string().nullable(),
   student: studentRefSchema,
+  /**
+   * In a payment list: how many lessons this pay-per-lesson payment settled
+   * in full, oldest first (L-90). Null for a package payment, a refund, or
+   * outside a list.
+   */
+  settledLessons: z.number().int().nonnegative().nullable(),
   createdAt: isoDateTimeSchema,
   updatedAt: isoDateTimeSchema,
 });

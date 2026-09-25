@@ -416,6 +416,8 @@ export const lessonResponseSchema = z.object({
   student: lessonStudentRefSchema.nullable(),
   group: groupRefSchema.nullable(),
   teacher: teacherRefSchema,
+  /** What an individual lesson teaches: its teacher's first subject; null for a group. */
+  subject: z.string().nullable(),
   createdAt: isoDateTimeSchema,
   updatedAt: isoDateTimeSchema,
   deletedAt: isoDateTimeSchema.nullable(),
