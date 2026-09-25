@@ -36,7 +36,7 @@ import { useLessonDates, useMoney } from './lesson-format';
 import { useErrorToast, useTeacherOptions } from './lesson-form-parts';
 import { LessonAttendanceSummary, LessonMembers, useGroupMembers } from './lesson-group';
 import { LessonHistory } from './lesson-history';
-import { LessonPanelWindow, LessonWindowLayout } from './lesson-panel-window';
+import { BandWindow, BandWindowLayout } from '@/components/shared/band-window';
 import { LessonPayment, useLessonPayment } from './lesson-payment';
 import {
   LessonBand,
@@ -86,14 +86,14 @@ function PanelSkeleton({ mobile }: { mobile: boolean }) {
   return (
     <>
       <DialogTitle className="sr-only">{t('loading')}</DialogTitle>
-      <LessonWindowLayout mobile={mobile} band={band}>
+      <BandWindowLayout mobile={mobile} band={band}>
         <Skeleton className="h-17 w-full rounded-tile" />
         <div className="flex flex-col gap-3">
           <Skeleton className="h-4 w-4/5" />
           <Skeleton className="h-4 w-3/5" />
         </div>
         <Skeleton className="h-42.5 w-full rounded-block" />
-      </LessonWindowLayout>
+      </BandWindowLayout>
     </>
   );
 }
@@ -172,14 +172,14 @@ export function LessonPanel({
   const notFound = detail.error?.status === 404;
 
   return (
-    <LessonPanelWindow
+    <BandWindow
       open={lessonId !== null}
       onOpenChange={(open) => {
         if (!open) onClose();
       }}
       description={t('description')}
       mobile={mobile}
-      compact={notFound && !mobile}
+      size={notFound && !mobile ? 'compact' : 'md'}
     >
       {lesson && lesson.id === lessonId ? (
         <LessonPanelContent
@@ -220,7 +220,7 @@ export function LessonPanel({
       ) : (
         <PanelSkeleton mobile={mobile} />
       )}
-    </LessonPanelWindow>
+    </BandWindow>
   );
 }
 
@@ -414,7 +414,7 @@ function LessonPanelContent({
 
   return (
     <>
-      <LessonWindowLayout
+      <BandWindowLayout
         mobile={mobile}
         band={
           <LessonBand
@@ -467,7 +467,7 @@ function LessonPanelContent({
           <LessonPayment view={payment.view} lesson={lesson} pkg={payment.pkg} />
         )}
         <LessonHistory lesson={lesson} events={events} teacherNames={teachers.names} fill={false} />
-      </LessonWindowLayout>
+      </BandWindowLayout>
       {dialogs}
     </>
   );

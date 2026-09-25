@@ -43,7 +43,7 @@ import {
 import { LessonFormBand, TeacherField, useDayLessons, WhenHeading } from './lesson-form-kit';
 import { useLessonDates, useMoneyParts } from './lesson-format';
 import { useLessonForm, useTeacherOptions } from './lesson-form-parts';
-import { LessonWindowLayout } from './lesson-panel-window';
+import { BandWindowLayout } from '@/components/shared/band-window';
 
 export type PriceMode = 'editable' | 'paid' | 'package' | 'group';
 
@@ -384,7 +384,7 @@ export function LessonEdit({
         void submit();
       }}
     >
-      <LessonWindowLayout
+      <BandWindowLayout
         mobile={mobile}
         band={
           <LessonFormBand
@@ -413,7 +413,7 @@ export function LessonEdit({
         }
       >
         {body}
-      </LessonWindowLayout>
+      </BandWindowLayout>
       {moving?.move && schedule ? (
         <MoveDialog
           lesson={lesson}

@@ -30,7 +30,7 @@ import { useCreatePrefill } from '../create/use-create-prefill';
 import { useDurationHint, useDurationLabels, useSlotsLabel } from '../field-labels';
 import { TeacherField } from '../lesson-form-kit';
 import { useErrorToast, useLessonForm, useTeacherOptions } from '../lesson-form-parts';
-import { LessonPanelWindow, LessonWindowLayout } from '../lesson-panel-window';
+import { BandWindow, BandWindowLayout } from '@/components/shared/band-window';
 import { ScheduleChangeDialog } from './schedule-change-dialog';
 import { ScheduleCheckDialog } from './schedule-check';
 import { useLengthLabel } from './schedule-parts';
@@ -189,7 +189,7 @@ function ScheduleCreateFlow({
 
   return (
     <FormProvider {...form}>
-      <LessonPanelWindow
+      <BandWindow
         open={step === 'form'}
         onOpenChange={(next) => {
           if (!next) onClose();
@@ -205,7 +205,7 @@ function ScheduleCreateFlow({
             void next();
           }}
         >
-          <LessonWindowLayout
+          <BandWindowLayout
             mobile={mobile}
             band={
               <CreateBand
@@ -279,9 +279,9 @@ function ScheduleCreateFlow({
               labels={{ from: t('from'), until: t('until'), untilHint: t('untilHint') }}
               between={<LengthAndHorizon studioWeeks={data.horizonWeeks} mobile={mobile} />}
             />
-          </LessonWindowLayout>
+          </BandWindowLayout>
         </form>
-      </LessonPanelWindow>
+      </BandWindow>
       {preview.data ? (
         <ScheduleCheckDialog
           open={step === 'check'}

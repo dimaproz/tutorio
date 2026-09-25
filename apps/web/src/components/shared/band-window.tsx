@@ -4,40 +4,47 @@ import type { ReactNode } from 'react';
 import { Dialog, DialogContent, DialogDescription } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 
+const WIDTH = {
+  // The lesson windows (S01 layout A, the S02 form).
+  md: 'max-h-[calc(100dvh-48px)] w-160 max-w-[calc(100%-2rem)] rounded-hero sm:max-w-160',
+  // The package sale with its preview column (S07).
+  lg: 'max-h-[calc(100dvh-48px)] w-225 max-w-[calc(100%-2rem)] rounded-hero sm:max-w-225',
+  // A "not found" state.
+  compact: 'w-130 max-w-[calc(100%-2rem)] rounded-hero p-5 sm:max-w-130',
+} as const;
+
 /**
- * The lesson windows' dialog (S01 layout A, the S02 form): on desktop one
- * centred 640px column with the hero radius over the scrim, as tall as its
- * content up to the viewport less 48px; on phones a full-screen sheet.
- * `compact` is the 520px window of the "not found" state. The content owns
- * the title as a `DialogTitle`.
+ * The dialog of a window headed by the indigo band (the lesson windows, the
+ * package sale): on desktop one centred column with the hero radius over the
+ * scrim — 640px, 900px (`lg`) or the 520px `compact` — as tall as its
+ * content up to the viewport less 48px; on phones a full-screen sheet. The
+ * content owns the title as a `DialogTitle`.
  */
-export function LessonPanelWindow({
+export function BandWindow({
   open,
   onOpenChange,
   description,
   mobile,
-  compact = false,
+  size = 'md',
   children,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   description: string;
   mobile: boolean;
-  compact?: boolean;
+  size?: keyof typeof WIDTH;
   children: ReactNode;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        data-slot="lesson-panel"
+        data-slot="band-window"
         className={cn(
           'flex flex-col gap-0 overflow-hidden bg-card p-0',
           mobile
             ? 'top-0 left-0 h-dvh w-full max-w-none translate-x-0 translate-y-0 rounded-none sm:max-w-none'
-            : compact
-              ? 'w-130 max-w-[calc(100%-2rem)] rounded-hero p-5 sm:max-w-130'
-              : 'max-h-[calc(100dvh-48px)] w-160 max-w-[calc(100%-2rem)] rounded-hero sm:max-w-160',
+            : WIDTH[size],
         )}
       >
         <DialogDescription className="sr-only">{description}</DialogDescription>
@@ -48,7 +55,7 @@ export function LessonPanelWindow({
 }
 
 /**
- * Layout A of every lesson window: the indigo band, the body and the pinned
+ * Layout A of every band window: the indigo band, the body and the pinned
  * footer.
  *
  * - Desktop: the band stays put, only the body scrolls, and the footer holds
@@ -56,7 +63,7 @@ export function LessonPanelWindow({
  * - Phone: the band and the body scroll together; the footer is pinned, its
  *   note centred above equal-width actions.
  */
-export function LessonWindowLayout({
+export function BandWindowLayout({
   mobile,
   band,
   children,

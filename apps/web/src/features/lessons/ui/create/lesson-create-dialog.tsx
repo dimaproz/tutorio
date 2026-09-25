@@ -34,7 +34,7 @@ import {
 import { useDurationHint, useDurationLabels } from '../field-labels';
 import { TeacherField, useDayLessons } from '../lesson-form-kit';
 import { useLessonForm, useTeacherOptions } from '../lesson-form-parts';
-import { LessonPanelWindow, LessonWindowLayout } from '../lesson-panel-window';
+import { BandWindow, BandWindowLayout } from '@/components/shared/band-window';
 import { CreateBand } from './create-band';
 import { useCreateFooter } from './create-footer';
 import { CreatePriceField } from './create-price';
@@ -88,7 +88,7 @@ export function LessonCreateDialog({
   const t = useTranslations('lessons.create');
   const mobile = useIsMobile();
   return (
-    <LessonPanelWindow
+    <BandWindow
       open={open}
       onOpenChange={onOpenChange}
       description={t('description')}
@@ -104,7 +104,7 @@ export function LessonCreateDialog({
           onCreated={onCreated}
         />
       ) : null}
-    </LessonPanelWindow>
+    </BandWindow>
   );
 }
 
@@ -419,7 +419,7 @@ function LessonCreateForm({
           void submit();
         }}
       >
-        <LessonWindowLayout
+        <BandWindowLayout
           mobile={mobile}
           band={
             <CreateBand data={data} mobile={mobile} onClose={onClose} searchOnOpen={searchOnOpen} />
@@ -438,7 +438,7 @@ function LessonCreateForm({
           }
         >
           {body}
-        </LessonWindowLayout>
+        </BandWindowLayout>
         {save.dialog}
       </form>
     </FormProvider>
