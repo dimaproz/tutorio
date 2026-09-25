@@ -430,6 +430,9 @@ model Teacher {
   color             String?
   avatarKey         String?
   status            TeacherStatus @default(ACTIVE)
+  // When the profile was archived (or its owner stopped teaching); null while
+  // ACTIVE.
+  archivedAt        DateTime?
   // Optional link to a login account; unique so one member maps to one profile.
   workspaceMemberId String?       @unique
   notes             String?
