@@ -102,6 +102,42 @@ describe.each(RUNTIME_ZONES)('the studio wall clock with the runtime in %s', (ru
   });
 });
 
+describe('the cached offsets', () => {
+  it('read two years of instants as Intl does, across switches and in odd zones', () => {
+    const zones = [
+      KYIV,
+      'America/New_York',
+      'Asia/Kathmandu',
+      'Australia/Lord_Howe',
+      'Pacific/Chatham',
+      'UTC',
+    ];
+    const from = Date.parse('2026-01-01T00:07:00Z');
+    for (const zone of zones) {
+      // Swedish writes "2026-03-29 02:07": the same shape as the helpers.
+      const reference = new Intl.DateTimeFormat('sv-SE', {
+        timeZone: zone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23',
+      });
+      for (let ms = from; ms < from + 2 * 365 * 86_400_000; ms += 3 * 3_600_000 + 15 * 60_000) {
+        expect(`${zonedDate(ms, zone)} ${zonedTime(ms, zone)}`).toBe(reference.format(ms));
+      }
+    }
+    // The hour before the spring switch in Kyiv (01:00 UTC) is still winter time.
+    expect(zonedTime('2026-03-29T00:07:00Z', KYIV)).toBe('02:07');
+    expect(zonedTime('2026-03-29T01:07:00Z', KYIV)).toBe('04:07');
+  });
+
+  it('refuses a zone that does not exist', () => {
+    expect(() => zonedDate(Date.now(), 'Mars/Olympus')).toThrow(RangeError);
+  });
+});
+
 describe('calendar dates', () => {
   it('adds days across months, years and the DST switch', () => {
     expect(addCalendarDays('2026-10-24', 1)).toBe('2026-10-25');

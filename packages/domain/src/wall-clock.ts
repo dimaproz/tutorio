@@ -8,15 +8,81 @@
  * weekday, the days between) needs no timezone at all.
  */
 
-import { formatInTimeZone, getTimezoneOffset } from 'date-fns-tz';
-
 const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
 const TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
 const DAY_MS = 24 * 60 * 60 * 1000;
+/** Every zone changes its offset on a quarter hour of UTC, never inside one. */
+const QUARTER_MS = 15 * 60 * 1000;
+const CACHE_LIMIT = 50_000;
 
 type InstantLike = Date | number | string;
 
-const toInstant = (value: InstantLike): Date => (value instanceof Date ? value : new Date(value));
+const toMs = (value: InstantLike): number =>
+  value instanceof Date ? value.getTime() : typeof value === 'number' ? value : Date.parse(value);
+
+const formats = new Map<string, Intl.DateTimeFormat>();
+const offsets = new Map<string, Map<number, number>>();
+
+/**
+ * The zone's offset from UTC at an instant, read from the runtime's own
+ * timezone database (`Intl`). `date-fns-tz` is not used here: its offsets
+ * are wrong within an hour of a DST switch. Throws a RangeError for a zone
+ * that does not exist.
+ */
+function exactOffset(timeZone: string, ms: number): number {
+  let format = formats.get(timeZone);
+  if (!format) {
+    format = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      hourCycle: 'h23',
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      second: 'numeric',
+    });
+    formats.set(timeZone, format);
+  }
+  const part: Partial<Record<Intl.DateTimeFormatPartTypes, number>> = {};
+  for (const { type, value } of format.formatToParts(new Date(ms))) part[type] = Number(value);
+  const wall = Date.UTC(
+    part.year!,
+    part.month! - 1,
+    part.day!,
+    part.hour! % 24,
+    part.minute!,
+    part.second!,
+  );
+  return wall - (ms - (((ms % 1000) + 1000) % 1000));
+}
+
+/**
+ * The zone's offset from UTC at an instant, in milliseconds. A calendar
+ * screen asks it thousands of times per render, so the answer is kept per
+ * quarter hour: the offset cannot change inside one.
+ */
+function offsetAt(timeZone: string, ms: number): number {
+  let zone = offsets.get(timeZone);
+  if (!zone) {
+    zone = new Map();
+    offsets.set(timeZone, zone);
+  }
+  const quarter = Math.floor(ms / QUARTER_MS);
+  let offset = zone.get(quarter);
+  if (offset === undefined) {
+    offset = exactOffset(timeZone, quarter * QUARTER_MS);
+    if (zone.size >= CACHE_LIMIT) zone.clear();
+    zone.set(quarter, offset);
+  }
+  return offset;
+}
+
+/** The instant's wall clock in the zone as an ISO string: "yyyy-MM-ddTHH:mm:ss.sssZ". */
+const wallIso = (instant: InstantLike, timeZone: string): string => {
+  const ms = toMs(instant);
+  return new Date(ms + offsetAt(timeZone, ms)).toISOString();
+};
 
 /** Whether a string is a calendar date "yyyy-MM-dd". */
 export function isCalendarDate(value: string): boolean {
@@ -45,10 +111,10 @@ export function zonedDateTime(date: string, time: string, timeZone: string): Dat
   const wall = Date.UTC(year, month - 1, day, hours, minutes);
   // A transition is never a day away from another, so the offsets a day
   // either side are the only two the wall time can have.
-  const before = getTimezoneOffset(timeZone, new Date(wall - DAY_MS));
-  const after = getTimezoneOffset(timeZone, new Date(wall + DAY_MS));
+  const before = offsetAt(timeZone, wall - DAY_MS);
+  const after = offsetAt(timeZone, wall + DAY_MS);
   const matches = [wall - before, wall - after].filter(
-    (instant) => instant + getTimezoneOffset(timeZone, new Date(instant)) === wall,
+    (instant) => instant + offsetAt(timeZone, instant) === wall,
   );
   return new Date(matches.length > 0 ? Math.min(...matches) : wall - before);
 }
@@ -68,18 +134,18 @@ export function zonedDayEnd(date: string, timeZone: string): Date {
 
 /** The studio's calendar date of an instant, "yyyy-MM-dd". */
 export function zonedDate(instant: InstantLike, timeZone: string): string {
-  return formatInTimeZone(toInstant(instant), timeZone, 'yyyy-MM-dd');
+  return wallIso(instant, timeZone).slice(0, 10);
 }
 
 /** The studio's clock time of an instant, "HH:mm". */
 export function zonedTime(instant: InstantLike, timeZone: string): string {
-  return formatInTimeZone(toInstant(instant), timeZone, 'HH:mm');
+  return wallIso(instant, timeZone).slice(11, 16);
 }
 
 /** Minutes since the studio's midnight of the instant's day, by its clock. */
 export function zonedMinutesOfDay(instant: InstantLike, timeZone: string): number {
-  const [hours, minutes] = zonedTime(instant, timeZone).split(':').map(Number) as [number, number];
-  return hours * 60 + minutes;
+  const wall = new Date(wallIso(instant, timeZone));
+  return wall.getUTCHours() * 60 + wall.getUTCMinutes();
 }
 
 /** The studio's weekday of an instant: 0 = Sunday … 6 = Saturday. */
