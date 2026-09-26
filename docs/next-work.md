@@ -317,10 +317,11 @@ them), the list's figures (`studentCount`, `groupCount`, `week`, `counts`,
 `POST /teachers/:id/archive(/preview)` and restore of an archived profile
 (migration `20261002120000_teacher_archived_at`).
 
-Follow-ups: the owner's answers to the brief's open questions (directions in
-a hand-over, where the switch to tutor mode lives, the neutral wording, solo
-tutors turning teaching off); the settings step (S10) reuses
-`SoloRefusalDialog`.
+The owner answered the brief's questions on 2026-09-26: a hand-over moves
+the one-to-one students with their billing too, «Перейти в режим
+репетитора» shows only while the owner teaches alone, the neutral wording
+stays, and a solo tutor cannot turn teaching off (`SOLO_OWNER_MUST_TEACH`).
+The settings step (S10) reuses `SoloRefusalDialog`.
 
 ### Work Packet 6.4 — Lessons, Schedules and Charging (contract accepted 2026-09-23)
 

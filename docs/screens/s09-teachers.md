@@ -1,7 +1,7 @@
 # S09 — Teachers
 
-- Status: Done (2026-09-25, commits `14533a3`…`824e8f5` and the closing
-  docs commit)
+- Status: Done (2026-09-25, commits `14533a3`…`acb7d32`; the owner's
+  answers 2026-09-26 in the commits after it)
 - Work packet: 6.2
 - Depends on: nothing (reuses the Students, Parents and Groups patterns)
 
@@ -115,8 +115,13 @@ profile is the one teacher bound to a login (`isMe`).
    conflicts). A transfer hands over, after a clash check against the new
    teacher's calendar (L-110; students do not change, so only teacher
    overlaps count), the future scheduled lessons, the active schedules (the
-   rule in force and a planned one) and the groups the teacher leads (with
-   their members). Without a transfer the schedules keep generating lessons
+   rule in force and a planned one), the groups the teacher leads (with
+   their members) and the live one-to-one directions with their packages,
+   payments and debt (the owner's answer 1); a student who already studies
+   one to one with the new teacher keeps this direction where it is (one
+   direction per student and teacher), its lessons and schedule moving all
+   the same — the preview counts both (`directionCount`,
+   `keptDirectionCount`). Without a transfer the schedules keep generating lessons
    for the archived teacher, as the dialog warns. Archive sets
    `status = ARCHIVED` and the new `archivedAt`; the profile stays readable;
    `POST /teachers/:id/restore` makes an archived profile active again (solo
@@ -124,7 +129,11 @@ profile is the one teacher bound to a login (`isMe`).
 6. **Turning teaching off** is the same archive command on the caller's own
    profile (`isMe`), with the same transfer. The caller's own profile is never
    listed among the archived teachers nor counted there — it comes back as
-   `me`, and the list shows the «Я теж викладаю» row, which restores it.
+   `me`, and the list shows the «Я теж викладаю» row, which restores it. A
+   solo tutor is the teacher (the owner's answer 4): archiving one's own
+   profile in tutor mode — by the command or a status edit — is refused with
+   `SOLO_OWNER_MUST_TEACH`, and so is switching to tutor mode while the
+   owner's own profile is off.
 7. **Navigation**: «Викладачі» after «Батьки», owner only, studio mode only,
    `nav.teachers` in uk and en.
 
@@ -135,32 +144,47 @@ fixture, Wednesday 9 September, 16:00). The tablet (834, new in the
 viewport toolbar) and phone (390) boards are the same stories at those
 widths.
 
-| Board · state                                      | Story                                                        |
-| -------------------------------------------------- | ------------------------------------------------------------ |
-| TeachersList 01 · Таблиця                          | `Teachers/Screens/Collection` Playground                     |
-| TeachersList 02 · Картки                           | Cards (the table/cards switch, remembered)                   |
-| TeachersList 03 · Власниця не викладає             | OwnerNotTeaching (`scenario: notTeaching`, «Я теж викладаю») |
-| TeachersList 04 · Архів                            | Archive                                                      |
-| TeachersList 05 · Лише власниця                    | OnlyOwner (`scenario: onlyMe`)                               |
-| TeachersList 06 · Режим репетитора                 | TutorMode (`scenario: solo`)                                 |
-| TeachersList 07 · Перехід у соло · не можна        | SoloRefused                                                  |
-| TeacherProfile 01 · Профіль                        | `Teachers/Screens/Profile` Playground, MoreStudents          |
-| TeacherProfile 02 · Вкладка «Розклади»             | SchedulesTab (with «Показати ще»)                            |
-| TeacherProfile 03 · Мій профіль (власниця)         | OwnProfile (`teacher: olena`)                                |
-| TeacherProfile 04 · Вимкнути викладання · наслідки | TurnTeachingOff                                              |
-| TeacherProfile 05 · Архівувати · наслідки          | ArchiveWithTransfer (the hand-over and its overlap)          |
-| TeacherProfile 06 · В архіві                       | ArchivedAndRestore (`archived: true`)                        |
-| TeacherForm 01 · Новий викладач                    | `Teachers/Screens/Form` Playground, ColourChoice             |
-| TeacherForm 02 · Предмети · вибір                  | SubjectsPopover (pick and create)                            |
-| TeacherForm 03 · Помилка                           | NameMissing                                                  |
-| TeacherForm 04 · Мій профіль (власниця)            | OwnProfile (`mode: own`), EditSaved                          |
+| Board · state                                      | Story                                                                        |
+| -------------------------------------------------- | ---------------------------------------------------------------------------- |
+| TeachersList 01 · Таблиця                          | `Teachers/Screens/Collection` Playground                                     |
+| TeachersList 02 · Картки                           | Cards (the table/cards switch, remembered)                                   |
+| TeachersList 03 · Власниця не викладає             | OwnerNotTeaching (`scenario: notTeaching`, «Я теж викладаю»)                 |
+| TeachersList 04 · Архів                            | Archive                                                                      |
+| TeachersList 05 · Лише власниця                    | OnlyOwner (`scenario: onlyMe`, switches to tutor mode)                       |
+| TeachersList 06 · Режим репетитора                 | TutorMode (`scenario: solo`, no «Вимкнути викладання»)                       |
+| TeachersList 07 · Перехід у соло · не можна        | superseded: NoTutorModeWithColleagues; `Teachers/Patterns/SoloRefusalDialog` |
+| TeacherProfile 01 · Профіль                        | `Teachers/Screens/Profile` Playground, MoreStudents                          |
+| TeacherProfile 02 · Вкладка «Розклади»             | SchedulesTab (with «Показати ще»)                                            |
+| TeacherProfile 03 · Мій профіль (власниця)         | OwnProfile (`teacher: olena`)                                                |
+| TeacherProfile 04 · Вимкнути викладання · наслідки | TurnTeachingOff                                                              |
+| TeacherProfile 05 · Архівувати · наслідки          | ArchiveWithTransfer (the hand-over and its overlap)                          |
+| TeacherProfile 06 · В архіві                       | ArchivedAndRestore (`archived: true`)                                        |
+| TeacherForm 01 · Новий викладач                    | `Teachers/Screens/Form` Playground, ColourChoice                             |
+| TeacherForm 02 · Предмети · вибір                  | SubjectsPopover (pick and create)                                            |
+| TeacherForm 03 · Помилка                           | NameMissing                                                                  |
+| TeacherForm 04 · Мій профіль (власниця)            | OwnProfile (`mode: own`), EditSaved                                          |
 
 `Shared/Page/PageHeader` NarrowColumn covers the header fix. Checked at
 1440, 834 and 390, light and dark, Ukrainian and English; the collection,
 the solo switch and its refusal, and the owner's profile were also checked
 in the running app against the local database.
 
-## Decisions taken while building (to confirm with the owner)
+## The owner's answers (2026-09-26)
+
+1. **A hand-over moves the one-to-one students too**, with their packages
+   and debt (Data 5): the dialog says «8 індивідуальних учнів перейдуть до
+   Dmytro · Разом із пакетами, оплатами й боргами», and names those who
+   already study with the new teacher and keep their direction.
+2. **«Перейти в режим репетитора» only when the owner teaches alone**: with
+   another active teacher the owner's ⋯ has no such item (board 01-07 is
+   superseded); alone and teaching, it switches at once. `SoloRefusalDialog`
+   stays for a refusal the API still returns (a colleague added elsewhere)
+   and for the settings step (S10).
+3. **The gender-neutral wording stays** (decision 1 below).
+4. **A solo tutor cannot turn teaching off**: no «Вимкнути викладання» in
+   tutor mode, and the API refuses it (Data 6).
+
+## Decisions taken while building
 
 1. **Gender-neutral copy.** The boards say «Власниця студії», «Викладачка»,
    «Викладачку буде приховано»; the product cannot know a teacher's gender,
@@ -178,13 +202,11 @@ in the running app against the local database.
    Iryna», which is what happens without a hand-over.
 4. **Overlaps with the new teacher** show under the picker with the S05
    `ConflictPairs` and the primary becomes «Все одно передати» (L-111).
-5. **Directions and their billing stay with the archived teacher**; the
-   hand-over moves the future lessons, the active schedules and the led
-   groups (see Data 5).
+5. **Directions move with the hand-over** — replaced by the owner's answer 1.
 6. **The switch to tutor mode** sits in the owner's ⋯ menu on the collection
-   and on her profile, «Перейти в режим репетитора»; the refusal dialog is
-   exported for the settings step (S10). «Перейти в режим студії» in the
-   solo notice switches at once, with a toast.
+   and on her profile, shown only while she teaches alone (answer 2).
+   «Перейти в режим студії» in the solo notice switches at once, with a
+   toast.
 7. **«Я викладаю» is a command, not a form field**: turning it off opens the
    consequences dialog, turning it on restores at once — on the profile and
    in the form alike. The card is shown only in studio mode.
@@ -207,15 +229,7 @@ in the running app against the local database.
 
 ## Open questions
 
-1. Should an archive with a hand-over also move the teacher's individual
-   directions — their packages and debt — to the new teacher? A student who
-   already has a direction with the new teacher would then have two.
-2. Is the owner's ⋯ menu the right place for «Перейти в режим репетитора»
-   until the settings step, or should it live only in settings?
-3. Is the gender-neutral wording acceptable, or should the profile carry a
-   form of address?
-4. In tutor mode the owner cannot turn teaching off (the card is hidden):
-   is that right, or should a solo tutor be able to stop teaching too?
+None: the owner answered all four on 2026-09-26 (above).
 
 ## Out of scope
 

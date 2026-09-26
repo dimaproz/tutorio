@@ -63,8 +63,9 @@ this month with no-shows and students' cancellations, the rate), «Тижден�
 as seven columns or a day strip, the groups (`GroupCard`) and schedules in
 one tabbed card, the students with their level and how they study, the
 owner's «Я викладаю» and notes. Archive and turning teaching off show the
-consequences and hand the future lessons, active schedules and led groups to
-a colleague after a clash check («Все одно передати» on overlaps); the
+consequences and hand the future lessons, active schedules, led groups and
+one-to-one students with their packages and debt to a colleague after a
+clash check («Все одно передати» on overlaps); the
 archived profile is grey with «Відновити». The full-page form takes the
 avatar, contacts, subjects (a popover of the studio's subjects, or a new
 one), rate and currency, the colour with the calendar preview, bio and
@@ -76,7 +77,11 @@ list carries each teacher's students, groups and this week, the tab counts
 and the caller's own profile (`me`), with `sort` and `subject`;
 `GET /teachers/:id/summary`, `GET /teachers/:id/students`,
 `POST /teachers/:id/archive/preview` and `POST /teachers/:id/archive`
-(`transferTo`, `?force`); restore makes an archived profile active again;
+(`transferTo`, `?force`); restore makes an archived profile active again; a
+solo tutor cannot turn their own teaching off and a studio whose owner does
+not teach cannot go solo (`SOLO_OWNER_MUST_TEACH`, the owner's answers of
+2026-09-26, which also hide «Перейти в режим репетитора» while colleagues
+teach);
 migration `20261002120000_teacher_archived_at` (applied to the local dev
 database, not yet to Railway dev). Brief, decisions and open questions:
 [`screens/s09-teachers.md`](./screens/s09-teachers.md).
