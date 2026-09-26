@@ -60,6 +60,7 @@ export default defineConfig({
         },
         test: {
           name: 'storybook',
+          setupFiles: [path.join(directory, '.storybook/vitest.setup.ts')],
           browser: {
             enabled: true,
             provider: 'playwright',

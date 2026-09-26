@@ -226,12 +226,12 @@ export const MobileSidebar: Story = {
     await waitFor(() => expect(openedFromKeyboard).toBeVisible());
     openedFromKeyboard.focus();
     await userEvent.keyboard('{Escape}');
-    await waitFor(() => expect(sheet.queryByRole('dialog', { name: 'Sidebar' })).not.toBeVisible());
+    await waitFor(() => expect(sheet.queryByRole('dialog', { name: 'Sidebar' })).toBeNull());
 
     await userEvent.click(trigger);
     const dialog = sheet.getByRole('dialog', { name: 'Sidebar' });
     await waitFor(() => expect(dialog).toBeVisible());
     await userEvent.click(within(dialog).getByRole('link', { name: 'Students' }));
-    await waitFor(() => expect(sheet.queryByRole('dialog', { name: 'Sidebar' })).not.toBeVisible());
+    await waitFor(() => expect(sheet.queryByRole('dialog', { name: 'Sidebar' })).toBeNull());
   },
 };

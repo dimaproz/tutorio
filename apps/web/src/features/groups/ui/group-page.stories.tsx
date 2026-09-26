@@ -228,7 +228,7 @@ export const PricesMixed: Story = {
 export const OwnPriceTooltip: Story = {
   play: async ({ canvasElement }) => {
     const card = await roster(canvasElement);
-    await userEvent.click(await card.findByRole('button', { name: 'own price' }));
+    await userEvent.hover(await card.findByRole('button', { name: 'own price' }));
     await expect(
       await within(document.body).findByRole('tooltip', { name: 'Group price 400 ₴' }),
     ).toBeInTheDocument();
