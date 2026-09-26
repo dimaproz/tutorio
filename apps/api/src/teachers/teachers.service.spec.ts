@@ -181,6 +181,25 @@ describe('TeachersService archive state and the list', () => {
     );
   });
 
+  it('keeps a solo tutor teaching: their own profile cannot be archived', async () => {
+    const { prisma, service } = buildService('SOLO', 1);
+    prisma.teacher.findFirst.mockResolvedValue({
+      ...teacherRow,
+      workspaceMemberId: 'm1',
+      workspaceMember: { userId: owner.userId },
+    });
+
+    try {
+      await service.update(owner, TEACHER_ID, { status: 'ARCHIVED' });
+      throw new Error('expected SOLO_OWNER_MUST_TEACH');
+    } catch (error) {
+      expect((error as BusinessApiException).code).toBe(
+        'SOLO_OWNER_MUST_TEACH',
+      );
+    }
+    expect(prisma.teacher.update).not.toHaveBeenCalled();
+  });
+
   it('keeps the subjects on an edit without them and stamps the archive', async () => {
     const { prisma, service } = buildService('SCHOOL', 1);
     prisma.teacher.findFirst.mockResolvedValue({

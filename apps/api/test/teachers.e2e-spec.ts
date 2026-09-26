@@ -120,6 +120,19 @@ describe('Work Packet 6.2: teachers — list figures, profile reads, archive wit
         startDate: start.toISOString(),
       })
       .expect(201);
+    // Clara studies one to one with both: her direction with Iryna stays.
+    await post('/schedules')
+      .send({
+        studentId: students.Clara,
+        teacherId: iryna,
+        slots: slots('12:00'),
+        durationMin: 60,
+        timezone: 'UTC',
+        startDate: start.toISOString(),
+        priceMinor: 40000,
+        currency: 'UAH',
+      })
+      .expect(201);
     // Dmytro teaches Clara at Iryna's 10:00: the hand-over clashes.
     await post('/schedules')
       .send({
@@ -209,7 +222,7 @@ describe('Work Packet 6.2: teachers — list figures, profile reads, archive wit
   it('reads the profile metrics and the students with how they study', async () => {
     const summary = await get(`/teachers/${iryna}/summary`).expect(200);
     expect(summary.body).toMatchObject({
-      students: { total: 3, individual: 1, inGroups: 2 },
+      students: { total: 3, individual: 2, inGroups: 2 },
       groupCount: 1,
       month: { held: 0, noShows: 0, cancelledByStudents: 0 },
     });
@@ -238,9 +251,11 @@ describe('Work Packet 6.2: teachers — list figures, profile reads, archive wit
       .send({})
       .expect(200);
     expect(plain.body).toMatchObject({
-      scheduleCount: 2,
+      scheduleCount: 3,
       studentCount: 3,
       groups: [{ id: kids, name: 'Kids T' }],
+      directionCount: 2,
+      keptDirectionCount: 0,
       conflicts: [],
     });
     expect(plain.body.futureLessonCount).toBeGreaterThan(0);
@@ -248,6 +263,10 @@ describe('Work Packet 6.2: teachers — list figures, profile reads, archive wit
     const handed = await post(`/teachers/${iryna}/archive/preview`)
       .send({ transferTo: dmytro })
       .expect(200);
+    expect(handed.body).toMatchObject({
+      directionCount: 2,
+      keptDirectionCount: 1,
+    });
     expect(handed.body.conflicts.length).toBeGreaterThan(0);
     expect(
       handed.body.conflicts.every(
@@ -280,7 +299,20 @@ describe('Work Packet 6.2: teachers — list figures, profile reads, archive wit
     const schedules = await get('/schedules')
       .query({ teacherId: dmytro })
       .expect(200);
-    expect(schedules.body.total).toBe(3);
+    expect(schedules.body.total).toBe(4);
+    // Anna's direction moved with its billing; Clara already had one with Dmytro.
+    const directions = await prisma.enrollment.findMany({
+      where: { workspaceId, groupId: null, deletedAt: null },
+      select: { studentId: true, teacherId: true },
+    });
+    expect(directions).toEqual(
+      expect.arrayContaining([
+        { studentId: students.Anna, teacherId: dmytro },
+        { studentId: students.Clara, teacherId: iryna },
+        { studentId: students.Clara, teacherId: dmytro },
+      ]),
+    );
+    expect(directions).toHaveLength(3);
     const list = await get('/teachers').expect(200);
     expect(list.body.counts).toEqual({ active: 2, archived: 1, all: 3 });
 
@@ -307,5 +339,27 @@ describe('Work Packet 6.2: teachers — list figures, profile reads, archive wit
     await post(`/teachers/${me}/restore`).expect(201);
     const back = await get('/teachers').expect(200);
     expect(back.body.items[0]).toMatchObject({ id: me, status: 'ACTIVE' });
+  });
+
+  it('keeps a solo tutor teaching', async () => {
+    const settings = (mode: 'SOLO' | 'SCHOOL') =>
+      patch('/workspaces/current/settings').send({ mode });
+    await post(`/teachers/${me}/archive`).send({}).expect(200);
+    await post(`/teachers/${iryna}/archive`).send({}).expect(200);
+    await post(`/teachers/${dmytro}/archive`).send({}).expect(200);
+
+    // Nobody else teaches, but neither does the owner: no tutor mode yet.
+    const refused = await settings('SOLO').expect(409);
+    expect(refused.body.code).toBe('SOLO_OWNER_MUST_TEACH');
+
+    await post(`/teachers/${me}/restore`).expect(201);
+    await settings('SOLO').expect(200);
+    const archive = await post(`/teachers/${me}/archive`).send({}).expect(409);
+    expect(archive.body.code).toBe('SOLO_OWNER_MUST_TEACH');
+    const edit = await patch(`/teachers/${me}`)
+      .send({ status: 'ARCHIVED' })
+      .expect(409);
+    expect(edit.body.code).toBe('SOLO_OWNER_MUST_TEACH');
+    await settings('SCHOOL').expect(200);
   });
 });

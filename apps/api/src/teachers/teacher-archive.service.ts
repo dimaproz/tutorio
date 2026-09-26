@@ -11,6 +11,7 @@ import type { AuthenticatedUser } from '../auth/auth.types';
 import {
   invalidWorkspaceRelation,
   scheduleConflict,
+  soloOwnerMustTeach,
   teacherNotFound,
 } from '../common/business.errors';
 import { PrismaService } from '../prisma/prisma.service';
@@ -39,17 +40,25 @@ interface Handover {
   scheduleIds: string[];
   groups: { id: string; name: string }[];
   studentCount: number;
+  /** Live one-to-one directions that move with a hand-over. */
+  directionIds: string[];
+  /** Directions that stay: the student already has one with the new teacher. */
+  keptDirectionCount: number;
 }
 
 /**
  * Archiving a teacher — or the owner turning their own teaching off — with an
  * optional hand-over (docs/screens/s09-teachers.md, data 5 and 6): the future
  * scheduled lessons, the active schedules (the rule in force and a planned
- * one) and the groups the teacher leads, with their members, move to another
- * active teacher after a check of that teacher's calendar (L-110). Students
- * do not change, so only the new teacher's overlaps count. Taught, cancelled
- * and past lessons, and the individual directions with their billing, keep
- * the teacher they had: history never changes.
+ * one), the groups the teacher leads, with their members, and the live
+ * one-to-one directions with their packages and debt (the owner's answer,
+ * 2026-09-26) move to another active teacher after a check of that teacher's
+ * calendar (L-110). Students do not change, so only the new teacher's
+ * overlaps count. A student who already studies one to one with the new
+ * teacher keeps this direction with the archived teacher — one direction per
+ * student and teacher —, its lessons and schedule moving all the same.
+ * Taught, cancelled and past lessons keep the teacher who had them. A solo
+ * tutor cannot turn their own teaching off.
  */
 @Injectable()
 export class TeacherArchiveService {
@@ -78,6 +87,9 @@ export class TeacherArchiveService {
             : null,
         studentCount: handover.studentCount,
         groups: handover.groups,
+        directionCount:
+          handover.directionIds.length + handover.keptDirectionCount,
+        keptDirectionCount: handover.keptDirectionCount,
         conflicts: await this.conflicts(tx, auth.workspaceId, handover),
       };
     });
@@ -110,7 +122,7 @@ export class TeacherArchiveService {
           );
         }
         const groupIds = handover.groups.map((group) => group.id);
-        const [lessons, schedules, groups] = await Promise.all([
+        const [lessons, schedules, groups, , , directions] = await Promise.all([
           tx.lesson.updateMany({
             where: { id: { in: handover.lessons.map((lesson) => lesson.id) } },
             data: { teacherId: target.id },
@@ -136,11 +148,19 @@ export class TeacherArchiveService {
             where: { groupId: { in: groupIds }, deletedAt: null },
             data: { teacherId: target.id },
           }),
+          tx.enrollment.updateMany({
+            where: { id: { in: handover.directionIds } },
+            data: { teacherId: target.id },
+          }),
         ]);
         changes.transferredTo = { before: null, after: target.id };
         changes.transferredLessons = { before: null, after: lessons.count };
         changes.transferredSchedules = { before: null, after: schedules.count };
         changes.transferredGroups = { before: null, after: groups.count };
+        changes.transferredDirections = {
+          before: null,
+          after: directions.count,
+        };
       }
 
       if (handover.teacher.status !== 'ARCHIVED') {
@@ -177,10 +197,23 @@ export class TeacherArchiveService {
     const workspaceId = auth.workspaceId;
     const teacher = await tx.teacher.findFirst({
       where: { id: teacherId, workspaceId, deletedAt: null },
-      select: { id: true, fullName: true, status: true },
+      select: {
+        id: true,
+        fullName: true,
+        status: true,
+        workspaceMember: { select: { userId: true } },
+        workspace: { select: { mode: true } },
+      },
     });
     if (!teacher) {
       throw teacherNotFound();
+    }
+    // A solo tutor is the teacher (the owner's answer, 2026-09-26).
+    if (
+      teacher.workspace.mode === 'SOLO' &&
+      teacher.workspaceMember?.userId === auth.userId
+    ) {
+      throw soloOwnerMustTeach();
     }
     let target: Handover['target'] = null;
     if (dto.transferTo) {
@@ -197,40 +230,70 @@ export class TeacherArchiveService {
       target = { id: row.id };
     }
 
-    const [lessons, schedules, groups, memberships] = await Promise.all([
-      tx.lesson.findMany({
-        where: {
-          workspaceId,
-          teacherId,
-          status: 'SCHEDULED',
-          startsAtUtc: { gte: now },
-          ...liveOrSuspended,
-        },
-        select: {
-          id: true,
-          startsAtUtc: true,
-          durationMin: true,
-          deletedAt: true,
-          enrollmentId: true,
-          groupId: true,
-        },
-        orderBy: { startsAtUtc: 'asc' },
-      }),
-      tx.schedule.findMany({
-        where: { workspaceId, teacherId, state: 'ACTIVE' },
-        select: { id: true },
-      }),
-      tx.group.findMany({
-        where: { workspaceId, teacherId, deletedAt: null },
-        select: { id: true, name: true },
-        orderBy: { name: 'asc' },
-      }),
-      tx.enrollment.findMany({
-        where: teacherMembershipWhere(workspaceId, [teacherId]),
-        select: { studentId: true },
-        distinct: ['studentId'],
-      }),
-    ]);
+    const [lessons, schedules, groups, memberships, directions] =
+      await Promise.all([
+        tx.lesson.findMany({
+          where: {
+            workspaceId,
+            teacherId,
+            status: 'SCHEDULED',
+            startsAtUtc: { gte: now },
+            ...liveOrSuspended,
+          },
+          select: {
+            id: true,
+            startsAtUtc: true,
+            durationMin: true,
+            deletedAt: true,
+            enrollmentId: true,
+            groupId: true,
+          },
+          orderBy: { startsAtUtc: 'asc' },
+        }),
+        tx.schedule.findMany({
+          where: { workspaceId, teacherId, state: 'ACTIVE' },
+          select: { id: true },
+        }),
+        tx.group.findMany({
+          where: { workspaceId, teacherId, deletedAt: null },
+          select: { id: true, name: true },
+          orderBy: { name: 'asc' },
+        }),
+        tx.enrollment.findMany({
+          where: teacherMembershipWhere(workspaceId, [teacherId]),
+          select: { studentId: true },
+          distinct: ['studentId'],
+        }),
+        tx.enrollment.findMany({
+          where: {
+            workspaceId,
+            teacherId,
+            groupId: null,
+            deletedAt: null,
+            status: { in: ['ACTIVE', 'PAUSED'] },
+          },
+          select: { id: true, studentId: true },
+        }),
+      ]);
+    // One direction per student and teacher: the new teacher's own (any
+    // live one, whatever its status) keeps this one where it is.
+    const taken = target
+      ? new Set(
+          (
+            await tx.enrollment.findMany({
+              where: {
+                workspaceId,
+                teacherId: target.id,
+                groupId: null,
+                deletedAt: null,
+                studentId: { in: directions.map((row) => row.studentId) },
+              },
+              select: { studentId: true },
+            })
+          ).map((row) => row.studentId),
+        )
+      : new Set<string>();
+    const moving = directions.filter((row) => !taken.has(row.studentId));
     return {
       teacher,
       target,
@@ -238,6 +301,8 @@ export class TeacherArchiveService {
       scheduleIds: schedules.map((schedule) => schedule.id),
       groups,
       studentCount: memberships.length,
+      directionIds: moving.map((row) => row.id),
+      keptDirectionCount: directions.length - moving.length,
     };
   }
 

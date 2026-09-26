@@ -15,6 +15,7 @@ import type { AuthenticatedUser } from '../auth/auth.types';
 import {
   invalidWorkspaceRelation,
   soloModeSingleTeacher,
+  soloOwnerMustTeach,
   teacherNotFound,
 } from '../common/business.errors';
 import { buildPaginatedResponse } from '../common/pagination';
@@ -252,6 +253,20 @@ export class TeachersService {
     }
   }
 
+  /** A solo tutor is the teacher: their own profile cannot be archived. */
+  private async assertOwnerMayStopTeaching(
+    tx: Prisma.TransactionClient,
+    workspaceId: string,
+  ): Promise<void> {
+    const workspace = await tx.workspace.findFirstOrThrow({
+      where: { id: workspaceId },
+      select: { mode: true },
+    });
+    if (workspace.mode === 'SOLO') {
+      throw soloOwnerMustTeach();
+    }
+  }
+
   async create(
     auth: AuthenticatedUser,
     dto: CreateTeacherDto,
@@ -317,6 +332,12 @@ export class TeachersService {
           dto.workspaceMemberId,
           before.id,
         );
+      }
+      if (
+        dto.status === 'ARCHIVED' &&
+        before.workspaceMember?.userId === auth.userId
+      ) {
+        await this.assertOwnerMayStopTeaching(tx, auth.workspaceId);
       }
       if (dto.status === 'ACTIVE' && before.status !== 'ACTIVE') {
         await this.assertSoloTeacherSlot(tx, auth.workspaceId, before.id);

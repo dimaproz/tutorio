@@ -6,7 +6,10 @@ import type {
 } from '@tutorio/validation';
 import { AuditService } from '../audit/audit.service';
 import type { AuthenticatedUser } from '../auth/auth.types';
-import { soloModeSingleTeacher } from '../common/business.errors';
+import {
+  soloModeSingleTeacher,
+  soloOwnerMustTeach,
+} from '../common/business.errors';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -82,6 +85,19 @@ export class WorkspacesService {
         });
         if (activeTeachers > 1) {
           throw soloModeSingleTeacher();
+        }
+        // A solo tutor is the teacher: an owner who turned teaching off
+        // cannot go solo until they teach again.
+        const own = await tx.teacher.findFirst({
+          where: {
+            workspaceId: before.id,
+            deletedAt: null,
+            workspaceMember: { userId: auth.userId },
+          },
+          select: { status: true },
+        });
+        if (own && own.status !== 'ACTIVE') {
+          throw soloOwnerMustTeach();
         }
       }
 

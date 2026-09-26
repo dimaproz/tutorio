@@ -62,6 +62,15 @@ export const soloModeSingleTeacher = () =>
     HttpStatus.CONFLICT,
   );
 
+// A solo tutor is the teacher: they cannot turn their own teaching off, and a
+// studio whose owner does not teach cannot become solo.
+export const soloOwnerMustTeach = () =>
+  new BusinessApiException(
+    'SOLO_OWNER_MUST_TEACH',
+    'A solo tutor teaches: their own profile stays active',
+    HttpStatus.CONFLICT,
+  );
+
 export const workspaceMemberNotFound = () =>
   new BusinessApiException(
     'WORKSPACE_MEMBER_NOT_FOUND',
