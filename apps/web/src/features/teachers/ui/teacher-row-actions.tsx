@@ -23,9 +23,15 @@ import {
 export type TeacherCommands = {
   onArchive: (teacher: TeacherResponse) => void;
   onRestore: (teacher: TeacherResponse) => void;
-  /** The owner turns their own teaching off (the same archive, S09 decision 1). */
-  onStopTeaching: (teacher: TeacherResponse) => void;
-  /** Asks to switch the studio to tutor mode; omitted where it does not apply. */
+  /**
+   * The owner turns their own teaching off (the same archive, S09 decision
+   * 1); omitted in tutor mode, where the tutor is the teacher.
+   */
+  onStopTeaching?: (teacher: TeacherResponse) => void;
+  /**
+   * Switches the studio to tutor mode; offered only while the owner teaches
+   * and nobody else does (the owner's answer, 2026-09-26).
+   */
   onSwitchToSolo?: () => void;
 };
 
@@ -87,10 +93,12 @@ export function TeacherRowActions({
               {teacher.isMe ? t('startTeaching') : t('restore')}
             </DropdownMenuItem>
           ) : teacher.isMe ? (
-            <DropdownMenuItem onSelect={() => commands.onStopTeaching(teacher)}>
-              <GraduationCapIcon data-icon />
-              {t('stopTeaching')}
-            </DropdownMenuItem>
+            commands.onStopTeaching ? (
+              <DropdownMenuItem onSelect={() => commands.onStopTeaching?.(teacher)}>
+                <GraduationCapIcon data-icon />
+                {t('stopTeaching')}
+              </DropdownMenuItem>
+            ) : null
           ) : (
             <DropdownMenuItem onSelect={() => commands.onArchive(teacher)}>
               <ArchiveIcon data-icon />

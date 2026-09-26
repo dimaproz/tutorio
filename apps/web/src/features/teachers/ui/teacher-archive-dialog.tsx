@@ -9,6 +9,7 @@ import {
   HistoryIcon,
   InfoIcon,
   RepeatIcon,
+  UsersIcon,
 } from 'lucide-react';
 import { useFormatter, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
@@ -148,6 +149,21 @@ function ArchiveFlow({
           : undefined,
       });
     }
+  }
+  // One-to-one students move with their billing (the owner's answer,
+  // 2026-09-26), except those who already study with the new teacher.
+  if (data && target && data.directionCount > 0) {
+    const to = firstName(target.fullName);
+    items.push({
+      id: 'directions',
+      icon: <UsersIcon />,
+      tone: 'info',
+      title: t('directions', { count: data.directionCount - data.keptDirectionCount, name: to }),
+      text:
+        data.keptDirectionCount > 0
+          ? t('directionsKept', { kept: data.keptDirectionCount, name: to })
+          : t('directionsText'),
+    });
   }
   if (own) {
     items.push({

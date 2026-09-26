@@ -821,6 +821,8 @@ export function createTeacherRoutes(options: TeacherStoryOptions) {
               lastLessonAt: local(16, 18, 0, 10),
               studentCount: 9,
               groups: [{ id: groupId(4), name: 'Beginners' }],
+              directionCount: 5,
+              keptDirectionCount: 0,
               conflicts,
             }
           : teacher.id === TEACHER_IDS.iryna
@@ -834,6 +836,9 @@ export function createTeacherRoutes(options: TeacherStoryOptions) {
                   { id: groupId(2), name: 'Kids A2' },
                   { id: groupId(3), name: 'Speaking club' },
                 ],
+                directionCount: 8,
+                // Marta already studies one to one with Kateryna.
+                keptDirectionCount: transferTo === TEACHER_IDS.kateryna ? 1 : 0,
                 conflicts,
               }
             : {
@@ -842,6 +847,8 @@ export function createTeacherRoutes(options: TeacherStoryOptions) {
                 lastLessonAt: null,
                 studentCount: 0,
                 groups: [],
+                directionCount: 0,
+                keptDirectionCount: 0,
                 conflicts: [],
               };
         return json(preview);

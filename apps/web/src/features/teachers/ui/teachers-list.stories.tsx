@@ -129,6 +129,12 @@ export const OnlyOwner: Story = {
     await expect(await canvas.findByText('So far you are the only teacher')).toBeVisible();
     await expect(canvas.getByText('1 teacher — you')).toBeVisible();
     await expect(canvas.queryByRole('searchbox', { name: 'Search teachers' })).toBeNull();
+    // Alone and teaching: tutor mode is one click away.
+    await userEvent.click(canvas.getByRole('button', { name: 'Actions: Olena Kovalenko' }));
+    const menu = within(await within(document.body).findByRole('menu'));
+    await userEvent.click(await menu.findByRole('menuitem', { name: 'Switch to tutor mode' }));
+    const toast = await within(document.body).findByText('Tutor mode is on');
+    await waitFor(() => expect(toast).toBeVisible());
   },
 };
 
@@ -139,21 +145,31 @@ export const TutorMode: Story = {
     await expect(await canvas.findByText('You work on your own')).toBeVisible();
     await expect(canvas.getByRole('button', { name: 'Switch to studio mode' })).toBeVisible();
     await expect(canvas.queryByRole('link', { name: 'Add teacher' })).toBeNull();
+    // A solo tutor is the teacher: no turning teaching off, no tutor mode to switch to.
+    await userEvent.click(await canvas.findByRole('button', { name: 'Actions: Olena Kovalenko' }));
+    const menu = within(await within(document.body).findByRole('menu'));
+    await waitFor(() => expect(menu.getByRole('menuitem', { name: 'Open profile' })).toBeVisible());
+    await expect(menu.queryByRole('menuitem', { name: 'Turn teaching off' })).toBeNull();
+    await expect(menu.queryByRole('menuitem', { name: 'Switch to tutor mode' })).toBeNull();
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(within(document.body).queryByRole('menu')).toBeNull());
   },
 };
 
-/** Board 01-07: switching to tutor mode is refused while others teach. */
-export const SoloRefused: Story = {
+/**
+ * Board 01-07 is superseded (the owner's answer, 2026-09-26): with colleagues
+ * teaching, the owner's menu does not offer tutor mode at all.
+ */
+export const NoTutorModeWithColleagues: Story = {
   play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole('button', { name: 'Actions: Olena Kovalenko' }));
     const menu = within(await within(document.body).findByRole('menu'));
-    await userEvent.click(menu.getByRole('menuitem', { name: 'Switch to tutor mode' }));
-    const dialog = within(await within(document.body).findByRole('dialog'));
-    await waitFor(() => expect(dialog.getByText("Can't switch to tutor mode")).toBeVisible());
-    await expect(dialog.getByText('The studio has 4 more active teachers')).toBeVisible();
-    await expect(dialog.queryByText('Dmytro Tutor')).toBeNull();
-    await userEvent.click(dialog.getByRole('button', { name: 'Got it' }));
-    await waitFor(() => expect(within(document.body).queryByRole('dialog')).toBeNull());
+    await waitFor(() =>
+      expect(menu.getByRole('menuitem', { name: 'Turn teaching off' })).toBeVisible(),
+    );
+    await expect(menu.queryByRole('menuitem', { name: 'Switch to tutor mode' })).toBeNull();
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(within(document.body).queryByRole('menu')).toBeNull());
   },
 };
 

@@ -1,11 +1,10 @@
 'use client';
 
 import { useId, useState } from 'react';
-import { PlusIcon, XIcon } from 'lucide-react';
+import { CheckIcon, PlusIcon, XIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Command,
   CommandGroup,
@@ -101,7 +100,11 @@ export function SubjectsField({
                 {t('addSubject')}
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="start" className="w-90 max-w-[calc(100vw-32px)] p-0">
+            <PopoverContent
+              align="start"
+              aria-label={t('subjects')}
+              className="w-90 max-w-[calc(100vw-32px)] p-0"
+            >
               <Command label={t('subjectSearch')}>
                 <CommandInput
                   value={search}
@@ -124,13 +127,20 @@ export function SubjectsField({
                           disabled={!item.selected && full}
                           onSelect={() => toggle(item)}
                         >
-                          <Checkbox
-                            checked={item.selected}
-                            tabIndex={-1}
+                          {/* A mark, not a control: the option itself toggles. */}
+                          <span
                             aria-hidden="true"
-                            className="pointer-events-none"
-                          />
-                          <span className="grow truncate">{item.subject}</span>
+                            data-checked={item.selected || undefined}
+                            className="flex size-5 shrink-0 items-center justify-center rounded-[6px] border border-input data-[checked]:border-primary data-[checked]:bg-primary data-[checked]:text-primary-foreground"
+                          >
+                            {item.selected ? <CheckIcon className="size-3.5" /> : null}
+                          </span>
+                          <span className="grow truncate">
+                            {item.subject}
+                            {item.selected ? (
+                              <span className="sr-only">{`, ${t('subjectPicked')}`}</span>
+                            ) : null}
+                          </span>
                           <span className="shrink-0 text-xs text-muted-foreground">
                             {who(item)}
                           </span>

@@ -201,11 +201,13 @@ export function TeacherProfileContent({
   const [stopping, setStopping] = useState<ScheduleResponse | null>(null);
 
   const teachers = useTeachersQuery({ page: 1, pageSize: 1, status: 'ACTIVE' }, teacher.isMe);
-  const activeCount = teachers.data?.counts.active ?? 0;
+  const activeCount = teachers.data?.counts.active;
   const actions = useTeacherActions({
-    otherActiveTeachers: activeCount - (teacher.status === 'ACTIVE' ? 1 : 0),
+    otherActiveTeachers:
+      activeCount === undefined ? undefined : activeCount - (teacher.status === 'ACTIVE' ? 1 : 0),
+    ownerTeaches: teacher.isMe && teacher.status === 'ACTIVE',
   });
-  const commands = studio ? actions.commands : { ...actions.commands, onSwitchToSolo: undefined };
+  const commands = actions.commands;
   const archived = teacher.status === 'ARCHIVED' && !teacher.isMe;
   const teaching = teacher.status === 'ACTIVE';
   const color = teacherColor(teacher);
@@ -281,7 +283,7 @@ export function TeacherProfileContent({
                 teaching={teaching}
                 busy={actions.busyId === teacher.id}
                 onChange={(next) =>
-                  next ? commands.onRestore(teacher) : commands.onStopTeaching(teacher)
+                  next ? commands.onRestore(teacher) : commands.onStopTeaching?.(teacher)
                 }
               />
             ) : null}

@@ -186,7 +186,8 @@
     "PAUSE_ENDED": "This pause is already over.",
     "PAUSE_RUNNING": "A pause that has begun can only change its end and reason.",
     "NO_PLANNED_CHANGE": "There is no planned change any more — refresh the page.",
-    "NO_PLANNED_STOP": "There is no planned stop any more — refresh the page."
+    "NO_PLANNED_STOP": "There is no planned stop any more — refresh the page.",
+    "SOLO_OWNER_MUST_TEACH": "In tutor mode you are the teacher — «I teach» stays on."
   },
   "validation": {
     "noShowIndividualOnly": "A group lesson records absences through attendance",
@@ -3725,7 +3726,10 @@
       "ownSubmitTransfer": "Turn off and hand over",
       "force": "Hand over anyway",
       "close": "Close",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "directions": "{count, plural, one {# one-to-one student moves} other {# one-to-one students move}} to {name}",
+      "directionsText": "With their packages, payments and debt",
+      "directionsKept": "With their packages and debt · {kept, plural, one {# more already studies with {name} and keeps this direction as it is} other {# more already study with {name} and keep their directions as they are}}"
     },
     "form": {
       "createTitle": "New teacher",
@@ -3823,7 +3827,8 @@
       "loadErrorDescription": "Try again before editing.",
       "unavailableTitle": "Record unavailable",
       "unavailableDescription": "The details show up here once loaded. Nothing will change.",
-      "previewTime": "10:00 – 11:00"
+      "previewTime": "10:00 – 11:00",
+      "subjectPicked": "picked"
     }
   }
 }

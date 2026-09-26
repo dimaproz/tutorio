@@ -126,6 +126,9 @@ export const ArchiveWithTransfer: Story = {
     const dialog = within(await body().findByRole('dialog'));
     await waitFor(() => expect(dialog.getByText('Archive Iryna Bondar?')).toBeVisible());
     await expect(await dialog.findByText('3 schedules move to Dmytro')).toBeVisible();
+    // One-to-one students go with their billing (the owner's answer, 2026-09-26).
+    await expect(dialog.getByText('8 one-to-one students move to Dmytro')).toBeVisible();
+    await expect(dialog.getByText('With their packages, payments and debt')).toBeVisible();
     await expect(dialog.getByText('15 future lessons')).toBeVisible();
     await expect(dialog.getByText("History doesn't change")).toBeVisible();
 
@@ -133,6 +136,8 @@ export const ArchiveWithTransfer: Story = {
     await userEvent.click(dialog.getByRole('combobox'));
     await userEvent.click(await body().findByRole('option', { name: /Kateryna Rudenko/ }));
     await expect(await dialog.findByText(/overlaps Kateryna's lessons/)).toBeVisible();
+    await expect(dialog.getByText('7 one-to-one students move to Kateryna')).toBeVisible();
+    await expect(dialog.getByText(/1 more already studies with Kateryna/)).toBeVisible();
     await userEvent.click(dialog.getByRole('button', { name: 'Hand over anyway' }));
     await waitFor(() => expect(body().queryByRole('dialog')).toBeNull());
     await waitFor(() => expect(canvas.getAllByText(/Archived since/).length).toBeGreaterThan(0));

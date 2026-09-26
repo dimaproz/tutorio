@@ -73,6 +73,8 @@ export const SubjectsPopover: Story = {
     await userEvent.click(body().getByRole('option', { name: /Français Kateryna/ }));
     await userEvent.type(search, 'DELF{Enter}');
     await userEvent.keyboard('{Escape}');
+    // The popover's modal layer lingers while it fades out; the a11y check waits.
+    await waitFor(() => expect(document.querySelector('[data-aria-hidden]')).toBeNull());
     await expect(await canvas.findByRole('button', { name: 'Remove Français' })).toBeVisible();
     await expect(canvas.getByRole('button', { name: 'Remove DELF' })).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: 'Remove DELF' }));

@@ -227,7 +227,7 @@ function TeacherEditForm({
                     onChange: (next) =>
                       next
                         ? actions.commands.onRestore(current)
-                        : actions.commands.onStopTeaching(current),
+                        : actions.commands.onStopTeaching?.(current),
                   }
                 : undefined
             }

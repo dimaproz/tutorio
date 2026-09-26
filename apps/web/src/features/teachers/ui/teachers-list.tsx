@@ -95,7 +95,10 @@ export function TeachersList() {
   const notTeaching = me?.status === 'ARCHIVED';
   const othersActive = (counts?.active ?? 0) - (me && !notTeaching ? 1 : 0);
 
-  const actions = useTeacherActions({ otherActiveTeachers: othersActive });
+  const actions = useTeacherActions({
+    otherActiveTeachers: counts ? othersActive : undefined,
+    ownerTeaches: me?.status === 'ACTIVE',
+  });
   const columns = useTeachersListColumns(actions.commands);
   const studio = useUpdateWorkspaceSettingsMutation();
   const switchToStudio = async () => {
@@ -111,8 +114,7 @@ export function TeachersList() {
   const onlyMe = counts?.all === 1 && Boolean(me) && !notTeaching;
   const simple = solo || onlyMe;
   const showEmpty = teachers.isSuccess && items.length === 0 && !notTeaching;
-  // Tutor mode has nothing to switch to.
-  const commands = solo ? { ...actions.commands, onSwitchToSolo: undefined } : actions.commands;
+  const commands = actions.commands;
 
   const description = solo
     ? t('subtitleSolo')

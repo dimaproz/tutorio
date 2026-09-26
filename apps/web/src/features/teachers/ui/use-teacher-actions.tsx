@@ -5,6 +5,7 @@ import { RotateCcwIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { TeacherResponse } from '@tutorio/validation';
+import { useSession } from '@/components/app/session-provider';
 import { ConfirmDialog } from '@/components/shared/confirm-dialog';
 import { errorMessageKey } from '@/lib/api/error-message';
 import { useRestoreTeacherMutation } from '@/lib/api/teachers';
@@ -22,13 +23,20 @@ import type { TeacherCommands } from './teacher-row-actions';
  * while other teachers are active.
  */
 export function useTeacherActions({
-  otherActiveTeachers = 0,
+  otherActiveTeachers,
+  ownerTeaches = false,
   onArchived,
 }: {
-  /** Active teachers besides the owner: what the solo refusal reports. */
+  /**
+   * Active teachers besides the owner, when known: tutor mode is offered
+   * only at 0, and the refusal reports the count.
+   */
   otherActiveTeachers?: number;
+  /** The owner's own profile is active. */
+  ownerTeaches?: boolean;
   onArchived?: () => void;
 } = {}) {
+  const solo = useSession().workspace.mode === 'SOLO';
   const t = useTranslations('teachers');
   const tErrors = useTranslations('errors');
   const [archiving, setArchiving] = useState<TeacherResponse | null>(null);
@@ -61,9 +69,11 @@ export function useTeacherActions({
 
   const commands: TeacherCommands = {
     onArchive: setArchiving,
-    onStopTeaching: setArchiving,
+    // A solo tutor is the teacher (the owner's answer, 2026-09-26).
+    onStopTeaching: solo ? undefined : setArchiving,
     onRestore: (teacher) => (teacher.isMe ? void runRestore(teacher) : setRestoring(teacher)),
-    onSwitchToSolo: () => void switchToSolo(),
+    onSwitchToSolo:
+      !solo && ownerTeaches && otherActiveTeachers === 0 ? () => void switchToSolo() : undefined,
   };
 
   const dialogs = (
@@ -87,7 +97,11 @@ export function useTeacherActions({
         pending={restore.isPending}
         onConfirm={() => restoring && void runRestore(restoring)}
       />
-      <SoloRefusalDialog open={refusal} onOpenChange={setRefusal} others={otherActiveTeachers} />
+      <SoloRefusalDialog
+        open={refusal}
+        onOpenChange={setRefusal}
+        others={otherActiveTeachers ?? 0}
+      />
     </>
   );
 
