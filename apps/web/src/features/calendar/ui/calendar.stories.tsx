@@ -189,7 +189,8 @@ export const MoveScope: Story = {
     );
     await dragLesson(canvasElement, card, 4, 14 * 60, true);
     const dialog = within(await within(document.body).findByRole('dialog', {}, { timeout: 5000 }));
-    await expect(dialog.getByText('Move a schedule lesson')).toBeVisible();
+    // The dialog fades in: wait for it rather than assert mid-animation.
+    await waitFor(() => expect(dialog.getByText('Move a schedule lesson')).toBeVisible());
     await expect(dialog.getByRole('radio', { name: /This lesson only/ })).toBeChecked();
   },
 };
@@ -211,7 +212,9 @@ export const MoveConflict: Story = {
         { timeout: 5000 },
       ),
     );
-    await expect(conflict.getByRole('button', { name: /Save anyway/ })).toBeVisible();
+    await waitFor(() =>
+      expect(conflict.getByRole('button', { name: /Save anyway/ })).toBeVisible(),
+    );
   },
 };
 
@@ -239,8 +242,10 @@ export const PickSlot: Story = {
       coords: { clientX: rect.left + 20, clientY: rect.top + 14 * HOUR + 10 },
     });
     const form = within(await within(document.body).findByRole('dialog', {}, { timeout: 5000 }));
-    await expect(await form.findByText('New lesson')).toBeVisible();
-    await expect(await form.findByDisplayValue('14:00')).toBeVisible();
+    const title = await form.findByText('New lesson');
+    await waitFor(() => expect(title).toBeVisible());
+    const time = await form.findByDisplayValue('14:00');
+    await waitFor(() => expect(time).toBeVisible());
   },
 };
 
