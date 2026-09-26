@@ -3,6 +3,7 @@ export * from './audit';
 export * from './auth';
 export * from './billing';
 export * from './common';
+export * from './dashboard';
 export * from './enrollments';
 export * from './groups';
 export * from './locale';

@@ -461,10 +461,17 @@ export type LessonListResponse = z.infer<typeof lessonListResponseSchema>;
 /**
  * The Lessons list quick filters (product/scheduling.md, Pages): lessons not
  * paid yet (on debt, or a pay-per-lesson charge payments have not reached),
- * cancelled, no-shows, and cancelled or missed individual lessons with no
- * makeup yet.
+ * cancelled, no-shows, cancelled or missed individual lessons with no
+ * makeup yet, and group lessons that are over with attendance nobody
+ * confirmed (L-72, L-74).
  */
-export const lessonQuickFilterSchema = z.enum(['unpaid', 'cancelled', 'no_show', 'needs_makeup']);
+export const lessonQuickFilterSchema = z.enum([
+  'unpaid',
+  'cancelled',
+  'no_show',
+  'needs_makeup',
+  'unconfirmed',
+]);
 export type LessonQuickFilterDto = z.infer<typeof lessonQuickFilterSchema>;
 
 /**
@@ -507,6 +514,7 @@ export const lessonPageResponseSchema = paginatedResponseSchema(lessonResponseSc
     cancelled: z.number().int().nonnegative(),
     noShow: z.number().int().nonnegative(),
     needsMakeup: z.number().int().nonnegative(),
+    unconfirmed: z.number().int().nonnegative(),
   }),
   /**
    * The package each of the page's package-paid directions uses now: the
