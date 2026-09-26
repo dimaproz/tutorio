@@ -4,6 +4,7 @@ import {
   lowCreditThresholdSchema,
   scheduleHorizonWeeksSchema,
   workspaceModeSchema,
+  workspaceNameSchema,
   type CurrentWorkspace,
   type UpdateWorkspaceSettingsDto,
 } from '@tutorio/validation';
@@ -12,8 +13,9 @@ import { z } from 'zod';
 /** The currencies in the order the General page offers them (S10 board 02). */
 export const SETTINGS_CURRENCIES = ['UAH', 'PLN', 'EUR', 'USD', 'GBP'] as const;
 
-/** «Загальне»: what the studio works in. Name and timezone are read-only in the pilot. */
+/** «Загальне»: the studio's name and what it works in. The timezone is read only. */
 export const generalSettingsSchema = z.object({
+  name: workspaceNameSchema,
   defaultCurrency: currencyCodeSchema,
   mode: workspaceModeSchema,
 });
@@ -31,6 +33,7 @@ type Workspace = CurrentWorkspace['workspace'];
 
 export function generalSettingsDefaults(workspace: Workspace): GeneralSettingsValues {
   return {
+    name: workspace.name,
     defaultCurrency: currencyCodeSchema.catch('UAH').parse(workspace.defaultCurrency),
     mode: workspace.mode,
   };
@@ -61,12 +64,17 @@ export function clampSetting(key: keyof LessonSettingsValues, value: number): nu
   return Math.min(max, Math.max(min, Math.round(value)));
 }
 
+/** A value as it will be saved: text without the spaces around it. */
+const settled = (value: unknown) => (typeof value === 'string' ? value.trim() : value);
+
 /** The fields whose value differs from the saved one, in the form's order. */
 export function changedSettings<T extends Record<string, unknown>>(
   values: T,
   saved: T,
 ): (keyof T)[] {
-  return (Object.keys(saved) as (keyof T)[]).filter((key) => values[key] !== saved[key]);
+  return (Object.keys(saved) as (keyof T)[]).filter(
+    (key) => settled(values[key]) !== settled(saved[key]),
+  );
 }
 
 /** The PATCH body: only what changed, so the log records exactly that. */
@@ -75,6 +83,6 @@ export function buildSettingsDto<T extends UpdateWorkspaceSettingsDto>(
   saved: T,
 ): UpdateWorkspaceSettingsDto {
   return Object.fromEntries(
-    changedSettings(values, saved).map((key) => [key, values[key]]),
+    changedSettings(values, saved).map((key) => [key, settled(values[key])]),
   ) as UpdateWorkspaceSettingsDto;
 }

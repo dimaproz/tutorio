@@ -513,7 +513,7 @@ Settings delivered by screen step S10 (`117fb0c`…`ac518e1`), from the owner's
 handoff `tutorio-s10-settings`: «Налаштування» in the navigation (owner only)
 opens an overview of the areas with their current values and «Незабаром»
 cards for requisites, payments, the Telegram bot and integrations; «Загальне»
-(the default currency and the mode, name and timezone read only, the refusal
+(the name, the default currency and the mode, the timezone read only, the refusal
 of tutor mode while colleagues teach) and «Заняття й пакети» (the
 cancellation window, the schedule horizon and the package warning, each with
 its picture) save on their own with changed marks, the save bar, a toast and

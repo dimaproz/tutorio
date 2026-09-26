@@ -30,7 +30,8 @@ top bar reads «← Налаштування» and the page's name.
    · Студія», «24 год · 4 тижні · 2 заняття», «64 записи за тиждень»);
    Реквізити, Оплати, Telegram-бот and Інтеграції are inert «Незабаром» cards.
    Phones list each group in one card with «Скоро».
-2. **General**: name and timezone read only (a lock and a hint), the default
+2. **General**: the studio's name (editable, the owner's answer of
+   2026-09-26), the timezone read only (a lock and a hint), the default
    currency as five flag tiles, the mode as two tiles with the active teachers
    and a link to them; the refusal of tutor mode (`SOLO_MODE_SINGLE_TEACHER`),
    a bottom sheet on phones.
@@ -80,7 +81,9 @@ Kovalenko. The repository does not keep mockups.
    are marked «змінено» and the bar counts them. Leaving with unsaved changes
    asks to confirm.
 3. **Name and timezone are read only** in the pilot — the brief's open
-   question, answered. A lock and a hint say how to change them.
+   question, answered. A lock and a hint say how to change them. _Revised by
+   the owner on 2026-09-26: the name is editable (see below); the timezone
+   stays read only._
 4. **Every number explains itself** with a small picture of what it does.
 5. **Changes apply to new records only.** Existing prices, packages and
    lessons do not change; the currency hint says so.
@@ -167,16 +170,18 @@ Answered by the owner on 2026-09-26:
 - **The «Хто» filter** lists login accounts only — fine for the
   owner-operated pilot; teachers appear there once they get logins.
 
-Still open:
+- **The studio's name is editable.** Nothing is keyed by it (no slug, URL or
+  receipt yet), so «Загальне» takes it like any other setting: trimmed, 2–80
+  characters as at registration, the «змінено» mark, the save bar and the
+  log (`name` in `PATCH /workspaces/current/settings`); the hint reads «Видно
+  в меню, у шапці та в журналі змін». The timezone stays read only: changing
+  it would move every lesson's wall clock.
 
-1. **«Змінити назву можна через підтримку»** has no link, and there is no
-   support channel. Nothing depends on the name (no slug, URL or receipt
-   yet), so it could simply be editable here; the timezone stays read only,
-   as changing it moves every lesson's wall clock.
+No question is open.
 
 ## Evidence
 
-- Stories: `Settings/Screens/Hub`, `…/General` (save, «Скасувати», the solo
+- Stories: `Settings/Screens/Hub`, `…/General` (save, a rename, «Скасувати», the solo
   refusal on desktop and phone, the leave confirm, a failed save),
   `…/Lessons` (save two changes, typing and «Скасувати», the leave confirm),
   `…/AuditLog` (the log and «Показати ще», a diff, the filtered board, a

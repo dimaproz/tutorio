@@ -45,7 +45,9 @@ const currency = (canvas: Canvas, name: RegExp) => canvas.findByRole('radio', { 
 export const Playground: Story = {
   play: async ({ canvas }) => {
     await expect(await canvas.findByRole('heading', { level: 1, name: 'General' })).toBeVisible();
-    await expect(canvas.getByDisplayValue('Kyiv English Studio')).toBeDisabled();
+    await expect(canvas.getByRole('textbox', { name: 'Studio name' })).toHaveValue(
+      'Kyiv English Studio',
+    );
     await expect(canvas.getByDisplayValue(/Kyiv · UTC\+3/)).toBeDisabled();
     await expect(await currency(canvas, /UAH/)).toHaveAttribute('aria-checked', 'true');
     await expect(canvas.getByRole('radio', { name: /Studio/ })).toHaveAttribute(
@@ -77,6 +79,26 @@ export const SaveCurrency: Story = {
   },
 };
 
+/** The name is a setting too: too short is refused, a new one is saved. */
+export const RenameStudio: Story = {
+  play: async ({ canvas }) => {
+    const name = await canvas.findByRole('textbox', { name: 'Studio name' });
+    await userEvent.clear(name);
+    await userEvent.type(name, 'K');
+    await expect(await canvas.findByText('changed')).toBeVisible();
+    await userEvent.click(canvas.getByRole('button', { name: 'Save' }));
+    await expect(
+      await canvas.findByText('The studio name needs at least 2 characters'),
+    ).toBeVisible();
+    await userEvent.type(name, 'yiv English Studio · Podil ');
+    await userEvent.click(canvas.getByRole('button', { name: 'Save' }));
+    const toast = await within(document.body).findByText('Settings saved');
+    await waitFor(() => expect(toast).toBeVisible());
+    await expect(name).toHaveValue('Kyiv English Studio · Podil');
+    await expect(canvas.getByRole('status')).toHaveTextContent('All changes saved');
+  },
+};
+
 /** «Скасувати» puts back what was saved. */
 export const CancelRestores: Story = {
   play: async ({ canvas }) => {
@@ -99,7 +121,10 @@ export const SoloRefusal: Story = {
     const dialog = await within(document.body).findByRole('dialog', {
       name: 'You cannot switch to tutor mode yet',
     });
-    await expect(within(dialog).getByText('The studio has 4 more active teachers')).toBeVisible();
+    // The dialog fades in.
+    await waitFor(() =>
+      expect(within(dialog).getByText('The studio has 4 more active teachers')).toBeVisible(),
+    );
     await expect(within(dialog).getByText('Nothing changes')).toBeVisible();
     await expect(within(dialog).getByRole('button', { name: 'Go to teachers' })).toBeVisible();
     await userEvent.click(within(dialog).getByRole('button', { name: 'Got it' }));

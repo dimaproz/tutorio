@@ -54,7 +54,7 @@ of pages. `/app/settings` shows the areas in four groups with their current
 values — «Загальне», «Заняття й пакети», «Журнал змін» with the week's entry
 count — and inert «Незабаром» cards for requisites, payments, the Telegram
 bot and integrations; phones list each group in one card. «Загальне» shows
-the name and timezone read only and takes the default currency (flag tiles)
+the timezone read only and takes the studio's name, the default currency (flag tiles)
 and the mode (tiles with the active teachers); choosing tutor mode while
 colleagues teach opens the refusal (a bottom sheet on phones) and nothing
 changes. «Заняття й пакети» steps the cancellation window, the schedule
@@ -73,13 +73,14 @@ API: every audit list row names its record (`record`: the person, group or
 studio now, a second name, a lesson's start, a payment's amount, the money's
 currency, a schedule's slots; a deleted record keeps the name in its diff),
 the page names the ids its diffs hold (`names`), the member roster carries
-avatars, and a teacher's archive is logged as `DELETE` like a student's and a
-group's. No migration. Brief, decisions and open questions:
+avatars, the settings update takes the studio's `name`, a payment's audit
+entry records its `method`, and a teacher's archive is logged as `DELETE`
+like a student's and a group's. No migration. Brief, decisions and open questions:
 [`screens/s10-settings.md`](./screens/s10-settings.md).
 
 Gate on 2026-09-26: validation 68 tests; API lint, typecheck, 265 unit tests
 and the API E2E suite on an isolated PostgreSQL 17 (140 tests in 14 files);
-web lint, typecheck, 426 unit tests, build, the Storybook browser tests (441
+web lint, typecheck, 427 unit tests, build, the Storybook browser tests (442
 in 102 files; two fade-in checks of the calendar and teacher form stories
 timed out under the full run and pass on their own, as before) and the
 Storybook build.

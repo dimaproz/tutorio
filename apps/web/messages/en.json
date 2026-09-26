@@ -262,7 +262,9 @@
     "refundNothing": "Choose what to refund: lessons, money or both",
     "refundOverPaid": "No more than was paid for the unused lessons",
     "deltaBelowZero": "You cannot remove more than is left",
-    "packageNameTooLong": "The name is at most 120 characters"
+    "packageNameTooLong": "The name is at most 120 characters",
+    "studioNameTooShort": "The studio name needs at least 2 characters",
+    "studioNameTooLong": "The studio name can have at most 80 characters"
   },
   "pagination": {
     "label": "Pagination",
@@ -3910,7 +3912,7 @@
       "title": "General",
       "subtitle": "Name, time zone, currency and how you work",
       "name": "Studio name",
-      "nameHint": "Support can change the name for you",
+      "nameHint": "Shown in the menu, the top bar and the change log",
       "timezone": "Time zone",
       "timezoneHint": "Every lesson and schedule runs on this clock",
       "timezoneValue": "{city} · {offset}",

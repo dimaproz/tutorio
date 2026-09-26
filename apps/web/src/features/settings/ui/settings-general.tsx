@@ -25,7 +25,7 @@ import {
   type GeneralSettingsValues,
 } from '../model/form';
 import { ModeRefusalDialog } from './mode-refusal-dialog';
-import { SettingHeading, SettingsFrame } from './settings-frame';
+import { ChangedMark, SettingHeading, SettingsFrame } from './settings-frame';
 import { useSettingsForm } from './use-settings-form';
 
 const FLAG: Record<CurrencyCodeDto, FlagCode> = {
@@ -73,7 +73,9 @@ export function SettingsGeneralPage() {
 
   const settings = useSettingsForm<GeneralSettingsValues>({
     resolver: zodResolver(generalSettingsSchema, {
-      errorMap: makeZodErrorMap(tValidation),
+      errorMap: makeZodErrorMap(tValidation, {
+        name: { tooSmall: 'studioNameTooShort', tooBig: 'studioNameTooLong' },
+      }),
       path: [],
       async: true,
     }),
@@ -132,13 +134,21 @@ export function SettingsGeneralPage() {
         onRetry={() => void settings.submit()}
       >
         <div className="grid gap-5 lg:grid-cols-2">
-          <TextField
-            label={t('name')}
-            hint={t('nameHint')}
-            icon={<Building2Icon />}
-            value={workspace.name}
-            readOnly
-            locked
+          <Controller
+            control={form.control}
+            name="name"
+            render={({ field, fieldState }) => (
+              <TextField
+                {...field}
+                label={t('name')}
+                labelAction={settings.isChanged('name') ? <ChangedMark /> : undefined}
+                hint={t('nameHint')}
+                error={fieldState.error?.message}
+                icon={<Building2Icon />}
+                maxLength={80}
+                autoComplete="organization"
+              />
+            )}
           />
           <TextField
             label={t('timezone')}
@@ -216,7 +226,7 @@ export function SettingsGeneralPage() {
       <ModeRefusalDialog
         open={refusal}
         onOpenChange={setRefusal}
-        studio={workspace.name}
+        studio={settings.saved.name}
         others={others ?? 0}
       />
     </form>

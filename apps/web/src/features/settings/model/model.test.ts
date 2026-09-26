@@ -63,7 +63,11 @@ const row = (fields: Partial<AuditLogListItem>): AuditLogListItem => ({
 
 describe('settings forms', () => {
   it('starts from the studio as saved', () => {
-    expect(generalSettingsDefaults(workspace)).toEqual({ defaultCurrency: 'UAH', mode: 'SCHOOL' });
+    expect(generalSettingsDefaults(workspace)).toEqual({
+      name: 'Kyiv English Studio',
+      defaultCurrency: 'UAH',
+      mode: 'SCHOOL',
+    });
     expect(lessonSettingsDefaults(workspace)).toEqual({
       cancellationDeadlineHours: 24,
       scheduleHorizonWeeks: 4,
@@ -83,6 +87,14 @@ describe('settings forms', () => {
       lowCreditThreshold: 3,
     });
     expect(buildSettingsDto(saved, saved)).toEqual({});
+  });
+
+  it('reads a name by what will be saved: spaces around it change nothing', () => {
+    const saved = generalSettingsDefaults(workspace);
+    expect(changedSettings({ ...saved, name: ' Kyiv English Studio ' }, saved)).toEqual([]);
+    expect(buildSettingsDto({ ...saved, name: ' SpeakWise Kyiv ' }, saved)).toEqual({
+      name: 'SpeakWise Kyiv',
+    });
   });
 
   it('keeps a stepped or typed number inside the API range', () => {
