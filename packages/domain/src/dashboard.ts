@@ -126,7 +126,10 @@ export function expectsRenewal(
   now: Date,
 ): boolean {
   if (pkg.upcomingLessons <= 0) return false;
-  if (pkg.expiresAt !== null && pkg.expiresAt.getTime() - now.getTime() <= DUE_FORECAST_DAYS * DAY_MS) {
+  if (
+    pkg.expiresAt !== null &&
+    pkg.expiresAt.getTime() - now.getTime() <= DUE_FORECAST_DAYS * DAY_MS
+  ) {
     return true;
   }
   return pkg.creditsLeft <= pkg.upcomingLessons;
@@ -155,7 +158,11 @@ export function dueForecast(sources: readonly DueSource[]): CurrencyDue[] {
   for (const source of sources) {
     const amount = (source.renewalMinor ?? 0) + Math.max(0, source.owedMinor);
     if (amount <= 0) continue;
-    const due = byCurrency.get(source.currency) ?? { currency: source.currency, amountMinor: 0, packages: 0 };
+    const due = byCurrency.get(source.currency) ?? {
+      currency: source.currency,
+      amountMinor: 0,
+      packages: 0,
+    };
     due.amountMinor += amount;
     due.packages += 1;
     byCurrency.set(source.currency, due);
@@ -190,7 +197,11 @@ export function receivedTotals(
   for (const payment of payments) {
     if (!within(payment.paidAt, periods.monthStart, periods.monthEnd)) continue;
     const sign = payment.status === 'REFUNDED' ? -1 : 1;
-    const total = byCurrency.get(payment.currency) ?? { currency: payment.currency, monthMinor: 0, todayMinor: 0 };
+    const total = byCurrency.get(payment.currency) ?? {
+      currency: payment.currency,
+      monthMinor: 0,
+      todayMinor: 0,
+    };
     total.monthMinor += sign * payment.amountMinor;
     if (within(payment.paidAt, periods.dayStart, periods.dayEnd)) {
       total.todayMinor += sign * payment.amountMinor;
@@ -208,6 +219,8 @@ export interface DebtEntry {
   lessons: number;
   /** The oldest unpaid lesson. */
   oldestAt: Date;
+  /** The direction owing it; a row summed over several directions has none. */
+  enrollmentId?: string;
 }
 
 export interface DebtSummary {
@@ -234,7 +247,9 @@ export function debtorsOf(entries: readonly DebtEntry[]): DebtSummary {
             ...row,
             amountMinor: row.amountMinor + entry.amountMinor,
             lessons: row.lessons + entry.lessons,
-            oldestAt: row.oldestAt.getTime() <= entry.oldestAt.getTime() ? row.oldestAt : entry.oldestAt,
+            oldestAt:
+              row.oldestAt.getTime() <= entry.oldestAt.getTime() ? row.oldestAt : entry.oldestAt,
+            enrollmentId: row.enrollmentId === entry.enrollmentId ? row.enrollmentId : undefined,
           }
         : { ...entry },
     );
@@ -248,7 +263,11 @@ export function debtorsOf(entries: readonly DebtEntry[]): DebtSummary {
   );
   const totals = new Map<string, { currency: string; amountMinor: number; students: number }>();
   for (const row of ordered) {
-    const total = totals.get(row.currency) ?? { currency: row.currency, amountMinor: 0, students: 0 };
+    const total = totals.get(row.currency) ?? {
+      currency: row.currency,
+      amountMinor: 0,
+      students: 0,
+    };
     total.amountMinor += row.amountMinor;
     total.students += 1;
     totals.set(row.currency, total);
