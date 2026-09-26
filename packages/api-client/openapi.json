@@ -12672,6 +12672,11 @@
                   "format": "uuid",
                   "nullable": true
                 },
+                "originalStartsAtUtc": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                },
                 "makeupLessonId": {
                   "type": "string",
                   "format": "uuid",
@@ -12849,6 +12854,12 @@
                   "required": ["id", "name"],
                   "nullable": true
                 },
+                "groupMembers": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false,
+                  "nullable": true
+                },
                 "teacher": {
                   "type": "object",
                   "properties": {
@@ -12898,6 +12909,7 @@
                 "status",
                 "kind",
                 "originalLessonId",
+                "originalStartsAtUtc",
                 "makeupLessonId",
                 "topic",
                 "isDetached",
@@ -12914,6 +12926,7 @@
                 "charges",
                 "student",
                 "group",
+                "groupMembers",
                 "teacher",
                 "subject",
                 "createdAt",
@@ -13001,6 +13014,11 @@
                   "format": "uuid",
                   "nullable": true
                 },
+                "originalStartsAtUtc": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                },
                 "makeupLessonId": {
                   "type": "string",
                   "format": "uuid",
@@ -13178,6 +13196,12 @@
                   "required": ["id", "name"],
                   "nullable": true
                 },
+                "groupMembers": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false,
+                  "nullable": true
+                },
                 "teacher": {
                   "type": "object",
                   "properties": {
@@ -13227,6 +13251,7 @@
                 "status",
                 "kind",
                 "originalLessonId",
+                "originalStartsAtUtc",
                 "makeupLessonId",
                 "topic",
                 "isDetached",
@@ -13243,6 +13268,7 @@
                 "charges",
                 "student",
                 "group",
+                "groupMembers",
                 "teacher",
                 "subject",
                 "createdAt",
@@ -13404,6 +13430,11 @@
           "originalLessonId": {
             "type": "string",
             "format": "uuid",
+            "nullable": true
+          },
+          "originalStartsAtUtc": {
+            "type": "string",
+            "format": "date-time",
             "nullable": true
           },
           "makeupLessonId": {
@@ -13581,6 +13612,12 @@
               }
             },
             "required": ["id", "name"],
+            "nullable": true
+          },
+          "groupMembers": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false,
             "nullable": true
           },
           "teacher": {
@@ -13792,6 +13829,7 @@
           "status",
           "kind",
           "originalLessonId",
+          "originalStartsAtUtc",
           "makeupLessonId",
           "topic",
           "isDetached",
@@ -13808,6 +13846,7 @@
           "charges",
           "student",
           "group",
+          "groupMembers",
           "teacher",
           "subject",
           "createdAt",
@@ -14174,6 +14213,11 @@
             "format": "uuid",
             "nullable": true
           },
+          "originalStartsAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "makeupLessonId": {
             "type": "string",
             "format": "uuid",
@@ -14351,6 +14395,12 @@
             "required": ["id", "name"],
             "nullable": true
           },
+          "groupMembers": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "nullable": true
+          },
           "teacher": {
             "type": "object",
             "properties": {
@@ -14400,6 +14450,7 @@
           "status",
           "kind",
           "originalLessonId",
+          "originalStartsAtUtc",
           "makeupLessonId",
           "topic",
           "isDetached",
@@ -14416,6 +14467,7 @@
           "charges",
           "student",
           "group",
+          "groupMembers",
           "teacher",
           "subject",
           "createdAt",

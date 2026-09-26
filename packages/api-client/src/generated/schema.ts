@@ -3440,6 +3440,8 @@ export interface components {
         kind: 'REGULAR' | 'MAKEUP';
         /** Format: uuid */
         originalLessonId: string | null;
+        /** Format: date-time */
+        originalStartsAtUtc: string | null;
         /** Format: uuid */
         makeupLessonId: string | null;
         topic: string | null;
@@ -3505,6 +3507,7 @@ export interface components {
           id: string;
           name: string;
         } | null;
+        groupMembers: number | null;
         teacher: {
           /** Format: uuid */
           id: string;
@@ -3546,6 +3549,8 @@ export interface components {
         kind: 'REGULAR' | 'MAKEUP';
         /** Format: uuid */
         originalLessonId: string | null;
+        /** Format: date-time */
+        originalStartsAtUtc: string | null;
         /** Format: uuid */
         makeupLessonId: string | null;
         topic: string | null;
@@ -3611,6 +3616,7 @@ export interface components {
           id: string;
           name: string;
         } | null;
+        groupMembers: number | null;
         teacher: {
           /** Format: uuid */
           id: string;
@@ -3671,6 +3677,8 @@ export interface components {
       kind: 'REGULAR' | 'MAKEUP';
       /** Format: uuid */
       originalLessonId: string | null;
+      /** Format: date-time */
+      originalStartsAtUtc: string | null;
       /** Format: uuid */
       makeupLessonId: string | null;
       topic: string | null;
@@ -3736,6 +3744,7 @@ export interface components {
         id: string;
         name: string;
       } | null;
+      groupMembers: number | null;
       teacher: {
         /** Format: uuid */
         id: string;
@@ -3926,6 +3935,8 @@ export interface components {
       kind: 'REGULAR' | 'MAKEUP';
       /** Format: uuid */
       originalLessonId: string | null;
+      /** Format: date-time */
+      originalStartsAtUtc: string | null;
       /** Format: uuid */
       makeupLessonId: string | null;
       topic: string | null;
@@ -3991,6 +4002,7 @@ export interface components {
         id: string;
         name: string;
       } | null;
+      groupMembers: number | null;
       teacher: {
         /** Format: uuid */
         id: string;
