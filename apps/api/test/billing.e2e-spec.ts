@@ -187,9 +187,26 @@ describe('Work Packet 6.4 phase 3: billing core (e2e)', () => {
     expect((await billing(enrollmentId)).balance.chargedMinor).toBe(125000);
 
     // Money paid ahead of the lessons stays as an advance.
-    await post('/payments')
-      .send({ enrollmentId, amountMinor: 100000, currency: 'UAH' })
+    const transfer = await post('/payments')
+      .send({
+        enrollmentId,
+        amountMinor: 100000,
+        currency: 'UAH',
+        method: 'BANK_TRANSFER',
+      })
       .expect(201);
+    // The change log records how it was paid (S10).
+    const log = await get('/audit-logs')
+      .query({ entity: 'PAYMENT', entityId: transfer.body.id })
+      .expect(200);
+    expect(log.body.items[0].changes.fields.method).toEqual({
+      before: null,
+      after: 'BANK_TRANSFER',
+    });
+    expect(log.body.items[0].record).toMatchObject({
+      amountMinor: 100000,
+      currency: 'UAH',
+    });
     expect((await billing(enrollmentId)).balance).toMatchObject({
       debtMinor: 0,
       advanceMinor: 35000,

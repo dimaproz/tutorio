@@ -296,6 +296,8 @@ export class PaymentsService {
                 packageId: dto.packageId ?? null,
                 amountMinor: dto.amountMinor,
                 currency: dto.currency,
+                // The log reads «Переказ 3 200 ₴», «Готівка …» (S10).
+                method: dto.method,
               },
             ),
           });
