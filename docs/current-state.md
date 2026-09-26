@@ -1,7 +1,7 @@
 # Tutorio Current State
 
-Last verified: 2026-09-25 after the teachers pages (see "Teachers — screen
-step S09").
+Last verified: 2026-09-26 after the studio settings (see "Studio settings —
+screen step S10").
 
 This is the first project document to read before planning or implementing
 work. It reports the repository as it exists; [`mvp-plan.md`](./mvp-plan.md)
@@ -46,6 +46,43 @@ build. Not yet checked by hand in the running app under an emulated zone.
 Found on the way, not fixed: the API's schedule expansion
 (`packages/domain/src/recurrence.ts`) uses `date-fns-tz` and drops a lesson
 at 02:00–02:59 on the spring-switch day in Kyiv.
+
+## Studio settings — screen step S10 (2026-09-26)
+
+«Налаштування» is in the navigation (owner only, both modes) and is a module
+of pages. `/app/settings` shows the areas in four groups with their current
+values — «Загальне», «Заняття й пакети», «Журнал змін» with the week's entry
+count — and inert «Незабаром» cards for requisites, payments, the Telegram
+bot and integrations; phones list each group in one card. «Загальне» shows
+the name and timezone read only and takes the default currency (flag tiles)
+and the mode (tiles with the active teachers); choosing tutor mode while
+colleagues teach opens the refusal (a bottom sheet on phones) and nothing
+changes. «Заняття й пакети» steps the cancellation window, the schedule
+horizon and the package warning (0 turns it off) with presets, each beside a
+picture of what it does. Both pages save on their own: «змінено» marks, the
+sticky bar counting unsaved changes with «Скасувати» and «Зберегти», the toast
+and a confirm on leaving. «Журнал змін» (`/app/settings/audit`) lists the
+last seven days by day with the record, the action, a one-line summary and
+who (Tutorio when nobody did it), filters by what changed, the action, who
+and the period (all in the URL, «Скинути»), opens a row into «Поле / Було /
+Стало» and reads 20 more at a time; phones and tablets get cards, phones a
+«Фільтри» sheet. `ChoiceCardGroup` gained the `tile` appearance; the phone top
+bar now shortens a long way back instead of running under the title.
+
+API: every audit list row names its record (`record`: the person, group or
+studio now, a second name, a lesson's start, a payment's amount, the money's
+currency, a schedule's slots; a deleted record keeps the name in its diff),
+the page names the ids its diffs hold (`names`), the member roster carries
+avatars, and a teacher's archive is logged as `DELETE` like a student's and a
+group's. No migration. Brief, decisions and open questions:
+[`screens/s10-settings.md`](./screens/s10-settings.md).
+
+Gate on 2026-09-26: validation 68 tests; API lint, typecheck, 265 unit tests
+and the API E2E suite on an isolated PostgreSQL 17 (140 tests in 14 files);
+web lint, typecheck, 426 unit tests, build, the Storybook browser tests (441
+in 102 files; two fade-in checks of the calendar and teacher form stories
+timed out under the full run and pass on their own, as before) and the
+Storybook build.
 
 ## Teachers — screen step S09 (2026-09-25)
 

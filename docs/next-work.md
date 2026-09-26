@@ -321,7 +321,8 @@ The owner answered the brief's questions on 2026-09-26: a hand-over moves
 the one-to-one students with their billing too, «Перейти в режим
 репетитора» shows only while the owner teaches alone, the neutral wording
 stays, and a solo tutor cannot turn teaching off (`SOLO_OWNER_MUST_TEACH`).
-The settings step (S10) reuses `SoloRefusalDialog`.
+The settings step (S10) refuses tutor mode with its own board's dialog
+(`ModeRefusalDialog`); the teachers page keeps `SoloRefusalDialog`.
 
 ### Work Packet 6.4 — Lessons, Schedules and Charging (contract accepted 2026-09-23)
 
@@ -501,12 +502,27 @@ package ahead and the pause extensions, the ledger its lessons, and delete
 refuses a used package (`PACKAGE_IN_USE`). Group members' packages stay on
 the group page (S08). Brief: [`screens/s07-packages.md`](./screens/s07-packages.md).
 
-### Work Packet 6.6 — Dashboard and Settings
+### Work Packet 6.6 — Dashboard and Settings (settings done with S10, 2026-09-26)
 
 Migrate the Today dashboard and workspace/audit settings after upstream feature
 patterns are stable. Dashboard content remains limited to today and actionable
 exceptions; Settings reuses approved fields, sections, tables, and feedback
 patterns without introducing theme customization.
+
+Settings delivered by screen step S10 (`117fb0c`…`ac518e1`), from the owner's
+handoff `tutorio-s10-settings`: «Налаштування» in the navigation (owner only)
+opens an overview of the areas with their current values and «Незабаром»
+cards for requisites, payments, the Telegram bot and integrations; «Загальне»
+(the default currency and the mode, name and timezone read only, the refusal
+of tutor mode while colleagues teach) and «Заняття й пакети» (the
+cancellation window, the schedule horizon and the package warning, each with
+its picture) save on their own with changed marks, the save bar, a toast and
+a confirm on leaving; «Журнал змін» filters by what, action, who and period,
+groups by day, opens a row's diff and reads more on demand. The API names the
+record of each audit row and the ids its diffs hold (`record`, `names`),
+carries avatars on the member roster and logs a teacher's archive as
+`DELETE`. Brief, decisions and open questions:
+[`screens/s10-settings.md`](./screens/s10-settings.md). The dashboard is S11.
 
 ## Work Packet 7 — Lesson Pack Sale (done with S07, 2026-09-25)
 
