@@ -1656,6 +1656,19 @@ export interface components {
         email: string;
         /** @enum {string} */
         role: 'OWNER' | 'TEACHER';
+        /** @enum {string|null} */
+        avatarKey:
+          | 'user-1'
+          | 'user-2'
+          | 'user-3'
+          | 'user-4'
+          | 'user-5'
+          | 'user-6'
+          | 'user-7'
+          | 'user-8'
+          | 'user-9'
+          | 'user-10'
+          | null;
       }[];
     };
     AuditLogListDto: {
@@ -1699,11 +1712,28 @@ export interface components {
         } | null;
         /** Format: date-time */
         createdAt: string;
+        record: {
+          label: string | null;
+          detail: string | null;
+          /** Format: date-time */
+          startsAt: string | null;
+          amountMinor: number | null;
+          currency: string | null;
+          slots:
+            | {
+                weekday: number;
+                localTime: string;
+              }[]
+            | null;
+        };
       }[];
       page: number;
       pageSize: number;
       total: number;
       totalPages: number;
+      names: {
+        [key: string]: string;
+      };
     };
     StudentListDto: {
       items: {

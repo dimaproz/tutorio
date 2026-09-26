@@ -7215,9 +7215,25 @@
                 "role": {
                   "type": "string",
                   "enum": ["OWNER", "TEACHER"]
+                },
+                "avatarKey": {
+                  "type": "string",
+                  "enum": [
+                    "user-1",
+                    "user-2",
+                    "user-3",
+                    "user-4",
+                    "user-5",
+                    "user-6",
+                    "user-7",
+                    "user-8",
+                    "user-9",
+                    "user-10"
+                  ],
+                  "nullable": true
                 }
               },
-              "required": ["id", "userId", "name", "email", "role"]
+              "required": ["id", "userId", "name", "email", "role", "avatarKey"]
             }
           }
         },
@@ -7306,6 +7322,53 @@
                 "createdAt": {
                   "type": "string",
                   "format": "date-time"
+                },
+                "record": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "detail": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "startsAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    },
+                    "amountMinor": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "currency": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "slots": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "weekday": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "exclusiveMinimum": false,
+                            "maximum": 6,
+                            "exclusiveMaximum": false
+                          },
+                          "localTime": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["weekday", "localTime"]
+                      },
+                      "nullable": true
+                    }
+                  },
+                  "required": ["label", "detail", "startsAt", "amountMinor", "currency", "slots"]
                 }
               },
               "required": [
@@ -7317,7 +7380,8 @@
                 "entityId",
                 "action",
                 "changes",
-                "createdAt"
+                "createdAt",
+                "record"
               ]
             }
           },
@@ -7340,9 +7404,15 @@
             "type": "integer",
             "minimum": 0,
             "exclusiveMinimum": false
+          },
+          "names": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
           }
         },
-        "required": ["items", "page", "pageSize", "total", "totalPages"]
+        "required": ["items", "page", "pageSize", "total", "totalPages", "names"]
       },
       "StudentListDto": {
         "type": "object",
