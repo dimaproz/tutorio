@@ -355,7 +355,15 @@ describe('workspace settings', () => {
     );
     expect(
       updateWorkspaceSettingsSchema.safeParse({ cancellationDeadlineHours: 400 }).success,
-    ).toBe(false);
+    ).toBe(false); // The name is trimmed and keeps the registration's 2–80 characters;
+    // the timezone is not a setting.
+    expect(updateWorkspaceSettingsSchema.parse({ name: '  SpeakWise ' })).toEqual({
+      name: 'SpeakWise',
+    });
+    expect(updateWorkspaceSettingsSchema.safeParse({ name: ' a ' }).success).toBe(false);
+    expect(updateWorkspaceSettingsSchema.safeParse({ timezone: 'Europe/Warsaw' }).success).toBe(
+      false,
+    );
   });
 });
 

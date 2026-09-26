@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { workspaceModeSchema, workspaceRoleSchema } from './auth';
+import { workspaceModeSchema, workspaceNameSchema, workspaceRoleSchema } from './auth';
 import {
   avatarKeySchema,
   cancellationDeadlineHoursSchema,
@@ -12,6 +12,8 @@ import { scheduleHorizonWeeksSchema } from './schedules';
 // Workspace-level defaults inherited by enrollments unless overridden.
 export const updateWorkspaceSettingsSchema = z
   .object({
+    // The studio's name as the app shows it; nothing is keyed by it (S10).
+    name: workspaceNameSchema,
     defaultCurrency: currencyCodeSchema,
     cancellationDeadlineHours: cancellationDeadlineHoursSchema,
     // How far ahead new schedules generate lessons (L-120).
