@@ -318,6 +318,23 @@ describe('Work Packet 6.2: teachers — list figures, profile reads, archive wit
 
     const restored = await post(`/teachers/${iryna}/restore`).expect(201);
     expect(restored.body).toMatchObject({ status: 'ACTIVE', archivedAt: null });
+
+    // The log reads «Архівовано» with the hand-over, then «Відновлено» (S10).
+    const log = await get('/audit-logs')
+      .query({ entity: 'TEACHER', entityId: iryna })
+      .expect(200);
+    const entries = log.body.items as {
+      action: string;
+      changes: { fields: Record<string, { after: unknown }> } | null;
+      record: { label: string };
+    }[];
+    expect(entries.map((entry) => entry.action).slice(0, 2)).toEqual([
+      'RESTORE',
+      'DELETE',
+    ]);
+    expect(entries[1].changes?.fields.transferredTo.after).toBe(dmytro);
+    expect(entries[1].record.label).toBe('Iryna T');
+    expect(log.body.names[dmytro]).toEqual(expect.any(String));
   });
 
   it('turns the owner’s own teaching off without listing her as archived', async () => {

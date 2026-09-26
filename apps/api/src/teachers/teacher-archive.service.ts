@@ -174,10 +174,12 @@ export class TeacherArchiveService {
             : { status: 'ARCHIVED', archivedAt: now },
         include: withMemberUser,
       });
+      // Archiving reads «Архівовано» in the log, as a student's or a group's
+      // does; handing over from a teacher already archived stays a change.
       await this.audit.record(tx, {
         workspaceId: auth.workspaceId,
         actorId: auth.userId,
-        action: 'UPDATE',
+        action: changes.status ? 'DELETE' : 'UPDATE',
         entity: 'TEACHER',
         entityId: teacherId,
         changes: Object.keys(changes).length > 0 ? { fields: changes } : null,
