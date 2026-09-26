@@ -53,6 +53,14 @@ describe('unconfirmed attendance (L-72, L-74)', () => {
     expect(needsAttendance({ ...group, status: 'SCHEDULED' }, now)).toBe(true);
   });
 
+  it('looks back seven days only', () => {
+    const old = new Date(now.getTime() - 7 * days(1) - 60_000);
+    expect(needsAttendance({ ...group, startsAtUtc: old }, now)).toBe(false);
+    expect(
+      needsAttendance({ ...group, startsAtUtc: new Date(now.getTime() - 6 * days(1)) }, now),
+    ).toBe(true);
+  });
+
   it('leaves out a confirmed, running, cancelled or individual lesson', () => {
     expect(needsAttendance({ ...group, confirmed: true }, now)).toBe(false);
     expect(

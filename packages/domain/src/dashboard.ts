@@ -36,6 +36,12 @@ export type AttentionKind = (typeof ATTENTION_KINDS)[number];
 export const ATTENTION_PREVIEW = 3;
 /** A package window closing within this many days with credits left. */
 export const EXPIRY_WARNING_DAYS = 3;
+/**
+ * Unconfirmed attendance counts for group lessons of the last this many
+ * days, so a group nobody marks does not fill the card forever (owner,
+ * 2026-09-26).
+ */
+export const ATTENDANCE_WINDOW_DAYS = 7;
 /** A pause ending within this many days. */
 export const PAUSE_RETURN_DAYS = 3;
 /** An open-ended pause running longer than this many days. */
@@ -75,17 +81,23 @@ export interface AttendanceCandidate {
 }
 
 /**
- * A group lesson that is over, not cancelled, whose attendance nobody
- * confirmed: everyone counts as present until the tutor marks the
- * exceptions (L-72, L-74).
+ * A group lesson of the last {@link ATTENDANCE_WINDOW_DAYS} days that is
+ * over, not cancelled, and whose attendance nobody confirmed: everyone
+ * counts as present until the tutor marks the exceptions (L-72, L-74).
  */
 export function needsAttendance(lesson: AttendanceCandidate, now: Date): boolean {
   return (
     lesson.isGroup &&
     !lesson.confirmed &&
     !isCancelledStatus(lesson.status) &&
-    lessonEndsAt(lesson).getTime() <= now.getTime()
+    lessonEndsAt(lesson).getTime() <= now.getTime() &&
+    lesson.startsAtUtc.getTime() >= attendanceWindowStart(now).getTime()
   );
+}
+
+/** The first instant of the unconfirmed-attendance window. */
+export function attendanceWindowStart(now: Date): Date {
+  return new Date(now.getTime() - ATTENDANCE_WINDOW_DAYS * DAY_MS);
 }
 
 /**
