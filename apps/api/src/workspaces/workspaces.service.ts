@@ -1,5 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import type {
+  AvatarKeyDto,
   CurrentWorkspace,
   UpdateWorkspaceSettingsDto,
   WorkspaceMemberListResponse,
@@ -117,14 +118,20 @@ export class WorkspacesService {
     return this.getCurrent(auth);
   }
 
-  /** Read-only roster for the teacher selector. */
+  /**
+   * Read-only roster: the people who can change something, with the avatar
+   * of their teaching profile (the audit log's «Хто» filter).
+   */
   async listMembers(
     auth: AuthenticatedUser,
   ): Promise<WorkspaceMemberListResponse> {
     const members = await this.prisma.workspaceMember.findMany({
       where: { workspaceId: auth.workspaceId },
       orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
-      include: { user: { select: { name: true, email: true } } },
+      include: {
+        user: { select: { name: true, email: true } },
+        teacherProfile: { select: { avatarKey: true, deletedAt: true } },
+      },
     });
     return {
       items: members.map((member) => ({
@@ -133,6 +140,9 @@ export class WorkspacesService {
         name: member.user.name,
         email: member.user.email,
         role: member.role,
+        avatarKey: member.teacherProfile?.deletedAt
+          ? null
+          : ((member.teacherProfile?.avatarKey ?? null) as AvatarKeyDto | null),
       })),
     };
   }

@@ -15,6 +15,9 @@ const owner: AuthenticatedUser = {
   role: 'OWNER',
 };
 
+// The records an audit page names are read from every kind of table.
+const empty = () => ({ findMany: jest.fn().mockResolvedValue([]) });
+
 function buildPrismaMock() {
   const prisma = {
     auditLog: {
@@ -22,6 +25,25 @@ function buildPrismaMock() {
       findMany: jest.fn().mockResolvedValue([]),
       count: jest.fn().mockResolvedValue(0),
     },
+    student: {
+      findMany: jest
+        .fn()
+        .mockResolvedValue([
+          { id: ENTITY_ID, fullName: 'Anna Shevchenko', currency: 'UAH' },
+        ]),
+    },
+    parent: empty(),
+    teacher: empty(),
+    group: empty(),
+    workspace: empty(),
+    enrollment: empty(),
+    lesson: empty(),
+    lessonSeries: empty(),
+    schedule: empty(),
+    pause: empty(),
+    lessonPackage: empty(),
+    payment: empty(),
+    user: empty(),
     $transaction: jest.fn((operations: Promise<unknown>[]) =>
       Promise.all(operations),
     ),
@@ -230,6 +252,14 @@ describe('AuditService.list', () => {
           entityId: ENTITY_ID,
           action: 'UPDATE',
           changes: { fields: { name: { before: 'Old', after: 'New' } } },
+          record: {
+            label: 'Anna Shevchenko',
+            detail: null,
+            startsAt: null,
+            amountMinor: null,
+            currency: 'UAH',
+            slots: null,
+          },
           createdAt: '2026-07-20T10:00:00.000Z',
         },
       ],
@@ -237,6 +267,7 @@ describe('AuditService.list', () => {
       pageSize: 20,
       total: 41,
       totalPages: 3,
+      names: {},
     });
   });
 });

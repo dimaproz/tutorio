@@ -1688,6 +1688,39 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
         email: expect.any(String),
       });
 
+      // Each row names its record; ids in a diff come with their names.
+      const settings = await server()
+        .get('/api/audit-logs')
+        .query({ entity: 'WORKSPACE' })
+        .set('Authorization', auth(ownerA))
+        .expect(200);
+      expect(settings.body.items[0].record).toMatchObject({
+        label: `E2E WS A ${runId}`,
+        currency: 'UAH',
+      });
+      const students = await server()
+        .get('/api/audit-logs')
+        .query({ entity: 'STUDENT', action: 'CREATE' })
+        .set('Authorization', auth(ownerA))
+        .expect(200);
+      type StudentCreate = {
+        record: { label: string | null };
+        changes: { fields: { parentIds?: { after: string[] } } };
+      };
+      const items = students.body.items as StudentCreate[];
+      expect(items.every((item) => typeof item.record.label === 'string')).toBe(
+        true,
+      );
+      // Parents deleted since are left out; the one linked first still exists.
+      const parentIds = items.flatMap(
+        (item) => item.changes.fields.parentIds?.after ?? [],
+      );
+      const names = students.body.names as Record<string, string>;
+      expect(Object.keys(names).every((id) => parentIds.includes(id))).toBe(
+        true,
+      );
+      expect(Object.values(names)).toContain('Parent Learner');
+
       // Workspace B sees only its own single entry (student create above).
       const logsB = await server()
         .get('/api/audit-logs')

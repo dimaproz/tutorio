@@ -11,6 +11,7 @@ import type {
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { buildPaginatedResponse, toSkipTake } from '../common/pagination';
 import { PrismaService } from '../prisma/prisma.service';
+import { resolveAuditRecords } from './audit-records';
 
 export interface AuditEntry {
   workspaceId: string;
@@ -155,7 +156,10 @@ export class AuditService {
     }
   }
 
-  /** Owner-only, workspace-scoped, newest-first audit trail with filters. */
+  /**
+   * Owner-only, workspace-scoped, newest-first audit trail with filters. Each
+   * row carries the record it names, read now (L-50: a null actor is Tutorio).
+   */
   async list(
     auth: AuthenticatedUser,
     query: ListAuditLogsQueryDto,
@@ -187,6 +191,22 @@ export class AuditService {
       this.prisma.auditLog.count({ where }),
     ]);
 
-    return buildPaginatedResponse(rows.map(toAuditLogResponse), total, query);
+    // Each row names its record, and the ids its diff holds get their names.
+    const { records, names } = await resolveAuditRecords(
+      this.prisma,
+      auth.workspaceId,
+      rows,
+    );
+    return {
+      ...buildPaginatedResponse(
+        rows.map((row, index) => ({
+          ...toAuditLogResponse(row),
+          record: records[index],
+        })),
+        total,
+        query,
+      ),
+      names,
+    };
   }
 }

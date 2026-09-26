@@ -127,7 +127,35 @@ describe('WorkspacesService.listMembers', () => {
         name: 'Olena',
         email: 'olena@example.com',
         role: 'OWNER',
+        avatarKey: null,
       },
+    ]);
+  });
+
+  it("carries the avatar of a member's live teaching profile", async () => {
+    const { prisma, service } = buildService();
+    prisma.workspaceMember.findMany.mockResolvedValue([
+      {
+        ...membershipRow,
+        user: { name: 'Olena', email: 'olena@example.com' },
+        teacherProfile: { avatarKey: 'user-3', deletedAt: null },
+      },
+      {
+        ...membershipRow,
+        id: '77777777-7777-4777-8777-777777777777',
+        user: { name: 'Dmytro', email: 'dmytro@example.com' },
+        teacherProfile: {
+          avatarKey: 'user-5',
+          deletedAt: new Date('2026-09-01T00:00:00.000Z'),
+        },
+      },
+    ]);
+
+    const result = await service.listMembers(owner);
+
+    expect(result.items.map((item) => item.avatarKey)).toEqual([
+      'user-3',
+      null,
     ]);
   });
 });
