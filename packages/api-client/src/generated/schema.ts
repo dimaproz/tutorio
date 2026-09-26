@@ -1533,6 +1533,66 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/dashboard/money': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * The studio's money this month
+     * @description Per currency, never summed: received this month and today on the studio's clock, the debt now with the number of debtors, and the approximate amount expected within 7 days. Always the whole studio.
+     */
+    get: operations['DashboardController_money'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/dashboard/attention': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * The exceptions to act on
+     * @description Seven categories in a fixed order (unconfirmed attendance, makeups, debtors, unpaid packages, packages running out, packages expiring within 3 days, pauses), each with its count, its three most urgent rows and a two-name summary. `teacherId` keeps one teacher's.
+     */
+    get: operations['DashboardController_attention'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/dashboard/setup': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * The first-run checklist
+     * @description Which set-up steps the data already ticks: a colleague (studio mode only), a student, a schedule or lesson, a package or payment.
+     */
+    get: operations['DashboardController_setup'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -3575,6 +3635,7 @@ export interface components {
         cancelled: number;
         noShow: number;
         needsMakeup: number;
+        unconfirmed: number;
       };
       packages: {
         /** Format: uuid */
@@ -5426,6 +5487,121 @@ export interface components {
       createdAt: string;
       /** Format: date-time */
       updatedAt: string;
+    };
+    DashboardMoneyDto: {
+      month: string;
+      currencies: {
+        /** @enum {string} */
+        currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+        receivedMonthMinor: number;
+        receivedTodayMinor: number;
+        debtMinor: number;
+        debtors: number;
+        dueMinor: number;
+        duePackages: number;
+      }[];
+    };
+    DashboardAttentionDto: {
+      /** Format: uuid */
+      teacherId: string | null;
+      total: number;
+      categories: {
+        /** @enum {string} */
+        kind:
+          | 'attendance'
+          | 'makeups'
+          | 'debtors'
+          | 'unpaidPackages'
+          | 'endingPackages'
+          | 'expiringPackages'
+          | 'pauses';
+        count: number;
+        items: {
+          id: string;
+          student: {
+            /** Format: uuid */
+            id: string;
+            fullName: string;
+            /** @enum {string|null} */
+            avatarKey:
+              | 'user-1'
+              | 'user-2'
+              | 'user-3'
+              | 'user-4'
+              | 'user-5'
+              | 'user-6'
+              | 'user-7'
+              | 'user-8'
+              | 'user-9'
+              | 'user-10'
+              | null;
+          } | null;
+          group: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+          } | null;
+          teacher: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            color: string | null;
+          } | null;
+          /** Format: uuid */
+          enrollmentId: string | null;
+          lesson: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            startsAtUtc: string;
+            /** @enum {string} */
+            status:
+              'SCHEDULED' | 'COMPLETED' | 'CANCELLED_CHARGED' | 'CANCELLED_UNCHARGED' | 'NO_SHOW';
+            /** @enum {string|null} */
+            cancelledBy: 'TEACHER' | 'STUDENT' | 'GROUP' | null;
+          } | null;
+          debt: {
+            amountMinor: number;
+            /** @enum {string} */
+            currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+            lessons: number;
+          } | null;
+          package: {
+            /** Format: uuid */
+            id: string;
+            name: string | null;
+            /** @enum {string} */
+            currency: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
+            totalMinor: number;
+            paidMinor: number;
+            remainingCredits: number;
+            /** Format: date-time */
+            expiresAt: string | null;
+          } | null;
+          credits: {
+            left: number;
+            /** @enum {string} */
+            warning: 'ON_DEBT' | 'NO_CREDITS' | 'LOW_CREDITS';
+          } | null;
+          pause: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            startsAt: string;
+            /** Format: date-time */
+            endsAt: string | null;
+            /** @enum {string} */
+            reason: 'RETURNING' | 'OPEN_LONG';
+          } | null;
+        }[];
+        names: string[];
+      }[];
+    };
+    DashboardSetupDto: {
+      teacher: boolean | null;
+      student: boolean;
+      schedule: boolean;
+      sale: boolean;
     };
   };
   responses: never;
@@ -7781,7 +7957,7 @@ export interface operations {
           'SCHEDULED' | 'COMPLETED' | 'CANCELLED_CHARGED' | 'CANCELLED_UNCHARGED' | 'NO_SHOW'
         )[];
         search?: string;
-        filter?: 'unpaid' | 'cancelled' | 'no_show' | 'needs_makeup';
+        filter?: 'unpaid' | 'cancelled' | 'no_show' | 'needs_makeup' | 'unconfirmed';
         order?: 'asc' | 'desc';
       };
       header?: never;
@@ -9456,6 +9632,92 @@ export interface operations {
         };
       };
       409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  DashboardController_money: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DashboardMoneyDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  DashboardController_attention: {
+    parameters: {
+      query?: {
+        teacherId?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DashboardAttentionDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  DashboardController_setup: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DashboardSetupDto'];
+        };
+      };
+      /** @description OWNER role required */
+      403: {
         headers: {
           [name: string]: unknown;
         };

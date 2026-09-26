@@ -3984,7 +3984,7 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["unpaid", "cancelled", "no_show", "needs_makeup"]
+              "enum": ["unpaid", "cancelled", "no_show", "needs_makeup", "unconfirmed"]
             }
           },
           {
@@ -6840,6 +6840,124 @@
         ],
         "summary": "Record a payment received",
         "tags": ["payments"]
+      }
+    },
+    "/api/dashboard/money": {
+      "get": {
+        "description": "Per currency, never summed: received this month and today on the studio's clock, the debt now with the number of debtors, and the approximate amount expected within 7 days. Always the whole studio.",
+        "operationId": "DashboardController_money",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardMoneyDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "The studio's money this month",
+        "tags": ["dashboard"]
+      }
+    },
+    "/api/dashboard/attention": {
+      "get": {
+        "description": "Seven categories in a fixed order (unconfirmed attendance, makeups, debtors, unpaid packages, packages running out, packages expiring within 3 days, pauses), each with its count, its three most urgent rows and a two-name summary. `teacherId` keeps one teacher's.",
+        "operationId": "DashboardController_attention",
+        "parameters": [
+          {
+            "name": "teacherId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardAttentionDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "The exceptions to act on",
+        "tags": ["dashboard"]
+      }
+    },
+    "/api/dashboard/setup": {
+      "get": {
+        "description": "Which set-up steps the data already ticks: a colleague (studio mode only), a student, a schedule or lesson, a package or payment.",
+        "operationId": "DashboardController_setup",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardSetupDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OWNER role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "The first-run checklist",
+        "tags": ["dashboard"]
       }
     }
   },
@@ -13180,9 +13298,14 @@
                 "type": "integer",
                 "minimum": 0,
                 "exclusiveMinimum": false
+              },
+              "unconfirmed": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": false
               }
             },
-            "required": ["all", "unpaid", "cancelled", "noShow", "needsMakeup"]
+            "required": ["all", "unpaid", "cancelled", "noShow", "needsMakeup", "unconfirmed"]
           },
           "packages": {
             "type": "array",
@@ -18766,6 +18889,353 @@
           "createdAt",
           "updatedAt"
         ]
+      },
+      "DashboardMoneyDto": {
+        "type": "object",
+        "properties": {
+          "month": {
+            "type": "string"
+          },
+          "currencies": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "currency": {
+                  "type": "string",
+                  "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
+                },
+                "receivedMonthMinor": {
+                  "type": "integer"
+                },
+                "receivedTodayMinor": {
+                  "type": "integer"
+                },
+                "debtMinor": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                },
+                "debtors": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                },
+                "dueMinor": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                },
+                "duePackages": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                }
+              },
+              "required": [
+                "currency",
+                "receivedMonthMinor",
+                "receivedTodayMinor",
+                "debtMinor",
+                "debtors",
+                "dueMinor",
+                "duePackages"
+              ]
+            }
+          }
+        },
+        "required": ["month", "currencies"]
+      },
+      "DashboardAttentionDto": {
+        "type": "object",
+        "properties": {
+          "teacherId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "attendance",
+                    "makeups",
+                    "debtors",
+                    "unpaidPackages",
+                    "endingPackages",
+                    "expiringPackages",
+                    "pauses"
+                  ]
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": false
+                },
+                "items": {
+                  "type": "array",
+                  "maxItems": 3,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "student": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "fullName": {
+                            "type": "string"
+                          },
+                          "avatarKey": {
+                            "type": "string",
+                            "enum": [
+                              "user-1",
+                              "user-2",
+                              "user-3",
+                              "user-4",
+                              "user-5",
+                              "user-6",
+                              "user-7",
+                              "user-8",
+                              "user-9",
+                              "user-10"
+                            ],
+                            "nullable": true
+                          }
+                        },
+                        "required": ["id", "fullName", "avatarKey"],
+                        "nullable": true
+                      },
+                      "group": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "name": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "name"],
+                        "nullable": true
+                      },
+                      "teacher": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "color": {
+                            "type": "string",
+                            "nullable": true
+                          }
+                        },
+                        "required": ["id", "name", "color"],
+                        "nullable": true
+                      },
+                      "enrollmentId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                      },
+                      "lesson": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "startsAtUtc": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "SCHEDULED",
+                              "COMPLETED",
+                              "CANCELLED_CHARGED",
+                              "CANCELLED_UNCHARGED",
+                              "NO_SHOW"
+                            ]
+                          },
+                          "cancelledBy": {
+                            "type": "string",
+                            "enum": ["TEACHER", "STUDENT", "GROUP"],
+                            "nullable": true
+                          }
+                        },
+                        "required": ["id", "startsAtUtc", "status", "cancelledBy"],
+                        "nullable": true
+                      },
+                      "debt": {
+                        "type": "object",
+                        "properties": {
+                          "amountMinor": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "exclusiveMinimum": false
+                          },
+                          "currency": {
+                            "type": "string",
+                            "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
+                          },
+                          "lessons": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "exclusiveMinimum": false
+                          }
+                        },
+                        "required": ["amountMinor", "currency", "lessons"],
+                        "nullable": true
+                      },
+                      "package": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "name": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "currency": {
+                            "type": "string",
+                            "enum": ["EUR", "UAH", "PLN", "USD", "GBP"]
+                          },
+                          "totalMinor": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "exclusiveMinimum": false
+                          },
+                          "paidMinor": {
+                            "type": "integer"
+                          },
+                          "remainingCredits": {
+                            "type": "integer"
+                          },
+                          "expiresAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "nullable": true
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "currency",
+                          "totalMinor",
+                          "paidMinor",
+                          "remainingCredits",
+                          "expiresAt"
+                        ],
+                        "nullable": true
+                      },
+                      "credits": {
+                        "type": "object",
+                        "properties": {
+                          "left": {
+                            "type": "integer"
+                          },
+                          "warning": {
+                            "type": "string",
+                            "enum": ["ON_DEBT", "NO_CREDITS", "LOW_CREDITS"]
+                          }
+                        },
+                        "required": ["left", "warning"],
+                        "nullable": true
+                      },
+                      "pause": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "startsAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "endsAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "nullable": true
+                          },
+                          "reason": {
+                            "type": "string",
+                            "enum": ["RETURNING", "OPEN_LONG"]
+                          }
+                        },
+                        "required": ["id", "startsAt", "endsAt", "reason"],
+                        "nullable": true
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "student",
+                      "group",
+                      "teacher",
+                      "enrollmentId",
+                      "lesson",
+                      "debt",
+                      "package",
+                      "credits",
+                      "pause"
+                    ]
+                  }
+                },
+                "names": {
+                  "type": "array",
+                  "maxItems": 2,
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": ["kind", "count", "items", "names"]
+            }
+          }
+        },
+        "required": ["teacherId", "total", "categories"]
+      },
+      "DashboardSetupDto": {
+        "type": "object",
+        "properties": {
+          "teacher": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "student": {
+            "type": "boolean"
+          },
+          "schedule": {
+            "type": "boolean"
+          },
+          "sale": {
+            "type": "boolean"
+          }
+        },
+        "required": ["teacher", "student", "schedule", "sale"]
       }
     }
   }
