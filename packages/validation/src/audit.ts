@@ -53,8 +53,9 @@ export const auditChangesSchema = z.object({
 
 export type AuditChanges = z.infer<typeof auditChangesSchema>;
 
-// Compact actor info for the audit table; null when the actor was deleted or
-// the change was system-initiated.
+// Compact actor info for the audit table. Null means the change was made by
+// Tutorio itself (L-50: a lesson held automatically): users are never deleted,
+// so a null actor is never a person who left.
 export const auditActorSchema = z.object({
   id: uuidSchema,
   name: z.string(),
@@ -62,6 +63,36 @@ export const auditActorSchema = z.object({
 });
 
 export type AuditActor = z.infer<typeof auditActorSchema>;
+
+// A weekly slot as the schedules contract writes it. Declared here: importing
+// it from ./schedules closes a cycle through ./scheduling, which reads this file.
+const auditSlotSchema = z.object({
+  weekday: z.number().int().min(0).max(6),
+  localTime: z.string(),
+});
+
+/**
+ * What the changed record is, read when the log is listed: its name now
+ * (a person, a group, the studio) and the few facts that tell one lesson,
+ * payment or schedule of the same person from another. A record that no
+ * longer exists keeps the name its own diff carries, or none.
+ */
+export const auditRecordSchema = z.object({
+  /** The person, group or studio; for a lesson, schedule or payment, whose it is. */
+  label: z.string().nullable(),
+  /** A second name: the group or teacher of a direction, a package's name. */
+  detail: z.string().nullable(),
+  /** A lesson's start. */
+  startsAt: isoDateTimeSchema.nullable(),
+  /** A payment's amount, in `currency`. */
+  amountMinor: z.number().int().nullable(),
+  /** The currency the record's money fields are in. */
+  currency: z.string().nullable(),
+  /** A schedule's current weekly slots on the studio's clock. */
+  slots: z.array(auditSlotSchema).nullable(),
+});
+
+export type AuditRecord = z.infer<typeof auditRecordSchema>;
 
 export const auditLogResponseSchema = z.object({
   id: uuidSchema,
@@ -77,6 +108,20 @@ export const auditLogResponseSchema = z.object({
 
 export type AuditLogResponse = z.infer<typeof auditLogResponseSchema>;
 
-export const auditLogListResponseSchema = paginatedResponseSchema(auditLogResponseSchema);
+/** A row of the audit log page: the entry and the record it names. */
+export const auditLogListItemSchema = auditLogResponseSchema.extend({
+  record: auditRecordSchema,
+});
+
+export type AuditLogListItem = z.infer<typeof auditLogListItemSchema>;
+
+export const auditLogListResponseSchema = paginatedResponseSchema(auditLogListItemSchema).extend({
+  /**
+   * The names of the records the page's diffs point at by id (a teacher,
+   * student, group, parent or package): `{ [id]: name }`. An id that no
+   * longer resolves is absent.
+   */
+  names: z.record(z.string()),
+});
 
 export type AuditLogListResponse = z.infer<typeof auditLogListResponseSchema>;

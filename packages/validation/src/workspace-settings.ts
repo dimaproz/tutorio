@@ -1,6 +1,11 @@
 import { z } from 'zod';
 import { workspaceModeSchema, workspaceRoleSchema } from './auth';
-import { cancellationDeadlineHoursSchema, currencyCodeSchema, uuidSchema } from './common';
+import {
+  avatarKeySchema,
+  cancellationDeadlineHoursSchema,
+  currencyCodeSchema,
+  uuidSchema,
+} from './common';
 import { lowCreditThresholdSchema } from './billing';
 import { scheduleHorizonWeeksSchema } from './schedules';
 
@@ -34,13 +39,16 @@ export const workspaceSettingsResponseSchema = z.object({
 
 export type WorkspaceSettingsResponse = z.infer<typeof workspaceSettingsResponseSchema>;
 
-// Read-only member roster for the teacher selector (no mutation endpoints).
+// Read-only member roster: the people who can change something (the audit
+// log's «Хто» filter). No mutation endpoints.
 export const workspaceMemberResponseSchema = z.object({
   id: uuidSchema,
   userId: uuidSchema,
   name: z.string(),
   email: z.string(),
   role: workspaceRoleSchema,
+  /** The avatar of the member's teaching profile, when they have one. */
+  avatarKey: avatarKeySchema.nullable(),
 });
 
 export type WorkspaceMemberResponse = z.infer<typeof workspaceMemberResponseSchema>;
