@@ -30,15 +30,20 @@ export function MobileAppBarContent({
 
   if (parent?.href) {
     return (
-      <header className="relative flex h-14 shrink-0 items-center justify-center px-1">
+      // Three columns keep the title centred; a long way back shortens
+      // instead of running under it («Налаштування» and «Заняття й пакети»).
+      <header className="grid h-14 shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
         <Link
           href={parent.href}
-          className="absolute left-0 inline-flex h-11 items-center gap-1.5 rounded-pill px-2 text-[15px] font-medium outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          className="inline-flex h-11 max-w-full min-w-0 items-center gap-1.5 justify-self-start rounded-pill px-2 text-[15px] font-medium outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         >
-          <ArrowLeftIcon aria-hidden="true" className="size-4.5" />
-          {t(parent.key)}
+          <ArrowLeftIcon aria-hidden="true" className="size-4.5 shrink-0" />
+          <span className="truncate">{t(parent.key)}</span>
         </Link>
-        <span className="max-w-[55%] truncate text-base font-semibold">{crumb ?? t('detail')}</span>
+        <span className="max-w-[55vw] truncate text-base font-semibold">
+          {crumb ?? t('detail')}
+        </span>
+        <span aria-hidden="true" />
       </header>
     );
   }
