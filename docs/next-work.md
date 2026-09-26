@@ -536,11 +536,11 @@ nearest lessons, the «M2» money card (per currency, the whole studio) and
 the checklist. Each block loads and fails on its own. The API reads
 `GET /dashboard/money`, `/dashboard/attention?teacherId=` and
 `/dashboard/setup` (rules in `packages/domain`), the lessons list gained the
-`unconfirmed` quick filter, and a lesson carries its makeup's original date
+`unconfirmed` quick filter (group lessons of the last 7 days), and a lesson carries its makeup's original date
 and its group's size. The shared `LessonTimeRow` replaced the calendar's
 `row` variant in the phone lists and serves the teacher profile's day list;
 times and amounts read in the sans font with `tabular-nums`. Brief,
-decisions and open questions:
+decisions and the owner's answers:
 [`screens/s11-dashboard.md`](./screens/s11-dashboard.md).
 
 Follow-up (not in S11): **a teacher's own Today** (the handoff's board 04,

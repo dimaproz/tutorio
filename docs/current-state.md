@@ -786,7 +786,7 @@ Work Packet 6.3 — Groups is implemented and reviewed, with its brief in
 closed as screen step S09 ([`screens/s09-teachers.md`](./screens/s09-teachers.md)).
 S10 (settings) and S11 (the Today dashboard at `/app`,
 [`screens/s11-dashboard.md`](./screens/s11-dashboard.md)) are done, which
-closes the screen steps S01–S11 and Work Packet 6.6. The owner's open
-questions from S11 are listed in its brief; a teacher's own Today waits for
-teacher access to the business routes ([`next-work.md`](./next-work.md),
+closes the screen steps S01–S11 and Work Packet 6.6. The owner answered
+S11's open questions on 2026-09-26 (recorded in its brief); a teacher's own
+Today waits for teacher access to the business routes ([`next-work.md`](./next-work.md),
 Work Packet 6.6).

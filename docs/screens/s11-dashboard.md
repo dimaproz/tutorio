@@ -427,14 +427,16 @@ catalogue), and the calendar agenda with the teacher tint (board 05).
     the two columns start at 1280px.
 11. **The money card's muted text** is white at 88% (AA on the indigo).
 
+## Answers after the build (the owner, 2026-09-26)
+
+1. **Unconfirmed attendance: the last 7 days only**, so a group nobody marks
+   does not fill the card forever. The card and its «Усі N →» list (the
+   `unconfirmed` quick filter) both look back seven days.
+2. **A lesson ahead keeps «пакет N з M» / «за заняття»**; no «не оплачено»
+   before it is held.
+3. **The greeting keeps the name as registered.**
+4. **«Отримано»** subtracts refunds (the month's net money), as proposed.
+
 ## Open questions
 
-- **Unconfirmed attendance window.** Proposed: group lessons of the last 7
-  days only, so a group the owner never marks does not fill the card forever.
-  The build counts every held, unconfirmed group lesson.
-- **«Отримано» and refunds.** Built as proposed: refunds are subtracted
-  (the month's net money).
-- **«Не оплачено» on a lesson ahead** (decision 5 above): should an upcoming
-  lesson of a direction in debt say so?
-- **The owner's name in the greeting**: keep the registered name, or ask how
-  to greet the owner?
+None.
