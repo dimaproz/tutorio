@@ -30,7 +30,7 @@ export type RowContext = {
 
 export const calendarDayHref = (date: string) => `/app/calendar?date=${date}&view=day`;
 
-const who = (lesson: Lesson) => lesson.student?.fullName ?? lesson.group?.name ?? '';
+const who = (lesson: Lesson) => lesson.group?.name ?? lesson.student?.fullName ?? '';
 
 function useRows(context: RowContext, compactMenu = false) {
   return (lessons: readonly Lesson[], dense = context.dense) =>
@@ -147,7 +147,7 @@ export function TodayTicket({
             : t('inHours', { hours: Math.floor(inMinutes / 60), minutes: inMinutes % 60 })
       }
       media={
-        lesson.student ? (
+        lesson.student && !lesson.group ? (
           <EntityAvatar
             avatarKey={lesson.student.avatarKey}
             fullName={lesson.student.fullName}
@@ -166,7 +166,6 @@ export function TodayTicket({
           : undefined
       }
       action={{ label: t('open'), onClick: () => context.onOpen(lesson.id) }}
-      onOpen={context.dense ? () => context.onOpen(lesson.id) : undefined}
       openLabel={t('openLesson', { who: who(lesson) })}
     />
   );

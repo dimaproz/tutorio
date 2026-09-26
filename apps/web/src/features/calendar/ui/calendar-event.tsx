@@ -210,7 +210,8 @@ export function CalendarEvent({
       : {}),
   };
   const strike = cancelled && 'line-through decoration-1';
-  const dot = tinted ? <TeacherDot /> : null;
+  // A running tile already leads with its live dot.
+  const dot = tinted && time !== 'running' ? <TeacherDot /> : null;
   const timeText = (text: ReactNode) => (
     <span className="flex min-w-0 items-center gap-1">
       {dot}

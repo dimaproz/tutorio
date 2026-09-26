@@ -91,7 +91,9 @@ export const Playground: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await visible(await canvas.findByRole('heading', { name: 'Good afternoon, Olena' }));
-    await visible(await canvas.findByRole('button', { name: /Open the lesson: Roman Kyrylenko/ }));
+    await visible(
+      (await canvas.findAllByRole('button', { name: /Open the lesson: Roman Kyrylenko/ }))[0]!,
+    );
   },
 };
 
@@ -190,7 +192,9 @@ export const BlockFails: Story = {
     const canvas = within(canvasElement);
     await visible(await canvas.findByRole('alert'));
     await visible(canvas.getByRole('button', { name: 'Try again' }));
-    await visible(await canvas.findByRole('button', { name: /Open the lesson: Roman Kyrylenko/ }));
+    await visible(
+      (await canvas.findAllByRole('button', { name: /Open the lesson: Roman Kyrylenko/ }))[0]!,
+    );
   },
 };
 

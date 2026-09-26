@@ -61,10 +61,10 @@ export function CalendarLegend({
         label={t('upcoming')}
       />
       <Item
-        media={<Swatch className="bg-[color-mix(in_oklab,var(--brand)_18%,var(--card))]" />}
+        media={<Swatch className="bg-[color-mix(in_oklab,var(--brand)_10%,var(--card))]" />}
         label={t('past')}
       />
-      <Item media={<Swatch className="bg-card bg-hatch" />} label={t('cancelled')} />
+      <Item media={<Swatch className="border border-border bg-card" />} label={t('cancelled')} />
       <Item media={<UnpaidMark className="size-4 text-[10px]" />} label={t('unpaid')} />
     </ul>
   );

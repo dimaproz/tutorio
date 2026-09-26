@@ -27,12 +27,13 @@ import {
   type TimeRowPackage,
 } from '../model/time-row';
 
+/** A group lesson reads as its group, whoever else it names. */
 const lessonName = (lesson: Pick<LessonResponse, 'student' | 'group'>) =>
-  lesson.student?.fullName ?? lesson.group?.name ?? '';
+  lesson.group?.name ?? lesson.student?.fullName ?? '';
 
 /** The 36px media: the student's avatar, or the group tile. */
 function RowMedia({ lesson }: { lesson: TimeRowLesson }) {
-  return lesson.student ? (
+  return lesson.student && !lesson.group ? (
     <EntityAvatar
       avatarKey={lesson.student.avatarKey}
       fullName={lesson.student.fullName}

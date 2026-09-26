@@ -59,8 +59,9 @@ export function TodayHeader({
   const [sheet, setSheet] = useState(false);
 
   return (
-    <div className="flex items-start justify-between gap-4 md:items-end">
-      <div className="flex min-w-0 flex-col gap-2">
+    // The actions wrap under the title where both do not fit (a tablet).
+    <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-4 md:items-end">
+      <div className="flex min-w-0 flex-1 basis-60 flex-col gap-2">
         <span className="text-[15px] leading-5 text-muted-foreground">{date}</span>
         <h1 className={PAGE_TITLE_CLASS.lg}>{greeting}</h1>
         {subtitle ? <p className="text-[15px] leading-5">{subtitle}</p> : null}
@@ -78,7 +79,7 @@ export function TodayHeader({
         ) : null}
       </div>
 
-      <div className="hidden shrink-0 flex-wrap items-center justify-end gap-2.5 md:flex">
+      <div className="hidden flex-wrap items-center gap-2.5 md:flex">
         <Button type="button" variant="outline" onClick={() => onAction('payment')}>
           <BanknoteIcon data-icon="inline-start" />
           {t('payment')}
