@@ -385,6 +385,8 @@ export const lessonResponseSchema = z.object({
   kind: lessonKindSchema,
   // The lesson this makeup replaces, and the makeup given for this lesson.
   originalLessonId: uuidSchema.nullable(),
+  /** When the lesson this makeup replaces was, for «за 19 вересня». */
+  originalStartsAtUtc: isoDateTimeSchema.nullable(),
   makeupLessonId: uuidSchema.nullable(),
   topic: z.string().nullable(),
   isDetached: z.boolean(),
@@ -418,6 +420,8 @@ export const lessonResponseSchema = z.object({
   // Compact refs for calendar event rendering (avoids request waterfalls).
   student: lessonStudentRefSchema.nullable(),
   group: groupRefSchema.nullable(),
+  /** A group lesson: the group's live members now («група · 4 учнів»); null otherwise. */
+  groupMembers: z.number().int().nonnegative().nullable(),
   teacher: teacherRefSchema,
   /** What an individual lesson teaches: its teacher's first subject; null for a group. */
   subject: z.string().nullable(),
