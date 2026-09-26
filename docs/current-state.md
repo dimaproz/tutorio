@@ -784,5 +784,9 @@ same pattern, with its brief in [`product/parents.md`](./product/parents.md).
 Work Packet 6.3 — Groups is implemented and reviewed, with its brief in
 [`product/groups.md`](./product/groups.md). Work Packet 6.2 — Teachers is
 closed as screen step S09 ([`screens/s09-teachers.md`](./screens/s09-teachers.md)).
-The next screen steps are S10 (settings) and S11 (dashboard), from the
-owner's mockups.
+S10 (settings) and S11 (the Today dashboard at `/app`,
+[`screens/s11-dashboard.md`](./screens/s11-dashboard.md)) are done, which
+closes the screen steps S01–S11 and Work Packet 6.6. The owner's open
+questions from S11 are listed in its brief; a teacher's own Today waits for
+teacher access to the business routes ([`next-work.md`](./next-work.md),
+Work Packet 6.6).

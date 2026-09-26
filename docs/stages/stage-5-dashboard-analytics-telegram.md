@@ -7,6 +7,11 @@
 > **Pillar:** Growth · **Status:** Deferred pending pilot evidence · **Depends
 > on:** Stage 4 (money to analyse and to alert on), Stage 3 (lessons to remind
 > about). The Stage 3.7 "today" widget is upgraded here into the full dashboard.
+>
+> The pilot's Today dashboard (screen step S11,
+> [`screens/s11-dashboard.md`](../screens/s11-dashboard.md)) already takes
+> today's lessons, the exception cards with their actions and the month's
+> money per currency; Telegram, the digest and analytics stay here.
 
 ## 1. Goal & non-goals
 

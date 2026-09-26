@@ -502,7 +502,7 @@ package ahead and the pause extensions, the ledger its lessons, and delete
 refuses a used package (`PACKAGE_IN_USE`). Group members' packages stay on
 the group page (S08). Brief: [`screens/s07-packages.md`](./screens/s07-packages.md).
 
-### Work Packet 6.6 — Dashboard and Settings (settings done with S10, 2026-09-26)
+### Work Packet 6.6 — Dashboard and Settings (done with S10 and S11, 2026-09-26)
 
 Migrate the Today dashboard and workspace/audit settings after upstream feature
 patterns are stable. Dashboard content remains limited to today and actionable
@@ -523,6 +523,31 @@ record of each audit row and the ids its diffs hold (`record`, `names`),
 carries avatars on the member roster and logs a teacher's archive as
 `DELETE`. Brief, decisions and open questions:
 [`screens/s10-settings.md`](./screens/s10-settings.md). The dashboard is S11.
+
+The dashboard is done with screen step S11 (`e87090a`…`0b92696`), from the
+owner's handoff `tutorio-s11-today`: «Сьогодні» is `/app` and the first
+navigation item (the phone tab bar reads Сьогодні · Календар · Заняття ·
+Учні · Ще, «Групи» under «Ще»). The page greets by the studio's clock, offers
+«Мої · Студія» to an owner who teaches with colleagues, and shows the
+«Зараз» ticket (running, next, «На сьогодні все»), the day as one timeline
+with the «зараз» line, the row menu and «Відмітити», «Завтра», a free day's
+nearest lessons, the «M2» money card (per currency, the whole studio) and
+«Потребує уваги» as one accordion card of seven categories; the first run is
+the checklist. Each block loads and fails on its own. The API reads
+`GET /dashboard/money`, `/dashboard/attention?teacherId=` and
+`/dashboard/setup` (rules in `packages/domain`), the lessons list gained the
+`unconfirmed` quick filter, and a lesson carries its makeup's original date
+and its group's size. The shared `LessonTimeRow` replaced the calendar's
+`row` variant in the phone lists and serves the teacher profile's day list;
+times and amounts read in the sans font with `tabular-nums`. Brief,
+decisions and open questions:
+[`screens/s11-dashboard.md`](./screens/s11-dashboard.md).
+
+Follow-up (not in S11): **a teacher's own Today** (the handoff's board 04,
+«TodayTeacher»): a signed-in teacher's day, «Мій вересень» (the indigo card
+with the clock motif, «T1») instead of the money, and only the teacher's own
+exception kinds. It waits for teacher access to the business routes — in the
+pilot `canUseBusinessRoutes` is false for TEACHER.
 
 ## Work Packet 7 — Lesson Pack Sale (done with S07, 2026-09-25)
 
