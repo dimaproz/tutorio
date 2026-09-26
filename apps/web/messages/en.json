@@ -4071,8 +4071,8 @@
         "set": "{label}: {value}",
         "automatic": "(automatically when it ended)",
         "more": ", …",
-        "payment": "Payment {amount}",
-        "paymentFor": "Payment {amount} for the “{name}” package",
+        "payment": "{method} {amount}",
+        "paymentFor": "{method} {amount} for the “{name}” package",
         "created": {
           "WORKSPACE": "Studio created",
           "STUDENT": "New student",
@@ -4090,7 +4090,13 @@
         "deleted": "Archived",
         "restored": "Restored from the archive",
         "nothing": "No details",
-        "scheduleChange": "Change from {date}: {before} → {after}"
+        "scheduleChange": "Change from {date}: {before} → {after}",
+        "method": {
+          "CASH": "Cash",
+          "BANK_TRANSFER": "Bank transfer",
+          "CARD": "Card",
+          "OTHER": "Payment"
+        }
       },
       "noResults": {
         "title": "No changes match these filters",
@@ -4202,7 +4208,8 @@
         "skippedLessons": "Skipped for clashes",
         "moved": "Lessons moved",
         "created": "Lessons added",
-        "removed": "Lessons removed"
+        "removed": "Lessons removed",
+        "method": "Payment method"
       },
       "values": {
         "mode": {
@@ -4283,6 +4290,12 @@
           "charges": "charges",
           "payments": "payments",
           "history": "history"
+        },
+        "paymentMethod": {
+          "CASH": "Cash",
+          "BANK_TRANSFER": "Bank transfer",
+          "CARD": "Card",
+          "OTHER": "Other"
         }
       }
     }

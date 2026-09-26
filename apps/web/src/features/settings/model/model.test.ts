@@ -199,6 +199,7 @@ describe('audit rows', () => {
     expect(fieldSpec('TEACHER', 'status')).toMatchObject({ values: 'teacherStatus' });
     expect(fieldSpec('LESSON', 'attendance.44444444')).toMatchObject({ values: 'attendance' });
     expect(fieldSpec('GROUP', 'repricedMembers')).toMatchObject({ kind: 'count' });
+    expect(fieldSpec('PAYMENT', 'method')).toMatchObject({ kind: 'enum', values: 'paymentMethod' });
     expect(fieldSpec('LESSON', 'workspaceId')).toBeNull();
     // A field the API adds later still shows, under its own name.
     expect(fieldSpec('GROUP', 'somethingNew')).toEqual({ kind: 'text', label: 'somethingNew' });

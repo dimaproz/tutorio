@@ -165,9 +165,14 @@ export function useAuditFormat(names: Record<string, string>) {
         item.record.amountMinor !== null
       ) {
         const amount = money(item.record.amountMinor, item.record.currency);
+        // «Переказ 3 200 ₴»: how it was paid, when the entry records it.
+        const paid = item.changes?.fields.method?.after;
+        const method = t.has(`summary.method.${String(paid)}`)
+          ? t(`summary.method.${String(paid)}`)
+          : t('summary.method.OTHER');
         return item.record.detail
-          ? t('summary.paymentFor', { amount, name: item.record.detail })
-          : t('summary.payment', { amount });
+          ? t('summary.paymentFor', { method, amount, name: item.record.detail })
+          : t('summary.payment', { method, amount });
       }
       const change = item.changes?.fields;
       if (

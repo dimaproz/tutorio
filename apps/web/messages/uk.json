@@ -4071,8 +4071,8 @@
         "set": "{label}: {value}",
         "automatic": "(автоматично після закінчення)",
         "more": ", …",
-        "payment": "Оплата {amount}",
-        "paymentFor": "Оплата {amount} за пакет «{name}»",
+        "payment": "{method} {amount}",
+        "paymentFor": "{method} {amount} за пакет «{name}»",
         "created": {
           "WORKSPACE": "Студію створено",
           "STUDENT": "Новий учень",
@@ -4090,7 +4090,13 @@
         "deleted": "Архівовано",
         "restored": "Відновлено з архіву",
         "nothing": "Без подробиць",
-        "scheduleChange": "Зміна з {date}: {before} → {after}"
+        "scheduleChange": "Зміна з {date}: {before} → {after}",
+        "method": {
+          "CASH": "Готівка",
+          "BANK_TRANSFER": "Переказ",
+          "CARD": "Картка",
+          "OTHER": "Оплата"
+        }
       },
       "noResults": {
         "title": "Немає змін за цими фільтрами",
@@ -4202,7 +4208,8 @@
         "skippedLessons": "Пропущено через збіги",
         "moved": "Перенесено занять",
         "created": "Додано занять",
-        "removed": "Прибрано занять"
+        "removed": "Прибрано занять",
+        "method": "Спосіб оплати"
       },
       "values": {
         "mode": {
@@ -4283,6 +4290,12 @@
           "charges": "списання",
           "payments": "оплати",
           "history": "історія"
+        },
+        "paymentMethod": {
+          "CASH": "Готівка",
+          "BANK_TRANSFER": "Переказ на рахунок",
+          "CARD": "Картка",
+          "OTHER": "Інше"
         }
       }
     }

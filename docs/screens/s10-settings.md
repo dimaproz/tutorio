@@ -154,16 +154,23 @@ so the «Архівовано» badge and the «Дія» filter agree.
 
 ## Open questions
 
-1. **Payment method.** The API does not audit a payment's method, note or
-   date, so the board's «Переказ 3 200 ₴» reads «Оплата 3 200 ₴». Should the
-   payment's `method` go into its audit entry?
-2. **Older teacher archives** written before this step stay `UPDATE` and read
+Answered by the owner on 2026-09-26:
+
+- **Payment method** — yes: a payment's audit entry now records its
+  `method`, and the log reads «Переказ 3 200 ₴ за пакет «Жовтень»»,
+  «Готівка …», «Картка …» (an entry without it reads «Оплата …»); the diff
+  shows «Спосіб оплати».
+- **Tablet layout** — confirmed as built (one column below 1024 px, the log
+  as cards).
+
+Still open:
+
+1. **Older teacher archives** written before this step stay `UPDATE` and read
    «Змінено · статус Викладає → В архіві». Rewrite them, or leave history as
    it was written?
-3. **«Змінити назву можна через підтримку»** has no link: which support
+2. **«Змінити назву можна через підтримку»** has no link: which support
    channel should it open?
-4. **Tablet layout** above — confirm, or draw the 834 boards.
-5. **The «Хто» filter** lists login accounts; a teacher without a login never
+3. **The «Хто» filter** lists login accounts; a teacher without a login never
    appears as an actor. Fine for the owner-operated pilot?
 
 ## Evidence

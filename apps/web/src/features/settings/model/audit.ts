@@ -242,6 +242,7 @@ const COMMON: Record<string, FieldSpec> = {
   pricePerLesson: spec('money', 'priceMinor'),
   priceMinor: spec('money', 'priceMinor'),
   amountMinor: spec('money', 'amountMinor'),
+  method: spec('enum', 'method', 'paymentMethod'),
   totalPriceMinorSnapshot: spec('money', 'totalPriceMinorSnapshot'),
   remainderMinor: spec('money', 'remainderMinor'),
   refundedMinor: spec('money', 'refundedMinor'),

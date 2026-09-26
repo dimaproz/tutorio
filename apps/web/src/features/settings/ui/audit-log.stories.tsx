@@ -70,7 +70,9 @@ export const Playground: Story = {
     await expect(
       canvas.getByText('Free cancellation 24 h → 12 h, package warning 2 lessons → 3 lessons'),
     ).toBeVisible();
-    await expect(canvas.getByText(/^Payment 3,200\s₴ for the “Жовтень” package$/)).toBeVisible();
+    await expect(
+      canvas.getByText(/^Bank transfer 3,200\s₴ for the “Жовтень” package$/),
+    ).toBeVisible();
     await expect(canvas.getAllByText('Tutorio · automatically').length).toBeGreaterThan(0);
     await expect(canvas.getByText('Archived')).toBeVisible();
     await expect(canvas.getByText('Showing 20 of 64')).toBeVisible();

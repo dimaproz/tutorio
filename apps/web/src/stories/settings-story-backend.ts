@@ -162,6 +162,7 @@ const BOARD_ENTRIES: AuditLogListItem[] = [
         packageId: { before: null, after: PACKAGE_OCTOBER },
         amountMinor: { before: null, after: 320000 },
         currency: { before: null, after: 'UAH' },
+        method: { before: null, after: 'BANK_TRANSFER' },
       },
     },
   }),
