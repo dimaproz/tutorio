@@ -81,9 +81,9 @@ like a student's and a group's. No migration. Brief, decisions and open question
 Gate on 2026-09-26: validation 68 tests; API lint, typecheck, 265 unit tests
 and the API E2E suite on an isolated PostgreSQL 17 (140 tests in 14 files);
 web lint, typecheck, 427 unit tests, build, the Storybook browser tests (442
-in 102 files; two fade-in checks of the calendar and teacher form stories
-timed out under the full run and pass on their own, as before) and the
-Storybook build.
+in 102 files; under a full run a single story times out now and then — the
+calendar, the teacher form, the group page — and passes on its own, as
+before) and the Storybook build.
 
 ## Teachers — screen step S09 (2026-09-25)
 
