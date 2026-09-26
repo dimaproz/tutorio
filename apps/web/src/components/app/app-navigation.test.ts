@@ -20,6 +20,7 @@ describe('application navigation', () => {
       'groups',
       'parents',
       'teachers',
+      'settings',
     ]);
     expect(
       isNavigationActive('/app/students/83d4d4e3-5e9b-4fd0-b9cc-8d6e5f3d0e8e', items[4]!),
@@ -32,6 +33,16 @@ describe('application navigation', () => {
     expect(solo).not.toContain('teachers');
     expect(getRouteContext('/app/teachers/83d4d4e3-5e9b-4fd0-b9cc-8d6e5f3d0e8e')).toEqual([
       { key: 'teachers', href: '/app/teachers' },
+      { key: 'detail' },
+    ]);
+  });
+
+  it('offers the settings to an owner in both modes, each area a detail of them', () => {
+    const solo = getNavigationItems({ isOwner: true, isSolo: true }).map((item) => item.key);
+    expect(solo.at(-1)).toBe('settings');
+    expect(getRouteContext('/app/settings')).toEqual([{ key: 'settings', href: '/app/settings' }]);
+    expect(getRouteContext('/app/settings/audit')).toEqual([
+      { key: 'settings', href: '/app/settings' },
       { key: 'detail' },
     ]);
   });

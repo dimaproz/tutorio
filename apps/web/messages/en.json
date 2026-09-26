@@ -331,7 +331,8 @@
       "tabsLabel": "Quick navigation",
       "more": "More",
       "packages": "Packages",
-      "teachers": "Teachers"
+      "teachers": "Teachers",
+      "settings": "Settings"
     },
     "header": {
       "search": "Search students, lessons, payments",
@@ -3829,6 +3830,461 @@
       "unavailableDescription": "The details show up here once loaded. Nothing will change.",
       "previewTime": "10:00 – 11:00",
       "subjectPicked": "picked"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Defaults for the whole studio",
+    "hub": {
+      "groups": {
+        "studio": "Studio",
+        "money": "Money",
+        "connections": "Connections",
+        "control": "Control"
+      },
+      "soon": "Coming soon",
+      "soonShort": "Soon",
+      "cards": {
+        "general": {
+          "title": "General",
+          "description": "Name, time zone, currency, how you work"
+        },
+        "lessons": {
+          "title": "Lessons and packages",
+          "description": "Free cancellation, schedule ahead, packages running low"
+        },
+        "requisites": {
+          "title": "Business details",
+          "description": "Tax ID, IBAN and invoice details"
+        },
+        "payments": {
+          "title": "Payments",
+          "description": "Payment methods, debt reminders"
+        },
+        "telegram": {
+          "title": "Telegram bot",
+          "description": "Lesson reminders for students and parents"
+        },
+        "integrations": {
+          "title": "Integrations",
+          "description": "Calendars, payment services, export"
+        },
+        "audit": {
+          "title": "Change log",
+          "description": "Who changed what in the studio, and when"
+        }
+      },
+      "auditWeek": "{count, plural, one {# entry this week} other {# entries this week}}",
+      "auditWeekLoading": "Entries this week"
+    },
+    "units": {
+      "hours": "{count} h",
+      "weeks": "{count, plural, one {# week} other {# weeks}}",
+      "lessons": "{count, plural, one {# lesson} other {# lessons}}",
+      "minutes": "{count} min",
+      "hoursUnit": "h",
+      "weeksUnit": "{count, plural, one {week} other {weeks}}",
+      "lessonsUnit": "{count, plural, one {lesson} other {lessons}}",
+      "weeksPreset": "{count} wk",
+      "noWarnings": "No warnings"
+    },
+    "mode": {
+      "SOLO": "Tutor",
+      "SCHOOL": "Studio"
+    },
+    "page": {
+      "changed": "changed",
+      "saved": "All changes saved",
+      "unsaved": "{count, plural, one {# change not saved} other {# changes not saved}}",
+      "saving": "Saving…",
+      "save": "Save",
+      "cancel": "Cancel",
+      "toast": "Settings saved",
+      "discardTitle": "Leave without saving?",
+      "discardText": "The changes on this page are not saved — they will be lost if you leave.",
+      "discardAction": "Leave without saving",
+      "stay": "Stay",
+      "saveErrorTitle": "Could not save the settings"
+    },
+    "general": {
+      "title": "General",
+      "subtitle": "Name, time zone, currency and how you work",
+      "name": "Studio name",
+      "nameHint": "Support can change the name for you",
+      "timezone": "Time zone",
+      "timezoneHint": "Every lesson and schedule runs on this clock",
+      "timezoneValue": "{city} · {offset}",
+      "currency": "Default currency",
+      "currencyHint": "For new students, groups and packages. Existing prices stay as they are.",
+      "currencyNames": {
+        "UAH": "Hryvnia",
+        "PLN": "Złoty",
+        "EUR": "Euro",
+        "USD": "Dollar",
+        "GBP": "Pound"
+      },
+      "mode": "How you work",
+      "soloHint": "Only you teach. There is no “Teachers” section in the menu.",
+      "schoolHint": "Several teachers, each with their own colour in the calendar.",
+      "teachersNote": "The studio has <b>{count, plural, one {# active teacher} other {# active teachers}}</b>",
+      "teachersLink": "Teachers",
+      "refusal": {
+        "title": "You cannot switch to tutor mode yet",
+        "description": "{name} · studio",
+        "others": "{count, plural, one {The studio has # more active teacher} other {The studio has # more active teachers}}",
+        "othersText": "Tutor mode means one teacher: you. Archive the other teachers first.",
+        "keep": "Nothing changes",
+        "keepText": "The mode stays “Studio”; your other settings can still be saved",
+        "ok": "Got it",
+        "toTeachers": "Go to teachers",
+        "close": "Close"
+      },
+      "cities": {
+        "Europe_Kyiv": "Kyiv",
+        "Europe_Warsaw": "Warsaw",
+        "Europe_London": "London",
+        "Europe_Berlin": "Berlin",
+        "Europe_Paris": "Paris",
+        "UTC": "UTC"
+      }
+    },
+    "lessons": {
+      "title": "Lessons and packages",
+      "subtitle": "Cancellation, schedules ahead and packages running low",
+      "decrease": "Less: {label}",
+      "increase": "More: {label}",
+      "presets": "Quick choice: {label}",
+      "cancellation": {
+        "label": "Free cancellation",
+        "hint": "If a student cancels later, we suggest counting the lesson as paid. You can change it for one student in their direction.",
+        "free": "Free",
+        "paid": "Charged",
+        "paidShort": "Paid",
+        "lesson": "Lesson",
+        "early": "The student cancels earlier",
+        "before": "{count} h before the lesson",
+        "anyTime": "Students can cancel for free until the lesson starts"
+      },
+      "horizon": {
+        "label": "Schedule ahead",
+        "hint": "How many weeks of lessons new schedules put in the calendar.",
+        "caption": "Lessons are in the calendar until <b>{date}</b>. Every night a schedule adds another week.",
+        "weekOf": "Week of {date}"
+      },
+      "lowCredit": {
+        "label": "Package warning",
+        "hint": "When a package has this many lessons left or fewer. 0 turns it off.",
+        "sampleName": "Anna Shevchenko",
+        "badge": "Running low",
+        "left": "{left} of {total}",
+        "creditsLeft": "{left} of {total} lessons left in the package",
+        "caption": "That is how the student shows in packages, on their page and in the group — time to sell a new package.",
+        "offCaption": "No warnings: the student shows among those who owe once the package runs out."
+      }
+    },
+    "audit": {
+      "title": "Change log",
+      "subtitle": "Who changed what in the studio, and when",
+      "columns": {
+        "time": "Time",
+        "record": "What changed",
+        "action": "Action",
+        "changes": "Changes",
+        "who": "Who"
+      },
+      "listLabel": "Log entries",
+      "filters": {
+        "entity": "What changed",
+        "action": "Action",
+        "actor": "Who",
+        "allEntities": "Everything",
+        "allActions": "All actions",
+        "allPeople": "Everyone",
+        "reset": "Reset",
+        "sheet": "Filters",
+        "sheetDescription": "What changed, the action, who and the period",
+        "apply": "Show",
+        "current": "{label}: {value}"
+      },
+      "periods": {
+        "heading": "Period",
+        "week": "Last 7 days",
+        "month": "Last 30 days",
+        "thisMonth": "This month",
+        "custom": "Own dates",
+        "from": "From",
+        "to": "To",
+        "pickDate": "Pick a date"
+      },
+      "entity": {
+        "WORKSPACE": "Settings",
+        "STUDENT": "Student",
+        "PARENT": "Parent",
+        "GROUP": "Group",
+        "TEACHER": "Teacher",
+        "ENROLLMENT": "Direction",
+        "LESSON": "Lesson",
+        "LESSON_SERIES": "Schedule",
+        "SCHEDULE": "Schedule",
+        "PAUSE": "Pause",
+        "LESSON_PACKAGE": "Package",
+        "PAYMENT": "Payment"
+      },
+      "entityPlural": {
+        "WORKSPACE": "settings",
+        "STUDENT": "students",
+        "PARENT": "parents",
+        "GROUP": "groups",
+        "TEACHER": "teachers",
+        "ENROLLMENT": "directions",
+        "LESSON": "lessons",
+        "LESSON_SERIES": "schedules",
+        "SCHEDULE": "schedules",
+        "PAUSE": "pauses",
+        "LESSON_PACKAGE": "packages",
+        "PAYMENT": "payments"
+      },
+      "action": {
+        "CREATE": "Created",
+        "UPDATE": "Changed",
+        "DELETE": "Archived",
+        "RESTORE": "Restored"
+      },
+      "system": "Tutorio · automatically",
+      "deletedRecord": "Record deleted",
+      "today": "Today, {date}",
+      "yesterday": "Yesterday, {date}",
+      "shown": "Showing {shown} of {total}",
+      "shownShort": "{shown} of {total}",
+      "more": "Show {count} more",
+      "moreShort": "Show more",
+      "records": "{count, plural, one {# entry} other {# entries}}",
+      "open": "Show the changes",
+      "diff": {
+        "field": "Field",
+        "before": "Before",
+        "after": "After",
+        "afterShort": "after"
+      },
+      "summary": {
+        "arrow": "{before} → {after}",
+        "set": "{label}: {value}",
+        "automatic": "(automatically when it ended)",
+        "more": ", …",
+        "payment": "Payment {amount}",
+        "paymentFor": "Payment {amount} for the “{name}” package",
+        "created": {
+          "WORKSPACE": "Studio created",
+          "STUDENT": "New student",
+          "PARENT": "New parent",
+          "GROUP": "New group",
+          "TEACHER": "New teacher",
+          "ENROLLMENT": "New direction",
+          "LESSON": "New lesson",
+          "LESSON_SERIES": "New schedule",
+          "SCHEDULE": "New schedule",
+          "PAUSE": "New pause",
+          "LESSON_PACKAGE": "Package sold",
+          "PAYMENT": "Payment"
+        },
+        "deleted": "Archived",
+        "restored": "Restored from the archive",
+        "nothing": "No details",
+        "scheduleChange": "Change from {date}: {before} → {after}"
+      },
+      "noResults": {
+        "title": "No changes match these filters",
+        "text": "{summary}. Try another period or reset the filters.",
+        "reset": "Reset filters"
+      },
+      "empty": {
+        "title": "No changes in this period",
+        "text": "When someone changes a student, a lesson or a setting, it shows here."
+      },
+      "error": {
+        "title": "Could not load the log",
+        "text": "Check the connection and try again.",
+        "retry": "Try again"
+      },
+      "none": "—",
+      "yes": "Yes",
+      "no": "No",
+      "fields": {
+        "fullName": "Name",
+        "name": "Name",
+        "email": "Email",
+        "phone": "Phone",
+        "telegramUsername": "Telegram",
+        "timezone": "Time zone",
+        "notes": "Notes",
+        "note": "Note",
+        "bio": "About the teacher",
+        "topic": "Topic",
+        "subjects": "Subjects",
+        "color": "Calendar colour",
+        "avatarKey": "Avatar",
+        "currency": "Currency",
+        "defaultCurrency": "Default currency",
+        "mode": "How you work",
+        "cancellationDeadlineHours": "Free cancellation",
+        "scheduleHorizonWeeks": "Schedule ahead",
+        "lowCreditThreshold": "Package warning",
+        "horizonWeeks": "Schedule ahead",
+        "languageLevel": "Language level",
+        "knowledgeLevel": "Knowledge level",
+        "age": "Age",
+        "grade": "Grade",
+        "capacity": "Seats in the group",
+        "hourlyRateMinor": "Rate per lesson",
+        "defaultRateMinor": "Rate per lesson",
+        "priceMinor": "Lesson price",
+        "amountMinor": "Amount",
+        "totalPriceMinorSnapshot": "Package price",
+        "remainderMinor": "Money left over",
+        "refundedMinor": "Money refunded",
+        "billingType": "How they pay",
+        "sizingMode": "Package kind",
+        "ownPrice": "Own price",
+        "isDetached": "Apart from the schedule",
+        "cancelled": "Cancelled before it started",
+        "bulk": "Bulk cancellation",
+        "kind": "Lesson kind",
+        "cancelledBy": "Cancelled by",
+        "completedBy": "Held by",
+        "cancelledReason": "Reason",
+        "startsAtUtc": "Start",
+        "paidAt": "Paid on",
+        "startsAt": "Starts",
+        "endsAt": "Ends",
+        "endedAt": "Ended",
+        "expiresAt": "Valid until",
+        "effectiveFrom": "From",
+        "durationMin": "Length",
+        "slots": "Days and time",
+        "studentId": "Student",
+        "groupId": "Group",
+        "teacherId": "Teacher",
+        "transferredTo": "Handed over to",
+        "packageId": "Package",
+        "toPackageId": "New package",
+        "workspaceMemberId": "Login account",
+        "enrollmentId": "Direction",
+        "toEnrollmentId": "Moved to",
+        "originalLessonId": "Missed lesson",
+        "replacedByPauseId": "Replaced by a pause",
+        "parentIds": "Parents",
+        "studentIds": "Students",
+        "retained": "Kept",
+        "lessonsTotal": "Lessons in the package",
+        "manualAdjustment": "Adjustment",
+        "transferredCredits": "Lessons moved",
+        "refundedCredits": "Lessons refunded",
+        "debtLessonsCovered": "Owed lessons covered",
+        "lessons": "Lessons received",
+        "status": "Status",
+        "attendance": "Attendance",
+        "charge": "Lesson charge",
+        "archivedSeries": "Schedules stopped",
+        "archivedFutureScheduledLessons": "Future lessons removed",
+        "archivedGroupEnrollments": "Groups left",
+        "restoredFutureScheduledLessons": "Lessons brought back",
+        "restoredGroupEnrollments": "Groups rejoined",
+        "reassignedEnrollments": "Students handed over",
+        "reassignedSeries": "Schedules handed over",
+        "reassignedLessons": "Lessons handed over",
+        "repricedMembers": "Members repriced",
+        "transferredLessons": "Lessons handed over",
+        "transferredSchedules": "Schedules handed over",
+        "transferredGroups": "Groups handed over",
+        "transferredDirections": "Directions handed over",
+        "removedLessons": "Lessons removed",
+        "restoredLessons": "Lessons brought back",
+        "skippedLessons": "Skipped for clashes",
+        "moved": "Lessons moved",
+        "created": "Lessons added",
+        "removed": "Lessons removed"
+      },
+      "values": {
+        "mode": {
+          "SOLO": "Tutor",
+          "SCHOOL": "Studio"
+        },
+        "status": {
+          "ACTIVE": "Active",
+          "ARCHIVED": "Archived"
+        },
+        "studentStatus": {
+          "ACTIVE": "Active",
+          "ON_HOLD": "On hold",
+          "ARCHIVED": "Archived"
+        },
+        "teacherStatus": {
+          "ACTIVE": "Teaching",
+          "ARCHIVED": "Archived"
+        },
+        "enrollmentStatus": {
+          "ACTIVE": "Active",
+          "PAUSED": "Paused",
+          "ARCHIVED": "Archived"
+        },
+        "lessonStatus": {
+          "SCHEDULED": "Scheduled",
+          "COMPLETED": "Held",
+          "CANCELLED_CHARGED": "Cancelled, charged",
+          "CANCELLED_UNCHARGED": "Cancelled for free",
+          "NO_SHOW": "No-show"
+        },
+        "attendance": {
+          "PRESENT": "Present",
+          "ABSENT": "Absent",
+          "EXCUSED": "Excused"
+        },
+        "charge": {
+          "PACKAGE": "From a package",
+          "DEBT": "On debt",
+          "BALANCE": "From the advance"
+        },
+        "billingType": {
+          "PACKAGE": "Packages",
+          "PER_LESSON": "Per lesson"
+        },
+        "sizingMode": {
+          "FIXED_COUNT": "Number of lessons",
+          "BY_PERIOD": "Period from the schedule",
+          "BY_PERIOD_WEEKLY": "Period, N a week"
+        },
+        "lessonKind": {
+          "REGULAR": "Regular",
+          "MAKEUP": "Makeup"
+        },
+        "cancelledBy": {
+          "TEACHER": "Teacher",
+          "STUDENT": "Student",
+          "GROUP": "Group"
+        },
+        "completedBy": {
+          "SCHEDULE": "Automatically"
+        },
+        "languageLevel": {
+          "A1": "A1",
+          "A2": "A2",
+          "B1": "B1",
+          "B2": "B2",
+          "C1": "C1",
+          "C2": "C2"
+        },
+        "knowledgeLevel": {
+          "BEGINNER": "Beginner",
+          "INTERMEDIATE": "Intermediate",
+          "ADVANCED": "Advanced"
+        },
+        "retained": {
+          "credits": "lessons",
+          "charges": "charges",
+          "payments": "payments",
+          "history": "history"
+        }
+      }
     }
   }
 }

@@ -7,11 +7,11 @@ import {
   LayersIcon,
   PackageIcon,
   RepeatIcon,
+  SettingsIcon,
   UsersIcon,
 } from 'lucide-react';
 
-// The rebuilt destinations only; home and settings return with their new
-// screens.
+// The rebuilt destinations only; home returns with its new screen.
 export type NavigationKey =
   | 'calendar'
   | 'lessons'
@@ -20,7 +20,8 @@ export type NavigationKey =
   | 'students'
   | 'groups'
   | 'parents'
-  | 'teachers';
+  | 'teachers'
+  | 'settings';
 
 export type NavigationItem = {
   key: NavigationKey;
@@ -64,6 +65,8 @@ const navigationItems: NavigationItem[] = [
     ownerOnly: true,
     schoolOnly: true,
   },
+  // The studio's defaults and the change log (S10).
+  { key: 'settings', href: '/app/settings', icon: SettingsIcon, ownerOnly: true },
 ];
 
 function isVisible(item: NavigationItem, { isOwner, isSolo }: NavigationAccess): boolean {

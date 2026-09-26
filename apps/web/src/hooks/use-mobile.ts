@@ -20,3 +20,21 @@ function getServerSnapshot() {
 export function useIsMobile() {
   return React.useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
+
+const DESKTOP_BREAKPOINT = 1024;
+const BELOW_DESKTOP_MEDIA_QUERY = `(max-width: ${DESKTOP_BREAKPOINT - 1}px)`;
+
+function subscribeBelowDesktop(onStoreChange: () => void) {
+  const mql = window.matchMedia(BELOW_DESKTOP_MEDIA_QUERY);
+  mql.addEventListener('change', onStoreChange);
+  return () => mql.removeEventListener('change', onStoreChange);
+}
+
+/** Narrower than a desktop (`lg`): a tablet beside the sidebar, or a phone. */
+export function useIsBelowDesktop() {
+  return React.useSyncExternalStore(
+    subscribeBelowDesktop,
+    () => window.matchMedia(BELOW_DESKTOP_MEDIA_QUERY).matches,
+    getServerSnapshot,
+  );
+}

@@ -50,11 +50,12 @@ export interface EnrollmentListFilters {
 }
 
 export interface AuditListFilters {
-  page: number;
+  pageSize: number;
   entity?: string;
-  entityId?: string;
-  actorId?: string;
   action?: string;
+  actorId?: string;
+  from?: string;
+  to?: string;
 }
 
 export interface TeacherListFilters {
@@ -136,6 +137,7 @@ export const queryKeys = {
   audit: {
     all: ['audit'] as const,
     lists: (filters: AuditListFilters) => ['audit', 'list', filters] as const,
+    feed: (filters: AuditListFilters) => ['audit', 'feed', filters] as const,
   },
   teachers: {
     all: ['teachers'] as const,

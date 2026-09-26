@@ -10,6 +10,7 @@ import type {
   ParentListItem,
   StudentDetail,
   StudentListItem,
+  TeacherListResponse,
 } from '@tutorio/validation';
 import { paginationQuerySchema } from '@tutorio/validation';
 import { SessionProvider } from '@/components/app/session-provider';
@@ -25,6 +26,11 @@ import { createLessonListRoutes, type LessonListStoryOptions } from './lesson-li
 import { createLessonRoutes, type LessonStoryOptions } from './lesson-story-backend';
 import { createPackagesRoutes, type PackagesStoryOptions } from './packages-story-backend';
 import { createSchedulesRoutes, type SchedulesStoryOptions } from './schedules-story-backend';
+import {
+  createSettingsRoutes,
+  SETTINGS_WORKSPACE,
+  type SettingsStoryOptions,
+} from './settings-story-backend';
 import { createTeacherRoutes, type TeacherStoryOptions } from './teachers-story-backend';
 import {
   createProfileBillingRoutes,
@@ -357,6 +363,7 @@ export const SAMPLE_LESSONS: LessonResponse[] = [
 
 export type StoryBackendOptions = GroupStoryOptions &
   CalendarStoryOptions &
+  SettingsStoryOptions &
   LessonListStoryOptions &
   SchedulesStoryOptions &
   LessonStoryOptions &
@@ -389,12 +396,22 @@ export type StoryBackendOptions = GroupStoryOptions &
     mode?: AuthMe['workspace']['mode'];
   };
 
-/** The signed-in session of a story: its role and the studio's mode. */
-function sessionFor(options: StoryBackendOptions): AuthMe {
+/**
+ * The signed-in session of a story: its role and the studio's mode; the
+ * settings stories use the S10 studio, with what their saves changed.
+ */
+function sessionFor(
+  options: StoryBackendOptions,
+  settings: Partial<AuthMe['workspace']> = options.settings ? SETTINGS_WORKSPACE : {},
+): AuthMe {
   return {
     ...storySession,
     role: options.role ?? storySession.role,
-    workspace: { ...storySession.workspace, mode: options.mode ?? storySession.workspace.mode },
+    workspace: {
+      ...storySession.workspace,
+      ...settings,
+      mode: options.mode ?? settings.mode ?? storySession.workspace.mode,
+    },
   };
 }
 
@@ -506,6 +523,14 @@ function createHandler(options: StoryBackendOptions) {
   const profileBillingRoutes = createProfileBillingRoutes(options);
   const packagesRoutes = createPackagesRoutes(options);
   const teacherRoutes = createTeacherRoutes(options);
+  const settingsRoutes = createSettingsRoutes(options);
+  /** Active teachers besides the owner, as the teachers stories hold them. */
+  const otherActiveTeachers = async () => {
+    const response = await teacherRoutes('/teachers', 'GET', new URLSearchParams(), () => ({}));
+    if (!response?.ok) return 0;
+    const list = (await response.json()) as TeacherListResponse;
+    return list.counts.active - (list.me?.status === 'ACTIVE' ? 1 : 0);
+  };
   const settle = () =>
     options.saveDelayMs
       ? new Promise((resolve) => setTimeout(resolve, options.saveDelayMs))
@@ -518,7 +543,9 @@ function createHandler(options: StoryBackendOptions) {
     const query = url.searchParams;
     const never = () => new Promise<Response>(() => undefined);
 
-    if (path === '/auth/me') return json(sessionFor(options));
+    if (path === '/auth/me') {
+      return json(sessionFor(options, options.settings ? settingsRoutes.workspace() : undefined));
+    }
 
     // The API validates every list query; so does the story backend, or a
     // screen that asks for more than the API allows looks fine only here.
@@ -531,6 +558,15 @@ function createHandler(options: StoryBackendOptions) {
     }
 
     const readBody = () => JSON.parse(String(init?.body ?? '{}'));
+    // Before the teachers: the settings save is the settings stories' own.
+    const settingsResponse = await settingsRoutes.routes(
+      path,
+      method,
+      query,
+      readBody,
+      otherActiveTeachers,
+    );
+    if (settingsResponse) return settingsResponse;
     const teacherResponse = await teacherRoutes(path, method, query, readBody);
     if (teacherResponse) return teacherResponse;
     const packagesResponse = await packagesRoutes(path, method, query, readBody);

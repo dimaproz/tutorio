@@ -331,7 +331,8 @@
       "tabsLabel": "Швидка навігація",
       "more": "Ще",
       "packages": "Пакети",
-      "teachers": "Викладачі"
+      "teachers": "Викладачі",
+      "settings": "Налаштування"
     },
     "header": {
       "search": "Пошук учнів, занять, оплат",
@@ -3829,6 +3830,461 @@
       "unavailableDescription": "Дані з’являться тут, щойно завантажаться. Нічого не буде змінено.",
       "previewTime": "10:00 – 11:00",
       "subjectPicked": "обрано"
+    }
+  },
+  "settings": {
+    "title": "Налаштування",
+    "subtitle": "Типові значення для всієї студії",
+    "hub": {
+      "groups": {
+        "studio": "Студія",
+        "money": "Гроші",
+        "connections": "Підключення",
+        "control": "Контроль"
+      },
+      "soon": "Незабаром",
+      "soonShort": "Скоро",
+      "cards": {
+        "general": {
+          "title": "Загальне",
+          "description": "Назва, часовий пояс, валюта, режим роботи"
+        },
+        "lessons": {
+          "title": "Заняття й пакети",
+          "description": "Безкоштовне скасування, розклад наперед, залишок у пакетах"
+        },
+        "requisites": {
+          "title": "Реквізити",
+          "description": "ФОП, IBAN і дані для рахунків"
+        },
+        "payments": {
+          "title": "Оплати",
+          "description": "Способи оплати, нагадування про борги"
+        },
+        "telegram": {
+          "title": "Telegram-бот",
+          "description": "Нагадування учням і батькам про заняття"
+        },
+        "integrations": {
+          "title": "Інтеграції",
+          "description": "Календарі, платіжні сервіси, експорт"
+        },
+        "audit": {
+          "title": "Журнал змін",
+          "description": "Хто, що і коли змінив у студії"
+        }
+      },
+      "auditWeek": "{count, plural, one {# запис за тиждень} few {# записи за тиждень} many {# записів за тиждень} other {# запису за тиждень}}",
+      "auditWeekLoading": "Записи за тиждень"
+    },
+    "units": {
+      "hours": "{count} год",
+      "weeks": "{count, plural, one {# тиждень} few {# тижні} many {# тижнів} other {# тижня}}",
+      "lessons": "{count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}}",
+      "minutes": "{count} хв",
+      "hoursUnit": "год",
+      "weeksUnit": "{count, plural, one {тиждень} few {тижні} many {тижнів} other {тижня}}",
+      "lessonsUnit": "{count, plural, one {заняття} few {заняття} many {занять} other {заняття}}",
+      "weeksPreset": "{count} тиж.",
+      "noWarnings": "Без попереджень"
+    },
+    "mode": {
+      "SOLO": "Репетитор",
+      "SCHOOL": "Студія"
+    },
+    "page": {
+      "changed": "змінено",
+      "saved": "Усі зміни збережено",
+      "unsaved": "{count, plural, one {# зміна не збережена} few {# зміни не збережено} many {# змін не збережено} other {# зміни не збережено}}",
+      "saving": "Зберігаємо…",
+      "save": "Зберегти",
+      "cancel": "Скасувати",
+      "toast": "Налаштування збережено",
+      "discardTitle": "Вийти без збереження?",
+      "discardText": "Зміни на цій сторінці не збережено — якщо вийти, вони пропадуть.",
+      "discardAction": "Вийти без збереження",
+      "stay": "Залишитися",
+      "saveErrorTitle": "Не вдалося зберегти налаштування"
+    },
+    "general": {
+      "title": "Загальне",
+      "subtitle": "Назва, часовий пояс, валюта й режим роботи",
+      "name": "Назва студії",
+      "nameHint": "Змінити назву можна через підтримку",
+      "timezone": "Часовий пояс",
+      "timezoneHint": "Усі заняття й розклади — за цим часом",
+      "timezoneValue": "{city} · {offset}",
+      "currency": "Валюта за замовчуванням",
+      "currencyHint": "Для нових учнів, груп і пакетів. Ціни, що вже є, не зміняться.",
+      "currencyNames": {
+        "UAH": "Гривня",
+        "PLN": "Злотий",
+        "EUR": "Євро",
+        "USD": "Долар",
+        "GBP": "Фунт"
+      },
+      "mode": "Режим роботи",
+      "soloHint": "Викладаєте лише ви. Розділу «Викладачі» в меню немає.",
+      "schoolHint": "Кілька викладачів, у кожного свій колір у календарі.",
+      "teachersNote": "У студії <b>{count, plural, one {# активний викладач} few {# активні викладачі} many {# активних викладачів} other {# активного викладача}}</b>",
+      "teachersLink": "Викладачі",
+      "refusal": {
+        "title": "Поки що не можна перейти в режим репетитора",
+        "description": "{name} · студія",
+        "others": "{count, plural, one {У студії ще # активний викладач} few {У студії ще # активні викладачі} many {У студії ще # активних викладачів} other {У студії ще # активного викладача}}",
+        "othersText": "Режим репетитора — це один викладач, ви. Спершу архівуйте інших викладачів.",
+        "keep": "Нічого не зміниться",
+        "keepText": "Режим лишається «Студія», інші налаштування можна зберегти",
+        "ok": "Зрозуміло",
+        "toTeachers": "До викладачів",
+        "close": "Закрити"
+      },
+      "cities": {
+        "Europe_Kyiv": "Київ",
+        "Europe_Warsaw": "Варшава",
+        "Europe_London": "Лондон",
+        "Europe_Berlin": "Берлін",
+        "Europe_Paris": "Париж",
+        "UTC": "UTC"
+      }
+    },
+    "lessons": {
+      "title": "Заняття й пакети",
+      "subtitle": "Скасування, розклади наперед і залишок у пакетах",
+      "decrease": "Менше: {label}",
+      "increase": "Більше: {label}",
+      "presets": "Швидкий вибір: {label}",
+      "cancellation": {
+        "label": "Безкоштовне скасування",
+        "hint": "Якщо учень скасовує пізніше, заняття пропонуємо зарахувати як оплачене. Для окремого учня можна змінити в його напрямку.",
+        "free": "Безкоштовно",
+        "paid": "Оплачується",
+        "paidShort": "Платно",
+        "lesson": "Заняття",
+        "early": "Учень скасовує раніше",
+        "before": "за {count} год до заняття",
+        "anyTime": "Скасувати безкоштовно можна до самого початку"
+      },
+      "horizon": {
+        "label": "Розклад наперед",
+        "hint": "На скільки тижнів нові розклади створюють заняття в календарі.",
+        "caption": "Заняття вже в календарі до <b>{date}</b>. Щоночі розклад додає ще тиждень.",
+        "weekOf": "Тиждень з {date}"
+      },
+      "lowCredit": {
+        "label": "Попередження про пакет",
+        "hint": "Коли в пакеті лишається стільки занять або менше. 0 — не попереджати.",
+        "sampleName": "Anna Shevchenko",
+        "badge": "Закінчується",
+        "left": "{left} з {total}",
+        "creditsLeft": "У пакеті лишилося {left} з {total} занять",
+        "caption": "Так побачите учня в пакетах, на його сторінці й у групі — час продати новий пакет.",
+        "offCaption": "Попереджень не буде: учень з’явиться серед боржників, коли пакет закінчиться."
+      }
+    },
+    "audit": {
+      "title": "Журнал змін",
+      "subtitle": "Хто, що і коли змінив у студії",
+      "columns": {
+        "time": "Час",
+        "record": "Що змінили",
+        "action": "Дія",
+        "changes": "Зміни",
+        "who": "Хто"
+      },
+      "listLabel": "Записи журналу",
+      "filters": {
+        "entity": "Що змінили",
+        "action": "Дія",
+        "actor": "Хто",
+        "allEntities": "Усе",
+        "allActions": "Усі дії",
+        "allPeople": "Усі люди",
+        "reset": "Скинути",
+        "sheet": "Фільтри",
+        "sheetDescription": "Що змінили, дія, хто і період",
+        "apply": "Показати",
+        "current": "{label}: {value}"
+      },
+      "periods": {
+        "heading": "Період",
+        "week": "Останні 7 днів",
+        "month": "Останні 30 днів",
+        "thisMonth": "Цей місяць",
+        "custom": "Свої дати",
+        "from": "Від",
+        "to": "До",
+        "pickDate": "Оберіть дату"
+      },
+      "entity": {
+        "WORKSPACE": "Налаштування",
+        "STUDENT": "Учень",
+        "PARENT": "Батьки",
+        "GROUP": "Група",
+        "TEACHER": "Викладач",
+        "ENROLLMENT": "Напрямок",
+        "LESSON": "Заняття",
+        "LESSON_SERIES": "Розклад",
+        "SCHEDULE": "Розклад",
+        "PAUSE": "Пауза",
+        "LESSON_PACKAGE": "Пакет",
+        "PAYMENT": "Оплата"
+      },
+      "entityPlural": {
+        "WORKSPACE": "налаштування",
+        "STUDENT": "учні",
+        "PARENT": "батьки",
+        "GROUP": "групи",
+        "TEACHER": "викладачі",
+        "ENROLLMENT": "напрямки",
+        "LESSON": "заняття",
+        "LESSON_SERIES": "розклади",
+        "SCHEDULE": "розклади",
+        "PAUSE": "паузи",
+        "LESSON_PACKAGE": "пакети",
+        "PAYMENT": "оплати"
+      },
+      "action": {
+        "CREATE": "Створено",
+        "UPDATE": "Змінено",
+        "DELETE": "Архівовано",
+        "RESTORE": "Відновлено"
+      },
+      "system": "Tutorio · автоматично",
+      "deletedRecord": "Запис видалено",
+      "today": "Сьогодні, {date}",
+      "yesterday": "Вчора, {date}",
+      "shown": "Показано {shown} з {total}",
+      "shownShort": "{shown} з {total}",
+      "more": "Показати ще {count}",
+      "moreShort": "Показати ще",
+      "records": "{count, plural, one {# запис} few {# записи} many {# записів} other {# запису}}",
+      "open": "Показати зміни",
+      "diff": {
+        "field": "Поле",
+        "before": "Було",
+        "after": "Стало",
+        "afterShort": "стало"
+      },
+      "summary": {
+        "arrow": "{before} → {after}",
+        "set": "{label}: {value}",
+        "automatic": "(автоматично після закінчення)",
+        "more": ", …",
+        "payment": "Оплата {amount}",
+        "paymentFor": "Оплата {amount} за пакет «{name}»",
+        "created": {
+          "WORKSPACE": "Студію створено",
+          "STUDENT": "Новий учень",
+          "PARENT": "Новий контакт батьків",
+          "GROUP": "Нова група",
+          "TEACHER": "Новий викладач",
+          "ENROLLMENT": "Новий напрямок",
+          "LESSON": "Нове заняття",
+          "LESSON_SERIES": "Новий розклад",
+          "SCHEDULE": "Новий розклад",
+          "PAUSE": "Нова пауза",
+          "LESSON_PACKAGE": "Пакет продано",
+          "PAYMENT": "Оплата"
+        },
+        "deleted": "Архівовано",
+        "restored": "Відновлено з архіву",
+        "nothing": "Без подробиць",
+        "scheduleChange": "Зміна з {date}: {before} → {after}"
+      },
+      "noResults": {
+        "title": "Немає змін за цими фільтрами",
+        "text": "{summary}. Спробуйте інший період або скиньте фільтри.",
+        "reset": "Скинути фільтри"
+      },
+      "empty": {
+        "title": "За цей період змін немає",
+        "text": "Коли хтось змінить учня, заняття чи налаштування, це з’явиться тут."
+      },
+      "error": {
+        "title": "Не вдалося завантажити журнал",
+        "text": "Перевірте з’єднання і спробуйте ще раз.",
+        "retry": "Спробувати ще"
+      },
+      "none": "—",
+      "yes": "Так",
+      "no": "Ні",
+      "fields": {
+        "fullName": "Ім’я",
+        "name": "Назва",
+        "email": "Email",
+        "phone": "Телефон",
+        "telegramUsername": "Telegram",
+        "timezone": "Часовий пояс",
+        "notes": "Нотатки",
+        "note": "Примітка",
+        "bio": "Про викладача",
+        "topic": "Тема",
+        "subjects": "Предмети",
+        "color": "Колір у календарі",
+        "avatarKey": "Аватар",
+        "currency": "Валюта",
+        "defaultCurrency": "Валюта за замовчуванням",
+        "mode": "Режим роботи",
+        "cancellationDeadlineHours": "Безкоштовне скасування",
+        "scheduleHorizonWeeks": "Розклад наперед",
+        "lowCreditThreshold": "Попередження про пакет",
+        "horizonWeeks": "Розклад наперед",
+        "languageLevel": "Рівень мови",
+        "knowledgeLevel": "Рівень знань",
+        "age": "Вік",
+        "grade": "Клас",
+        "capacity": "Місць у групі",
+        "hourlyRateMinor": "Ставка за заняття",
+        "defaultRateMinor": "Ставка за заняття",
+        "priceMinor": "Ціна заняття",
+        "amountMinor": "Сума",
+        "totalPriceMinorSnapshot": "Ціна пакета",
+        "remainderMinor": "Залишок коштів",
+        "refundedMinor": "Повернуто коштів",
+        "billingType": "Як платить",
+        "sizingMode": "Вид пакета",
+        "ownPrice": "Своя ціна",
+        "isDetached": "Окремо від розкладу",
+        "cancelled": "Скасовано до початку",
+        "bulk": "Масове скасування",
+        "kind": "Вид заняття",
+        "cancelledBy": "Хто скасував",
+        "completedBy": "Хто провів",
+        "cancelledReason": "Причина",
+        "startsAtUtc": "Початок",
+        "paidAt": "Оплачено",
+        "startsAt": "Початок",
+        "endsAt": "Кінець",
+        "endedAt": "Завершено",
+        "expiresAt": "Діє до",
+        "effectiveFrom": "Діє з",
+        "durationMin": "Тривалість",
+        "slots": "Дні й час",
+        "studentId": "Учень",
+        "groupId": "Група",
+        "teacherId": "Викладач",
+        "transferredTo": "Передано викладачу",
+        "packageId": "Пакет",
+        "toPackageId": "Новий пакет",
+        "workspaceMemberId": "Обліковий запис",
+        "enrollmentId": "Напрямок",
+        "toEnrollmentId": "Куди перенесено",
+        "originalLessonId": "Пропущене заняття",
+        "replacedByPauseId": "Замінено паузою",
+        "parentIds": "Батьки",
+        "studentIds": "Учні",
+        "retained": "Збережено",
+        "lessonsTotal": "Занять у пакеті",
+        "manualAdjustment": "Коригування",
+        "transferredCredits": "Перенесено занять",
+        "refundedCredits": "Повернуто занять",
+        "debtLessonsCovered": "Закрито боргу",
+        "lessons": "Отримано занять",
+        "status": "Статус",
+        "attendance": "Відвідування",
+        "charge": "Оплата заняття",
+        "archivedSeries": "Зупинено розкладів",
+        "archivedFutureScheduledLessons": "Прибрано майбутніх занять",
+        "archivedGroupEnrollments": "Вийшов із груп",
+        "restoredFutureScheduledLessons": "Повернуто занять",
+        "restoredGroupEnrollments": "Повернуто в групи",
+        "reassignedEnrollments": "Передано учнів",
+        "reassignedSeries": "Передано розкладів",
+        "reassignedLessons": "Передано занять",
+        "repricedMembers": "Нова ціна для учнів",
+        "transferredLessons": "Передано занять",
+        "transferredSchedules": "Передано розкладів",
+        "transferredGroups": "Передано груп",
+        "transferredDirections": "Передано напрямків",
+        "removedLessons": "Прибрано занять",
+        "restoredLessons": "Повернуто занять",
+        "skippedLessons": "Пропущено через збіги",
+        "moved": "Перенесено занять",
+        "created": "Додано занять",
+        "removed": "Прибрано занять"
+      },
+      "values": {
+        "mode": {
+          "SOLO": "Репетитор",
+          "SCHOOL": "Студія"
+        },
+        "status": {
+          "ACTIVE": "Активний",
+          "ARCHIVED": "В архіві"
+        },
+        "studentStatus": {
+          "ACTIVE": "Активний",
+          "ON_HOLD": "На паузі",
+          "ARCHIVED": "В архіві"
+        },
+        "teacherStatus": {
+          "ACTIVE": "Викладає",
+          "ARCHIVED": "В архіві"
+        },
+        "enrollmentStatus": {
+          "ACTIVE": "Активний",
+          "PAUSED": "На паузі",
+          "ARCHIVED": "В архіві"
+        },
+        "lessonStatus": {
+          "SCHEDULED": "Заплановано",
+          "COMPLETED": "Проведено",
+          "CANCELLED_CHARGED": "Скасовано, оплачується",
+          "CANCELLED_UNCHARGED": "Скасовано безкоштовно",
+          "NO_SHOW": "Не прийшов"
+        },
+        "attendance": {
+          "PRESENT": "Був",
+          "ABSENT": "Не був",
+          "EXCUSED": "Поважна причина"
+        },
+        "charge": {
+          "PACKAGE": "З пакета",
+          "DEBT": "У борг",
+          "BALANCE": "З авансу"
+        },
+        "billingType": {
+          "PACKAGE": "Пакетами",
+          "PER_LESSON": "За заняття"
+        },
+        "sizingMode": {
+          "FIXED_COUNT": "Кількість занять",
+          "BY_PERIOD": "Період за розкладом",
+          "BY_PERIOD_WEEKLY": "Період, N на тиждень"
+        },
+        "lessonKind": {
+          "REGULAR": "Звичайне",
+          "MAKEUP": "Відпрацювання"
+        },
+        "cancelledBy": {
+          "TEACHER": "Викладач",
+          "STUDENT": "Учень",
+          "GROUP": "Група"
+        },
+        "completedBy": {
+          "SCHEDULE": "Автоматично"
+        },
+        "languageLevel": {
+          "A1": "A1",
+          "A2": "A2",
+          "B1": "B1",
+          "B2": "B2",
+          "C1": "C1",
+          "C2": "C2"
+        },
+        "knowledgeLevel": {
+          "BEGINNER": "Початковий",
+          "INTERMEDIATE": "Середній",
+          "ADVANCED": "Просунутий"
+        },
+        "retained": {
+          "credits": "заняття",
+          "charges": "списання",
+          "payments": "оплати",
+          "history": "історія"
+        }
+      }
     }
   }
 }
