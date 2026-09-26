@@ -88,7 +88,7 @@ export function SettingStepper({
                 onChange(clamp(value - 1));
               }
             }}
-            className="w-[3ch] bg-transparent text-right font-mono text-lg leading-6 font-semibold tabular-nums outline-none"
+            className="w-[3ch] bg-transparent text-right text-lg leading-6 font-semibold tabular-nums outline-none"
           />
           <span className="text-sm text-muted-foreground">{unit}</span>
         </label>

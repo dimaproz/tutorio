@@ -85,9 +85,7 @@ export function GroupCard({
           <GroupRosterStack group={group} />
           <div className="mt-auto flex items-center justify-between gap-3 border-t border-border pt-4">
             <GroupNextLesson startsAtUtc={group.nextLesson?.startsAtUtc ?? null} />
-            {price ? (
-              <span className="shrink-0 font-mono text-sm tabular-nums">{price}</span>
-            ) : null}
+            {price ? <span className="shrink-0 text-sm tabular-nums">{price}</span> : null}
           </div>
         </>
       )}

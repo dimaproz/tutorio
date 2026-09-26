@@ -30,7 +30,7 @@ const badgeVariants = cva(
         ghost: 'hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50',
         link: 'text-brand underline-offset-4 hover:underline',
         /** Navigation and filter counts: mono figures in a compact pill. */
-        counter: 'bg-secondary font-mono text-muted-foreground',
+        counter: 'bg-secondary tabular-nums text-muted-foreground',
       },
       size: {
         sm: 'h-6 text-xs',

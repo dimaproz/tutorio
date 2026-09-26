@@ -123,7 +123,7 @@ export function GroupScheduleCard({
         {slots.map((slot) => (
           <li
             key={`${slot.weekday}-${slot.localTime}`}
-            className="inline-flex h-9 items-center gap-2 rounded-control bg-feature-soft px-3 font-mono text-sm tabular-nums"
+            className="inline-flex h-9 items-center gap-2 rounded-control bg-feature-soft px-3 text-sm tabular-nums"
           >
             <span className="font-sans font-semibold uppercase">{shortDays[slot.weekday]}</span>
             {slot.localTime}
@@ -139,7 +139,7 @@ export function GroupScheduleCard({
             <span className="text-sm font-semibold tracking-[0.04em] uppercase">
               {longDays[slot.weekday]}
             </span>
-            <span className="font-mono text-[13px] text-feature-muted tabular-nums">
+            <span className="text-[13px] text-feature-muted tabular-nums">
               {timeRange(slot.localTime, slot.durationMin)}
             </span>
           </li>
@@ -281,7 +281,7 @@ function PlannedChange({
         {slots.map((slot) => (
           <li
             key={`${slot.weekday}-${slot.localTime}`}
-            className="inline-flex h-7 items-center gap-1.5 rounded-control bg-feature-soft px-2.5 font-mono text-[13px] tabular-nums"
+            className="inline-flex h-7 items-center gap-1.5 rounded-control bg-feature-soft px-2.5 text-[13px] tabular-nums"
           >
             <span className="font-sans font-semibold uppercase">{shortDays[slot.weekday]}</span>
             {slot.localTime}

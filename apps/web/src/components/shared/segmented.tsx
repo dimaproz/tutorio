@@ -103,7 +103,9 @@ export function Segmented<T extends string>({
             {item.count != null ? (
               // The count dims only on the filled segment, where 70% still
               // clears AA; on paper it stays at full muted strength.
-              <span className="font-mono text-xs in-data-[state=on]:opacity-70">{item.count}</span>
+              <span className="tabular-nums text-xs in-data-[state=on]:opacity-70">
+                {item.count}
+              </span>
             ) : null}
           </ToggleGroupItem>
         );

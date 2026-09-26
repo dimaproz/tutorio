@@ -120,7 +120,7 @@ export function TeacherScheduleRow({
       />
       <span
         className={cn(
-          'col-start-3 row-start-1 text-right font-mono text-[13px] whitespace-nowrap tabular-nums lg:col-start-4',
+          'col-start-3 row-start-1 text-right text-[13px] whitespace-nowrap tabular-nums lg:col-start-4',
           today ? 'font-semibold text-brand' : 'text-muted-foreground',
         )}
       >

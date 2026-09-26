@@ -6,7 +6,12 @@ import type { ColumnDef } from '@tanstack/react-table';
 import { useTranslations } from 'next-intl';
 import type { GroupListItem } from '@tutorio/validation';
 import { groupLifecycle, useGroupPrice } from './group-card';
-import { GroupNextLesson, GroupRosterStack, GroupSchedulePills, GroupStatusBadge } from './group-parts';
+import {
+  GroupNextLesson,
+  GroupRosterStack,
+  GroupSchedulePills,
+  GroupStatusBadge,
+} from './group-parts';
 import { GroupRowActions } from './group-row-actions';
 
 /** Reference layout: group, schedule, students, next lesson, price, actions. */
@@ -39,7 +44,7 @@ function GroupIdentityCell({ group }: { group: GroupListItem }) {
 function GroupPriceCell({ group }: { group: GroupListItem }) {
   const price = useGroupPrice(group);
   return price ? (
-    <span className="font-mono text-sm tabular-nums">{price}</span>
+    <span className="text-sm tabular-nums">{price}</span>
   ) : (
     <span aria-hidden="true" className="text-[13px] text-muted-foreground">
       —

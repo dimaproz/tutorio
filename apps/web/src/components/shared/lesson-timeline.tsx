@@ -98,7 +98,7 @@ export function LessonTimeline({
                   <span className="text-sm leading-5 font-semibold text-foreground">
                     {item.title}
                   </span>
-                  <span className="font-mono text-xs leading-5 whitespace-nowrap text-muted-foreground">
+                  <span className="tabular-nums text-xs leading-5 whitespace-nowrap text-muted-foreground">
                     {item.time}
                   </span>
                 </div>

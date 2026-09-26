@@ -230,7 +230,7 @@ function PaymentForm({
               <CircleAlertIcon aria-hidden="true" />
               {t('debtLabel')}
             </span>
-            <span className="font-mono text-[26px] leading-8 font-bold text-tint-danger-foreground">
+            <span className="tabular-nums text-[26px] leading-8 font-bold text-tint-danger-foreground">
               {format.money(debtMinor, currency)}
             </span>
           </div>

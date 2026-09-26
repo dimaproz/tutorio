@@ -192,7 +192,7 @@ export function StudentNextLessonCell({
           )}
         </span>
       )}
-      <span className="font-mono text-xs text-muted-foreground">{time}</span>
+      <span className="tabular-nums text-xs text-muted-foreground">{time}</span>
     </div>
   );
 }

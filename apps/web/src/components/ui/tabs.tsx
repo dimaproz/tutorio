@@ -86,7 +86,7 @@ function TabsTrigger({
       ) : (
         <>
           {children}
-          <span data-slot="tabs-trigger-count" className="font-mono text-xs">
+          <span data-slot="tabs-trigger-count" className="tabular-nums text-xs">
             {count}
           </span>
         </>

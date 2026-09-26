@@ -28,7 +28,7 @@ function Side({ side, before }: { side: MoveChangeSide; before: boolean }) {
         </span>
         <span
           className={cn(
-            'font-mono text-lg leading-6 font-semibold',
+            'tabular-nums text-lg leading-6 font-semibold',
             before ? 'text-muted-foreground line-through' : 'text-foreground',
           )}
         >

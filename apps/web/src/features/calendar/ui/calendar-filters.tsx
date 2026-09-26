@@ -61,7 +61,7 @@ function CheckRow({
         {label}
       </Label>
       {count !== undefined ? (
-        <span className="font-mono text-xs text-muted-foreground">{count}</span>
+        <span className="tabular-nums text-xs text-muted-foreground">{count}</span>
       ) : null}
     </div>
   );

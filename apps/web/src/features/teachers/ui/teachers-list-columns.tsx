@@ -35,7 +35,7 @@ function RateCell({ teacher }: { teacher: TeacherListItem }) {
   const t = useTranslations('teachers');
   const rate = useTeacherRate()(teacher);
   return (
-    <span className="block text-right font-mono text-sm tabular-nums">
+    <span className="block text-right text-sm tabular-nums">
       {rate?.text ?? <span className="text-muted-foreground">{t('noRate')}</span>}
     </span>
   );

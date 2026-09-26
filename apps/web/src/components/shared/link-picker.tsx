@@ -347,7 +347,7 @@ export function LinkPicker({
             {count > 0 && selectedText ? selectedText(count) : chooseText}
           </span>
           {keyboardHint ? (
-            <span aria-hidden="true" className="font-mono">
+            <span aria-hidden="true" className="tabular-nums">
               {keyboardHint}
             </span>
           ) : null}

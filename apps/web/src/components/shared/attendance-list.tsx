@@ -196,7 +196,7 @@ export function AttendanceList({
                           ·
                         </span>
                       ) : null}
-                      <span className="font-mono text-xs font-semibold">{part.value}</span>
+                      <span className="tabular-nums text-xs font-semibold">{part.value}</span>
                       <span className="truncate text-muted-foreground">{part.label}</span>
                     </span>
                   ))}
@@ -263,7 +263,7 @@ export function AttendanceList({
                       )}
                       <span
                         className={cn(
-                          'w-12 shrink-0 text-right font-mono text-[13px] font-semibold',
+                          'w-12 shrink-0 text-right tabular-nums text-[13px] font-semibold',
                           tone.rate,
                         )}
                       >

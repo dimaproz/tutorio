@@ -41,7 +41,11 @@ function PaginationLink({ className, isActive, size = 'icon-sm', ...props }: Pag
       asChild
       variant={isActive ? 'primary' : 'ghost'}
       size={size}
-      className={cn('font-mono text-[13px] font-normal', !isActive && 'text-foreground', className)}
+      className={cn(
+        'tabular-nums text-[13px] font-normal',
+        !isActive && 'text-foreground',
+        className,
+      )}
     >
       <a
         aria-current={isActive ? 'page' : undefined}

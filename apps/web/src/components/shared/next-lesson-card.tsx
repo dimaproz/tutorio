@@ -109,7 +109,9 @@ export function NextLessonCard({
               {date}
             </span>
             {time ? (
-              <span className={cn('text-[15px] text-feature-muted', progress ? null : 'font-mono')}>
+              <span
+                className={cn('text-[15px] text-feature-muted', progress ? null : 'tabular-nums')}
+              >
                 {time}
               </span>
             ) : null}

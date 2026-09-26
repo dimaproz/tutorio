@@ -139,7 +139,7 @@ export function StudentPackagesTab({
                 </div>
                 <span
                   className={cn(
-                    'ml-auto font-mono text-sm font-semibold md:hidden',
+                    'ml-auto tabular-nums text-sm font-semibold md:hidden',
                     state !== 'active' && 'text-muted-foreground',
                   )}
                 >
@@ -173,7 +173,7 @@ export function StudentPackagesTab({
               </div>
               <span
                 className={cn(
-                  'hidden text-right font-mono text-sm font-semibold md:block',
+                  'hidden text-right tabular-nums text-sm font-semibold md:block',
                   state !== 'active' && 'text-muted-foreground',
                 )}
               >

@@ -206,7 +206,7 @@ export function CalendarTimeGrid({
             {HOURS.slice(1).map((hour) => (
               <span
                 key={hour}
-                className="absolute right-2 font-mono text-[11px] leading-none text-muted-foreground"
+                className="absolute right-2 tabular-nums text-[11px] leading-none text-muted-foreground"
                 style={{ top: top(hour * 60) - 5 }}
               >
                 {clockLabel(hour * 60)}

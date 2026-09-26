@@ -126,7 +126,7 @@ function Tile({ label, value, className }: { label: string; value: string; class
   return (
     <div className={cn('flex flex-col gap-0.5 rounded-field bg-background px-3.5 py-3', className)}>
       <span className="text-xs text-muted-foreground">{label}</span>
-      <span className="font-mono text-[17px] font-bold">{value}</span>
+      <span className="tabular-nums text-[17px] font-bold">{value}</span>
     </div>
   );
 }
@@ -169,7 +169,7 @@ function LedgerItem({
     <li
       className={cn('flex items-center gap-3 rounded-tile px-3 py-2.5 md:min-h-16 md:py-0', GRID)}
     >
-      <span className="hidden font-mono text-sm font-semibold whitespace-nowrap md:block">
+      <span className="hidden tabular-nums text-sm font-semibold whitespace-nowrap md:block">
         {format.shortDay(payment.paidAt)}
       </span>
       <div className="flex min-w-0 grow items-center gap-3">
@@ -198,7 +198,7 @@ function LedgerItem({
       </span>
       <span
         className={cn(
-          'shrink-0 text-right font-mono text-[15px] font-bold',
+          'shrink-0 text-right tabular-nums text-[15px] font-bold',
           refund ? 'text-tint-danger-foreground' : 'text-foreground',
         )}
       >

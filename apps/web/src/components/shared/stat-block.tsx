@@ -197,7 +197,7 @@ export function StatBlock(props: StatBlockProps) {
             <ArrowRightIcon data-icon="inline-end" />
           </Button>
         ) : (
-          <span className="shrink-0 font-mono text-xs leading-[18px] whitespace-nowrap">
+          <span className="shrink-0 tabular-nums text-xs leading-[18px] whitespace-nowrap">
             {detail}
           </span>
         )}
@@ -245,7 +245,7 @@ function StatBlockValue(props: StatBlockProps & { theme: (typeof TONE)[StatBlock
           {props.value}
         </span>
         {props.sub ? (
-          <span className={cn('font-mono text-sm leading-5', theme.muted)}>{props.sub}</span>
+          <span className={cn('tabular-nums text-sm leading-5', theme.muted)}>{props.sub}</span>
         ) : null}
       </div>
     );
@@ -266,7 +266,7 @@ function StatBlockValue(props: StatBlockProps & { theme: (typeof TONE)[StatBlock
                 style={{ width: `${clampPercent(item.percent)}%` }}
               />
             </span>
-            <span className={cn('text-right font-mono text-xs', theme.muted)}>{item.value}</span>
+            <span className={cn('text-right tabular-nums text-xs', theme.muted)}>{item.value}</span>
           </div>
         ))}
       </div>

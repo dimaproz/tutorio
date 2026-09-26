@@ -121,7 +121,7 @@ export function CalendarMonthGrid({
                   {dayOfMonth(day, timeZone)}
                 </span>
                 {dayLessons.length > 0 ? (
-                  <span className="font-mono text-[11px] text-muted-foreground">
+                  <span className="tabular-nums text-[11px] text-muted-foreground">
                     {dayLessons.length}
                   </span>
                 ) : null}

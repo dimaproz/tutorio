@@ -172,7 +172,7 @@ export function LowCreditExplainer({ threshold }: { threshold: number }) {
                 />
               ))}
             </span>
-            <span className="font-mono text-xs text-muted-foreground" aria-hidden="true">
+            <span className="tabular-nums text-xs text-muted-foreground" aria-hidden="true">
               {t('left', { left, total: PACKAGE_SIZE })}
             </span>
           </div>

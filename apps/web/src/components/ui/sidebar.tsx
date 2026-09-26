@@ -555,7 +555,7 @@ function SidebarMenuBadge({ className, ...props }: React.ComponentProps<'div'>) 
       data-slot="sidebar-menu-badge"
       data-sidebar="menu-badge"
       className={cn(
-        'pointer-events-none absolute right-3 flex h-5.5 min-w-6.5 items-center justify-center rounded-pill bg-secondary px-2 font-mono text-xs text-muted-foreground tabular-nums select-none group-data-[collapsible=icon]:hidden peer-data-[size=default]/menu-button:top-[11px] peer-data-[size=lg]/menu-button:top-2.5 peer-data-[size=sm]/menu-button:top-1 peer-data-active/menu-button:bg-brand-soft peer-data-active/menu-button:text-brand-soft-foreground',
+        'pointer-events-none absolute right-3 flex h-5.5 min-w-6.5 items-center justify-center rounded-pill bg-secondary px-2 text-xs text-muted-foreground tabular-nums select-none group-data-[collapsible=icon]:hidden peer-data-[size=default]/menu-button:top-[11px] peer-data-[size=lg]/menu-button:top-2.5 peer-data-[size=sm]/menu-button:top-1 peer-data-active/menu-button:bg-brand-soft peer-data-active/menu-button:text-brand-soft-foreground',
         className,
       )}
       {...props}

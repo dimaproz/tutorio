@@ -123,7 +123,7 @@ export function AuthPromoRegister() {
         <div className="flex flex-col gap-0.5 rounded-block bg-card px-2.5 pt-3.5 pb-2.5 text-foreground">
           <div className="flex items-center justify-between px-2.5 pt-0.5 pb-2">
             <span className="text-[15px] leading-5 font-semibold">{t('students')}</span>
-            <span className="font-mono text-xs text-muted-foreground">48</span>
+            <span className="tabular-nums text-xs text-muted-foreground">48</span>
           </div>
           {STUDENTS.map((student) => (
             <div
@@ -188,7 +188,7 @@ export function AuthPromoRegister() {
           >
             <span
               className={cn(
-                'flex size-8 shrink-0 items-center justify-center rounded-pill font-mono text-[13px] font-medium',
+                'flex size-8 shrink-0 items-center justify-center rounded-pill tabular-nums text-[13px] font-medium',
                 index === 0 && 'bg-success text-success-foreground',
                 index === 1 && 'bg-primary text-primary-foreground',
                 index === 2 && 'bg-background text-muted-foreground',

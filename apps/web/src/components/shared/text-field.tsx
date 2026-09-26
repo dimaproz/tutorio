@@ -147,7 +147,9 @@ export function FieldFrame({
             <span />
           )}
           {aside ? (
-            <span className="font-mono text-xs leading-[18px] text-muted-foreground">{aside}</span>
+            <span className="tabular-nums text-xs leading-[18px] text-muted-foreground">
+              {aside}
+            </span>
           ) : null}
           {labelAction ? <span className="flex shrink-0 items-center">{labelAction}</span> : null}
         </div>

@@ -26,7 +26,12 @@ export function GroupStatusBadge({
   const t = useTranslations('groups.status');
   if (status === 'ACTIVE') {
     return (
-      <Badge variant={onTint ? 'surface' : 'success-inverse'} size="lg" dot dotTone={DOT_TONE[status]}>
+      <Badge
+        variant={onTint ? 'surface' : 'success-inverse'}
+        size="lg"
+        dot
+        dotTone={DOT_TONE[status]}
+      >
         {t(status)}
       </Badge>
     );
@@ -60,7 +65,7 @@ export function GroupSchedulePills({
         <li
           key={`${slot.weekday}-${slot.localTime}`}
           className={cn(
-            'inline-flex items-center gap-2 rounded-control bg-tile-indigo font-mono text-foreground tabular-nums',
+            'inline-flex items-center gap-2 rounded-control bg-tile-indigo text-foreground tabular-nums',
             size === 'sm' ? 'h-8 px-3 text-[13px]' : 'h-9 px-3.5 text-sm',
           )}
         >

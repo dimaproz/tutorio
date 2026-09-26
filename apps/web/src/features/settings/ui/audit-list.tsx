@@ -114,7 +114,9 @@ function AuditRow({ item, actor, format, open, onOpenChange }: RowProps) {
   const expandable = visibleFields(item).length > 0;
   const cells = (
     <>
-      <span className="font-mono text-sm text-muted-foreground">{format.time(item.createdAt)}</span>
+      <span className="tabular-nums text-sm text-muted-foreground">
+        {format.time(item.createdAt)}
+      </span>
       <span className="flex min-w-0 items-center gap-3">
         <EntityTile entity={item.entity} />
         <span className="flex min-w-0 flex-col">

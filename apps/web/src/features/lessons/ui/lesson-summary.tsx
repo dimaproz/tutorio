@@ -123,7 +123,7 @@ export function LessonBand({
         {capitalizeFirst(dates.longDay(lesson.startsAtUtc))}
       </DialogTitle>
       <div className="flex flex-wrap items-center gap-2.5">
-        <span className="font-mono text-[15px] text-tint-indigo-meta">
+        <span className="tabular-nums text-[15px] text-tint-indigo-meta">
           {t('timeRange', {
             start: dates.time(lesson.startsAtUtc),
             end: dates.endTime(lesson),

@@ -44,7 +44,7 @@ export function FilterPill({
       ) : null}
       {label}
       {count != null ? (
-        <span className="flex h-5 min-w-5 items-center justify-center rounded-pill bg-primary px-1.5 font-mono text-[11px] text-primary-foreground">
+        <span className="flex h-5 min-w-5 items-center justify-center rounded-pill bg-primary px-1.5 tabular-nums text-[11px] text-primary-foreground">
           {count}
         </span>
       ) : null}

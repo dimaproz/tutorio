@@ -303,7 +303,7 @@ function TimeComboField({
                 onBlur?.();
               }}
               className={cn(
-                'h-full font-mono text-[15px] md:text-[15px]',
+                'h-full tabular-nums text-[15px] md:text-[15px]',
                 compact ? 'pl-4' : 'pl-2.5',
                 'pr-1',
               )}
@@ -351,7 +351,7 @@ function TimeComboField({
               {custom ? (
                 <CommandGroup className="border-b border-border p-0 pb-1.5">
                   <CommandItem value={custom} onSelect={() => commit(custom)}>
-                    <span className="font-mono font-semibold">{custom}</span>
+                    <span className="tabular-nums font-semibold">{custom}</span>
                     <span className="text-xs text-muted-foreground">{labels.custom}</span>
                   </CommandItem>
                 </CommandGroup>
@@ -365,7 +365,7 @@ function TimeComboField({
                     onSelect={() => commit(slot)}
                     className="gap-2.5 font-normal data-[checked=true]:font-medium"
                   >
-                    <span className="font-mono">{slot}</span>
+                    <span className="tabular-nums">{slot}</span>
                     {busy[slot] ? <BusyMark label={busy[slot]!} /> : null}
                   </CommandItem>
                 ))}
@@ -427,7 +427,7 @@ function TimeSheetField({
         data-placeholder={value ? undefined : ''}
         onClick={() => close(true)}
         className={cn(
-          'flex h-13 w-full min-w-0 items-center gap-2.5 rounded-field border border-border bg-card px-4 text-left font-mono text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/16 data-invalid:border-destructive disabled:cursor-not-allowed disabled:bg-background disabled:text-muted-foreground data-placeholder:text-muted-foreground',
+          'flex h-13 w-full min-w-0 items-center gap-2.5 rounded-field border border-border bg-card px-4 text-left tabular-nums text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/16 data-invalid:border-destructive disabled:cursor-not-allowed disabled:bg-background disabled:text-muted-foreground data-placeholder:text-muted-foreground',
           compact && 'justify-between gap-1 px-3',
         )}
       >
@@ -471,7 +471,7 @@ function TimeSheetField({
                 onKeyDown={(event) => {
                   if (event.key === 'Enter') done();
                 }}
-                className="h-full pl-2.5 font-mono text-2xl font-semibold md:text-2xl"
+                className="h-full pl-2.5 tabular-nums text-2xl font-semibold md:text-2xl"
               />
               {labels.sheetTypeNote ? (
                 <InputGroupAddon align="inline-end" className="pr-4 text-xs font-normal">
@@ -491,7 +491,7 @@ function TimeSheetField({
                     aria-selected={selected}
                     onClick={() => setDraft(slot)}
                     className={cn(
-                      'relative h-11 rounded-item font-mono text-[15px] font-semibold outline-none focus-visible:outline-2 focus-visible:outline-ring',
+                      'relative h-11 rounded-item tabular-nums text-[15px] font-semibold outline-none focus-visible:outline-2 focus-visible:outline-ring',
                       selected
                         ? 'bg-primary text-primary-foreground'
                         : taken
