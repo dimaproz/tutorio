@@ -195,10 +195,17 @@ export class DashboardService {
     );
     const debt = debtorsOf(debts).totals;
     const expected = dueForecast(due);
+    // The studio's currency always; another one only when it has money in it.
     const currencies = [
       ...new Set([
         workspace.defaultCurrency,
-        ...[...received, ...debt, ...expected]
+        ...[
+          ...received.filter(
+            (row) => row.monthMinor !== 0 || row.todayMinor !== 0,
+          ),
+          ...debt.filter((row) => row.amountMinor > 0),
+          ...expected,
+        ]
           .map((row) => row.currency)
           .sort(),
       ]),
@@ -214,7 +221,7 @@ export class DashboardService {
           receivedMonthMinor: got?.monthMinor ?? 0,
           receivedTodayMinor: got?.todayMinor ?? 0,
           debtMinor: owed?.amountMinor ?? 0,
-          debtors: owed?.students ?? 0,
+          debtors: owed && owed.amountMinor > 0 ? owed.students : 0,
           dueMinor: soon?.amountMinor ?? 0,
           duePackages: soon?.packages ?? 0,
         };
