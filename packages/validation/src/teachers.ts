@@ -233,8 +233,10 @@ export type TeacherStudentsResponse = z.infer<typeof teacherStudentsResponseSche
 
 /**
  * Archive a teacher, or turn one's own teaching off. `transferTo` hands the
- * future lessons, the active schedules and the groups to another active
- * teacher; without it they stay with the archived teacher.
+ * future lessons, the active schedules, the groups and the one-to-one
+ * directions to another active teacher; without it they stay with the
+ * archived teacher. A solo tutor cannot turn their own teaching off
+ * (`SOLO_OWNER_MUST_TEACH`).
  */
 export const archiveTeacherSchema = z
   .object({ transferTo: uuidSchema.nullable().optional() })
@@ -252,6 +254,17 @@ export const teacherArchivePreviewSchema = z.object({
   studentCount: z.number().int().nonnegative(),
   /** Groups the teacher leads. */
   groups: z.array(z.object({ id: uuidSchema, name: z.string() })),
+  /**
+   * The teacher's live one-to-one directions: with a hand-over they move to
+   * the new teacher with their packages and debt.
+   */
+  directionCount: z.number().int().nonnegative(),
+  /**
+   * Of those, the students who already study one to one with the new
+   * teacher: their direction stays with the archived teacher (a student has
+   * one direction per teacher), only its lessons and schedule move.
+   */
+  keptDirectionCount: z.number().int().nonnegative(),
   /** The new teacher's overlaps with the handed-over lessons (L-110). */
   conflicts: z.array(scheduleConflictSchema),
 });
