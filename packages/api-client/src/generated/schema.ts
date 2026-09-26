@@ -1638,6 +1638,7 @@ export interface components {
       role: 'OWNER' | 'TEACHER';
     };
     UpdateWorkspaceSettingsDto: {
+      name?: string;
       /** @enum {string} */
       defaultCurrency?: 'EUR' | 'UAH' | 'PLN' | 'USD' | 'GBP';
       cancellationDeadlineHours?: number;
