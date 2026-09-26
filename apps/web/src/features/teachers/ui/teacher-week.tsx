@@ -4,15 +4,16 @@ import { useState } from 'react';
 import Link from 'next/link';
 import {
   CalendarDaysIcon,
-  CheckIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  CircleCheckIcon,
   LayersIcon,
   PlusIcon,
-  XIcon,
+  UserXIcon,
 } from 'lucide-react';
-import { useFormatter, useTranslations } from 'next-intl';
+import { useFormatter, useNow, useTranslations } from 'next-intl';
 import { IconButton } from '@/components/shared/icon-button';
+import { TimedLessonRow } from '@/features/lessons';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -24,18 +25,31 @@ import { cn } from '@/lib/utils';
 import type { TeacherWeek as Week, WeekDay, WeekLesson } from '../model/presentation';
 
 /** The fill of a lesson by where it stands (S09 week block). */
+// S11: a past lesson (held or missed) is an 8% tint with its mark, the next
+// one filled with the colour, one ahead a white tile with the time in the
+// teacher's colour.
 const BLOCK = {
-  done: 'bg-[color-mix(in_oklab,var(--teacher)_8%,var(--card))] text-muted-foreground',
-  miss: 'bg-tint-danger text-tint-danger-foreground',
+  done: 'bg-[color-mix(in_oklab,var(--teacher)_8%,var(--card))] text-foreground',
+  miss: 'bg-[color-mix(in_oklab,var(--teacher)_8%,var(--card))] text-foreground',
   // The colour itself, darkened when needed so the text reads (AA).
   next: 'bg-(--teacher-fill) text-(--teacher-ink)',
-  planned:
-    'border-l-[3px] border-(--teacher) bg-[color-mix(in_oklab,var(--teacher)_16%,var(--card))] text-foreground',
+  planned: 'border border-border bg-card text-foreground',
+} as const;
+
+const TIME = {
+  done: 'text-muted-foreground',
+  miss: 'text-muted-foreground',
+  next: '',
+  planned: 'text-[color-mix(in_oklab,var(--teacher)_70%,var(--foreground))]',
 } as const;
 
 function StateGlyph({ state }: { state: WeekLesson['state'] }) {
-  if (state === 'done') return <CheckIcon aria-hidden="true" className="size-3.5 shrink-0" />;
-  if (state === 'miss') return <XIcon aria-hidden="true" className="size-3.5 shrink-0" />;
+  if (state === 'done') {
+    return <CircleCheckIcon aria-hidden="true" className="size-3.5 shrink-0 text-success" />;
+  }
+  if (state === 'miss') {
+    return <UserXIcon aria-hidden="true" className="size-3.5 shrink-0 text-destructive" />;
+  }
   return null;
 }
 
@@ -73,11 +87,13 @@ function useDayFormat() {
 }
 
 /**
- * «Тиждень» on the profile (S09 board 02): the teacher's week in their colour
- * — held lessons faded with ✓, a miss in the danger tint with ✗, the next one
- * filled, the rest tinted with a mark —, a day without lessons «вихідний».
- * Seven columns on a desktop; below it a strip of day tiles with lesson dots
- * and the chosen day's lessons as rows. A lesson opens the lesson panel.
+ * «Тиждень» on the profile (S09 board 02, S11): the teacher's week in their
+ * colour — past lessons a light tint with ✓ or the no-show mark, the next one
+ * filled, the ones ahead white with the time in the colour —, a day without
+ * lessons «вихідний». Seven columns on a desktop; below it a strip of day
+ * tiles with lesson dots and the chosen day's lessons as the shared dense
+ * `LessonTimeRow`, tinted with the teacher's colour. A lesson opens the
+ * lesson panel.
  */
 export function TeacherWeek(props: WeekProps) {
   const t = useTranslations('teachers.profile.week');
@@ -150,6 +166,7 @@ export function TeacherWeek(props: WeekProps) {
           <DayStrip
             key={week.monday}
             week={week}
+            color={color}
             calendarHref={props.calendarHref}
             onOpenLesson={props.onOpenLesson}
           />
@@ -193,7 +210,7 @@ function WeekColumns({
             <span className="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
               {weekdays[calendarWeekday(day.date)]}
             </span>
-            <span className="font-mono text-[15px] font-semibold tabular-nums">
+            <span className="text-[15px] font-semibold tabular-nums">
               {Number(day.date.slice(8))}
             </span>
           </div>
@@ -216,8 +233,8 @@ function WeekColumns({
                   BLOCK[lesson.state],
                 )}
               >
-                <span className="flex items-center justify-between gap-1 font-mono text-xs tabular-nums">
-                  {lesson.time}
+                <span className="flex items-center justify-between gap-1 text-xs font-semibold tabular-nums">
+                  <span className={TIME[lesson.state]}>{lesson.time}</span>
                   <StateGlyph state={lesson.state} />
                 </span>
                 <span className="flex min-w-0 items-center gap-1 text-[13px] leading-[18px] font-semibold">
@@ -245,13 +262,17 @@ function firstDay(week: Week): WeekDay {
 
 function DayStrip({
   week,
+  color,
   calendarHref,
   onOpenLesson,
 }: {
   week: Week;
+  color: string;
   calendarHref: string;
   onOpenLesson: (lessonId: string) => void;
 }) {
+  const clock = useNow();
+  const [now] = useState(() => clock.getTime());
   const t = useTranslations('teachers.profile.week');
   const weekdays = useWeekdayLabels();
   const days = useDayFormat();
@@ -287,7 +308,7 @@ function DayStrip({
               >
                 {weekdays[calendarWeekday(item.date)]}
               </span>
-              <span className="font-mono text-[17px] leading-5 font-semibold tabular-nums">
+              <span className="text-[17px] leading-5 font-semibold tabular-nums">
                 {Number(item.date.slice(8))}
               </span>
               <span aria-hidden="true" className="flex h-1.5 items-center gap-0.5">
@@ -326,32 +347,14 @@ function DayStrip({
         <ul className="flex flex-col gap-2">
           {day.lessons.map((lesson) => (
             <li key={lesson.id}>
-              <button
-                type="button"
-                onClick={() => onOpenLesson(lesson.id)}
-                className={cn(
-                  'flex w-full items-center gap-3 rounded-row px-3.5 py-3 text-left outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50',
-                  BLOCK[lesson.state],
-                )}
-              >
-                <span className="font-mono text-sm font-semibold tabular-nums">{lesson.time}</span>
-                <span className="flex min-w-0 grow items-center gap-1.5 text-[15px] font-semibold">
-                  {lesson.group ? (
-                    <LayersIcon aria-hidden="true" className="size-4 shrink-0" />
-                  ) : null}
-                  <span className="truncate">{lesson.title}</span>
-                </span>
-                {lesson.state === 'done' || lesson.state === 'miss' || lesson.state === 'next' ? (
-                  <span className="flex shrink-0 items-center gap-1 text-xs">
-                    <StateGlyph state={lesson.state} />
-                    {lesson.state === 'done'
-                      ? t('done')
-                      : lesson.state === 'miss'
-                        ? t('miss')
-                        : t('upNext')}
-                  </span>
-                ) : null}
-              </button>
+              <TimedLessonRow
+                lesson={lesson.lesson}
+                nowMs={now}
+                dense
+                showTeacher
+                tint={color}
+                onOpen={onOpenLesson}
+              />
             </li>
           ))}
         </ul>

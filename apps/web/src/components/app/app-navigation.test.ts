@@ -12,6 +12,7 @@ describe('application navigation', () => {
     const items = getNavigationItems({ isOwner: true, isSolo: false });
 
     expect(items.map((item) => item.key)).toEqual([
+      'today',
       'calendar',
       'lessons',
       'schedules',
@@ -23,9 +24,17 @@ describe('application navigation', () => {
       'settings',
     ]);
     expect(
-      isNavigationActive('/app/students/83d4d4e3-5e9b-4fd0-b9cc-8d6e5f3d0e8e', items[4]!),
+      isNavigationActive('/app/students/83d4d4e3-5e9b-4fd0-b9cc-8d6e5f3d0e8e', items[5]!),
     ).toBe(true);
-    expect(isNavigationActive('/app/groups', items[4]!)).toBe(false);
+    expect(isNavigationActive('/app/groups', items[5]!)).toBe(false);
+  });
+
+  it('opens on «Сьогодні», active on /app only', () => {
+    const today = getNavigationItems({ isOwner: true, isSolo: true })[0]!;
+    expect(today.key).toBe('today');
+    expect(isNavigationActive('/app', today)).toBe(true);
+    expect(isNavigationActive('/app/students', today)).toBe(false);
+    expect(getRouteContext('/app')).toEqual([{ key: 'today', href: '/app' }]);
   });
 
   it('shows the teachers to a studio only', () => {

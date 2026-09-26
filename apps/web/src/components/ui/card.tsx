@@ -12,6 +12,8 @@ const CARD_TONE = {
   indigo: 'bg-tint-indigo text-tint-foreground',
   ink: 'bg-ink text-ink-foreground',
   feature: 'bg-feature text-feature-foreground',
+  // The money card: the brand indigo in both themes (S11).
+  accent: 'bg-accent-card text-accent-card-foreground',
   // The destructive block of an edit form: its text reads the danger pair.
   danger: 'bg-tint-danger text-tint-danger-foreground',
 } as const;

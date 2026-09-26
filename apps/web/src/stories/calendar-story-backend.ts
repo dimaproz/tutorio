@@ -105,6 +105,8 @@ function lesson(
     status,
     kind: 'REGULAR',
     originalLessonId: null,
+    originalStartsAtUtc: null,
+    groupMembers: null,
     makeupLessonId: null,
     topic: null,
     isDetached: false,

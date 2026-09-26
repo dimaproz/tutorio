@@ -42,6 +42,13 @@ function lesson(fields: Partial<CalendarLesson> = {}): CalendarLesson {
     group: null,
     teacher: { id: 'teacher-1', name: 'Dmytro Tutor', color: null },
     originalLessonId: null,
+    enrollmentId: null,
+    attendance: null,
+    cancelledBy: null,
+    rescheduledCount: 0,
+    priceMinor: 50000,
+    groupMembers: null,
+    originalStartsAtUtc: null,
     ...fields,
   };
 }

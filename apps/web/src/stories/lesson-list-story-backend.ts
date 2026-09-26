@@ -121,6 +121,8 @@ function lesson(
     status,
     kind: 'REGULAR',
     originalLessonId: null,
+    originalStartsAtUtc: null,
+    groupMembers: null,
     makeupLessonId: null,
     topic: null,
     isDetached: false,
@@ -301,8 +303,11 @@ const needsMakeup = (item: LessonResponse) =>
   item.groupId === null &&
   (cancelled(item) || item.status === 'NO_SHOW') &&
   item.makeupLessonId === null;
+const unconfirmed = (item: LessonResponse) =>
+  item.groupId !== null && item.status === 'COMPLETED' && item.attendance?.confirmed !== true;
 const QUICK: Record<string, (item: LessonResponse) => boolean> = {
   unpaid,
+  unconfirmed,
   cancelled,
   no_show: (item) => item.status === 'NO_SHOW',
   needs_makeup: needsMakeup,
@@ -410,6 +415,7 @@ export function createLessonListRoutes(options: LessonListStoryOptions) {
           cancelled: base.filter(cancelled).length,
           noShow: base.filter(QUICK.no_show!).length,
           needsMakeup: base.filter(needsMakeup).length,
+          unconfirmed: base.filter(unconfirmed).length,
         },
       });
     }

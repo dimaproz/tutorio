@@ -28,6 +28,7 @@ const COUNT_OF: Record<QuickFilter, keyof LessonPageResponse['counts']> = {
   cancelled: 'cancelled',
   no_show: 'noShow',
   needs_makeup: 'needsMakeup',
+  unconfirmed: 'unconfirmed',
 };
 
 export type ToolbarActions = {

@@ -29,3 +29,5 @@ export {
   useLengthLabel,
 } from './ui/schedule/schedule-parts';
 export { scheduleConflicts } from './model/move';
+export { TimedLessonRow } from './ui/timed-lesson-row';
+export { minutesLeft, type TimeRowLesson, type TimeRowPackage } from './model/time-row';

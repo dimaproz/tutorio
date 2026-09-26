@@ -4,6 +4,7 @@ import {
   ClipboardListIcon,
   GraduationCapIcon,
   HeartIcon,
+  HouseIcon,
   LayersIcon,
   PackageIcon,
   RepeatIcon,
@@ -11,8 +12,8 @@ import {
   UsersIcon,
 } from 'lucide-react';
 
-// The rebuilt destinations only; home returns with its new screen.
 export type NavigationKey =
+  | 'today'
   | 'calendar'
   | 'lessons'
   | 'schedules'
@@ -50,6 +51,8 @@ export function canUseBusinessRoutes(role: string): boolean {
 // One flat list, in the order the design reads it. Every destination reads
 // business data, so every one is owner-only.
 const navigationItems: NavigationItem[] = [
+  // The owner's home screen (S11).
+  { key: 'today', href: '/app', icon: HouseIcon, exact: true, ownerOnly: true },
   { key: 'calendar', href: '/app/calendar', icon: CalendarDaysIcon, ownerOnly: true },
   { key: 'lessons', href: '/app/lessons', icon: ClipboardListIcon, ownerOnly: true },
   { key: 'schedules', href: '/app/schedules', icon: RepeatIcon, ownerOnly: true },
@@ -96,7 +99,7 @@ export function getRouteContext(pathname: string): RouteContext[] {
   const matchedItem = routeContextItems.find((item) => isNavigationActive(pathname, item));
 
   if (!matchedItem) {
-    return [{ key: 'students', href: '/app/students' }];
+    return [{ key: 'today', href: '/app' }];
   }
 
   if (pathname === matchedItem.href) {

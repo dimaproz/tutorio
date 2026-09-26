@@ -15,4 +15,9 @@ export {
   useStudentLinkRow,
   type StudentFormPicker,
 } from './use-student-link';
-export { DirectionPaymentDialog, DirectionPauseEndDialog } from './learning/member-billing-dialogs';
+export {
+  DirectionPaymentDialog,
+  DirectionPauseEndDialog,
+  StudentPauseEndDialog,
+} from './learning/member-billing-dialogs';
+export { StudentPaymentDialog } from './learning/student-payment-dialog';

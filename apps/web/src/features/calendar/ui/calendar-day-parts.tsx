@@ -4,10 +4,10 @@ import { CalendarDaysIcon, ClockIcon, RotateCcwIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { ImpactList, type ImpactItem } from '@/components/shared/impact-list';
 import { cn } from '@/lib/utils';
-import { lessonsOnDay, lessonTitle, lessonType, type CalendarLesson } from '../model/lessons';
+import { lessonsOnDay, lessonTitle, type CalendarLesson } from '../model/lessons';
 import { clockLabel, dayOfMonth, isSameDay } from '../model/period';
 import { daySummary, type DaySummary } from '../model/summary';
-import { CalendarEvent } from './calendar-event';
+import { TimedLessonRow } from '@/features/lessons';
 import { TypeDots } from './calendar-month-grid';
 import { useLocalFormatter } from '@/lib/i18n/local-formatter';
 import { useStudioTimeZone } from '@/lib/i18n/time-zone';
@@ -199,17 +199,20 @@ export function CalendarDayLine({
 
 /**
  * The phone's week: an agenda grouped by day (a seven-column grid does not
- * fit 390), each lesson a row with its time, name, length and type.
+ * fit 390), each lesson the shared timed row (`LessonTimeRow`, dense).
  */
 export function CalendarAgenda({
   days,
   lessons,
   nowMs,
+  showTeacher = false,
   onOpenLesson,
 }: {
   days: Date[];
   lessons: readonly CalendarLesson[];
   nowMs: number;
+  /** Several teachers: each time column takes the teacher's colour (S11). */
+  showTeacher?: boolean;
   onOpenLesson: (lesson: CalendarLesson) => void;
 }) {
   const t = useTranslations('calendar.agenda');
@@ -230,13 +233,13 @@ export function CalendarAgenda({
             </h2>
             <div className="flex flex-col gap-2">
               {dayLessons.map((lesson) => (
-                <CalendarEvent
+                <TimedLessonRow
                   key={lesson.id}
                   lesson={lesson}
                   nowMs={nowMs}
-                  variant="row"
-                  meta={t('meta', { minutes: lesson.durationMin, type: lessonType(lesson) })}
-                  onClick={() => onOpenLesson(lesson)}
+                  dense
+                  showTeacher={showTeacher}
+                  onOpen={() => onOpenLesson(lesson)}
                 />
               ))}
             </div>

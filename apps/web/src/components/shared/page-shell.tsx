@@ -6,7 +6,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-const TITLE_SIZE = {
+/** The page title's type scale, for a page head composed around it (Today). */
+export const PAGE_TITLE_CLASS = {
   default: 'text-xl font-semibold tracking-tight md:text-2xl',
   md: 'text-[26px] leading-8 font-semibold tracking-[-0.03em] md:text-[32px] md:leading-[38px]',
   lg: 'text-[34px] leading-[38px] font-semibold tracking-[-0.035em] md:text-5xl md:leading-[52px]',
@@ -31,7 +32,7 @@ export function PageHeader({
   title: React.ReactNode;
   description?: React.ReactNode;
   action?: React.ReactNode;
-  size?: keyof typeof TITLE_SIZE;
+  size?: keyof typeof PAGE_TITLE_CLASS;
 }) {
   const studio = size !== 'default';
 
@@ -44,7 +45,7 @@ export function PageHeader({
       )}
     >
       <div className={cn('flex min-w-0 flex-col', studio ? 'gap-1 md:gap-2' : 'gap-1')}>
-        <h1 className={TITLE_SIZE[size]}>{title}</h1>
+        <h1 className={PAGE_TITLE_CLASS[size]}>{title}</h1>
         {description ? (
           <p
             className={cn(

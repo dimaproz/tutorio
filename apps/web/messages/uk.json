@@ -334,7 +334,8 @@
       "more": "Ще",
       "packages": "Пакети",
       "teachers": "Викладачі",
-      "settings": "Налаштування"
+      "settings": "Налаштування",
+      "today": "Сьогодні"
     },
     "header": {
       "search": "Пошук учнів, занять, оплат",
@@ -1137,6 +1138,22 @@
         "OTHER": "Інше"
       },
       "settledLessons": "закрито {count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}}"
+    },
+    "paymentStart": {
+      "title": "Записати оплату",
+      "description": "Оберіть учня й напрямок — далі звична форма оплати.",
+      "close": "Закрити",
+      "next": "Далі",
+      "cancel": "Скасувати",
+      "student": "Учень",
+      "studentPlaceholder": "Оберіть учня",
+      "studentSearch": "Пошук учня…",
+      "studentEmpty": "Нікого не знайдено",
+      "noDirections": "У цього учня ще немає напрямків.",
+      "direction": "Напрямок",
+      "directionPlaceholder": "Оберіть напрямок",
+      "directionSearch": "Пошук напрямку…",
+      "directionEmpty": "Напрямків немає"
     }
   },
   "groups": {
@@ -2500,6 +2517,31 @@
       "nothingEmptyText": "{who} · {period}. Проведені й уже скасовані не рахуються.",
       "done": "{count, plural, one {Скасовано # заняття на {period} · безкоштовно} few {Скасовано # заняття на {period} · безкоштовно} many {Скасовано # занять на {period} · безкоштовно} other {Скасовано # заняття на {period} · безкоштовно}}",
       "show": "Показати"
+    },
+    "timeRow": {
+      "open": "Відкрити заняття: {name}, {time}",
+      "denseMeta": "{minutes} хв · {kind, select, group {група} makeup {відпрацювання} other {індивідуальне}}",
+      "kind": {
+        "individual": "індивідуальне",
+        "group": "група"
+      },
+      "groupOf": "група · {count, plural, one {# учень} few {# учні} many {# учнів} other {# учня}}",
+      "makeupChip": "відпрацювання",
+      "makeupFor": "за {date}",
+      "moved": "перенесено",
+      "badge": {
+        "cancelled": "Скасовано · {by, select, student {учень} other {викладач}}",
+        "cancelledCharged": "Скасовано · з оплатою",
+        "noShow": "Не прийшли",
+        "markAttendance": "Відмітити",
+        "attendance": "Без відмітки",
+        "now": "Зараз · ще {minutes} хв",
+        "unpaid": "не оплачено",
+        "held": "Проведено",
+        "groupPaid": "{paid} з {total} оплатили",
+        "package": "пакет {left} з {total}",
+        "perLesson": "за заняття"
+      }
     }
   },
   "packages": {
@@ -3107,13 +3149,15 @@
       "unpaid": "Без оплати",
       "cancelled": "Скасовані",
       "no_show": "Не прийшли",
-      "needs_makeup": "Без відпрацювання"
+      "needs_makeup": "Без відпрацювання",
+      "unconfirmed": "Без відмітки"
     },
     "summary": {
       "unpaid": "без оплати",
       "cancelled": "скасовані",
       "no_show": "не прийшли",
-      "needs_makeup": "без відпрацювання"
+      "needs_makeup": "без відпрацювання",
+      "unconfirmed": "без відмітки присутності"
     },
     "search": "Учень, група або викладач",
     "periods": {
@@ -4298,6 +4342,155 @@
           "BANK_TRANSFER": "Переказ на рахунок",
           "CARD": "Картка",
           "OTHER": "Інше"
+        }
+      }
+    }
+  },
+  "today": {
+    "title": "Сьогодні",
+    "ready": "Tutorio готовий до роботи",
+    "greeting": {
+      "hello": "{part, select, morning {Доброго ранку} day {Доброго дня} other {Доброго вечора}}, {name}",
+      "welcome": "Вітаємо, {name}"
+    },
+    "header": {
+      "scope": "Чиї заняття",
+      "mine": "Мої",
+      "studio": "Студія",
+      "payment": "Записати оплату",
+      "paymentHint": "Спершу оберіть учня",
+      "create": "Створити",
+      "sheetDescription": "Що створити",
+      "sale": "Продати пакет",
+      "saleHint": "Учень і напрямок",
+      "student": "Новий учень",
+      "studentHint": "Повна форма учня",
+      "lesson": "Додати заняття",
+      "lessonHint": "Форма з сьогоднішньою датою"
+    },
+    "ticket": {
+      "now": "Зараз",
+      "next": "Наступне",
+      "left": "ще {minutes} хв",
+      "inMinutes": "{minutes, plural, =0 {починається} other {через # хв}}",
+      "inHours": "через {hours} год{minutes, plural, =0 {} other { # хв}}",
+      "until": "до {time}",
+      "package": "пакет {left} з {total}",
+      "progress": "Скільки минуло",
+      "open": "Відкрити заняття",
+      "openLesson": "Відкрити заняття: {who}",
+      "done": "На сьогодні все",
+      "held": "{count, plural, one {# заняття проведено} few {# заняття проведено} many {# занять проведено} other {# заняття проведено}}",
+      "tomorrow": "завтра",
+      "nothingAhead": "попереду вільно",
+      "firstNext": "{tomorrow, select, yes {Завтра} other {{weekday, select, 1 {У понеділок} 2 {У вівторок} 3 {У середу} 4 {У четвер} 5 {У пʼятницю} 6 {У суботу} other {У неділю}}}} перше о {time} — {who}",
+      "tomorrowCalendar": "Календар на завтра",
+      "calendar": "Календар"
+    },
+    "day": {
+      "today": "Сьогодні",
+      "calendar": "Календар",
+      "count": "{count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}}",
+      "countCancelled": "{count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}} · {cancelled} скасовано",
+      "held": "{count, plural, one {# заняття проведено} few {# заняття проведено} many {# занять проведено} other {# заняття проведено}}"
+    },
+    "free": {
+      "title": "Сьогодні вільно",
+      "tomorrow": "наступні заняття — завтра",
+      "onDay": "наступні заняття — {weekday, select, 1 {у понеділок} 2 {у вівторок} 3 {у середу} 4 {у четвер} 5 {у пʼятницю} 6 {у суботу} other {у неділю}}",
+      "nothing": "найближчих двох тижнів занять немає",
+      "count": "{count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}}",
+      "countRange": "{count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}} · {from}–{to}"
+    },
+    "tomorrow": {
+      "title": "Завтра",
+      "calendar": "У календарі",
+      "summary": "{day} · {count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}} · перше о {time}",
+      "none": "занять немає"
+    },
+    "money": {
+      "title": "Гроші за місяць",
+      "scope": "уся студія",
+      "received": "Отримано {month, select, 1 {у січні} 2 {у лютому} 3 {у березні} 4 {у квітні} 5 {у травні} 6 {у червні} 7 {у липні} 8 {у серпні} 9 {у вересні} 10 {у жовтні} 11 {у листопаді} other {у грудні}}",
+      "today": "+{amount} сьогодні",
+      "thisMonth": "цього місяця",
+      "noPayments": "платежів цього місяця ще немає",
+      "debt": "Борги зараз",
+      "noDebt": "Боргів немає",
+      "debtors": "{count, plural, one {у # учня} few {у # учнів} many {у # учнів} other {у # учня}}",
+      "due": "До оплати за 7 днів",
+      "approx": "≈ {amount}",
+      "duePackages": "{count, plural, =0 {нічого не очікується} one {# пакет · прибл.} few {# пакети · прибл.} many {# пакетів · прибл.} other {# пакета · прибл.}}"
+    },
+    "attention": {
+      "title": "Потребує уваги",
+      "total": "{count, plural, one {# справа} few {# справи} many {# справ} other {# справи}}",
+      "calmTitle": "Усе під контролем",
+      "calmText": "Немає нічого, що потребує ваших дій",
+      "summaryMore": "{names} і ще {count}",
+      "all": "Усі {count}",
+      "kind": {
+        "attendance": "Присутність не відмічена",
+        "makeups": "Потрібне відпрацювання",
+        "debtors": "Боржники",
+        "unpaidPackages": "Продано, але не оплачено",
+        "endingPackages": "Пакети закінчуються",
+        "expiringPackages": "Пакети за датою",
+        "pauses": "Повертаються з паузи"
+      },
+      "action": {
+        "attendance": "Відмітити",
+        "makeups": "Призначити",
+        "debtors": "Записати оплату",
+        "unpaidPackages": "Записати оплату",
+        "endingPackages": "Продати пакет",
+        "expiringPackages": "Подовжити",
+        "pauses": "Повернути"
+      },
+      "line": {
+        "todayAt": "сьогодні, {time}",
+        "dayAt": "{day}, {time}",
+        "makeup": "{day} · {why, select, noShow {не прийшли} student {скасував учень} group {скасувала група} other {скасував викладач}}",
+        "debt": "{amount} · {count, plural, one {# заняття} few {# заняття} many {# занять} other {# заняття}}",
+        "unpaid": "сплачено {paid} з {total}",
+        "unpaidNamed": "«{name}» · сплачено {paid} з {total}",
+        "creditsLeft": "{who} · {count, plural, one {лишилось # заняття} few {лишилось # заняття} many {лишилось # занять} other {лишилось # заняття}}",
+        "noCredits": "{who} · занять не лишилось",
+        "expires": "діє до {day} · {count, plural, one {згорить # заняття} few {згорять # заняття} many {згорять # занять} other {згорить # заняття}}",
+        "returns": "повертається {day}",
+        "openPause": "на паузі без дати · {days, plural, one {# день} few {# дні} many {# днів} other {# дня}}"
+      }
+    },
+    "error": {
+      "title": "Не вдалося завантажити",
+      "text": "Решта сторінки працює. Спробуйте ще раз.",
+      "retry": "Спробувати ще"
+    },
+    "setup": {
+      "title": "Почнімо",
+      "progress": "Уже {done} з {total}",
+      "text": "Кроки відмічаються самі, щойно зʼявляться дані. Коли все готово — список зникне.",
+      "done": "Готово",
+      "step": {
+        "teacher": {
+          "title": "Додати викладача",
+          "text": "Для студії: у кожного свій колір у календарі",
+          "action": "Додати викладача"
+        },
+        "student": {
+          "title": "Додати учня",
+          "text": "Імʼя й контакти — решту можна пізніше",
+          "action": "Додати учня"
+        },
+        "schedule": {
+          "title": "Створити розклад або заняття",
+          "text": "Регулярні заняття зʼявляться в календарі на 4 тижні",
+          "action": "Створити розклад"
+        },
+        "sale": {
+          "title": "Продати пакет або записати оплату",
+          "text": "Щоб бачити, хто скільки сплатив",
+          "action": "Продати пакет"
         }
       }
     }

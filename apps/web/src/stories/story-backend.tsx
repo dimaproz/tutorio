@@ -32,6 +32,7 @@ import {
   type SettingsStoryOptions,
 } from './settings-story-backend';
 import { createTeacherRoutes, type TeacherStoryOptions } from './teachers-story-backend';
+import { createTodayRoutes, type TodayStoryOptions } from './today-story-backend';
 import {
   createProfileBillingRoutes,
   type ProfileBillingOptions,
@@ -319,6 +320,8 @@ function lesson(
     rescheduledCount: 0,
     kind: 'REGULAR',
     originalLessonId: null,
+    originalStartsAtUtc: null,
+    groupMembers: null,
     makeupLessonId: null,
     topic: null,
     rescheduledAt: null,
@@ -370,7 +373,8 @@ export type StoryBackendOptions = GroupStoryOptions &
   LessonCreateStoryOptions &
   ProfileBillingOptions &
   PackagesStoryOptions &
-  TeacherStoryOptions & {
+  TeacherStoryOptions &
+  TodayStoryOptions & {
     students?: SampleStudent[];
     packages?: PackageResponse[];
     lessons?: LessonResponse[];
@@ -524,6 +528,7 @@ function createHandler(options: StoryBackendOptions) {
   const packagesRoutes = createPackagesRoutes(options);
   const teacherRoutes = createTeacherRoutes(options);
   const settingsRoutes = createSettingsRoutes(options);
+  const todayRoutes = createTodayRoutes(options);
   /** Active teachers besides the owner, as the teachers stories hold them. */
   const otherActiveTeachers = async () => {
     const response = await teacherRoutes('/teachers', 'GET', new URLSearchParams(), () => ({}));
@@ -558,6 +563,9 @@ function createHandler(options: StoryBackendOptions) {
     }
 
     const readBody = () => JSON.parse(String(init?.body ?? '{}'));
+    // The Today page's reads (its teachers list included) come first.
+    const todayResponse = await todayRoutes(path, method, query);
+    if (todayResponse) return todayResponse;
     // Before the teachers: the settings save is the settings stories' own.
     const settingsResponse = await settingsRoutes.routes(
       path,

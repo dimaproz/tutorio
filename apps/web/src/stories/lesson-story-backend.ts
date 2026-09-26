@@ -129,6 +129,8 @@ function lesson(n: number, fields: Partial<LessonDetailResponse>): LessonDetailR
     status: 'SCHEDULED',
     kind: 'REGULAR',
     originalLessonId: null,
+    originalStartsAtUtc: null,
+    groupMembers: null,
     makeupLessonId: null,
     topic: 'Past Perfect: розповідь про подорож',
     isDetached: false,

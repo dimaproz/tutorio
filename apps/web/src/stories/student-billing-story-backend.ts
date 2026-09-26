@@ -348,6 +348,8 @@ function lesson(
     rescheduledCount: 0,
     kind: 'REGULAR',
     originalLessonId: null,
+    originalStartsAtUtc: null,
+    groupMembers: null,
     makeupLessonId: null,
     topic: null,
     rescheduledAt: null,

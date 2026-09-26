@@ -95,6 +95,11 @@
   --color-chip-on-tint: var(--chip-on-tint);
   --color-chip-on-tint-foreground: var(--chip-on-tint-foreground);
   --color-stat-track-on-tint: var(--stat-track-on-tint);
+  --color-accent-card: var(--accent-card);
+  --color-accent-card-foreground: var(--accent-card-foreground);
+  --color-accent-card-muted: var(--accent-card-muted);
+  --color-accent-card-line: var(--accent-card-line);
+  --color-stub-shade: var(--stub-shade);
   --color-feature: var(--feature);
   --color-feature-foreground: var(--feature-foreground);
   --color-feature-heading: var(--feature-heading);
@@ -264,6 +269,14 @@
   --feature-muted: #b5bbd6;
   --feature-soft: #2a2f55;
   --feature-line: #3a4070;
+  /* The money card (S11 «M2»): the brand indigo with white text in both
+     themes. `brand` turns lavender in dark and the white text would vanish. */
+  --accent-card: #4b4fe0;
+  --accent-card-foreground: #ffffff;
+  --accent-card-muted: rgb(255 255 255 / 0.88);
+  --accent-card-line: rgb(255 255 255 / 0.16);
+  /* The stub of a painted ticket (the Today «Зараз»): a shade over its fill. */
+  --stub-shade: rgb(0 0 0 / 0.14);
   --raised: #ffffff;
   --raised-line: transparent;
   --scrim: color-mix(in oklab, #1b1f3b 46%, transparent);

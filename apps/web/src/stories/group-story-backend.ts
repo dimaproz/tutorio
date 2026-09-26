@@ -382,6 +382,8 @@ function b2Lessons(planned = false): LessonResponse[] {
       rescheduledCount: 0,
       kind: 'REGULAR',
       originalLessonId: null,
+      originalStartsAtUtc: null,
+      groupMembers: null,
       makeupLessonId: null,
       topic: TOPICS[index % TOPICS.length]!,
       rescheduledAt: null,

@@ -334,7 +334,8 @@
       "more": "More",
       "packages": "Packages",
       "teachers": "Teachers",
-      "settings": "Settings"
+      "settings": "Settings",
+      "today": "Today"
     },
     "header": {
       "search": "Search students, lessons, payments",
@@ -1137,6 +1138,22 @@
         "OTHER": "Other"
       },
       "settledLessons": "{count, plural, one {# lesson} other {# lessons}} settled"
+    },
+    "paymentStart": {
+      "title": "Record a payment",
+      "description": "Pick the student and the direction — then the usual payment form.",
+      "close": "Close",
+      "next": "Next",
+      "cancel": "Cancel",
+      "student": "Student",
+      "studentPlaceholder": "Pick a student",
+      "studentSearch": "Search students…",
+      "studentEmpty": "Nobody found",
+      "noDirections": "This student has no directions yet.",
+      "direction": "Direction",
+      "directionPlaceholder": "Pick a direction",
+      "directionSearch": "Search directions…",
+      "directionEmpty": "No directions"
     }
   },
   "groups": {
@@ -2500,6 +2517,31 @@
       "nothingEmptyText": "{who} · {period}. Held and already cancelled lessons do not count.",
       "done": "{count, plural, one {Cancelled # lesson on {period} · free} other {Cancelled # lessons on {period} · free}}",
       "show": "Show"
+    },
+    "timeRow": {
+      "open": "Open the lesson: {name}, {time}",
+      "denseMeta": "{minutes} min · {kind, select, group {group} makeup {makeup} other {individual}}",
+      "kind": {
+        "individual": "individual",
+        "group": "group"
+      },
+      "groupOf": "group · {count, plural, one {# student} other {# students}}",
+      "makeupChip": "makeup",
+      "makeupFor": "for {date}",
+      "moved": "moved",
+      "badge": {
+        "cancelled": "Cancelled · {by, select, student {student} other {teacher}}",
+        "cancelledCharged": "Cancelled · charged",
+        "noShow": "No-show",
+        "markAttendance": "Mark",
+        "attendance": "Not marked",
+        "now": "Now · {minutes} min left",
+        "unpaid": "unpaid",
+        "held": "Held",
+        "groupPaid": "{paid} of {total} paid",
+        "package": "package {left} of {total}",
+        "perLesson": "per lesson"
+      }
     }
   },
   "packages": {
@@ -3107,13 +3149,15 @@
       "unpaid": "Unpaid",
       "cancelled": "Cancelled",
       "no_show": "No-shows",
-      "needs_makeup": "No makeup"
+      "needs_makeup": "No makeup",
+      "unconfirmed": "Not marked"
     },
     "summary": {
       "unpaid": "unpaid",
       "cancelled": "cancelled",
       "no_show": "no-shows",
-      "needs_makeup": "no makeup"
+      "needs_makeup": "no makeup",
+      "unconfirmed": "attendance not marked"
     },
     "search": "Student, group or teacher",
     "periods": {
@@ -4298,6 +4342,155 @@
           "BANK_TRANSFER": "Bank transfer",
           "CARD": "Card",
           "OTHER": "Other"
+        }
+      }
+    }
+  },
+  "today": {
+    "title": "Today",
+    "ready": "Tutorio is ready to work",
+    "greeting": {
+      "hello": "{part, select, morning {Good morning} day {Good afternoon} other {Good evening}}, {name}",
+      "welcome": "Welcome, {name}"
+    },
+    "header": {
+      "scope": "Whose lessons",
+      "mine": "Mine",
+      "studio": "Studio",
+      "payment": "Record a payment",
+      "paymentHint": "Pick the student first",
+      "create": "Create",
+      "sheetDescription": "What to create",
+      "sale": "Sell a package",
+      "saleHint": "Student and direction",
+      "student": "New student",
+      "studentHint": "The full student form",
+      "lesson": "Add a lesson",
+      "lessonHint": "The form with today’s date"
+    },
+    "ticket": {
+      "now": "Now",
+      "next": "Next",
+      "left": "{minutes} min left",
+      "inMinutes": "{minutes, plural, =0 {starting} other {in # min}}",
+      "inHours": "in {hours} h{minutes, plural, =0 {} other { # min}}",
+      "until": "until {time}",
+      "package": "package {left} of {total}",
+      "progress": "How far it has got",
+      "open": "Open the lesson",
+      "openLesson": "Open the lesson: {who}",
+      "done": "That’s all for today",
+      "held": "{count, plural, one {# lesson held} other {# lessons held}}",
+      "tomorrow": "tomorrow",
+      "nothingAhead": "nothing ahead",
+      "firstNext": "{tomorrow, select, yes {Tomorrow} other {On {weekday, select, 1 {Monday} 2 {Tuesday} 3 {Wednesday} 4 {Thursday} 5 {Friday} 6 {Saturday} other {Sunday}}}} the first at {time} — {who}",
+      "tomorrowCalendar": "Tomorrow’s calendar",
+      "calendar": "Calendar"
+    },
+    "day": {
+      "today": "Today",
+      "calendar": "Calendar",
+      "count": "{count, plural, one {# lesson} other {# lessons}}",
+      "countCancelled": "{count, plural, one {# lesson} other {# lessons}} · {cancelled} cancelled",
+      "held": "{count, plural, one {# lesson held} other {# lessons held}}"
+    },
+    "free": {
+      "title": "A free day",
+      "tomorrow": "the next lessons are tomorrow",
+      "onDay": "the next lessons are on {weekday, select, 1 {Monday} 2 {Tuesday} 3 {Wednesday} 4 {Thursday} 5 {Friday} 6 {Saturday} other {Sunday}}",
+      "nothing": "no lessons in the next two weeks",
+      "count": "{count, plural, one {# lesson} other {# lessons}}",
+      "countRange": "{count, plural, one {# lesson} other {# lessons}} · {from}–{to}"
+    },
+    "tomorrow": {
+      "title": "Tomorrow",
+      "calendar": "In the calendar",
+      "summary": "{day} · {count, plural, one {# lesson} other {# lessons}} · the first at {time}",
+      "none": "no lessons"
+    },
+    "money": {
+      "title": "This month’s money",
+      "scope": "whole studio",
+      "received": "Received in {name}",
+      "today": "+{amount} today",
+      "thisMonth": "this month",
+      "noPayments": "no payments this month yet",
+      "debt": "Owed now",
+      "noDebt": "No debts",
+      "debtors": "{count, plural, one {by # student} other {by # students}}",
+      "due": "Due within 7 days",
+      "approx": "≈ {amount}",
+      "duePackages": "{count, plural, =0 {nothing expected} one {# package · approx.} other {# packages · approx.}}"
+    },
+    "attention": {
+      "title": "Needs attention",
+      "total": "{count, plural, one {# item} other {# items}}",
+      "calmTitle": "Everything is under control",
+      "calmText": "Nothing needs your action",
+      "summaryMore": "{names} and {count} more",
+      "all": "All {count}",
+      "kind": {
+        "attendance": "Attendance not marked",
+        "makeups": "Makeup needed",
+        "debtors": "Debtors",
+        "unpaidPackages": "Sold, not paid",
+        "endingPackages": "Packages running out",
+        "expiringPackages": "Packages expiring",
+        "pauses": "Back from a pause"
+      },
+      "action": {
+        "attendance": "Mark",
+        "makeups": "Assign",
+        "debtors": "Record a payment",
+        "unpaidPackages": "Record a payment",
+        "endingPackages": "Sell a package",
+        "expiringPackages": "Extend",
+        "pauses": "Bring back"
+      },
+      "line": {
+        "todayAt": "today, {time}",
+        "dayAt": "{day}, {time}",
+        "makeup": "{day} · {why, select, noShow {no-show} student {cancelled by the student} group {cancelled by the group} other {cancelled by the teacher}}",
+        "debt": "{amount} · {count, plural, one {# lesson} other {# lessons}}",
+        "unpaid": "paid {paid} of {total}",
+        "unpaidNamed": "“{name}” · paid {paid} of {total}",
+        "creditsLeft": "{who} · {count, plural, one {# lesson left} other {# lessons left}}",
+        "noCredits": "{who} · no lessons left",
+        "expires": "valid until {day} · {count, plural, one {# lesson will expire} other {# lessons will expire}}",
+        "returns": "returns {day}",
+        "openPause": "paused with no end date · {days, plural, one {# day} other {# days}}"
+      }
+    },
+    "error": {
+      "title": "Couldn’t load",
+      "text": "The rest of the page works. Try again.",
+      "retry": "Try again"
+    },
+    "setup": {
+      "title": "Let’s start",
+      "progress": "{done} of {total} done",
+      "text": "Steps tick themselves as the data appears. When everything is done, the list goes away.",
+      "done": "Done",
+      "step": {
+        "teacher": {
+          "title": "Add a teacher",
+          "text": "For a studio: each with a colour in the calendar",
+          "action": "Add a teacher"
+        },
+        "student": {
+          "title": "Add a student",
+          "text": "Name and contacts — the rest can wait",
+          "action": "Add a student"
+        },
+        "schedule": {
+          "title": "Create a schedule or a lesson",
+          "text": "Regular lessons appear in the calendar four weeks ahead",
+          "action": "Create a schedule"
+        },
+        "sale": {
+          "title": "Sell a package or record a payment",
+          "text": "To see who has paid how much",
+          "action": "Sell a package"
         }
       }
     }

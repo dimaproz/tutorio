@@ -15,7 +15,14 @@ import {
  * default is never written, so the plain page has a plain URL.
  */
 
-export const QUICK_FILTERS = ['all', 'unpaid', 'cancelled', 'no_show', 'needs_makeup'] as const;
+export const QUICK_FILTERS = [
+  'all',
+  'unpaid',
+  'cancelled',
+  'no_show',
+  'needs_makeup',
+  'unconfirmed',
+] as const;
 export type QuickFilter = (typeof QUICK_FILTERS)[number];
 
 export const PERIOD_PRESETS = ['week', 'month', 'lastMonth', 'last3Months', 'all'] as const;

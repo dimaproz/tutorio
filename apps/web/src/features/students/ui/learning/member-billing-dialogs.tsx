@@ -59,3 +59,28 @@ export function DirectionPauseEndDialog({
     />
   );
 }
+
+/**
+ * «Повернути» one pause from outside the profile (the Today page, S11): the
+ * S06 return dialog for that pause once the student's pauses are read.
+ */
+export function StudentPauseEndDialog({
+  student,
+  pauseId,
+  onClose,
+}: {
+  student: { id: string; fullName: string };
+  pauseId: string;
+  onClose: () => void;
+}) {
+  const pauses = useStudentPausesQuery(student.id);
+  const pause = pauses.data?.items.find((row) => row.id === pauseId) ?? null;
+  return (
+    <PauseEndDialog
+      open={pause !== null}
+      onOpenChange={(open) => (open ? undefined : onClose())}
+      pause={pause}
+      student={student}
+    />
+  );
+}

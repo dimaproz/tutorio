@@ -50,14 +50,14 @@ type EventArgs = {
  * `CalendarEvent` (S03 decisions 4–6): the colour says the kind, the fill
  * the time, the marks what happened. `block` sits on the week grid (compact
  * at 45 minutes, the topic from 90), `wide` on the day view, `chip` in a
- * month cell, `row` in the phone's lists; `ghost`, `dragging` and `conflict`
+ * month cell (the phone's lists are the shared `LessonTimeRow`); `ghost`, `dragging` and `conflict`
  * are the drag states.
  */
 function EventStory({ sample, variant, state, showTeacher, onClick }: EventArgs) {
   const lesson = SAMPLES[sample];
   const height = variant === 'block' ? (lesson.durationMin / 60) * 44 - 3 : undefined;
   return (
-    <div className={variant === 'wide' || variant === 'row' ? 'w-150' : 'w-48'} style={{ height }}>
+    <div className={variant === 'wide' ? 'w-150' : 'w-48'} style={{ height }}>
       <CalendarEvent
         lesson={lesson}
         nowMs={CALENDAR_CLOCK}
@@ -66,7 +66,6 @@ function EventStory({ sample, variant, state, showTeacher, onClick }: EventArgs)
         withTopic={lesson.durationMin >= 90}
         showTeacher={showTeacher}
         state={state}
-        meta={variant === 'row' ? `${lesson.durationMin} min · individual` : undefined}
         onClick={onClick}
       />
     </div>
@@ -79,7 +78,7 @@ const meta = {
   args: { sample: 'running', variant: 'block', state: 'idle', showTeacher: false, onClick: fn() },
   argTypes: {
     sample: { control: 'select', options: Object.keys(SAMPLES) },
-    variant: { control: 'inline-radio', options: ['block', 'wide', 'chip', 'row'] },
+    variant: { control: 'inline-radio', options: ['block', 'wide', 'chip'] },
     state: { control: 'inline-radio', options: ['idle', 'ghost', 'dragging', 'conflict'] },
   },
 } satisfies Meta<typeof EventStory>;
@@ -169,14 +168,19 @@ export const DaySide: StoryObj = {
   ),
 };
 
-/** The phone's week agenda. */
-export const Agenda: StoryObj = {
-  render: () => (
+/**
+ * The phone's week agenda: the shared dense `LessonTimeRow` (S11 board 05);
+ * `showTeacher` tints each time column with the teacher's colour.
+ */
+export const Agenda: StoryObj<{ showTeacher: boolean }> = {
+  args: { showTeacher: false },
+  render: ({ showTeacher }) => (
     <div className="w-97">
       <CalendarAgenda
         days={WEEK_DAYS.slice(0, 3)}
         lessons={WEEK}
         nowMs={CALENDAR_CLOCK}
+        showTeacher={showTeacher}
         onOpenLesson={fn()}
       />
     </div>

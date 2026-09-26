@@ -13,14 +13,22 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { MoonIcon } from 'lucide-react';
 import { storySession } from './story-backend';
 
-function Chrome({ pathname, children }: { pathname: string; children: ReactNode }) {
+function Chrome({
+  pathname,
+  solo,
+  children,
+}: {
+  pathname: string;
+  solo: boolean;
+  children: ReactNode;
+}) {
   const crumb = usePageCrumb();
   return (
     <>
       <AppSidebarContent
         pathname={pathname}
         session={storySession}
-        isSolo={false}
+        isSolo={solo}
         onLogout={() => undefined}
       />
       <SidebarInset className="gap-4 px-4 pt-1 pb-[110px] md:gap-6 md:pt-5 md:pr-6 md:pb-4 md:pl-0">
@@ -47,14 +55,25 @@ function Chrome({ pathname, children }: { pathname: string; children: ReactNode 
  * The authenticated frame for screen stories: the same sidebar, top bars and
  * tab bar the app layout renders, without the session request.
  */
-export function StoryAppShell({ pathname, children }: { pathname: string; children: ReactNode }) {
+export function StoryAppShell({
+  pathname,
+  solo = false,
+  children,
+}: {
+  pathname: string;
+  /** A solo tutor's studio: no «Викладачі» in the menu. */
+  solo?: boolean;
+  children: ReactNode;
+}) {
   return (
     <PageCrumbProvider>
       <SidebarProvider
         defaultOpen
         style={{ '--sidebar-width': '316px', '--header-height': '3rem' } as CSSProperties}
       >
-        <Chrome pathname={pathname}>{children}</Chrome>
+        <Chrome pathname={pathname} solo={solo}>
+          {children}
+        </Chrome>
       </SidebarProvider>
       {/* As the app layout: a screen's confirmations and their undo. */}
       <Toaster />

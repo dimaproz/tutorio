@@ -6,7 +6,7 @@ import {
   CalendarDaysIcon,
   ClipboardListIcon,
   EllipsisVerticalIcon,
-  LayersIcon,
+  HouseIcon,
   UsersIcon,
   type LucideIcon,
 } from 'lucide-react';
@@ -16,11 +16,12 @@ import { cn } from '@/lib/utils';
 import { canUseBusinessRoutes, isNavigationActive, type NavigationKey } from './app-navigation';
 import { useSession } from './session-provider';
 
+// Сьогодні · Календар · Заняття · Учні · Ще (S11); «Групи» lives under «Ще».
 const TABS: { key: NavigationKey; href: string; icon: LucideIcon; exact?: boolean }[] = [
+  { key: 'today', href: '/app', icon: HouseIcon, exact: true },
   { key: 'calendar', href: '/app/calendar', icon: CalendarDaysIcon },
   { key: 'lessons', href: '/app/lessons', icon: ClipboardListIcon },
   { key: 'students', href: '/app/students', icon: UsersIcon },
-  { key: 'groups', href: '/app/groups', icon: LayersIcon },
 ];
 
 const TAB_CLASS =

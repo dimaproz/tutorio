@@ -18,6 +18,7 @@ import {
   BulkCancelDialog,
   LessonCreateDialog,
   LessonPanel,
+  TimedLessonRow,
   useLessonMove,
   useLessonPanel,
   type LessonCreateInitial,
@@ -43,7 +44,6 @@ import {
   CalendarDaySide,
   CalendarWeekStrip,
 } from './calendar-day-parts';
-import { CalendarEvent } from './calendar-event';
 import { CalendarFilterSheet, StatusFilterMenu, TeacherFilterMenu } from './calendar-filters';
 import { CalendarLegend } from './calendar-legend';
 import { CalendarMonthDots, CalendarMonthGrid } from './calendar-month-grid';
@@ -292,6 +292,7 @@ export function CalendarPage({ nowMs: pinnedNow }: { nowMs?: number } = {}) {
               days={period.days}
               lessons={visible}
               nowMs={nowMs}
+              showTeacher={multiTeacher}
               onOpenLesson={openLesson}
             />
           )
@@ -311,12 +312,13 @@ export function CalendarPage({ nowMs: pinnedNow }: { nowMs?: number } = {}) {
             </h2>
             <div className="flex flex-col gap-2">
               {dayLessons.map((lesson) => (
-                <CalendarEvent
+                <TimedLessonRow
                   key={lesson.id}
                   lesson={lesson}
                   nowMs={nowMs}
-                  variant="row"
-                  onClick={() => openLesson(lesson)}
+                  dense
+                  showTeacher={multiTeacher}
+                  onOpen={() => openLesson(lesson)}
                 />
               ))}
             </div>

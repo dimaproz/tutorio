@@ -138,6 +138,8 @@ export type WeekLesson = {
   title: string;
   group: boolean;
   state: WeekLessonState;
+  /** The lesson itself, for the phone's day list (the shared timed row). */
+  lesson: LessonResponse;
 };
 
 export type WeekDay = {
@@ -186,6 +188,7 @@ export function teacherWeek(
       time: zonedTime(lesson.startsAtUtc, timeZone),
       title: lesson.group?.name ?? shortName(lesson.student?.fullName ?? ''),
       group: Boolean(lesson.groupId),
+      lesson,
       state:
         lesson.status === 'NO_SHOW'
           ? 'miss'

@@ -1,5 +1,6 @@
 export { PackagesPage } from './ui/list/packages-page';
 export { PackageTicketModal } from './ui/package-ticket-modal';
+export { PackageOperationDialog } from './ui/package-operation-dialog';
 export { PackageSaleDialog } from './ui/sale/package-sale-dialog';
 export { PACKAGE_PARAM, usePackageTicket } from './ui/use-package-ticket';
 export { MemberSaleDialog } from './ui/sale/member-sale-dialog';

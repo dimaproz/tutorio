@@ -1,6 +1,16 @@
-import { redirect } from 'next/navigation';
+import type { Metadata } from 'next';
+import { getTranslations } from 'next-intl/server';
+import { TodayPage } from '@/features/today';
 
-// The studio opens on its students until the rebuilt home screen lands.
-export default function AppHomePage() {
-  redirect('/app/students');
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('today');
+  return { title: t('title') };
+}
+
+export default function TodayRoute() {
+  return (
+    <div className="flex flex-1 flex-col gap-6">
+      <TodayPage />
+    </div>
+  );
 }

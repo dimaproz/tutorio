@@ -63,7 +63,8 @@ export function usePeriodTitle() {
  * The calendar's state: the view (remembered per browser, day on phones and
  * week on desktop), the anchor day, the teacher and status filters, and the
  * period's lessons as the grid draws them. A link may open it on a day and
- * one teacher (`?date=yyyy-MM-dd&teacher=<id>`, a teacher's profile).
+ * one teacher (`?date=yyyy-MM-dd&teacher=<id>`, a teacher's profile), and in
+ * one view (`?view=day`, the Today page).
  */
 export function useCalendarState({ mobile, nowMs }: { mobile: boolean; nowMs: number }) {
   const [desktopView, setDesktopView] = useStoredChoice<CalendarView>(
@@ -76,10 +77,20 @@ export function useCalendarState({ mobile, nowMs }: { mobile: boolean; nowMs: nu
     CALENDAR_VIEWS,
     'day',
   );
-  const view = mobile ? phoneView : desktopView;
-  const setView = mobile ? setPhoneView : setDesktopView;
-  const timeZone = useStudioTimeZone();
   const searchParams = useSearchParams();
+  // A link may open a view once (`?view=day`, the Today page's «Календар»)
+  // without changing the remembered one.
+  const [linkedView, setLinkedView] = useState<CalendarView | null>(() => {
+    const linked = searchParams.get('view');
+    return CALENDAR_VIEWS.includes(linked as CalendarView) ? (linked as CalendarView) : null;
+  });
+  const view = linkedView ?? (mobile ? phoneView : desktopView);
+  const setStoredView = mobile ? setPhoneView : setDesktopView;
+  const setView = (next: CalendarView) => {
+    setLinkedView(null);
+    setStoredView(next);
+  };
+  const timeZone = useStudioTimeZone();
   const [anchor, setAnchor] = useState(() => {
     const linked = searchParams.get('date');
     return linked && isCalendarDate(linked)

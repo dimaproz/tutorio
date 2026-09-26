@@ -1,11 +1,12 @@
 'use client';
 
-import type { ComponentProps, ReactNode } from 'react';
+import type { ComponentProps, CSSProperties, ReactNode } from 'react';
 import { CircleCheckIcon, RotateCcwIcon, UserXIcon, UsersIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { EntityAvatar } from '@/components/shared/entity-avatar';
 import { Badge } from '@/components/ui/badge';
-import { DEFAULT_TEACHER_COLOR, inkOn } from '@/lib/theme/user-colors';
+import { CoinMark } from '@/components/shared/lesson-time-row';
+import { DEFAULT_TEACHER_COLOR } from '@/lib/theme/user-colors';
 import { cn } from '@/lib/utils';
 import {
   LESSON_TYPE_CLASS,
@@ -19,19 +20,24 @@ import {
 } from '../model/lessons';
 import { useLocalFormatter } from '@/lib/i18n/local-formatter';
 
-export type CalendarEventVariant = 'block' | 'wide' | 'chip' | 'row';
+export type CalendarEventVariant = 'block' | 'wide' | 'chip';
 export type CalendarEventState = 'idle' | 'ghost' | 'dragging' | 'conflict';
 
 /** The fill says the time (decision 4); the colour comes from `--lesson`. */
+// S11: a past tile is lighter and has no outline; a cancelled one is a quiet
+// card with a hairline, muted text and a strike on the time only.
 const FILL: Record<LessonTime, string> = {
   upcoming: 'border-[1.5px] border-[color-mix(in_oklab,var(--lesson)_55%,transparent)] bg-card',
-  past: 'border-[1.5px] border-transparent bg-[color-mix(in_oklab,var(--lesson)_14%,var(--card))]',
+  past: 'border-[1.5px] border-transparent bg-[color-mix(in_oklab,var(--lesson)_10%,var(--card))]',
   running: 'border-2 border-(--lesson) bg-[color-mix(in_oklab,var(--lesson)_14%,var(--card))]',
-  cancelled: 'border-[1.5px] border-transparent bg-card bg-hatch text-muted-foreground',
+  cancelled: 'border border-border bg-card text-muted-foreground',
 };
 
+// Times read in the sans font with tabular figures (S11 decision 10). With
+// several teachers the time takes the teacher's colour (`--time-tint`, user
+// data) instead of the lesson's.
 const TIME_TEXT =
-  'font-mono tabular-nums text-[color-mix(in_oklab,var(--lesson)_55%,var(--foreground))]';
+  'tabular-nums text-[color-mix(in_oklab,var(--time-tint,var(--lesson))_60%,var(--foreground))]';
 
 /** "10:00–11:00", or the start alone. */
 export function useEventTimes() {
@@ -74,50 +80,22 @@ export function useEventLabel() {
   };
 }
 
-/** The round orange «₴»: a lesson not paid yet. */
-export function UnpaidMark({ className }: { className?: string }) {
-  return (
-    <span
-      aria-hidden="true"
-      className={cn(
-        'flex size-3.5 shrink-0 items-center justify-center rounded-full bg-status-hold text-[9px] leading-none font-bold text-ink-foreground',
-        className,
-      )}
-    >
-      ₴
-    </span>
-  );
+/** The round warning «₴»: a lesson not paid yet. */
+export const UnpaidMark = CoinMark;
+
+/** The teacher's 7px dot beside the time, where several teachers are shown (S11). */
+function TeacherDot() {
+  return <span aria-hidden="true" className="size-1.75 shrink-0 rounded-full bg-(--time-tint)" />;
 }
 
-/** The teacher's initials in their own colour (user data, decision 6). */
-export function TeacherMark({ lesson }: { lesson: CalendarLesson }) {
-  const color = lesson.teacher.color ?? DEFAULT_TEACHER_COLOR;
-  const initials = lesson.teacher.name
-    .split(/\s+/)
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-  return (
-    <span
-      aria-hidden="true"
-      style={{ backgroundColor: color, color: inkOn(color) }}
-      className="flex size-3.5 shrink-0 items-center justify-center rounded-full text-[7px] leading-none font-bold"
-    >
-      {initials}
-    </span>
-  );
-}
-
-function Marks({ lesson, showTeacher }: { lesson: CalendarLesson; showTeacher: boolean }) {
+function Marks({ lesson }: { lesson: CalendarLesson }) {
   const marks = lessonMarks(lesson);
-  if (!marks.held && !marks.noShow && !marks.unpaid && !showTeacher) return null;
+  if (!marks.held && !marks.noShow && !marks.unpaid) return null;
   return (
     <span aria-hidden="true" className="flex shrink-0 items-center gap-1 [&_svg]:size-3.5">
       {marks.held ? <CircleCheckIcon className="text-(--lesson)" /> : null}
       {marks.noShow ? <UserXIcon className="text-destructive" /> : null}
       {marks.unpaid ? <UnpaidMark /> : null}
-      {showTeacher ? <TeacherMark lesson={lesson} /> : null}
     </span>
   );
 }
@@ -177,8 +155,8 @@ export function CalendarEvent({
   showTeacher = false,
   state = 'idle',
   stacked = false,
-  meta,
   className,
+  style,
   ...props
 }: Omit<ComponentProps<'button'>, 'children'> & {
   lesson: CalendarLesson;
@@ -189,13 +167,11 @@ export function CalendarEvent({
   startOnly?: boolean;
   /** The topic line (lessons of 90 minutes or more). */
   withTopic?: boolean;
-  /** Several teachers are shown: their initials in their colour. */
+  /** Several teachers are shown: the time and a dot in the teacher's colour. */
   showTeacher?: boolean;
   state?: CalendarEventState;
   /** A `wide` card with the time under the name (the phone's day). */
   stacked?: boolean;
-  /** The `row`'s second line, e.g. «60 хв · індивідуальне». */
-  meta?: ReactNode;
 }) {
   const times = useEventTimes();
   const label = useEventLabel();
@@ -226,8 +202,20 @@ export function CalendarEvent({
       )}
     />
   );
+  const tinted = showTeacher && !cancelled;
+  const tintStyle = {
+    ...style,
+    ...(tinted
+      ? ({ '--time-tint': lesson.teacher.color ?? DEFAULT_TEACHER_COLOR } as CSSProperties)
+      : {}),
+  };
+  const strike = cancelled && 'line-through decoration-1';
+  const dot = tinted ? <TeacherDot /> : null;
   const timeText = (text: ReactNode) => (
-    <span className={cn(TIME_TEXT, cancelled && 'line-through')}>{text}</span>
+    <span className="flex min-w-0 items-center gap-1">
+      {dot}
+      <span className={cn(TIME_TEXT, strike)}>{text}</span>
+    </span>
   );
 
   if (variant === 'chip') {
@@ -239,51 +227,12 @@ export function CalendarEvent({
           shell,
           'h-5 items-center gap-1.5 rounded-md pr-1.5 pl-2 text-[11px] leading-4',
         )}
+        style={tintStyle}
         {...props}
       >
         {bar}
         {timeText(times.start(lesson))}
-        <span className={cn('truncate font-semibold', cancelled && 'line-through')}>
-          {lessonTitle(lesson)}
-        </span>
-      </button>
-    );
-  }
-
-  if (variant === 'row') {
-    const marks = lessonMarks(lesson);
-    return (
-      <button
-        type="button"
-        aria-label={label(lesson, nowMs)}
-        className={cn(shell, 'min-h-12 items-center gap-3 rounded-tile py-3 pr-3.5 pl-4')}
-        {...props}
-      >
-        {bar}
-        <span className={cn('w-11 shrink-0 text-sm', TIME_TEXT, cancelled && 'line-through')}>
-          {times.start(lesson)}
-        </span>
-        <span className="flex min-w-0 grow flex-col gap-0.5">
-          <span
-            className={cn(
-              'truncate text-[15px] leading-5 font-semibold',
-              cancelled && 'line-through',
-            )}
-          >
-            {lessonTitle(lesson)}
-          </span>
-          {meta ? (
-            <span className="truncate text-[13px] leading-[18px] text-muted-foreground">
-              {meta}
-            </span>
-          ) : null}
-        </span>
-        <span aria-hidden="true" className="flex shrink-0 items-center gap-2 [&_svg]:size-4">
-          {time === 'running' ? <RunningDot /> : null}
-          {marks.held ? <CircleCheckIcon className="text-(--lesson)" /> : null}
-          {marks.noShow ? <UserXIcon className="text-destructive" /> : null}
-          {marks.unpaid ? <UnpaidMark className="size-5 text-[11px]" /> : null}
-        </span>
+        <span className="truncate font-semibold">{lessonTitle(lesson)}</span>
       </button>
     );
   }
@@ -294,6 +243,7 @@ export function CalendarEvent({
         type="button"
         aria-label={label(lesson, nowMs)}
         className={cn(shell, 'h-full items-start gap-3 rounded-tile py-3 pr-4 pl-5')}
+        style={tintStyle}
         {...props}
       >
         {bar}
@@ -316,16 +266,12 @@ export function CalendarEvent({
           <span
             className={cn('flex min-w-0', stacked ? 'flex-col gap-0.5' : 'items-baseline gap-2.5')}
           >
-            <span
-              className={cn(
-                'truncate text-[15px] leading-5 font-semibold',
-                cancelled && 'line-through',
-              )}
-            >
+            <span className="truncate text-[15px] leading-5 font-semibold">
               {lessonTitle(lesson)}
             </span>
-            <span className={cn('shrink-0 text-xs', TIME_TEXT, cancelled && 'line-through')}>
-              {times.range(lesson)}
+            <span className="flex shrink-0 items-center gap-1 text-xs">
+              {dot}
+              <span className={cn(TIME_TEXT, strike)}>{times.range(lesson)}</span>
             </span>
           </span>
           {lesson.topic ? (
@@ -345,7 +291,6 @@ export function CalendarEvent({
           <span className="flex shrink-0 items-center gap-2">
             <StatusBadge lesson={lesson} time={time} />
             {lessonMarks(lesson).unpaid ? <UnpaidMark className="size-5 text-[11px]" /> : null}
-            {showTeacher ? <TeacherMark lesson={lesson} /> : null}
           </span>
         )}
       </button>
@@ -362,17 +307,16 @@ export function CalendarEvent({
         'h-full rounded-[10px] py-[5px] pr-[7px] pl-[10px] text-xs leading-4',
         compact ? 'flex-row items-center gap-1.5' : 'flex-col gap-0.5',
       )}
+      style={tintStyle}
       {...props}
     >
       {bar}
       {compact ? (
         <>
           {time === 'running' ? <RunningDot /> : null}
-          <span className={cn('shrink-0 text-[11px]', TIME_TEXT, cancelled && 'line-through')}>
-            {times.start(lesson)}
-          </span>
-          <Title lesson={lesson} className={cn('grow', cancelled && 'line-through')} />
-          <Marks lesson={lesson} showTeacher={showTeacher} />
+          <span className="shrink-0 text-[11px]">{timeText(times.start(lesson))}</span>
+          <Title lesson={lesson} className="grow" />
+          <Marks lesson={lesson} />
         </>
       ) : (
         <>
@@ -381,9 +325,9 @@ export function CalendarEvent({
               {time === 'running' ? <RunningDot /> : null}
               {timeText(startOnly ? times.start(lesson) : times.range(lesson))}
             </span>
-            <Marks lesson={lesson} showTeacher={showTeacher} />
+            <Marks lesson={lesson} />
           </span>
-          <Title lesson={lesson} className={cn(cancelled && 'line-through')} />
+          <Title lesson={lesson} />
           {withTopic && lesson.topic ? (
             <span className="truncate text-[11px] text-muted-foreground">{lesson.topic}</span>
           ) : null}

@@ -124,12 +124,7 @@ const meta = {
   argTypes: {
     pathname: {
       control: 'select',
-      options: [
-        '/app/students',
-        '/app/students/new',
-        '/app/groups',
-        '/app/parents',
-      ],
+      options: ['/app', '/app/students', '/app/students/new', '/app/groups', '/app/parents'],
     },
     workspace: { control: 'inline-radio', options: ['school', 'solo'] },
     role: { control: 'inline-radio', options: ['OWNER', 'TEACHER'] },

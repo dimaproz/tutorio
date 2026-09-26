@@ -26,6 +26,14 @@ export type CalendarLesson = Pick<
   | 'group'
   | 'teacher'
   | 'originalLessonId'
+  // The shared timed row of the phone lists (S11).
+  | 'enrollmentId'
+  | 'attendance'
+  | 'cancelledBy'
+  | 'rescheduledCount'
+  | 'priceMinor'
+  | 'groupMembers'
+  | 'originalStartsAtUtc'
 >;
 
 export const LESSON_TYPE_CLASS: Record<LessonType, string> = {

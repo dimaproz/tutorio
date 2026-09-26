@@ -16,6 +16,8 @@ export function lessonFixture(fields: Partial<LessonDetailResponse> = {}): Lesso
     status: 'SCHEDULED',
     kind: 'REGULAR',
     originalLessonId: null,
+    originalStartsAtUtc: null,
+    groupMembers: null,
     makeupLessonId: null,
     topic: null,
     isDetached: false,
