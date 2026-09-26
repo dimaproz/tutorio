@@ -11,6 +11,7 @@ import { AccessTokenGuard } from './auth/guards/access-token.guard';
 import { ClientThrottlerGuard } from './auth/guards/client-throttler.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
 import { type Env, validateEnv } from './config/env';
+import { DashboardModule } from './dashboard/dashboard.module';
 import { EnrollmentsModule } from './enrollments/enrollments.module';
 import { GroupsModule } from './groups/groups.module';
 import { HealthModule } from './health/health.module';
@@ -53,6 +54,7 @@ import { WorkspacesModule } from './workspaces/workspaces.module';
     SchedulingModule,
     PackagesModule,
     PausesModule,
+    DashboardModule,
   ],
   providers: [
     { provide: APP_PIPE, useClass: ZodValidationPipe },

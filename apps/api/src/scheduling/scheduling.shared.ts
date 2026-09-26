@@ -54,6 +54,31 @@ export const lessonInclude = {
   },
 } satisfies Prisma.LessonInclude;
 
+/** Cancelled or missed individual lessons with no makeup yet (L-60). */
+export const needsMakeupWhere = {
+  enrollmentId: { not: null },
+  groupId: null,
+  status: { in: ['CANCELLED_CHARGED', 'CANCELLED_UNCHARGED', 'NO_SHOW'] },
+  OR: [
+    { makeup: { is: null } },
+    { makeup: { is: { deletedAt: { not: null } } } },
+  ],
+} satisfies Prisma.LessonWhereInput;
+
+/**
+ * Group lessons that are over, not cancelled, whose attendance no person
+ * confirmed (L-72, L-74). A lesson the automation has not held yet ends
+ * within minutes, so the held ones are the list.
+ */
+export function unconfirmedAttendanceWhere(now: Date): Prisma.LessonWhereInput {
+  return {
+    groupId: { not: null },
+    status: 'COMPLETED',
+    startsAtUtc: { lte: now },
+    attendance: { none: { markedById: { not: null } } },
+  };
+}
+
 export type LessonRow = Prisma.LessonGetPayload<{
   include: typeof lessonInclude;
 }>;

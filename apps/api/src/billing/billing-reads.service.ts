@@ -308,6 +308,50 @@ export class BillingReadsService {
   }
 
   /**
+   * What each pay-per-lesson direction of a workspace owes now (L-90), with
+   * the lessons payments have not reached yet, oldest first; one teacher's
+   * directions only when `teacherId` is given.
+   */
+  async balanceDebts(
+    db: Db,
+    workspaceId: string,
+    teacherId?: string,
+  ): Promise<
+    {
+      enrollmentId: string;
+      studentId: string;
+      currency: string;
+      debtMinor: number;
+      unpaid: BalanceAllocation['unpaid'];
+    }[]
+  > {
+    const directions = await db.enrollment.findMany({
+      where: {
+        workspaceId,
+        ...(teacherId ? { teacherId } : {}),
+        student: { deletedAt: null },
+        charges: { some: { voidedAt: null, source: 'BALANCE' } },
+      },
+      select: { ...directionSelect, studentId: true },
+    });
+    const { byDirection } = await this.balancesOf(db, directions);
+    return directions.flatMap((direction) => {
+      const allocation = byDirection.get(direction.id);
+      return allocation && allocation.debtMinor > 0
+        ? [
+            {
+              enrollmentId: direction.id,
+              studentId: direction.studentId,
+              currency: direction.currency,
+              debtMinor: allocation.debtMinor,
+              unpaid: allocation.unpaid,
+            },
+          ]
+        : [];
+    });
+  }
+
+  /**
    * The package each package-paid direction uses now (L-81): the oldest valid
    * one with a credit left, else the latest valid one (none left); with its
    * credits left and its size. Directions paid per lesson, or with no valid

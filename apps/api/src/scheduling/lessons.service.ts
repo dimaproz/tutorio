@@ -52,7 +52,9 @@ import {
 } from './lifecycle-suspension';
 import {
   assertTargetAndTeacher,
+  unconfirmedAttendanceWhere,
   lessonInclude,
+  needsMakeupWhere,
   type LessonRow,
   localHourMinute,
   resolveStudentTarget,
@@ -190,39 +192,40 @@ export class LessonsService {
         status: { in: ['CANCELLED_CHARGED', 'CANCELLED_UNCHARGED'] },
       },
       no_show: { status: 'NO_SHOW' },
-      // Cancelled or missed individual lessons with no makeup yet (L-60).
-      needs_makeup: {
-        enrollmentId: { not: null },
-        groupId: null,
-        status: {
-          in: ['CANCELLED_CHARGED', 'CANCELLED_UNCHARGED', 'NO_SHOW'],
-        },
-        OR: [
-          { makeup: { is: null } },
-          { makeup: { is: { deletedAt: { not: null } } } },
-        ],
-      },
+      needs_makeup: needsMakeupWhere,
+      // Held group lessons nobody marked: the automation counted everyone
+      // present (L-72) and the tutor has not confirmed it (L-74).
+      unconfirmed: unconfirmedAttendanceWhere(new Date()),
     };
     const where: Prisma.LessonWhereInput = query.filter
       ? { AND: [base, quick[query.filter]] }
       : base;
     const count = (filter: LessonQuickFilterDto) =>
       this.prisma.lesson.count({ where: { AND: [base, quick[filter]] } });
-    const [rows, total, all, unpaidCount, cancelled, noShow, needsMakeup] =
-      await Promise.all([
-        this.prisma.lesson.findMany({
-          where,
-          orderBy: [{ startsAtUtc: query.order }, { id: query.order }],
-          ...toSkipTake(query),
-          include: lessonInclude,
-        }),
-        this.prisma.lesson.count({ where }),
-        query.filter ? this.prisma.lesson.count({ where: base }) : null,
-        count('unpaid'),
-        count('cancelled'),
-        count('no_show'),
-        count('needs_makeup'),
-      ]);
+    const [
+      rows,
+      total,
+      all,
+      unpaidCount,
+      cancelled,
+      noShow,
+      needsMakeup,
+      unconfirmed,
+    ] = await Promise.all([
+      this.prisma.lesson.findMany({
+        where,
+        orderBy: [{ startsAtUtc: query.order }, { id: query.order }],
+        ...toSkipTake(query),
+        include: lessonInclude,
+      }),
+      this.prisma.lesson.count({ where }),
+      query.filter ? this.prisma.lesson.count({ where: base }) : null,
+      count('unpaid'),
+      count('cancelled'),
+      count('no_show'),
+      count('needs_makeup'),
+      count('unconfirmed'),
+    ]);
     const packages = await this.billingReads.currentPackages(
       this.prisma,
       auth.workspaceId,
@@ -242,6 +245,7 @@ export class LessonsService {
         cancelled,
         noShow,
         needsMakeup,
+        unconfirmed,
       },
       packages,
     };
