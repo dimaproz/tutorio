@@ -2713,6 +2713,8 @@ export interface components {
         id: string;
         name: string;
       }[];
+      directionCount: number;
+      keptDirectionCount: number;
       conflicts: {
         /** Format: date-time */
         candidateStartsAtUtc: string;

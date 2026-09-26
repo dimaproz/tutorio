@@ -10360,6 +10360,16 @@
               "required": ["id", "name"]
             }
           },
+          "directionCount": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
+          "keptDirectionCount": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": false
+          },
           "conflicts": {
             "type": "array",
             "items": {
@@ -10471,6 +10481,8 @@
           "lastLessonAt",
           "studentCount",
           "groups",
+          "directionCount",
+          "keptDirectionCount",
           "conflicts"
         ]
       },
