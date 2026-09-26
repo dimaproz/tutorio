@@ -51,8 +51,9 @@ export class WorkspacesService {
   }
 
   /**
-   * Owner-only (controller guard). The studio defaults and the mode are
-   * mutable here — name/plan changes are out of this endpoint's contract.
+   * Owner-only (controller guard). The studio's name, defaults and mode are
+   * mutable here — the plan and the timezone are out of this endpoint's
+   * contract (a timezone change would move every lesson's wall clock).
    * Existing enrollments keep their own currency/price snapshots; only
    * enrollments without a deadline override inherit the new default.
    */

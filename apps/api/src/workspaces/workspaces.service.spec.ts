@@ -94,6 +94,20 @@ describe('WorkspacesService.updateSettings', () => {
     });
   });
 
+  it('renames the studio and audits the old and the new name', async () => {
+    const { prisma, service } = buildService();
+    prisma.workspace.findFirst.mockResolvedValue(workspaceRow);
+
+    await service.updateSettings(owner, { name: 'SpeakWise Kyiv' });
+
+    expect(prisma.workspace.update.mock.calls[0][0].data).toEqual({
+      name: 'SpeakWise Kyiv',
+    });
+    expect(prisma.auditLog.create.mock.calls[0][0].data.diff).toEqual({
+      fields: { name: { before: 'SpeakWise', after: 'SpeakWise Kyiv' } },
+    });
+  });
+
   it('does not persist or audit a no-op settings PATCH', async () => {
     const { prisma, service } = buildService();
     prisma.workspace.findFirst.mockResolvedValue(workspaceRow);

@@ -1662,6 +1662,25 @@ describe('Stage 2: students, groups, enrollments, settings, audit (e2e)', () => 
       });
       expect(await auditCount('WORKSPACE', workspaceAId, 'UPDATE')).toBe(1);
 
+      // The name is a setting too; a blank or one-letter name is refused.
+      await server()
+        .patch('/api/workspaces/current/settings')
+        .set('Authorization', auth(ownerA))
+        .send({ name: ' ' })
+        .expect(400);
+      const renamed = await server()
+        .patch('/api/workspaces/current/settings')
+        .set('Authorization', auth(ownerA))
+        .send({ name: `  E2E WS A ${runId} renamed ` })
+        .expect(200);
+      expect(renamed.body.workspace.name).toBe(`E2E WS A ${runId} renamed`);
+      expect(await auditCount('WORKSPACE', workspaceAId, 'UPDATE')).toBe(2);
+      await server()
+        .patch('/api/workspaces/current/settings')
+        .set('Authorization', auth(ownerA))
+        .send({ name: `E2E WS A ${runId}` })
+        .expect(200);
+
       // Workspace B keeps its registration defaults.
       const currentB = await server()
         .get('/api/workspaces/current')
