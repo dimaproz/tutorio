@@ -1,4 +1,8 @@
-import { effectiveDeadlineHours, resolveDefaultPrice } from '@tutorio/domain';
+import {
+  attendanceWindowStart,
+  effectiveDeadlineHours,
+  resolveDefaultPrice,
+} from '@tutorio/domain';
 import { Prisma } from '@prisma/client';
 import type { CurrencyCode } from '@tutorio/domain';
 import type {
@@ -85,15 +89,15 @@ export const needsMakeupWhere = {
 } satisfies Prisma.LessonWhereInput;
 
 /**
- * Group lessons that are over, not cancelled, whose attendance no person
- * confirmed (L-72, L-74). A lesson the automation has not held yet ends
- * within minutes, so the held ones are the list.
+ * Group lessons of the last seven days that are over, not cancelled, whose
+ * attendance no person confirmed (L-72, L-74). A lesson the automation has
+ * not held yet ends within minutes, so the held ones are the list.
  */
 export function unconfirmedAttendanceWhere(now: Date): Prisma.LessonWhereInput {
   return {
     groupId: { not: null },
     status: 'COMPLETED',
-    startsAtUtc: { lte: now },
+    startsAtUtc: { gte: attendanceWindowStart(now), lte: now },
     attendance: { none: { markedById: { not: null } } },
   };
 }

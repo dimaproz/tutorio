@@ -466,8 +466,8 @@ export type LessonListResponse = z.infer<typeof lessonListResponseSchema>;
  * The Lessons list quick filters (product/scheduling.md, Pages): lessons not
  * paid yet (on debt, or a pay-per-lesson charge payments have not reached),
  * cancelled, no-shows, cancelled or missed individual lessons with no
- * makeup yet, and group lessons that are over with attendance nobody
- * confirmed (L-72, L-74).
+ * makeup yet, and group lessons of the last 7 days that are over with
+ * attendance nobody confirmed (L-72, L-74).
  */
 export const lessonQuickFilterSchema = z.enum([
   'unpaid',

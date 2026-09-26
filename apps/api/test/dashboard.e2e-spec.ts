@@ -259,6 +259,12 @@ describe('S11: the Today dashboard reads (e2e)', () => {
       startsAt: [inHours(-4)],
       status: 'COMPLETED',
     });
+    // Older than the seven-day window: not counted, not listed.
+    await book({
+      groupId: group,
+      startsAt: [inHours(-8 * 24)],
+      status: 'COMPLETED',
+    });
 
     // A pause that ends tomorrow.
     const away = await newStudent('Away');
@@ -283,12 +289,12 @@ describe('S11: the Today dashboard reads (e2e)', () => {
       items: [{ lesson: { id: missed.id }, student: { id: payer } }],
     });
     // The no-show is charged too: two lessons of 400 ₴ owed; the group
-    // member pays per lesson and owes the held group lesson.
+    // member pays per lesson and owes both held group lessons.
     expect(listed.of('debtors')).toMatchObject({
       count: 2,
       items: [
         { student: { id: payer }, debt: { amountMinor: 80000, lessons: 2 } },
-        { student: { id: member }, debt: { amountMinor: 30000, lessons: 1 } },
+        { student: { id: member }, debt: { amountMinor: 60000, lessons: 2 } },
       ],
     });
     expect(listed.of('unpaidPackages')).toMatchObject({
@@ -350,7 +356,7 @@ describe('S11: the Today dashboard reads (e2e)', () => {
         currency: 'UAH',
         receivedMonthMinor: 70000,
         receivedTodayMinor: 70000,
-        debtMinor: 110000,
+        debtMinor: 140000,
         debtors: 2,
         // The unpaid package's 800 ₴ plus its expected renewal of 800 ₴.
         dueMinor: 160000,
