@@ -162,16 +162,17 @@ Answered by the owner on 2026-09-26:
   shows «Спосіб оплати».
 - **Tablet layout** — confirmed as built (one column below 1024 px, the log
   as cards).
+- **Older teacher archives** stay as written (`UPDATE`, «Змінено»): history
+  is not rewritten; the pilot's data is test data.
+- **The «Хто» filter** lists login accounts only — fine for the
+  owner-operated pilot; teachers appear there once they get logins.
 
 Still open:
 
-1. **Older teacher archives** written before this step stay `UPDATE` and read
-   «Змінено · статус Викладає → В архіві». Rewrite them, or leave history as
-   it was written?
-2. **«Змінити назву можна через підтримку»** has no link: which support
-   channel should it open?
-3. **The «Хто» filter** lists login accounts; a teacher without a login never
-   appears as an actor. Fine for the owner-operated pilot?
+1. **«Змінити назву можна через підтримку»** has no link, and there is no
+   support channel. Nothing depends on the name (no slug, URL or receipt
+   yet), so it could simply be editable here; the timezone stays read only,
+   as changing it moves every lesson's wall clock.
 
 ## Evidence
 
