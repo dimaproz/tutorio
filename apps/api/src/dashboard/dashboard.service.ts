@@ -385,6 +385,7 @@ export class DashboardService {
         select: {
           amountMinor: true,
           currency: true,
+          enrollmentId: true,
           enrollment: { select: { studentId: true } },
           lesson: { select: { startsAtUtc: true } },
         },
@@ -398,6 +399,7 @@ export class DashboardService {
         amountMinor: charge.amountMinor,
         lessons: 1,
         oldestAt: charge.lesson.startsAtUtc,
+        enrollmentId: charge.enrollmentId,
       })),
       ...balances.map((balance) => ({
         studentId: balance.studentId,
@@ -405,6 +407,7 @@ export class DashboardService {
         amountMinor: balance.debtMinor,
         lessons: balance.unpaid.length,
         oldestAt: balance.unpaid[0]?.lessonAt ?? now,
+        enrollmentId: balance.enrollmentId,
       })),
     ];
   }
@@ -433,6 +436,7 @@ export class DashboardService {
               {
                 ...blankItem(`${row.studentId}:${row.currency}`),
                 student: person(student),
+                enrollmentId: row.enrollmentId ?? null,
                 debt: {
                   amountMinor: row.amountMinor,
                   currency: row.currency as CurrencyCodeDto,

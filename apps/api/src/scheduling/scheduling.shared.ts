@@ -33,11 +33,30 @@ export const lessonInclude = {
       student: { select: { id: true, fullName: true, avatarKey: true } },
     },
   },
-  group: { select: { id: true, name: true } },
+  group: {
+    select: {
+      id: true,
+      name: true,
+      // «група · 4 учнів»: the live members, as the group page counts them.
+      _count: {
+        select: {
+          enrollments: {
+            where: {
+              deletedAt: null,
+              status: { in: ['ACTIVE', 'PAUSED'] },
+              student: { deletedAt: null, status: { not: 'ARCHIVED' } },
+            },
+          },
+        },
+      },
+    },
+  },
   teacher: {
     select: { id: true, fullName: true, color: true, subjects: true },
   },
   workspace: { select: { cancellationDeadlineHours: true } },
+  // A makeup's original lesson, for «за 19 вересня».
+  original: { select: { startsAtUtc: true } },
   // Only the statuses: a lesson row reports "5 of 6 came", not who; and
   // whether a person marked it, not only the automation (L-72).
   attendance: { select: { status: true, markedById: true } },
@@ -114,6 +133,7 @@ export function toLessonResponse(
     status: row.status,
     kind: row.kind,
     originalLessonId: row.originalLessonId,
+    originalStartsAtUtc: row.original?.startsAtUtc.toISOString() ?? null,
     makeupLessonId: row.makeup?.id ?? null,
     topic: row.topic,
     isDetached: row.isDetached,
@@ -155,7 +175,8 @@ export function toLessonResponse(
           avatarKey: row.enrollment.student.avatarKey as AvatarKeyDto | null,
         }
       : null,
-    group: row.group,
+    group: row.group ? { id: row.group.id, name: row.group.name } : null,
+    groupMembers: row.group?._count.enrollments ?? null,
     teacher: {
       id: row.teacher.id,
       name: row.teacher.fullName,
